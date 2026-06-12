@@ -34,7 +34,7 @@ env:
   FPC_VERSION: 3.2.2
   LAZARUS_BRANCH: lazarus_4_4
   LAZARUS_REPO: https://github.com/fpc/Lazarus.git
-  MAKE_BUILD_BACKEND: lazbuild
+  MAKE_BUILD_BACKEND: fpc
   # make.pas package build scope: 'all' compiles every discovered package (catches
   # a package that fails on the target even if unused); 'required' only compiles
   # the projects' dependency closure. Override per job below, like MAKE_BUILD_BACKEND.
