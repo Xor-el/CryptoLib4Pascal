@@ -906,12 +906,12 @@ end;
 
 procedure TAsn1OutputStream.WriteDL(ADl: Int32);
 begin
-  WriteDL(Self, ADl);
+  WriteDL(FStream, ADl);
 end;
 
 procedure TAsn1OutputStream.WriteIdentifier(AFlags, ATagNo: Int32);
 begin
-  WriteIdentifier(Self, AFlags, ATagNo);
+  WriteIdentifier(FStream, AFlags, ATagNo);
 end;
 
 class procedure TAsn1OutputStream.WriteDL(const AOutput: TStream; ADl: Int32);
