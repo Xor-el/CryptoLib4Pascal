@@ -45,6 +45,8 @@ type
   ITbsCertificateStructure = interface;
   ITime = interface;
   IValidity = interface;
+  IExtension = interface;
+  IExtensions = interface;
   ICertificatePair = interface;
   IX509CertificateStructure = interface;
   IX509Extensions = interface;
@@ -358,6 +360,43 @@ type
 
     property Forward: IX509CertificateStructure read GetForward;
     property Reverse: IX509CertificateStructure read GetReverse;
+  end;
+
+  /// <summary>
+  /// RFC 5280 Extension ::= SEQUENCE { extnID, critical DEFAULT FALSE, extnValue }.
+  /// </summary>
+  IExtension = interface(IAsn1Encodable)
+    ['{E4F5A6B7-C8D9-4E0F-A1B2-C3D4E5F60718}']
+
+    function GetExtnID: IDerObjectIdentifier;
+    function GetCritical: IDerBoolean;
+    function GetExtnValue: IAsn1OctetString;
+    function GetParsedValue: IAsn1Object;
+    function GetX509Extension: IX509Extension;
+
+    property ExtnID: IDerObjectIdentifier read GetExtnID;
+    property Critical: IDerBoolean read GetCritical;
+    property ExtnValue: IAsn1OctetString read GetExtnValue;
+  end;
+
+  /// <summary>
+  /// RFC 5280 Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension.
+  /// </summary>
+  IExtensions = interface(IAsn1Encodable)
+    ['{F5A6B7C8-D9E0-4F1A-B2C3-D4E5F6071829}']
+
+    function GetCount: Int32;
+    function GetExtension(const AOid: IDerObjectIdentifier): IExtension;
+    function GetExtensionParsedValue(const AOid: IDerObjectIdentifier): IAsn1Object;
+    function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
+    function GetExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function GetNonCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function GetCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function HasAnyCriticalExtensions: Boolean;
+    function Equivalent(const AOther: IExtensions): Boolean;
+
+    property Count: Int32 read GetCount;
+    property ExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier> read GetExtensionOids;
   end;
 
   /// <summary>

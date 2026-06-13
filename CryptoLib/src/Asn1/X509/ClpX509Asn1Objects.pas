@@ -509,6 +509,97 @@ type
   end;
 
   /// <summary>
+  /// RFC 5280 Extension ::= SEQUENCE { extnID, critical DEFAULT FALSE, extnValue }.
+  /// </summary>
+  TExtension = class(TAsn1Encodable, IExtension)
+
+  strict private
+  var
+    FExtnID: IDerObjectIdentifier;
+    FCritical: IDerBoolean;
+    FExtnValue: IAsn1OctetString;
+
+  strict protected
+    function GetExtnID: IDerObjectIdentifier;
+    function GetCritical: IDerBoolean;
+    function GetExtnValue: IAsn1OctetString;
+
+  public
+    class function GetInstance(AObj: TObject): IExtension; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IExtension; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IExtension; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IExtension; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IExtension; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IExtension; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AExtnID: IDerObjectIdentifier; const ACritical: IDerBoolean;
+      const AExtnValue: IAsn1OctetString); overload;
+
+    function GetParsedValue: IAsn1Object;
+    function GetX509Extension: IX509Extension;
+    function ToAsn1Object: IAsn1Object; override;
+
+    property ExtnID: IDerObjectIdentifier read GetExtnID;
+    property Critical: IDerBoolean read GetCritical;
+    property ExtnValue: IAsn1OctetString read GetExtnValue;
+
+  end;
+
+  /// <summary>
+  /// RFC 5280 Extensions ::= SEQUENCE SIZE (1..MAX) OF Extension.
+  /// </summary>
+  TExtensions = class(TAsn1Encodable, IExtensions)
+
+  strict private
+  var
+    FExtensions: TDictionary<IDerObjectIdentifier, IExtension>;
+    FOrdering: TList<IDerObjectIdentifier>;
+
+  strict protected
+    function GetCount: Int32;
+    function GetExtension(const AOid: IDerObjectIdentifier): IExtension; overload;
+    function GetExtensionParsedValue(const AOid: IDerObjectIdentifier): IAsn1Object; overload;
+    function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString; overload;
+    function GetExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function GetNonCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function GetCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function GetExtensionOidsInternal(AIsCritical: Boolean): TCryptoLibGenericArray<IDerObjectIdentifier>;
+    function HasAnyCriticalExtensions: Boolean;
+    function Equivalent(const AOther: IExtensions): Boolean;
+
+  public
+    class function GetInstance(AObj: TObject): IExtensions; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IExtensions; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IExtensions; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IExtensions; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IExtensions; static;
+    class function GetExtension(const AExtensions: IExtensions;
+      const AOid: IDerObjectIdentifier): IExtension; overload; static;
+    class function GetExtensionParsedValue(const AExtensions: IExtensions;
+      const AOid: IDerObjectIdentifier): IAsn1Object; overload; static;
+    class function GetExtensionValue(const AExtensions: IExtensions;
+      const AOid: IDerObjectIdentifier): IAsn1OctetString; overload; static;
+    class function FromX509Extensions(const AX509Extensions: IX509Extensions): IExtensions; static;
+    class function ToX509Extensions(const AExtensions: IExtensions): IX509Extensions; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AExtension: IExtension); overload;
+    constructor Create(const AExtensions: TCryptoLibGenericArray<IExtension>); overload;
+
+    destructor Destroy; override;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Count: Int32 read GetCount;
+
+  end;
+
+  /// <summary>
   /// The X509Extensions object.
   /// </summary>
   TX509Extensions = class(TAsn1Encodable, IX509Extensions)
@@ -5431,6 +5522,528 @@ end;
 function TExtendedKeyUsage.ToAsn1Object: IAsn1Object;
 begin
   Result := FSeq;
+end;
+
+{ TExtension }
+
+class function TExtension.GetInstance(AObj: TObject): IExtension;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IExtension, Result) then
+    Exit;
+
+  Result := TExtension.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TExtension.GetInstance(const AObj: IAsn1Convertible): IExtension;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IExtension, Result) then
+    Exit;
+
+  Result := TExtension.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TExtension.GetInstance(const AEncoded: TCryptoLibByteArray): IExtension;
+begin
+  Result := TExtension.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TExtension.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IExtension;
+begin
+  Result := TExtension.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TExtension.GetOptional(const AElement: IAsn1Encodable): IExtension;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IExtension, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TExtension.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TExtension.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IExtension;
+begin
+  Result := TExtension.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TExtension.Create(const ASeq: IAsn1Sequence);
+var
+  LCount: Int32;
+begin
+  inherited Create();
+
+  LCount := ASeq.Count;
+  if (LCount < 2) or (LCount > 3) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FExtnID := TDerObjectIdentifier.GetInstance(ASeq[0]);
+
+  if LCount = 3 then
+  begin
+    FCritical := TDerBoolean.GetInstance(ASeq[1]);
+    FExtnValue := TAsn1OctetString.GetInstance(ASeq[2]);
+  end
+  else
+  begin
+    FCritical := TDerBoolean.False;
+    FExtnValue := TAsn1OctetString.GetInstance(ASeq[1]);
+  end;
+end;
+
+constructor TExtension.Create(const AExtnID: IDerObjectIdentifier; const ACritical: IDerBoolean;
+  const AExtnValue: IAsn1OctetString);
+begin
+  inherited Create();
+
+  if AExtnID = nil then
+    raise EArgumentNilCryptoLibException.Create('extnID');
+  if ACritical = nil then
+    raise EArgumentNilCryptoLibException.Create('critical');
+  if AExtnValue = nil then
+    raise EArgumentNilCryptoLibException.Create('extnValue');
+
+  FExtnID := AExtnID;
+  FCritical := ACritical;
+  FExtnValue := AExtnValue;
+end;
+
+function TExtension.GetExtnID: IDerObjectIdentifier;
+begin
+  Result := FExtnID;
+end;
+
+function TExtension.GetCritical: IDerBoolean;
+begin
+  Result := FCritical;
+end;
+
+function TExtension.GetExtnValue: IAsn1OctetString;
+begin
+  Result := FExtnValue;
+end;
+
+function TExtension.GetParsedValue: IAsn1Object;
+begin
+  try
+    Result := TAsn1Object.FromByteArray(FExtnValue.GetOctets());
+  except
+    on E: Exception do
+      raise EArgumentCryptoLibException.Create('can''t convert extension: ' + E.Message);
+  end;
+end;
+
+function TExtension.GetX509Extension: IX509Extension;
+begin
+  Result := TX509Extension.Create(FCritical, FExtnValue);
+end;
+
+function TExtension.ToAsn1Object: IAsn1Object;
+begin
+  if FCritical.IsTrue then
+    Result := TDerSequence.Create([FExtnID, TDerBoolean.True, FExtnValue])
+  else
+    Result := TDerSequence.Create([FExtnID, FExtnValue]);
+end;
+
+{ TExtensions }
+
+class function TExtensions.GetInstance(AObj: TObject): IExtensions;
+var
+  LSequence: IAsn1Sequence;
+  LTagged: IAsn1TaggedObject;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IExtensions, Result) then
+    Exit;
+
+  if Supports(AObj, IAsn1Sequence, LSequence) then
+  begin
+    Result := TExtensions.Create(LSequence);
+    Exit;
+  end;
+
+  if Supports(AObj, IAsn1TaggedObject, LTagged) then
+  begin
+    Result := GetInstance(TAsn1Utilities.CheckContextTagClass(LTagged).GetBaseObject().ToAsn1Object());
+    Exit;
+  end;
+
+  raise EArgumentCryptoLibException.Create('unknown object in factory: ' + TPlatformUtilities.GetTypeName(AObj));
+end;
+
+class function TExtensions.GetInstance(const AObj: IAsn1Convertible): IExtensions;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IExtensions, Result) then
+    Exit;
+
+  Result := TExtensions.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TExtensions.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IExtensions;
+begin
+  Result := TExtensions.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TExtensions.GetOptional(const AElement: IAsn1Encodable): IExtensions;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.Create('element');
+
+  if Supports(AElement, IExtensions, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TExtensions.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TExtensions.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IExtensions;
+begin
+  Result := TExtensions.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TExtensions.GetExtension(const AExtensions: IExtensions;
+  const AOid: IDerObjectIdentifier): IExtension;
+begin
+  if AExtensions = nil then
+    Result := nil
+  else
+    Result := AExtensions.GetExtension(AOid);
+end;
+
+class function TExtensions.GetExtensionParsedValue(const AExtensions: IExtensions;
+  const AOid: IDerObjectIdentifier): IAsn1Object;
+var
+  LExt: IExtension;
+begin
+  if AExtensions = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LExt := AExtensions.GetExtension(AOid);
+  if LExt = nil then
+    Result := nil
+  else
+    Result := LExt.GetParsedValue();
+end;
+
+class function TExtensions.GetExtensionValue(const AExtensions: IExtensions;
+  const AOid: IDerObjectIdentifier): IAsn1OctetString;
+var
+  LExt: IExtension;
+begin
+  if AExtensions = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LExt := AExtensions.GetExtension(AOid);
+  if LExt = nil then
+    Result := nil
+  else
+    Result := LExt.ExtnValue;
+end;
+
+class function TExtensions.FromX509Extensions(const AX509Extensions: IX509Extensions): IExtensions;
+var
+  LOid: IDerObjectIdentifier;
+  LX509Ext: IX509Extension;
+  LExtensions: TList<IExtension>;
+  LCritical: IDerBoolean;
+begin
+  if AX509Extensions = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LExtensions := TList<IExtension>.Create;
+  try
+    for LOid in AX509Extensions.ExtensionOids do
+    begin
+      LX509Ext := AX509Extensions.GetExtension(LOid);
+      if LX509Ext.IsCritical then
+        LCritical := TDerBoolean.True
+      else
+        LCritical := TDerBoolean.False;
+      LExtensions.Add(TExtension.Create(LOid, LCritical, LX509Ext.Value));
+    end;
+    Result := TExtensions.Create(LExtensions.ToArray);
+  finally
+    LExtensions.Free;
+  end;
+end;
+
+class function TExtensions.ToX509Extensions(const AExtensions: IExtensions): IX509Extensions;
+var
+  LOids: TList<IDerObjectIdentifier>;
+  LValues: TList<IX509Extension>;
+  LOid: IDerObjectIdentifier;
+begin
+  if AExtensions = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  LOids := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
+  LValues := TList<IX509Extension>.Create;
+  try
+    for LOid in AExtensions.ExtensionOids do
+    begin
+      LOids.Add(LOid);
+      LValues.Add(AExtensions.GetExtension(LOid).GetX509Extension);
+    end;
+    Result := TX509Extensions.Create(LOids, LValues);
+  finally
+    LOids.Free;
+    LValues.Free;
+  end;
+end;
+
+constructor TExtensions.Create(const ASeq: IAsn1Sequence);
+var
+  LI: Int32;
+  LExt: IExtension;
+  LOid: IDerObjectIdentifier;
+begin
+  inherited Create();
+
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IExtension>.Create(TAsn1Comparers.OidEqualityComparer);
+
+  for LI := 0 to ASeq.Count - 1 do
+  begin
+    LExt := TExtension.GetInstance(ASeq[LI]);
+    LOid := LExt.ExtnID;
+
+    if FExtensions.ContainsKey(LOid) then
+      raise EArgumentCryptoLibException.CreateFmt('repeated extension found: %s', [LOid.Id]);
+
+    FExtensions.Add(LOid, LExt);
+    FOrdering.Add(LOid);
+  end;
+end;
+
+constructor TExtensions.Create(const AExtension: IExtension);
+begin
+  inherited Create();
+
+  if AExtension = nil then
+    raise EArgumentNilCryptoLibException.Create('extension');
+
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IExtension>.Create(TAsn1Comparers.OidEqualityComparer);
+
+  FExtensions.Add(AExtension.ExtnID, AExtension);
+  FOrdering.Add(AExtension.ExtnID);
+end;
+
+constructor TExtensions.Create(const AExtensions: TCryptoLibGenericArray<IExtension>);
+var
+  LI: Int32;
+  LExt: IExtension;
+begin
+  inherited Create();
+
+  if (AExtensions = nil) or (Length(AExtensions) = 0) then
+    raise EArgumentCryptoLibException.Create('extension array cannot be null or empty');
+
+  FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
+  FExtensions := TDictionary<IDerObjectIdentifier, IExtension>.Create(TAsn1Comparers.OidEqualityComparer);
+
+  for LI := 0 to High(AExtensions) do
+  begin
+    LExt := AExtensions[LI];
+    if LExt = nil then
+      raise EArgumentNilCryptoLibException.Create('extension');
+
+    if FExtensions.ContainsKey(LExt.ExtnID) then
+      raise EArgumentCryptoLibException.CreateFmt('repeated extension found: %s', [LExt.ExtnID.Id]);
+
+    FExtensions.Add(LExt.ExtnID, LExt);
+    FOrdering.Add(LExt.ExtnID);
+  end;
+end;
+
+destructor TExtensions.Destroy;
+begin
+  FExtensions.Free;
+  FOrdering.Free;
+  inherited Destroy;
+end;
+
+function TExtensions.GetCount: Int32;
+begin
+  Result := FOrdering.Count;
+end;
+
+function TExtensions.GetExtension(const AOid: IDerObjectIdentifier): IExtension;
+begin
+  if not FExtensions.TryGetValue(AOid, Result) then
+    Result := nil;
+end;
+
+function TExtensions.GetExtensionParsedValue(const AOid: IDerObjectIdentifier): IAsn1Object;
+var
+  LExt: IExtension;
+begin
+  LExt := GetExtension(AOid);
+  if LExt = nil then
+    Result := nil
+  else
+    Result := LExt.GetParsedValue();
+end;
+
+function TExtensions.GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
+var
+  LExt: IExtension;
+begin
+  LExt := GetExtension(AOid);
+  if LExt = nil then
+    Result := nil
+  else
+    Result := LExt.ExtnValue;
+end;
+
+function TExtensions.GetExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+begin
+  Result := TCollectionUtilities.ToArray<IDerObjectIdentifier>(FOrdering);
+end;
+
+function TExtensions.GetNonCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+begin
+  Result := GetExtensionOidsInternal(False);
+end;
+
+function TExtensions.GetCriticalExtensionOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
+begin
+  Result := GetExtensionOidsInternal(True);
+end;
+
+function TExtensions.GetExtensionOidsInternal(AIsCritical: Boolean): TCryptoLibGenericArray<IDerObjectIdentifier>;
+var
+  LOids: TList<IDerObjectIdentifier>;
+  LOid: IDerObjectIdentifier;
+  LExt: IExtension;
+begin
+  LOids := TList<IDerObjectIdentifier>.Create();
+  try
+    for LOid in FOrdering do
+    begin
+      LExt := FExtensions[LOid];
+      if LExt.Critical.IsTrue = AIsCritical then
+        LOids.Add(LOid);
+    end;
+    Result := LOids.ToArray();
+  finally
+    LOids.Free;
+  end;
+end;
+
+function TExtensions.HasAnyCriticalExtensions: Boolean;
+var
+  LOid: IDerObjectIdentifier;
+begin
+  for LOid in FOrdering do
+  begin
+    if FExtensions[LOid].Critical.IsTrue then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  Result := False;
+end;
+
+function TExtensions.Equivalent(const AOther: IExtensions): Boolean;
+var
+  LOid: IDerObjectIdentifier;
+  LOtherExt, LThisExt: IExtension;
+  LThisX509, LOtherX509: IX509Extension;
+begin
+  if AOther.Count <> FExtensions.Count then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  for LOid in FOrdering do
+  begin
+    LOtherExt := AOther.GetExtension(LOid);
+    if LOtherExt = nil then
+    begin
+      Result := False;
+      Exit;
+    end;
+
+    LThisExt := FExtensions[LOid];
+    LThisX509 := LThisExt.GetX509Extension;
+    LOtherX509 := LOtherExt.GetX509Extension;
+    if (not LThisX509.Value.Equals(LOtherX509.Value)) or
+      (LThisX509.IsCritical <> LOtherX509.IsCritical) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  Result := True;
+end;
+
+function TExtensions.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+  LOid: IDerObjectIdentifier;
+begin
+  LV := TAsn1EncodableVector.Create(FOrdering.Count);
+
+  for LOid in FOrdering do
+    LV.Add(FExtensions[LOid]);
+
+  Result := TDerSequence.Create(LV);
 end;
 
 { TX509Extensions }

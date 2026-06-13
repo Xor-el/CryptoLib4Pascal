@@ -197,7 +197,9 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure AddExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
-    procedure AddExtensions(const AExtensions: IX509Extensions);
+    procedure AddExtension(const AExtension: IExtension); overload;
+    procedure AddExtensions(const AExtensions: IX509Extensions); overload;
+    procedure AddExtensions(const AExtensions: IExtensions); overload;
     function Generate: IX509Extensions;
     function GetExtension(const AOid: IDerObjectIdentifier): IX509Extension;
     function HasExtension(const AOid: IDerObjectIdentifier): Boolean;
@@ -211,6 +213,7 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure ReplaceExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
+    procedure ReplaceExtension(const AExtension: IExtension); overload;
     procedure Reset;
 
   end;
@@ -747,6 +750,11 @@ begin
   ImplAddExtension(AOid, AX509Extension);
 end;
 
+procedure TX509ExtensionsGenerator.AddExtension(const AExtension: IExtension);
+begin
+  AddExtension(AExtension.ExtnID, AExtension.GetX509Extension);
+end;
+
 procedure TX509ExtensionsGenerator.AddExtensions(const AExtensions: IX509Extensions);
 var
   LOid: IDerObjectIdentifier;
@@ -756,6 +764,18 @@ begin
   begin
     LExt := AExtensions.GetExtension(LOid);
     AddExtension(LOid, LExt.IsCritical, LExt.Value.GetOctets());
+  end;
+end;
+
+procedure TX509ExtensionsGenerator.AddExtensions(const AExtensions: IExtensions);
+var
+  LOid: IDerObjectIdentifier;
+  LExt: IExtension;
+begin
+  for LOid in AExtensions.ExtensionOids do
+  begin
+    LExt := AExtensions.GetExtension(LOid);
+    AddExtension(LOid, LExt.Critical.IsTrue, LExt.ExtnValue.GetOctets());
   end;
 end;
 
@@ -812,6 +832,11 @@ begin
   if not HasExtension(AOid) then
     raise EInvalidOperationCryptoLibException.CreateFmt('extension %s not present', [AOid.Id]);
   FExtensions[AOid] := AX509Extension;
+end;
+
+procedure TX509ExtensionsGenerator.ReplaceExtension(const AExtension: IExtension);
+begin
+  ReplaceExtension(AExtension.ExtnID, AExtension.GetX509Extension);
 end;
 
 procedure TX509ExtensionsGenerator.Reset;

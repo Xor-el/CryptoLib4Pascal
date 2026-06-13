@@ -123,7 +123,9 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure AddExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
-    procedure AddExtensions(const AExtensions: IX509Extensions);
+    procedure AddExtension(const AExtension: IExtension); overload;
+    procedure AddExtensions(const AExtensions: IX509Extensions); overload;
+    procedure AddExtensions(const AExtensions: IExtensions); overload;
     function Generate: IX509Extensions;
     function GetExtension(const AOid: IDerObjectIdentifier): IX509Extension;
     function HasExtension(const AOid: IDerObjectIdentifier): Boolean;
@@ -137,6 +139,7 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure ReplaceExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
+    procedure ReplaceExtension(const AExtension: IExtension); overload;
     procedure Reset;
   end;
 
