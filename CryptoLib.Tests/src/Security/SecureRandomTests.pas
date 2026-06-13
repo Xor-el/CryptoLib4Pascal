@@ -217,10 +217,16 @@ begin
 end;
 
 procedure TTestSecureRandom.TestAESPRNGRandom;
+const
+  // For very small buffers two independent random draws can legitimately be
+  // equal (e.g. a single byte collides with probability 1/256). Retrying a
+  // few times distinguishes ordinary randomness (which diverges on retry)
+  // from a genuinely stuck RNG (which keeps returning identical output).
+  MaxCollisionRetries = Int32(8);
 var
   b1, b2: TBytes;
   a1, a2: IRandomNumberGenerator;
-  Idx: Int32;
+  Idx, Retry: Int32;
 begin
   // it is hard to validate randomness - we just test the feature set
   b1 := nil;
@@ -247,6 +253,14 @@ begin
     System.SetLength(b2, Idx);
     a1.GetBytes(b1);
     a2.GetBytes(b2);
+
+    Retry := 0;
+    while AreEqual(b1, b2) and (Retry < MaxCollisionRetries) do
+    begin
+      a1.GetBytes(b1);
+      a2.GetBytes(b2);
+      System.Inc(Retry);
+    end;
 
     CheckTrue(not AreEqual(b1, b2));
   end;
