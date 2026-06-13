@@ -1833,8 +1833,7 @@ end;
 
 procedure TEd25519.TExpandedKey.CheckExpandedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
 begin
-  if (ABuf = nil) or (System.Length(ABuf) - AOff < ExpandedKeySize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  TArrayUtilities.ValidateSegment(ABuf, AOff, ExpandedKeySize);
 end;
 
 procedure TEd25519.TExpandedKey.CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
