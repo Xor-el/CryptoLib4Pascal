@@ -79,6 +79,7 @@ resourcestring
   SProblemParsingPkcs7 = 'problem parsing PKCS7 object: %s';
   SMalformedSequenceRsa = 'malformed sequence in RSA private key';
   SMalformedSequenceDsa = 'malformed sequence in DSA private key';
+  SWrongVersionDsa = 'wrong version for DSA private key';
   SProblemCreatingPrivateKey = 'problem creating %s private key: %s';
   SUnknownKeyType = 'Unknown key type: %s';
   SEncryptedPrivateKeyNotSupported = 'Encrypted private key is not supported';
@@ -277,7 +278,7 @@ var
   LSeq: IAsn1Sequence;
   LRsa: IRsaPrivateKeyStructure;
   LPubSpec, LPrivSpec: IAsymmetricKeyParameter;
-  LP, LQ, LG, LY, LX: IDerInteger;
+  LP, LQ, LG, LY, LX, LV: IDerInteger;
   LDsaParams: IDsaParameters;
   LPKey: IECPrivateKeyStructure;
   LAlgId: IAlgorithmIdentifier;
@@ -354,6 +355,10 @@ begin
       begin
         if LSeq.Count <> 6 then
           raise EPemCryptoLibException.Create(SMalformedSequenceDsa);
+
+        LV := TDerInteger.GetInstance(LSeq[0]);
+        if not LV.HasValue(0) then
+          raise EPemCryptoLibException.Create(SWrongVersionDsa);
 
         LP := TDerInteger.GetInstance(LSeq[1]);
         LQ := TDerInteger.GetInstance(LSeq[2]);
