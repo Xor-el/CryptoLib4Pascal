@@ -31,7 +31,8 @@ uses
 
 resourcestring
   SWrongInitCipherParameter =
-    'The Init Parameter does not Contain the Private Key';
+    'the init parameter does not contain the private key';
+  SPublicKeyParametersExpected = 'public key parameters expected';
 
 type
   /// <summary>
@@ -102,7 +103,7 @@ var
   LPub: IX25519PublicKeyParameters;
 begin
   if not Supports(APublicKey, IX25519PublicKeyParameters, LPub) then
-    raise EInvalidCastCryptoLibException.Create('APublicKey');
+    raise EInvalidCastCryptoLibException.CreateRes(@SPublicKeyParametersExpected);
 
   FPrivateKey.GenerateSecret(LPub, ABuf, AOff);
 end;

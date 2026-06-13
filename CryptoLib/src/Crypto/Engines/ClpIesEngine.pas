@@ -51,10 +51,11 @@ resourcestring
     'Unable to Recover Ephemeral Public Key: "%s"';
   SInvalidCipherTextLength =
     'Length of Input Must be Greater than the MAC and V Combined';
-  SInvalidMAC = 'Invalid MAC';
+  SInvalidMAC = 'invalid MAC';
+  SIesParametersMustSupportIIesWithCipherParameters = 'IES parameters must support IIesWithCipherParameters for block cipher mode';
+  SParametersMustSupportIesParameters = 'parameters must support IIesParameters';
 
 type
-
   /// <summary>
   /// Support class for constructing integrated encryption ciphers for doing
   /// basic message exchanges on top of key agreement ciphers. <br />Follows
@@ -234,7 +235,7 @@ var
   LWithCipher: IIesWithCipherParameters;
 begin
   if not Supports(FParam, IIesWithCipherParameters, LWithCipher) then
-    raise EArgumentCryptoLibException.Create('IES parameters must support IIesWithCipherParameters for block cipher mode');
+    raise EArgumentCryptoLibException.CreateRes(@SIesParametersMustSupportIIesWithCipherParameters);
   System.SetLength(AK1, LWithCipher.CipherKeySize div 8);
   System.SetLength(AK2, FParam.MacKeySize div 8);
   System.SetLength(LK, System.Length(AK1) + System.Length(AK2));
@@ -499,14 +500,14 @@ begin
   begin
     FIV := LParamsWithIV.GetIV;
     if not Supports(LParamsWithIV.Parameters, IIesParameters, LIesParams) then
-      raise EArgumentCryptoLibException.Create('Parameters must support IIesParameters');
+      raise EArgumentCryptoLibException.CreateRes(@SParametersMustSupportIesParameters);
     FParam := LIesParams;
   end
   else
   begin
     FIV := nil;
     if not Supports(AParams, IIesParameters, LIesParams) then
-      raise EArgumentCryptoLibException.Create('Parameters must support IIesParameters');
+      raise EArgumentCryptoLibException.CreateRes(@SParametersMustSupportIesParameters);
     FParam := LIesParams;
   end;
 end;

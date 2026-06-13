@@ -34,8 +34,8 @@ uses
 
 resourcestring
   SUnsupportedCipher = 'CtsBlockCipher can only accept ECB, or CBC ciphers';
-  SCTSDoFinalError = 'Need at Least One Block of Input For CTS';
-  SOutputBufferTooSmallForDoFinal = 'Output Buffer Too Short for DoFinal()';
+  SCTSDoFinalError = 'need at least one block of input for CTS';
+  SOutputBufferTooSmallForDoFinal = 'output buffer too short for DoFinal()';
 
 type
   TCtsBlockCipher = class sealed(TBufferedBlockCipher, ICtsBlockCipher)

@@ -33,6 +33,9 @@ uses
   ClpIRsaBlindingEngine,
   ClpCryptoLibTypes;
 
+resourcestring
+  SParametersMustSupportRsaBlindingParameters = 'parameters must support IRsaBlindingParameters';
+
 type
   /// <summary>
   /// This does your basic RSA Chaum's blinding and unblinding as outlined in
@@ -99,12 +102,12 @@ begin
   if Supports(AParameters, IParametersWithRandom, LRParam) then
   begin
     if not Supports(LRParam.Parameters, IRsaBlindingParameters, LP) then
-      raise EArgumentCryptoLibException.Create('Parameters must support IRsaBlindingParameters');
-  end
-  else
-  begin
+      raise EArgumentCryptoLibException.CreateRes(@SParametersMustSupportRsaBlindingParameters);
+    end
+    else
+    begin
     if not Supports(AParameters, IRsaBlindingParameters, LP) then
-      raise EArgumentCryptoLibException.Create('Parameters must support IRsaBlindingParameters');
+      raise EArgumentCryptoLibException.CreateRes(@SParametersMustSupportRsaBlindingParameters);
   end;
 
   FCore.Init(AForEncryption, LP.PublicKey);

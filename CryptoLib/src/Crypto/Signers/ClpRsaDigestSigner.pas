@@ -48,11 +48,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SSigningRequiresPrivateKey = 'Signing requires private key.';
-  SVerificationRequiresPublicKey = 'Verification requires public key.';
-  SNotInitForSignature = 'RsaDigestSigner not initialised for signature generation.';
-  SNotInitForVerification = 'RsaDigestSigner not initialised for verification';
-  SUnableToEncode = 'unable to encode signature: ';
+  SSigningRequiresPrivateKey = 'signing requires private key';
+  SVerificationRequiresPublicKey = 'verification requires public key';
+  SNotInitialized = 'RsaDigestSigner not initialized for %s';
+  SUnableToEncode = 'unable to encode signature: %s';
 
 type
   /// <summary>
@@ -256,7 +255,7 @@ var
   LHash, LData: TCryptoLibByteArray;
 begin
   if not FForSigning then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForSignature);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialized, ['signature generation']);
 
   LHash := FDigest.DoFinal();
 
@@ -271,18 +270,18 @@ begin
     on E: EIOCryptoLibException do
     begin
       // IO errors should be reported as encoding failures
-      raise ECryptoLibException.Create(SUnableToEncode + E.Message);
+      raise ECryptoLibException.CreateResFmt(@SUnableToEncode, [E.Message]);
     end;
 
     on E: ECryptoLibException do
     begin
-      raise ECryptoLibException.Create(SUnableToEncode + E.Message);
+      raise ECryptoLibException.CreateResFmt(@SUnableToEncode, [E.Message]);
     end;
 
     on E: Exception do
     begin
       // Non-crypto exceptions get wrapped
-      raise ECryptoLibException.Create(SUnableToEncode + E.Message);
+      raise ECryptoLibException.CreateResFmt(@SUnableToEncode, [E.Message]);
     end;
   end;
 end;
@@ -295,7 +294,7 @@ var
 begin
   if FForSigning then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForVerification);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialized, ['verification']);
   end;
 
   try

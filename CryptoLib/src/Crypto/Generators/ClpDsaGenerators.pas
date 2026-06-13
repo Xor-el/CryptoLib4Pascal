@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -42,17 +42,17 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SParametersCannotBeNil = '"parameters" Cannot Be Nil';
+  SParametersCannotBeNil = 'parameters cannot be nil';
   SInvalidLValue =
-    'L Values Must be Between 1024 and 3072 and a Multiple of 1024';
-  SInvalidNValueForSpecifiedL = 'N Must be " %d " for L = " %d "';
-  SInvalidNValueForSpecifiedL_Two = 'N Must be " %d " or " %d " for L = " %d "';
+    'L values must be between 1024 and 3072 and a multiple of 1024';
+  SInvalidNValueForSpecifiedL = 'N must be %d for L = %d';
+  SInvalidNValueForSpecifiedLPair = 'N must be %d or %d for L = %d';
   SDigestOutputSizeTooSmallForN =
-    'Digest Output Size Too Small for Value of N Which is " %d "';
+    'digest output size too small for value of N which is %d';
   SUnsupportedDigest =
-    'Can Only Use SHA-1 For Generating FIPS 186-2 Parameters';
+    'can only use SHA-1 for generating FIPS 186-2 parameters';
   SInvalidDsaKeyStrength =
-    'Size Must Be From %d - %d and a multiple of %d, "%d"';
+    'size must be from %d - %d and a multiple of %d, %d';
 
 type
   TDsaKeyPairGenerator = class sealed(TInterfacedObject,
@@ -650,7 +650,7 @@ begin
   else if ((LL = 2048) and ((LN <> 224) and (LN <> 256))) then
   begin
     raise EInvalidParameterCryptoLibException.CreateResFmt
-      (@SInvalidNValueForSpecifiedL_Two, [224, 256, 2048]);
+      (@SInvalidNValueForSpecifiedLPair, [224, 256, 2048]);
   end
   else if ((LL = 3072) and (LN <> 256)) then
   begin

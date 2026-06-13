@@ -31,9 +31,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SSenderPublicKeyInvalid = 'Sender''s Public Key Invalid.';
+  SSenderPublicKeyInvalid = 'sender''s public key invalid';
   SSenderPublicKeyInvalidPointEncoding =
-    'Sender''s Public Key has Invalid Point Encoding "%x"';
+    'sender''s public key has invalid point encoding %x';
 
 type
   TECIESPublicKeyParser = class sealed(TInterfacedObject, IECIESPublicKeyParser,

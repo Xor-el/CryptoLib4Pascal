@@ -60,6 +60,16 @@ uses
   ClpCryptoLibTypes,
   ClpIPkcs8EncryptedPrivateKeyInfo;
 
+resourcestring
+  SEncodingException = 'encoding exception';
+  SObjNil = 'object cannot be nil';
+  SObjectTypeNotSupported = 'object type not supported';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SPasswordNil = 'password cannot be nil';
+  SRandomNil = 'random cannot be nil';
+  SObjectTypeNotSupportedForEncryption = 'object type not supported for encryption';
+  SCannotEncodeObject = 'cannot encode object: %s';
+
 type
   /// <summary>
   /// PEM generator for the original set of PEM objects used in OpenSSL.
@@ -122,7 +132,7 @@ begin
       Result := CreatePemObject(FObj);
   except
     on E: Exception do
-      raise EPemGenerationCryptoLibException.Create('encoding exception');
+      raise EPemGenerationCryptoLibException.CreateRes(@SEncodingException);
   end;
 end;
 
@@ -146,7 +156,7 @@ var
   LEncoding: TCryptoLibByteArray;
 begin
   if AObj.IsEmpty then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
 
   // Key pair -> recurse with private key
   if AObj.TryGetAsType<IAsymmetricCipherKeyPair>(LKp) then
@@ -167,7 +177,7 @@ begin
       LEncoding := LCert.GetEncoded();
     except
       on E: Exception do
-        raise EPemGenerationCryptoLibException.Create('Cannot Encode object: ' + E.Message);
+        raise EPemGenerationCryptoLibException.CreateResFmt(@SCannotEncodeObject, [E.Message]);
     end;
     Exit(TPemObject.Create('CERTIFICATE', LEncoding));
   end;
@@ -179,7 +189,7 @@ begin
       LEncoding := LCrl.GetEncoded();
     except
       on E: Exception do
-        raise EPemGenerationCryptoLibException.Create('Cannot Encode object: ' + E.Message);
+        raise EPemGenerationCryptoLibException.CreateResFmt(@SCannotEncodeObject, [E.Message]);
     end;
     Exit(TPemObject.Create('X509 CRL', LEncoding));
   end;
@@ -232,7 +242,7 @@ begin
   if AObj.TryGetAsType<IX962Parameters>(LX962Params) then
     Exit(TPemObject.Create('EC PARAMETERS', LX962Params.GetEncoded()));
 
-  raise EPemGenerationCryptoLibException.Create('Object type not supported');
+  raise EPemGenerationCryptoLibException.CreateRes(@SObjectTypeNotSupported);
 end;
 
 class function TOpenSslMiscPemGenerator.CreatePemObjectEncrypted(const AObj: TValue;
@@ -250,13 +260,13 @@ var
   LHeaders: TCryptoLibGenericArray<IPemHeader>;
 begin
   if AObj.IsEmpty then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
   if AAlgorithm = '' then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if APassword = nil then
-    raise EArgumentNilCryptoLibException.Create('password');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPasswordNil);
   if ARandom = nil then
-    raise EArgumentNilCryptoLibException.Create('random');
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
 
   if AObj.TryGetAsType<IAsymmetricCipherKeyPair>(LKp) then
     Exit(CreatePemObjectEncrypted(TValue.From<IAsymmetricKeyParameter>(LKp.Private),
@@ -268,7 +278,7 @@ begin
     LKeyData := EncodePrivateKey(LAkp, LType);
 
   if (LType = '') or (LKeyData = nil) then
-    raise EPemGenerationCryptoLibException.Create('Object type not supported for encryption');
+    raise EPemGenerationCryptoLibException.CreateRes(@SObjectTypeNotSupportedForEncryption);
 
   LDekAlgName := TStringUtilities.ToUpperInvariant(AAlgorithm);
 

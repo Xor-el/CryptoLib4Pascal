@@ -32,6 +32,26 @@ uses
   ClpAsn1Core,
   ClpAsn1Streams;
 
+resourcestring
+  SExpectedStreamToBeReadable = 'expected stream to be readable';
+  SNoTaggedObjectFound = 'no tagged object found';
+  SContentOctetsCannotBeEmpty = 'content octets cannot be empty';
+  SZeroLengthDataWithNonZeroPadBits = 'zero length data with non-zero pad bits';
+  SPadBitsOutOfRange = 'pad bits cannot be greater than 7 or less than 0';
+  SExplicitTagsMustBeConstructed = 'explicit tags must be constructed (see X.690 8.14.2)';
+  SInvalidUniversalTagNumber = 'invalid UNIVERSAL tag number: %d';
+  SUnexpectedIdentifierEncountered = 'unexpected identifier encountered: %d';
+  SExpectedOctetAlignedBitStringButFound = 'expected octet-aligned bitstring, but found padBits: %d';
+  SCorruptedStreamDetected = 'corrupted stream detected: %s';
+  SIOExceptionConvertingStreamToByteArray = 'IOException converting stream to byte array: %s';
+  SIndefiniteLengthPrimitiveEncodingEncountered = 'indefinite-length primitive encoding encountered';
+  SUnknownDlObjectEncountered = 'unknown DL object encountered: 0x%x';
+  SUnknownBerObjectEncountered = 'unknown BER object encountered: 0x%x';
+  SParseImplicitPrimitiveRequiresDefiniteLengthInputStream = 'ParseImplicitPrimitive requires DefiniteLengthInputStream';
+  SExternalsMustUseConstructedEncoding = 'externals must use constructed encoding (see X.690 8.18)';
+  SSequencesMustUseConstructedEncoding = 'sequences must use constructed encoding (see X.690 8.9.1/8.10.1)';
+  SSetsMustUseConstructedEncoding = 'sets must use constructed encoding (see X.690 8.11.1/8.12.1)';
+
 type
   /// <summary>
   /// ASN.1 stream parser for reading ASN.1 objects from a stream.
@@ -562,7 +582,7 @@ constructor TAsn1StreamParser.Create(const AInput: TStream;
 begin
   inherited Create;
   if not AInput.CanRead then
-    raise EArgumentCryptoLibException.Create('Expected stream to be readable');
+    raise EArgumentCryptoLibException.CreateRes(@SExpectedStreamToBeReadable);
 
   FIn := AInput;
   FDepth := ADepth;
@@ -634,8 +654,7 @@ begin
   if LLength < 0 then // indefinite-length method
   begin
     if 0 = (ATagHdr and TAsn1Tags.Constructed) then
-      raise EIOCryptoLibException.Create
-        ('indefinite-length primitive encoding encountered');
+      raise EIOCryptoLibException.CreateRes(@SIndefiniteLengthPrimitiveEncodingEncountered);
 
     LIndIn := TAsn1IndefiniteLengthInputStream.Create(FIn, FLimit);
     try
@@ -711,8 +730,7 @@ begin
       // TODO[asn1] DLSequenceParser
       Result := TDerSequenceParser.Create(Self as IAsn1StreamParser);
   else
-    raise EAsn1CryptoLibException.CreateFmt
-      ('unknown DL object encountered: 0x%x', [AUnivTagNo]);
+    raise EAsn1CryptoLibException.CreateResFmt(@SUnknownDlObjectEncountered, [AUnivTagNo]);
   end;
 end;
 
@@ -732,8 +750,7 @@ begin
     TAsn1Tags.&Set:
       Result := TBerSetParser.Create(Self as IAsn1StreamParser);
   else
-    raise EAsn1CryptoLibException.CreateFmt
-      ('unknown BER object encountered: 0x%x', [AUnivTagNo]);
+    raise EAsn1CryptoLibException.CreateResFmt(@SUnknownBerObjectEncountered, [AUnivTagNo]);
   end;
 end;
 
@@ -744,8 +761,7 @@ begin
     Result := ParseImplicitPrimitive(AUnivTagNo,
       FIn as TAsn1DefiniteLengthInputStream)
   else
-    raise EAsn1CryptoLibException.Create
-      ('ParseImplicitPrimitive requires DefiniteLengthInputStream');
+    raise EAsn1CryptoLibException.CreateRes(@SParseImplicitPrimitiveRequiresDefiniteLengthInputStream);
 end;
 
 function TAsn1StreamParser.ParseImplicitPrimitive(AUnivTagNo: Int32;
@@ -756,16 +772,13 @@ begin
     TAsn1Tags.BitString:
       Result := TDLBitStringParser.Create(ADefIn);
     TAsn1Tags.External:
-      raise EAsn1CryptoLibException.Create
-        ('externals must use constructed encoding (see X.690 8.18)');
+      raise EAsn1CryptoLibException.CreateRes(@SExternalsMustUseConstructedEncoding);
     TAsn1Tags.OctetString:
       Result := TDerOctetStringParser.Create(ADefIn);
     TAsn1Tags.&Set:
-      raise EAsn1CryptoLibException.Create
-        ('sequences must use constructed encoding (see X.690 8.9.1/8.10.1)');
+      raise EAsn1CryptoLibException.CreateRes(@SSequencesMustUseConstructedEncoding);
     TAsn1Tags.Sequence:
-      raise EAsn1CryptoLibException.Create
-        ('sets must use constructed encoding (see X.690 8.11.1/8.12.1)');
+      raise EAsn1CryptoLibException.CreateRes(@SSetsMustUseConstructedEncoding);
   else
     begin
       TAsn1InputStream.CheckLength(ADefIn.Remaining, ADefIn.Limit);
@@ -774,11 +787,11 @@ begin
         ADefIn.Free;
       except
         on e: EArgumentCryptoLibException do
-          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
+          raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [e.Message]);
         on e: EInvalidOperationCryptoLibException do
-          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
+          raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [e.Message]);
         on e: EIndexOutOfRangeCryptoLibException do
-          raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + e.Message);
+          raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [e.Message]);
       end;
     end;
   end;
@@ -844,7 +857,7 @@ var
   LTagHdr: Int32;
 begin
   if (AUnivTagNo < 0) or (AUnivTagNo > 30) then
-    raise EArgumentCryptoLibException.CreateFmt('invalid universal tag number: %d', [AUnivTagNo]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidUniversalTagNumber, [AUnivTagNo]);
 
   LTagHdr := FIn.ReadByte();
   if LTagHdr < 0 then
@@ -854,7 +867,7 @@ begin
   end;
 
   if ((LTagHdr and not TAsn1Tags.Constructed) <> AUnivTagNo) then
-    raise EIOCryptoLibException.CreateFmt('unexpected identifier encountered: %d', [LTagHdr]);
+    raise EIOCryptoLibException.CreateResFmt(@SUnexpectedIdentifierEncountered, [LTagHdr]);
 
   Result := ImplParseObject(LTagHdr);
 end;
@@ -873,7 +886,7 @@ begin
 
   LTagClass := LTagHdr and TAsn1Tags.Private;
   if LTagClass = 0 then
-    raise EAsn1CryptoLibException.Create('no tagged object found');
+    raise EAsn1CryptoLibException.CreateRes(@SNoTaggedObjectFound);
 
   LResult := ImplParseObject(LTagHdr);
   Result := LResult as IAsn1TaggedObjectParser;
@@ -912,7 +925,7 @@ begin
     Result := Parse(FParser);
   except
     on E: EIOCryptoLibException do
-      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
   end;
 end;
 
@@ -951,7 +964,7 @@ begin
     Result := Parse(FParser);
   except
     on E: EIOCryptoLibException do
-      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
   end;
 end;
 
@@ -999,7 +1012,7 @@ begin
     Result := TDerOctetString.WithContents(FStream.ToArray());
   except
     on E: EIOCryptoLibException do
-      raise EInvalidOperationCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
   end;
 end;
 
@@ -1029,17 +1042,17 @@ var
 begin
   LLength := FStream.Remaining;
   if LLength < 1 then
-    raise EInvalidOperationCryptoLibException.Create('content octets cannot be empty');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SContentOctetsCannotBeEmpty);
 
   FPadBits := FStream.ReadByte();
   if FPadBits > 0 then
   begin
     if LLength < 2 then
-      raise EInvalidOperationCryptoLibException.Create('zero length data with non-zero pad bits');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SZeroLengthDataWithNonZeroPadBits);
     if FPadBits > 7 then
-      raise EInvalidOperationCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SPadBitsOutOfRange);
     if AOctetAligned then
-      raise EIOCryptoLibException.CreateFmt('expected octet-aligned bitstring, but found padBits: %d', [FPadBits]);
+      raise EIOCryptoLibException.CreateResFmt(@SExpectedOctetAlignedBitStringButFound, [FPadBits]);
   end;
 
   // Transfers ownership to caller - caller MUST free the stream
@@ -1068,7 +1081,7 @@ begin
     Result := TDerBitString.CreatePrimitive(FStream.ToArray());
   except
     on E: EIOCryptoLibException do
-      raise EAsn1ParsingCryptoLibException.Create('IOException converting stream to byte array: ' + E.Message);
+      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
   end;
 end;
 
@@ -1181,7 +1194,7 @@ begin
     Result := TDLExternal.FromSequence(LSeq);
   except
     on E: EArgumentCryptoLibException do
-      raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+      raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [E.Message]);
   end;
 end;
 
@@ -1319,7 +1332,7 @@ end;
 function TDLTaggedObjectParser.CheckConstructed(): IAsn1StreamParser;
 begin
   if not FConstructed then
-    raise EIOCryptoLibException.Create('Explicit tags must be constructed (see X.690 8.14.2)');
+    raise EIOCryptoLibException.CreateRes(@SExplicitTagsMustBeConstructed);
   Result := FParser;
 end;
 

@@ -46,6 +46,22 @@ uses
   ClpAsn1VerifierFactory,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCertificateExpiredOn = 'certificate expired on %s';
+  SCertificateNotValidUntil = 'certificate not valid until %s';
+  SExceptionDecodingCertificateStructure = 'exception decoding certificate structure: %s';
+  SInvalidDataStructureInCertificate = 'invalid data structure in certificate: %s';
+  SIsCriticalNotApplicableToX509V2AttributeCertificate =
+    'IsCritical not applicable to X509V2AttributeCertificate';
+  SValueNotApplicableToX509V2AttributeCertificate =
+    'Value not applicable to X509V2AttributeCertificate';
+  SParsedValueNotApplicableToX509V2AttributeCertificate =
+    'ParsedValue not applicable to X509V2AttributeCertificate';
+  SSignatureAlgorithmInCertificateInfoNotSameAsOuterCertificate =
+    'signature algorithm in certificate info not same as outer certificate';
+  SPublicKeyPresentedNotForCertificateSignature =
+    'public key presented not for certificate signature';
+
 type
   /// <summary>
   /// Implementation of X.509 V2 Attribute Certificate.
@@ -118,7 +134,7 @@ begin
     on E: EIOCryptoLibException do
       raise;
     on E: Exception do
-      raise EIOCryptoLibException.Create('exception decoding certificate structure: ' + E.Message);
+      raise EIOCryptoLibException.CreateResFmt(@SExceptionDecodingCertificateStructure, [E.Message]);
   end;
 end;
 
@@ -151,7 +167,7 @@ begin
     FNotAfter := ACert.ACInfo.AttrCertValidityPeriod.NotAfterTime.ToDateTime;
   except
     on E: Exception do
-      raise EIOCryptoLibException.Create('invalid data structure in certificate!: ' + E.Message);
+      raise EIOCryptoLibException.CreateResFmt(@SInvalidDataStructureInCertificate, [E.Message]);
   end;
 end;
 
@@ -162,20 +178,17 @@ end;
 
 function TX509V2AttributeCertificate.GetIsCritical: Boolean;
 begin
-  raise ENotSupportedCryptoLibException.Create
-    ('GetIsCritical not applicable to X509V2AttributeCertificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SIsCriticalNotApplicableToX509V2AttributeCertificate);
 end;
 
 function TX509V2AttributeCertificate.GetValue: IAsn1OctetString;
 begin
-  raise ENotSupportedCryptoLibException.Create
-    ('GetValue not applicable to X509V2AttributeCertificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SValueNotApplicableToX509V2AttributeCertificate);
 end;
 
 function TX509V2AttributeCertificate.GetParsedValue: IAsn1Object;
 begin
-  raise ENotSupportedCryptoLibException.Create
-    ('GetParsedValue not applicable to X509V2AttributeCertificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SParsedValueNotApplicableToX509V2AttributeCertificate);
 end;
 
 function TX509V2AttributeCertificate.GetAttributeCertificate: IAttributeCertificate;
@@ -253,11 +266,9 @@ end;
 procedure TX509V2AttributeCertificate.CheckValidity(const ADate: TDateTime);
 begin
   if ADate > FNotAfter then
-    raise EArgumentCryptoLibException.CreateFmt('certificate expired on %s',
-      [DateToStr(FNotAfter)]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCertificateExpiredOn, [DateToStr(FNotAfter)]);
   if ADate < FNotBefore then
-    raise EArgumentCryptoLibException.CreateFmt('certificate not valid until %s',
-      [DateToStr(FNotBefore)]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCertificateNotValidUntil, [DateToStr(FNotBefore)]);
 end;
 
 function TX509V2AttributeCertificate.GetSignatureAlgorithm: IAlgorithmIdentifier;
@@ -275,8 +286,7 @@ function TX509V2AttributeCertificate.CheckSignatureValid(const AVerifier
 begin
   if not TX509Utilities.AreEquivalentAlgorithms(FCert.SignatureAlgorithm,
     FCert.ACInfo.Signature) then
-    raise ECertificateCryptoLibException.Create
-      ('Signature algorithm in certificate info not same as outer certificate');
+    raise ECertificateCryptoLibException.CreateRes(@SSignatureAlgorithmInCertificateInfoNotSameAsOuterCertificate);
   Result := TX509Utilities.VerifySignature(AVerifier, FCert.ACInfo,
     FCert.SignatureValue);
 end;
@@ -285,8 +295,7 @@ procedure TX509V2AttributeCertificate.CheckSignature(const AVerifier
   : IVerifierFactory);
 begin
   if not CheckSignatureValid(AVerifier) then
-    raise EInvalidKeyCryptoLibException.Create
-      ('Public key presented not for certificate signature');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKeyPresentedNotForCertificateSignature);
 end;
 
 function TX509V2AttributeCertificate.IsSignatureValid(const AKey

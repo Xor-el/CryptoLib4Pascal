@@ -36,20 +36,20 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SPUnInitialized = '"P" Cannot Be Uninitialized';
-  SGUnInitialized = '"G" Cannot Be Uninitialized';
-  SMustBeOddPrime = 'Field must be an Odd Prime, "P"';
-  SInvalidGeneratorRange = 'Generator must in the Range [2, p - 2], "G"';
-  SQTooBigToBeAFactor = 'Q too Big to be a Factor of (P - 1), "Q"';
-  SMTooBig = 'M value must be < BitLength of P, "M"';
-  SLErrorOne = 'when L value specified, it must be less than bitlength(P), "L"';
-  SLErrorTwo = 'when L value specified, it may not be less than m value, "L"';
-  SInvalidSubGroupFactor = 'Subgroup factor must be >= 2, "j"';
-  SSeedNil = '"Seed" Cannot Be Nil';
-  SYUnInitialized = '"Y" Cannot Be Uninitialized';
-  SInvalidDHPublicKey = 'Invalid DH public key "Y"';
-  SInvalidYInCorrectGroup = '"Y" Value Does Not Appear To Be In Correct Group';
-  SXUnInitialized = '"X" Cannot Be Uninitialized';
+  SPUninitialized = 'P cannot be uninitialized';
+  SGUninitialized = 'G cannot be uninitialized';
+  SMustBeOddPrime = 'field must be an odd prime';
+  SInvalidGeneratorRange = 'generator must be in the range [2, p - 2]';
+  SQTooBigToBeAFactor = 'Q too big to be a factor of (P - 1)';
+  SMTooBig = 'M value must be < bitLength of P';
+  SLErrorOne = 'when L value specified, it must be less than bitLength(P)';
+  SLErrorTwo = 'when L value specified, it may not be less than M value';
+  SInvalidSubGroupFactor = 'subgroup factor must be >= 2';
+  SSeedNil = 'seed cannot be nil';
+  SYUninitialized = 'Y cannot be uninitialized';
+  SInvalidDHPublicKey = 'invalid DH public key';
+  SInvalidYInCorrectGroup = 'Y value does not appear to be in the correct group';
+  SXUninitialized = 'X cannot be uninitialized';
 
 type
   TDHValidationParameters = class(TInterfacedObject, IDHValidationParameters)
@@ -354,12 +354,12 @@ begin
   inherited Create();
   if (not AP.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SPUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SPUninitialized);
   end;
 
   if (not AG.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SGUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SGUninitialized);
   end;
 
   if (not AP.TestBit(0)) then
@@ -571,7 +571,7 @@ var
 begin
   if (not AY.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SYUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SYUninitialized);
   end;
 
   LP := ADHParams.P;
@@ -655,7 +655,7 @@ class function TDHPrivateKeyParameters.Validate(const AX: TBigInteger): TBigInte
 begin
   if (not AX.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SXUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SXUninitialized);
   end;
   Result := AX;
 end;

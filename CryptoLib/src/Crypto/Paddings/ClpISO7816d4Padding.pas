@@ -27,7 +27,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCorruptedPadBlock = 'Pad Block Corrupted';
+  SCorruptedPadBlock = 'pad block corrupted';
 
 type
   /// <summary>

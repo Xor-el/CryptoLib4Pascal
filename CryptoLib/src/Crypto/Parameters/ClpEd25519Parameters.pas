@@ -36,11 +36,11 @@ resourcestring
   SInvalidPublicKey = 'invalid public key';
   SMustHaveLengthKeySize = 'must have length %d';
   SEOFInPrivateKey = 'EOF encountered in middle of Ed25519 private key';
-  SUnsupportedAlgorithm = 'Unsupported Algorithm';
-  SCtxNotNil = 'Ctx must be Nil for Ed25519 Algorithm';
-  SCtxNil = 'Ctx must not be Nil for Ed25519ctx/Ed25519ph';
-  SCtxLength = 'Ctx length must be at most 255';
-  SMsgLen = 'MsgLen must be Equal to PreHashSize for Ed25519ph Algorithm';
+  SUnsupportedAlgorithm = 'unsupported algorithm';
+  SCtxNotNil = 'ctx must be nil for Ed25519 algorithm';
+  SCtxNil = 'ctx must not be nil for Ed25519ctx/Ed25519ph';
+  SCtxLength = 'ctx length must be at most 255';
+  SMsgLen = 'msgLen must be equal to preHashSize for Ed25519ph algorithm';
 
 type
   /// <summary>

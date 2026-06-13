@@ -32,7 +32,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SAtLeastOneOfPairPresent = 'At least one of the pair shall be present';
+  SAtLeastOneOfPairPresent = 'at least one of the pair shall be present';
+  SPairNil = 'pair cannot be nil';
+  SFailedToEncodeCertificatePair = 'failed to encode certificate pair: %s';
 
 type
   /// <summary>
@@ -72,7 +74,7 @@ constructor TX509CertificatePair.Create(const AForward, AReverse: IX509Certifica
 begin
   inherited Create();
   if (AForward = nil) and (AReverse = nil) then
-    raise EArgumentCryptoLibException.Create(SAtLeastOneOfPairPresent);
+    raise EArgumentCryptoLibException.CreateRes(@SAtLeastOneOfPairPresent);
   FForward := AForward;
   FReverse := AReverse;
 end;
@@ -84,13 +86,13 @@ var
 begin
   inherited Create();
   if APair = nil then
-    raise EArgumentNilCryptoLibException.Create('pair');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPairNil);
 
   LForwardStruct := APair.Forward;
   LReverseStruct := APair.Reverse;
 
   if (LForwardStruct = nil) and (LReverseStruct = nil) then
-    raise EArgumentCryptoLibException.Create(SAtLeastOneOfPairPresent);
+    raise EArgumentCryptoLibException.CreateRes(@SAtLeastOneOfPairPresent);
 
   if LForwardStruct <> nil then
     FForward := TX509Certificate.Create(LForwardStruct)
@@ -136,7 +138,7 @@ begin
     Result := LPair.GetEncoded(TAsn1Encodable.Der);
   except
     on E: Exception do
-      raise ECertificateCryptoLibException.Create('Failed to encode certificate pair: ' + E.Message);
+      raise ECertificateCryptoLibException.CreateResFmt(@SFailedToEncodeCertificatePair, [E.Message]);
   end;
 end;
 

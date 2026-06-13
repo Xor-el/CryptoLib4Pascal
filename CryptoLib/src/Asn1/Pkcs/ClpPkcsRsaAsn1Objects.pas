@@ -36,8 +36,18 @@ uses
   ClpAsn1Utilities;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SWrongVersionForRsaPrivateKey = 'wrong version for RSA private key';
+  SModulusNil = 'modulus cannot be nil';
+  SPublicExponentNil = 'public exponent cannot be nil';
+  SPrivateExponentNil = 'private exponent cannot be nil';
+  SPrime1Nil = 'prime1 cannot be nil';
+  SPrime2Nil = 'prime2 cannot be nil';
+  SExponent1Nil = 'exponent1 cannot be nil';
+  SExponent2Nil = 'exponent2 cannot be nil';
+  SCoefficientNil = 'coefficient cannot be nil';
+
 
 type
   /// <summary>
@@ -290,7 +300,7 @@ begin
   FCoefficient := TDerInteger.GetInstance(ASeq[8]).Value;
 
   if not LVersion.HasValue(0) then
-    raise EArgumentCryptoLibException.Create('wrong version for RSA private key');
+    raise EArgumentCryptoLibException.CreateRes(@SWrongVersionForRsaPrivateKey);
 
   FVersion := LVersion;
 end;
@@ -301,21 +311,21 @@ begin
   inherited Create();
 
   if not AModulus.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('modulus');
+    raise EArgumentNilCryptoLibException.CreateRes(@SModulusNil);
   if not APublicExponent.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('publicExponent');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicExponentNil);
   if not APrivateExponent.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('privateExponent');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateExponentNil);
   if not APrime1.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('prime1');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrime1Nil);
   if not APrime2.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('prime2');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrime2Nil);
   if not AExponent1.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('exponent1');
+    raise EArgumentNilCryptoLibException.CreateRes(@SExponent1Nil);
   if not AExponent2.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('exponent2');
+    raise EArgumentNilCryptoLibException.CreateRes(@SExponent2Nil);
   if not ACoefficient.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('coefficient');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCoefficientNil);
 
   FVersion := TDerInteger.Zero;
   FModulus := AModulus;

@@ -35,6 +35,39 @@ uses
   ClpStreams,
   ClpStreamUtilities;
 
+resourcestring
+  SNegativeLengthsNotAllowed = 'negative lengths not allowed';
+  SBufferLengthNotSufficientForData = 'buffer length not sufficient for data';
+  SMalformedEndOfContentsMarker = 'malformed end-of-contents marker';
+  SUnexpectedEndOfStream = 'unexpected end of stream';
+  SAsn1EncodableNil = 'ASN.1 encodable cannot be nil';
+  SAsn1ObjectNil = 'ASN.1 object cannot be nil';
+  SStreamCannotBeNil = 'stream cannot be nil';
+  SStreamMustBeAnAsn1OutputStream = 'stream must be a TAsn1OutputStream';
+  SBufNil = 'buffer cannot be nil';
+  SExpectedStreamToBeReadable = 'expected stream to be readable';
+  STagNumberMoreThan31Bits = 'tag number more than 31 bits';
+  SInvalidLongFormDefiniteLengthFF = 'invalid long form definite-length 0xFF';
+  SEofFoundReadingLength = 'EOF found reading length';
+  SUnknownObjectEncountered = 'unknown object encountered: %s';
+  SUnknownBerObjectEncountered = 'unknown BER object encountered: %d';
+  SUnknownTagEncountered = 'unknown tag %d encountered';
+  SUnknownObjectEncounteredInConstructed = 'unknown object encountered in constructed %s: %s';
+  SUnsupportedTagEncountered = 'unsupported tag %d encountered';
+  SCorruptedStreamDetected = 'corrupted stream detected: %s';
+  SCorruptedStreamOutOfBoundsLength = 'corrupted stream - out of bounds length found: %d > %d';
+  SMaximumNestedConstructionLevelReached = 'maximum nested construction level reached';
+  SDefLengthObjectTruncated = 'DEF length %d object truncated by %d';
+  SExpectedOctetAlignedBitStringButFound = 'expected octet-aligned bitstring, but found padBits: %d';
+  SOnlyTheLastNestedBitStringCanHavePadding = 'only the last nested bitstring can have padding';
+  SEofFoundInsideTagValue = 'EOF found inside tag value';
+  SCorruptedStreamHighTagNumber31 = 'corrupted stream - high tag number < 31 found';
+  SCorruptedStreamInvalidHighTagNumber = 'corrupted stream - invalid high tag number found';
+  SEofFoundWhenLengthExpected = 'EOF found when length expected';
+  SLongFormDefiniteLengthMoreThan31Bits = 'long form definite-length more than 31 bits';
+  SUnexpectedEndOfContentsMarker = 'unexpected end-of-contents marker';
+  SIndefiniteLengthPrimitiveEncodingEncountered = 'indefinite-length primitive encoding encountered';
+
 type
   /// <summary>
   /// Abstract base class for ASN.1 limited input streams.
@@ -559,17 +592,14 @@ end;
 class function TAsn1InputStream.DecrementDepth(AParentDepth: Int32): Int32;
 begin
   if AParentDepth <= 0 then
-    raise EAsn1ParsingCryptoLibException.Create(
-      'maximum nested construction level reached');
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SMaximumNestedConstructionLevelReached);
   Result := AParentDepth - 1;
 end;
 
 class procedure TAsn1InputStream.CheckLength(ALength, ALimit: Int32);
 begin
   if ALength > ALimit then
-    raise EIOCryptoLibException.CreateFmt(
-      'corrupted stream - out of bounds length found: %d > %d',
-      [ALength, ALimit]);
+    raise EIOCryptoLibException.CreateResFmt(@SCorruptedStreamOutOfBoundsLength, [ALength, ALimit]);
 end;
 
 function TAsn1InputStream.CreateSubStream(const ASub: TStream;
@@ -609,7 +639,7 @@ begin
   if ALength <= 0 then
   begin
     if ALength < 0 then
-      raise EArgumentCryptoLibException.Create('negative lengths not allowed');
+      raise EArgumentCryptoLibException.CreateRes(@SNegativeLengthsNotAllowed);
     SetParentEofDetect();
   end;
   FOriginalLength := ALength;
@@ -630,8 +660,7 @@ begin
 
     LB := FIn.ReadByte();
     if LB < 0 then
-      raise EEndOfStreamCryptoLibException.CreateFmt
-        ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
+      raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
 
     FRemaining := 0;
     SetParentEofDetect();
@@ -642,8 +671,7 @@ begin
   begin
     LB := FIn.ReadByte();
     if LB < 0 then
-      raise EEndOfStreamCryptoLibException.CreateFmt
-        ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
+      raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
 
     System.Dec(FRemaining);
     Result := LB;
@@ -665,8 +693,7 @@ begin
   LNumRead := FIn.Read(ABuffer[AOffset], LToRead);
 
   if LNumRead < 1 then
-    raise EEndOfStreamCryptoLibException.CreateFmt
-      ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
+    raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
 
   FRemaining := FRemaining - LNumRead;
   if FRemaining = 0 then
@@ -688,15 +715,14 @@ begin
   LToRead := FRemaining;
 
   if System.Length(ABuf) < LToRead then
-    raise EArgumentCryptoLibException.Create('buffer length not sufficient for data');
+    raise EArgumentCryptoLibException.CreateRes(@SBufferLengthNotSufficientForData);
 
   TAsn1InputStream.CheckLength(LToRead, Limit);
 
   FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, ABuf, 0,
     LToRead);
   if FRemaining <> 0 then
-    raise EEndOfStreamCryptoLibException.CreateFmt
-      ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
+    raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
   SetParentEofDetect();
 end;
 
@@ -714,8 +740,7 @@ begin
   FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, Result, 0,
     System.Length(Result));
   if FRemaining <> 0 then
-    raise EEndOfStreamCryptoLibException.CreateFmt
-      ('DEF length %d object truncated by %d', [FOriginalLength, FRemaining]);
+    raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
   SetParentEofDetect();
 end;
 
@@ -749,7 +774,7 @@ var
 begin
   LByte := RequireByte();
   if LByte <> 0 then
-    raise EIOCryptoLibException.Create('malformed end-of-contents marker');
+    raise EIOCryptoLibException.CreateRes(@SMalformedEndOfContentsMarker);
 
   FLookAhead := -1;
   SetParentEofDetect();
@@ -791,7 +816,7 @@ begin
 
   LNumRead := FIn.Read(ABuffer[AOffset + 1], ACount - 1);
   if LNumRead <= 0 then
-    raise EEndOfStreamCryptoLibException.Create('');
+    raise EEndOfStreamCryptoLibException.CreateRes(@SUnexpectedEndOfStream);
 
   ABuffer[AOffset] := Byte(FLookAhead);
   FLookAhead := RequireByte();
@@ -805,7 +830,7 @@ var
 begin
   LB := FIn.ReadByte();
   if LB < 0 then
-    raise EEndOfStreamCryptoLibException.Create('');
+    raise EEndOfStreamCryptoLibException.CreateRes(@SUnexpectedEndOfStream);
 
   Result := LB;
 end;
@@ -873,7 +898,7 @@ var
   LAsn1Encoding: IAsn1Encoding;
 begin
   if AAsn1Encodable = nil then
-    raise EArgumentNilCryptoLibException.Create('asn1Encodable');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAsn1EncodableNil);
 
   LAsn1Encoding := AAsn1Encodable.ToAsn1Object().GetEncoding(Self.Encoding);
   LAsn1Encoding.Encode(Self);
@@ -885,7 +910,7 @@ var
   LAsn1Encoding: IAsn1Encoding;
 begin
   if AAsn1Object = nil then
-    raise EArgumentNilCryptoLibException.Create('asn1Object');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAsn1ObjectNil);
 
   LAsn1Encoding := AAsn1Object.GetEncoding(Self.Encoding);
   LAsn1Encoding.Encode(Self);
@@ -1063,10 +1088,10 @@ end;
 class function TAsn1OutputStream.ValidateAsn1OutputStream(const AOut: TStream): TAsn1OutputStream;
 begin
   if AOut = nil then
-    raise EArgumentNilCryptoLibException.Create('Stream cannot be nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStreamCannotBeNil);
 
   if not (AOut is TAsn1OutputStream) then
-    raise EArgumentCryptoLibException.Create('Stream must be a TAsn1OutputStream');
+    raise EArgumentCryptoLibException.CreateRes(@SStreamMustBeAnAsn1OutputStream);
 
   Result := AOut as TAsn1OutputStream;
 end;
@@ -1115,7 +1140,7 @@ constructor TAsn1BufferedBerOctetStream.Create(const AOutStream: TStream;
 begin
   inherited Create();
   if ABuf = nil then
-    raise EArgumentNilCryptoLibException.Create('buf');
+    raise EArgumentNilCryptoLibException.CreateRes(@SBufNil);
   FBuf := ABuf;
   FOff := 0;
   FAsn1Out := TAsn1OutputStream.CreateInstance(AOutStream, TAsn1Encodable.Ber, True);
@@ -1233,8 +1258,7 @@ begin
   if LAsn1Obj = nil then
   begin
     if FOctetAligned and (FPadBits <> 0) then
-      raise EIOCryptoLibException.CreateFmt
-        ('expected octet-aligned bitstring, but found padBits: %d', [FPadBits]);
+      raise EIOCryptoLibException.CreateResFmt(@SExpectedOctetAlignedBitStringButFound, [FPadBits]);
 
     Result := nil;
     Exit;
@@ -1243,13 +1267,11 @@ begin
   if Supports(LAsn1Obj, IAsn1BitStringParser, Result) then
   begin
     if FPadBits <> 0 then
-      raise EIOCryptoLibException.Create
-        ('only the last nested bitstring can have padding');
+      raise EIOCryptoLibException.CreateRes(@SOnlyTheLastNestedBitStringCanHavePadding);
   end
   else
   begin
-    raise EIOCryptoLibException.CreateFmt('unknown object encountered: %s',
-      [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
+    raise EIOCryptoLibException.CreateResFmt(@SUnknownObjectEncountered, [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
   end;
 end;
 
@@ -1401,8 +1423,7 @@ begin
 
   if not Supports(LAsn1Obj, IAsn1OctetStringParser, Result) then
   begin
-    raise EIOCryptoLibException.CreateFmt('unknown object encountered: %s',
-      [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
+    raise EIOCryptoLibException.CreateResFmt(@SUnknownObjectEncountered, [TPlatformUtilities.GetTypeName(LAsn1Obj as TObject)]);
   end;
 end;
 
@@ -1550,7 +1571,7 @@ constructor TAsn1InputStream.Create(const AInput: TStream; ADepth, ALimit: Int32
 begin
   inherited Create(AInput);
   if not AInput.CanRead then
-    raise EArgumentCryptoLibException.Create('Expected stream to be readable');
+    raise EArgumentCryptoLibException.CreateRes(@SExpectedStreamToBeReadable);
 
   FDepth := ADepth;
   FLimit := ALimit;
@@ -1623,11 +1644,9 @@ begin
     if LB < 31 then
     begin
       if LB < 0 then
-        raise EEndOfStreamCryptoLibException.Create
-          ('EOF found inside tag value.');
+        raise EEndOfStreamCryptoLibException.CreateRes(@SEofFoundInsideTagValue);
 
-      raise EIOCryptoLibException.Create
-        ('corrupted stream - high tag number < 31 found');
+      raise EIOCryptoLibException.CreateRes(@SCorruptedStreamHighTagNumber31);
     end;
 
     LTagNo := LB and $7F;
@@ -1635,20 +1654,18 @@ begin
     // X.690-0207 8.1.2.4.2
     // "c) bits 7 to 1 of the first subsequent octet shall not all be zero."
     if 0 = LTagNo then
-      raise EIOCryptoLibException.Create
-        ('corrupted stream - invalid high tag number found');
+      raise EIOCryptoLibException.CreateRes(@SCorruptedStreamInvalidHighTagNumber);
 
     while (LB and $80) <> 0 do
     begin
       if ((UInt32(LTagNo) shr 24) <> 0) then
-        raise EIOCryptoLibException.Create('Tag number more than 31 bits');
+        raise EIOCryptoLibException.CreateRes(@STagNumberMoreThan31Bits);
 
       LTagNo := LTagNo shl 7;
 
       LB := AInput.ReadByte();
       if LB < 0 then
-        raise EEndOfStreamCryptoLibException.Create
-          ('EOF found inside tag value.');
+        raise EEndOfStreamCryptoLibException.CreateRes(@SEofFoundInsideTagValue);
 
       LTagNo := LTagNo or (LB and $7F);
     end;
@@ -1674,12 +1691,11 @@ begin
   end;
   if LLength < 0 then
   begin
-    raise EEndOfStreamCryptoLibException.Create
-      ('EOF found when length expected');
+    raise EEndOfStreamCryptoLibException.CreateRes(@SEofFoundWhenLengthExpected);
   end;
   if $FF = LLength then
   begin
-    raise EIOCryptoLibException.Create('invalid long form definite-length 0xFF');
+    raise EIOCryptoLibException.CreateRes(@SInvalidLongFormDefiniteLengthFF);
   end;
 
   LOctetsCount := LLength and $7F;
@@ -1689,11 +1705,10 @@ begin
   repeat
     LOctet := AInput.ReadByte();
     if LOctet < 0 then
-      raise EEndOfStreamCryptoLibException.Create('EOF found reading length');
+      raise EEndOfStreamCryptoLibException.CreateRes(@SEofFoundReadingLength);
 
     if ((UInt32(LLength) shr 23) <> 0) then
-      raise EIOCryptoLibException.Create
-        ('long form definite-length more than 31 bits');
+      raise EIOCryptoLibException.CreateRes(@SLongFormDefiniteLengthMoreThan31Bits);
 
     LLength := (LLength shl 8) + LOctet;
     System.Inc(LOctetsPos);
@@ -1712,8 +1727,7 @@ begin
   if LTagHdr <= 0 then
   begin
     if LTagHdr = 0 then
-      raise EIOCryptoLibException.Create
-        ('unexpected end-of-contents marker');
+      raise EIOCryptoLibException.CreateRes(@SUnexpectedEndOfContentsMarker);
 
     Result := nil;
     Exit;
@@ -1729,19 +1743,18 @@ begin
       Result := BuildObject(LTagHdr, LTagNo, LLength);
     except
       on E: EArgumentCryptoLibException do
-        raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+        raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [E.Message]);
       on E: EInvalidOperationCryptoLibException do
-        raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+        raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [E.Message]);
       on E: EIndexOutOfRangeCryptoLibException do
-        raise EAsn1CryptoLibException.Create('corrupted stream detected: ' + E.Message);
+        raise EAsn1CryptoLibException.CreateResFmt(@SCorruptedStreamDetected, [E.Message]);
     end;
   end
   else
   begin
     // indefinite-length
     if 0 = (LTagHdr and TAsn1Tags.Constructed) then
-      raise EIOCryptoLibException.Create
-        ('indefinite-length primitive encoding encountered');
+      raise EIOCryptoLibException.CreateRes(@SIndefiniteLengthPrimitiveEncodingEncountered);
 
     LIndIn := TAsn1IndefiniteLengthInputStream.Create(FStream, FLimit);
     LSp := TAsn1StreamParser.CreateSubParser(LIndIn, FDepth, FLimit, FTmp);
@@ -1766,7 +1779,7 @@ begin
       TAsn1Tags.External:
         Result := TDerExternalParser.Parse(LSp);
     else
-      raise EIOCryptoLibException.CreateFmt('unknown BER object encountered: %d', [LTagNo]);
+      raise EIOCryptoLibException.CreateResFmt(@SUnknownBerObjectEncountered, [LTagNo]);
     end;
   end;
 end;
@@ -1813,7 +1826,7 @@ begin
           Result := TDLSequence.FromVector(ReadVector(LDefIn)).ToAsn1External();
         end;
     else
-      raise EIOCryptoLibException.CreateFmt('unknown tag %d encountered', [ATagNo]);
+      raise EIOCryptoLibException.CreateResFmt(@SUnknownTagEncountered, [ATagNo]);
     end;
   finally
     LDefIn.Free;
@@ -1895,8 +1908,7 @@ begin
   for LI := 0 to LCount - 1 do
   begin
     if not Supports(AContentsElements[LI], IDerBitString, LBitString) then
-      raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed BIT STRING: %s',
-        [TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
+      raise EAsn1CryptoLibException.CreateResFmt(@SUnknownObjectEncounteredInConstructed, ['BIT STRING', TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
     LBitStrings[LI] := LBitString;
   end;
 
@@ -1915,8 +1927,7 @@ begin
   for LI := 0 to LCount - 1 do
   begin
     if not Supports(AContentsElements[LI], IAsn1OctetString, LOctetString) then
-      raise EAsn1CryptoLibException.CreateFmt('unknown object encountered in constructed OCTET STRING: %s',
-        [TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
+      raise EAsn1CryptoLibException.CreateResFmt(@SUnknownObjectEncounteredInConstructed, ['OCTET STRING', TPlatformUtilities.GetTypeName(AContentsElements[LI] as TObject)]);
     LOctetStrings[LI] := LOctetString;
   end;
 
@@ -2009,9 +2020,9 @@ begin
     TAsn1Tags.Duration,
     TAsn1Tags.ObjectIdentifierIri,
     TAsn1Tags.RelativeOidIri:
-      raise EIOCryptoLibException.CreateFmt('unsupported tag %d encountered', [ATagNo]);
+      raise EIOCryptoLibException.CreateResFmt(@SUnsupportedTagEncountered, [ATagNo]);
   else
-    raise EIOCryptoLibException.CreateFmt('unknown tag %d encountered', [ATagNo]);
+    raise EIOCryptoLibException.CreateResFmt(@SUnknownTagEncountered, [ATagNo]);
   end;
 end;
 

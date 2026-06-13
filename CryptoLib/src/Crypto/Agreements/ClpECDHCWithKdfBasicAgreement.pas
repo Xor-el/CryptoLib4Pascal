@@ -32,6 +32,10 @@ uses
   ClpBasicAgreementWithKdf,
   ClpCryptoLibTypes;
 
+resourcestring
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SKdfNil = 'KDF cannot be nil';
+
 type
   TECDHCWithKdfBasicAgreement = class sealed(TECDHCBasicAgreement,
     IECDHCWithKdfBasicAgreement, IECDHCBasicAgreement, IBasicAgreement)
@@ -57,9 +61,9 @@ constructor TECDHCWithKdfBasicAgreement.Create(const AAlgorithm: String;
 begin
   inherited Create();
   if AAlgorithm = '' then
-    raise EArgumentNilCryptoLibException.Create('AAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if AKdf = nil then
-    raise EArgumentNilCryptoLibException.Create('AKdf');
+    raise EArgumentNilCryptoLibException.CreateRes(@SKdfNil);
   FAlgorithm := AAlgorithm;
   FKdf := AKdf;
 end;

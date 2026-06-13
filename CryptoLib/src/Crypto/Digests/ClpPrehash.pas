@@ -31,7 +31,7 @@ uses
 
 resourcestring
   SNotSupported = 'not supported';
-  SIncorrectPrehashSize = 'Incorrect prehash size';
+  SIncorrectPrehashSize = 'incorrect prehash size';
 
 type
   /// <summary>

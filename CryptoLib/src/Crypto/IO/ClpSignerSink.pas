@@ -26,6 +26,9 @@ uses
   ClpStreams,
   ClpCryptoLibTypes;
 
+resourcestring
+  SSignerNil = 'signer cannot be nil';
+
 type
   /// <summary>
   /// A stream that writes data to an ISigner for signature calculation.
@@ -53,7 +56,7 @@ constructor TSignerSink.Create(const ASigner: ISigner);
 begin
   inherited Create();
   if ASigner = nil then
-    raise EArgumentNilCryptoLibException.Create('signer');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSignerNil);
   FSigner := ASigner;
 end;
 

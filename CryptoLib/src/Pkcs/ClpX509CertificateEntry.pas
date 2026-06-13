@@ -31,6 +31,9 @@ uses
   ClpPkcs12Entry,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCertNil = 'certificate cannot be nil';
+
 type
   /// <summary>
   /// PKCS#12 certificate bag entry.
@@ -65,7 +68,7 @@ begin
   LAttributes := TDictionary<IDerObjectIdentifier, IAsn1Encodable>.Create(TAsn1Comparers.OidEqualityComparer);
   inherited Create(LAttributes, True);
   if ACert = nil then
-    raise EArgumentNilCryptoLibException.Create('cert');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertNil);
   FCertificate := ACert;
 end;
 
@@ -74,7 +77,7 @@ constructor TX509CertificateEntry.Create(const ACert: IX509Certificate;
 begin
   inherited Create(AAttributes, True);
   if ACert = nil then
-    raise EArgumentNilCryptoLibException.Create('cert');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertNil);
   FCertificate := ACert;
 end;
 

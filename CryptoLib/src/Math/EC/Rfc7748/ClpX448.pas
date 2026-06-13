@@ -29,7 +29,7 @@ uses
   ClpX448Field;
 
 resourcestring
-  SInvalidKeyLength = 'Invalid key length';
+  SInvalidKeyLength = 'invalid key length';
 
 type
   TX448 = class sealed

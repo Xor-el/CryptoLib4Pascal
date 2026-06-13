@@ -40,11 +40,10 @@ uses
   ClpIECDsaSigner;
 
 resourcestring
-  SECPublicKeyNotFound = 'EC Public Key Required for Verification';
-  SECPrivateKeyNotFound = 'EC Private Key Required for Signing';
+  SECPublicKeyNotFound = 'EC public key required for verification';
+  SECPrivateKeyNotFound = 'EC private key required for signing';
 
 type
-
   /// <summary>
   /// EC-DSA as described in X9.62
   /// </summary>

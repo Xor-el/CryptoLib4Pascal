@@ -30,6 +30,11 @@ uses
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SSizeNotSupported = 'size not supported';
+  SSeekNotSupported = 'seek not supported';
+  SSetSizeNotSupported = 'set size not supported';
+
 type
   /// <summary>
   /// A stream that applies cipher transformations on read/write operations.
@@ -99,7 +104,7 @@ end;
 
 function TCipherStream.GetSize: Int64;
 begin
-  raise ENotSupportedCryptoLibException.Create('GetSize not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSizeNotSupported);
 end;
 
 function TCipherStream.GetCanRead: Boolean;
@@ -233,12 +238,12 @@ end;
 
 function TCipherStream.Seek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
 begin
-  raise ENotSupportedCryptoLibException.Create('Seek not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSeekNotSupported);
 end;
 
 procedure TCipherStream.SetSize(const ANewSize: Int64);
 begin
-  raise ENotSupportedCryptoLibException.Create('SetSize not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSetSizeNotSupported);
 end;
 
 destructor TCipherStream.Destroy;

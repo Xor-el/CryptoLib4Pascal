@@ -44,10 +44,14 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotInitializedForSigning =
-    'BIP340SchnorrSigner not Initialised for Signature Generation.';
-  SNotInitializedForVerifying =
-    'BIP340SchnorrSigner not Initialised for Verification';
+  SNotInitialized = 'BIP340SchnorrSigner not initialized for %s';
+  SSecp256k1CurveNotFound = 'secp256k1 curve not found';
+  SInvalidPrivateKey = 'invalid private key';
+  SKZeroInBip340Signing = 'k'' = 0 in BIP340 signing';
+  SBip340SchnorrPrivateKeyRequiredForSigning =
+    'BIP340 Schnorr private key required for signing';
+  SBip340SchnorrPublicKeyRequiredForVerification =
+    'BIP340 Schnorr public key required for verification';
 
 type
   TBip340SchnorrSigner = class(TInterfacedObject, ISigner, IBip340SchnorrSigner)
@@ -185,7 +189,7 @@ var
 begin
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
-    raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
   LDomain := TECDomainParameters.FromX9ECParameters(LX9);
   LN := LDomain.N;
 
@@ -201,7 +205,7 @@ begin
 
     LD := TBigInteger.Create(1, APrivateKey.GetEncoded()).&Mod(LN);
     if (LD.SignValue = 0) then
-      raise EInvalidOperationCryptoLibException.Create('invalid private key');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPrivateKey);
     LP := TECAlgorithms.ReferenceMultiply(LDomain.G, LD).Normalize();
     if (not TBip340SchnorrUtilities.HasEvenY(LP)) then
       LD := LN.Subtract(LD);
@@ -225,7 +229,7 @@ begin
     LK := TBigInteger.Create(1, LKPrimeBytes).&Mod(LN);
 
     if (LK.SignValue = 0) then
-      raise EInvalidOperationCryptoLibException.Create('k'' = 0 in BIP340 signing');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SKZeroInBip340Signing);
 
     LR := TECAlgorithms.ReferenceMultiply(LDomain.G, LK).Normalize();
     if (not TBip340SchnorrUtilities.HasEvenY(LR)) then
@@ -366,8 +370,8 @@ end;
 function TBip340SchnorrSigner.GenerateSignature: TCryptoLibByteArray;
 begin
   if ((not FForSigning) or (FPrivateKey = nil)) then
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signature generation']);
   Result := FBuffer.GenerateSignature(FPrivateKey, FInitParams);
 end;
 
@@ -385,16 +389,14 @@ begin
   begin
     if (not Supports(LParams, IBip340SchnorrPrivateKeyParameters, FPrivateKey))
     then
-      raise EInvalidKeyCryptoLibException.Create
-        ('BIP340 Schnorr private key required for signing');
+      raise EInvalidKeyCryptoLibException.CreateRes(@SBip340SchnorrPrivateKeyRequiredForSigning);
     FPublicKey := nil;
   end
   else
   begin
     if (not Supports(LParams, IBip340SchnorrPublicKeyParameters, FPublicKey))
     then
-      raise EInvalidKeyCryptoLibException.Create
-        ('BIP340 Schnorr public key required for verification');
+      raise EInvalidKeyCryptoLibException.CreateRes(@SBip340SchnorrPublicKeyRequiredForVerification);
     FPrivateKey := nil;
   end;
 
@@ -419,8 +421,8 @@ end;
 function TBip340SchnorrSigner.VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
 begin
   if ((FForSigning) or (FPublicKey = nil)) then
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifying);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verification']);
   Result := FBuffer.VerifySignature(FPublicKey, ASignature);
 end;
 

@@ -28,7 +28,7 @@ uses
 
 resourcestring
   SRandomDeviceReadError =
-    'An Error Occurred while reading random data from random device (file)';
+    'an error occurred while reading random data from random device (file)';
 
 type
   /// <summary>

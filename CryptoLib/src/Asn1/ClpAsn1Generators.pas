@@ -30,6 +30,10 @@ uses
   ClpAsn1Streams,
   ClpStreamUtilities;
 
+resourcestring
+  SOutStreamNil = 'output stream cannot be nil';
+  SStreamNil = 'stream cannot be nil';
+
 type
   /// <summary>
   /// Abstract base class for ASN.1 generators.
@@ -143,7 +147,7 @@ constructor TAsn1Generator.Create(AOutStream: TStream);
 begin
   inherited Create;
   if AOutStream = nil then
-    raise EArgumentNilCryptoLibException.Create('outStream');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOutStreamNil);
   FOut := AOutStream;
   FClosed := False;
 end;
@@ -175,7 +179,7 @@ end;
 function TAsn1Generator.GetOut: TStream;
 begin
   if FOut = nil then
-    raise EInvalidOperationCryptoLibException.Create('Stream is null');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SStreamNil);
   Result := FOut;
 end;
 

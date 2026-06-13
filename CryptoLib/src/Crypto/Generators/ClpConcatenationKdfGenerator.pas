@@ -34,7 +34,7 @@ uses
 resourcestring
   SKdfParametersRequired =
     'KDF parameters required for ConcatenationKdfGenerator';
-  SOutputBufferTooShort = 'Output buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   /// <summary>

@@ -34,6 +34,9 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SErrorEncryptingPrivateKey = 'couldn''t encrypt private key';
+
 type
   /// <summary>
   /// PEM generator for PKCS#8 private keys (unencrypted or encrypted).
@@ -133,7 +136,7 @@ begin
     Result := TPemObject.Create('ENCRYPTED PRIVATE KEY', LEpki.GetEncoded());
   except
     on E: Exception do
-      raise EPemGenerationCryptoLibException.Create('Couldn''t encrypt private key');
+      raise EPemGenerationCryptoLibException.CreateRes(@SErrorEncryptingPrivateKey);
   end;
 end;
 

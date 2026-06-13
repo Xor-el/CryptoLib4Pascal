@@ -35,6 +35,13 @@ uses
   ClpAsn1Comparers,
   ClpIX509Asn1Generators;
 
+resourcestring
+  SMandatoryFieldsNotSet = 'not all mandatory fields set in %s generator';
+  SV3PreTbsCertificateSignatureMustNotBeSet = 'signature field should not be set in PreTBSCertificate';
+  SV2PreTbsCertListSignatureMustNotBeSet = 'signature should not be set in PreTBSCertList generator';
+  SExtensionAlreadyAdded = 'extension %s already added';
+  SExtensionNotPresent = 'extension %s not present';
+
 type
   /// <summary>
   /// Generator for Version 1 TbsCertificateStructures.
@@ -283,7 +290,7 @@ begin
   if (FSerialNumber = nil) or (FSignature = nil) or (FIssuer = nil) or
      ((FValidity = nil) and ((FStartDate = nil) or (FEndDate = nil))) or
      (FSubject = nil) or (FSubjectPublicKeyInfo = nil) then
-    raise EInvalidOperationCryptoLibException.Create('not all mandatory fields set in V1 TBScertificate generator');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V1 TBSCertificate']);
 
   if FValidity <> nil then
     LValidity := FValidity
@@ -381,12 +388,12 @@ var
   LSubject: IX509Name;
 begin
   if FSignature <> nil then
-    raise EInvalidOperationCryptoLibException.Create('signature field should not be set in PreTBSCertificate');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SV3PreTbsCertificateSignatureMustNotBeSet);
 
   if (FSerialNumber = nil) or (FIssuer = nil) or
      ((FValidity = nil) and ((FStartDate = nil) or (FEndDate = nil))) or
      ((FSubject = nil) and (not FAltNamePresentAndCritical)) or (FSubjectPublicKeyInfo = nil) then
-    raise EInvalidOperationCryptoLibException.Create('not all mandatory fields set in V3 TBScertificate generator');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V3 TBSCertificate']);
 
   if FValidity <> nil then
     LValidity := FValidity
@@ -419,7 +426,7 @@ begin
   if (FSerialNumber = nil) or (FSignature = nil) or (FIssuer = nil) or
      ((FValidity = nil) and ((FStartDate = nil) or (FEndDate = nil))) or
      ((FSubject = nil) and (not FAltNamePresentAndCritical)) or (FSubjectPublicKeyInfo = nil) then
-    raise EInvalidOperationCryptoLibException.Create('not all mandatory fields set in V3 TBScertificate generator');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V3 TBSCertificate']);
 
   if FValidity <> nil then
     LValidity := FValidity
@@ -558,10 +565,10 @@ end;
 function TV2TbsCertListGenerator.GeneratePreTbsCertList: IAsn1Sequence;
 begin
   if FSignature <> nil then
-    raise EInvalidOperationCryptoLibException.Create('signature should not be set in PreTBSCertList generator');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SV2PreTbsCertListSignatureMustNotBeSet);
 
   if (FIssuer = nil) or (FThisUpdate = nil) then
-    raise EInvalidOperationCryptoLibException.Create('Not all mandatory fields set in V2 PreTBSCertList generator');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 PreTBSCertList']);
 
   Result := GenerateTbsCertificateStructure;
 end;
@@ -569,7 +576,7 @@ end;
 function TV2TbsCertListGenerator.GenerateTbsCertList: ITbsCertificateList;
 begin
   if (FSignature = nil) or (FIssuer = nil) or (FThisUpdate = nil) then
-    raise EInvalidOperationCryptoLibException.Create('Not all mandatory fields set in V2 TbsCertList generator.');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 TBSCertList']);
 
   Result := TTbsCertificateList.GetInstance(GenerateTbsCertificateStructure);
 end;
@@ -665,7 +672,7 @@ var
 begin
   if (FSerialNumber = nil) or (FSignature = nil) or (FIssuer = nil) or
      (FStartDate = nil) or (FEndDate = nil) or (FHolder = nil) or (FAttributes = nil) then
-    raise EInvalidOperationCryptoLibException.Create('not all mandatory fields set in V2 AttributeCertificateInfo generator');
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 AttributeCertificateInfo']);
 
   LV := TAsn1EncodableVector.Create([FVersion, FHolder, FIssuer, FSignature, FSerialNumber]);
   LV.Add(TAttCertValidityPeriod.Create(FStartDate, FEndDate));
@@ -746,7 +753,7 @@ procedure TX509ExtensionsGenerator.AddExtension(const AOid: IDerObjectIdentifier
   const AX509Extension: IX509Extension);
 begin
   if HasExtension(AOid) then
-    raise EArgumentCryptoLibException.CreateFmt('extension %s already added', [AOid.Id]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SExtensionAlreadyAdded, [AOid.Id]);
   ImplAddExtension(AOid, AX509Extension);
 end;
 
@@ -803,7 +810,7 @@ end;
 procedure TX509ExtensionsGenerator.RemoveExtension(const AOid: IDerObjectIdentifier);
 begin
   if not HasExtension(AOid) then
-    raise EInvalidOperationCryptoLibException.CreateFmt('extension %s not present', [AOid.Id]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExtensionNotPresent, [AOid.Id]);
   FOrdering.Remove(AOid);
   FExtensions.Remove(AOid);
 end;
@@ -830,7 +837,7 @@ procedure TX509ExtensionsGenerator.ReplaceExtension(const AOid: IDerObjectIdenti
   const AX509Extension: IX509Extension);
 begin
   if not HasExtension(AOid) then
-    raise EInvalidOperationCryptoLibException.CreateFmt('extension %s not present', [AOid.Id]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExtensionNotPresent, [AOid.Id]);
   FExtensions[AOid] := AX509Extension;
 end;
 
@@ -858,7 +865,7 @@ var
   LSeq1, LSeq2, LConcat: IAsn1Sequence;
 begin
   if not FDupsAllowed.ContainsKey(AOid) then
-    raise EArgumentCryptoLibException.CreateFmt('extension %s already added', [AOid.Id]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SExtensionAlreadyAdded, [AOid.Id]);
 
   LSeq1 := TAsn1Sequence.GetInstance(AExistingExtension.Value.GetOctets());
   LSeq2 := TAsn1Sequence.GetInstance(AExtValue);

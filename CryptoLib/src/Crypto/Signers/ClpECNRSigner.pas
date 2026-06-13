@@ -40,16 +40,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SECPublicKeyNotFound = 'EC Public Key Required for Verification';
-  SECPrivateKeyNotFound = 'EC Private Key Required for Signing';
-  SNotInitializedForSigning = 'Not Initialised For Signing';
-  SNotInitializedForVerifying = 'Not Initialised For Verifying';
-  SNotInitializedForVerifyingRecovery =
-    'Not Initialised For Verifying/Recovery';
-  SInputTooLargeForECNRKey = 'Input Too Large For ECNR Key.';
+  SECPublicKeyNotFound = 'EC public key required for verification';
+  SECPrivateKeyNotFound = 'EC private key required for signing';
+  SNotInitialized = 'not initialized for %s';
+  SInputTooLargeForECNRKey = 'input too large for ECNR key';
 
 type
-
   /// <summary>
   /// EC-NR as described in IEEE 1363-2000 - a signature algorithm for Elliptic Curve which
   /// also offers message recovery.
@@ -202,8 +198,8 @@ begin
   if (not FForSigning) then
   begin
     // not properly initialized... deal with it
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signing']);
   end;
 
   LN := Order;
@@ -294,8 +290,8 @@ begin
   if (FForSigning) then
   begin
     // not properly initialized... deal with it
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifying);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verifying']);
   end;
 
   LPubKey := FKey as IECPublicKeyParameters;
@@ -322,8 +318,8 @@ var
 begin
   if (FForSigning) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifyingRecovery);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verifying/recovery']);
   end;
 
   LT := ExtractT(FKey as IECPublicKeyParameters, AR, &AS);

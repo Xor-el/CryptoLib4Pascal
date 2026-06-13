@@ -26,7 +26,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SIKMNil = '"ikm" is Nil';
+  SIKMNil = 'ikm cannot be nil';
 
 type
 

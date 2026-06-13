@@ -33,6 +33,9 @@ uses
   ClpIAsn1Objects,
   ClpCryptoLibTypes;
 
+resourcestring
+  SMalformedPemDataEncountered = 'malformed PEM data encountered';
+
 type
   /// <summary>
   /// PEM parser implementation.
@@ -135,7 +138,7 @@ begin
       LAsn1Obj := TAsn1Object.FromByteArray(LDecoded);
 
       if not Supports(LAsn1Obj, IAsn1Sequence, Result) then
-        raise EIOCryptoLibException.Create('malformed PEM data encountered');
+        raise EIOCryptoLibException.CreateRes(@SMalformedPemDataEncountered);
     end;
   finally
     LPemBuf.Free;

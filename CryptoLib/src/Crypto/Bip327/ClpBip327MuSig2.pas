@@ -38,6 +38,13 @@ uses
   ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SNoncegenRequiresASecureRandomGenerator = 'NonceGen requires a secure random generator (BIP-327)';
+  SNonceAggAtLeastOnePubnonceRequired = 'NonceAgg: at least one pubnonce required';
+  SSessionKeyAggCoeffPNotInPubkeys = 'SessionKeyAggCoeff: P not in pubkeys';
+  SPartialSigAggInvalidSession = 'PartialSigAgg: invalid session';
+  STweaksAndIsXOnlyTLength = 'tweaks and is_xonly_t length mismatch';
+
 type
   TBip327SessionContext = record
     AggNonce: TCryptoLibByteArray;   // 66 bytes
@@ -136,7 +143,7 @@ begin
   LN := ADomain.N;
 
   if ARandom = nil then
-    raise EArgumentCryptoLibException.Create('NonceGen requires a secure random generator (BIP-327)');
+    raise EArgumentCryptoLibException.CreateRes(@SNoncegenRequiresASecureRandomGenerator);
 
   System.SetLength(LRandPrime, 32);
   ARandom.NextBytes(LRandPrime);
@@ -231,7 +238,7 @@ var
   LPt: IECPoint;
 begin
   if (APubNonces = nil) or (System.Length(APubNonces) = 0) then
-    raise EArgumentCryptoLibException.Create('NonceAgg: at least one pubnonce required');
+    raise EArgumentCryptoLibException.CreateRes(@SNonceAggAtLeastOnePubnonceRequired);
   LU := System.Length(APubNonces);
   LCurve := ADomain.Curve;
   for LJ := 0 to 1 do
@@ -337,7 +344,7 @@ begin
       Result := TBip327MuSig2KeyAggregation.KeyAggCoeff(ASessionCtx.PubKeys, LPk);
       Exit;
     end;
-  raise EArgumentCryptoLibException.Create('GetSessionKeyAggCoeff: P not in pubkeys');
+  raise EArgumentCryptoLibException.CreateRes(@SSessionKeyAggCoeffPNotInPubkeys);
 end;
 
 class function TBip327MuSig2.PartialSigVerifyInternal(const ADomain: IECDomainParameters;
@@ -502,7 +509,7 @@ var
   LG: TBigInteger;
 begin
   if not GetSessionValues(ADomain, ASessionCtx, LValues) then
-    raise EArgumentCryptoLibException.Create('PartialSigAgg: invalid session');
+    raise EArgumentCryptoLibException.CreateRes(@SPartialSigAggInvalidSession);
   LN := ADomain.N;
   LS := TBigInteger.Zero;
   for LI := 0 to System.Length(APsigs) - 1 do
@@ -556,7 +563,7 @@ var
   LI: Int32;
 begin
   if System.Length(ATweaks) <> System.Length(AIsXOnlyT) then
-    raise EArgumentCryptoLibException.Create('tweaks and is_xonly_t length mismatch');
+    raise EArgumentCryptoLibException.CreateRes(@STweaksAndIsXOnlyTLength);
   LCtx := TBip327MuSig2KeyAggregation.KeyAgg(ADomain, APubKeys);
   for LI := 0 to System.Length(ATweaks) - 1 do
     LCtx := TBip327MuSig2KeyAggregation.ApplyTweak(LCtx, ATweaks[LI], AIsXOnlyT[LI]);

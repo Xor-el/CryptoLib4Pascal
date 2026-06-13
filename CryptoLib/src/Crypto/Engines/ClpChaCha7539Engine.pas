@@ -34,17 +34,16 @@ uses
   ClpByteUtilities;
 
 resourcestring
-  SInvalidKeySize256 = '%s Requires 256 bit key';
-  SCounterExceeded = 'Attempt to Increase Counter Past 2^32.';
-  SNotInitialised = '%s not Initialized';
-  SNotBlockAligned = '%s not in Block-Aligned State';
-  SMaxByteExceeded38 =
-    '2^38 Byte Limit per IV Would be Exceeded; Change IV';
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
+  SInvalidKeySizeTwoFiftySix = '%s requires 256 bit key';
+  SCounterExceeded = 'attempt to increase counter past 2^32';
+  SNotInitialised = '%s not initialized';
+  SNotBlockAligned = '%s not in block-aligned state';
+  SMaxByteExceeded =
+    '2^38 byte limit per IV would be exceeded; change IV';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
-
   TChaCha7539Engine = class(TSalsa20Engine, IChaCha7539Engine, IStreamCipher)
 
   strict protected
@@ -161,7 +160,7 @@ begin
   begin
     if (System.Length(AKeyBytes) <> 32) then
     begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize256,
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySizeTwoFiftySix,
         [AlgorithmName]);
     end;
 
@@ -259,7 +258,7 @@ begin
 
   if (LimitExceeded(UInt32(ALen))) then
   begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
 
   while ALen > 0 do
@@ -341,7 +340,7 @@ begin
   end;
   if (LimitExceeded(UInt32(64))) then
   begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
 
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
@@ -362,7 +361,7 @@ begin
   end;
   if (LimitExceeded(UInt32(128))) then
   begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
   case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2, TX86SimdLevel.SSE2]) of
@@ -403,7 +402,7 @@ begin
     begin
       if (LimitExceeded(UInt32(256))) then
       begin
-        raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded38);
+        raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
       end;
       ChaCha7539ProcessBlocks4Avx2(FRounds, PByte(@FEngineState[0]),
         PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));

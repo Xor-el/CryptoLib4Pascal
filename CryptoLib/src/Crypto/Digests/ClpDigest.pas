@@ -28,10 +28,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
-
   /// <summary>
   /// Hash Wrapper For the Proper Implementation in HashLib4Pascal
   /// </summary>

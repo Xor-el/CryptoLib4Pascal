@@ -33,15 +33,13 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SPrimesHashNil = 'hash cannot be null';
-  SPrimesLengthMustBeAtLeast2 = 'length must be >= 2';
-  SPrimesInputSeedNil = 'inputSeed cannot be null';
+  SPrimesArgumentNil = '%s cannot be nil';
+  SPrimesLengthMustBeAtLeastTwo = 'length must be >= 2';
   SPrimesInputSeedEmpty = 'inputSeed cannot be empty';
-  SPrimesRandomNil = 'random cannot be null';
   SPrimesIterationsMustBePositive = 'iterations must be > 0';
   SPrimesBaseValueMustBeLess = 'baseValue must be < (candidate - 1)';
-  SPrimesCandidateMustBeNonNull = 'must be non-null and >= 2';
-  SPrimesTooManyIterations = 'Too many iterations in Shawe-Taylor Random_Prime Routine';
+  SPrimesCandidateMustBeNonNil = 'must be non-nil and >= 2';
+  SPrimesTooManyIterations = 'too many iterations in Shawe-Taylor Random_Prime Routine';
 
 type
   /// <summary>
@@ -214,7 +212,7 @@ end;
 class procedure TPrimes.CheckCandidate(const AN: TBigInteger; const AName: String);
 begin
   if (not AN.IsInitialized) or (AN.SignValue < 1) or (AN.BitLength < 2) then
-    raise EArgumentCryptoLibException.CreateRes(@SPrimesCandidateMustBeNonNull);
+    raise EArgumentCryptoLibException.CreateRes(@SPrimesCandidateMustBeNonNil);
 end;
 
 class function TPrimes.ProbablyPrime: TPrimes.IMROutput;
@@ -238,11 +236,11 @@ var
   LPrimeSeed: TCryptoLibByteArray;
 begin
   if AHash = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SPrimesHashNil);
+    raise EArgumentNilCryptoLibException.CreateResFmt(@SPrimesArgumentNil, ['hash']);
   if ALength < 2 then
-    raise EArgumentCryptoLibException.CreateRes(@SPrimesLengthMustBeAtLeast2);
+    raise EArgumentCryptoLibException.CreateRes(@SPrimesLengthMustBeAtLeastTwo);
   if AInputSeed = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SPrimesInputSeedNil);
+    raise EArgumentNilCryptoLibException.CreateResFmt(@SPrimesArgumentNil, ['inputSeed']);
   if System.Length(AInputSeed) = 0 then
     raise EArgumentCryptoLibException.CreateRes(@SPrimesInputSeedEmpty);
 
@@ -260,7 +258,7 @@ begin
   CheckCandidate(ACandidate, 'candidate');
 
   if ARandom = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SPrimesRandomNil);
+    raise EArgumentNilCryptoLibException.CreateResFmt(@SPrimesArgumentNil, ['random']);
   if AIterations < 1 then
     raise EArgumentCryptoLibException.CreateRes(@SPrimesIterationsMustBePositive);
 
@@ -347,7 +345,7 @@ begin
   CheckCandidate(ACandidate, 'candidate');
 
   if ARandom = nil then
-    raise EArgumentCryptoLibException.Create('cannot be null');
+    raise EArgumentNilCryptoLibException.CreateResFmt(@SPrimesArgumentNil, ['random']);
   if AIterations < 1 then
     raise EArgumentCryptoLibException.CreateRes(@SPrimesIterationsMustBePositive);
 

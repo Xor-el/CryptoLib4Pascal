@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -24,6 +24,23 @@ uses
   Classes,
   SysUtils,
   ClpCryptoLibTypes;
+
+resourcestring
+  SCountCannotBeNegative = 'count cannot be negative';
+  SStreamDoesNotSupportWriting = 'stream does not support writing';
+  SCannotWriteBeyondBufferCapacity = 'cannot write beyond buffer capacity';
+  SWriteNotSupportedOnInputStream = 'Write not supported on input stream';
+  SWriteByteNotSupportedOnInputStream = 'WriteByte not supported on input stream';
+  SReadNotSupportedOnOutputStream = 'Read not supported on output stream';
+  SReadByteNotSupportedOnOutputStream = 'ReadByte not supported on output stream';
+  SStreamCannotBeNil = 'stream cannot be nil';
+  SDataOverflow = 'data overflow';
+  SCannotWriteBytesOnlyBytesRemaining = 'cannot write %d bytes, only %d bytes remaining';
+  SCannotSeekToNegativePosition = 'cannot seek to negative position: %d';
+  SCannotSeekBeyondBufferCapacity = 'cannot seek beyond buffer capacity: %d > %d';
+  SCannotSetPositionToNegativeValue = 'cannot set position to negative value: %d';
+  SCannotSetPositionBeyondBufferCapacity = 'cannot set position beyond buffer capacity: %d > %d';
+  SCanOnlyPushBackOneByte = 'can only push back one byte';
 
 type
   /// <summary>
@@ -308,7 +325,7 @@ var
   LRemaining: Int32;
 begin
   if ACount < 0 then
-    raise EArgumentOutOfRangeCryptoLibException.Create('Count cannot be negative');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCountCannotBeNegative);
 
   LRemaining := FBufferCount - FPosition;
   if LRemaining <= 0 then
@@ -345,11 +362,11 @@ var
   LRemaining: Int32;
 begin
   if not CanWrite then
-    raise ENotSupportedCryptoLibException.Create('Stream does not support writing');
+    raise ENotSupportedCryptoLibException.CreateRes(@SStreamDoesNotSupportWriting);
 
   LRemaining := FBufferCount - FPosition;
   if LRemaining <= 0 then
-    raise EStreamOverflowCryptoLibException.Create('Cannot write beyond buffer capacity');
+    raise EStreamOverflowCryptoLibException.CreateRes(@SCannotWriteBeyondBufferCapacity);
 
   FBuffer[FBufferIndex + FPosition] := AValue;
   System.Inc(FPosition);
@@ -360,17 +377,17 @@ var
   LRemaining: Int32;
 begin
   if not CanWrite then
-    raise ENotSupportedCryptoLibException.Create('Stream does not support writing');
+    raise ENotSupportedCryptoLibException.CreateRes(@SStreamDoesNotSupportWriting);
 
   if ACount < 0 then
-    raise EArgumentOutOfRangeCryptoLibException.Create('Count cannot be negative');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCountCannotBeNegative);
 
   LRemaining := FBufferCount - FPosition;
   if LRemaining <= 0 then
-    raise EStreamOverflowCryptoLibException.Create('Cannot write beyond buffer capacity');
+    raise EStreamOverflowCryptoLibException.CreateRes(@SCannotWriteBeyondBufferCapacity);
 
   if ACount > LRemaining then
-    raise EStreamOverflowCryptoLibException.CreateFmt('Cannot write %d bytes, only %d bytes remaining', [ACount, LRemaining]);
+    raise EStreamOverflowCryptoLibException.CreateResFmt(@SCannotWriteBytesOnlyBytesRemaining, [ACount, LRemaining]);
 
   System.Move(ABuffer, FBuffer[FBufferIndex + FPosition], ACount);
   System.Inc(FPosition, ACount);
@@ -390,10 +407,10 @@ begin
   end;
 
   if LNewPosition < 0 then
-    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('Cannot seek to negative position: %d', [LNewPosition]);
+    raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(@SCannotSeekToNegativePosition, [LNewPosition]);
 
   if LNewPosition > FBufferCount then
-    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('Cannot seek beyond buffer capacity: %d > %d', [LNewPosition, FBufferCount]);
+    raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(@SCannotSeekBeyondBufferCapacity, [LNewPosition, FBufferCount]);
 
   FPosition := LNewPosition;
   Result := FPosition;
@@ -412,10 +429,10 @@ end;
 procedure TFixedBufferStream.SetPosition(const AValue: Int64);
 begin
   if AValue < 0 then
-    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('Cannot set position to negative value: %d', [AValue]);
+    raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(@SCannotSetPositionToNegativeValue, [AValue]);
 
   if AValue > FBufferCount then
-    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('Cannot set position beyond buffer capacity: %d > %d', [AValue, FBufferCount]);
+    raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(@SCannotSetPositionBeyondBufferCapacity, [AValue, FBufferCount]);
 
   FPosition := AValue;
 end;
@@ -475,7 +492,7 @@ end;
 
 function TBaseInputStream.Write(const ABuffer; ACount: LongInt): LongInt;
 begin
-  raise ENotSupportedCryptoLibException.Create('Write not supported on input stream');
+  raise ENotSupportedCryptoLibException.CreateRes(@SWriteNotSupportedOnInputStream);
 end;
 
 function TBaseInputStream.Write(const ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt): LongInt;
@@ -485,7 +502,7 @@ end;
 
 procedure TBaseInputStream.WriteByte(AValue: Byte);
 begin
-  raise ENotSupportedCryptoLibException.Create('WriteByte not supported on input stream');
+  raise ENotSupportedCryptoLibException.CreateRes(@SWriteByteNotSupportedOnInputStream);
 end;
 
 { TBaseOutputStream }
@@ -507,7 +524,7 @@ end;
 
 function TBaseOutputStream.Read(var ABuffer; ACount: LongInt): LongInt;
 begin
-  raise ENotSupportedCryptoLibException.Create('Read not supported on output stream');
+  raise ENotSupportedCryptoLibException.CreateRes(@SReadNotSupportedOnOutputStream);
 end;
 
 function TBaseOutputStream.Read(ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt): LongInt;
@@ -537,7 +554,7 @@ end;
 
 function TBaseOutputStream.ReadByte: Int32;
 begin
-  raise ENotSupportedCryptoLibException.Create('ReadByte not supported on output stream');
+  raise ENotSupportedCryptoLibException.CreateRes(@SReadByteNotSupportedOnOutputStream);
 end;
 
 { TFilterStream }
@@ -546,7 +563,7 @@ constructor TFilterStream.Create(const AStream: TStream);
 begin
   inherited Create();
   if AStream = nil then
-    raise EArgumentNilCryptoLibException.Create('Stream cannot be nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStreamCannotBeNil);
   FStream := AStream;
 end;
 
@@ -648,7 +665,7 @@ begin
   begin
     FLimit := FLimit - LNumRead;
     if FLimit < 0 then
-      raise EStreamOverflowCryptoLibException.Create('Data Overflow');
+      raise EStreamOverflowCryptoLibException.CreateRes(@SDataOverflow);
   end;
   Result := LNumRead;
 end;
@@ -662,7 +679,7 @@ begin
   begin
     System.Dec(FLimit);
     if FLimit < 0 then
-      raise EStreamOverflowCryptoLibException.Create('Data Overflow');
+      raise EStreamOverflowCryptoLibException.CreateRes(@SDataOverflow);
   end;
   Result := LB;
 end;
@@ -717,8 +734,7 @@ end;
 procedure TPushbackStream.UnRead(AByte: Int32);
 begin
   if FBuffer <> -1 then
-    raise EInvalidOperationCryptoLibException.Create
-      ('Can only push back one byte');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SCanOnlyPushBackOneByte);
 
   FBuffer := AByte and $FF;
 end;

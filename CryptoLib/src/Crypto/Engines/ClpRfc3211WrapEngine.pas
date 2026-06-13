@@ -37,12 +37,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotSetForWrapping3211 = 'Not set for wrapping';
-  SNotSetForUnwrapping3211 = 'Not set for unwrapping';
+  SNotSetForWrapping = 'not set for wrapping';
+  SNotSetForUnwrapping = 'not set for unwrapping';
   SRFC3211WrapRequiresIV = 'RFC3211Wrap requires an IV';
-  SInputTooLarge = 'Input must be from 0 to 255 bytes';
-  SInputTooShort3211 = 'Input too short';
-  SWrappedKeyCorrupted = 'Wrapped key corrupted';
+  SInputTooLarge = 'input must be from 0 to 255 bytes';
+  SInputTooShort = 'input too short';
+  SWrappedKeyCorrupted = 'wrapped key corrupted';
 
 type
   /// <summary>
@@ -116,7 +116,7 @@ var
   LCekBlock: TCryptoLibByteArray;
 begin
   if not FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForWrapping3211);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForWrapping);
   if (AInLen > 255) or (AInLen < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SInputTooLarge);
 
@@ -170,12 +170,12 @@ var
   LCheck: Byte;
 begin
   if FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForUnwrapping3211);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForUnwrapping);
 
   LBlockSize := FEngine.GetBlockSize();
 
   if AInLen < 2 * LBlockSize then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SInputTooShort3211);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SInputTooShort);
 
   System.SetLength(LCekBlock, AInLen);
   System.SetLength(LIv, LBlockSize);

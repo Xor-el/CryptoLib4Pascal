@@ -32,6 +32,10 @@ uses
   ClpX509Asn1Generators,
   ClpCryptoLibTypes;
 
+resourcestring
+  SNoExtensionsInBaseTbsCertificate = 'no extensions in base TBS certificate';
+  SNoDeltaCertificateDescriptorPresent = 'no deltaCertificateDescriptor present';
+
 type
   /// <summary>
   /// Tool for the extension in draft-bonnell-lamps-chameleon-certs.
@@ -149,10 +153,10 @@ var
 begin
   LBaseExtensions := ABaseTbs.Extensions;
   if LBaseExtensions = nil then
-    raise EInvalidOperationCryptoLibException.Create('no extensions in base TBS certificate');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNoExtensionsInBaseTbsCertificate);
   LDcdExt := LBaseExtensions.GetExtension(TX509Extensions.DraftDeltaCertificateDescriptor);
   if LDcdExt = nil then
-    raise EInvalidOperationCryptoLibException.Create('no deltaCertificateDescriptor present');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNoDeltaCertificateDescriptorPresent);
   LDescriptor := TDeltaCertificateDescriptor.GetInstance(LDcdExt.GetParsedValue as IAsn1Convertible);
   LVersion := ABaseTbs.VersionNumber;
   LSerialNumber := LDescriptor.SerialNumber;

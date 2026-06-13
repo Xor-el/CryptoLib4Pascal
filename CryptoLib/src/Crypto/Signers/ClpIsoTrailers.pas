@@ -27,6 +27,9 @@ uses
   ClpCryptoLibTypes,
   ClpIDigest;
 
+resourcestring
+  SNoTrailerForDigest = 'no trailer for digest';
+
 type
   /// <summary>
   /// Utility class for ISO/IEC 10118 trailer values used in X9.31 and ISO9796-2 signing.
@@ -115,7 +118,7 @@ begin
   end
   else
   begin
-    raise EInvalidOperationCryptoLibException.Create('No trailer for digest');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNoTrailerForDigest);
   end;
 end;
 

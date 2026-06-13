@@ -59,6 +59,18 @@ uses
   ClpCryptoLibComparers,
   ClpCryptoLibTypes;
 
+resourcestring
+  SSignatureFactoryNil = 'signature factory cannot be nil';
+  SSubjectNil = 'subject cannot be nil';
+  SPublicKeyNil = 'public key cannot be nil';
+  SExpectedPublicKey = 'expected public key';
+  SPubInfoNil = 'public key info cannot be nil';
+  SPkcs9AtExtensionRequestPresentButEmpty = 'pkcs_9_at_extensionRequest present but has no value';
+  SExceptionEncodingTbsCertRequest = 'exception encoding TBS cert request: %s';
+  SEncounteredNonPkcsAttributeInExtensions = 'encountered non PKCS attribute in extensions block: %s';
+  SAsn1ProcessingIssue = 'ASN.1 processing issue: %s';
+  SX509ExtensionIncorrectSequenceSize = 'incorrect sequence size of X509Extension got %d expected 2 or 3';
+
 type
   /// <summary>
   /// A class for verifying and creating PKCS#10 Certification requests.
@@ -318,13 +330,13 @@ constructor TPkcs10CertificationRequest.Create(const ASignatureFactory: ISignatu
 begin
   inherited Create();
   if ASignatureFactory = nil then
-    raise EArgumentNilCryptoLibException.Create('signatureFactory');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSignatureFactoryNil);
   if ASubject = nil then
-    raise EArgumentNilCryptoLibException.Create('subject');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectNil);
   if APublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('publicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicKeyNil);
   if APublicKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('expected public key');
+    raise EArgumentCryptoLibException.CreateRes(@SExpectedPublicKey);
   Init(ASignatureFactory, ASubject, APublicKey, AAttributes);
 end;
 
@@ -334,11 +346,11 @@ constructor TPkcs10CertificationRequest.Create(const ASignatureFactory: ISignatu
 begin
   inherited Create();
   if ASignatureFactory = nil then
-    raise EArgumentNilCryptoLibException.Create('signatureFactory');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSignatureFactoryNil);
   if ASubject = nil then
-    raise EArgumentNilCryptoLibException.Create('subject');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectNil);
   if APubInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('pubInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPubInfoNil);
   Init(ASignatureFactory, ASubject, APubInfo, AAttributes);
 end;
 
@@ -390,7 +402,7 @@ begin
     Result := TX509Utilities.VerifySignature(AVerifier, FReqInfo, FSigBits);
   except
     on E: Exception do
-      raise EInvalidOperationCryptoLibException.Create('exception encoding TBS cert request: ' + E.Message);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SExceptionEncodingTbsCertRequest, [E.Message]);
   end;
 end;
 
@@ -416,7 +428,7 @@ begin
       LAttr := TAttributePkcs.GetInstance(LAttrs[LI]);
     except
       on E: Exception do
-        raise EArgumentCryptoLibException.Create('encountered non PKCS attribute in extensions block: ' + E.Message);
+        raise EArgumentCryptoLibException.CreateResFmt(@SEncounteredNonPkcsAttributeInExtensions, [E.Message]);
     end;
 
     if TPkcsObjectIdentifiers.Pkcs9AtExtensionRequest.Equals(LAttr.AttrType) then
@@ -424,7 +436,7 @@ begin
       LGen := TX509ExtensionsGenerator.Create();
       LAttrValues := LAttr.AttrValues;
       if (LAttrValues = nil) or (LAttrValues.Count = 0) then
-        raise EInvalidOperationCryptoLibException.Create('pkcs_9_at_extensionRequest present but has no value');
+        raise EInvalidOperationCryptoLibException.CreateRes(@SPkcs9AtExtensionRequestPresentButEmpty);
 
       LExtSeq := TAsn1Sequence.GetInstance(LAttrValues[0]);
       try
@@ -442,14 +454,14 @@ begin
               TAsn1OctetString.GetInstance(LItemSeq[2]).GetOctets());
           end
           else
-            raise EInvalidOperationCryptoLibException.CreateFmt(
-              'incorrect sequence size of X509Extension got %d expected 2 or 3', [LCount]);
+            raise EInvalidOperationCryptoLibException.CreateResFmt(
+              @SX509ExtensionIncorrectSequenceSize, [LCount]);
         end;
       except
         on E: EArgumentCryptoLibException do
           raise;
         on E: Exception do
-          raise EInvalidOperationCryptoLibException.Create('asn1 processing issue: ' + E.Message);
+          raise EInvalidOperationCryptoLibException.CreateResFmt(@SAsn1ProcessingIssue, [E.Message]);
       end;
       Result := LGen.Generate();
       Exit;

@@ -32,13 +32,13 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SBlowfishEngineNotInitialised = 'Blowfish Engine not Initialised';
+  SBlowfishEngineNotInitialised = 'Blowfish engine not initialized';
   SInvalidParameterBlowfishInit =
-    'Invalid Parameter Passed to Blowfish Init - "%s"';
-  SInputBuffertooShort = 'Input Buffer too Short';
-  SOutputBuffertooShort = 'Output Buffer too Short';
+    'invalid parameter passed to Blowfish init: %s';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
   SInvalidKeyLength =
-    'Key Length must be between 32 - 448 bits and divisible by 8.';
+    'key length must be between 32 - 448 bits and divisible by 8';
 
 type
 
@@ -498,8 +498,8 @@ begin
       (@SBlowfishEngineNotInitialised);
   end;
 
-  TCheck.DataLength(AInput, AInOff, BLOCK_SIZE, SInputBuffertooShort);
-  TCheck.OutputLength(AOutput, AOutOff, BLOCK_SIZE, SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, BLOCK_SIZE, SInputBufferTooShort);
+  TCheck.OutputLength(AOutput, AOutOff, BLOCK_SIZE, SOutputBufferTooShort);
 
   if (FForEncryption) then
   begin

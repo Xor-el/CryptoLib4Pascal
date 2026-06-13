@@ -29,6 +29,9 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SUnableToMatchAlgorithm = 'unable to match algorithm: %s';
+
 type
   /// <summary>
   /// Factory for creating AlgorithmIdentifier instances for encryption algorithms.
@@ -63,7 +66,7 @@ begin
   end
   else
   begin
-    raise EInvalidOperationCryptoLibException.Create('unable to match algorithm: ' + AEncryptionOID.Id);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SUnableToMatchAlgorithm, [AEncryptionOID.Id]);
   end;
 end;
 

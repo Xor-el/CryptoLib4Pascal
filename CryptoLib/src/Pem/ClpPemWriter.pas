@@ -30,6 +30,9 @@ uses
   ClpEncoders,
   ClpConverters;
 
+resourcestring
+  SWriterCannotBeNil = 'writer cannot be nil';
+
 type
   /// <summary>
   /// PEM writer implementation.
@@ -68,7 +71,7 @@ constructor TPemWriter.Create(const AWriter: TStream);
 begin
   Inherited Create();
   if AWriter = nil then
-    raise EArgumentNilCryptoLibException.Create('Writer cannot be nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SWriterCannotBeNil);
   FWriter := AWriter;
   FNlLength := System.Length(sLineBreak);
   System.SetLength(FBuffer, LineLength);

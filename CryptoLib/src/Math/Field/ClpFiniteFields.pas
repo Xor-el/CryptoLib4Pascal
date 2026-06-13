@@ -32,9 +32,9 @@ uses
   ClpGenericPolynomialExtensionField;
 
 resourcestring
-  SIrreduciblePolynomialsConstantTerm = 'Irreducible polynomials in GF(2) must have constant term';
-  SPolynomialExponentsMonotonic = 'Polynomial exponents must be monotonically increasing';
-  SCharacteristicMustBeAtLeast2 = 'Must be >= 2';
+  SIrreduciblePolynomialsConstantTerm = 'irreducible polynomials in GF(2) must have constant term';
+  SPolynomialExponentsMonotonic = 'polynomial exponents must be monotonically increasing';
+  SCharacteristicMustBeAtLeastTwo = 'must be >= 2';
 
 type
   TFiniteFields = class sealed(TObject)
@@ -86,7 +86,7 @@ var
 begin
   LBitLength := ACharacteristic.BitLength;
   if (ACharacteristic.SignValue <= 0) or (LBitLength < 2) then
-    raise EArgumentCryptoLibException.CreateRes(@SCharacteristicMustBeAtLeast2);
+    raise EArgumentCryptoLibException.CreateRes(@SCharacteristicMustBeAtLeastTwo);
   if LBitLength < 3 then
   begin
     case ACharacteristic.Int32Value of

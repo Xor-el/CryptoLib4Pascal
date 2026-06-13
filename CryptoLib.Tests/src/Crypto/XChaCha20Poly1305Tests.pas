@@ -287,7 +287,7 @@ begin
   except
     on E: EArgumentCryptoLibException do
     begin
-      if E.Message <> 'Nonce must be 192 bits' then
+      if E.Message <> 'nonce must be 192 bits' then
         Fail('unexpected nonce length message: ' + E.Message);
     end;
   end;
@@ -417,7 +417,7 @@ begin
   except
     on E: EArgumentCryptoLibException do
     begin
-      if E.Message <> 'Key must be 256 bits' then
+      if E.Message <> 'key must be 256 bits' then
         Fail('unexpected key size message: ' + E.Message);
     end;
   end;

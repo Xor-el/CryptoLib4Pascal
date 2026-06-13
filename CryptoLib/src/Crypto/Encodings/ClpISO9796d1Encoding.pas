@@ -32,9 +32,10 @@ uses
 
 resourcestring
   SPadBitsOutOfRange = 'padBits out of range (0-7)';
-  SInvalidForcingByte = 'Invalid forcing byte in block';
-  SInvalidCongruence = 'Resulting integer is not congruent to 6 mod 16';
-  SInvalidTsums = 'Invalid tsums in block';
+  SInvalidForcingByte = 'invalid forcing byte in block';
+  SInvalidCongruence = 'resulting integer is not congruent to 6 mod 16';
+  SInvalidTsums = 'invalid tsums in block';
+  SExpectedRsaKeyParameter = 'expected RSA key parameter';
 
 type
   /// <summary>
@@ -131,7 +132,7 @@ begin
   LParameters := TParameterUtilities.IgnoreRandom(LParameters);
 
   if not Supports(LParameters, IRsaKeyParameters, LKeyParam) then
-    raise EInvalidKeyCryptoLibException.Create('Expected RSA key parameter');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SExpectedRsaKeyParameter);
   FModulus := LKeyParam.Modulus;
   FBitSize := FModulus.BitLength;
   FForEncryption := AForEncryption;

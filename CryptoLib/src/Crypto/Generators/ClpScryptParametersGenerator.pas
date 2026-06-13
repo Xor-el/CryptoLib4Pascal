@@ -21,7 +21,6 @@ unit ClpScryptParametersGenerator;
 interface
 
 uses
-
   HlpIHashInfo,
   HlpHashFactory,
   ClpICipherParameters,
@@ -34,7 +33,6 @@ uses
   ClpCryptoLibTypes;
 
 type
-
   /// <summary>
   /// <a href="http://tools.ietf.org/html/draft-josefsson-scrypt-kdf-01">draft-josefsson-scrypt-kd</a>
   /// Scrypt Specification</see>

@@ -35,8 +35,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputDataTooLong = 'Input data too long';
-  SDataWrong = 'Data wrong';
+  SInputDataTooLong = 'input data too long';
+  SDataWrong = 'data wrong';
 
 type
   /// <summary>

@@ -41,6 +41,9 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SUnknownEncryptionAlgorithm = 'unknown encryption algorithm: %s';
+
 type
   /// <summary>
   /// Factory for creating EncryptedPrivateKeyInfo structures.
@@ -153,7 +156,7 @@ var
 begin
   LEngine := TPbeUtilities.CreateEngine(AAlgorithm);
   if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
-    raise ECryptoLibException.Create('Unknown encryption algorithm: ' + AAlgorithm);
+    raise ECryptoLibException.CreateResFmt(@SUnknownEncryptionAlgorithm, [AAlgorithm]);
 
   LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(
     AAlgorithm, ASalt, AIterationCount);
@@ -200,7 +203,7 @@ var
 begin
   LCipher := TCipherUtilities.GetCipher(ACipherAlgorithm);
   if LCipher = nil then
-    raise ECryptoLibException.Create('Unknown encryption algorithm: ' + ACipherAlgorithm.Id);
+    raise ECryptoLibException.CreateResFmt(@SUnknownEncryptionAlgorithm, [ACipherAlgorithm.Id]);
 
   LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(
     ACipherAlgorithm, APrfAlgorithm, ASalt, AIterationCount, ARandom);

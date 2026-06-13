@@ -31,7 +31,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
+  SBadSequenceSize = 'bad sequence size: %d';
 
 type
   /// <summary>

@@ -50,6 +50,111 @@ uses
   ClpInt32Utilities,
   ClpInt64Utilities;
 
+resourcestring
+  SObjNil = 'object cannot be nil';
+  SObjectImplicitExplicitExpected = 'object implicit - explicit expected';
+  SObjectExplicitImplicitExpected = 'object explicit - implicit expected';
+  SUnexpectedObjectTypeInParsedImplicit = 'unexpected object type in ParsedImplicit';
+  SCannotConvertToParser = 'cannot convert to parser';
+  SThisMethodNotValidForImplicitlyTaggedObjects = 'this method not valid for implicitly tagged objects';
+  STaggedObjectNil = 'tagged object cannot be nil';
+  SUnexpectedObjectType = 'unexpected object type';
+  SIllegalObjectInGetInstance = 'illegal object in GetInstance';
+  SElementNil = 'element cannot be nil';
+  SElement1Nil = 'element1 cannot be nil';
+  SElement2Nil = 'element2 cannot be nil';
+  SElementsCannotContainNil = 'elements cannot contain nil';
+  SElementVectorNil = 'element vector cannot be nil';
+  SElementsNil = 'elements cannot be nil';
+  SIndexOutOfRange = 'index out of range';
+  SSequenceNil = 'sequence cannot be nil';
+  SSetNil = 'set cannot be nil';
+  SContentsElementsNil = 'contents elements cannot be nil';
+  SExplicitTagsMustBeConstructed = 'explicit tags must be constructed (see X.690 8.14.2)';
+  SContentsNil = 'contents cannot be nil';
+  SZeroLengthDataWithNonZeroPadBits = 'zero length data with non-zero pad bits';
+  SPadBitsOutOfRange = 'pad bits cannot be greater than 7 or less than 0';
+  SDataNil = 'data cannot be nil';
+  SPadBitsMustBeInRangeZeroToSeven = 'pad bits must be in the range 0 to 7';
+  SIfDataIsEmptyPadBitsMustBeZero = 'if data is empty, padBits must be 0';
+  STruncatedBitStringDetected = 'truncated BIT STRING detected';
+  SInvalidPadBitsDetected = 'invalid pad bits detected';
+  SOnlyTheLastNestedBitStringCanHavePadding = 'only the last nested bitstring can have padding';
+  STooFewObjectsInInputSequence = 'too few objects in input sequence';
+  SIncompatibleTypeForDataValueDescriptor = 'incompatible type for data-value-descriptor';
+  SInputSequenceTooLarge = 'input sequence too large';
+  SNoTaggedObjectFoundInSequence = 'no tagged object found in sequence, structure does not seem to be of type External';
+  SMalformedBmpStringEncodingEncountered = 'malformed BMPString encoding encountered';
+  SStrNil = 'string cannot be nil';
+  SEofEncounteredInMiddleOfBmpString = 'EOF encountered in middle of BMPString';
+  SDerBmpStringLengthMismatch = 'BMP string length mismatch after parsing';
+  SEofEncounteredReadingBooleanOctet = 'EOF encountered reading BOOLEAN octet';
+  SBooleanValueShouldHaveOneByte = 'BOOLEAN value should have 1 byte';
+  SEnumeratedMustBeNonNegative = 'ENUMERATED must be non-negative';
+  SMalformedEnumerated = 'malformed ENUMERATED';
+  SAsn1EnumeratedOutOfIntRange = 'ASN.1 Enumerated out of int range';
+  SEnumeratedHasZeroLength = 'ENUMERATED has zero length';
+  SMalformedNullEncodingEncountered = 'malformed NULL encoding encountered';
+  SFailedToConstructNullFromByteArray = 'failed to construct NULL from byte array';
+  SExceededOidContentsLengthLimit = 'exceeded OID contents length limit';
+  SInvalidOidContentsBuffer = 'invalid OID contents buffer';
+  SInvalidOidContents = 'invalid OID contents';
+  SIdentifierNil = 'identifier cannot be nil';
+  SOidBigIntegerFieldRequiresPositiveValue = 'OID BigInteger field requires a positive value';
+  SEmptyOidDecimalComponent = 'empty OID decimal component';
+  SInvalidOidDecimalComponent = 'invalid OID decimal component';
+  SExceededRelativeOidContentsLengthLimit = 'exceeded relative OID contents length limit';
+  SInvalidContentsSegment = 'invalid contents segment';
+  SInvalidRelativeOidContentsBuffer = 'invalid relative OID contents buffer';
+  SInvalidRelativeOidContents = 'invalid relative OID contents';
+  STimeStringNil = 'time string cannot be nil';
+  SInvalidTimeStringLength = 'invalid time string length';
+  SInvalidUtcTimeFormat = 'invalid UTC time format';
+  SInvalidLocalTimeFormat = 'invalid local time format';
+  SInvalidTimezoneFormat = 'invalid timezone format (%d chars)';
+  SInvalidTimeFormat = 'invalid time format';
+  SDateTimeIsLocked = 'DateTime is locked';
+  SInvalidUtcTimeStringLength = 'invalid UTC time string length';
+  SDateTimeValueOutOfRange = 'DateTime value out of range';
+  SStringContainsIllegalCharacters = 'string contains illegal characters';
+  SValueNil = 'value cannot be nil';
+  SMalformedInteger = 'malformed integer';
+  SFailedToConstructIntegerFromByteArray = 'failed to construct integer from byte array';
+  SAsn1IntegerOutOfIntRange = 'ASN.1 Integer out of int range';
+  SAsn1IntegerOutOfPositiveIntRange = 'ASN.1 Integer out of positive int range';
+  SAsn1IntegerOutOfLongRange = 'ASN.1 Integer out of long range';
+  SAsn1IntegerOutOfPositiveLongRange = 'ASN.1 Integer out of positive long range';
+  SFailedToGetAsn1TagInterface = 'failed to get IAsn1Tag interface';
+  SUnexpectedImplicitPrimitiveEncoding = 'unexpected implicit primitive encoding';
+  SUnexpectedImplicitConstructedEncoding = 'unexpected implicit constructed encoding';
+  SImplicitTaggingNotImplementedForTag = 'implicit tagging not implemented for tag %d';
+  SUnsupportedUniversalTagNumber = 'unsupported UNIVERSAL tag number: %d';
+  SInvalidEncodingValue = 'invalid encoding value: %d';
+  SUnknownTag = 'unknown tag: %s';
+  SUnexpectedObject = 'unexpected object: %s';
+  SInvalidTagClass = 'invalid tag class: %s';
+  SInvalidBaseTagClass = 'invalid base tag class: %s';
+  SIllegalObjectInGetInstanceWithType = 'illegal object in GetInstance: %s';
+  SFailedToConstructTaggedObjectFrom = 'failed to construct tagged object from byte array: %s';
+  SFailedToConstructSequenceFromByte = 'failed to construct sequence from byte array: %s';
+  SFailedToConstructSetFromByte = 'failed to construct set from byte array: %s';
+  SFailedToConstructOctetStringFrom = 'failed to construct OCTET STRING from byte array: %s';
+  SFailedToConstructBitStringFrom = 'failed to construct BIT STRING from byte array: %s';
+  SExpectedOctetAlignedBitStringButFound = 'expected octet-aligned bitstring, but found padBits: %s';
+  SFailedToConstructBooleanFromByte = 'failed to construct boolean from byte array: %s';
+  SFailedToConstructEnumeratedFromByte = 'failed to construct enumerated from byte array: %s';
+  SFailedToConstructObjectIdentifierFrom = 'failed to construct object identifier from byte array: %s';
+  SInvalidOid = '%s not a valid OID';
+  SInvalidRelativeOid = '%s not a valid relative OID';
+  SFailedToConstructRelativeOidFrom = 'failed to construct relative OID from byte array: %s';
+  SInvalidDateString = 'invalid date string: %s';
+  SFailedToConstructGeneralizedTimeFrom = 'failed to construct generalized time from byte array: %s';
+  SFailedToConstructUtcTimeFrom = 'failed to construct UTC time from byte array: %s';
+  SFailedToConstructObjectDescriptorFrom = 'failed to construct object descriptor from byte array: %s';
+  SFailedToConstructStringFromByteArray = 'failed to construct %s string from byte array';
+  SFailedToConstructStringFromByteArrayDetail = 'failed to construct %s string from byte array: %s';
+  SFailedToGetStringFromTaggedObject = 'failed to get %s string from tagged object';
+
 type
   /// <summary>
   /// Abstract base class for ASN.1 types.
@@ -3272,9 +3377,9 @@ var
 begin
   inherited Create;
   if AObj = nil then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
   if (TAsn1Tags.Universal = ATagClass) or ((ATagClass and TAsn1Tags.Private) <> ATagClass) then
-    raise EArgumentCryptoLibException.Create('invalid tag class: ' + IntToStr(ATagClass));
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidTagClass, [IntToStr(ATagClass)]);
   
   // IAsn1Choice marker interface 'insists' on explicit tagging
   if Supports(AObj, IAsn1Choice, LChoice) then
@@ -3430,7 +3535,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('implicit tagging not implemented for tag %d', [ATag]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SImplicitTaggingNotImplementedForTag, [ATag]);
 end;
 
 function TAsn1TaggedObject.ToString(): String;
@@ -3518,14 +3623,14 @@ end;
 function TAsn1TaggedObject.GetExplicitBaseObject(): IAsn1Encodable;
 begin
   if not IsExplicit() then
-    raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SObjectImplicitExplicitExpected);
   Result := FObject;
 end;
 
 function TAsn1TaggedObject.GetExplicitBaseTagged(): IAsn1TaggedObject;
 begin
   if not IsExplicit() then
-    raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SObjectImplicitExplicitExpected);
 
   Result := CheckedCast(FObject.ToAsn1Object());
 end;
@@ -3535,11 +3640,11 @@ var
   LTagged: IAsn1TaggedObject;
 begin
   if (TAsn1Tags.Universal = ABaseTagClass) or ((ABaseTagClass and TAsn1Tags.Private) <> ABaseTagClass) then
-    raise EArgumentCryptoLibException.Create('invalid base tag class: ' + IntToStr(ABaseTagClass));
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidBaseTagClass, [IntToStr(ABaseTagClass)]);
 
   case FExplicitness of
     DeclaredExplicit:
-      raise EInvalidOperationCryptoLibException.Create('object explicit - implicit expected.');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SObjectExplicitImplicitExpected);
     DeclaredImplicit:
       begin
         LTagged := CheckedCast(FObject.ToAsn1Object());
@@ -3558,7 +3663,7 @@ var
 begin
   LUniversalType := TAsn1UniversalTypes.Get(ATagNo);
   if LUniversalType = nil then
-    raise EArgumentCryptoLibException.CreateFmt('unsupported UNIVERSAL tag number: %d', [ATagNo]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnsupportedUniversalTagNumber, [ATagNo]);
   
   Result := GetBaseUniversal(ADeclaredExplicit, LUniversalType);
 end;
@@ -3573,14 +3678,14 @@ begin
   if ADeclaredExplicit then
   begin
     if not IsExplicit() then
-      raise EInvalidOperationCryptoLibException.Create('object implicit - explicit expected.');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SObjectImplicitExplicitExpected);
     
     Result := AUniversalType.CheckedCast(GetBaseObject().ToAsn1Object());
     Exit;
   end;
   
   if FExplicitness = DeclaredExplicit then
-    raise EInvalidOperationCryptoLibException.Create('object explicit - implicit expected.');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SObjectExplicitImplicitExpected);
   
   LBaseObject := GetBaseObject().ToAsn1Object();
   
@@ -3599,7 +3704,7 @@ begin
           Result := AUniversalType.FromImplicitPrimitive(LOctetString);
         end
         else
-          raise EInvalidOperationCryptoLibException.Create('unexpected object type in ParsedImplicit');
+          raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedObjectTypeInParsedImplicit);
       end;
   else
     Result := AUniversalType.CheckedCast(LBaseObject);
@@ -3619,7 +3724,7 @@ begin
   if Supports(LTagged, IAsn1TaggedObjectParser, Result) then
     // Already a parser
   else
-    raise EInvalidOperationCryptoLibException.Create('Cannot convert to parser');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SCannotConvertToParser);
 end;
 
 function TAsn1TaggedObject.ParseImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObjectParser;
@@ -3630,7 +3735,7 @@ begin
   if Supports(LTagged, IAsn1TaggedObjectParser, Result) then
     // Already a parser
   else
-    raise EInvalidOperationCryptoLibException.Create('Cannot convert to parser');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SCannotConvertToParser);
 end;
 
 // Static methods
@@ -3639,37 +3744,37 @@ class function TAsn1TaggedObject.CheckInstance(const AObj: TObject): IAsn1Tagged
 begin
   Result := GetInstance(AObj);
   if Result = nil then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
 end;
 
 class function TAsn1TaggedObject.CheckInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
 begin
   Result := GetInstance(AObj);
   if Result = nil then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
 end;
 
 class function TAsn1TaggedObject.CheckInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject;
 begin
   Result := GetInstance(AObj);
   if Result = nil then
-    raise EArgumentNilCryptoLibException.Create('obj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
 end;
 
 class function TAsn1TaggedObject.CheckInstance(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): IAsn1TaggedObject;
 begin
   if not ADeclaredExplicit then
-    raise EArgumentCryptoLibException.Create('this method not valid for implicitly tagged tagged objects');
+    raise EArgumentCryptoLibException.CreateRes(@SThisMethodNotValidForImplicitlyTaggedObjects);
   if ATaggedObject = nil then
-    raise EArgumentNilCryptoLibException.Create('taggedObject');
+    raise EArgumentNilCryptoLibException.CreateRes(@STaggedObjectNil);
   Result := ATaggedObject;
 end;
 
 class function TAsn1TaggedObject.CheckedCast(const AAsn1Object: IAsn1Object): IAsn1TaggedObject;
 begin
   if not Supports(AAsn1Object, IAsn1TaggedObject, Result) then
-    raise EInvalidOperationCryptoLibException.Create('unexpected object type');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedObjectType);
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: TObject): IAsn1TaggedObject;
@@ -3698,7 +3803,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Object): IAsn1TaggedObject;
@@ -3709,7 +3814,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IAsn1TaggedObject, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: IAsn1Convertible): IAsn1TaggedObject;
@@ -3724,7 +3829,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -3740,7 +3845,7 @@ begin
     Result := CheckedCast(TAsn1Object.FromByteArray(ABytes));
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct tagged object from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructTaggedObjectFrom, [E.Message]);
   end;
 end;
 
@@ -3790,7 +3895,7 @@ end;
 class function TAsn1TaggedObject.GetOptional(const AElement: IAsn1Encodable): IAsn1TaggedObject;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IAsn1TaggedObject, Result) then
     Exit;
   Result := nil;
@@ -4088,7 +4193,7 @@ constructor TAsn1Sequence.Create(const AElement: IAsn1Encodable);
 begin
   inherited Create;
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   System.SetLength(FElements, 1);
   FElements[0] := AElement;
 end;
@@ -4097,9 +4202,9 @@ constructor TAsn1Sequence.Create(const AElement1, AElement2: IAsn1Encodable);
 begin
   inherited Create;
   if AElement1 = nil then
-    raise EArgumentNilCryptoLibException.Create('element1');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElement1Nil);
   if AElement2 = nil then
-    raise EArgumentNilCryptoLibException.Create('element2');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElement2Nil);
   System.SetLength(FElements, 2);
   FElements[0] := AElement1;
   FElements[1] := AElement2;
@@ -4113,7 +4218,7 @@ begin
   // Check for null elements
   for LI := 0 to System.Length(AElements) - 1 do
     if AElements[LI] = nil then
-      raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
+      raise ENullReferenceCryptoLibException.CreateRes(@SElementsCannotContainNil);
   System.SetLength(FElements, System.Length(AElements));
   for LI := 0 to System.Length(AElements) - 1 do
     FElements[LI] := AElements[LI];
@@ -4123,7 +4228,7 @@ constructor TAsn1Sequence.Create(const AElementVector: IAsn1EncodableVector);
 begin
   inherited Create;
   if AElementVector = nil then
-    raise EArgumentNilCryptoLibException.Create('elementVector');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
   FElements := AElementVector.TakeElements();
 end;
 
@@ -4133,7 +4238,7 @@ var
 begin
   inherited Create;
   if AC = nil then
-    raise EArgumentNilCryptoLibException.Create('elements');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementsNil);
   System.SetLength(FElements, System.Length(AC));
   for LI := 0 to System.Length(AC) - 1 do
     FElements[LI] := AC[LI];
@@ -4157,7 +4262,7 @@ end;
 function TAsn1Sequence.GetItem(AIndex: Int32): IAsn1Encodable;
 begin
   if (AIndex < 0) or (AIndex >= System.Length(FElements)) then
-    raise EIndexOutOfRangeCryptoLibException.Create('Index out of range');
+    raise EIndexOutOfRangeCryptoLibException.CreateRes(@SIndexOutOfRange);
   Result := FElements[AIndex];
 end;
 
@@ -4329,7 +4434,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstance, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1Sequence.GetInstance(const AObj: IAsn1Object): IAsn1Sequence;
@@ -4343,7 +4448,7 @@ begin
   if Supports(AObj, IAsn1Sequence, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+  raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1Sequence.GetInstance(const AObj: IAsn1Convertible): IAsn1Sequence;
@@ -4377,7 +4482,7 @@ begin
     Result := TAsn1Sequence.Meta.Instance.FromByteArray(ABytes) as IAsn1Sequence;
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct sequence from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructSequenceFromByte, [E.Message]);
   end;
 end;
 
@@ -4386,7 +4491,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1Sequence, LSequence) then
     Result := LSequence
@@ -4845,7 +4950,7 @@ constructor TAsn1Set.Create(const AElement: IAsn1Encodable);
 begin
   inherited Create;
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   System.SetLength(FElements, 1);
   FElements[0] := AElement;
   FSortedDerEncodings := nil;
@@ -4859,7 +4964,7 @@ begin
   // Check for null elements
   for LI := 0 to System.Length(AElements) - 1 do
     if AElements[LI] = nil then
-      raise ENullReferenceCryptoLibException.Create('elements cannot contain null');
+      raise ENullReferenceCryptoLibException.CreateRes(@SElementsCannotContainNil);
   System.SetLength(FElements, System.Length(AElements));
   for LI := 0 to System.Length(AElements) - 1 do
     FElements[LI] := AElements[LI];
@@ -4873,7 +4978,7 @@ constructor TAsn1Set.Create(const AElementVector: IAsn1EncodableVector; ADoSort:
 begin
   inherited Create;
   if AElementVector = nil then
-    raise EArgumentNilCryptoLibException.Create('elementVector');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementVectorNil);
   if ADoSort and (AElementVector.Count > 1) then
   begin
     FElements := AElementVector.CopyElements();
@@ -4892,7 +4997,7 @@ var
 begin
   inherited Create;
   if AC = nil then
-    raise EArgumentNilCryptoLibException.Create('elements');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementsNil);
   System.SetLength(FElements, System.Length(AC));
   for LI := 0 to System.Length(AC) - 1 do
     FElements[LI] := AC[LI];
@@ -4909,7 +5014,7 @@ var
 begin
   inherited Create;
   if ASequence = nil then
-    raise EArgumentNilCryptoLibException.Create('sequence');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSequenceNil);
   LElements := ASequence.Elements;
   System.SetLength(FElements, System.Length(LElements));
   for LI := 0 to System.Length(LElements) - 1 do
@@ -4924,7 +5029,7 @@ var
 begin
   inherited Create;
   if ASet = nil then
-    raise EArgumentNilCryptoLibException.Create('set');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSetNil);
   LElements := ASet.Elements;
   System.SetLength(FElements, System.Length(LElements));
   for LI := 0 to System.Length(LElements) - 1 do
@@ -4958,7 +5063,7 @@ end;
 function TAsn1Set.GetItem(AIndex: Int32): IAsn1Encodable;
 begin
   if (AIndex < 0) or (AIndex >= System.Length(FElements)) then
-    raise EIndexOutOfRangeCryptoLibException.Create('Index out of range');
+    raise EIndexOutOfRangeCryptoLibException.CreateRes(@SIndexOutOfRange);
   Result := FElements[AIndex];
 end;
 
@@ -5076,7 +5181,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1Set.GetInstance(const AObj: IAsn1Object): IAsn1Set;
@@ -5087,7 +5192,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IAsn1Set, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1Set.GetInstance(const AObj: IAsn1Convertible): IAsn1Set;
@@ -5102,7 +5207,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -5118,7 +5223,7 @@ begin
     Result := TAsn1Set.Meta.Instance.FromByteArray(ABytes) as IAsn1Set;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct set from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructSetFromByte, [E.Message]);
   end;
 end;
 
@@ -5132,7 +5237,7 @@ var
   LSet: IAsn1Set;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1Set, LSet) then
     Result := LSet
@@ -5847,7 +5952,7 @@ var
   LMaybeExplicit: Boolean;
 begin
   if AContentsElements = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsElements');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsElementsNil);
   LMaybeExplicit := (AContentsElements.Count = 1);
   if LMaybeExplicit then
     Result := TDLTaggedObject.Create(ParsedExplicit, ATagClass, ATagNo,
@@ -5863,7 +5968,7 @@ var
   LMaybeExplicit: Boolean;
 begin
   if AContentsElements = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsElements');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsElementsNil);
   LMaybeExplicit := (AContentsElements.Count = 1);
   if LMaybeExplicit then
     Result := TBerTaggedObject.Create(ParsedExplicit, ATagClass, ATagNo,
@@ -6007,7 +6112,7 @@ end;
 function TDLTaggedObjectParser.CheckConstructed(): IAsn1StreamParser;
 begin
   if not FConstructed then
-    raise EIOCryptoLibException.Create('Explicit tags must be constructed (see X.690 8.14.2)');
+    raise EIOCryptoLibException.CreateRes(@SExplicitTagsMustBeConstructed);
   Result := FParser;
 end;
 
@@ -6101,7 +6206,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstance, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1OctetString.GetInstance(const ABytes: TCryptoLibByteArray): IAsn1OctetString;
@@ -6115,7 +6220,7 @@ begin
     Result := TAsn1OctetString.Meta.Instance.FromByteArray(ABytes) as IAsn1OctetString;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct OCTET STRING from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructOctetStringFrom, [E.Message]);
   end;
 end;
 
@@ -6127,7 +6232,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IAsn1OctetString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1OctetString.GetInstance(const AObj: IAsn1Convertible): IAsn1OctetString;
@@ -6142,7 +6247,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -6157,7 +6262,7 @@ var
   LOctetString: IAsn1OctetString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1OctetString, LOctetString) then
     Result := LOctetString
@@ -6226,7 +6331,7 @@ end;
 class function TDerOctetString.FromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalFromContents(AContents);
 end;
 
@@ -6241,7 +6346,7 @@ end;
 class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalWithContents(AContents);
 end;
 
@@ -6323,7 +6428,7 @@ end;
 class function TBerOctetString.FromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalFromContents(AContents);
 end;
 
@@ -6361,7 +6466,7 @@ end;
 class function TBerOctetString.WithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalWithContents(AContents);
 end;
 
@@ -6510,16 +6615,16 @@ var
 begin
   inherited Create();
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   if System.Length(AContents) < 1 then
-    raise EArgumentCryptoLibException.Create('zero length data with non-zero pad bits');
+    raise EArgumentCryptoLibException.CreateRes(@SZeroLengthDataWithNonZeroPadBits);
   if ACheck then
   begin
     LPadBits := AContents[0];
     if (System.Length(AContents) = 1) and (LPadBits > 0) then
-      raise EArgumentCryptoLibException.Create('zero length data with non-zero pad bits');
+      raise EArgumentCryptoLibException.CreateRes(@SZeroLengthDataWithNonZeroPadBits);
     if LPadBits > 7 then
-      raise EArgumentCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+      raise EArgumentCryptoLibException.CreateRes(@SPadBitsOutOfRange);
   end;
   FContents := System.Copy(AContents);
 end;
@@ -6528,11 +6633,11 @@ constructor TDerBitString.Create(const AData: TCryptoLibByteArray; APadBits: Int
 begin
   inherited Create();
   if AData = nil then
-    raise EArgumentNilCryptoLibException.Create('data');
+    raise EArgumentNilCryptoLibException.CreateRes(@SDataNil);
   if (APadBits < 0) or (APadBits > 7) then
-    raise EArgumentCryptoLibException.Create('must be in the range 0 to 7');
+    raise EArgumentCryptoLibException.CreateRes(@SPadBitsMustBeInRangeZeroToSeven);
   if (System.Length(AData) = 0) and (APadBits <> 0) then
-    raise EArgumentCryptoLibException.Create('if ''data'' is empty, ''padBits'' must be 0');
+    raise EArgumentCryptoLibException.CreateRes(@SIfDataIsEmptyPadBitsMustBeZero);
   FContents := TArrayUtilities.Prepend<Byte>(AData, Byte(APadBits));
 end;
 
@@ -6684,13 +6789,13 @@ var
 begin
   LLength := System.Length(AContents);
   if LLength < 1 then
-    raise EArgumentCryptoLibException.Create('truncated BIT STRING detected');
+    raise EArgumentCryptoLibException.CreateRes(@STruncatedBitStringDetected);
 
   LPadBits := AContents[0];
   if LPadBits > 0 then
   begin
     if (LPadBits > 7) or (LLength < 2) then
-      raise EArgumentCryptoLibException.Create('invalid pad bits detected');
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidPadBitsDetected);
 
     LFinalOctet := AContents[LLength - 1];
     LFinalOctetDer := Byte(LFinalOctet and ($FF shl LPadBits));
@@ -6709,7 +6814,7 @@ constructor TDerBitString.Create(AData: Byte; APadBits: Int32);
 begin
   inherited Create();
   if (APadBits > 7) or (APadBits < 0) then
-    raise EArgumentCryptoLibException.Create('pad bits cannot be greater than 7 or less than 0');
+    raise EArgumentCryptoLibException.CreateRes(@SPadBitsOutOfRange);
   System.SetLength(FContents, 2);
   FContents[0] := Byte(APadBits);
   FContents[1] := AData;
@@ -6801,7 +6906,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerBitString.GetInstance(const AObj: IAsn1Object): IDerBitString;
@@ -6812,7 +6917,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerBitString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerBitString.GetInstance(const AObj: IAsn1Convertible): IDerBitString;
@@ -6827,7 +6932,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -6844,7 +6949,7 @@ begin
     Result := TDerBitString.Meta.Instance.FromByteArray(ABytes) as IDerBitString;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct BIT STRING from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructBitStringFrom, [E.Message]);
   end;
 end;
 
@@ -6856,7 +6961,7 @@ end;
 class function TDerBitString.GetOptional(const AElement: IAsn1Encodable): IDerBitString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerBitString, Result) then
     // Found
   else
@@ -6906,7 +7011,7 @@ end;
 procedure TDerBitString.CheckOctetAligned();
 begin
   if FContents[0] <> $00 then
-    raise EIOCryptoLibException.Create('expected octet-aligned bitstring, but found padBits: ' + IntToStr(FContents[0]));
+    raise EIOCryptoLibException.CreateResFmt(@SExpectedOctetAlignedBitStringButFound, [IntToStr(FContents[0])]);
 end;
 
 function TDerBitString.GetEncoding(AEncoding: Int32): IAsn1Encoding;
@@ -7132,7 +7237,7 @@ begin
       begin
         LElementContents := ABitStrings[LI].Contents;
         if LElementContents[0] <> 0 then
-          raise EArgumentCryptoLibException.Create('only the last nested bitstring can have padding');
+          raise EArgumentCryptoLibException.CreateRes(@SOnlyTheLastNestedBitStringCanHavePadding);
         LTotalLength := LTotalLength + System.Length(LElementContents) - 1;
       end;
       // Last one can have padding
@@ -7159,14 +7264,14 @@ end;
 class function TDerExternal.GetObjFromSequence(const ASequence: IAsn1Sequence; AIndex: Int32): IAsn1Object;
 begin
   if ASequence.Count <= AIndex then
-    raise EArgumentCryptoLibException.Create('too few objects in input sequence');
+    raise EArgumentCryptoLibException.CreateRes(@STooFewObjectsInInputSequence);
   Result := ASequence[AIndex].ToAsn1Object();
 end;
 
 class function TDerExternal.CheckEncoding(AEncoding: Int32): Int32;
 begin
   if (AEncoding < 0) or (AEncoding > 2) then
-    raise EInvalidOperationCryptoLibException.CreateFmt('invalid encoding value: %d', [AEncoding]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SInvalidEncodingValue, [AEncoding]);
   Result := AEncoding;
 end;
 
@@ -7194,7 +7299,7 @@ begin
     2:
       Result := TDerBitString.GetTagged(AEncoding, False);
   else
-    raise EArgumentCryptoLibException.CreateFmt('unknown tag: %s', [TAsn1Utilities.GetTagText(AEncoding)]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownTag, [TAsn1Utilities.GetTagText(AEncoding)]);
   end;
 end;
 
@@ -7208,7 +7313,7 @@ begin
   else if Supports(ADataValueDescriptor, IDerGraphicString, LGraphicString) then
     Result := TAsn1ObjectDescriptor.Create(ADataValueDescriptor)
   else
-    raise EArgumentCryptoLibException.Create('incompatible type for data-value-descriptor');
+    raise EArgumentCryptoLibException.CreateRes(@SIncompatibleTypeForDataValueDescriptor);
 end;
 
 class function TDerExternal.FromSequence(const ASeq: IAsn1Sequence): IDerExternal;
@@ -7238,7 +7343,7 @@ var
 begin
   inherited Create();
   if ASequence = nil then
-    raise EArgumentNilCryptoLibException.Create('sequence');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSequenceNil);
 
   LOffset := 0;
   LAsn1 := GetObjFromSequence(ASequence, LOffset);
@@ -7271,10 +7376,10 @@ begin
   end;
 
   if ASequence.Count <> LOffset + 1 then
-    raise EArgumentCryptoLibException.Create('input sequence too large');
+    raise EArgumentCryptoLibException.CreateRes(@SInputSequenceTooLarge);
 
   if not Supports(LAsn1, IAsn1TaggedObject, LObj) then
-    raise EArgumentCryptoLibException.Create('No tagged object found in sequence. Structure doesn''t seem to be of type External');
+    raise EArgumentCryptoLibException.CreateRes(@SNoTaggedObjectFoundInSequence);
 
   FEncoding := CheckEncoding(LObj.TagNo);
   FExternalContent := GetExternalContent(LObj);
@@ -7485,10 +7590,10 @@ var
 begin
   inherited Create();
   if AStr = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   LByteLen := System.Length(AStr);
   if (LByteLen and 1) <> 0 then
-    raise EArgumentCryptoLibException.Create('malformed BMPString encoding encountered');
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedBmpStringEncodingEncountered);
   LCharLen := TBitOperations.Asr32(LByteLen, 1);
   System.SetLength(LCs, LCharLen);
   for LI := 0 to LCharLen - 1 do
@@ -7500,7 +7605,7 @@ constructor TDerBmpString.Create(const AStr: String);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FStr := AStr;
 end;
 
@@ -7567,7 +7672,7 @@ var
 begin
   LRemainingBytes := ADefIn.Remaining;
   if (LRemainingBytes and 1) <> 0 then
-    raise EIOCryptoLibException.Create('malformed BMPString encoding encountered');
+    raise EIOCryptoLibException.CreateRes(@SMalformedBmpStringEncodingEncountered);
 
   LLength := LRemainingBytes div 2;
 
@@ -7578,7 +7683,7 @@ begin
   while LRemainingBytes >= 8 do
   begin
     if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
-      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
+      raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredInMiddleOfBmpString);
 
     LStr[LStringPos    ] := Char((LBuf[0] shl 8) or (LBuf[1] and $FF));
     LStr[LStringPos + 1] := Char((LBuf[2] shl 8) or (LBuf[3] and $FF));
@@ -7591,7 +7696,7 @@ begin
   if LRemainingBytes > 0 then
   begin
     if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
-      raise EEndOfStreamCryptoLibException.Create('EOF encountered in middle of BMPString');
+      raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredInMiddleOfBmpString);
 
     LBufPos := 0;
     repeat
@@ -7602,7 +7707,7 @@ begin
   end;
 
   if (ADefIn.Remaining <> 0) or (System.Length(LStr) <> LStringPos) then
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDerBmpStringLengthMismatch);
 
   Result := TDerBmpString.CreatePrimitive(LStr);
 end;
@@ -7633,7 +7738,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerBmpString.GetInstance(const AObj: IAsn1Object): IDerBmpString;
@@ -7644,7 +7749,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerBmpString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerBmpString.GetInstance(const AObj: IAsn1Convertible): IDerBmpString;
@@ -7659,7 +7764,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -7676,10 +7781,10 @@ begin
   try
     LObj := TDerBmpString.Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerBmpString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct BMP string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['BMP']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct BMP string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['BMP', E.Message]);
   end;
 end;
 
@@ -7691,7 +7796,7 @@ end;
 class function TDerBmpString.GetOptional(const AElement: IAsn1Encodable): IDerBmpString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerBmpString, Result) then
     Exit;
   Result := nil;
@@ -7713,7 +7818,7 @@ end;
 class procedure TDerBoolean.CheckContentsLength(AContentsLength: Int32);
 begin
   if AContentsLength <> 1 then
-    raise EArgumentCryptoLibException.Create('BOOLEAN value should have 1 byte in it');
+    raise EArgumentCryptoLibException.CreateRes(@SBooleanValueShouldHaveOneByte);
 end;
 
 class function TDerBoolean.CreatePrimitive(AB: Byte): IAsn1Object;
@@ -7738,7 +7843,7 @@ constructor TDerBoolean.Create(const AContents: TCryptoLibByteArray);
 begin
   inherited Create();
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   CheckContentsLength(System.Length(AContents));
   FContents := AContents[0];
 end;
@@ -7751,7 +7856,7 @@ end;
 class function TDerBoolean.FromContents(const AContents: TCryptoLibByteArray): IDerBoolean;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   CheckContentsLength(System.Length(AContents));
   Result := FromContents(AContents[0]);
 end;
@@ -7764,7 +7869,7 @@ end;
 class function TDerBoolean.CreatePrimitive(const AContents: TCryptoLibByteArray): IAsn1Object;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   CheckContentsLength(System.Length(AContents));
   Result := CreatePrimitive(AContents[0]);
 end;
@@ -7776,7 +7881,7 @@ begin
   CheckContentsLength(ADefIn.Remaining);
   LB := ADefIn.ReadByte;
   if LB < 0 then
-    raise EEndOfStreamCryptoLibException.Create('');
+    raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredReadingBooleanOctet);
   Result := CreatePrimitive(Byte(LB));
 end;
 
@@ -7832,7 +7937,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerBoolean.GetInstance(const AObj: IAsn1Convertible): IDerBoolean;
@@ -7847,7 +7952,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -7863,7 +7968,7 @@ begin
   if Supports(AObj, IDerBoolean, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TDerBoolean.GetInstance(const ABytes: TCryptoLibByteArray): IDerBoolean;
@@ -7878,7 +7983,7 @@ begin
     Result := TDerBoolean.Meta.Instance.FromByteArray(ABytes) as IDerBoolean;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct boolean from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructBooleanFromByte, [E.Message]);
   end;
 end;
 
@@ -7890,7 +7995,7 @@ end;
 class function TDerBoolean.GetOptional(const AElement: IAsn1Encodable): IDerBoolean;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IDerBoolean, Result) then
     Exit;
@@ -8008,7 +8113,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerEnumerated.GetInstance(const AObj: IAsn1Object): IDerEnumerated;
@@ -8019,7 +8124,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerEnumerated, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerEnumerated.GetInstance(const AObj: IAsn1Convertible): IDerEnumerated;
@@ -8034,7 +8139,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -8050,7 +8155,7 @@ begin
     Result := TDerEnumerated.Meta.Instance.FromByteArray(ABytes) as IDerEnumerated;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct enumerated from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructEnumeratedFromByte, [E.Message]);
   end;
 end;
 
@@ -8062,7 +8167,7 @@ end;
 class function TDerEnumerated.GetOptional(const AElement: IAsn1Encodable): IDerEnumerated;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IDerEnumerated, Result) then
     Exit;
@@ -8081,7 +8186,7 @@ var
 begin
   inherited Create();
   if AVal < 0 then
-    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
 
   LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
   FContents := LBytes;
@@ -8094,7 +8199,7 @@ var
 begin
   inherited Create();
   if AVal < 0 then
-    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
 
   LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
   FContents := LBytes;
@@ -8107,7 +8212,7 @@ var
 begin
   inherited Create();
   if AVal.SignValue < 0 then
-    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
 
   LBytes := AVal.ToByteArray();
   FContents := LBytes;
@@ -8123,9 +8228,9 @@ constructor TDerEnumerated.Create(const AContents: TCryptoLibByteArray; AClone: 
 begin
   inherited Create();
   if TDerInteger.IsMalformed(AContents) then
-    raise EArgumentCryptoLibException.Create('malformed enumerated');
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
   if (AContents[0] and $80) <> 0 then
-    raise EArgumentCryptoLibException.Create('enumerated must be non-negative');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
 
   if AClone then
     FContents := System.Copy(AContents)
@@ -8175,7 +8280,7 @@ var
 begin
   LCount := System.Length(FContents) - FStart;
   if LCount > 4 then
-    raise EArithmeticCryptoLibException.Create('ASN.1 Enumerated out of int range');
+    raise EArithmeticCryptoLibException.CreateRes(@SAsn1EnumeratedOutOfIntRange);
 
   Result := TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned);
 end;
@@ -8236,7 +8341,7 @@ begin
     Exit;
   end;
   if LLength = 0 then
-    raise EArgumentCryptoLibException.Create('ENUMERATED has zero length');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedHasZeroLength);
 
   LValue := AContents[0];
   if LValue >= System.Length(FCache) then
@@ -8262,7 +8367,7 @@ var
 begin
   LLen := ADefIn.Remaining;
   if LLen = 0 then
-    raise EArgumentCryptoLibException.Create('ENUMERATED has zero length');
+    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedHasZeroLength);
   if LLen > 1 then
   begin
     Result := CreatePrimitive(ADefIn.ToArray, False);
@@ -8271,7 +8376,7 @@ begin
 
   LB := ADefIn.ReadByte;
   if LB < 0 then
-    raise EEndOfStreamCryptoLibException.Create('');
+    raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredReadingBooleanOctet);
   System.SetLength(LOne, 1);
   LOne[0] := Byte(LB);
   Result := CreatePrimitive(LOne, False);
@@ -8292,7 +8397,7 @@ end;
 class procedure TAsn1Null.CheckContentsLength(AContentsLength: Int32);
 begin
   if AContentsLength <> 0 then
-    raise EInvalidOperationCryptoLibException.Create('malformed NULL encoding encountered');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SMalformedNullEncodingEncountered);
 end;
 
 class function TAsn1Null.CreatePrimitive(): IAsn1Object;
@@ -8332,7 +8437,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1Null.GetInstance(const AObj: IAsn1Object): IAsn1Null;
@@ -8343,7 +8448,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IAsn1Null, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1Null.GetInstance(const AObj: IAsn1Convertible): IAsn1Null;
@@ -8358,7 +8463,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -8375,10 +8480,10 @@ begin
   try
     LObj := TAsn1Null.Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IAsn1Null, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct NULL from byte[]');
+      raise EArgumentCryptoLibException.CreateRes(@SFailedToConstructNullFromByteArray);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct NULL from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructNullFromByteArray, [E.Message]);
   end;
 end;
 
@@ -8390,7 +8495,7 @@ end;
 class function TAsn1Null.GetOptional(const AElement: IAsn1Encodable): IAsn1Null;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IAsn1Null, Result) then
     Exit;
   Result := nil;
@@ -8479,7 +8584,7 @@ end;
 class procedure TDerObjectIdentifier.CheckContentsLength(AContentsLength: Int32);
 begin
   if AContentsLength > 4096 then
-    raise EArgumentCryptoLibException.Create('exceeded OID contents length limit');
+    raise EArgumentCryptoLibException.CreateRes(@SExceededOidContentsLengthLimit);
 end;
 
 class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray;
@@ -8493,7 +8598,7 @@ begin
   CheckContentsLength(AContentsLength);
 
   if (AContentsLength > 0) and ((AContents = nil) or (System.Length(AContents) < AContentsLength)) then
-    raise EArgumentCryptoLibException.Create('invalid OID contents buffer');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidOidContentsBuffer);
 
   LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents, 0, AContentsLength));
   LIndex := LIndex xor (LIndex shr 20);
@@ -8511,7 +8616,7 @@ begin
   end;
 
   if not TAsn1RelativeOid.IsValidContents(AContents, AContentsLength) then
-    raise EArgumentCryptoLibException.Create('invalid OID contents');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidOidContents);
 
   if AClone or (System.Length(AContents) <> AContentsLength) then
     LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
@@ -8587,7 +8692,7 @@ end;
 class function TDerObjectIdentifier.FromContents(const AContents: TCryptoLibByteArray): IDerObjectIdentifier;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := CreatePrimitive(AContents, True) as IDerObjectIdentifier;
 end;
 
@@ -8617,7 +8722,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Object): IDerObjectIdentifier;
@@ -8631,7 +8736,7 @@ begin
   if Supports(AObj, IDerObjectIdentifier, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TDerObjectIdentifier.GetInstance(const AObj: IAsn1Convertible): IDerObjectIdentifier;
@@ -8646,7 +8751,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -8663,7 +8768,7 @@ begin
     Result := TDerObjectIdentifier.Meta.Instance.FromByteArray(ABytes) as IDerObjectIdentifier;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct object identifier from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructObjectIdentifierFrom, [E.Message]);
   end;
 end;
 
@@ -8675,7 +8780,7 @@ end;
 class function TDerObjectIdentifier.GetOptional(const AElement: IAsn1Encodable): IDerObjectIdentifier;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IDerObjectIdentifier, Result) then
     Exit;
@@ -8693,7 +8798,7 @@ var
   LContents: TCryptoLibByteArray;
 begin
   if AIdentifier = '' then
-    raise EArgumentNilCryptoLibException.Create('identifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
 
   if (System.Length(AIdentifier) <= MaxIdentifierLength) and IsValidIdentifier(AIdentifier) then
   begin
@@ -8822,11 +8927,11 @@ end;
 class procedure TDerObjectIdentifier.CheckIdentifier(const AIdentifier: String);
 begin
   if AIdentifier = '' then
-    raise EArgumentNilCryptoLibException.Create('identifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
   if System.Length(AIdentifier) > MaxIdentifierLength then
-    raise EArgumentCryptoLibException.Create('exceeded OID contents length limit');
+    raise EArgumentCryptoLibException.CreateRes(@SExceededOidContentsLengthLimit);
   if not IsValidIdentifier(AIdentifier) then
-    raise EFormatCryptoLibException.Create('string ' + AIdentifier + ' not a valid OID');
+    raise EFormatCryptoLibException.CreateResFmt(@SInvalidOid, [AIdentifier]);
 end;
 
 class function TDerObjectIdentifier.IsValidIdentifier(const AIdentifier: String): Boolean;
@@ -8980,7 +9085,7 @@ begin
   {$ENDIF DEBUG}
   LByteCount := (AFieldValue.BitLength + 6) div 7;
   if LByteCount < 1 then
-    raise EArgumentCryptoLibException.Create('OID BigInteger field requires a positive value');
+    raise EArgumentCryptoLibException.CreateRes(@SOidBigIntegerFieldRequiresPositiveValue);
   LTmpValue := AFieldValue;
   System.SetLength(LTmp, LByteCount);
   for LI := LByteCount - 1 downto 0 do
@@ -9000,13 +9105,13 @@ class procedure TAsn1RelativeOid.WriteEncodedFieldFromDecimal(const AOutputStrea
     LCh: Char;
   begin
     if AToken = '' then
-      raise EFormatCryptoLibException.Create('empty OID decimal component');
+      raise EFormatCryptoLibException.CreateRes(@SEmptyOidDecimalComponent);
     Result := 0;
     for LI := 1 to System.Length(AToken) do
     begin
       LCh := AToken[LI];
       if (LCh < '0') or (LCh > '9') then
-        raise EFormatCryptoLibException.Create('invalid OID decimal component');
+        raise EFormatCryptoLibException.CreateRes(@SInvalidOidDecimalComponent);
       Result := (Result * 10) + UInt32(Ord(LCh) - Ord('0'));
     end;
   end;
@@ -9058,7 +9163,7 @@ end;
 class procedure TAsn1RelativeOid.CheckContentsLength(AContentsLength: Int32);
 begin
   if AContentsLength > 4096 then
-    raise EArgumentCryptoLibException.Create('exceeded relative OID contents length limit');
+    raise EArgumentCryptoLibException.CreateRes(@SExceededRelativeOidContentsLengthLimit);
 end;
 
 function TAsn1RelativeOid.Asn1Equals(const AAsn1Object: IAsn1Object): Boolean;
@@ -9110,7 +9215,7 @@ end;
 class function TAsn1RelativeOid.FromContents(const AContents: TCryptoLibByteArray): IAsn1RelativeOid;
 begin
   if AContents = nil then
-    raise EArgumentNilCryptoLibException.Create('contents');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := CreatePrimitive(AContents, True) as IAsn1RelativeOid;
 end;
 
@@ -9136,7 +9241,7 @@ begin
     end;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1RelativeOid.GetInstance(const AObj: IAsn1Object): IAsn1RelativeOid;
@@ -9147,7 +9252,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IAsn1RelativeOid, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TAsn1RelativeOid.GetInstance(const AObj: IAsn1Convertible): IAsn1RelativeOid;
@@ -9162,7 +9267,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -9178,7 +9283,7 @@ begin
     Result := TAsn1RelativeOid.Meta.Instance.FromByteArray(ABytes) as IAsn1RelativeOid;
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct relative OID from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructRelativeOidFrom, [E.Message]);
   end;
 end;
 
@@ -9190,7 +9295,7 @@ end;
 class function TAsn1RelativeOid.GetOptional(const AElement: IAsn1Encodable): IAsn1RelativeOid;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1RelativeOid, Result) then
     Exit;
@@ -9208,7 +9313,7 @@ var
   LContents: TCryptoLibByteArray;
 begin
   if AIdentifier = '' then
-    raise EArgumentNilCryptoLibException.Create('identifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
 
   if (System.Length(AIdentifier) <= MaxIdentifierLength) and IsValidIdentifier(AIdentifier, 0) then
   begin
@@ -9228,11 +9333,11 @@ end;
 class procedure TAsn1RelativeOid.CheckIdentifier(const AIdentifier: String);
 begin
   if AIdentifier = '' then
-    raise EArgumentNilCryptoLibException.Create('identifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SIdentifierNil);
   if System.Length(AIdentifier) > MaxIdentifierLength then
-    raise EArgumentCryptoLibException.Create('exceeded relative OID contents length limit');
+    raise EArgumentCryptoLibException.CreateRes(@SExceededRelativeOidContentsLengthLimit);
   if not IsValidIdentifier(AIdentifier, 0) then
-    raise EFormatCryptoLibException.Create('string ' + AIdentifier + ' not a valid relative OID');
+    raise EFormatCryptoLibException.CreateResFmt(@SInvalidRelativeOid, [AIdentifier]);
 end;
 
 class function TAsn1RelativeOid.IsValidIdentifier(const AIdentifier: String; AFrom: Int32): Boolean;
@@ -9294,7 +9399,7 @@ begin
   end;
 
   if (AContents = nil) or (System.Length(AContents) < AContentsLength) then
-    raise EArgumentCryptoLibException.Create('invalid contents segment');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContentsSegment);
 
   LSubIDStart := True;
   for LI := 0 to AContentsLength - 1 do
@@ -9488,7 +9593,7 @@ begin
   CheckContentsLength(AContentsLength);
 
   if (AContentsLength > 0) and ((AContents = nil) or (System.Length(AContents) < AContentsLength)) then
-    raise EArgumentCryptoLibException.Create('invalid relative OID contents buffer');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidRelativeOidContentsBuffer);
 
   LIndex := UInt32(TArrayUtilities.GetArrayHashCode(AContents, 0, AContentsLength));
   LIndex := LIndex xor (LIndex shr 24);
@@ -9509,7 +9614,7 @@ begin
   end;
 
   if not IsValidContents(AContents, AContentsLength) then
-    raise EArgumentCryptoLibException.Create('invalid relative OID contents');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidRelativeOidContents);
 
   if AClone or (System.Length(AContents) <> AContentsLength) then
     LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
@@ -9580,7 +9685,7 @@ constructor TAsn1GeneralizedTime.Create(const ATimeString: String);
 begin
   inherited Create();
   if ATimeString = '' then
-    raise EArgumentNilCryptoLibException.Create('timeString');
+    raise EArgumentNilCryptoLibException.CreateRes(@STimeStringNil);
   
   FTimeString := ATimeString;
   FTimeStringCanonical := False; // TODO Dynamic check?
@@ -9589,7 +9694,7 @@ begin
     FDateTime := FromString(ATimeString);
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('invalid date string: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, [E.Message]);
   end;
 end;
 
@@ -9637,7 +9742,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Object): IAsn1GeneralizedTime;
@@ -9651,7 +9756,7 @@ begin
   if Supports(AObj, IAsn1GeneralizedTime, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TAsn1GeneralizedTime.GetInstance(const AObj: IAsn1Convertible): IAsn1GeneralizedTime;
@@ -9666,7 +9771,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -9683,7 +9788,7 @@ begin
     Result := TAsn1GeneralizedTime.Meta.Instance.FromByteArray(ABytes) as IAsn1GeneralizedTime;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct generalized time from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructGeneralizedTimeFrom, [E.Message]);
   end;
 end;
 
@@ -9695,7 +9800,7 @@ end;
 class function TAsn1GeneralizedTime.GetOptional(const AElement: IAsn1Encodable): IAsn1GeneralizedTime;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1GeneralizedTime, Result) then
     Exit;
@@ -9778,7 +9883,7 @@ var
   LSignIndex: Int32;
 begin
   if System.Length(AStr) < 10 then
-    raise EFormatCryptoLibException.Create('Invalid time string length');
+    raise EFormatCryptoLibException.CreateRes(@SInvalidTimeStringLength);
 
   LS := StringReplace(AStr, ',', '.', [rfReplaceAll]);
 
@@ -9797,7 +9902,7 @@ begin
       22: Result := ParseUtc(LS, 'yyyyMMddHHmmss.ffffff"Z"');
       23: Result := ParseUtc(LS, 'yyyyMMddHHmmss.fffffff"Z"');
     else
-      raise EFormatCryptoLibException.Create('Invalid UTC time format');
+      raise EFormatCryptoLibException.CreateRes(@SInvalidUtcTimeFormat);
     end;
     Exit;
   end;
@@ -9818,7 +9923,7 @@ begin
       21: Result := ParseLocal(LS, 'yyyyMMddHHmmss.ffffff');
       22: Result := ParseLocal(LS, 'yyyyMMddHHmmss.fffffff');
     else
-      raise EFormatCryptoLibException.Create('Invalid local time format');
+      raise EFormatCryptoLibException.CreateRes(@SInvalidLocalTimeFormat);
     end;
     Exit;
   end;
@@ -9837,7 +9942,7 @@ begin
       26: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffffzzz');
       27: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffffzzz');
     else
-      raise EFormatCryptoLibException.Create('Invalid timezone format (5 chars)');
+      raise EFormatCryptoLibException.CreateResFmt(@SInvalidTimezoneFormat, [5]);
     end;
     Exit;
   end;
@@ -9856,12 +9961,12 @@ begin
       24: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.ffffffzz');
       25: Result := ParseTimeZone(LS, 'yyyyMMddHHmmss.fffffffzz');
     else
-      raise EFormatCryptoLibException.Create('Invalid timezone format (3 chars)');
+      raise EFormatCryptoLibException.CreateResFmt(@SInvalidTimezoneFormat, [3]);
     end;
     Exit;
   end;
 
-  raise EFormatCryptoLibException.Create('Invalid time format');
+  raise EFormatCryptoLibException.CreateRes(@SInvalidTimeFormat);
 end;
 
 class function TAsn1GeneralizedTime.IndexOfSign(const AStr: String; AStartIndex: Int32): Int32;
@@ -9929,7 +10034,7 @@ constructor TAsn1UtcTime.Create(const ATimeString: String);
 begin
   inherited Create();
   if ATimeString = '' then
-    raise EArgumentNilCryptoLibException.Create('timeString');
+    raise EArgumentNilCryptoLibException.CreateRes(@STimeStringNil);
   
   FTimeString := ATimeString;
   try
@@ -9937,7 +10042,7 @@ begin
     FDateTimeLocked := False;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('invalid date string: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, [E.Message]);
   end;
 end;
 
@@ -10003,7 +10108,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Object): IAsn1UtcTime;
@@ -10017,7 +10122,7 @@ begin
   if Supports(AObj, IAsn1UtcTime, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TAsn1UtcTime.GetInstance(const AObj: IAsn1Convertible): IAsn1UtcTime;
@@ -10032,7 +10137,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -10049,7 +10154,7 @@ begin
     Result := TAsn1UtcTime.Meta.Instance.FromByteArray(ABytes) as IAsn1UtcTime;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct UTC time from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructUtcTimeFrom, [E.Message]);
   end;
 end;
 
@@ -10061,7 +10166,7 @@ end;
 class function TAsn1UtcTime.GetOptional(const AElement: IAsn1Encodable): IAsn1UtcTime;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1UtcTime, Result) then
     Exit;
@@ -10245,7 +10350,7 @@ begin
   end;
   
   if FDateTimeLocked then
-    raise EInvalidOperationCryptoLibException.Create('DateTime is locked');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDateTimeIsLocked);
   
   LTwoDigitYear := YearOf(FDateTime) mod 100;
   LTwoDigitYearCutoff := ATwoDigitYearMax mod 100;
@@ -10324,7 +10429,7 @@ begin
         );
       end;
   else
-    raise EFormatCryptoLibException.Create('Invalid UTC time string length');
+    raise EFormatCryptoLibException.CreateRes(@SInvalidUtcTimeStringLength);
   end;
 end;
 
@@ -10356,7 +10461,7 @@ end;
 class procedure TAsn1UtcTime.Validate(const ADateTime: TDateTime; ATwoDigitYearMax: Int32);
 begin
   if not InRange(ADateTime, ATwoDigitYearMax) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('DateTime value out of range');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SDateTimeValueOutOfRange);
 end;
 
 { TAsn1ObjectDescriptor }
@@ -10393,7 +10498,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Object): IAsn1ObjectDescriptor;
@@ -10407,7 +10512,7 @@ begin
   if Supports(AObj, IAsn1ObjectDescriptor, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TAsn1ObjectDescriptor.GetInstance(const AObj: IAsn1Convertible): IAsn1ObjectDescriptor;
@@ -10422,7 +10527,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -10439,7 +10544,7 @@ begin
     Result := TAsn1ObjectDescriptor.Meta.Instance.FromByteArray(ABytes) as IAsn1ObjectDescriptor;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('failed to construct object descriptor from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructObjectDescriptorFrom, [E.Message]);
   end;
 end;
 
@@ -10451,7 +10556,7 @@ end;
 class function TAsn1ObjectDescriptor.GetOptional(const AElement: IAsn1Encodable): IAsn1ObjectDescriptor;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IAsn1ObjectDescriptor, Result) then
     Exit;
@@ -10561,7 +10666,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerUtf8String.GetInstance(const AObj: IAsn1Object): IDerUtf8String;
@@ -10572,7 +10677,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerUtf8String, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerUtf8String.GetInstance(const AObj: IAsn1Convertible): IDerUtf8String;
@@ -10587,7 +10692,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -10599,10 +10704,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerUtf8String, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct UTF8 string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['UTF8']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct UTF8 string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['UTF8', E.Message]);
   end;
 end;
 
@@ -10612,7 +10717,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerUtf8String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get UTF8 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['UTF8']);
 end;
 
 class function TDerUtf8String.GetOptional(const AElement: IAsn1Encodable): IDerUtf8String;
@@ -10620,7 +10725,7 @@ var
   LUtf8String: IDerUtf8String;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerUtf8String, LUtf8String) then
     Result := LUtf8String
   else
@@ -10633,7 +10738,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerUtf8String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get UTF8 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['UTF8']);
 end;
 
 function TDerUtf8String.GetString(): String;
@@ -10684,7 +10789,7 @@ constructor TDerGeneralString.Create(const AStr: String);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -10728,7 +10833,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerGeneralString.GetInstance(const AObj: IAsn1Object): IDerGeneralString;
@@ -10739,7 +10844,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerGeneralString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerGeneralString.GetInstance(const AObj: IAsn1Convertible): IDerGeneralString;
@@ -10754,7 +10859,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -10766,10 +10871,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerGeneralString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct general string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['general']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct general string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['general', E.Message]);
   end;
 end;
 
@@ -10779,7 +10884,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerGeneralString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get general string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['general']);
 end;
 
 class function TDerGeneralString.GetOptional(const AElement: IAsn1Encodable): IDerGeneralString;
@@ -10787,7 +10892,7 @@ var
   LGeneralString: IDerGeneralString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerGeneralString, LGeneralString) then
     Result := LGeneralString
   else
@@ -10800,7 +10905,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerGeneralString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get general string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['general']);
 end;
 
 function TDerGeneralString.GetString(): String;
@@ -10887,7 +10992,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerGraphicString.GetInstance(const AObj: IAsn1Object): IDerGraphicString;
@@ -10898,7 +11003,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerGraphicString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerGraphicString.GetInstance(const AObj: IAsn1Convertible): IDerGraphicString;
@@ -10913,7 +11018,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -10925,10 +11030,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerGraphicString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct graphic string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['graphic']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct graphic string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['graphic', E.Message]);
   end;
 end;
 
@@ -10938,7 +11043,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerGraphicString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get graphic string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['graphic']);
 end;
 
 class function TDerGraphicString.GetOptional(const AElement: IAsn1Encodable): IDerGraphicString;
@@ -10946,7 +11051,7 @@ var
   LGraphicString: IDerGraphicString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerGraphicString, LGraphicString) then
     Result := LGraphicString
   else
@@ -10959,7 +11064,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerGraphicString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get graphic string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['graphic']);
 end;
 
 function TDerGraphicString.GetString(): String;
@@ -11015,9 +11120,9 @@ constructor TDerIA5String.Create(const AStr: String; AValidate: Boolean);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   if AValidate and not IsIA5String(AStr) then
-    raise EArgumentCryptoLibException.Create('string contains illegal characters');
+    raise EArgumentCryptoLibException.CreateRes(@SStringContainsIllegalCharacters);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -11078,7 +11183,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerIA5String.GetInstance(const AObj: IAsn1Object): IDerIA5String;
@@ -11089,7 +11194,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerIA5String, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerIA5String.GetInstance(const AObj: IAsn1Convertible): IDerIA5String;
@@ -11104,7 +11209,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -11116,10 +11221,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerIA5String, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct IA5 string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['IA5']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct IA5 string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['IA5', E.Message]);
   end;
 end;
 
@@ -11129,7 +11234,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerIA5String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get IA5 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['IA5']);
 end;
 
 class function TDerIA5String.GetOptional(const AElement: IAsn1Encodable): IDerIA5String;
@@ -11137,7 +11242,7 @@ var
   LIA5String: IDerIA5String;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerIA5String, LIA5String) then
     Result := LIA5String
   else
@@ -11150,7 +11255,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerIA5String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get IA5 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['IA5']);
 end;
 
 function TDerIA5String.GetString(): String;
@@ -11206,9 +11311,9 @@ constructor TDerNumericString.Create(const AStr: String; AValidate: Boolean);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   if AValidate and not IsNumericString(AStr) then
-    raise EArgumentCryptoLibException.Create('string contains illegal characters');
+    raise EArgumentCryptoLibException.CreateRes(@SStringContainsIllegalCharacters);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -11291,7 +11396,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerNumericString.GetInstance(const AObj: IAsn1Object): IDerNumericString;
@@ -11302,7 +11407,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerNumericString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerNumericString.GetInstance(const AObj: IAsn1Convertible): IDerNumericString;
@@ -11317,7 +11422,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -11329,10 +11434,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerNumericString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct numeric string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['numeric']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct numeric string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['numeric', E.Message]);
   end;
 end;
 
@@ -11342,7 +11447,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerNumericString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get numeric string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['numeric']);
 end;
 
 class function TDerNumericString.GetOptional(const AElement: IAsn1Encodable): IDerNumericString;
@@ -11350,7 +11455,7 @@ var
   LNumericString: IDerNumericString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerNumericString, LNumericString) then
     Result := LNumericString
   else
@@ -11363,7 +11468,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerNumericString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get numeric string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['numeric']);
 end;
 
 function TDerNumericString.GetString(): String;
@@ -11414,7 +11519,7 @@ constructor TDerPrintableString.Create(const AStr: String);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -11458,7 +11563,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerPrintableString.GetInstance(const AObj: IAsn1Object): IDerPrintableString;
@@ -11469,7 +11574,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerPrintableString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerPrintableString.GetInstance(const AObj: IAsn1Convertible): IDerPrintableString;
@@ -11484,7 +11589,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -11496,10 +11601,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerPrintableString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct printable string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['printable']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct printable string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['printable', E.Message]);
   end;
 end;
 
@@ -11509,7 +11614,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerPrintableString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get printable string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['printable']);
 end;
 
 class function TDerPrintableString.GetOptional(const AElement: IAsn1Encodable): IDerPrintableString;
@@ -11517,7 +11622,7 @@ var
   LPrintableString: IDerPrintableString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerPrintableString, LPrintableString) then
     Result := LPrintableString
   else
@@ -11530,7 +11635,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerPrintableString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get printable string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['printable']);
 end;
 
 function TDerPrintableString.GetString(): String;
@@ -11626,7 +11731,7 @@ constructor TDerT61String.Create(const AStr: String);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, FEncoding);
 end;
 
@@ -11670,7 +11775,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerT61String.GetInstance(const AObj: IAsn1Object): IDerT61String;
@@ -11681,7 +11786,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerT61String, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerT61String.GetInstance(const AObj: IAsn1Convertible): IDerT61String;
@@ -11696,7 +11801,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -11708,10 +11813,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerT61String, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct T61 string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['T61']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct T61 string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['T61', E.Message]);
   end;
 end;
 
@@ -11721,7 +11826,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerT61String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get T61 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['T61']);
 end;
 
 class function TDerT61String.GetOptional(const AElement: IAsn1Encodable): IDerT61String;
@@ -11729,7 +11834,7 @@ var
   LT61String: IDerT61String;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerT61String, LT61String) then
     Result := LT61String
   else
@@ -11742,7 +11847,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerT61String, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get T61 string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['T61']);
 end;
 
 function TDerT61String.GetString(): String;
@@ -11829,7 +11934,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerUniversalString.GetInstance(const AObj: IAsn1Object): IDerUniversalString;
@@ -11840,7 +11945,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerUniversalString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerUniversalString.GetInstance(const AObj: IAsn1Convertible): IDerUniversalString;
@@ -11855,7 +11960,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -11867,10 +11972,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerUniversalString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct universal string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['universal']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct universal string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['universal', E.Message]);
   end;
 end;
 
@@ -11880,7 +11985,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerUniversalString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get universal string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['universal']);
 end;
 
 class function TDerUniversalString.GetOptional(const AElement: IAsn1Encodable): IDerUniversalString;
@@ -11888,7 +11993,7 @@ var
   LUniversalString: IDerUniversalString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerUniversalString, LUniversalString) then
     Result := LUniversalString
   else
@@ -11901,7 +12006,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerUniversalString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get universal string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['universal']);
 end;
 
 function TDerUniversalString.GetString(): String;
@@ -12038,7 +12143,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerVideotexString.GetInstance(const AObj: IAsn1Object): IDerVideotexString;
@@ -12049,7 +12154,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerVideotexString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerVideotexString.GetInstance(const AObj: IAsn1Convertible): IDerVideotexString;
@@ -12064,7 +12169,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -12076,10 +12181,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerVideotexString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct videotex string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['videotex']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct videotex string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['videotex', E.Message]);
   end;
 end;
 
@@ -12089,7 +12194,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerVideotexString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get videotex string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['videotex']);
 end;
 
 class function TDerVideotexString.GetOptional(const AElement: IAsn1Encodable): IDerVideotexString;
@@ -12097,7 +12202,7 @@ var
   LVideotexString: IDerVideotexString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerVideotexString, LVideotexString) then
     Result := LVideotexString
   else
@@ -12110,7 +12215,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerVideotexString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get videotex string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['videotex']);
 end;
 
 function TDerVideotexString.GetString(): String;
@@ -12161,7 +12266,7 @@ constructor TDerVisibleString.Create(const AStr: String);
 begin
   inherited Create();
   if AStr = '' then
-    raise EArgumentNilCryptoLibException.Create('str');
+    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -12205,7 +12310,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('illegal object in GetInstance: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerVisibleString.GetInstance(const AObj: IAsn1Object): IDerVisibleString;
@@ -12216,7 +12321,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerVisibleString, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerVisibleString.GetInstance(const AObj: IAsn1Convertible): IDerVisibleString;
@@ -12231,7 +12336,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -12243,10 +12348,10 @@ begin
   try
     LObj := Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerVisibleString, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct visible string from byte[]');
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArray, ['visible']);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct visible string from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructStringFromByteArrayDetail, ['visible', E.Message]);
   end;
 end;
 
@@ -12256,7 +12361,7 @@ var
 begin
   LObj := Meta.Instance.GetContextTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerVisibleString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get visible string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['visible']);
 end;
 
 class function TDerVisibleString.GetOptional(const AElement: IAsn1Encodable): IDerVisibleString;
@@ -12264,7 +12369,7 @@ var
   LVisibleString: IDerVisibleString;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerVisibleString, LVisibleString) then
     Result := LVisibleString
   else
@@ -12277,7 +12382,7 @@ var
 begin
   LObj := Meta.Instance.GetTagged(ATaggedObject, ADeclaredExplicit);
   if not Supports(LObj, IDerVisibleString, Result) then
-    raise EArgumentCryptoLibException.Create('failed to get visible string from tagged object');
+    raise EArgumentCryptoLibException.CreateResFmt(@SFailedToGetStringFromTaggedObject, ['visible']);
 end;
 
 function TDerVisibleString.GetString(): String;
@@ -12391,7 +12496,7 @@ constructor TDerInteger.Create(const AValue: TBigInteger);
 begin
   inherited Create();
   if not AValue.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create('value');
+    raise EArgumentNilCryptoLibException.CreateRes(@SValueNil);
   FBytes := AValue.ToByteArray();
   FStart := 0;
 end;
@@ -12405,7 +12510,7 @@ constructor TDerInteger.Create(const ABytes: TCryptoLibByteArray; AClone: Boolea
 begin
   inherited Create();
   if IsMalformed(ABytes) then
-    raise EArgumentCryptoLibException.Create('malformed integer');
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedInteger);
   if AClone then
     FBytes := System.Copy(ABytes)
   else
@@ -12568,7 +12673,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SIllegalObjectInGetInstance, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TDerInteger.GetInstance(const AObj: IAsn1Object): IDerInteger;
@@ -12579,7 +12684,7 @@ begin
     Exit;
   end;
   if not Supports(AObj, IDerInteger, Result) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
 end;
 
 class function TDerInteger.GetInstance(const AObj: IAsn1Convertible): IDerInteger;
@@ -12594,7 +12699,7 @@ begin
     Exit;
   
   if Supports(AObj, IAsn1Object) then
-    raise EArgumentCryptoLibException.Create('illegal object in GetInstance');
+    raise EArgumentCryptoLibException.CreateRes(@SIllegalObjectInGetInstance);
     
   Result := GetInstance(AObj.ToAsn1Object());
 end;
@@ -12611,10 +12716,10 @@ begin
   try
     LObj := TDerInteger.Meta.Instance.FromByteArray(ABytes);
     if not Supports(LObj, IDerInteger, Result) then
-      raise EArgumentCryptoLibException.Create('failed to construct integer from byte[]');
+      raise EArgumentCryptoLibException.CreateRes(@SFailedToConstructIntegerFromByteArray);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct integer from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructIntegerFromByteArray, [E.Message]);
   end;
 end;
 
@@ -12626,7 +12731,7 @@ end;
 class function TDerInteger.GetOptional(const AElement: IAsn1Encodable): IDerInteger;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   if Supports(AElement, IDerInteger, Result) then
     Exit;
   Result := nil;
@@ -12692,25 +12797,25 @@ end;
 function TDerInteger.GetIntValueExact(): Int32;
 begin
   if not TryGetIntValueExact(Result) then
-    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of int range');
+    raise EArithmeticCryptoLibException.CreateRes(@SAsn1IntegerOutOfIntRange);
 end;
 
 function TDerInteger.GetIntPositiveValueExact(): Int32;
 begin
   if not TryGetIntPositiveValueExact(Result) then
-    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of positive int range');
+    raise EArithmeticCryptoLibException.CreateRes(@SAsn1IntegerOutOfPositiveIntRange);
 end;
 
 function TDerInteger.GetLongValueExact(): Int64;
 begin
   if not TryGetLongValueExact(Result) then
-    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of long range');
+    raise EArithmeticCryptoLibException.CreateRes(@SAsn1IntegerOutOfLongRange);
 end;
 
 function TDerInteger.GetLongPositiveValueExact(): Int64;
 begin
   if not TryGetLongPositiveValueExact(Result) then
-    raise EArithmeticCryptoLibException.Create('ASN.1 Integer out of positive long range');
+    raise EArithmeticCryptoLibException.CreateRes(@SAsn1IntegerOutOfPositiveLongRange);
 end;
 
 function TDerInteger.TryGetIntValueExact(out AValue: Int32): Boolean;
@@ -12834,7 +12939,7 @@ var
 begin
   LTag := TAsn1Tag.Create(ATagClass, ATagNo);
   if not Supports(LTag, IAsn1Tag, Result) then
-    raise EInvalidOperationCryptoLibException.Create('failed to get IAsn1Tag interface');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SFailedToGetAsn1TagInterface);
 end;
 
 function TAsn1Tag.GetTagClass(): Int32;
@@ -12883,17 +12988,17 @@ begin
   if (FPlatformType <> nil) and LObj.InheritsFrom(FPlatformType) then
     Result := AAsn1Object
   else
-    raise EInvalidOperationCryptoLibException.CreateFmt('unexpected object: %s', [TPlatformUtilities.GetTypeName(LObj)]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SUnexpectedObject, [TPlatformUtilities.GetTypeName(LObj)]);
 end;
 
 function TAsn1UniversalType.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
 begin
-  raise EInvalidOperationCryptoLibException.Create('unexpected implicit primitive encoding');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedImplicitPrimitiveEncoding);
 end;
 
 function TAsn1UniversalType.FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object;
 begin
-  raise EInvalidOperationCryptoLibException.Create('unexpected implicit constructed encoding');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedImplicitConstructedEncoding);
 end;
 
 function TAsn1UniversalType.FromByteArray(const ABytes: TCryptoLibByteArray): IAsn1Object;

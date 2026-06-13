@@ -37,8 +37,9 @@ resourcestring
   SContentInfoContentMissing = 'ContentInfo content missing';
   SEncryptedContentMissing = 'EncryptedContentInfo content missing';
   SNegativePkcs12IterationCount = 'negative iteration count found';
-  SPkcs12IterationCountsOutOfRange = 'iteration counts >= 2^31 are not suppported';
+  SPkcs12IterationCountsOutOfRange = 'iteration counts >= 2^31 are not supported';
   SPkcs12IterationExceedsMax = 'iteration count %d greater than %d';
+  SIterationsNil = 'iterations cannot be nil';
 
 type
   /// <summary>
@@ -105,10 +106,10 @@ var
   LMax: Int32;
 begin
   if AIterationCount < 0 then
-    raise EInvalidOperationCryptoLibException.Create(SNegativePkcs12IterationCount);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNegativePkcs12IterationCount);
   LMax := GetEffectiveMaxPkcs12Iterations;
   if AIterationCount > LMax then
-    raise EInvalidOperationCryptoLibException.Create(Format(SPkcs12IterationExceedsMax, [AIterationCount, LMax]));
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SPkcs12IterationExceedsMax, [AIterationCount, LMax]);
   Result := AIterationCount;
 end;
 
@@ -117,9 +118,9 @@ var
   LInt: Int32;
 begin
   if AIterations = nil then
-    raise EArgumentNilCryptoLibException.Create('iterations');
+    raise EArgumentNilCryptoLibException.CreateRes(@SIterationsNil);
   if not AIterations.TryGetIntValueExact(LInt) then
-    raise EInvalidOperationCryptoLibException.Create(SPkcs12IterationCountsOutOfRange);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPkcs12IterationCountsOutOfRange);
   Result := ValidateIterations(LInt);
 end;
 
@@ -127,7 +128,7 @@ class function TPkcs12Utilities.GetContent(const AInfo: IPkcsContentInfo): IAsn1
 begin
   Result := AInfo.Content;
   if Result = nil then
-    raise EAsn1ParsingCryptoLibException.Create(SContentInfoContentMissing);
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SContentInfoContentMissing);
 end;
 
 class function TPkcs12Utilities.GetContentOctets(const AInfo: IPkcsContentInfo): TCryptoLibByteArray;
@@ -139,7 +140,7 @@ class function TPkcs12Utilities.GetEncryptedContent(const AEncrypted: IPkcsEncry
 begin
   Result := AEncrypted.Content;
   if Result = nil then
-    raise EAsn1ParsingCryptoLibException.Create(SEncryptedContentMissing);
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SEncryptedContentMissing);
 end;
 
 class function TPkcs12Utilities.DLEncode(const AAsn1Encodable: IAsn1Encodable): TCryptoLibByteArray;
@@ -191,7 +192,7 @@ begin
       LMacData := TMacData.Create(LMac, LMacData.MacSalt, LMacData.Iterations);
     except
       on E: Exception do
-        raise EIOCryptoLibException.Create(Format(SErrorConstructingMac, [E.Message]));
+        raise EIOCryptoLibException.CreateResFmt(@SErrorConstructingMac, [E.Message]);
     end;
   end;
 

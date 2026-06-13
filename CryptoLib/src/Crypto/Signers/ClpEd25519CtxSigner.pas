@@ -32,11 +32,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SContextNil = 'Ctx must not be Nil for Ed25519ctx/Ed25519ph';
-  SNotInitializedForSigning =
-    'Ed25519CtxSigner not Initialised for Signature Generation.';
-  SNotInitializedForVerifying =
-    'Ed25519CtxSigner not Initialised for Verification';
+  SContextNil = 'ctx must not be nil for Ed25519ctx/Ed25519ph';
+  SNotInitialized = 'Ed25519CtxSigner not initialized for %s';
 
 type
   /// <summary>
@@ -306,8 +303,8 @@ function TEd25519CtxSigner.GenerateSignature: TCryptoLibByteArray;
 begin
   if ((not FForSigning) or (FPrivateKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signature generation']);
   end;
   Result := FBuffer.GenerateSignature(FPrivateKey, FContext);
 end;
@@ -317,8 +314,8 @@ function TEd25519CtxSigner.VerifySignature(const ASignature
 begin
   if ((FForSigning) or (FPublicKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifying);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verification']);
   end;
   Result := FBuffer.VerifySignature(FPublicKey, FContext, ASignature);
 end;

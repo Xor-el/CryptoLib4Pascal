@@ -34,12 +34,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooShort_SipHash = 'Output Buffer Too Short';
+  SOutputBufferTooShort = 'output buffer too short';
   SInvalidParameterSipHashMac = 'SipHashMac requires KeyParameter';
   SInvalidSipHashKeyLength = 'SipHashMac requires a 128-bit (16 byte) key';
 
 type
-
   /// <summary>
   /// SipHash MAC wrapper over HashLib4Pascal TSipHash implementations.
   /// </summary>
@@ -135,7 +134,7 @@ begin
   if (System.Length(AOutput) - AOutOff) < GetMacSize then
   begin
     raise EDataLengthCryptoLibException.CreateRes
-      (@SOutputBufferTooShort_SipHash);
+      (@SOutputBufferTooShort);
   end;
 
   LBuf := FHash.TransformFinal.GetBytes();

@@ -27,7 +27,7 @@ uses
 
 resourcestring
   SScaleMayNotBeNegative = 'scale may not be negative';
-  SSameScaleRequired = 'Only SimpleBigDecimal of same scale allowed in arithmetic operations';
+  SSameScaleRequired = 'only SimpleBigDecimal of same scale allowed in arithmetic operations';
 
 type
   /// <summary>
@@ -87,7 +87,7 @@ implementation
 constructor TSimpleBigDecimal.Create(const ABigInt: TBigInteger; AScale: Int32);
 begin
   if AScale < 0 then
-    raise EArgumentCryptoLibException.Create(SScaleMayNotBeNegative);
+    raise EArgumentCryptoLibException.CreateRes(@SScaleMayNotBeNegative);
   FBigInt := ABigInt;
   FScale := AScale;
 end;
@@ -100,13 +100,13 @@ end;
 procedure TSimpleBigDecimal.CheckScale(const AB: TSimpleBigDecimal);
 begin
   if FScale <> AB.FScale then
-    raise EArgumentCryptoLibException.Create(SSameScaleRequired);
+    raise EArgumentCryptoLibException.CreateRes(@SSameScaleRequired);
 end;
 
 function TSimpleBigDecimal.AdjustScale(ANewScale: Int32): TSimpleBigDecimal;
 begin
   if ANewScale < 0 then
-    raise EArgumentCryptoLibException.Create(SScaleMayNotBeNegative);
+    raise EArgumentCryptoLibException.CreateRes(@SScaleMayNotBeNegative);
   if ANewScale = FScale then
     Exit(Self);
   Result := TSimpleBigDecimal.Create(FBigInt.ShiftLeft(ANewScale - FScale), ANewScale);

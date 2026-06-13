@@ -33,8 +33,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMacSizeMultipleOf8 = 'MAC size must be multiple of 8';
-  SNegativeInputLength = 'Can''t have a negative input length!';
+  SMacSizeMultipleOfEight = 'MAC size must be multiple of 8';
+  SNegativeInputLength = 'can''t have a negative input length';
 
 type
   TCbcBlockCipherMac = class sealed(TMac, ICbcBlockCipherMac, IMac)
@@ -97,7 +97,7 @@ constructor TCbcBlockCipherMac.Create(const ACipher: IBlockCipher;
 begin
   inherited Create();
   if (AMacSizeInBits mod 8) <> 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOf8);
+    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOfEight);
 
   FCipherMode := TCbcBlockCipher.Create(ACipher) as IBlockCipherMode;
   FPadding := APadding;

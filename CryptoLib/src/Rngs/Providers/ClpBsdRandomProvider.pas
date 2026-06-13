@@ -31,13 +31,13 @@ uses
 
 resourcestring
   SArc4RandomBufGenerationError =
-    'An Error Occurred while generating random data from the OS random source.';
+    'an error occurred while generating random data from the OS random source';
 
+type
   /// <summary>
   /// Bsd OS random source provider.
   /// Implements Bsd variants using arc4random_buf when available, else /dev/urandom.
   /// </summary>
-type
   TBsdRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

@@ -36,9 +36,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
-  SInvalidParameterArgument = 'CTR/SIC Mode Requires ParametersWithIV';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInvalidParameterArgument = 'CTR/SIC mode requires ParametersWithIV';
   SInvalidTooLargeIVLength =
     'CTR/SIC mode requires IV no greater than: %u bytes';
   SInvalidTooSmallIVLength = 'CTR/SIC mode requires IV of at least: %u bytes';

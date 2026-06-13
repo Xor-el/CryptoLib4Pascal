@@ -34,9 +34,9 @@ uses
 
 resourcestring
   SNotECPrivateKeyParameters = 'ECDHBasicAgreement expects ECPrivateKeyParameters';
-  SWrongDomainParameter = 'ECDH Public Key has Wrong Domain Parameters';
-  SInvalidAgreementValue = 'Infinity is not a Valid Agreement Value for ECDH';
-  SInfinityInvalidPublicKey = 'Infinity is not a Valid Public Key for ECDH';
+  SWrongDomainParameter = 'ECDH public key has wrong domain parameters';
+  SInvalidAgreementValue = 'infinity is not a valid agreement value for ECDH';
+  SInfinityInvalidPublicKey = 'infinity is not a valid public key for ECDH';
 
 type
   /// <summary>

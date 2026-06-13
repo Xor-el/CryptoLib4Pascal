@@ -39,9 +39,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SWrapperNotRecognised = 'Wrapper "%s" not recognised.';
-  SNotInitialisedForWrapping = 'Not initialised for wrapping';
-  SNotInitialisedForUnwrapping = 'Not initialised for unwrapping';
+  SWrapperNotRecognized = 'wrapper %s not recognized';
+  SNotInitializedForWrapping = 'not initialized for wrapping';
+  SNotInitializedForUnwrapping = 'not initialized for unwrapping';
+  SWrapAlgorithmNotImplemented = 'wrap algorithm not implemented';
 
 type
   TWrapperUtilities = class sealed(TObject)
@@ -138,7 +139,7 @@ begin
           Exit;
         end;
     else
-      raise ENotImplementedCryptoLibException.Create('');
+      raise ENotImplementedCryptoLibException.CreateRes(@SWrapAlgorithmNotImplemented);
     end;
   end;
 
@@ -149,7 +150,7 @@ begin
     Exit;
   end;
 
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SWrapperNotRecognised,
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SWrapperNotRecognized,
     [AAlgorithm]);
 end;
 
@@ -184,7 +185,7 @@ function TWrapperUtilities.TBufferedCipherWrapper.Wrap(
   const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
 begin
   if not FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitialisedForWrapping);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitializedForWrapping);
   Result := FCipher.DoFinal(AInput, AInOff, ALength);
 end;
 
@@ -192,7 +193,7 @@ function TWrapperUtilities.TBufferedCipherWrapper.Unwrap(
   const AInput: TCryptoLibByteArray; AInOff, ALength: Int32): TCryptoLibByteArray;
 begin
   if FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitialisedForUnwrapping);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitializedForUnwrapping);
   Result := FCipher.DoFinal(AInput, AInOff, ALength);
 end;
 

@@ -34,10 +34,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMacSizeMultipleOf8 = 'MAC size must be multiple of 8';
-  SNegativeInputLength = 'Can''t have a negative input length!';
-  SInputBufferTooShort = 'Input buffer too short';
-  SOutputBufferTooShort = 'Output buffer too short';
+  SMacSizeMultipleOfEight = 'MAC size must be multiple of 8';
+  SNegativeInputLength = 'can''t have a negative input length';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   IMacCfbBlockCipher = interface(IBlockCipherMode)
@@ -247,7 +247,7 @@ constructor TCfbBlockCipherMac.Create(const ACipher: IBlockCipher;
 begin
   inherited Create();
   if (AMacSizeInBits mod 8) <> 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOf8);
+    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOfEight);
 
   System.SetLength(FMac, ACipher.GetBlockSize());
 

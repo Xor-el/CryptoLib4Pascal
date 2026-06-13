@@ -30,6 +30,13 @@ uses
   ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCBytesPointMustNotBeInfinity = 'CBytes: point must not be infinity';
+  SCBytesInvalidEncodedLength = 'CBytes: invalid encoded length';
+  SCPointExtInvalidLengthExpectedThirtyThree = 'CPointExt: invalid length (expected 33)';
+  SIndividualPubkeySkMustBeThirtyTwoBytes = 'IndividualPubkey: sk must be 32 bytes';
+  SIndividualPubkeyInvalidSecretKey = 'IndividualPubkey: invalid secret key';
+
 type
   /// <summary>
   /// Raised when a signer or the nonce aggregator sends an invalid contribution.
@@ -106,10 +113,10 @@ class function TBip327MuSig2Utilities.CBytes(const ADomain: IECDomainParameters;
   const AP: IECPoint): TCryptoLibByteArray;
 begin
   if (AP = nil) or (AP.IsInfinity) then
-    raise EArgumentCryptoLibException.Create('CBytes: point must not be infinity');
+    raise EArgumentCryptoLibException.CreateRes(@SCBytesPointMustNotBeInfinity);
   Result := AP.GetEncoded(True);
   if System.Length(Result) <> BIP327_PLAIN_PUBKEY_SIZE then
-    raise EArgumentCryptoLibException.Create('CBytes: invalid encoded length');
+    raise EArgumentCryptoLibException.CreateRes(@SCBytesInvalidEncodedLength);
 end;
 
 class function TBip327MuSig2Utilities.CBytesExt(const ADomain: IECDomainParameters;
@@ -159,7 +166,7 @@ var
   LI: Int32;
 begin
   if (ABytes = nil) or (System.Length(ABytes) <> BIP327_PLAIN_PUBKEY_SIZE) then
-    raise EArgumentCryptoLibException.Create('CPointExt: invalid length (expected 33)');
+    raise EArgumentCryptoLibException.CreateRes(@SCPointExtInvalidLengthExpectedThirtyThree);
   LAllZero := True;
   for LI := 0 to System.Length(ABytes) - 1 do
     if ABytes[LI] <> 0 then
@@ -184,11 +191,11 @@ var
   LP: IECPoint;
 begin
   if (ASk = nil) or (System.Length(ASk) <> TBip340SchnorrUtilities.BIP340_SECKEY_SIZE) then
-    raise EArgumentCryptoLibException.Create('IndividualPubkey: sk must be 32 bytes');
+    raise EArgumentCryptoLibException.CreateRes(@SIndividualPubkeySkMustBeThirtyTwoBytes);
   LN := ADomain.N;
   LD := TBigInteger.Create(1, ASk).&Mod(LN);
   if (LD.SignValue = 0) or (LD.CompareTo(LN) >= 0) then
-    raise EArgumentCryptoLibException.Create('IndividualPubkey: invalid secret key');
+    raise EArgumentCryptoLibException.CreateRes(@SIndividualPubkeyInvalidSecretKey);
   LP := TECAlgorithms.ReferenceMultiply(ADomain.G, LD).Normalize();
   Result := CBytes(ADomain, LP);
 end;

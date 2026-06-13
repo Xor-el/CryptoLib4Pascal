@@ -43,6 +43,12 @@ uses
   ClpWeakRef,
   ClpCryptoLibTypes;
 
+resourcestring
+  SNeedCurveWithKnownGroupOrder = 'need curve with known group order';
+  SPointCurveMismatch = 'point curve does not match GLV curve';
+  SOnlyAbstractF2mPointAllowed = 'only AbstractF2mPoint can be used in WTauNafMultiplier';
+  SFixedPointCombNotSupported = 'fixed-point comb doesn''t support scalars larger than the curve order';
+
 type
   TAbstractECMultiplier = class abstract(TInterfacedObject, IECMultiplier)
   strict protected
@@ -186,7 +192,7 @@ constructor TGlvMultiplier.Create(const ACurve: IECCurve; const AGlvEndomorphism
 begin
   Inherited Create;
   if (ACurve = nil) or (not ACurve.Order.IsInitialized) then
-    raise EArgumentCryptoLibException.Create('Need curve with known group order');
+    raise EArgumentCryptoLibException.CreateRes(@SNeedCurveWithKnownGroupOrder);
   FCurve := ACurve;
   FGlvEndomorphism := AGlvEndomorphism;
 end;
@@ -201,7 +207,7 @@ var
 begin
   LCurve := FCurve;
   if not LCurve.Equals(AP.Curve) then
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPointCurveMismatch);
   LN := AP.Curve.Order;
   LAB := FGlvEndomorphism.DecomposeScalar(AK.&Mod(LN));
   LA := LAB[0];
@@ -255,7 +261,7 @@ var
   LRho: IZTauElement;
 begin
   if not Supports(AP, IAbstractF2mPoint, LP) then
-    raise EArgumentCryptoLibException.Create('Only AbstractF2mPoint can be used in WTauNafMultiplier');
+    raise EArgumentCryptoLibException.CreateRes(@SOnlyAbstractF2mPointAllowed);
 
   LCurve := LP.Curve as IAbstractF2mCurve;
   LA := ShortInt(LCurve.A.ToBigInteger().Int32Value);
@@ -352,8 +358,7 @@ begin
   LSize := TFixedPointUtilities.GetCombSize(LC);
 
   if AK.BitLength > LSize then
-    raise EInvalidOperationCryptoLibException.Create(
-      'fixed-point comb doesn''t support scalars larger than the curve order');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SFixedPointCombNotSupported);
 
   LInfo := TFixedPointUtilities.Precompute(AP);
   LLookupTable := LInfo.LookupTable;

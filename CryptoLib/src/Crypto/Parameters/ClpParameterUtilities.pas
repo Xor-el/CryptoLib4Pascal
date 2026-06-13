@@ -42,11 +42,9 @@ uses
   ClpSecureRandom;
 
 resourcestring
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SAlgorithmNotRecognised = 'Algorithm "%s" not recognised.';
-  SCouldNotProcessAsn1Parameters = 'Could not process ASN.1 parameters';
-  SCouldNotProcessAsn1ParametersFmt = 'Could not process ASN.1 parameters: %s';
-  SParametersWithContextNotImpl = 'ParametersWithContext not implemented';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SAlgorithmNotRecognized = 'algorithm %s not recognized';
+  SCouldNotProcessAsn1Parameters = 'could not process ASN.1 parameters: %s';
 
 type
   /// <summary>
@@ -273,7 +271,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
   if LCanonical = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
 
   Result := TKeyParameter.Create(AKeyBytes, AOffset, ALength) as IKeyParameter;
 end;
@@ -315,7 +313,7 @@ begin
 
   LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
   if LCanonical = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
 
   LBasicIVSize := FindBasicIVSize(LCanonical);
   if (LBasicIVSize >= 0) or (LCanonical = 'RIJNDAEL') then
@@ -326,11 +324,11 @@ begin
       Result := TParametersWithIV.Create(AKey, LIV);
     except
       on E: Exception do
-        raise EArgumentCryptoLibException.CreateResFmt(@SCouldNotProcessAsn1ParametersFmt, [E.Message]);
+        raise EArgumentCryptoLibException.CreateResFmt(@SCouldNotProcessAsn1Parameters, [E.Message]);
     end;
     Exit;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
 end;
 
 class function TParameterUtilities.GenerateParameters(const AAlgId: IDerObjectIdentifier;
@@ -349,7 +347,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
   if LCanonical = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
   LBasicIVSize := FindBasicIVSize(LCanonical);
   if LBasicIVSize >= 0 then
   begin
@@ -357,7 +355,7 @@ begin
     Exit;
   end;
 
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognised, [AAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
 end;
 
 class function TParameterUtilities.GetRandom(const ACipherParameters: ICipherParameters;

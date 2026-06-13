@@ -45,11 +45,10 @@ resourcestring
     'Unable to Recover Ephemeral Public Key: "%s"';
   SInvalidCipherTextLength =
     'Length of Input Must be Greater than the MAC and V Combined';
-  SInvalidMAC = 'Invalid MAC';
-  SCipherCannotbeNilInThisMode = 'Cipher Cannot be Nil in This Mode.';
+  SInvalidMAC = 'invalid MAC';
+  SCipherCannotBeNilInThisMode = 'cipher cannot be nil in this mode';
 
 type
-
   /// <summary>
   /// Compatibility Class for PascalCoin IESEngine
   /// </summary>
@@ -110,7 +109,7 @@ begin
   if (FCipher = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes
-      (@SCipherCannotbeNilInThisMode);
+      (@SCipherCannotBeNilInThisMode);
   end
   else
   begin
@@ -160,7 +159,7 @@ begin
   if (FCipher = nil) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes
-      (@SCipherCannotbeNilInThisMode);
+      (@SCipherCannotBeNilInThisMode);
   end
   else
   begin

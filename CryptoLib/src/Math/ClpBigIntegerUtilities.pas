@@ -33,7 +33,7 @@ uses
 
 resourcestring
   SStandardLengthExceeded = 'standard length exceeded';
-  SMinMayNotBeGreaterThanMax = '''min'' may not be greater than ''max''';
+  SMinMayNotBeGreaterThanMax = 'min may not be greater than max';
   SMustBeOdd = 'must be odd';
   SModulusNotPositive = 'BigInteger: modulus not positive';
   SBigIntegerNotInvertible = 'BigInteger not invertible';
@@ -264,7 +264,7 @@ begin
   LBytesLength := System.Length(LBytes);
 
   if LBytesLength > ALength then
-    raise EArgumentCryptoLibException.Create(SStandardLengthExceeded);
+    raise EArgumentCryptoLibException.CreateRes(@SStandardLengthExceeded);
 
   if LBytesLength = ALength then
   begin
@@ -288,7 +288,7 @@ begin
   LBytesLength := System.Length(LBytes);
 
   if LBytesLength > ALen then
-    raise EArgumentCryptoLibException.Create(SStandardLengthExceeded);
+    raise EArgumentCryptoLibException.CreateRes(@SStandardLengthExceeded);
 
   LPadLen := ALen - LBytesLength;
   TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPadLen, Byte(0));
@@ -316,7 +316,7 @@ begin
   if LCmp >= 0 then
   begin
     if LCmp > 0 then
-      raise EArgumentCryptoLibException.Create(SMinMayNotBeGreaterThanMax);
+      raise EArgumentCryptoLibException.CreateRes(@SMinMayNotBeGreaterThanMax);
 
     Result := AMin;
     Exit;
@@ -398,10 +398,10 @@ var
   LM, LX, LZ: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
-    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+    raise EArgumentCryptoLibException.CreateRes(@SMustBeOdd);
 
   if AM.SignValue <> 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusNotPositive);
 
   LReducedX := AX;
   if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
@@ -414,7 +414,7 @@ begin
   LZ := TNat.Create(LLen);
 
   if TMod.ModOddInverse(LM, LX, LZ) = 0 then
-    raise EArithmeticCryptoLibException.Create(SBigIntegerNotInvertible);
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerNotInvertible);
 
   Result := TNat.ToBigInteger(LLen, LZ);
 end;
@@ -426,10 +426,10 @@ var
   LM, LX, LZ: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
-    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+    raise EArgumentCryptoLibException.CreateRes(@SMustBeOdd);
 
   if AM.SignValue <> 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusNotPositive);
 
   if AM.Equals(One) then
   begin
@@ -454,7 +454,7 @@ begin
   LZ := TNat.Create(LLen);
 
   if not TMod.ModOddInverseVar(LM, LX, LZ) then
-    raise EArithmeticCryptoLibException.Create(SBigIntegerNotInvertible);
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerNotInvertible);
 
   Result := TNat.ToBigInteger(LLen, LZ);
 end;
@@ -466,10 +466,10 @@ var
   LM, LX: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
-    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+    raise EArgumentCryptoLibException.CreateRes(@SMustBeOdd);
 
   if AM.SignValue <> 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusNotPositive);
 
   LReducedX := AX;
   if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then
@@ -489,10 +489,10 @@ var
   LM, LX: TCryptoLibUInt32Array;
 begin
   if not AM.TestBit(0) then
-    raise EArgumentCryptoLibException.Create(SMustBeOdd);
+    raise EArgumentCryptoLibException.CreateRes(@SMustBeOdd);
 
   if AM.SignValue <> 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusNotPositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusNotPositive);
 
   LReducedX := AX;
   if (LReducedX.SignValue < 0) or (LReducedX.BitLength > AM.BitLength) then

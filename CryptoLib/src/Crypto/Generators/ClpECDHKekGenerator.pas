@@ -41,8 +41,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooShort = 'Output buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
   SECDHKekNotInitialized = 'ECDH KEK generator not initialized';
+  SDigestNil = 'digest cannot be nil';
+  SParametersNil = 'parameters cannot be nil';
+  SInvalidECDHKdfParameters = 'parameters must support IDHKdfParameters';
 
 type
   /// <summary>
@@ -78,7 +81,7 @@ constructor TECDHKekGenerator.Create(const ADigest: IDigest);
 begin
   inherited Create();
   if ADigest = nil then
-    raise EArgumentNilCryptoLibException.Create('digest');
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestNil);
   FKdf := TKdf2BytesGenerator.Create(ADigest);
 end;
 
@@ -112,10 +115,10 @@ var
   LParams: IDHKdfParameters;
 begin
   if AParameters = nil then
-    raise EArgumentNilCryptoLibException.Create('AParameters');
+    raise EArgumentNilCryptoLibException.CreateRes(@SParametersNil);
 
   if not Supports(AParameters, IDHKdfParameters, LParams) then
-    raise EInvalidCastCryptoLibException.Create('AParameters');
+    raise EInvalidCastCryptoLibException.CreateRes(@SInvalidECDHKdfParameters);
 
   FParams := LParams;
 end;

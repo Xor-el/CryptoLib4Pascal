@@ -37,12 +37,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotSetForWrapping5649 = 'Not set for wrapping';
-  SNotSetForUnwrapping5649 = 'Not set for unwrapping';
-  SUnwrapDataMustBeMultipleOf8_5649 = 'Unwrap data must be a multiple of 8 bytes';
-  SUnwrapDataMustBeAtLeast16_5649 = 'Unwrap data must be at least 16 bytes';
-  SIVLengthNotEqualTo4 = 'IV length not equal to 4';
-  SChecksumFailed5649 = 'Checksum failed';
+  SNotSetForWrapping = 'not set for wrapping';
+  SNotSetForUnwrapping = 'not set for unwrapping';
+  SUnwrapDataMustBeMultipleOfEight = 'unwrap data must be a multiple of 8 bytes';
+  SUnwrapDataMustBeAtLeastSixteen = 'unwrap data must be at least 16 bytes';
+  SIVLengthNotEqualToFour = 'IV length not equal to 4';
+  SChecksumFailed = 'checksum failed';
 
 type
   TRfc5649WrapEngine = class(TInterfacedObject, IRfc5649WrapEngine, IWrapper)
@@ -126,7 +126,7 @@ begin
   begin
     LIv := LWithIV.GetIV();
     if System.Length(LIv) <> 4 then
-      raise EArgumentCryptoLibException.CreateRes(@SIVLengthNotEqualTo4);
+      raise EArgumentCryptoLibException.CreateRes(@SIVLengthNotEqualToFour);
 
     Supports(LWithIV.Parameters, IKeyParameter, FKey);
     System.Move(LIv[0], FPreIV[0], 4 * System.SizeOf(Byte));
@@ -142,7 +142,7 @@ var
   LParamsWithIV: IParametersWithIV;
 begin
   if not FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForWrapping5649);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForWrapping);
 
   System.SetLength(LIv, 8);
   System.Move(FPreIV[0], LIv[0], 4 * System.SizeOf(Byte));
@@ -188,15 +188,15 @@ var
     LExtractedHighOrderAIV, LZeros, LPad, LPlaintext: TCryptoLibByteArray;
 begin
   if FForWrapping then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForUnwrapping5649);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForUnwrapping);
 
   LN := ALength div 8;
 
   if (LN * 8) <> ALength then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeMultipleOf8_5649);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeMultipleOfEight);
 
   if LN <= 1 then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeAtLeast16_5649);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeAtLeastSixteen);
 
   System.SetLength(LRelevantCiphertext, ALength);
   System.Move(AInput[AInOff], LRelevantCiphertext[0], ALength * System.SizeOf(Byte));
@@ -254,7 +254,7 @@ begin
     LIsValid := False;
 
   if not LIsValid then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SChecksumFailed5649);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SChecksumFailed);
 
   System.SetLength(LPlaintext, LMli);
   System.Move(LPaddedPlaintext[0], LPlaintext[0], System.Length(LPlaintext) * System.SizeOf(Byte));

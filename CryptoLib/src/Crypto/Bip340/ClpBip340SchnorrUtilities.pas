@@ -34,6 +34,13 @@ uses
   ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SLiftXMustBeThirtyTwoBytes = 'LiftX: x must be 32 bytes';
+  SLiftXGreaterOrEqualFieldPrime = 'LiftX: x >= p';
+  SLiftXNoSquareRoot = 'LiftX: no square root';
+  SHasEvenYInvalidPoint = 'HasEvenY: invalid point';
+  SBytesFromPointInvalidPoint = 'BytesFromPoint: invalid point';
+
 type
   TBip340SchnorrUtilities = class sealed(TObject)
   public
@@ -92,16 +99,16 @@ var
   LP: IECPoint;
 begin
   if (System.Length(AXBytes) <> BIP340_PUBKEY_SIZE) then
-    raise EArgumentCryptoLibException.Create('LiftX: x must be 32 bytes');
+    raise EArgumentCryptoLibException.CreateRes(@SLiftXMustBeThirtyTwoBytes);
   LCurve := ADomain.Curve;
   LX := TBigInteger.Create(1, AXBytes);
   if (LX.CompareTo(LCurve.Field.Characteristic) >= 0) then
-    raise EArgumentCryptoLibException.Create('LiftX: x >= p');
+    raise EArgumentCryptoLibException.CreateRes(@SLiftXGreaterOrEqualFieldPrime);
   LC := LCurve.FromBigInteger(LX).Square().Multiply(LCurve.FromBigInteger(LX))
     .Add(LCurve.FromBigInteger(TBigInteger.ValueOf(7)));
   LY := LC.Sqrt();
   if (LY = nil) then
-    raise EArgumentCryptoLibException.Create('LiftX: no square root');
+    raise EArgumentCryptoLibException.CreateRes(@SLiftXNoSquareRoot);
   LP := LCurve.CreateRawPoint(LCurve.FromBigInteger(LX), LY);
   if (not HasEvenY(LP)) then
     LP := LP.Negate();
@@ -113,7 +120,7 @@ var
   LY: TBigInteger;
 begin
   if (AP = nil) or (AP.IsInfinity) then
-    raise EArgumentCryptoLibException.Create('HasEvenY: invalid point');
+    raise EArgumentCryptoLibException.CreateRes(@SHasEvenYInvalidPoint);
   LY := AP.Normalize().AffineYCoord.ToBigInteger();
   Result := LY.&And(TBigInteger.One).CompareTo(TBigInteger.Zero) = 0;
 end;
@@ -123,7 +130,7 @@ var
   LX: TBigInteger;
 begin
   if (AP = nil) or (AP.IsInfinity) then
-    raise EArgumentCryptoLibException.Create('BytesFromPoint: invalid point');
+    raise EArgumentCryptoLibException.CreateRes(@SBytesFromPointInvalidPoint);
   LX := AP.Normalize().AffineXCoord.ToBigInteger();
   Result := TBigIntegerUtilities.AsUnsignedByteArray(BIP340_PUBKEY_SIZE, LX);
 end;

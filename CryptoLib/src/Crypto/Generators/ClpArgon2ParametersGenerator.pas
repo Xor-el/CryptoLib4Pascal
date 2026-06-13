@@ -36,12 +36,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SArgon2TypeInvalid = 'Selected Argon2Type is Invalid';
-  SArgon2VersionInvalid = 'Selected Argon2Version is Invalid';
-  SArgon2MemoryCostTypeInvalid = 'Selected Argon2MemoryCostType is Invalid';
+  SInvalidArgon2Selection = 'selected %s is invalid';
 
 type
-
   /// <summary>
   /// <see href="https://github.com/P-H-C/phc-winner-argon2/blob/master/argon2-specs.pdf">
   /// Argon2 Specification</see>, <see href="https://tools.ietf.org/html/draft-irtf-cfrg-argon2-04">
@@ -198,7 +195,7 @@ begin
       end
   else
     begin
-      raise EArgumentCryptoLibException.CreateRes(@SArgon2TypeInvalid);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidArgon2Selection, ['Argon2Type']);
     end;
   end;
 
@@ -214,7 +211,7 @@ begin
       end
   else
     begin
-      raise EArgumentCryptoLibException.CreateRes(@SArgon2VersionInvalid);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidArgon2Selection, ['Argon2Version']);
     end;
   end;
 
@@ -236,8 +233,8 @@ begin
       end
   else
     begin
-      raise EArgumentCryptoLibException.CreateRes
-        (@SArgon2MemoryCostTypeInvalid);
+      raise EArgumentCryptoLibException.CreateResFmt
+        (@SInvalidArgon2Selection, ['Argon2MemoryCostType']);
     end;
   end;
 

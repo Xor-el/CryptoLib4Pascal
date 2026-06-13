@@ -37,6 +37,7 @@ uses
 
 resourcestring
   SNoValidTrailer = 'no valid trailer';
+  SExpectedRsaKeyParameter = 'expected RSA key parameter';
 
 type
   /// <summary>
@@ -140,7 +141,7 @@ begin
 
   if not Supports(LKeyParams, IRsaKeyParameters, FKParam) then
   begin
-    raise EInvalidKeyCryptoLibException.Create('Expected RSA key parameter');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SExpectedRsaKeyParameter);
   end;
 
   FCipher.Init(AForSigning, AParameters);

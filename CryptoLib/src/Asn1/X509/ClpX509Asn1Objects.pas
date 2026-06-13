@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -56,31 +56,67 @@ uses
   ClpCryptoLibComparers;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SAlgorithmNil = 'algorithm';
-  SDigestAlgorithmNil = 'digestAlgorithm';
-  SDigestNil = 'digest';
-  SAlgorithmNilAlt = 'algorithm';
-  SSignatureNil = 'signature';
-  SNotCA = 'Not a valid RSA modulus';
-  SNotValidPublicExponent = 'Not a valid RSA public exponent';
-  SSubjectPublicKeyInfoNil = 'subjectPublicKeyInfo';
-  SNotBeforeNil = 'notBefore';
-  SNotAfterNil = 'notAfter';
-  STbsCertNil = 'tbsCert';
-  SSigAlgIDNil = 'sigAlgID';
-  SSigNil = 'sig';
-  SVersionNumberNotRecognised = 'version number not recognised';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
-  SInvalidKeyIdentifier = 'keyID';
-  SInvalidKeyID = 'keyID';
-  SDeltaCertDescSerialNil = 'serialNumber';
-  SDeltaCertDescSpkiNil = 'subjectPublicKeyInfo';
-  SDeltaCertDescSigValNil = 'signatureValue';
-  SInvalidDsaParameter = 'Invalid DsaParameter: %s';
-  SCertificatePairAtLeastOnePresent = 'At least one of the pair shall be present';
-  SAuthorityKeyIdentifierIssuerSerialMismatch =
-    'AuthorityKeyIdentifier authorityCertIssuer and authorityCertSerialNumber MUST both be present or both be absent';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SAlgorithmNil = 'algorithm identifier cannot be nil';
+  SDigestAlgorithmNil = 'digest algorithm cannot be nil';
+  SDigestNil = 'digest cannot be nil';
+  SSignatureNil = 'signature cannot be nil';
+  SSubjectPublicKeyInfoNil = 'subject public key info cannot be nil';
+  SNotBeforeNil = 'not before time cannot be nil';
+  SNotAfterNil = 'not after time cannot be nil';
+  STBSCertNil = 'TBSCertificate cannot be nil';
+  SSigAlgIDNil = 'signature algorithm identifier cannot be nil';
+  SSigNil = 'signature cannot be nil';
+  SVersionNumberNotRecognized = 'version number not recognized';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SInvalidKeyIdentifier = 'key identifier cannot be nil';
+  SDeltaCertDescSerialNil = 'serial number cannot be nil';
+  SDeltaCertDescSpkiNil = 'subject public key info cannot be nil';
+  SDeltaCertDescSigValNil = 'signature value cannot be nil';
+  SCertificatePairAtLeastOnePresent = 'at least one of the pair shall be present';
+  SAuthorityKeyIdentifierIssuerSerialMismatch = 'AuthorityKeyIdentifier authority cert issuer and authority cert serial number MUST both be present or both be absent';
+  SX509Asn1ElementNil = 'ASN.1 encodable element cannot be nil';
+  SGeneralizedTimeNil = 'generalized time cannot be nil';
+  SUtcTimeNil = 'UTC time cannot be nil';
+  SInvalidTimeObject = 'invalid time object';
+  SSubjectKeyIdentifierFromSpkiNotImplemented = 'subject key identifier from SPKI not yet implemented';
+  SSubjectAltPublicKeyNil = 'subject alternative public key cannot be nil';
+  STBSCSerialNumberNil = 'serial number cannot be nil';
+  STBSCSignatureNil = 'signature cannot be nil';
+  STBSCIssuerNil = 'issuer cannot be nil';
+  STBSCValidityNil = 'validity cannot be nil';
+  STBSCSubjectNil = 'subject cannot be nil';
+  STBSCSubjectPublicKeyInfoNil = 'subject public key info cannot be nil';
+  SIpAddressIsInvalid = 'IP address is invalid';
+  SNameNil = 'name cannot be nil';
+  SNamesCannotBeNilOrEmpty = 'names cannot be nil or empty';
+  SNamesCannotContainNil = 'names cannot contain nil';
+  SExtensionIdNil = 'extension ID cannot be nil';
+  SCriticalNil = 'critical cannot be nil';
+  SExtensionValueNil = 'extension value cannot be nil';
+  SExtensionNil = 'extension cannot be nil';
+  SExtensionArrayCannotBeNilOrEmpty = 'extension array cannot be nil or empty';
+  SBadlyFormattedDirectoryString = 'badly formatted directory string';
+  SAttrTypeNil = 'attribute type cannot be nil';
+  SAttrValuesNil = 'attribute values cannot be nil';
+  SNotBeforeTimeNil = 'not before time cannot be nil';
+  SNotAfterTimeNil = 'not after time cannot be nil';
+  SPolicyIdentifierNil = 'policy identifier cannot be nil';
+  SSerialNil = 'serial cannot be nil';
+  SObjectDigestInfoDigestAlgorithmNil = 'digest algorithm cannot be nil';
+  SUnknownTagInHolder = 'unknown tag in Holder';
+  SAttributeCertificateAcInfoNil = 'AC info cannot be nil';
+  SAttributeCertificateSignatureAlgorithmNil = 'signature algorithm cannot be nil';
+  SAttributeCertificateSignatureValueNil = 'signature value cannot be nil';
+  SInvalidDateString = 'invalid date string: %s';
+  SCannotProcessStringForTag = 'cannot process string for tag: %s';
+  SRepeatedExtensionFound = 'repeated extension found: %s';
+  SNoAttributeForObjectIdPassed = 'no attribute for object id - %s - passed to distinguished name';
+  SUnknownObjectIdPassedToDistinguished = 'unknown object id - %s - passed to distinguished name';
+  SCannotConvertExtension = 'cannot convert extension: %s';
+  SUnknownObjectInFactory = 'unknown object in factory: %s';
+  SOnlyOneOfOnlyContainsCaCertsUserCertsAttrCerts = 'only one of only-contains-CA-certs, only-contains-user-certs, or only-contains-attribute-certs can be true';
+  SOidsMustBeSameLengthAsValues = 'OIDs must be same length as values';
 
 type
   /// <summary>
@@ -839,15 +875,15 @@ type
     class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
     class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
     class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
-    /// <summary>RFC 9336 sec. 3.1 — signing documents (e.g. PDF, XML, JSON) for human consumption (<c>id-kp-documentSigning</c>, <c>{ id-kp 36 }</c>).</summary>
+    /// <summary>RFC 9336 sec. 3.1 ? signing documents (e.g. PDF, XML, JSON) for human consumption (<c>id-kp-documentSigning</c>, <c>{ id-kp 36 }</c>).</summary>
     class property IdKpDocumentSigning: IDerObjectIdentifier read GetIdKpDocumentSigning;
-    /// <summary>RFC 9809 sec. 3 — signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
+    /// <summary>RFC 9809 sec. 3 ? signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
     class property IdKpConfigSigning: IDerObjectIdentifier read GetIdKpConfigSigning;
-    /// <summary>RFC 9809 sec. 3 — signing trust anchor configuration files (<c>id-kp-trustAnchorConfigSigning</c>, <c>{ id-kp 42 }</c>).</summary>
+    /// <summary>RFC 9809 sec. 3 ? signing trust anchor configuration files (<c>id-kp-trustAnchorConfigSigning</c>, <c>{ id-kp 42 }</c>).</summary>
     class property IdKpTrustAnchorConfigSigning: IDerObjectIdentifier read GetIdKpTrustAnchorConfigSigning;
-    /// <summary>RFC 9809 sec. 3 — signing software or firmware update packages (<c>id-kp-updatePackageSigning</c>, <c>{ id-kp 43 }</c>).</summary>
+    /// <summary>RFC 9809 sec. 3 ? signing software or firmware update packages (<c>id-kp-updatePackageSigning</c>, <c>{ id-kp 43 }</c>).</summary>
     class property IdKpUpdatePackageSigning: IDerObjectIdentifier read GetIdKpUpdatePackageSigning;
-    /// <summary>RFC 9809 sec. 3 — authenticating communication peers for safety-critical communication (<c>id-kp-safetyCommunication</c>, <c>{ id-kp 44 }</c>).</summary>
+    /// <summary>RFC 9809 sec. 3 ? authenticating communication peers for safety-critical communication (<c>id-kp-safetyCommunication</c>, <c>{ id-kp 44 }</c>).</summary>
     class property IdKpSafetyCommunication: IDerObjectIdentifier read GetIdKpSafetyCommunication;
     class property IdKpSmartcardlogon: IDerObjectIdentifier read GetIdKpSmartcardlogon;
     class property IdKpMacAddress: IDerObjectIdentifier read GetIdKpMacAddress;
@@ -2480,7 +2516,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IAlgorithmIdentifier, Result) then
     Exit;
@@ -2529,7 +2565,7 @@ begin
 
   if AAlgorithm = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SAlgorithmNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   end;
 
   FAlgorithm := AAlgorithm;
@@ -2630,7 +2666,7 @@ begin
 
   if AAlgId = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SDigestAlgorithmNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestAlgorithmNil);
   end;
 
   FDigestAlgorithm := AAlgId;
@@ -2644,12 +2680,12 @@ begin
 
   if ADigestAlgorithm = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SDigestAlgorithmNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestAlgorithmNil);
   end;
 
   if ADigest = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SDigestNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestNil);
   end;
 
   FDigestAlgorithm := ADigestAlgorithm;
@@ -2751,11 +2787,11 @@ constructor TDeltaCertificateDescriptor.Create(const ASerialNumber: IDerInteger;
 begin
   inherited Create();
   if ASerialNumber = nil then
-    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSerialNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDeltaCertDescSerialNil);
   if ASubjectPublicKeyInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSpkiNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDeltaCertDescSpkiNil);
   if ASignatureValue = nil then
-    raise EArgumentNilCryptoLibException.Create(SDeltaCertDescSigValNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SDeltaCertDescSigValNil);
   FSerialNumber := ASerialNumber;
   FSignature := ASignature;
   FIssuer := AIssuer;
@@ -2930,7 +2966,7 @@ var
   LGeneralizedTime: IAsn1GeneralizedTime;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, ITime, Result) then
     Exit;
@@ -2962,7 +2998,7 @@ constructor TTime.Create(const AGeneralizedTime: IAsn1GeneralizedTime);
 begin
   inherited Create();
   if AGeneralizedTime = nil then
-    raise EArgumentNilCryptoLibException.Create('generalizedTime');
+    raise EArgumentNilCryptoLibException.CreateRes(@SGeneralizedTimeNil);
   FTimeObject := AGeneralizedTime;
 end;
 
@@ -2970,7 +3006,7 @@ constructor TTime.Create(const AUtcTime: IAsn1UtcTime);
 begin
   inherited Create();
   if AUtcTime = nil then
-    raise EArgumentNilCryptoLibException.Create('utcTime');
+    raise EArgumentNilCryptoLibException.CreateRes(@SUtcTimeNil);
 
   // Validate utcTime is in the appropriate year range
   AUtcTime.ToDateTime(2049);
@@ -3027,12 +3063,12 @@ begin
       Exit;
     end;
 
-    raise EInvalidOperationCryptoLibException.Create('invalid time object');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTimeObject);
   except
     on E: Exception do
     begin
       // this should never happen
-      raise EInvalidOperationCryptoLibException.CreateFmt('invalid date string: %s', [E.Message]);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SInvalidDateString, [E.Message]);
     end;
   end;
 end;
@@ -3072,7 +3108,7 @@ begin
     Exit;
   end;
 
-  raise EInvalidOperationCryptoLibException.Create('invalid time object');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTimeObject);
 end;
 
 { TValidity }
@@ -3144,12 +3180,12 @@ begin
 
   if ANotBefore = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SNotBeforeNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SNotBeforeNil);
   end;
 
   if ANotAfter = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SNotAfterNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SNotAfterNil);
   end;
 
   FNotBefore := ANotBefore;
@@ -3248,7 +3284,7 @@ begin
     ReadOptionalX509Extensions);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 
   FSeq := ASeq;
 end;
@@ -3331,7 +3367,7 @@ begin
 
   if AAlgorithm = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SAlgorithmNilAlt);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   end;
 
   FAlgorithm := AAlgorithm;
@@ -3418,7 +3454,7 @@ begin
 
   if ASignature = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SSignatureNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSignatureNil);
   end;
 
   FSignature := ASignature;
@@ -3460,7 +3496,7 @@ begin
   if Supports(AObj, ISubjectPublicKeyInfo, LPublicKeyInfo) then
   begin
     // TODO: This constructor is obsolete - use X509ExtensionUtilities instead
-    raise ENotImplementedCryptoLibException.Create('SubjectKeyIdentifier from SubjectPublicKeyInfo not yet implemented');
+    raise ENotImplementedCryptoLibException.CreateRes(@SSubjectKeyIdentifierFromSpkiNotImplemented);
   end;
 
   if Supports(AObj, IX509Extension, LExtension) then
@@ -3509,7 +3545,7 @@ begin
 
   if AKeyID = nil then
   begin
-    raise EArgumentNilCryptoLibException.Create(SInvalidKeyIdentifier);
+    raise EArgumentNilCryptoLibException.CreateRes(@SInvalidKeyIdentifier);
   end;
 
   FKeyIdentifier := System.Copy(AKeyID);
@@ -3616,7 +3652,7 @@ begin
 
   if LPos <> LCount then
   begin
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
   end;
 end;
 
@@ -3723,7 +3759,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, ISubjectPublicKeyInfo, Result) then
     Exit;
@@ -3878,9 +3914,9 @@ begin
   inherited Create();
 
   if AAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create(SAlgorithmNilAlt);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if ASubjectAltPublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('subjectAltPublicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectAltPublicKeyNil);
 
   FAlgorithm := AAlgorithm;
   FSubjectAltPublicKey := ASubjectAltPublicKey;
@@ -3891,7 +3927,7 @@ begin
   inherited Create();
 
   if ASubjectPublicKeyInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SSubjectPublicKeyInfoNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectPublicKeyInfoNil);
 
   FAlgorithm := ASubjectPublicKeyInfo.Algorithm;
   FSubjectAltPublicKey := ASubjectPublicKeyInfo.PublicKey;
@@ -4005,7 +4041,7 @@ begin
   end
   else if not FVersion.HasValue(2) then
   begin
-    raise EArgumentCryptoLibException.Create(SVersionNumberNotRecognised);
+    raise EArgumentCryptoLibException.CreateRes(@SVersionNumberNotRecognized);
   end;
 
   FSerialNumber := TDerInteger.GetInstance(ASeq[LPos]);
@@ -4038,7 +4074,7 @@ begin
 
   if LPos <> LCount then
   begin
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
   end;
 
   FSeq := ASeq;
@@ -4058,17 +4094,17 @@ begin
   else
     FVersion := AVersion;
   if ASerialNumber = nil then
-    raise EArgumentNilCryptoLibException.Create('serialNumber');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCSerialNumberNil);
   if ASignature = nil then
-    raise EArgumentNilCryptoLibException.Create('signature');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCSignatureNil);
   if AIssuer = nil then
-    raise EArgumentNilCryptoLibException.Create('issuer');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCIssuerNil);
   if AValidity = nil then
-    raise EArgumentNilCryptoLibException.Create('validity');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCValidityNil);
   if ASubject = nil then
-    raise EArgumentNilCryptoLibException.Create('subject');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCSubjectNil);
   if ASubjectPublicKeyInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('subjectPublicKeyInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCSubjectPublicKeyInfoNil);
 
   FSerialNumber := ASerialNumber;
   FSignature := ASignature;
@@ -4242,7 +4278,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IX509CertificateStructure, Result) then
     Exit;
@@ -4284,11 +4320,11 @@ begin
   inherited Create();
 
   if ATbsCert = nil then
-    raise EArgumentNilCryptoLibException.Create(STbsCertNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCertNil);
   if ASigAlgID = nil then
-    raise EArgumentNilCryptoLibException.Create(SSigAlgIDNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSigAlgIDNil);
   if ASig = nil then
-    raise EArgumentNilCryptoLibException.Create(SSigNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSigNil);
 
   FTbsCertificate := ATbsCert;
   FSignatureAlgorithm := ASigAlgID;
@@ -4532,7 +4568,7 @@ var
   LBaseObject: IAsn1Encodable;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IGeneralName, Result) then
     Exit;
@@ -4637,14 +4673,13 @@ begin
         // Parse IP address (IPv4 or IPv6)
         LEncoding := TGeneralName.ToGeneralNameEncoding(AName);
         if LEncoding = nil then
-          raise EArgumentCryptoLibException.Create('IP Address is invalid');
+          raise EArgumentCryptoLibException.CreateRes(@SIpAddressIsInvalid);
         FName := TDerOctetString.Create(LEncoding);
       end;
     RegisteredID:
       FName := TDerObjectIdentifier.Create(AName);
   else
-    raise EArgumentCryptoLibException.CreateFmt('can''t process string for tag: %s',
-      [TAsn1Utilities.GetTagText(TAsn1Tags.ContextSpecific, ATag)]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotProcessStringForTag, [TAsn1Utilities.GetTagText(TAsn1Tags.ContextSpecific, ATag)]);
   end;
 end;
 
@@ -5023,7 +5058,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IGeneralNames, Result) then
     Exit;
@@ -5055,7 +5090,7 @@ constructor TGeneralNames.Create(const AName: IGeneralName);
 begin
   inherited Create();
   if AName = nil then
-    raise EArgumentNilCryptoLibException.Create('name');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNameNil);
   System.SetLength(FNames, 1);
   FNames[0] := AName;
 end;
@@ -5066,11 +5101,11 @@ var
 begin
   inherited Create();
   if (ANames = nil) or (System.Length(ANames) = 0) then
-    raise EArgumentNilCryptoLibException.Create('names cannot be null or empty');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNamesCannotBeNilOrEmpty);
   for LI := 0 to System.Length(ANames) - 1 do
   begin
     if ANames[LI] = nil then
-      raise EArgumentNilCryptoLibException.Create('names cannot contain null');
+      raise EArgumentNilCryptoLibException.CreateRes(@SNamesCannotContainNil);
   end;
   FNames := TArrayUtilities.Clone<IGeneralName>(ANames, IdentityGeneralName);
 end;
@@ -5570,7 +5605,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IExtension, Result) then
     Exit;
@@ -5618,11 +5653,11 @@ begin
   inherited Create();
 
   if AExtnID = nil then
-    raise EArgumentNilCryptoLibException.Create('extnID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SExtensionIdNil);
   if ACritical = nil then
-    raise EArgumentNilCryptoLibException.Create('critical');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCriticalNil);
   if AExtnValue = nil then
-    raise EArgumentNilCryptoLibException.Create('extnValue');
+    raise EArgumentNilCryptoLibException.CreateRes(@SExtensionValueNil);
 
   FExtnID := AExtnID;
   FCritical := ACritical;
@@ -5650,7 +5685,7 @@ begin
     Result := TAsn1Object.FromByteArray(FExtnValue.GetOctets());
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('can''t convert extension: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotConvertExtension, [E.Message]);
   end;
 end;
 
@@ -5695,7 +5730,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('unknown object in factory: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObjectInFactory, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TExtensions.GetInstance(const AObj: IAsn1Convertible): IExtensions;
@@ -5723,7 +5758,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IExtensions, Result) then
     Exit;
@@ -5860,7 +5895,7 @@ begin
     LOid := LExt.ExtnID;
 
     if FExtensions.ContainsKey(LOid) then
-      raise EArgumentCryptoLibException.CreateFmt('repeated extension found: %s', [LOid.Id]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SRepeatedExtensionFound, [LOid.Id]);
 
     FExtensions.Add(LOid, LExt);
     FOrdering.Add(LOid);
@@ -5872,7 +5907,7 @@ begin
   inherited Create();
 
   if AExtension = nil then
-    raise EArgumentNilCryptoLibException.Create('extension');
+    raise EArgumentNilCryptoLibException.CreateRes(@SExtensionNil);
 
   FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   FExtensions := TDictionary<IDerObjectIdentifier, IExtension>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -5889,7 +5924,7 @@ begin
   inherited Create();
 
   if (AExtensions = nil) or (Length(AExtensions) = 0) then
-    raise EArgumentCryptoLibException.Create('extension array cannot be null or empty');
+    raise EArgumentCryptoLibException.CreateRes(@SExtensionArrayCannotBeNilOrEmpty);
 
   FOrdering := TList<IDerObjectIdentifier>.Create(TAsn1Comparers.OidComparer);
   FExtensions := TDictionary<IDerObjectIdentifier, IExtension>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -5898,10 +5933,10 @@ begin
   begin
     LExt := AExtensions[LI];
     if LExt = nil then
-      raise EArgumentNilCryptoLibException.Create('extension');
+      raise EArgumentNilCryptoLibException.CreateRes(@SExtensionNil);
 
     if FExtensions.ContainsKey(LExt.ExtnID) then
-      raise EArgumentCryptoLibException.CreateFmt('repeated extension found: %s', [LExt.ExtnID.Id]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SRepeatedExtensionFound, [LExt.ExtnID.Id]);
 
     FExtensions.Add(LExt.ExtnID, LExt);
     FOrdering.Add(LExt.ExtnID);
@@ -6353,7 +6388,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('unknown object in factory: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObjectInFactory, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TX509Extensions.GetInstance(const AObj: IAsn1Convertible): IX509Extensions;
@@ -6381,7 +6416,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IX509Extensions, Result) then
     Exit;
@@ -6449,7 +6484,7 @@ begin
     LOctets := TAsn1OctetString.GetInstance(LS[LS.Count - 1]);
 
     if FExtensions.ContainsKey(LOid) then
-      raise EArgumentCryptoLibException.CreateFmt('repeated extension found: %s', [LOid.Id]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SRepeatedExtensionFound, [LOid.Id]);
 
     LExt := TX509Extension.Create(LIsCritical, LOctets);
     FExtensions.Add(LOid, LExt);
@@ -6722,7 +6757,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IX509Name, Result) then
     Exit;
@@ -6918,7 +6953,7 @@ begin
   begin
     LOid := AOrdering[LI];
     if not AAttributes.TryGetValue(LOid, LAttribute) then
-      raise EArgumentCryptoLibException.CreateFmt('No attribute for object id - %s - passed to distinguished name', [LOid.Id]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SNoAttributeForObjectIdPassed, [LOid.Id]);
 
     AConverter.GetConvertedValue(LOid, LAttribute);
 
@@ -6942,7 +6977,7 @@ begin
   FConverter := AConverter;
 
   if AOids.Count <> AValues.Count then
-    raise EArgumentCryptoLibException.Create('''oids'' must be same length as ''values''.');
+    raise EArgumentCryptoLibException.CreateRes(@SOidsMustBeSameLengthAsValues);
 
   for LI := 0 to AOids.Count - 1 do
     AConverter.GetConvertedValue(AOids[LI], AValues[LI]);
@@ -7059,7 +7094,7 @@ begin
   FConverter := CreateDefaultConverter();
 
   if System.Length(AOids) <> System.Length(AValues) then
-    raise EArgumentCryptoLibException.Create('''oids'' must be same length as ''values''.');
+    raise EArgumentCryptoLibException.CreateRes(@SOidsMustBeSameLengthAsValues);
 
   for LI := 0 to System.Length(AOids) - 1 do
     FConverter.GetConvertedValue(AOids[LI], AValues[LI]);
@@ -7454,7 +7489,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.CreateFmt('Unknown object id - %s - passed to distinguished name', [AName]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SUnknownObjectIdPassedToDistinguished, [AName]);
 end;
 
 class function TX509Name.NextToken(const ATokenizer: IX509NameTokenizer): String;
@@ -7463,7 +7498,7 @@ var
 begin
   LToken := ATokenizer.NextToken();
   if LToken = '' then
-    raise EArgumentCryptoLibException.Create('badly formatted directory string');
+    raise EArgumentCryptoLibException.CreateRes(@SBadlyFormattedDirectoryString);
   Result := LToken;
 end;
 
@@ -7508,7 +7543,7 @@ begin
   LTokenizer := TX509NameTokenizer.Create(AToken, '=');
   LTypeToken := LTokenizer.NextToken();
   if (LTypeToken = '') or not LTokenizer.HasMoreTokens() then
-    raise EArgumentCryptoLibException.Create('badly formatted directory string');
+    raise EArgumentCryptoLibException.CreateRes(@SBadlyFormattedDirectoryString);
 
   LValueToken := LTokenizer.Remaining();
 
@@ -7781,7 +7816,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FAttrType := TDerObjectIdentifier.GetInstance(ASeq[0]);
   FAttrValues := TAsn1Set.GetInstance(ASeq[1]);
@@ -7791,9 +7826,9 @@ constructor TAttributeX509.Create(const AAttrType: IDerObjectIdentifier; const A
 begin
   inherited Create();
   if AAttrType = nil then
-    raise EArgumentNilCryptoLibException.Create('attrType');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttrTypeNil);
   if AAttrValues = nil then
-    raise EArgumentNilCryptoLibException.Create('attrValues');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttrValuesNil);
   FAttrType := AAttrType;
   FAttrValues := AAttrValues;
 end;
@@ -7872,7 +7907,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FNotBeforeTime := TAsn1GeneralizedTime.GetInstance(ASeq[0]);
   FNotAfterTime := TAsn1GeneralizedTime.GetInstance(ASeq[1]);
@@ -7882,9 +7917,9 @@ constructor TAttCertValidityPeriod.Create(const ANotBeforeTime, ANotAfterTime: I
 begin
   inherited Create();
   if ANotBeforeTime = nil then
-    raise EArgumentNilCryptoLibException.Create('notBeforeTime');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNotBeforeTimeNil);
   if ANotAfterTime = nil then
-    raise EArgumentNilCryptoLibException.Create('notAfterTime');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNotAfterTimeNil);
   FNotBeforeTime := ANotBeforeTime;
   FNotAfterTime := ANotAfterTime;
 end;
@@ -7958,7 +7993,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FPolicyIdentifier := TDerObjectIdentifier.GetInstance(ASeq[0]);
   if LCount < 2 then
@@ -7977,7 +8012,7 @@ constructor TPolicyInformation.Create(const APolicyIdentifier: IDerObjectIdentif
 begin
   inherited Create();
   if APolicyIdentifier = nil then
-    raise EArgumentNilCryptoLibException.Create('policyIdentifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPolicyIdentifierNil);
   FPolicyIdentifier := APolicyIdentifier;
   FPolicyQualifiers := APolicyQualifiers;
 end;
@@ -8046,7 +8081,7 @@ var
   LSeq: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IIssuerSerial, Result) then
     Exit;
@@ -8075,7 +8110,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FIssuer := TGeneralNames.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -8084,7 +8119,7 @@ begin
   FIssuerUid := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, ReadOptionalDerBitString);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TIssuerSerial.ReadOptionalDerBitString(AElement: IAsn1Encodable): IDerBitString;
@@ -8107,9 +8142,9 @@ constructor TIssuerSerial.Create(const AIssuer: IGeneralNames; const ASerial: ID
 begin
   inherited Create();
   if AIssuer = nil then
-    raise EArgumentNilCryptoLibException.Create('issuer');
+    raise EArgumentNilCryptoLibException.CreateRes(@STBSCIssuerNil);
   if ASerial = nil then
-    raise EArgumentNilCryptoLibException.Create('serial');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSerialNil);
   FIssuer := AIssuer;
   FSerial := ASerial;
   FIssuerUid := AIssuerUid;
@@ -8184,7 +8219,7 @@ var
   LSeq: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IV2Form, Result) then
     Exit;
@@ -8213,7 +8248,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FIssuerName := TAsn1Utilities.ReadOptional<IGeneralNames>(ASeq, LPos, ReadOptionalGeneralNames);
   FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
@@ -8222,7 +8257,7 @@ begin
     GetTaggedObjectDigestInfo);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TV2Form.ReadOptionalGeneralNames(AElement: IAsn1Encodable): IGeneralNames;
@@ -8345,7 +8380,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 3) or (LCount > 4) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FDigestedObjectType := TDerEnumerated.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -8356,7 +8391,7 @@ begin
   System.Inc(LPos);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TObjectDigestInfo.ReadOptionalDerObjectIdentifier(AElement: IAsn1Encodable): IDerObjectIdentifier;
@@ -8374,7 +8409,7 @@ begin
     FOtherObjectTypeID := TDerObjectIdentifier.Create(AOtherObjectTypeID);
 
   if ADigestAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('digestAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjectDigestInfoDigestAlgorithmNil);
   FDigestAlgorithm := ADigestAlgorithm;
   FObjectDigest := TDerBitString.Create(AObjectDigest);
 end;
@@ -8462,7 +8497,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FDistributionPointName := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
     GetTaggedDistributionPointName);
@@ -8472,7 +8507,7 @@ begin
     GetTaggedGeneralNames);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TDistributionPoint.GetTaggedDistributionPointName(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName;
@@ -8623,8 +8658,7 @@ begin
 
   LCount := Ord(AOnlyContainsUserCerts) + Ord(AOnlyContainsCACerts) + Ord(AOnlyContainsAttributeCerts);
   if LCount > 1 then
-    raise EArgumentCryptoLibException.Create(
-      'only one of onlyContainsCACerts, onlyContainsUserCerts, or onlyContainsAttributeCerts can be true');
+    raise EArgumentCryptoLibException.CreateRes(@SOnlyOneOfOnlyContainsCaCertsUserCertsAttrCerts);
 
   FDistributionPoint := ADistributionPoint;
   FOnlyContainsUserCerts := TDerBoolean.GetInstance(AOnlyContainsUserCerts);
@@ -8707,7 +8741,7 @@ begin
     FOnlyContainsAttributeCerts := TDerBoolean.False;
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 
   FSeq := ASeq;
 end;
@@ -8848,7 +8882,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, ICertificateList, Result) then
     Exit;
@@ -8980,7 +9014,7 @@ var
   LBaseObject: IAsn1Encodable;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IDistributionPointName, Result) then
     Exit;
@@ -9210,7 +9244,7 @@ begin
     GetTaggedX509Extensions);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 
   FSeq := ASeq;
 end;
@@ -9332,7 +9366,7 @@ var
   LV2Form: IV2Form;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
 
   if Supports(AElement, IAttCertIssuer, Result) then
     Exit;
@@ -9464,7 +9498,7 @@ begin
   else if ATagObj.HasContextTag(1) then
     FEntityName := TGeneralNames.GetTagged(ATagObj, True)
   else
-    raise EArgumentCryptoLibException.Create('unknown tag in Holder');
+    raise EArgumentCryptoLibException.CreateRes(@SUnknownTagInHolder);
   FVersion := 0;
 end;
 
@@ -9476,7 +9510,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
     GetTaggedIssuerSerial);
@@ -9486,7 +9520,7 @@ begin
     GetTaggedObjectDigestInfo);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 
   FVersion := 1;
 end;
@@ -9632,7 +9666,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 3 then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FACInfo := TAttributeCertificateInfo.GetInstance(ASeq[0]);
   FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[1]);
@@ -9644,11 +9678,11 @@ constructor TAttributeCertificate.Create(const AACInfo: IAttributeCertificateInf
 begin
   inherited Create();
   if AACInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('acinfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttributeCertificateAcInfoNil);
   if ASignatureAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('signatureAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttributeCertificateSignatureAlgorithmNil);
   if ASignatureValue = nil then
-    raise EArgumentNilCryptoLibException.Create('signatureValue');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttributeCertificateSignatureValueNil);
   FACInfo := AACInfo;
   FSignatureAlgorithm := ASignatureAlgorithm;
   FSignatureValue := ASignatureValue;
@@ -9734,7 +9768,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 6) or (LCount > 9) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
 
   FVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
   if FVersion = nil then
@@ -9755,7 +9789,7 @@ begin
   FExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos, ReadOptionalX509Extensions);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TAttributeCertificateInfo.ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger;

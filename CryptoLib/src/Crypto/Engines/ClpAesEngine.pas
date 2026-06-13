@@ -34,12 +34,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SAESEngineNotInitialised = 'AES Engine not Initialised';
-  SInputBuffertooShort = 'Input Buffer too Short';
-  SOutputBuffertooShort = 'Output Buffer too Short';
-  SInvalidParameterAESInit = 'Invalid Parameter Passed to AES Init - "%s"';
-  SInvalidKeyLength = 'Key Length not 128/192/256 bits.';
-  SInvalidOperation = 'Should Never Get Here';
+  SAesEngineNotInitialized = 'AES engine not initialized';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInvalidParameterAESInit = 'invalid parameter passed to AES init: %s';
+  SInvalidKeyLength = 'key length not 128/192/256 bits';
+  SInvalidOperation = 'should never get here';
 
 type
 
@@ -770,11 +770,11 @@ begin
   if (FWorkingKey = nil) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes
-      (@SAESEngineNotInitialised);
+      (@SAesEngineNotInitialized);
   end;
 
-  TCheck.DataLength(AInput, AInOff, 16, SInputBuffertooShort);
-  TCheck.OutputLength(AOutput, AOutOff, 16, SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, 16, SInputBufferTooShort);
+  TCheck.OutputLength(AOutput, AOutOff, 16, SOutputBufferTooShort);
 
   UnPackBlock(AInput, AInOff, LC0, LC1, LC2, LC3);
 

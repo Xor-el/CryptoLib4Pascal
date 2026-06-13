@@ -41,9 +41,9 @@ uses
   ClpISecureRandom;
 
 resourcestring
-  SUnRecognisedPRNGAlgorithm = 'Unrecognised PRNG Algorithm: %s "algorithm"';
-  SCannotBeNegative = 'Cannot be Negative  "maxValue"';
-  SInvalidMaxValue = 'maxValue Cannot be Less Than minValue';
+  SUnrecognizedPRNGAlgorithm = 'unrecognized PRNG algorithm: %s';
+  SMaxValueCannotBeNegative = 'maxValue cannot be negative';
+  SInvalidMaxValue = 'maxValue cannot be less than minValue';
 
 type
   TSecureRandom = class(TRandom, ISecureRandom)
@@ -145,7 +145,7 @@ begin
   begin
     if (AMaxValue < 0) then
     begin
-      raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCannotBeNegative);
+      raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SMaxValueCannotBeNegative);
     end;
 
     Result := 0;
@@ -338,7 +338,7 @@ begin
     end;
   end;
 
-  raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognisedPRNGAlgorithm,
+  raise EArgumentCryptoLibException.CreateResFmt(@SUnrecognizedPRNGAlgorithm,
     [AAlgorithm]);
 end;
 

@@ -32,6 +32,14 @@ uses
   ClpBitOperations,
   ClpAsn1Streams;
 
+resourcestring
+  SInitialCapacityMustNotBeNegative = 'initial capacity must not be negative';
+  SElementNil = 'element cannot be nil';
+  SEncodableArrayNil = 'encodable array cannot be nil';
+  SOtherVectorNil = 'vector cannot be nil';
+  SExtraDataFoundAfterObject = 'extra data found after object';
+  SIndexOutOfRange = 'index %d out of range (element count %d)';
+
 type
   /// <summary>
   /// Abstract base class for ASN.1 encodable objects.
@@ -389,7 +397,7 @@ constructor TAsn1EncodableVector.Create(AInitialCapacity: Int32);
 begin
   inherited Create;
   if AInitialCapacity < 0 then
-    raise EArgumentCryptoLibException.Create('must not be negative');
+    raise EArgumentCryptoLibException.CreateRes(@SInitialCapacityMustNotBeNegative);
 
   if AInitialCapacity = 0 then
     FElements := FEmptyElements
@@ -424,7 +432,7 @@ end;
 procedure TAsn1EncodableVector.Add(const AElement: IAsn1Encodable);
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   PrepareCapacity(1);
   FElements[FElementCount] := AElement;
@@ -499,7 +507,7 @@ var
   LI: Int32;
 begin
   if AE = nil then
-    raise EArgumentNilCryptoLibException.Create('e');
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncodableArrayNil);
 
   for LI := 0 to System.Length(AE) - 1 do
     Add(AE[LI]);
@@ -511,7 +519,7 @@ var
   LOtherElementCount: Int32;
 begin
   if AOther = nil then
-    raise EArgumentNilCryptoLibException.Create('other');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherVectorNil);
 
   LOtherElementCount := AOther.Count;
   if LOtherElementCount < 1 then
@@ -528,7 +536,7 @@ end;
 function TAsn1EncodableVector.GetItem(AIndex: Int32): IAsn1Encodable;
 begin
   if AIndex >= FElementCount then
-    raise EArgumentOutOfRangeCryptoLibException.CreateFmt('%d >= %d', [AIndex, FElementCount]);
+    raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(@SIndexOutOfRange, [AIndex, FElementCount]);
 
   Result := FElements[AIndex];
 end;
@@ -696,7 +704,7 @@ begin
   try
     Result := LAsn1In.ReadObject();
     if LAsn1In.Position <> LAsn1In.Size then
-      raise EIOCryptoLibException.Create('extra data found after object');
+      raise EIOCryptoLibException.CreateRes(@SExtraDataFoundAfterObject);
   finally
     LAsn1In.Free;
   end;

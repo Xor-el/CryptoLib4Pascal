@@ -36,7 +36,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SRsaEngineNotInitialised = 'RSA engine not initialised';
+  SRsaEngineNotInitialised = 'RSA engine not initialized';
 
 type
   /// <summary>

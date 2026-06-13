@@ -52,25 +52,22 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherBlockSizeRequired = 'cipher required with a block size of %d.';
-  SInvalidParametersGCM = 'invalid parameters passed to GCM';
-  SInvalidMacSize = 'Invalid value for MAC size: %d';
-  SIVMustBeAtLeast1Byte = 'IV must be at least 1 byte';
-  SCannotReuseNonce = 'cannot reuse nonce for GCM encryption';
-  SKeyMustBeSpecified = 'Key must be specified in initial Init';
-  STooManyBlocks = 'Attempt to process too many blocks';
+  SCipherBlockSizeRequired = 'cipher required with a block size of %d';
+  SInvalidParameters = 'invalid parameters passed to %s';
+  SInvalidMacSize = 'invalid value for MAC size: %d';
+  SIVMustBeAtLeastOneByte = 'IV must be at least 1 byte';
+  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
+  SKeyMustBeSpecified = 'key must be specified in initial init';
+  STooManyBlocks = 'attempt to process too many blocks';
   SGcmCannotReuse = 'GCM cipher cannot be reused for encryption';
   SGcmNeedsInit = 'GCM cipher needs to be initialized';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
-  SInputBufferTooShort = 'Input Buffer Too Short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInputBufferTooShort = 'input buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in GCM failed';
-  SGcmFourWayNotSupported = 'GCM four-block path is not available on this platform.';
-  SGcmFourWayHStateMissing = 'GCM fused four-block multiplier state is not initialized.';
-  SGcmDecryptFourWayBadLimit = 'Invalid limit for GCM four-block decrypt.';
-  SGcmEightWayNotSupported = 'GCM eight-block path is not available on this platform.';
-  SGcmEightWayHStateMissing = 'GCM fused eight-block multiplier state is not initialized.';
-  SGcmDecryptEightWayBadLimit = 'Invalid limit for GCM eight-block decrypt.';
+  SMacCheckFailed = 'mac check in %s failed';
+  SGcmBlockPathNotSupported = 'GCM %s-block path is not available on this platform';
+  SGcmBlockHStateMissing = 'GCM fused %s-block multiplier state is not initialized';
+  SGcmDecryptBadLimit = 'invalid limit for GCM %s-block decrypt';
 
 type
   /// <summary>
@@ -487,7 +484,7 @@ begin
   end
   else
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersGCM);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['GCM']);
   end;
 end;
 
@@ -501,10 +498,10 @@ begin
     Exit;
 
   if AKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['GCM']);
 
   if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-    raise EArgumentCryptoLibException.CreateRes(@SCannotReuseNonce);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['GCM']);
 end;
 
 procedure TGcmBlockCipher.InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
@@ -614,7 +611,7 @@ begin
   System.SetLength(FBufBlock, LBufLength);
 
   if System.Length(LNewNonce) < 1 then
-    raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeast1Byte);
+    raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeastOneByte);
 
   CheckNonceReuse(FForEncryption, LNewNonce, LKeyParam);
 
@@ -1108,7 +1105,8 @@ begin
     System.SetLength(LMsgMac, FMacSize);
     System.Move(FBufBlock[LExtra], LMsgMac[0], FMacSize);
     if not TArrayUtilities.FixedTimeEquals(FMacBlock, LMsgMac) then
-      raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
+        ['GCM']);
   end;
 
   DoReset(False);
@@ -1587,9 +1585,9 @@ procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsFourWaySupported then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
   if FHPow = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayHStateMissing);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['four']);
   if ALen >= BlockSize * 8 then
     ProcessBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
   while ALen >= BlockSize * 4 do
@@ -1600,7 +1598,7 @@ begin
     AOutOff := AOutOff + (BlockSize * 4);
   end;
 {$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
 {$ENDIF}
 end;
 
@@ -1610,9 +1608,9 @@ procedure TGcmBlockCipher.EncryptBlocks8(const AInBuf: TCryptoLibByteArray;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsEightWaySupported then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= BlockSize * 16 then
   begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -1635,7 +1633,7 @@ begin
     AOutOff := AOutOff + (BlockSize * 8);
   end;
 {$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
 {$ENDIF}
 end;
 
@@ -1719,11 +1717,11 @@ procedure TGcmBlockCipher.DecryptBlocks4(const AInBuf: TCryptoLibByteArray;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsFourWaySupported then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
   if ALimit < BlockSize * 4 then
-    raise EArgumentCryptoLibException.CreateRes(@SGcmDecryptFourWayBadLimit);
+    raise EArgumentCryptoLibException.CreateResFmt(@SGcmDecryptBadLimit, ['four']);
   if FHPow = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayHStateMissing);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['four']);
   if ALen >= ALimit + (BlockSize * 4) * 2 then
     ProcessBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
   while ALen >= ALimit do
@@ -1734,7 +1732,7 @@ begin
     AOutOff := AOutOff + (BlockSize * 4);
   end;
 {$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmFourWayNotSupported);
+  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
 {$ENDIF}
 end;
 
@@ -1744,11 +1742,11 @@ procedure TGcmBlockCipher.DecryptBlocks8(const AInBuf: TCryptoLibByteArray;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsEightWaySupported then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
   if ALimit < BlockSize * 8 then
-    raise EArgumentCryptoLibException.CreateRes(@SGcmDecryptEightWayBadLimit);
+    raise EArgumentCryptoLibException.CreateResFmt(@SGcmDecryptBadLimit, ['eight']);
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayHStateMissing);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= ALimit + (BlockSize * 8) * 2 then
   begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -1768,7 +1766,7 @@ begin
     AOutOff := AOutOff + (BlockSize * 8);
   end;
 {$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SGcmEightWayNotSupported);
+  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
 {$ENDIF}
 end;
 

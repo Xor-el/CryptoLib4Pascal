@@ -139,7 +139,7 @@ begin
     Fail('expected EArgumentNilCryptoLibException');
   except
     on E: EArgumentNilCryptoLibException do
-      CheckEquals('digestOid', E.Message);
+      CheckEquals('digest OID cannot be nil', E.Message);
   end;
 end;
 
@@ -235,7 +235,7 @@ begin
     Fail('expected EArgumentCryptoLibException');
   except
     on E: EArgumentCryptoLibException do
-      CheckTrue(Pos('Unknown signature name:', E.Message) > 0,
+      CheckTrue(Pos('unknown signature name:', E.Message) > 0,
         'Wrong exception message: ' + E.Message);
   end;
 end;

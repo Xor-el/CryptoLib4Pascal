@@ -212,7 +212,7 @@ begin
   except
     on e: EInvalidCipherTextCryptoLibException do
     begin
-      if (not(e.Message = 'Pad Block Corrupted')) then
+      if (not(e.Message = 'pad block corrupted')) then
       begin
         Fail('wrong exception for corrupt padding: ' + e.Message);
       end;

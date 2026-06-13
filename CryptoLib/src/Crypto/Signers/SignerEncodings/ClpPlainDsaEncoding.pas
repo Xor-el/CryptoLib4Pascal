@@ -30,8 +30,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SValueOutOfRange = 'Value out of range, "%s"';
-  SInvalidEncodingLength = 'Encoding has incorrect length, "%s"';
+  SValueOutOfRange = 'value out of range, %s';
+  SInvalidEncodingLength = 'encoding has incorrect length, %s';
 
 type
   TPlainDsaEncoding = class(TInterfacedObject, IDsaEncoding, IPlainDsaEncoding)

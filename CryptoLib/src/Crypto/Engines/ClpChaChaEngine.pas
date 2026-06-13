@@ -33,7 +33,7 @@ uses
 resourcestring
   SChaChaStateWords = 'ChaCha state must be at least 16 UInt32 values';
   SChaChaOut64 = 'ChaCha key stream output must be at least 64 bytes';
-  SRoundsEven = 'Number of Rounds Must be Even';
+  SRoundsEven = 'number of rounds must be even';
   SHChaChaKeyNil = 'HChaCha20 key cannot be nil';
   SHChaChaKey256 = 'HChaCha20 key must be 256 bits';
   SHChaChaNonceNil = 'HChaCha20 nonce cannot be nil';

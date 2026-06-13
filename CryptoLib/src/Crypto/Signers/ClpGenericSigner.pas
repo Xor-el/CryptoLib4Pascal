@@ -34,10 +34,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SSigningRequiresPrivate = 'Signing requires private key.';
-  SVerificationRequiresPublic = 'Verification requires public key.';
-  SNotInitForSigning = 'GenericSigner not initialised for signature generation.';
-  SNotInitForVerification = 'GenericSigner not initialised for verification';
+  SSigningRequiresPrivateKey = 'signing requires private key';
+  SVerificationRequiresPublicKey = 'verification requires public key';
+  SNotInitialized = 'GenericSigner not initialized for %s';
+  SExpectedAsymmetricKeyParameter = 'expected asymmetric key parameter';
 
 type
   /// <summary>
@@ -100,17 +100,17 @@ begin
 
   if not Supports(LKeyParams, IAsymmetricKeyParameter, LKey) then
   begin
-    raise EInvalidKeyCryptoLibException.Create('Expected asymmetric key parameter');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SExpectedAsymmetricKeyParameter);
   end;
 
   if AForSigning and (not LKey.IsPrivate) then
   begin
-    raise EInvalidKeyCryptoLibException.CreateRes(@SSigningRequiresPrivate);
+    raise EInvalidKeyCryptoLibException.CreateRes(@SSigningRequiresPrivateKey);
   end;
 
   if (not AForSigning) and LKey.IsPrivate then
   begin
-    raise EInvalidKeyCryptoLibException.CreateRes(@SVerificationRequiresPublic);
+    raise EInvalidKeyCryptoLibException.CreateRes(@SVerificationRequiresPublicKey);
   end;
 
   Reset();
@@ -140,7 +140,7 @@ var
 begin
   if not FForSigning then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialized, ['signature generation']);
   end;
 
   LHash := TDigestUtilities.DoFinal(FDigest);
@@ -155,7 +155,7 @@ var
 begin
   if FForSigning then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitForVerification);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialized, ['verification']);
   end;
 
   LHash := TDigestUtilities.DoFinal(FDigest);

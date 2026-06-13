@@ -30,6 +30,11 @@ uses
   ClpX509SignatureUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SPublicKeyNil = 'public key cannot be nil';
+  SKeyForVerifyingMustBePublic = 'key for verifying must be public';
+  SAlgorithmDetailsNil = 'algorithm details cannot be nil';
+
 type
   /// <summary>
   /// Provider class which supports dynamic creation of signature verifiers.
@@ -59,9 +64,9 @@ constructor TAsn1VerifierFactoryProvider.Create(const APublicKey: IAsymmetricKey
 begin
   inherited Create();
   if APublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('publicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicKeyNil);
   if APublicKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Key for verifying must be public');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyForVerifyingMustBePublic);
 
   FPublicKey := APublicKey;
 end;
@@ -69,7 +74,7 @@ end;
 function TAsn1VerifierFactoryProvider.CreateVerifierFactory(AAlgorithmDetails: IAlgorithmIdentifier): IVerifierFactory;
 begin
   if AAlgorithmDetails = nil then
-    raise EArgumentNilCryptoLibException.Create('algorithmDetails');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmDetailsNil);
 
   Result := TAsn1VerifierFactory.Create(AAlgorithmDetails, FPublicKey);
 end;

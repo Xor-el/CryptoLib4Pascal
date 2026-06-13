@@ -35,10 +35,13 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SF2mFieldElementsNotBothInstances = 'Field elements are not both instances of F2mFieldElement';
-  SF2mFieldElementsNotSameField = 'Field elements are not elements of the same field F2m';
-  SHalfTraceOnlyDefinedForOddM = 'Half-trace only defined for odd m';
-  SInternalErrorInTraceCalculation = 'Internal error in trace calculation';
+  SF2mFieldElementsNotBothInstances = 'field elements are not both instances of F2mFieldElement';
+  SF2mFieldElementsNotSameField = 'field elements are not elements of the same field F2m';
+  SHalfTraceOnlyDefinedForOddM = 'half-trace only defined for odd m';
+  SInternalErrorInTraceCalculation = 'internal error in trace calculation';
+  SEvenValueOfQ = 'even value of q';
+  SF2mFieldDataNil = 'F2m field data cannot be nil';
+  SXNil = 'x cannot be nil';
 
 type
   TECFieldElement = class abstract(TInterfacedObject, IECFieldElement)
@@ -616,7 +619,7 @@ begin
   if IsZero or IsOne then
     Exit(Self as IECFieldElement);
   if not FQ.TestBit(0) then
-    raise ENotImplementedCryptoLibException.Create('even value of q');
+    raise ENotImplementedCryptoLibException.CreateRes(@SEvenValueOfQ);
   if FQ.TestBit(1) then
   begin
     LE := FQ.ShiftRight(2).Add(TBigInteger.One);
@@ -686,7 +689,7 @@ var
 begin
   LM := GetFieldSize;
   if (LM and 1) = 0 then
-    raise EInvalidOperationCryptoLibException.Create(SHalfTraceOnlyDefinedForOddM);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SHalfTraceOnlyDefinedForOddM);
   LN := TBitOperations.Asr32(LM + 1, 1);
   LK := TInt32Utilities.BitLength(UInt32(LN)) - 1;
   LNk := 1;
@@ -729,7 +732,7 @@ begin
   else if LTr.IsOne then
     Result := 1
   else
-    raise EInvalidOperationCryptoLibException.Create(SInternalErrorInTraceCalculation);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInternalErrorInTraceCalculation);
 end;
 
 { TF2mFieldElement }
@@ -739,18 +742,18 @@ var
   LAIntf, LBIntf: IF2mFieldElement;
 begin
   if not Supports(AA, IF2mFieldElement, LAIntf) or not Supports(AB, IF2mFieldElement, LBIntf) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
+    raise EArgumentCryptoLibException.CreateRes(@SF2mFieldElementsNotBothInstances);
   if not TF2mFieldData.Equals(LAIntf.F2mFieldData, LBIntf.F2mFieldData) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotSameField);
+    raise EArgumentCryptoLibException.CreateRes(@SF2mFieldElementsNotSameField);
 end;
 
 constructor TF2mFieldElement.Create(const AF2mFieldData: IF2mFieldData; const AX: TCryptoLibUInt64Array);
 begin
   inherited Create;
   if AF2mFieldData = nil then
-    raise EArgumentNilCryptoLibException.Create('f2mFieldData');
+    raise EArgumentNilCryptoLibException.CreateRes(@SF2mFieldDataNil);
   if AX = nil then
-    raise EArgumentNilCryptoLibException.Create('x');
+    raise EArgumentNilCryptoLibException.CreateRes(@SXNil);
   FF2mFieldData := AF2mFieldData;
   FX := AX;
 end;
@@ -808,7 +811,7 @@ var
   LZ: TCryptoLibUInt64Array;
 begin
   if not Supports(AB, IF2mFieldElement, LBIntf) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
+    raise EArgumentCryptoLibException.CreateRes(@SF2mFieldElementsNotBothInstances);
   LSize := System.Length(FX);
   LBx := LBIntf.X;
   LZ := TBinPolys.Create(LSize);
@@ -841,7 +844,7 @@ var
   LZ: TCryptoLibUInt64Array;
 begin
   if not Supports(AB, IF2mFieldElement, LBIntf) then
-    raise EArgumentCryptoLibException.Create(SF2mFieldElementsNotBothInstances);
+    raise EArgumentCryptoLibException.CreateRes(@SF2mFieldElementsNotBothInstances);
   LSize := System.Length(FX);
   LBx := LBIntf.X;
   LZ := TBinPolys.Create(LSize);

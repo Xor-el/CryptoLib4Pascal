@@ -51,15 +51,15 @@ uses
   ClpX448Agreement;
 
 resourcestring
-  SOidNil = 'OID Cannot be Nil';
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SWrapAlgorithmNil = 'Wrap Algorithm Cannot be Nil';
-  SBasicAgreementOidNotRecognised = 'Basic Agreement OID not recognised.';
-  SBasicAgreementNotRecognised = 'Basic Agreement "%s" not recognised.';
-  SBasicAgreementWithKdfOidNotRecognised = 'Basic Agreement (with KDF) OID not recognised.';
-  SBasicAgreementWithKdfNotRecognised = 'Basic Agreement (with KDF) %s not recognised.';
-  SRawAgreementOidNotRecognised = 'Raw Agreement OID not recognised.';
-  SRawAgreementNotRecognised = 'Raw Agreement "%s" not recognised.';
+  SOidNil = 'OID cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SWrapAlgorithmNil = 'wrap algorithm cannot be nil';
+  SBasicAgreementOidNotRecognized = 'basic agreement OID not recognized';
+  SBasicAgreementNotRecognized = 'basic agreement %s not recognized';
+  SBasicAgreementWithKdfOidNotRecognized = 'basic agreement (with KDF) OID not recognized';
+  SBasicAgreementWithKdfNotRecognized = 'basic agreement (with KDF) %s not recognized';
+  SRawAgreementOidNotRecognized = 'raw agreement OID not recognized';
+  SRawAgreementNotRecognized = 'raw agreement %s not recognized';
 
 type
   /// <summary>
@@ -208,7 +208,7 @@ begin
       Exit;
     end;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateRes(@SBasicAgreementOidNotRecognised);
+  raise ESecurityUtilityCryptoLibException.CreateRes(@SBasicAgreementOidNotRecognized);
 end;
 
 class function TAgreementUtilities.GetBasicAgreement(const AAlgorithm: String): IBasicAgreement;
@@ -227,7 +227,7 @@ begin
     Result := LAgreement;
     Exit;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SBasicAgreementNotRecognised, [AAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SBasicAgreementNotRecognized, [AAlgorithm]);
 end;
 
 class function TAgreementUtilities.GetBasicAgreementWithKdf(const AAgreeAlgOid, AWrapAlgOid: IDerObjectIdentifier): IBasicAgreement;
@@ -259,7 +259,7 @@ begin
       Exit;
     end;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateRes(@SBasicAgreementWithKdfOidNotRecognised);
+  raise ESecurityUtilityCryptoLibException.CreateRes(@SBasicAgreementWithKdfOidNotRecognized);
 end;
 
 class function TAgreementUtilities.GetBasicAgreementWithKdf(const AAgreeAlgorithm, AWrapAlgorithm: String): IBasicAgreement;
@@ -280,7 +280,7 @@ begin
     Result := LAgreement;
     Exit;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SBasicAgreementWithKdfNotRecognised, [AAgreeAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SBasicAgreementWithKdfNotRecognized, [AAgreeAlgorithm]);
 end;
 
 class function TAgreementUtilities.GetRawAgreementForMechanism(const AMechanism: String): IRawAgreement;
@@ -308,7 +308,7 @@ begin
       Exit;
     end;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateRes(@SRawAgreementOidNotRecognised);
+  raise ESecurityUtilityCryptoLibException.CreateRes(@SRawAgreementOidNotRecognized);
 end;
 
 class function TAgreementUtilities.GetRawAgreement(const AAlgorithm: String): IRawAgreement;
@@ -327,7 +327,7 @@ begin
     Result := LAgreement;
     Exit;
   end;
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SRawAgreementNotRecognised, [AAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SRawAgreementNotRecognized, [AAlgorithm]);
 end;
 
 end.

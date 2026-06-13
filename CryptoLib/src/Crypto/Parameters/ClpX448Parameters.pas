@@ -35,7 +35,7 @@ resourcestring
   SEOFInPublicKey = 'EOF encountered in middle of X448 public key';
   SMustHaveLengthKeySize = 'must have length %d';
   SEOFInPrivateKey = 'EOF encountered in middle of X448 private key';
-  SAgreementCalculationFailed = 'X448 Agreement Failed';
+  SAgreementCalculationFailed = 'X448 agreement failed';
 
 type
   /// <summary>

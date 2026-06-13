@@ -35,10 +35,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputDataTooLarge = 'Input data too large';
-  SBlockIncorrect = 'Block incorrect';
-  SBlockIncorrectSize = 'Block incorrect size';
-  SDecryptionOnly = 'This method is only for decryption, not for signing';
+  SInputDataTooLarge = 'input data too large';
+  SBlockIncorrect = 'block incorrect';
+  SBlockIncorrectSize = 'block incorrect size';
+  SDecryptionOnly = 'this method is only for decryption, not for signing';
+  SExpectedAsymmetricKeyParameter = 'expected asymmetric key parameter';
 
 type
   /// <summary>
@@ -165,7 +166,7 @@ begin
   LParameters := TParameterUtilities.GetRandom(AParameters, LProvidedRandom);
 
   if not Supports(LParameters, IAsymmetricKeyParameter, LKeyParam) then
-    raise EInvalidKeyCryptoLibException.Create('Expected asymmetric key parameter');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SExpectedAsymmetricKeyParameter);
   FForPrivateKey := LKeyParam.IsPrivate;
   FForEncryption := AForEncryption;
   SetLength(FBlockBuffer, FEngine.OutputBlockSize);

@@ -36,6 +36,11 @@ uses
   ClpWNafPreCompInfo,
   ClpCryptoLibTypes;
 
+resourcestring
+  SWNafWidthMustBeInRange = 'must be in the range [%d, %d]';
+  SBitLengthOutOfRange = 'must have bitlength < 2^16';
+  SExpectedWNafPreCompInfo = 'expected IWNafPreCompInfo';
+
 type
   TWNafUtilities = class sealed(TObject)
   strict private
@@ -558,7 +563,7 @@ begin
     Exit;
   end;
   if (AWidth < 2) or (AWidth > 8) then
-    raise EArgumentCryptoLibException.Create('must be in the range [2, 8]');
+    raise EArgumentCryptoLibException.CreateResFmt(@SWNafWidthMustBeInRange, [2, 8]);
   if AK.SignValue = 0 then
   begin
     Result := nil;
@@ -686,7 +691,7 @@ var
   LDigit, LResultLength: Int32;
 begin
   if TBitOperations.Asr32(AK.BitLength, 16) <> 0 then
-    raise EArgumentCryptoLibException.Create('must have bitlength < 2^16');
+    raise EArgumentCryptoLibException.CreateRes(@SBitLengthOutOfRange);
   if AK.SignValue = 0 then
   begin
     Result := nil;
@@ -738,9 +743,9 @@ begin
     Exit;
   end;
   if (AWidth < 2) or (AWidth > 16) then
-    raise EArgumentCryptoLibException.Create('must be in the range [2, 16]');
+    raise EArgumentCryptoLibException.CreateResFmt(@SWNafWidthMustBeInRange, [2, 16]);
   if TBitOperations.Asr32(AK.BitLength, 16) <> 0 then
-    raise EArgumentCryptoLibException.Create('must have bitlength < 2^16');
+    raise EArgumentCryptoLibException.CreateRes(@SBitLengthOutOfRange);
   if AK.SignValue = 0 then
   begin
     Result := nil;
@@ -795,7 +800,7 @@ begin
   LPreCompCallback := TWNafUtilities.TPrecomputeWithPointMapCallback.Create(AP, APointMap, AFromWNaf, AIncludeNegated);
   LResult := AP.Curve.Precompute(AP, PRECOMP_NAME, LPreCompCallback);
   if not Supports(LResult, IWNafPreCompInfo, LWNaf) then
-    raise EInvalidCastCryptoLibException.Create('Expected IWNafPreCompInfo');
+    raise EInvalidCastCryptoLibException.CreateRes(@SExpectedWNafPreCompInfo);
   Result := LWNaf;
 end;
 
@@ -809,7 +814,7 @@ begin
   LPreCompCallback := TWNafUtilities.TPrecomputeCallback.Create(AP, AMinWidth, AIncludeNegated);
   LResult := AP.Curve.Precompute(AP, PRECOMP_NAME, LPreCompCallback);
   if not Supports(LResult, IWNafPreCompInfo, LWNaf) then
-    raise EInvalidCastCryptoLibException.Create('Expected IWNafPreCompInfo');
+    raise EInvalidCastCryptoLibException.CreateRes(@SExpectedWNafPreCompInfo);
   Result := LWNaf;
 end;
 

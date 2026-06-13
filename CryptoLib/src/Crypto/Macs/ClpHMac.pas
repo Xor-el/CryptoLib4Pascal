@@ -33,11 +33,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SOutputBufferTooShort = 'output buffer too short';
   SInvalidParameterHMac = 'HMAC requires KeyParameter';
 
 type
-
   /// <summary>
   /// <para>
   /// HMAC implementation based on RFC2104 <br />H(K XOR opad, H(K XOR

@@ -35,7 +35,6 @@ uses
   ClpCryptoLibTypes;
 
 type
-
   /// <summary>
   /// Generator for PBE derived keys and IVs as defined by PKCS #5 v2.0 Scheme 2.
   /// This generator uses a SHA-1 HMAC as the calculation function.

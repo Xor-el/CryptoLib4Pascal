@@ -27,9 +27,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SKeyNil = 'Key Cannot be Nil';
-  SInvalidKeyOffSet = 'Invalid Key OffSet';
-  SInvalidKeyLength = 'Invalid Key Length';
+  SKeyNil = 'key cannot be nil';
+  SInvalidKeyOffset = 'invalid key offset';
+  SInvalidKeyLength = 'invalid key length';
 
 type
   TKeyParameter = class sealed(TInterfacedObject, IKeyParameter,
@@ -85,7 +85,7 @@ begin
 
   if ((AKeyOff < 0) or (AKeyOff > System.Length(AKey))) then
   begin
-    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidKeyOffSet);
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidKeyOffset);
   end;
 
   if ((AKeyLen < 0) or (AKeyLen > (System.Length(AKey) - AKeyOff))) then

@@ -27,7 +27,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer too Short';
+  SOutputBufferTooSmall = 'output buffer too short';
 
 type
   TBufferedCipherBase = class abstract(TInterfacedObject, IBufferedCipherBase, IBufferedCipher)

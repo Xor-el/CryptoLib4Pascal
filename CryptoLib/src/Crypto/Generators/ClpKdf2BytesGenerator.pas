@@ -26,7 +26,6 @@ uses
   ClpIKdf2BytesGenerator;
 
 type
-
   /// <summary>
   /// <para>
   /// KDF2 generator for derived keys and ivs as defined by IEEE

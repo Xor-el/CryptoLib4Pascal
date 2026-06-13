@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -29,9 +29,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNilKeyReInit = '%s Doesn''t Support Re-Init with Nil Key';
-  SInvalidKeySize = '%s Requires a 256 bit Key';
-  SInvalidIvSize = '%s Requires a 192 bit IV';
+  SNilKeyReInit = '%s doesn''t support re-init with nil key';
+  SInvalidKeySize = '%s requires a 256 bit key';
+  SInvalidIvSize = '%s requires a 192 bit IV';
 
 type
   /// <summary>

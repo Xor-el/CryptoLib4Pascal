@@ -445,7 +445,7 @@ begin
       ctorOk := True;
     except
       on E: EArgumentCryptoLibException do
-        if Pos('Invalid DH public key', E.Message) = 0 then
+        if Pos('invalid DH public key', E.Message) = 0 then
           Fail('wrong constructor exception message: ' + E.Message);
     end;
     if ctorOk then
@@ -460,7 +460,7 @@ begin
       agreeOk := True;
     except
       on E: EArgumentCryptoLibException do
-        if Pos('Weak', E.Message) = 0 then
+        if Pos('weak', E.Message) = 0 then
           Fail('wrong CalculateAgreement exception message: ' + E.Message);
     end;
     if agreeOk then

@@ -32,8 +32,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SCipherNil = 'cipher cannot be nil';
 
 type
   TEcbBlockCipher = class(TInterfacedObject, IEcbBlockCipher,
@@ -108,7 +109,7 @@ constructor TEcbBlockCipher.Create(const ACipher: IBlockCipher);
 begin
   inherited Create();
   if ACipher = nil then
-    raise EArgumentNilCryptoLibException.Create('ACipher');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCipherNil);
   FCipher := ACipher;
   FBulkCipher := nil;
 end;

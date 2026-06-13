@@ -50,6 +50,13 @@ uses
   ClpIX509Asn1Generators,
   ClpX509Asn1Generators;
 
+resourcestring
+  SSerialNumberMustBeAPositive = 'serial number must be a positive integer';
+  SOtherCrlNil = 'other CRL cannot be nil';
+  SExtensionNotPresent = 'extension %s not present';
+  SExtension = 'extension %s: %s';
+  SUnableToProcessKey = 'unable to process key - %s';
+
 type
   /// <summary>
   /// Generator for X.509 version 1 certificates as defined in RFC 5280.
@@ -229,7 +236,7 @@ end;
 procedure TX509V1CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigInteger);
 begin
   if ASerialNumber.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create('serial number must be a positive integer');
+    raise EArgumentCryptoLibException.CreateRes(@SSerialNumberMustBeAPositive);
   FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber));
 end;
 
@@ -275,7 +282,7 @@ begin
       TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(APublicKey));
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('unable to process key - ' + E.ToString);
+      raise EArgumentCryptoLibException.CreateResFmt(@SUnableToProcessKey, [E.ToString]);
   end;
 end;
 
@@ -354,7 +361,7 @@ end;
 procedure TX509V3CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigInteger);
 begin
   if ASerialNumber.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create('serial number must be a positive integer');
+    raise EArgumentCryptoLibException.CreateRes(@SSerialNumberMustBeAPositive);
   FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber) as IDerInteger);
 end;
 
@@ -478,12 +485,12 @@ var
 begin
   LExt := ACert.CertificateStructure.Extensions.GetExtension(AOid);
   if LExt = nil then
-    raise EArgumentCryptoLibException.CreateFmt('extension %s not present', [AOid.Id]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SExtensionNotPresent, [AOid.Id]);
   try
     FExtGenerator.AddExtension(AOid, LExt);
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.CreateFmt('extension %s: %s', [AOid.Id, E.Message]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SExtension, [AOid.Id, E.Message]);
   end;
 end;
 
@@ -745,7 +752,7 @@ var
   LEntry: IX509CrlEntry;
 begin
   if AOther = nil then
-    raise EArgumentNilCryptoLibException.Create('AOther');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherCrlNil);
 
   LRevocations := AOther.GetRevokedCertificates;
   if LRevocations <> nil then

@@ -34,6 +34,17 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SKeySortEachKeyMustBeThirtyThree = 'KeySort: each key must be 33 bytes';
+  SKeyAggAtLeastOnePubkeyRequired = 'KeyAgg: at least one pubkey required';
+  SKeyAggQIsInfinity = 'KeyAgg: Q is infinity';
+  SApplyTweakInvalidContext = 'ApplyTweak: invalid context';
+  SApplyTweakTweakMustBeThirtyTwoBytes = 'ApplyTweak: tweak must be 32 bytes';
+  SApplyTweakTweakGreaterOrEqualN = 'ApplyTweak: tweak >= n';
+  SApplyTweakResultIsInfinity = 'ApplyTweak: result is infinity';
+  SKeyAggCoeffPubkeysRequired = 'KeyAggCoeff: pubkeys required';
+  SSecp256k1CurveNotFound = 'secp256k1 curve not found';
+
 type
   IBip327KeyAggContext = interface(IInterface)
     ['{8B3C4D5E-6F70-41A2-B3C4-D5E6F7081920}']
@@ -171,7 +182,7 @@ begin
   for LI := 0 to LLen - 1 do
   begin
     if (APubKeys[LI] = nil) or (System.Length(APubKeys[LI]) <> TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE) then
-      raise EArgumentCryptoLibException.Create('KeySort: each key must be 33 bytes');
+      raise EArgumentCryptoLibException.CreateRes(@SKeySortEachKeyMustBeThirtyThree);
     System.SetLength(LResult[LI], System.Length(APubKeys[LI]));
     System.Move(APubKeys[LI][0], LResult[LI][0], System.Length(APubKeys[LI]) * System.SizeOf(Byte));
   end;
@@ -203,7 +214,7 @@ var
   LSum: IECPoint;
 begin
   if System.Length(APubKeys) = 0 then
-    raise EArgumentCryptoLibException.Create('KeyAgg: at least one pubkey required');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyAggAtLeastOnePubkeyRequired);
   LCurve := ADomain.Curve;
   LN := ADomain.N;
   LU := System.Length(APubKeys);
@@ -219,7 +230,7 @@ begin
       LSum := LSum.Add(TECAlgorithms.ReferenceMultiply(LP, LA));
   end;
   if (LSum = nil) or (LSum.IsInfinity) then
-    raise EArgumentCryptoLibException.Create('KeyAgg: Q is infinity');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyAggQIsInfinity);
   Result := TBip327KeyAggContext.Create(LSum, TBigInteger.One, TBigInteger.Zero, ADomain);
 end;
 
@@ -233,9 +244,9 @@ var
   LDomain: IECDomainParameters;
 begin
   if (AKeyAggCtx = nil) then
-    raise EArgumentCryptoLibException.Create('ApplyTweak: invalid context');
+    raise EArgumentCryptoLibException.CreateRes(@SApplyTweakInvalidContext);
   if (ATweak = nil) or (System.Length(ATweak) <> 32) then
-    raise EArgumentCryptoLibException.Create('ApplyTweak: tweak must be 32 bytes');
+    raise EArgumentCryptoLibException.CreateRes(@SApplyTweakTweakMustBeThirtyTwoBytes);
   LDomain := AKeyAggCtx.GetDomain();
   LN := LDomain.N;
   LQ := AKeyAggCtx.GetQ();
@@ -243,14 +254,14 @@ begin
   LTAcc := AKeyAggCtx.GetTAcc();
   LT := TBigInteger.Create(1, ATweak);
   if LT.CompareTo(LN) >= 0 then
-    raise EArgumentCryptoLibException.Create('ApplyTweak: tweak >= n');
+    raise EArgumentCryptoLibException.CreateRes(@SApplyTweakTweakGreaterOrEqualN);
   if AIsXOnlyT and (not TBip340SchnorrUtilities.HasEvenY(LQ)) then
     LG := LN.Subtract(TBigInteger.One)
   else
     LG := TBigInteger.One;
   LQPrime := LQ.Multiply(LG).Add(TECAlgorithms.ReferenceMultiply(LDomain.G, LT));
   if (LQPrime = nil) or (LQPrime.IsInfinity) then
-    raise EArgumentCryptoLibException.Create('ApplyTweak: result is infinity');
+    raise EArgumentCryptoLibException.CreateRes(@SApplyTweakResultIsInfinity);
   LGAcc := LG.Multiply(LGAcc).&Mod(LN);
   LTAcc := LT.Add(LG.Multiply(LTAcc)).&Mod(LN);
   Result := TBip327KeyAggContext.Create(LQPrime, LGAcc, LTAcc, LDomain);
@@ -265,10 +276,10 @@ var
   LN: TBigInteger;
 begin
   if System.Length(APubKeys) = 0 then
-    raise EArgumentCryptoLibException.Create('KeyAggCoeff: pubkeys required');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyAggCoeffPubkeysRequired);
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
-    raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
   LN := LX9.N;
   LPk2 := GetSecondKey(APubKeys);
   Result := KeyAggCoeffInternal(APubKeys, APk, LPk2, LN);

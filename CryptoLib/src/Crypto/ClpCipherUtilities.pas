@@ -90,24 +90,23 @@ uses
   ClpIHMac;
 
 resourcestring
-  SMechanismNil = 'Mechanism Cannot be Nil';
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SUnRecognizedCipher = 'Cipher "%s" Not Recognised.';
+  SMechanismNil = 'mechanism cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SUnrecognizedCipher = 'unrecognized cipher: %s';
   SSICModeWarning =
-    'Warning: SIC-Mode Can Become a TwoTime-Pad if the Blocksize of the Cipher is Too Small. Use a Cipher With a Block Size of at Least 128 bits (e.g. AES)';
+    'warning: SIC mode can become a two-time pad if the block size of the cipher is too small. Use a cipher with a block size of at least 128 bits (e.g. AES)';
   SModeAndPaddingNotNeededStreamCipher =
-    'Modes and Paddings Not Used for Stream Ciphers';
+    'modes and paddings not used for stream ciphers';
   SModesAndPaddingsNotValidForAead =
-    'Modes and paddings cannot be applied to AEAD ciphers';
+    'modes and paddings cannot be applied to AEAD ciphers';
   SBadPaddingForAead =
-    'Bad padding specified for AEAD cipher.';
+    'bad padding specified for AEAD cipher';
   SCTSNotValidForAead =
-    'CTS mode not valid for AEAD ciphers.';
-  SOidNotRecognised = 'Cipher OID not recognised.';
-  SOidNil = 'OID Cannot be Nil';
+    'CTS mode not valid for AEAD ciphers';
+  SOidNotRecognized = 'cipher OID not recognized';
+  SOidNil = 'OID cannot be nil';
 
 type
-
   /// <summary>
   /// Factory for <see cref="IBufferedCipher"/> instances resolved from a textual algorithm name (with optional
   /// mode and padding segments) or from an ASN.1 algorithm OID.
@@ -625,7 +624,7 @@ begin
 
   LCipher := GetCipherForMechanism(LMechanism);
   if LCipher = nil then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedCipher, [AAlgorithm]);
   Result := LCipher;
 end;
 
@@ -637,10 +636,10 @@ begin
   if AOid = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
   if not FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
-    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognised);
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognized);
   LCipher := GetCipherForMechanism(LMechanism);
   if LCipher = nil then
-    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognised);
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SOidNotRecognized);
   Result := LCipher;
 end;
 
@@ -655,7 +654,7 @@ begin
     TCipherAlgorithm.RIJNDAEL:
       Result := TRijndaelEngine.Create();
   else
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedCipher,
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedCipher,
       [TEnumUtilities.ToString<TCipherAlgorithm>(ACipherAlgorithm)]);
   end;
 end;

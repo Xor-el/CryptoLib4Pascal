@@ -41,20 +41,23 @@ uses
   ClpECCurve;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SBadVersion = 'bad version in X9ECParameters';
-  SFieldIDNil = 'fieldID';
-  SSeqNil = 'seq';
-  SCurveNil = 'curve';
-  SFieldElementNil = 'f';
-  SCurveNotImplemented = 'This type of ECCurve is not implemented';
-  SCharacteristicTwoFieldNotImplemented = 'This CharacteristicTwoField representation is not implemented';
-  SUnsupportedCurveType = '''curve'' is of an unsupported type';
-  SOnlyTrinomialAndPentanomial = 'Only trinomial and pentomial curves are supported';
+  SFieldIDNil = 'field ID cannot be nil';
+  SSeqNil = 'sequence cannot be nil';
+  SCurveNil = 'curve cannot be nil';
+  SFieldElementNil = 'field element cannot be nil';
+  SCurveNotImplemented = 'this type of ECCurve is not implemented';
+  SFailedToConstructX962ParametersFromByteArray = 'failed to construct X962Parameters from byte array: %s';
+  SCharacteristicTwoFieldNotImplemented = 'this CharacteristicTwoField representation is not implemented';
+  SUnsupportedCurveType = 'curve is of an unsupported type';
+  SOnlyTrinomialAndPentanomial = 'only trinomial and pentanomial curves are supported';
   SInconsistentKValues = 'inconsistent k values';
-  SEncodingNil = 'encoding';
-  SOctetStringNil = 's';
+  SEncodingNil = 'encoding cannot be nil';
+  SOctetStringNil = 'octet string cannot be nil';
+  SElementNil = 'element cannot be nil';
+  SUnableToParseX962Parameters = 'unable to parse X962Parameters';
 
 type
   /// <summary>
@@ -388,7 +391,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IX9FieldID, Result) then
     Exit;
@@ -754,7 +757,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IX9ECParameters, Result) then
     Exit;
@@ -1001,7 +1004,7 @@ var
   LNull: IAsn1Null;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IX962Parameters, Result) then
     Exit;
@@ -1054,7 +1057,7 @@ begin
 
   Result := GetOptional(AElement);
   if Result = nil then
-    raise EArgumentCryptoLibException.Create('unable to parse X962Parameters');
+    raise EArgumentCryptoLibException.CreateRes(@SUnableToParseX962Parameters);
 end;
 
 class function TX962Parameters.GetInstance(const AEncoded: TCryptoLibByteArray): IX962Parameters;
@@ -1072,7 +1075,7 @@ begin
     Result := GetInstance(LAsn1Obj);
   except
     on E: EIOCryptoLibException do
-      raise EArgumentCryptoLibException.Create('failed to construct X962Parameters from byte[]: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructX962ParametersFromByteArray, [E.Message]);
   end;
 end;
 

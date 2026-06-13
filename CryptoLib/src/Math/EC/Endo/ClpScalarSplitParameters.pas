@@ -25,6 +25,9 @@ uses
   ClpIScalarSplitParameters,
   ClpCryptoLibTypes;
 
+resourcestring
+  SMustConsistOfExactlyTwoValues = 'must consist of exactly 2 (non-nil) values: %s';
+
 type
   TScalarSplitParameters = class(TInterfacedObject, IScalarSplitParameters)
   strict private
@@ -61,7 +64,7 @@ class procedure TScalarSplitParameters.CheckVector(
 begin
   if (AV = nil) or (System.Length(AV) <> 2) or (not AV[0].IsInitialized) or
     (not AV[1].IsInitialized) then
-    raise EArgumentCryptoLibException.Create('Must consist of exactly 2 (non-null) values: ' + AName);
+    raise EArgumentCryptoLibException.CreateResFmt(@SMustConsistOfExactlyTwoValues, [AName]);
 end;
 
 constructor TScalarSplitParameters.Create(const AV1,

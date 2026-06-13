@@ -26,9 +26,9 @@ uses
   ClpIRandom;
 
 resourcestring
-  SBufferNil = 'Buffer Cannot be Nil';
-  SMaxValueNegative = 'maxValue Must be Positive';
-  SInvalidMinValue = 'minValue Cannot be Greater Than maxValue';
+  SBufferNil = 'buffer cannot be nil';
+  SMaxValueNegative = 'maxValue must be positive';
+  SInvalidMinValue = 'minValue cannot be greater than maxValue';
 
 type
   TRandom = class(TInterfacedObject, IRandom)

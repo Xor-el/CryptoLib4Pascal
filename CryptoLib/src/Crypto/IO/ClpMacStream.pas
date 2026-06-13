@@ -28,6 +28,11 @@ uses
   ClpIMac,
   ClpCryptoLibTypes;
 
+resourcestring
+  SSizeNotSupported = 'size not supported';
+  SSeekNotSupported = 'seek not supported';
+  SSetSizeNotSupported = 'set size not supported';
+
 type
   /// <summary>
   /// A stream that updates MACs on read and write operations.
@@ -82,7 +87,7 @@ end;
 
 function TMacStream.GetSize: Int64;
 begin
-  raise ENotSupportedCryptoLibException.Create('GetSize not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSizeNotSupported);
 end;
 
 function TMacStream.GetCanRead: Boolean;
@@ -146,12 +151,12 @@ end;
 
 function TMacStream.Seek(const AOffset: Int64; AOrigin: TSeekOrigin): Int64;
 begin
-  raise ENotSupportedCryptoLibException.Create('Seek not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSeekNotSupported);
 end;
 
 procedure TMacStream.SetSize(const ANewSize: Int64);
 begin
-  raise ENotSupportedCryptoLibException.Create('SetSize not supported');
+  raise ENotSupportedCryptoLibException.CreateRes(@SSetSizeNotSupported);
 end;
 
 procedure TMacStream.Flush;

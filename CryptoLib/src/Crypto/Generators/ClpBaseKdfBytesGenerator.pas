@@ -32,12 +32,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer too Small';
-  SOutputLengthTooLarge = 'Output Length too Large';
-  SKDFParameterNotFound = 'KDF Parameters Required For KDF Generator';
+  SOutputBufferTooSmall = 'output buffer too small';
+  SOutputLengthTooLarge = 'output length too large';
+  SKDFParameterNotFound = 'KDF parameters required for KDF generator';
 
 type
-
   /// <summary>
   /// <para>
   /// Basic KDF generator for derived keys and ivs as defined by IEEE

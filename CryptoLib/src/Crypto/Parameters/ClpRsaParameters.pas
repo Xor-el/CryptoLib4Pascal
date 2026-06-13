@@ -33,23 +33,17 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SModulusNil = 'modulus';
-  SExponentNil = 'exponent';
-  SNotValidRsaModulus = 'Not a valid RSA modulus';
-  SNotValidRsaExponent = 'Not a valid RSA exponent';
+  SModulusNil = 'modulus cannot be nil';
+  SExponentNil = 'exponent cannot be nil';
   SRsaModulusIsEven = 'RSA modulus is even';
   SRsaModulusOutOfRange = 'RSA modulus out of range';
   SRsaModulusHasSmallPrimeFactor = 'RSA modulus has a small prime factor';
   SRsaModulusIsNotComposite = 'RSA modulus is not composite';
   SRsaPublicExponentIsEven = 'RSA publicExponent is even';
-  SNotValidRsaPValue = 'Not a valid RSA P value';
-  SNotValidRsaQValue = 'Not a valid RSA Q value';
-  SNotValidRsaDPValue = 'Not a valid RSA DP value';
-  SNotValidRsaDQValue = 'Not a valid RSA DQ value';
-  SNotValidRsaInverseQValue = 'Not a valid RSA InverseQ value';
-  SPublicExponentNil = 'publicExponent';
-  SPublicExponentNotOdd = 'Public exponent must be an odd number';
+  SPublicExponentNil = 'public exponent cannot be nil';
+  SPublicExponentNotOdd = 'public exponent must be an odd number';
   SPublicKeyRequired = 'RSA parameters should be for a public key';
+  SNotAValidRsa = 'not a valid RSA %s';
 
 type
   TRsaKeyParameters = class(TAsymmetricKeyParameter, IRsaKeyParameters)
@@ -292,9 +286,9 @@ begin
   if not AExponent.IsInitialized then
     raise EArgumentNilCryptoLibException.CreateRes(@SExponentNil);
   if AModulus.SignValue <= 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SNotValidRsaModulus);
+    raise EArgumentCryptoLibException.CreateResFmt(@SNotAValidRsa, ['modulus']);
   if AExponent.SignValue <= 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SNotValidRsaExponent);
+    raise EArgumentCryptoLibException.CreateResFmt(@SNotAValidRsa, ['exponent']);
   if (not AIsPrivate) and (AExponent.IsEven) then
     raise EArgumentCryptoLibException.CreateRes(@SRsaPublicExponentIsEven);
   FModulus := Validate(AModulus, AIsInternal);
@@ -340,7 +334,7 @@ begin
   if not AX.IsInitialized then
     raise EArgumentNilCryptoLibException.Create(AParamName);
   if AX.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create('Not a valid RSA ' + ADesc);
+    raise EArgumentCryptoLibException.CreateResFmt(@SNotAValidRsa, [ADesc]);
 end;
 
 constructor TRsaPrivateCrtKeyParameters.Create(const AModulus, APublicExponent,

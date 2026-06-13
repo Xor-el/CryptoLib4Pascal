@@ -32,11 +32,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SOutputBufferTooShort = 'output buffer too short';
   SInvalidParameterKMac = 'KMac requires KeyParameter';
 
 type
-
   /// <summary>
   /// <para>
   /// KMAC implementation based on FIPS 202

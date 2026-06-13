@@ -28,8 +28,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SPoly1305KeyMustBe256Bits = 'Poly1305 key must be 256 bits.';
-  SInvalidRFormat = 'Invalid format for r portion of Poly1305 key.';
+  SPoly1305KeyMustBeTwoFiftySixBits = 'Poly1305 key must be 256 bits';
+  SInvalidRFormat = 'invalid format for r portion of Poly1305 key';
 
 type
   TPoly1305KeyGenerator = class sealed(TCipherKeyGenerator,
@@ -71,7 +71,7 @@ end;
 class procedure TPoly1305KeyGenerator.Clamp(const AKey: TCryptoLibByteArray);
 begin
   if System.Length(AKey) <> 32 then
-    raise EArgumentCryptoLibException.CreateRes(@SPoly1305KeyMustBe256Bits);
+    raise EArgumentCryptoLibException.CreateRes(@SPoly1305KeyMustBeTwoFiftySixBits);
 
   AKey[3] := AKey[3] and R_MASK_HIGH_4;
   AKey[7] := AKey[7] and R_MASK_HIGH_4;
@@ -87,7 +87,7 @@ class procedure TPoly1305KeyGenerator.CheckKey(
   const AKey: TCryptoLibByteArray);
 begin
   if System.Length(AKey) <> 32 then
-    raise EArgumentCryptoLibException.CreateRes(@SPoly1305KeyMustBe256Bits);
+    raise EArgumentCryptoLibException.CreateRes(@SPoly1305KeyMustBeTwoFiftySixBits);
 
   CheckMask(AKey[3], R_MASK_HIGH_4);
   CheckMask(AKey[7], R_MASK_HIGH_4);

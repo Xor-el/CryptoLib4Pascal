@@ -351,8 +351,8 @@ begin
     on E: EInvalidCipherTextCryptoLibException do
     begin
       exceptionCaught := True;
-      Check(Pos('Block incorrect size', E.Message) > 0,
-        'Expected "Block incorrect size" but got: ' + E.Message);
+      Check(Pos('block incorrect size', E.Message) > 0,
+        'Expected "block incorrect size" but got: ' + E.Message);
     end;
   end;
 
@@ -382,22 +382,22 @@ end;
 
 procedure TTestRSABlinded.TestDudPkcs1Block;
 begin
-  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FDudBlock, 'Block incorrect');
+  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FDudBlock, 'block incorrect');
 end;
 
 procedure TTestRSABlinded.TestMissingDataPkcs1Block;
 begin
-  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FMissingDataBlock, 'Block incorrect');
+  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FMissingDataBlock, 'block incorrect');
 end;
 
 procedure TTestRSABlinded.TestTruncatedPkcs1Block;
 begin
-  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FTruncatedDataBlock, 'Block incorrect');
+  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FTruncatedDataBlock, 'block incorrect');
 end;
 
 procedure TTestRSABlinded.TestWrongPaddingPkcs1Block;
 begin
-  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FIncorrectPadding, 'Block incorrect');
+  CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FIncorrectPadding, 'block incorrect');
 end;
 
 procedure TTestRSABlinded.TestUninitializedEngine;

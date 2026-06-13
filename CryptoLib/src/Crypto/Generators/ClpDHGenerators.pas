@@ -36,7 +36,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SParametersCannotBeNil = '"parameters" Cannot Be Nil';
+  SParametersCannotBeNil = 'parameters cannot be nil';
 
 type
   TDHKeyPairGenerator = class sealed(TInterfacedObject,

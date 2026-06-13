@@ -32,6 +32,9 @@ uses
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects;
 
+resourcestring
+  SNistAliasOidNotInSec = 'NIST alias OID not in SEC registry';
+
 type
   TNistNamedCurves = class sealed(TObject)
 
@@ -73,7 +76,7 @@ var
   LName: String;
 begin
   if TSecNamedCurves.GetByOidLazy(AOid) = nil then
-    raise EInvalidOperationCryptoLibException.Create('NIST alias OID not in SEC registry');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNistAliasOidNotInSec);
   LName := AName;
   FNames.Add(AOid, LName);
   FObjIds.Add(LName, AOid);

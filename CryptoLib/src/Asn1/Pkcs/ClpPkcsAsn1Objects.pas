@@ -38,26 +38,43 @@ uses
   ClpPlatformUtilities;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SAttrTypeNil = 'attrType';
-  SAttrValuesNil = 'attrValues';
-  SWrongNumberOfElements = 'Wrong number of elements in sequence';
-  SRequestInfoNil = 'requestInfo';
-  SAlgorithmNil = 'algorithm';
-  SSignatureNil = 'signature';
-  SSubjectNil = 'subject';
-  SSubjectPKInfoNil = 'subjectPKInfo';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SAttrTypeNil = 'attribute type cannot be nil';
+  SAttrValuesNil = 'attribute values cannot be nil';
+  SWrongNumberOfElements = 'wrong number of elements in sequence';
+  SRequestInfoNil = 'request info cannot be nil';
+  SAlgorithmNil = 'algorithm identifier cannot be nil';
+  SSignatureNil = 'signature cannot be nil';
+  SSubjectNil = 'subject cannot be nil';
+  SSubjectPKInfoNil = 'subject public key info cannot be nil';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SChallengePasswordMustHaveSingleValue = 'challengePassword attribute must have exactly one value';
-  SPrivateKeyAlgorithmNil = 'privateKeyAlgorithm';
-  SPrivateKeyNil = 'privateKey';
-  SVersionNil = 'version';
+  SPrivateKeyAlgorithmNil = 'private key algorithm cannot be nil';
+  SPrivateKeyNil = 'private key cannot be nil';
+  SVersionNil = 'version cannot be nil';
   SWrongVersionForPfxPdu = 'wrong version for PFX PDU';
-  SContentInfoNil = 'contentInfo';
-  SMacNil = 'mac';
-  SMacSaltNil = 'macSalt';
-  SIterationsNil = 'iterations';
+  SContentInfoNil = 'content info cannot be nil';
+  SMacNil = 'MAC cannot be nil';
+  SMacSaltNil = 'MAC salt cannot be nil';
+  SIterationsNil = 'iterations cannot be nil';
   SEncryptedDataVersionNotZero = 'sequence not version 0';
+  SAsn1EncodableElementNil = 'ASN.1 encodable element cannot be nil';
+  SPublicKeyRequiresVersionV21OrLater = 'publicKey requires version v2(1) or later';
+  SAlgIdNil = 'algorithm identifier cannot be nil';
+  SEncryptionAlgorithmNil = 'encryption algorithm cannot be nil';
+  SEncryptedDataNil = 'encrypted data cannot be nil';
+  SKeyDevFuncNil = 'key derivation function cannot be nil';
+  SEncSchemeNil = 'encryption scheme cannot be nil';
+  SPkcsContentTypeNil = 'PKCS#7 content type cannot be nil';
+  SPkcsDigestAlgorithmsNil = 'PKCS#7 digest algorithms set cannot be nil';
+  SPkcsContentInfoNil = 'PKCS#7 content info cannot be nil';
+  SPkcsSignerInfosNil = 'PKCS#7 signer infos set cannot be nil';
+  SBagIdNil = 'safe bag ID cannot be nil';
+  SBagValueNil = 'safe bag value cannot be nil';
+  SCertIdNil = 'cert ID cannot be nil';
+  SCertValueNil = 'cert value cannot be nil';
+  SPkcsIllegalObjectInGetInstanceWithType = 'illegal object in GetInstance: %s';
+  SPkcsBadSequenceSize = 'bad sequence size: %d';
+
 
 type
   /// <summary>
@@ -814,7 +831,7 @@ begin
   LCount := ASeq.Count;
   if LCount <> 2 then
   begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   end;
 
   FAttrType := TDerObjectIdentifier.GetInstance(ASeq[0]);
@@ -827,9 +844,9 @@ begin
   inherited Create();
 
   if AAttrType = nil then
-    raise EArgumentNilCryptoLibException.Create(SAttrTypeNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttrTypeNil);
   if AAttrValues = nil then
-    raise EArgumentNilCryptoLibException.Create(SAttrValuesNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAttrValuesNil);
 
   FAttrType := AAttrType;
   FAttrValues := AAttrValues;
@@ -913,7 +930,7 @@ begin
   LPos := 0;
   if (LCount < 3) or (LCount > 4) then
   begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   end;
 
   FVersion := TDerInteger.GetInstance(ASeq[LPos]);
@@ -929,7 +946,7 @@ begin
 
   if LPos <> LCount then
   begin
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
   end;
 
   ValidateAttributes(FAttributes);
@@ -947,9 +964,9 @@ begin
 
   FVersion := TDerInteger.Zero;
   if ASubject = nil then
-    raise EArgumentNilCryptoLibException.Create(SSubjectNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectNil);
   if APkInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SSubjectPKInfoNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSubjectPKInfoNil);
 
   FSubject := ASubject;
   FSubjectPKInfo := APkInfo;
@@ -970,7 +987,7 @@ begin
       begin
         if LAttr.AttrValues.Count <> 1 then
         begin
-          raise EArgumentCryptoLibException.Create(SChallengePasswordMustHaveSingleValue);
+          raise EArgumentCryptoLibException.CreateRes(@SChallengePasswordMustHaveSingleValue);
         end;
       end;
     end;
@@ -1075,7 +1092,7 @@ begin
   LCount := ASeq.Count;
   if LCount <> 3 then
   begin
-    raise EArgumentCryptoLibException.Create(SWrongNumberOfElements);
+    raise EArgumentCryptoLibException.CreateRes(@SWrongNumberOfElements);
   end;
 
   FReqInfo := TCertificationRequestInfo.GetInstance(ASeq[0]);
@@ -1089,11 +1106,11 @@ begin
   inherited Create();
 
   if ARequestInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SRequestInfoNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SRequestInfoNil);
   if AAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create(SAlgorithmNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if ASignature = nil then
-    raise EArgumentNilCryptoLibException.Create(SSignatureNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SSignatureNil);
 
   FReqInfo := ARequestInfo;
   FSigAlgId := AAlgorithm;
@@ -1177,7 +1194,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAsn1EncodableElementNil);
 
   if Supports(AElement, IPrivateKeyInfo, Result) then
     Exit;
@@ -1205,7 +1222,7 @@ begin
   LPos := 0;
   if (LCount < 3) or (LCount > 5) then
   begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   end;
 
   FVersion := TDerInteger.GetInstance(ASeq[LPos]);
@@ -1223,13 +1240,13 @@ begin
 
   if LPos <> LCount then
   begin
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
   end;
 
   LVersionValue := FVersion.IntValueExact;
   if (FPublicKey <> nil) and (LVersionValue < 1) then
   begin
-    raise EArgumentCryptoLibException.Create('''publicKey'' requires version v2(1) or later');
+    raise EArgumentCryptoLibException.CreateRes(@SPublicKeyRequiresVersionV21OrLater);
   end;
 end;
 
@@ -1267,9 +1284,9 @@ begin
     FVersion := TDerInteger.Zero;
 
   if APrivateKeyAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKeyAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyAlgorithmNil);
   if APrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyNil);
 
   FPrivateKeyAlgorithm := APrivateKeyAlgorithm;
   FPrivateKey := TDerOctetString.Create(APrivateKey);
@@ -1403,7 +1420,7 @@ begin
 
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FEncryptionAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[0]);
   FEncryptedData := TAsn1OctetString.GetInstance(ASeq[1]);
@@ -1415,7 +1432,7 @@ begin
   inherited Create();
 
   if AAlgId = nil then
-    raise EArgumentNilCryptoLibException.Create('algId');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgIdNil);
 
   FEncryptionAlgorithm := AAlgId;
   FEncryptedData := TDerOctetString.FromContents(AEncoding);
@@ -1427,9 +1444,9 @@ begin
   inherited Create();
 
   if AEncryptionAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('encryptionAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncryptionAlgorithmNil);
   if AEncryptedData = nil then
-    raise EArgumentNilCryptoLibException.Create('encryptedData');
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncryptedDataNil);
 
   FEncryptionAlgorithm := AEncryptionAlgorithm;
   FEncryptedData := AEncryptedData;
@@ -1600,7 +1617,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   FSalt := TAsn1OctetString.GetInstance(ASeq[0]);
   FIterationCount := TDerInteger.GetInstance(ASeq[1]);
 end;
@@ -1688,7 +1705,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   LFunc := TAlgorithmIdentifier.GetInstance(ASeq[0]);
   FKeyDerivationFunc := TKeyDerivationFunc.Create(LFunc.Algorithm, LFunc.Parameters);
   FEncryptionScheme := TEncryptionScheme.GetEncryptionSchemeInstance(ASeq[1]);
@@ -1699,9 +1716,9 @@ constructor TPbeS2Parameters.Create(const AKeyDerivationFunc: IKeyDerivationFunc
 begin
   inherited Create();
   if AKeyDerivationFunc = nil then
-    raise EArgumentNilCryptoLibException.Create('keyDevFunc');
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyDevFuncNil);
   if AEncryptionScheme = nil then
-    raise EArgumentNilCryptoLibException.Create('encScheme');
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncSchemeNil);
   FKeyDerivationFunc := AKeyDerivationFunc;
   FEncryptionScheme := AEncryptionScheme;
 end;
@@ -1777,7 +1794,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 2) or (LCount > 4) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   FOctStr := TAsn1OctetString.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
   FIterationCount := TDerInteger.GetInstance(ASeq[LPos]);
@@ -1787,7 +1804,7 @@ begin
   if FPrf = nil then
     FPrf := DefaultPrf;
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TPbkdf2Params.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
@@ -1947,7 +1964,7 @@ begin
   inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
   FIV := TAsn1OctetString.GetInstance(ASeq[0]);
   FIterations := TDerInteger.GetInstance(ASeq[1]);
 end;
@@ -1997,7 +2014,7 @@ begin
   if Supports(AObj, IPkcsContentInfo, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SPkcsIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TPkcsContentInfo.GetInstance(const AObj: IAsn1Convertible): IPkcsContentInfo;
@@ -2045,7 +2062,7 @@ begin
   Inherited Create();
   LCount := ASeq.Count;
   if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateFmt('Bad sequence size: %d', [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FContentType := TDerObjectIdentifier.GetInstance(ASeq[0]);
 
@@ -2065,7 +2082,7 @@ constructor TPkcsContentInfo.Create(const AContentType: IDerObjectIdentifier;
 begin
   Inherited Create();
   if AContentType = nil then
-    raise EArgumentNilCryptoLibException.Create('contentType');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPkcsContentTypeNil);
   FContentType := AContentType;
   FContent := AContent;
 end;
@@ -2106,7 +2123,7 @@ begin
   if Supports(AObj, IPkcsSignedData, Result) then
     Exit;
 
-  raise EArgumentCryptoLibException.CreateFmt('illegal object in GetInstance: %s', [TPlatformUtilities.GetTypeName(AObj)]);
+  raise EArgumentCryptoLibException.CreateResFmt(@SPkcsIllegalObjectInGetInstanceWithType, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TPkcsSignedData.GetInstance(const AObj: IAsn1Convertible): IPkcsSignedData;
@@ -2154,7 +2171,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 4) or (LCount > 6) then
-    raise EArgumentCryptoLibException.CreateFmt(SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FVersion := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -2172,7 +2189,7 @@ begin
   System.Inc(LPos);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TPkcsSignedData.GetTaggedAsn1SetFromSeq(ATagged: IAsn1TaggedObject; AState: IAsn1Sequence): IAsn1Set;
@@ -2187,13 +2204,13 @@ constructor TPkcsSignedData.Create(const AVersion: IDerInteger;
 begin
   Inherited Create();
   if AVersion = nil then
-    raise EArgumentNilCryptoLibException.Create(SVersionNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SVersionNil);
   if ADigestAlgorithms = nil then
-    raise EArgumentNilCryptoLibException.Create('digestAlgorithms');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPkcsDigestAlgorithmsNil);
   if AContentInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('contentInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPkcsContentInfoNil);
   if ASignerInfos = nil then
-    raise EArgumentNilCryptoLibException.Create('signerInfos');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPkcsSignerInfosNil);
 
   FVersion := AVersion;
   FDigestAlgorithms := ADigestAlgorithms;
@@ -2307,7 +2324,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FMac := TDigestInfo.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -2318,7 +2335,7 @@ begin
     FIterations := TDerInteger.One;
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TMacData.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
@@ -2332,7 +2349,7 @@ begin
   inherited Create();
 
   if ADigInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SMacNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SMacNil);
 
   FMac := ADigInfo;
   FMacSalt := TDerOctetString.FromContents(ASalt);
@@ -2345,11 +2362,11 @@ begin
   inherited Create();
 
   if AMac = nil then
-    raise EArgumentNilCryptoLibException.Create(SMacNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SMacNil);
   if AMacSalt = nil then
-    raise EArgumentNilCryptoLibException.Create(SMacSaltNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SMacSaltNil);
   if AIterations = nil then
-    raise EArgumentNilCryptoLibException.Create(SIterationsNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SIterationsNil);
 
   FMac := AMac;
   FMacSalt := AMacSalt;
@@ -2451,11 +2468,11 @@ begin
 
   LCount := ASeq.Count;
   if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   LVersion := TDerInteger.GetInstance(ASeq[0]);
   if not LVersion.HasValue(3) then
-    raise EArgumentCryptoLibException.Create(SWrongVersionForPfxPdu);
+    raise EArgumentCryptoLibException.CreateRes(@SWrongVersionForPfxPdu);
 
   FContentInfo := TPkcsContentInfo.GetInstance(ASeq[1]);
 
@@ -2471,7 +2488,7 @@ begin
   inherited Create();
 
   if AContentInfo = nil then
-    raise EArgumentNilCryptoLibException.Create(SContentInfoNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentInfoNil);
 
   FContentInfo := AContentInfo;
   FMacData := AMacData;
@@ -2558,7 +2575,7 @@ begin
   LCount := ASeq.Count;
   LPos := 0;
   if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FBagID := TDerObjectIdentifier.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -2570,7 +2587,7 @@ begin
   FBagAttributes := TAsn1Utilities.ReadOptional<IAsn1Set>(ASeq, LPos, ReadOptionalAsn1Set);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 class function TSafeBag.ReadOptionalAsn1Set(AElement: IAsn1Encodable): IAsn1Set;
@@ -2590,9 +2607,9 @@ begin
   inherited Create();
 
   if ABagID = nil then
-    raise EArgumentNilCryptoLibException.Create('bagID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SBagIdNil);
   if ABagValue = nil then
-    raise EArgumentNilCryptoLibException.Create('bagValue');
+    raise EArgumentNilCryptoLibException.CreateRes(@SBagValueNil);
 
   FBagID := ABagID;
   FBagValue := ABagValue;
@@ -2692,7 +2709,7 @@ begin
 
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   FCertID := TDerObjectIdentifier.GetInstance(ASeq[0]);
   LTagged := TAsn1TaggedObject.GetContextInstance(ASeq[1], 0);
@@ -2705,9 +2722,9 @@ begin
   inherited Create();
 
   if ACertID = nil then
-    raise EArgumentNilCryptoLibException.Create('certID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertIdNil);
   if ACertValue = nil then
-    raise EArgumentNilCryptoLibException.Create('certValue');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertValueNil);
 
   FCertID := ACertID;
   FCertValue := ACertValue;
@@ -2889,11 +2906,11 @@ begin
 
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SPkcsBadSequenceSize, [LCount]);
 
   LVersion := TDerInteger.GetInstance(ASeq[0]);
   if not LVersion.HasValue(0) then
-    raise EArgumentCryptoLibException.Create(SEncryptedDataVersionNotZero);
+    raise EArgumentCryptoLibException.CreateRes(@SEncryptedDataVersionNotZero);
 
   FData := TAsn1Sequence.GetInstance(ASeq[1]);
 end;

@@ -37,11 +37,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMacSizeMultipleOf8 = 'MAC size must be multiple of 8';
+  SMacSizeMultipleOfEight = 'MAC size must be multiple of 8';
   SMacSizeTooLarge = 'MAC size must be less or equal to %d';
-  SBlockSizeInvalid = 'Block size must be either 64 or 128 bits';
-  SNegativeInputLength = 'Can''t have a negative input length!';
-  SCMacKeyOnly = 'CMac mode only permits key to be set.';
+  SBlockSizeInvalid = 'block size must be either 64 or 128 bits';
+  SNegativeInputLength = 'can''t have a negative input length';
+  SCMacKeyOnly = 'CMac mode only permits key to be set';
 
 type
   TCMac = class sealed(TMac, ICMac, IMac)
@@ -101,7 +101,7 @@ begin
   inherited Create();
 
   if (AMacSizeInBits mod 8) <> 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOf8);
+    raise EArgumentCryptoLibException.CreateRes(@SMacSizeMultipleOfEight);
 
   LBlockSize := ACipher.GetBlockSize();
 

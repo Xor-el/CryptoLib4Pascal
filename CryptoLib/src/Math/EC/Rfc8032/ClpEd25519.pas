@@ -35,10 +35,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SDigestSize = 'Digest must produce 64 bytes';
-  SInvalidOp = 'Invalid point';
-  SInvalidCtx = 'ctx';
-  SInvalidBufferLength = 'Invalid buffer length';
+  SDigestMustProduce64Bytes = 'digest must produce 64 bytes';
+  SInvalidPoint = 'invalid point';
+  SInvalidContext = 'invalid context';
+  SInvalidBufferLength = 'invalid buffer length';
 
 type
   /// <summary>
@@ -487,7 +487,7 @@ var
 begin
   LD := CreateDigest();
   if LD.GetDigestSize() <> DigestSize then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SDigestSize);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
   Result := LD;
 end;
 
@@ -1041,7 +1041,7 @@ begin
   InitPointAffine(LQ);
   NormalizeToAffine(LP, LQ);
   if CheckPoint(LQ) = 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
   Result := ExportPoint(LQ);
 end;
 
@@ -1129,7 +1129,7 @@ begin
   InitPointAccum(LP);
   ScalarMultBase(AK, LP);
   if EncodeResult(LP, AR, AROff) = 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 end;
 
 class procedure TEd25519.ScalarMultBaseYZ(const AK: TCryptoLibByteArray; AKOff: Int32; AY, AZ: TCryptoLibInt32Array);
@@ -1142,7 +1142,7 @@ begin
   InitPointAccum(LP);
   ScalarMultBase(LN, LP);
   if CheckPoint(LP) = 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
   TX25519Field.Copy(LP.Y, 0, AY, 0);
   TX25519Field.Copy(LP.Z, 0, AZ, 0);
 end;
@@ -1523,7 +1523,7 @@ procedure TEd25519.Sign(const &AS: TCryptoLibByteArray; ASOff: Int32; const ACtx
   const ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   if not CheckContextVar(ACtx, $00) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   ImplSign(&AS, ASOff, ACtx, $00, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
@@ -1531,7 +1531,7 @@ procedure TEd25519.Sign(const &AS: TCryptoLibByteArray; ASOff: Int32; const APk:
   const ACtx, AM: TCryptoLibByteArray; AMOff, AMLen: Int32; const ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   if not CheckContextVar(ACtx, $00) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   ImplSign(&AS, ASOff, APk, APkOff, ACtx, $00, AM, AMOff, AMLen, ASig, ASigOff);
 end;
 
@@ -1539,7 +1539,7 @@ procedure TEd25519.SignPreHash(const &AS: TCryptoLibByteArray; ASOff: Int32; con
   const ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   if not CheckContextVar(ACtx, $01) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   ImplSign(&AS, ASOff, ACtx, $01, APh, APhOff, PrehashSize, ASig, ASigOff);
 end;
 
@@ -1547,7 +1547,7 @@ procedure TEd25519.SignPreHash(const &AS: TCryptoLibByteArray; ASOff: Int32; con
   const ACtx, APh: TCryptoLibByteArray; APhOff: Int32; const ASig: TCryptoLibByteArray; ASigOff: Int32);
 begin
   if not CheckContextVar(ACtx, $01) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   ImplSign(&AS, ASOff, APk, APkOff, ACtx, $01, APh, APhOff, PrehashSize, ASig, ASigOff);
 end;
 
@@ -1558,7 +1558,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if APh.DoFinal(LM, 0) <> PrehashSize then
-    raise EArgumentCryptoLibException.CreateRes(@SDigestSize);
+    raise EArgumentCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
   SignPreHash(&AS, ASOff, ACtx, LM, 0, ASig, ASigOff);
 end;
 
@@ -1569,7 +1569,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if APh.DoFinal(LM, 0) <> PrehashSize then
-    raise EArgumentCryptoLibException.CreateRes(@SDigestSize);
+    raise EArgumentCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
   SignPreHash(&AS, ASOff, APk, APkOff, ACtx, LM, 0, ASig, ASigOff);
 end;
 
@@ -1610,7 +1610,7 @@ function TEd25519.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const 
   const ACtx, AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
   if not CheckContextVar(ACtx, $00) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $00, AM, AMOff, AMLen);
 end;
 
@@ -1624,7 +1624,7 @@ function TEd25519.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const 
   const ACtx, AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
   if not CheckContextVar(ACtx, $00) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $00, AM, AMOff, AMLen);
 end;
 
@@ -1632,7 +1632,7 @@ function TEd25519.VerifyPreHash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const ACtx, APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
   if not CheckContextVar(ACtx, $01) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $01, APh, APhOff, PrehashSize);
 end;
 
@@ -1643,7 +1643,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if APh.DoFinal(LM, 0) <> PrehashSize then
-    raise EArgumentCryptoLibException.CreateRes(@SDigestSize);
+    raise EArgumentCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
   Result := VerifyPreHash(ASig, ASigOff, APk, APkOff, ACtx, LM, 0);
 end;
 
@@ -1651,7 +1651,7 @@ function TEd25519.VerifyPreHash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const ACtx, APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
   if not CheckContextVar(ACtx, $01) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $01, APh, APhOff, PrehashSize);
 end;
 
@@ -1662,7 +1662,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if APh.DoFinal(LM, 0) <> PrehashSize then
-    raise EArgumentCryptoLibException.CreateRes(@SDigestSize);
+    raise EArgumentCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
   Result := VerifyPreHash(ASig, ASigOff, APublicPoint, ACtx, LM, 0);
 end;
 
@@ -1681,7 +1681,7 @@ var
   LData: TCryptoLibInt32Array;
 begin
   if not CheckContextVar(ACtx, APhflag) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   CopyBytes(ASig, ASigOff, PointBytes, LR);
   CopyBytes(ASig, ASigOff + PointBytes, ScalarBytes, LS);
   System.SetLength(LA, PublicKeySize);
@@ -1718,7 +1718,7 @@ begin
   System.SetLength(LV0, 4);
   System.SetLength(LV1, 4);
   if not TScalar25519.ReduceBasisVar(LNA, LV0, LV1) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
   TScalar25519.Multiply128Var(LNS, LV1, LNS);
   InitPointAccum(LPZ);
   ScalarMultStraus128Var(LNS, LV0, LPA, LV1, LPR, LPZ);
@@ -1778,7 +1778,7 @@ begin
   System.SetLength(LV0, 4);
   System.SetLength(LV1, 4);
   if not TScalar25519.ReduceBasisVar(LNA, LV0, LV1) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
   TScalar25519.Multiply128Var(LNS, LV1, LNS);
   InitPointAccum(LPZ);
   ScalarMultStraus128Var(LNS, LV0, LPA, LV1, LPR, LPZ);

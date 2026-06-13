@@ -84,7 +84,7 @@ var
   LSeed, LHash, LScalar: TCryptoLibByteArray;
 begin
   if AEd25519PrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create(SCurve25519Ed25519PrivateKeyNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SCurve25519Ed25519PrivateKeyNil);
   LSeed := AEd25519PrivateKey.GetEncoded();
   LHash := TDigestUtilities.CalculateDigest('SHA-512', LSeed);
   System.SetLength(LScalar, KeySizeBytes);
@@ -99,7 +99,7 @@ var
   LY, LOne, LOneMinusY, LOnePlusY, LInv, LU: TCryptoLibInt32Array;
 begin
   if AEd25519PublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create(SCurve25519Ed25519PublicKeyNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SCurve25519Ed25519PublicKeyNil);
   LPk := AEd25519PublicKey.GetEncoded();
   LY := TX25519Field.Create();
   TX25519Field.Decode255(LPk, LY);
@@ -108,7 +108,7 @@ begin
   LOneMinusY := TX25519Field.Create();
   TX25519Field.Sub(LOne, LY, LOneMinusY);
   if TX25519Field.IsZeroVar(LOneMinusY) then
-    raise EArgumentCryptoLibException.Create(SCurve25519Ed25519PublicKeyInvalid);
+    raise EArgumentCryptoLibException.CreateRes(@SCurve25519Ed25519PublicKeyInvalid);
   LOnePlusY := TX25519Field.Create();
   TX25519Field.Add(LOne, LY, LOnePlusY);
   LInv := TX25519Field.Create();

@@ -35,7 +35,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SUnknownDekAlgorithm = 'Unknown DEK algorithm: %s';
+  SUnknownDekAlgorithm = 'unknown DEK algorithm: %s';
 
 type
   /// <summary>

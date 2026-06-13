@@ -47,6 +47,12 @@ uses
   ClpISignatureAlgorithmFinder,
   ClpCryptoLibTypes;
 
+resourcestring
+  SNameNil = 'name cannot be nil';
+  SOidNil = 'OID cannot be nil';
+  SUseNoParamsInsteadForAbsentParameters = 'use ''NoParams'' instead for absent parameters';
+  SUnknownSignatureName = 'unknown signature name: %s';
+
 type
   /// <summary>
   /// Default implementation of ISignatureAlgorithmFinder that maps signature names
@@ -429,9 +435,9 @@ class procedure TDefaultSignatureAlgorithmFinder.AddAlgorithm(const AName: Strin
   const AOid: IDerObjectIdentifier; const ADigestOid: IDerObjectIdentifier; AIsNoParams: Boolean);
 begin
   if AName = '' then
-    raise EArgumentNilCryptoLibException.Create('name');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNameNil);
   if AOid = nil then
-    raise EArgumentNilCryptoLibException.Create('oid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
 
   AddAlgorithm(AName, AOid);
 
@@ -464,7 +470,7 @@ class procedure TDefaultSignatureAlgorithmFinder.AddParameters(const AAlgorithmN
   const AParameters: IAsn1Encodable);
 begin
   if AParameters = nil then
-    raise EArgumentCryptoLibException.Create('use ''NoParams'' instead for absent parameters');
+    raise EArgumentCryptoLibException.CreateRes(@SUseNoParamsInsteadForAbsentParameters);
   FParameters.Add(AAlgorithmName, AParameters);
 end;
 
@@ -489,7 +495,7 @@ var
   LExplicitParams: IAsn1Encodable;
 begin
   if not FAlgorithms.TryGetValue(ASignatureName, LSigOid) then
-    raise EArgumentCryptoLibException.CreateFmt('Unknown signature name: %s', [ASignatureName]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownSignatureName, [ASignatureName]);
 
   if FNoParams.TryGetValue(LSigOid, LNoParamsAlgID) then
   begin

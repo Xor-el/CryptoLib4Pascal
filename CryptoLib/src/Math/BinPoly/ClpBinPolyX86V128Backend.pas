@@ -30,6 +30,9 @@ uses
   ClpBinPolyX86V128Large,
   ClpCryptoLibTypes;
 
+resourcestring
+  SX86V128BackendRequiresPclmulqdqSupport = 'X86.V128 backend requires PCLMULQDQ support on this target';
+
 type
   /// <summary>
   /// Entry point for the x86/V128 binary-polynomial multiply backend.
@@ -58,7 +61,7 @@ var
   LSize: Int32;
 begin
   if not IsEnabled then
-    raise EInvalidOperationCryptoLibException.Create('X86.V128 backend requires PCLMULQDQ support on this target.');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SX86V128BackendRequiresPclmulqdqSupport);
 
   LSize := (AN + 63) shr 6;
   case LSize of

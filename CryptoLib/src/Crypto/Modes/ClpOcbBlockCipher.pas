@@ -43,17 +43,17 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SHashCipherNil = 'hashCipher';
-  SMainCipherNil = 'mainCipher';
+  SHashCipherNil = 'hash cipher cannot be nil';
+  SMainCipherNil = 'main cipher cannot be nil';
   SBlockSizeRequired = 'must have a block size of %d';
-  SCiphersMustMatch = '''hashCipher'' and ''mainCipher'' must be the same algorithm';
-  SInvalidParametersOCB = 'invalid parameters passed to OCB';
+  SCiphersMustMatch = 'hashCipher and mainCipher must be the same algorithm';
+  SInvalidParameters = 'invalid parameters passed to %s';
   SIVTooLong = 'IV must be no more than 15 bytes';
-  SCannotChangeEncState = 'cannot change encrypting state without providing key.';
-  SInvalidMacSize = 'Invalid value for MAC size: %d';
+  SCannotChangeEncState = 'cannot change encrypting state without providing key';
+  SInvalidMacSize = 'invalid value for MAC size: %d';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in OCB failed';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SMacCheckFailed = 'mac check in %s failed';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   TOcbBlockCipher = class(TInterfacedObject, IOcbBlockCipher,
@@ -237,7 +237,7 @@ begin
 
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersOCB);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['OCB']);
 
   LN := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
@@ -803,7 +803,8 @@ begin
   else
   begin
     if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LTag)) then
-      raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
+        ['OCB']);
   end;
 
   Reset(False);

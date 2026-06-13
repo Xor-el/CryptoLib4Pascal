@@ -26,8 +26,8 @@ uses
   ClpIAsymmetricCipherKeyPair;
 
 resourcestring
-  SExpectedPublicKey = 'Expected a Public Key "publicParameter"';
-  SExpectedPrivateKey = 'Expected a Private Key "privateParameter"';
+  SExpectedPublicKey = 'expected a public key';
+  SExpectedPrivateKey = 'expected a private key';
 
 type
   /// <summary>

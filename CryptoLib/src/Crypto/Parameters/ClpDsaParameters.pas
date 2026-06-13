@@ -31,13 +31,13 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SPUnInitialized = '"P" Cannot Be Uninitialized';
-  SQUnInitialized = '"Q" Cannot Be Uninitialized';
-  SGUnInitialized = '"G" Cannot Be Uninitialized';
-  SSeedNil = '"Seed" Cannot Be Nil';
-  SYUnInitialized = '"Y" Cannot Be Uninitialized';
-  SInvalidYInCorrectGroup = '"Y" Value Does Not Appear To Be In Correct Group';
-  SXUnInitialized = '"X" Cannot Be Uninitialized';
+  SPUninitialized = 'P cannot be uninitialized';
+  SQUninitialized = 'Q cannot be uninitialized';
+  SGUninitialized = 'G cannot be uninitialized';
+  SSeedNil = 'seed cannot be nil';
+  SYUninitialized = 'Y cannot be uninitialized';
+  SInvalidYInCorrectGroup = 'Y value does not appear to be in the correct group';
+  SXUninitialized = 'X cannot be uninitialized';
 
 type
   TDsaValidationParameters = class(TInterfacedObject, IDsaValidationParameters)
@@ -305,17 +305,17 @@ begin
   inherited Create();
   if (not AP.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SPUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SPUninitialized);
   end;
 
   if (not AQ.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SQUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SQUninitialized);
   end;
 
   if (not AG.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SGUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SGUninitialized);
   end;
 
   FP := AP;
@@ -398,7 +398,7 @@ class function TDsaPublicKeyParameters.Validate(const AY: TBigInteger;
 begin
   if (not AY.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SYUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SYUninitialized);
   end;
   if (AParameters <> nil) then
   begin
@@ -452,7 +452,7 @@ class function TDsaPrivateKeyParameters.Validate(const AX: TBigInteger): TBigInt
 begin
   if (not AX.IsInitialized) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SXUnInitialized);
+    raise EArgumentNilCryptoLibException.CreateRes(@SXUninitialized);
   end;
   Result := AX;
 end;

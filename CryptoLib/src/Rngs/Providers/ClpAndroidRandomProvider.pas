@@ -31,13 +31,13 @@ uses
 
 resourcestring
   SAndroidGetRandomError =
-    'An Error Occurred while generating random data using getRandom API';
+    'an error occurred while generating random data using getRandom API';
 
+type
   /// <summary>
   /// Android OS random source provider.
   /// Implements Android getrandom and /dev/urandom fallback
   /// </summary>
-type
   TAndroidRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

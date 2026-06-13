@@ -35,7 +35,7 @@ resourcestring
   SEOFInPublicKey = 'EOF encountered in middle of X25519 public key';
   SMustHaveLengthKeySize = 'must have length %d';
   SEOFInPrivateKey = 'EOF encountered in middle of X25519 private key';
-  SAgreementCalculationFailed = 'X25519 Agreement Failed';
+  SAgreementCalculationFailed = 'X25519 agreement failed';
 
 type
   /// <summary>

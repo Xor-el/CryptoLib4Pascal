@@ -270,7 +270,7 @@ begin
       Fail('must fail on malformed');
     except
       on E: EIOCryptoLibException do
-        CheckEquals('ran out of data before consuming type', E.Message, 'Exception message');
+        CheckEquals('ran out of data before consuming PEM type', E.Message, 'Exception message');
       on E: Exception do
         Fail('Expected EIOCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
     end;

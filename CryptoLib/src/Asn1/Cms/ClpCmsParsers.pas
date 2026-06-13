@@ -34,10 +34,19 @@ uses
 
 resourcestring
   SCmsUnknownObjectEncountered = 'unknown object encountered: %s';
-  SCmsGetCertsNotCalled = 'GetCerts() has not been called.';
-  SCmsGetCertsOrGetCrlsNotCalled = 'GetCerts() and/or GetCrls() has not been called.';
+  SCmsGetCertsNotCalled = 'GetCerts() has not been called';
+  SCmsGetCertsOrGetCrlsNotCalled = 'GetCerts() and/or GetCrls() has not been called';
+  SSeqNil = 'seq cannot be nil';
+  SCmsContentInfoParserExpectedContentType = 'ContentInfoParser: expected DerObjectIdentifier for content type';
+  SObjNil = 'ASN.1 object cannot be nil';
+  SCmsSignedDataParserExpectedVersion = 'SignedDataParser: expected DerInteger for version';
+  SCmsSignedDataParserExpectedDigestAlgorithms = 'SignedDataParser: expected Asn1SetParser for digest algorithms';
+  SCmsSignedDataParserExpectedEncapContentInfo = 'SignedDataParser: expected Asn1SequenceParser for encapsulated content info';
+  SCmsSignedDataParserExpectedSignerInfos = 'SignedDataParser: expected Asn1SetParser for signer infos';
+
 
 type
+
   /// <summary>
   /// CMS ContentInfo parser.
   /// </summary>
@@ -97,11 +106,11 @@ var
 begin
   Inherited Create();
   if ASeq = nil then
-    raise EArgumentNilCryptoLibException.Create('seq');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSeqNil);
 
   LObj := ASeq.ReadObject();
   if not Supports(LObj, IDerObjectIdentifier, FContentType) then
-    raise EArgumentCryptoLibException.Create('ContentInfoParser: expected DerObjectIdentifier for contentType');
+    raise EArgumentCryptoLibException.CreateRes(@SCmsContentInfoParserExpectedContentType);
 
   LObj := ASeq.ReadObject();
   if Supports(LObj, IAsn1TaggedObjectParser, LTagged) then
@@ -134,7 +143,7 @@ var
   LObj: IAsn1Convertible;
 begin
   if AObj = nil then
-    raise EArgumentNilCryptoLibException.Create('AObj');
+    raise EArgumentNilCryptoLibException.CreateRes(@SObjNil);
 
   if Supports(AObj, IAsn1SequenceParser, LSeqParser) then
     Exit(TCmsSignedDataParser.Create(LSeqParser));
@@ -159,11 +168,11 @@ var
 begin
   Inherited Create();
   if ASeq = nil then
-    raise EArgumentNilCryptoLibException.Create('seq');
+    raise EArgumentNilCryptoLibException.CreateRes(@SSeqNil);
   FSeq := ASeq;
   LObj := ASeq.ReadObject();
   if not Supports(LObj, IDerInteger, FVersion) then
-    raise EArgumentCryptoLibException.Create('SignedDataParser: expected DerInteger for version');
+    raise EArgumentCryptoLibException.CreateRes(@SCmsSignedDataParserExpectedVersion);
   FNextObject := nil;
   FCertsCalled := False;
   FCrlsCalled := False;
@@ -181,7 +190,7 @@ var
 begin
   LObj := FSeq.ReadObject();
   if not Supports(LObj, IAsn1SetParser, LSetParser) then
-    raise EArgumentCryptoLibException.Create('SignedDataParser: expected Asn1SetParser for digestAlgorithms');
+    raise EArgumentCryptoLibException.CreateRes(@SCmsSignedDataParserExpectedDigestAlgorithms);
   Result := LSetParser;
 end;
 
@@ -192,7 +201,7 @@ var
 begin
   LObj := FSeq.ReadObject();
   if not Supports(LObj, IAsn1SequenceParser, LSeqParser) then
-    raise EArgumentCryptoLibException.Create('SignedDataParser: expected Asn1SequenceParser for encapContentInfo');
+    raise EArgumentCryptoLibException.CreateRes(@SCmsSignedDataParserExpectedEncapContentInfo);
   Result := TCmsContentInfoParser.Create(LSeqParser);
 end;
 
@@ -226,7 +235,7 @@ var
   LObj: IAsn1Convertible;
 begin
   if not FCertsCalled then
-    raise EStreamCryptoLibException.Create(SCmsGetCertsNotCalled);
+    raise EStreamCryptoLibException.CreateRes(@SCmsGetCertsNotCalled);
 
   FCrlsCalled := True;
   if FNextObject = nil then
@@ -250,13 +259,13 @@ var
   LSetParser: IAsn1SetParser;
 begin
   if not FCertsCalled or not FCrlsCalled then
-    raise EStreamCryptoLibException.Create(SCmsGetCertsOrGetCrlsNotCalled);
+    raise EStreamCryptoLibException.CreateRes(@SCmsGetCertsOrGetCrlsNotCalled);
 
   if FNextObject = nil then
     FNextObject := FSeq.ReadObject();
 
   if not Supports(FNextObject, IAsn1SetParser, LSetParser) then
-    raise EArgumentCryptoLibException.Create('SignedDataParser: expected Asn1SetParser for signerInfos');
+    raise EArgumentCryptoLibException.CreateRes(@SCmsSignedDataParserExpectedSignerInfos);
   Result := LSetParser;
 end;
 

@@ -33,9 +33,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidOp = 'Invalid point';
-  SInvalidCtx = 'ctx';
-  SInvalidPh = 'ph';
+  SInvalidPoint = 'invalid point';
+  SInvalidContext = 'invalid context';
+  SInvalidPrehashDigestSize = 'invalid prehash digest size';
+  SInvalidSecretKeySize = 'invalid secret key size';
 
 type
   TEd448 = class(TObject)
@@ -1137,7 +1138,7 @@ begin
   InitPointProjective(LP);
   ScalarMultBase(AK, LP);
   if 0 = EncodeResult(LP, AR, AROff) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 end;
 
 class procedure TEd448.ScalarMultBaseXY(const AK: TCryptoLibByteArray; AKOff: Int32;
@@ -1153,7 +1154,7 @@ begin
   ScalarMultBase(LN, LP);
 
   if 0 = CheckPoint(LP) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 
   TX448Field.Copy(LP.X, 0, AX, 0);
   TX448Field.Copy(LP.Y, 0, AY, 0);
@@ -1303,7 +1304,7 @@ var
   LH, LS, LPk: TCryptoLibByteArray;
 begin
   if not CheckContextVar(ACtx) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
 
   LD := CreateAndValidateXof();
   System.SetLength(LH, XofSize);
@@ -1327,7 +1328,7 @@ var
   LH, LS: TCryptoLibByteArray;
 begin
   if not CheckContextVar(ACtx) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
 
   LD := CreateAndValidateXof();
   System.SetLength(LH, XofSize);
@@ -1353,7 +1354,7 @@ var
   LPZ: TPointProjective;
 begin
   if not CheckContextVar(ACtx) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
 
   LR := CopyBytes(ASig, ASigOff, PointBytes);
   LS := CopyBytes(ASig, ASigOff + PointBytes, ScalarBytes);
@@ -1410,7 +1411,7 @@ begin
   System.SetLength(LV1, 8);
 
   if not TScalar448.ReduceBasisVar(LNA, LV0, LV1) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 
   TScalar448.Multiply225Var(LNS, LV1, LNS);
 
@@ -1432,7 +1433,7 @@ var
   LPZ: TPointProjective;
 begin
   if not CheckContextVar(ACtx) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
 
   LR := CopyBytes(ASig, ASigOff, PointBytes);
   LS := CopyBytes(ASig, ASigOff + PointBytes, ScalarBytes);
@@ -1482,7 +1483,7 @@ begin
   System.SetLength(LV1, 8);
 
   if not TScalar448.ReduceBasisVar(LNA, LV0, LV1) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 
   TScalar448.Multiply225Var(LNS, LV1, LNS);
 
@@ -1494,7 +1495,7 @@ end;
 procedure TEd448.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 begin
   if System.Length(AK) <> SecretKeySize then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidCtx);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidSecretKeySize);
   ARandom.NextBytes(AK);
 end;
 
@@ -1536,7 +1537,7 @@ begin
   NormalizeToAffine(LP, LQ);
 
   if 0 = CheckPoint(LQ) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOp);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 
   Result := ExportPoint(LQ);
 end;
@@ -1575,7 +1576,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if PrehashSize <> APh.OutputFinal(LM, 0, PrehashSize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidPh);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPrehashDigestSize);
   ImplSign(ASk, ASkOff, ACtx, $01, LM, 0, System.Length(LM), ASig, ASigOff);
 end;
 
@@ -1587,7 +1588,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if PrehashSize <> APh.OutputFinal(LM, 0, PrehashSize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidPh);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPrehashDigestSize);
   ImplSign(ASk, ASkOff, APk, APkOff, ACtx, $01, LM, 0, System.Length(LM), ASig, ASigOff);
 end;
 
@@ -1716,7 +1717,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if PrehashSize <> APh.OutputFinal(LM, 0, PrehashSize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidPh);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPrehashDigestSize);
   Result := ImplVerify(ASig, ASigOff, APk, APkOff, ACtx, $01, LM, 0, System.Length(LM));
 end;
 
@@ -1727,7 +1728,7 @@ var
 begin
   System.SetLength(LM, PrehashSize);
   if PrehashSize <> APh.OutputFinal(LM, 0, PrehashSize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidPh);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPrehashDigestSize);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $01, LM, 0, System.Length(LM));
 end;
 

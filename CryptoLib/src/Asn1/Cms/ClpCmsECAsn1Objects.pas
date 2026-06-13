@@ -33,10 +33,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SEccCmsBadSequenceSize = 'Bad sequence size: %d';
-  SEccCmsUnexpectedElementsInSequence = 'Unexpected elements in sequence';
-  SEccCmsKeyInfoNil = 'KeyInfo cannot be Nil';
-  SEccCmsSuppPubInfoNil = 'SuppPubInfo cannot be Nil';
+  SEccCmsBadSequenceSize = 'bad sequence size: %d';
+  SEccCmsUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SEccCmsKeyInfoNil = 'KeyInfo cannot be nil';
+  SEccCmsSuppPubInfoNil = 'SuppPubInfo cannot be nil';
 
 type
   /// <summary>

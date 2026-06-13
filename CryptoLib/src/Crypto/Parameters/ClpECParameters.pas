@@ -39,21 +39,21 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCurveNil = 'Curve Cannot be Nil';
-  SScalarNil = 'Scalar Cannot be Nil';
-  SGNil = 'G Cannot be Nil';
-  SBigIntegerNotInitialized = 'BigInteger Not Initialized "%s"';
-  SQNil = 'Q Cannot be Nil';
-  SQInfinity = 'Point at Infinity "Q"';
-  SQPointNotOnCurve = 'Point Not on Curve "Q"';
-  SScalarInvalidRange = 'Scalar is not in the Interval [1, n - 1]';
-  SImplicitlyCANotImplemented = 'implicitlyCA';
-  SOidNil = 'OID Cannot be Nil';
+  SCurveNil = 'curve cannot be nil';
+  SScalarNil = 'scalar cannot be nil';
+  SGNil = 'G cannot be nil';
+  SBigIntegerNotInitialized = 'BigInteger %s not initialized';
+  SQNil = 'Q cannot be nil';
+  SQInfinity = 'Q is the point at infinity';
+  SQPointNotOnCurve = 'Q is not on the curve';
+  SScalarInvalidRange = 'scalar is not in the interval [1, n - 1]';
+  SImplicitlyCANotImplemented = 'implicitlyCA not implemented';
+  SOidNil = 'OID cannot be nil';
   SOidNotValid = 'OID is not a valid public key parameter set';
-  SAlgorithmNil = 'Algorithm Cannot be Empty';
-  SParameterNil = 'Parameter Cannot be Nil';
-  SUnRecognizedAlgorithm = 'Unrecognised Algorithm: " %s, "Algorithm';
-  SNameNotValidParameterSet = 'Name is not a valid public key parameter set';
+  SAlgorithmNil = 'algorithm cannot be empty';
+  SParameterNil = 'parameter cannot be nil';
+  SUnrecognizedAlgorithm = 'unrecognized algorithm: %s';
+  SNameNotValidParameterSet = 'name is not a valid public key parameter set';
 
 type
   TECDomainParameters = class(TInterfacedObject, IECDomainParameters)
@@ -293,7 +293,7 @@ var
   LX9: IX9ECParameters;
 begin
   if AX962Parameters.IsImplicitlyCA then
-    raise ENotSupportedCryptoLibException.Create(SImplicitlyCANotImplemented);
+    raise ENotSupportedCryptoLibException.CreateRes(@SImplicitlyCANotImplemented);
 
   LNamedCurve := AX962Parameters.GetNamedCurve;
   if LNamedCurve <> nil then
@@ -489,12 +489,12 @@ var
   LX9: IX9ECParameters;
 begin
   if AOid = nil then
-    raise EArgumentNilCryptoLibException.Create(SOidNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
 
   LX9 := TECUtilities.FindECCurveByOid(AOid);
 
   if LX9 = nil then
-    raise EArgumentCryptoLibException.Create(SOidNotValid);
+    raise EArgumentCryptoLibException.CreateRes(@SOidNotValid);
 
   Result := TECNamedDomainParameters.Create(AOid, LX9);
 end;
@@ -568,7 +568,7 @@ var
   LUpper: String;
 begin
   if (not FAlgorithms.TryGetValue(AAlgorithm, LUpper)) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm,
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm,
       [AAlgorithm]);
   Result := LUpper;
 end;

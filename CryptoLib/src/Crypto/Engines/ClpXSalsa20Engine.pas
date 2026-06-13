@@ -29,8 +29,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNilKeyReInit = '%s Doesn''t Support Re-Init with Nil Key';
-  SInvalidKeySize = '%s Requires a 256 bit Key';
+  SNilKeyReInit = '%s doesn''t support re-init with nil key';
+  SInvalidKeySize = '%s requires a 256 bit key';
 
 type
   /// <summary>

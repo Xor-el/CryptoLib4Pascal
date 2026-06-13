@@ -31,6 +31,9 @@ uses
   ClpIX509Certificate,
   ClpCryptoLibTypes;
 
+resourcestring
+  SUnexpectedFormInAttributeCertificateIssuer = 'unexpected form in AttributeCertificateIssuer';
+
 type
   /// <summary>
   /// Implementation of AttributeCertificateIssuer.
@@ -115,7 +118,7 @@ begin
   else if Supports(FForm, IGeneralNames, LGN) then
     Result := TAttCertIssuer.Create(LGN)
   else
-    raise EArgumentCryptoLibException.Create('Unexpected form in AttributeCertificateIssuer');
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedFormInAttributeCertificateIssuer);
 end;
 
 function TAttributeCertificateIssuer.GetForm: IAsn1Encodable;
@@ -174,7 +177,7 @@ begin
   else if Supports(FForm, IGeneralNames, LGN) then
     LIssuer := TAttCertIssuer.Create(LGN)
   else
-    raise EArgumentCryptoLibException.Create('Unexpected form in AttributeCertificateIssuer');
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedFormInAttributeCertificateIssuer);
   Result := TAttributeCertificateIssuer.Create(LIssuer);
 end;
 

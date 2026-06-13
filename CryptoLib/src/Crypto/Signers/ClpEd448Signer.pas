@@ -32,10 +32,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotInitializedForSigning =
-    'Ed448Signer not Initialised for Signature Generation.';
-  SNotInitializedForVerifying =
-    'Ed448Signer not Initialised for Verification';
+  SNotInitialized = 'Ed448Signer not initialized for %s';
 
 type
   /// <summary>
@@ -303,8 +300,8 @@ function TEd448Signer.GenerateSignature: TCryptoLibByteArray;
 begin
   if ((not FForSigning) or (FPrivateKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signature generation']);
   end;
   Result := FBuffer.GenerateSignature(FPrivateKey, FContext);
 end;
@@ -314,8 +311,8 @@ function TEd448Signer.VerifySignature(const ASignature
 begin
   if ((FForSigning) or (FPublicKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifying);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verification']);
   end;
   Result := FBuffer.VerifySignature(FPublicKey, FContext, ASignature);
 end;

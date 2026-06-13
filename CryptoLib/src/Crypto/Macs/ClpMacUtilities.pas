@@ -46,10 +46,10 @@ uses
   ClpStringUtilities;
 
 resourcestring
-  SOidNil = 'OID Cannot be Nil';
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SUnRecognizedMac = 'Mac "%s" not recognised.';
-  SUnRecognizedMacOid = 'Mac OID not recognised.';
+  SOidNil = 'OID cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SUnRecognizedMac = 'MAC %s not recognized';
+  SUnRecognizedMacOid = 'MAC OID not recognized';
 
 type
   /// <summary>

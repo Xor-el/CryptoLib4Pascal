@@ -58,16 +58,10 @@ uses
   ClpX9ObjectIdentifiers;
 
 resourcestring
-  SKeyGeneratorAlgorithmNotRecognised = 'KeyGenerator "%s" not Recognised.';
-  SKeyGeneratorAlgorithmNotSupported =
-    'KeyGenerator "%s" ( "%s" ) not Supported.';
-  SKeyPairGeneratorAlgorithmNotRecognised =
-    'KeyPairGenerator "%s" not Recognised.';
-  SKeyPairGeneratorAlgorithmNotSupported =
-    'KeyPairGenerator "%s" ( "%s" ) not Supported.';
+  SAlgorithmNotRecognized = '%s %s not recognized';
+  SAlgorithmNotSupported = '%s %s (%s) not supported';
 
 type
-
   /// <summary>
   /// Factory for symmetric key generators (<see cref="ICipherKeyGenerator"/>) and asymmetric key pair generators
   /// (<see cref="IAsymmetricCipherKeyPairGenerator"/>), resolved by algorithm name or ASN.1 OID string.
@@ -352,10 +346,10 @@ var
 begin
   LCanonicalName := GetCanonicalKeyGeneratorAlgorithm(AAlgorithm);
   if LCanonicalName = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, ['KeyGenerator', AAlgorithm]);
   LDefaultKeySize := FindDefaultKeySize(LCanonicalName);
   if LDefaultKeySize = -1 then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotSupported, ['KeyGenerator', AAlgorithm, LCanonicalName]);
   Result := LDefaultKeySize;
 end;
 
@@ -376,10 +370,10 @@ var
 begin
   LCanonicalName := GetCanonicalKeyGeneratorAlgorithm(AAlgorithm);
   if LCanonicalName = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, ['KeyGenerator', AAlgorithm]);
   LDefaultKeySize := FindDefaultKeySize(LCanonicalName);
   if LDefaultKeySize = -1 then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotSupported, ['KeyGenerator', AAlgorithm, LCanonicalName]);
   Result := TCipherKeyGenerator.Create(LDefaultKeySize);
 end;
 
@@ -389,7 +383,7 @@ var
 begin
   LCanonicalName := GetCanonicalKeyPairGeneratorAlgorithm(AAlgorithm);
   if LCanonicalName = '' then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyPairGeneratorAlgorithmNotRecognised, [AAlgorithm]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, ['KeyPairGenerator', AAlgorithm]);
 
   if LCanonicalName = 'DH' then
   begin
@@ -437,7 +431,7 @@ begin
     Exit;
   end;
 
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SKeyPairGeneratorAlgorithmNotSupported, [AAlgorithm, LCanonicalName]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotSupported, ['KeyPairGenerator', AAlgorithm, LCanonicalName]);
 end;
 
 class function TGeneratorUtilities.GetKeyPairGenerator(const AOid: IDerObjectIdentifier): IAsymmetricCipherKeyPairGenerator;
