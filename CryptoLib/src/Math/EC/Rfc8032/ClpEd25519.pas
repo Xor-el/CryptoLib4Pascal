@@ -21,6 +21,7 @@ unit ClpEd25519;
 interface
 
 uses
+  ClpArrayUtilities,
   ClpCodec,
   ClpDigestUtilities,
   ClpBitOperations,
@@ -1860,8 +1861,12 @@ var
 begin
   CheckExpandedBuffer(AXk, AXkOff);
   System.SetLength(LSk, SecretKeySize);
-  FOwner.GeneratePrivateKey(ARandom, LSk);
-  ExpandPrivateKey(LSk, 0, AXk, AXkOff);
+  try
+    FOwner.GeneratePrivateKey(ARandom, LSk);
+    ExpandPrivateKey(LSk, 0, AXk, AXkOff);
+  finally
+    TArrayUtilities.Fill<Byte>(LSk, 0, System.Length(LSk), 0);
+  end;
 end;
 
 procedure TEd25519.TExpandedKey.GeneratePublicKey(const AXk: TCryptoLibByteArray; AXkOff: Int32;
