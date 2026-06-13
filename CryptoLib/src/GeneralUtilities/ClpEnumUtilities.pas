@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   TypInfo,
+  ClpBinaryPrimitives,
   ClpDateTimeUtilities,
   ClpStringUtilities,
   ClpCryptoLibTypes;
@@ -35,6 +36,16 @@ type
   TEnumUtilities = class sealed(TObject)
   strict private
     class function DefaultReplacer(const AInput: String): String; static;
+
+    /// <summary>
+    /// Writes an enum ordinal into AResult using a size-aware, native-order store.
+    /// </summary>
+    class procedure WriteOrdinal<T>(out AResult: T; AOrdinal: Int32); static;
+
+    /// <summary>
+    /// Reads an enum ordinal from AValue using a size-aware, native-order load.
+    /// </summary>
+    class function ReadOrdinal<T>(const AValue: T): Int32; static;
   public
     /// <summary>
     /// Returns an array of ordinals for all defined values of the enum.
@@ -130,6 +141,26 @@ begin
   Result := StringReplace(Result, '/', '_', [rfReplaceAll]);
 end;
 
+class procedure TEnumUtilities.WriteOrdinal<T>(out AResult: T; AOrdinal: Int32);
+begin
+  case SizeOf(T) of
+    1: PByte(@AResult)^ := Byte(AOrdinal);
+    2: TBinaryPrimitives.StoreUInt16(PWord(@AResult), UInt16(AOrdinal));
+  else
+    TBinaryPrimitives.StoreUInt32(PCardinal(@AResult), UInt32(AOrdinal));
+  end;
+end;
+
+class function TEnumUtilities.ReadOrdinal<T>(const AValue: T): Int32;
+begin
+  case SizeOf(T) of
+    1: Result := PByte(@AValue)^;
+    2: Result := TBinaryPrimitives.LoadUInt16(PWord(@AValue));
+  else
+    Result := Int32(TBinaryPrimitives.LoadUInt32(PCardinal(@AValue)));
+  end;
+end;
+
 class function TEnumUtilities.GetEnumValues(ATypeInfo: PTypeInfo): TCryptoLibInt32Array;
 var
   LTypeData: PTypeData;
@@ -218,7 +249,7 @@ begin
   LOrds := GetEnumValues(TypeInfo(T));
   SetLength(Result, System.Length(LOrds));
   for LI := 0 to System.High(LOrds) do
-    Move(LOrds[LI], Result[LI], SizeOf(T));
+    WriteOrdinal<T>(Result[LI], LOrds[LI]);
 end;
 
 class function TEnumUtilities.GetArbitraryValue<T>: T;
@@ -226,7 +257,7 @@ var
   LOrd: Int32;
 begin
   LOrd := GetArbitraryValue(TypeInfo(T));
-  Move(LOrd, Result, SizeOf(T));
+  WriteOrdinal<T>(Result, LOrd);
 end;
 
 class function TEnumUtilities.TryGetEnumValue<T>(const AInput: String; out AResult: T): Boolean;
@@ -237,7 +268,7 @@ begin
   // that compiles it, remove this inlined implementation and forward to TryGetEnumValue<T>(AInput, AResult, nil).
   Result := TryGetEnumValue(TypeInfo(T), AInput, LOrd, nil);
   if Result then
-    Move(LOrd, AResult, SizeOf(T))
+    WriteOrdinal<T>(AResult, LOrd)
   else
     AResult := Default(T);
 end;
@@ -249,7 +280,7 @@ var
 begin
   Result := TryGetEnumValue(TypeInfo(T), AInput, LOrd, AReplacer);
   if Result then
-    Move(LOrd, AResult, SizeOf(T))
+    WriteOrdinal<T>(AResult, LOrd)
   else
     AResult := Default(T);
 end;
@@ -263,7 +294,7 @@ begin
   // correctly rejecting them, whereas a range check would incorrectly accept them.
   Result := ToString(TypeInfo(T), AOrdinal) <> '';
   if Result then
-    Move(AOrdinal, AResult, SizeOf(T))
+    WriteOrdinal<T>(AResult, AOrdinal)
   else
     AResult := Default(T);
 end;
@@ -272,8 +303,7 @@ class function TEnumUtilities.ToString<T>(const AValue: T): String;
 var
   LOrd: Int32;
 begin
-  LOrd := 0;
-  Move(AValue, LOrd, SizeOf(T));
+  LOrd := ReadOrdinal<T>(AValue);
   Result := ToString(TypeInfo(T), LOrd);
 end;
 

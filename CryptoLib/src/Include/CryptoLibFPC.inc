@@ -14,10 +14,6 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-{$IFDEF ENDIAN_BIG}
-  {$MESSAGE FATAL 'This Library does not support "Big Endian" processors yet.'}
-{$ENDIF}
-
 {$IF FPC_FULLVERSION < 30202}
   {$MESSAGE ERROR 'This Library requires FreePascal 3.2.2 or higher.'}
 {$IFEND}

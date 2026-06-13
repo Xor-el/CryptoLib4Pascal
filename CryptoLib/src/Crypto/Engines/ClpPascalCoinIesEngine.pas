@@ -35,6 +35,7 @@ uses
   ClpIKdfParameters,
   ClpIESEngine,
   ClpArrayUtilities,
+  ClpPack,
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpCryptoLibTypes;
@@ -216,9 +217,9 @@ begin
 
   PByte(Result)^ := Byte(System.Length(FV));
   (PByte(Result) + 1)^ := Byte(System.Length(LT));
-  (PWord(Result) + 1)^ := UInt16(LMessageToEncryptSize);
-  (PWord(Result) + 2)^ :=
-    UInt16(LMessageToEncryptSize + LMessageToEncryptPadSize);
+  TPack.UInt16_To_LE(UInt16(LMessageToEncryptSize), Result, 2);
+  TPack.UInt16_To_LE(UInt16(LMessageToEncryptSize + LMessageToEncryptPadSize),
+    Result, 4);
 
   System.Move(FV[0], Result[SECURE_HEAD_SIZE], System.Length(FV) *
     System.SizeOf(Byte));
