@@ -36,6 +36,11 @@ uses
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SInStreamNil = 'input stream cannot be nil';
+  SStreamMustBeReadable = 'stream must be readable';
+  SFailedToReadCertificatePair = 'failed to read certificate pair: %s';
+
 type
   TX509CertificatePairParser = class sealed(TInterfacedObject, IX509CertificatePairParser)
   strict private
@@ -134,10 +139,10 @@ var
   LStreamToUse: TStream;
 begin
   if AInStream = nil then
-    raise EArgumentNilCryptoLibException.Create('inStream');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInStreamNil);
 
   if not AInStream.CanRead then
-    raise EArgumentCryptoLibException.Create('Stream must be read-able');
+    raise EArgumentCryptoLibException.CreateRes(@SStreamMustBeReadable);
 
   if FCurrentStream = nil then
     FCurrentStream := AInStream
@@ -174,7 +179,7 @@ begin
     on E: ECertificateCryptoLibException do
       raise;
     on E: Exception do
-      raise ECertificateCryptoLibException.Create('Failed to read certificate pair: ' + E.Message);
+      raise ECertificateCryptoLibException.CreateResFmt(@SFailedToReadCertificatePair, [E.Message]);
   end;
 end;
 

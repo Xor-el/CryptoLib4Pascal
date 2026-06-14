@@ -28,8 +28,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNegativeOffset = 'Start Offset Cannot be Negative, "Start"';
-  SArrayTooSmall = 'Byte Array Too Small For Requested Offset and Length';
+  SNegativeOffset = 'start offset cannot be negative';
+  SArrayTooSmall = 'byte array too small for requested offset and length';
 
 type
   /// <summary>

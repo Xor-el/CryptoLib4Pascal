@@ -30,6 +30,9 @@ uses
   ClpInt32Utilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SInverseDoesNotExist = 'inverse does not exist';
+
 type
    /// <summary>
   /// Modular inversion as implemented in this class is based on the paper "Fast constant-time gcd computation and
@@ -100,14 +103,14 @@ class procedure TMod.CheckedModOddInverse(const AM: TCryptoLibUInt32Array; const
   const AZ: TCryptoLibUInt32Array);
 begin
   if ModOddInverse(AM, AX, AZ) = 0 then
-    raise EArithmeticCryptoLibException.Create('Inverse does not exist.');
+    raise EArithmeticCryptoLibException.CreateRes(@SInverseDoesNotExist);
 end;
 
 class procedure TMod.CheckedModOddInverseVar(const AM: TCryptoLibUInt32Array; const AX: TCryptoLibUInt32Array;
   const AZ: TCryptoLibUInt32Array);
 begin
   if not ModOddInverseVar(AM, AX, AZ) then
-    raise EArithmeticCryptoLibException.Create('Inverse does not exist.');
+    raise EArithmeticCryptoLibException.CreateRes(@SInverseDoesNotExist);
 end;
 
 class function TMod.Inverse32(AD: UInt32): UInt32;

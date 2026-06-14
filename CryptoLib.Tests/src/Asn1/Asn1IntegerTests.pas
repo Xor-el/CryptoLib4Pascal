@@ -382,7 +382,7 @@ begin
       on E: EArgumentCryptoLibException do
       begin
         CheckArgumentException('test 1', E,
-          'failed to construct sequence from byte[]: corrupted stream detected');
+          'failed to construct sequence from byte array: corrupted stream detected');
       end;
     end;
   finally
@@ -430,7 +430,7 @@ begin
     except
       on E: EArgumentCryptoLibException do
       begin
-        CheckArgumentException(E, 'malformed enumerated');
+        CheckArgumentException(E, 'malformed ENUMERATED');
       end;
     end;
   finally
@@ -454,7 +454,7 @@ begin
     except
       on E: EArgumentCryptoLibException do
       begin
-        CheckArgumentException(E, 'malformed enumerated');
+        CheckArgumentException(E, 'malformed ENUMERATED');
       end;
     end;
   finally

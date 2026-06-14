@@ -32,9 +32,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SRsaEngineNotInitialised = 'RSA engine not initialised';
-  SInputTooLargeForRsa = 'input too large for RSA cipher.';
-  SInputTooSmallForRsa = 'input too small for RSA cipher.';
+  SRsaEngineNotInitialised = 'RSA engine not initialized';
+  SInputTooLargeForRsa = 'input too large for RSA cipher';
+  SInputTooSmallForRsa = 'input too small for RSA cipher';
   SFaultyDecryption = 'RSA engine faulty decryption/signing detected';
 
 type

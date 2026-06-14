@@ -52,18 +52,19 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherBlockSizeRequiredSiv = 'Cipher required with a block size of %d.';
-  SInvalidParametersGcmSiv = 'invalid parameters passed to GCM_SIV';
-  SInvalidNonce = 'Invalid nonce';
-  SInvalidKey = 'Invalid key';
-  SCipherNotInitialised = 'Cipher is not initialised';
+  SCipherBlockSizeRequired = 'cipher required with a block size of %d';
+  SInvalidParameters = 'invalid parameters passed to %s';
+  SInvalidNonce = 'invalid nonce';
+  SInvalidKey = 'invalid key';
+  SCipherNotInitialised = 'cipher is not initialized';
   SAeadAfterData = 'AEAD data cannot be processed after ordinary data';
   SAeadByteCountExceeded = 'AEAD byte count exceeded';
   SByteCountExceeded = 'byte count exceeded';
-  SOutputBufferTooShortSiv = 'Output Buffer Too Short';
-  SInputBufferTooShortSiv = 'Input Buffer Too Short';
-  SDataTooShortSiv = 'Data too short';
-  SMacCheckFailedSiv = 'mac check failed';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInputBufferTooShort = 'input buffer too short';
+  SDataTooShort = 'data too short';
+  SMacCheckFailed = 'mac check failed';
+  SMacNotAvailableForCipher = 'MAC is not supported for this cipher';
 
 type
   TGcmSivBlockCipher = class(TInterfacedObject, IGcmSivBlockCipher,
@@ -313,7 +314,7 @@ constructor TGcmSivBlockCipher.Create(const ACipher: IBlockCipher;
 begin
   inherited Create;
   if ACipher.GetBlockSize() <> BUFLEN then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCipherBlockSizeRequiredSiv, [BUFLEN]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCipherBlockSizeRequired, [BUFLEN]);
 
   if AMultiplier <> nil then
     FTheMultiplier := AMultiplier
@@ -370,7 +371,8 @@ var
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersGcmSiv);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters,
+      ['GCM_SIV']);
 
   LMyInitialAEAD := LChoice.AssociatedText;
   LMyNonce := LChoice.Nonce;
@@ -441,7 +443,7 @@ end;
 procedure TGcmSivBlockCipher.ProcessAadBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32);
 begin
-  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShortSiv);
+  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
   CheckAeadStatus(ALen);
   FTheAEADHasher.UpdateHash(AInput, AInOff, ALen);
 end;
@@ -467,7 +469,7 @@ end;
 function TGcmSivBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShortSiv);
+  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
   CheckStatus(ALen);
 
   if FForEncryption then
@@ -489,7 +491,7 @@ var
   LMyTag: TCryptoLibByteArray;
   LMyDataLen: Int32;
 begin
-  TCheck.OutputLength(AOutput, AOutOff, GetOutputSize(0), SOutputBufferTooShortSiv);
+  TCheck.OutputLength(AOutput, AOutOff, GetOutputSize(0), SOutputBufferTooShort);
   CheckStatus(0);
 
   if FForEncryption then
@@ -516,7 +518,7 @@ end;
 
 function TGcmSivBlockCipher.GetMac: TCryptoLibByteArray;
 begin
-  raise EInvalidOperationCryptoLibException.Create('');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SMacNotAvailableForCipher);
 end;
 
 function TGcmSivBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
@@ -691,7 +693,7 @@ begin
   LMyRemaining := LTheEncDataLen - BUFLEN;
 
   if LMyRemaining < 0 then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShortSiv);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShort);
 
   LMyExpected := TArrayUtilities.CopyOfRange<Byte>(LMySrc, LMyRemaining, LMyRemaining + BUFLEN);
   LMyCounter := System.Copy(LMyExpected);
@@ -741,7 +743,7 @@ begin
   if not TArrayUtilities.FixedTimeEquals(LMyTag, LMyExpected) then
   begin
     Reset();
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailedSiv);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
   end;
 end;
 

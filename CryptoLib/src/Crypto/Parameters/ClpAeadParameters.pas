@@ -27,7 +27,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNonceNil = 'Nonce Cannot be Nil';
+  SNonceNil = 'nonce cannot be nil';
 
 type
   TAeadParameters = class sealed(TInterfacedObject, IAeadParameters,

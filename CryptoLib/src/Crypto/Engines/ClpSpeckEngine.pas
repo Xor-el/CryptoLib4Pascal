@@ -32,24 +32,15 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SSpeckEngineNotInitialised = '%s Engine not Initialised';
-  SInputBuffertooShort = 'Input Buffer too Short';
-  SOutputBuffertooShort = 'Output Buffer too Short';
-  SInvalidArgumentEncountered = 'Invalid Argument Encountered.';
-  SInvalidParameterSpeckInit = 'Invalid Parameter Passed to Speck Init - "%s"';
-  SSpeck32InvalidKeySize =
-    'Speck32 requires a key of 64 bits but input was "%d" bits.';
-  SSpeck48InvalidKeySize =
-    'Speck48 requires a key of 72 or 96 bits but input was "%d" bits.';
-  SSpeck64InvalidKeySize =
-    'Speck64 requires a key of 96 or 128 bits but input was "%d" bits.';
-  SSpeck96InvalidKeySize =
-    'Speck96 requires a key of 96 or 144 bits but input was "%d" bits.';
-  SSpeck128InvalidKeySize =
-    'Speck128 requires a key of 128, 192 or 256 bits but input was "%d" bits.';
+  SSpeckEngineNotInitialised = '%s engine not initialized';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInvalidArgumentEncountered = 'invalid argument encountered';
+  SInvalidParameterSpeckInit = 'invalid parameter passed to Speck init: %s';
+  SSpeckInvalidKeySize =
+    'Speck%s requires a key of %s but input was %d bits';
 
 type
-
   /// <summary>
   /// <para>
   /// The Speck family of block ciphers, described in <i>The Simon and
@@ -631,9 +622,9 @@ begin
   end;
 
   TCheck.DataLength((AInOff + FBlockSize) > System.Length(AInput),
-    SInputBuffertooShort);
+    SInputBufferTooShort);
   TCheck.DataLength((AOutOff + FBlockSize) > System.Length(AOutput),
-    SOutputBuffertooShort);
+    SOutputBufferTooShort);
 
   UnPackBlock(AInput, AInOff);
   if (FForEncryption) then
@@ -986,8 +977,8 @@ begin
   if (LKeyBytesSize <> 8) then
   begin
     TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    raise EArgumentCryptoLibException.CreateResFmt(@SSpeck32InvalidKeySize,
-      [LKeyBytesSize * 8]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SSpeckInvalidKeySize,
+      ['32', '64 bits', LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1011,8 +1002,8 @@ begin
   if not(LKeyBytesSize in [9, 12]) then
   begin
     TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    raise EArgumentCryptoLibException.CreateResFmt(@SSpeck48InvalidKeySize,
-      [LKeyBytesSize * 8]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SSpeckInvalidKeySize,
+      ['48', '72 or 96 bits', LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1036,8 +1027,8 @@ begin
   if not(LKeyBytesSize in [12, 16]) then
   begin
     TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    raise EArgumentCryptoLibException.CreateResFmt(@SSpeck64InvalidKeySize,
-      [LKeyBytesSize * 8]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SSpeckInvalidKeySize,
+      ['64', '96 or 128 bits', LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1061,8 +1052,8 @@ begin
   if not(LKeyBytesSize in [12, 18]) then
   begin
     TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    raise EArgumentCryptoLibException.CreateResFmt(@SSpeck96InvalidKeySize,
-      [LKeyBytesSize * 8]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SSpeckInvalidKeySize,
+      ['96', '96 or 144 bits', LKeyBytesSize * 8]);
   end;
 end;
 
@@ -1086,8 +1077,8 @@ begin
   if not(LKeyBytesSize in [16, 24, 32]) then
   begin
     TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    raise EArgumentCryptoLibException.CreateResFmt(@SSpeck128InvalidKeySize,
-      [LKeyBytesSize * 8]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SSpeckInvalidKeySize,
+      ['128', '128, 192 or 256 bits', LKeyBytesSize * 8]);
   end;
 end;
 

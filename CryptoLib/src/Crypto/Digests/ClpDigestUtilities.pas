@@ -46,11 +46,11 @@ uses
   ClpTeleTrusTObjectIdentifiers;
 
 resourcestring
-  SMechanismNil = 'Mechanism Cannot be Nil';
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SUnRecognizedDigest = 'Digest "%s" not recognised.';
-  SOidNotRecognised = 'Digest OID not recognised.';
-  SOidNil = 'OID Cannot be Nil';
+  SMechanismNil = 'mechanism cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SUnRecognizedDigest = 'digest %s not recognized';
+  SOidNotRecognised = 'digest OID not recognized';
+  SOidNil = 'OID cannot be nil';
 
 type
   /// <summary>

@@ -58,6 +58,15 @@ uses
   ClpIBufferedCipher,
   ClpPbeUtilities;
 
+resourcestring
+  SEncryptedKeyInfoNil = 'encrypted key info cannot be nil';
+  SEncryptedPrivateKeyInfoHasNoEncryptionAlgorithm = 'EncryptedPrivateKeyInfo has no encryption algorithm';
+  SPrivateKeyNil = 'private key cannot be nil';
+  SPublicKeyPassedPrivateKeyExpected = 'public key passed - private key expected';
+  SPrivateKeyRequiresParameters = 'private key requires parameters for %s';
+  SKeyTypeNotSupportedForPrivateKeyInfo = 'key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519, X448, Ed448)';
+  SUnknownEncryptionAlgorithm = 'unknown encryption algorithm: %s';
+
 type
   /// <summary>
   /// A factory to produce <see cref="IPrivateKeyInfo"/> (PKCS#8) objects from asymmetric private key parameters.
@@ -139,13 +148,13 @@ var
   LKeyBytes: TCryptoLibByteArray;
 begin
   if AEncInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('AEncInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SEncryptedKeyInfoNil);
   LAlgID := AEncInfo.EncryptionAlgorithm;
   if LAlgID = nil then
-    raise EArgumentCryptoLibException.Create('EncryptedPrivateKeyInfo has no encryption algorithm');
+    raise EArgumentCryptoLibException.CreateRes(@SEncryptedPrivateKeyInfoHasNoEncryptionAlgorithm);
   LEngine := TPbeUtilities.CreateEngine(LAlgID);
   if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
-    raise ECryptoLibException.CreateFmt('Unknown encryption algorithm: %s', [LAlgID.Algorithm.ID]);
+    raise ECryptoLibException.CreateResFmt(@SUnknownEncryptionAlgorithm, [LAlgID.Algorithm.ID]);
   LCipherParameters := TPbeUtilities.GenerateCipherParameters(LAlgID, APassPhrase, AWrongPkcs12Zero);
   LCipher.Init(False, LCipherParameters);
   LKeyBytes := LCipher.DoFinal(AEncInfo.GetEncryptedDataBytes());
@@ -179,9 +188,9 @@ var
   LDhParams: IDHParameters;
 begin
   if APrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create('APrivateKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyNil);
   if not APrivateKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Public key passed - private key expected');
+    raise EArgumentCryptoLibException.CreateRes(@SPublicKeyPassedPrivateKeyExpected);
 
   // RSA
   if Supports(APrivateKey, IRsaPrivateCrtKeyParameters, LCrtKey) then
@@ -220,7 +229,7 @@ begin
   if Supports(APrivateKey, IDsaPrivateKeyParameters, LDsaKey) then
   begin
     if LDsaKey.Parameters = nil then
-      raise EArgumentCryptoLibException.Create('DSA private key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPrivateKeyRequiresParameters, ['DSA']);
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,
       TDsaParameter.Create(LDsaKey.Parameters.P, LDsaKey.Parameters.Q, LDsaKey.Parameters.G) as IDsaParameter);
     Result := TPrivateKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.X) as IDerInteger, AAttributes);
@@ -235,7 +244,7 @@ begin
     LDerPub := TDerBitString.Create(LPubEnc);
     LParams := LECKey.Parameters;
     if LParams = nil then
-      raise EArgumentCryptoLibException.Create('EC private key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPrivateKeyRequiresParameters, ['EC']);
     LX962 := LParams.ToX962Parameters();
     LOrderBitLength := LParams.N.BitLength;
     LEC := TECPrivateKeyStructure.Create(LOrderBitLength, LECKey.D, LDerPub, LX962);
@@ -249,7 +258,7 @@ begin
   begin
     LDhParams := LDhKey.Parameters;
     if LDhParams = nil then
-      raise EArgumentCryptoLibException.Create('DH private key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPrivateKeyRequiresParameters, ['DH']);
     LAlgParams := TDHParameter.Create(LDhParams.P, LDhParams.G, LDhParams.L);
     LAlgID := TAlgorithmIdentifier.Create(LDhKey.AlgorithmOid, LAlgParams);
     Result := TPrivateKeyInfo.Create(LAlgID, TDerInteger.Create(LDhKey.X) as IDerInteger, AAttributes);
@@ -296,7 +305,7 @@ begin
     Exit;
   end;
 
-  raise ENotSupportedCryptoLibException.Create('Key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519, X448, Ed448).');
+  raise ENotSupportedCryptoLibException.CreateRes(@SKeyTypeNotSupportedForPrivateKeyInfo);
 end;
 
 end.

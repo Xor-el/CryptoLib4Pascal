@@ -36,11 +36,11 @@ resourcestring
   SNotECPrivateKeyParameters =
     'ECDHCBasicAgreement expects ECPrivateKeyParameters';
   SWrongDomainParameter =
-    'ECDHC Public Key has Wrong Domain Parameters';
+    'ECDHC public key has wrong domain parameters';
   SInvalidAgreementValue =
-    'Infinity is not a Valid Agreement Value for ECDHC';
+    'infinity is not a valid agreement value for ECDHC';
   SInfinityInvalidPublicKey =
-    'Infinity is not a Valid Public Key for ECDHC';
+    'infinity is not a valid public key for ECDHC';
 
 type
   TECDHCBasicAgreement = class(TInterfacedObject, IECDHCBasicAgreement,

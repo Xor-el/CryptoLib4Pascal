@@ -43,6 +43,10 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SMaxOutputSizeNotImplemented = 'GetMaxOutputSize not implemented';
+  SUnexpectedCipherType = 'unexpected cipher type';
+
 type
   /// <summary>
   /// A cipher builder based on ASN.1 algorithm identifiers that also carries the encryption key.
@@ -116,7 +120,7 @@ end;
 
 function TAsn1CipherBuilderWithKey.GetMaxOutputSize(AInputLen: Int32): Int32;
 begin
-  raise ENotImplementedCryptoLibException.Create('GetMaxOutputSize');
+  raise ENotImplementedCryptoLibException.CreateRes(@SMaxOutputSizeNotImplemented);
 end;
 
 function TAsn1CipherBuilderWithKey.BuildCipher(const AStream: TStream): ICipher;
@@ -139,7 +143,7 @@ begin
   end
   else
   begin
-    raise EInvalidOperationCryptoLibException.Create('Unexpected cipher type');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedCipherType);
   end;
 
   if AStream <> nil then

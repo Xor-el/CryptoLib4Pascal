@@ -27,7 +27,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SIVNil = 'IV Cannot be Nil';
+  SIVNil = 'IV cannot be nil';
 
 type
   /// <summary>

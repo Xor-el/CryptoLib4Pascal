@@ -47,6 +47,12 @@ uses
   ClpPkcsDHAsn1Objects,
   ClpCryptoLibTypes;
 
+resourcestring
+  SPublicKeyNil = 'public key cannot be nil';
+  SPrivateKeyPassedPublicKeyExpected = 'private key passed - public key expected';
+  SPublicKeyRequiresParameters = 'public key requires parameters for %s';
+  SKeyTypeNotSupportedForSubjectPublicKeyInfo = 'key type not supported for SubjectPublicKeyInfo';
+
 type
   /// <summary>
   /// A factory to produce <see cref="ISubjectPublicKeyInfo"/> (an X.509 ASN.1 type used for public keys) objects from
@@ -101,9 +107,9 @@ var
   LPubKey: TCryptoLibByteArray;
 begin
   if APublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('APublicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicKeyNil);
   if APublicKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Private key passed - public key expected.');
+    raise EArgumentCryptoLibException.CreateRes(@SPrivateKeyPassedPublicKeyExpected);
 
   if Supports(APublicKey, IRsaKeyParameters, LRsaKey) then
   begin
@@ -116,7 +122,7 @@ begin
   begin
     LKp := LDsaKey.Parameters;
     if LKp = nil then
-      raise EArgumentCryptoLibException.Create('DSA public key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPublicKeyRequiresParameters, ['DSA']);
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdDsa,
       TDsaParameter.Create(LKp.P, LKp.Q, LKp.G) as IDsaParameter);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDsaKey.Y) as IDerInteger);
@@ -127,7 +133,7 @@ begin
   begin
     LDhParams := LDHPub.Parameters;
     if LDhParams = nil then
-      raise EArgumentCryptoLibException.Create('DH public key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPublicKeyRequiresParameters, ['DH']);
     LAlgParams := TDHParameter.Create(LDhParams.P, LDhParams.G, LDhParams.L);
     LAlgID := TAlgorithmIdentifier.Create(LDHPub.AlgorithmOid, LAlgParams);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, TDerInteger.Create(LDHPub.Y) as IDerInteger);
@@ -138,7 +144,7 @@ begin
   begin
     LParams := LECKey.Parameters;
     if LParams = nil then
-      raise EArgumentCryptoLibException.Create('EC public key requires parameters.');
+      raise EArgumentCryptoLibException.CreateResFmt(@SPublicKeyRequiresParameters, ['EC']);
 
     LX962 := LParams.ToX962Parameters();
     LAlgID := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.IdECPublicKey, LX962);
@@ -175,7 +181,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('Key type not supported for SubjectPublicKeyInfo.');
+  raise EArgumentCryptoLibException.CreateRes(@SKeyTypeNotSupportedForSubjectPublicKeyInfo);
 end;
 
 end.

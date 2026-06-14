@@ -32,7 +32,6 @@ type
   IAsn1UniversalType = interface;
   IAsn1Set = interface;
 
-
   /// <summary>
   /// Interface for ASN.1 octet string objects.
   /// </summary>
@@ -383,7 +382,6 @@ type
     ['{6AB7DC7E-CD61-4D34-AE15-99E036688C77}']
   end;
 
-
   /// <summary>
   /// Interface for ASN.1 tagged objects.
   /// </summary>
@@ -464,8 +462,6 @@ type
   IDLTaggedObject = interface(IDerTaggedObject)
     ['{519A9202-31EE-45FE-82C4-52A9A9BDA498}']
   end;
-
-
 
   /// <summary>
   /// Interface for DER object identifier objects.
@@ -862,14 +858,12 @@ type
     // marker interface
   end;
 
-
   /// <summary>
   /// Interface for BER tagged objects.
   /// </summary>
   IBerTaggedObject = interface(IDLTaggedObject)
     ['{EE7B113E-81ED-5539-930A-73E9930A84CB}']
   end;
-
 
   /// <summary>
   /// Interface for ASN.1 types.

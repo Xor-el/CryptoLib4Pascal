@@ -26,6 +26,9 @@ uses
   ClpStreams,
   ClpCryptoLibTypes;
 
+resourcestring
+  SDigestNil = 'digest cannot be nil';
+
 type
   /// <summary>
   /// A stream that writes data to an IDigest for digest calculation.
@@ -53,7 +56,7 @@ constructor TDigestSink.Create(const ADigest: IDigest);
 begin
   inherited Create();
   if ADigest = nil then
-    raise EArgumentNilCryptoLibException.Create('digest');
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestNil);
   FDigest := ADigest;
 end;
 

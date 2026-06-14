@@ -36,7 +36,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SUnSupportedOperation = 'Operation not Supported';
+  SUnsupportedOperation = 'operation not supported';
 
 type
 
@@ -109,7 +109,7 @@ end;
 procedure THMacDsaKCalculator.Init(const AN: TBigInteger;
   const ARandom: ISecureRandom);
 begin
-  raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedOperation);
 end;
 
 procedure THMacDsaKCalculator.Init(const AN, AD: TBigInteger;

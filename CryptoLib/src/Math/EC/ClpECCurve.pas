@@ -47,21 +47,25 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMustBeNonNilAndOnThisCurve = 'must be non-null and on this curve';
+  SMustBeNonNilAndOnThisCurve = 'must be non-nil and on this curve';
   SInvalidRangeSpecified = 'invalid range specified';
-  SEntriesMustBeNullOrOnThisCurve = 'entries must be null or on this curve';
-  SNoDefaultMultiplier = 'No default multiplier set for curve';
-  SIncorrectLengthForInfinityEncoding = 'Incorrect length for infinity encoding';
-  SIncorrectLengthForCompressedEncoding = 'Incorrect length for compressed encoding';
-  SIncorrectLengthForUncompressedEncoding = 'Incorrect length for uncompressed encoding';
-  SIncorrectLengthForHybridEncoding = 'Incorrect length for hybrid encoding';
-  SInvalidPointEncoding = 'Invalid point encoding %d';
-  SInvalidInfinityEncoding = 'Invalid infinity encoding';
-  SPointCompressionNotSupported = 'Point compression not supported';
-  SInvalidPointCoordinates = 'Invalid point coordinates';
-  SInconsistentYCoordinateInHybridEncoding = 'Inconsistent Y coordinate in hybrid encoding';
+  SEntriesMustBeNilOrOnThisCurve = 'entries must be nil or on this curve';
+  SIncorrectLengthForEncoding = 'incorrect length for %s encoding';
+  SInvalidPointEncoding = 'invalid point encoding %d';
+  SInvalidInfinityEncoding = 'invalid infinity encoding';
+  SPointCompressionNotSupported = 'point compression not supported';
+  SInvalidPointCoordinates = 'invalid point coordinates';
+  SInconsistentYCoordinateInHybridEncoding = 'inconsistent Y coordinate in hybrid encoding';
   SUnsupportedCoordinateSystem = 'unsupported coordinate system';
   SImplementationReturnedCurrentCurve = 'implementation returned current curve';
+  SPointsNil = 'points cannot be nil';
+  SNotValidForAffineCoordinates = 'not valid for affine coordinates';
+  SFpQValueOutOfRange = 'Fp q value out of range';
+  SFpQValueNotPrime = 'Fp q value not prime';
+  SValueInvalidForFieldElement = 'value invalid for %s field element';
+  SF2mMValueOutOfRange = 'F2m m value out of range';
+  SInvalidLambdaAffineCoordinates = 'invalid lambda affine coordinates';
+  SExpectedAbstractF2mFieldElement = 'expected AbstractF2mFieldElement';
 
 type
   TECCurve = class abstract(TInterfacedObject, IECCurve)
@@ -483,14 +487,14 @@ var
   LPoint: IECPoint;
 begin
   if APoints = nil then
-    raise EArgumentNilCryptoLibException.Create('points');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPointsNil);
   if (AOff < 0) or (ALen < 0) or (AOff > (System.Length(APoints) - ALen)) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidRangeSpecified);
   for LI := 0 to ALen - 1 do
   begin
     LPoint := APoints[AOff + LI];
     if (LPoint <> nil) and (Self as IECCurve <> LPoint.Curve) then
-      raise EArgumentCryptoLibException.CreateRes(@SEntriesMustBeNullOrOnThisCurve);
+      raise EArgumentCryptoLibException.CreateRes(@SEntriesMustBeNilOrOnThisCurve);
   end;
 end;
 
@@ -635,7 +639,7 @@ begin
     TECCurveConstants.COORD_AFFINE, TECCurveConstants.COORD_LAMBDA_AFFINE:
       begin
         if AIso <> nil then
-          raise EArgumentCryptoLibException.Create('not valid for affine coordinates');
+          raise EArgumentCryptoLibException.CreateRes(@SNotValidForAffineCoordinates);
         Exit;
       end;
   end;
@@ -689,7 +693,7 @@ end;
 
 function TECCurve.DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint;
 begin
-  raise EArgumentCryptoLibException.Create(SPointCompressionNotSupported);
+  raise EArgumentCryptoLibException.CreateRes(@SPointCompressionNotSupported);
 end;
 
 function TECCurve.ValidatePoint(const AX, AY: TBigInteger): IECPoint;
@@ -698,7 +702,7 @@ var
 begin
   LP := CreatePoint(AX, AY);
   if not LP.IsValid() then
-    raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPointCoordinates);
   Result := LP;
 end;
 
@@ -750,10 +754,10 @@ var
   LClone: IECCurve;
 begin
   if not FOuter.SupportsCoordinateSystem(FCoord) then
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   LClone := FOuter.CloneCurve();
   if LClone = FOuter then
-    raise EInvalidOperationCryptoLibException.Create(SImplementationReturnedCurrentCurve);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SImplementationReturnedCurrentCurve);
   LClone.ApplyConfig(FCoord, FEndomorphism, FMultiplier);
   Result := LClone;
 end;
@@ -776,23 +780,23 @@ begin
     $00: // infinity
       begin
         if System.Length(AEncoded) <> 1 then
-          raise EArgumentCryptoLibException.Create(SIncorrectLengthForInfinityEncoding);
+          raise EArgumentCryptoLibException.CreateResFmt(@SIncorrectLengthForEncoding, ['infinity']);
         LP := GetInfinity();
       end;
     $02, $03: // compressed
       begin
         if System.Length(AEncoded) <> (LExpectedLength + 1) then
-          raise EArgumentCryptoLibException.Create(SIncorrectLengthForCompressedEncoding);
+          raise EArgumentCryptoLibException.CreateResFmt(@SIncorrectLengthForEncoding, ['compressed']);
         LYTilde := LType and 1;
         LX := TBigInteger.Create(1, AEncoded, 1, LExpectedLength);
         LP := DecompressPoint(LYTilde, LX);
         if not LP.ImplIsValid(True, True) then
-          raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
+          raise EArgumentCryptoLibException.CreateRes(@SInvalidPointCoordinates);
       end;
     $04: // uncompressed
       begin
         if System.Length(AEncoded) <> (2 * LExpectedLength + 1) then
-          raise EArgumentCryptoLibException.Create(SIncorrectLengthForUncompressedEncoding);
+          raise EArgumentCryptoLibException.CreateResFmt(@SIncorrectLengthForEncoding, ['uncompressed']);
         LX := TBigInteger.Create(1, AEncoded, 1, LExpectedLength);
         LY := TBigInteger.Create(1, AEncoded, 1 + LExpectedLength, LExpectedLength);
         LP := ValidatePoint(LX, LY);
@@ -800,11 +804,11 @@ begin
     $06, $07: // hybrid
       begin
         if System.Length(AEncoded) <> (2 * LExpectedLength + 1) then
-          raise EArgumentCryptoLibException.Create(SIncorrectLengthForHybridEncoding);
+          raise EArgumentCryptoLibException.CreateResFmt(@SIncorrectLengthForEncoding, ['hybrid']);
         LX := TBigInteger.Create(1, AEncoded, 1, LExpectedLength);
         LY := TBigInteger.Create(1, AEncoded, 1 + LExpectedLength, LExpectedLength);
         if LY.TestBit(0) <> (LType = $07) then
-          raise EArgumentCryptoLibException.Create(SInconsistentYCoordinateInHybridEncoding);
+          raise EArgumentCryptoLibException.CreateRes(@SInconsistentYCoordinateInHybridEncoding);
         LP := ValidatePoint(LX, LY);
       end;
   else
@@ -812,7 +816,7 @@ begin
   end;
 
   if (LType <> $00) and LP.IsInfinity then
-    raise EArgumentCryptoLibException.Create(SInvalidInfinityEncoding);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidInfinityEncoding);
 
   Result := LP;
 end;
@@ -896,9 +900,9 @@ end;
 class procedure TAbstractFpCurve.ImplCheckQ(const AQ: TBigInteger);
 begin
   if AQ.BitLength > FMaxFieldSize then
-    raise EArgumentCryptoLibException.Create('Fp q value out of range');
+    raise EArgumentCryptoLibException.CreateRes(@SFpQValueOutOfRange);
   if not ImplIsPrime(AQ) then
-    raise EArgumentCryptoLibException.Create('Fp q value not prime');
+    raise EArgumentCryptoLibException.CreateRes(@SFpQValueNotPrime);
 end;
 
 class function TAbstractFpCurve.ImplIsPrime(const AQ: TBigInteger): Boolean;
@@ -1000,7 +1004,7 @@ begin
   LRhs := LX.Square().Add(FA).Multiply(LX).Add(FB);
   LY := LRhs.Sqrt();
   if LY = nil then
-    raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPointCoordinates);
   if LY.TestBitZero <> (AYTilde = 1) then
     LY := LY.Negate();
   Result := CreateRawPoint(LX, LY);
@@ -1081,7 +1085,7 @@ end;
 function TFpCurve.FromBigInteger(const AX: TBigInteger): IECFieldElement;
 begin
   if (not AX.IsInitialized) or (AX.SignValue < 0) or (AX.CompareTo(FQ) >= 0) then
-    raise EArgumentCryptoLibException.Create('value invalid for Fp field element');
+    raise EArgumentCryptoLibException.CreateResFmt(@SValueInvalidForFieldElement, ['Fp']);
   Result := TFpFieldElement.Create(FQ, FR, AX);
 end;
 
@@ -1122,7 +1126,7 @@ var
   LExponents: TCryptoLibInt32Array;
 begin
   if AM > TAbstractF2mCurve.MaxFieldSize then
-    raise EArgumentCryptoLibException.Create('F2m m value out of range');
+    raise EArgumentCryptoLibException.CreateRes(@SF2mMValueOutOfRange);
   if (AK2 or AK3) = 0 then
     LExponents := TCryptoLibInt32Array.Create(0, AK1, AM)
   else
@@ -1159,7 +1163,7 @@ begin
       if LX.IsZero then
       begin
         if not LY.Square().Equals(FB) then
-          raise EArgumentCryptoLibException.Create('');
+          raise EArgumentCryptoLibException.CreateRes(@SInvalidLambdaAffineCoordinates);
       end
       else
       begin
@@ -1222,7 +1226,7 @@ begin
   end;
 
   if LYp = nil then
-    raise EArgumentCryptoLibException.Create(SInvalidPointCoordinates);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPointCoordinates);
 
   Result := CreateRawPoint(LXp, LYp);
 end;
@@ -1235,7 +1239,7 @@ var
   LR, LZeroElement, LT, LZ, LW, LW2, LGamma: IECFieldElement;
 begin
   if not Supports(ABeta, IAbstractF2mFieldElement, LBetaF2m) then
-    raise EInvalidCastCryptoLibException.Create('Expected AbstractF2mFieldElement');
+    raise EInvalidCastCryptoLibException.CreateRes(@SExpectedAbstractF2mFieldElement);
 
   LFastTrace := LBetaF2m.HasFastTrace;
   if LFastTrace and (0 <> LBetaF2m.Trace) then
@@ -1364,7 +1368,7 @@ var
   LT: TCryptoLibUInt64Array;
 begin
   if (not AX.IsInitialized) or (AX.SignValue < 0) or (AX.BitLength > FF2mFieldData.M) then
-    raise EArgumentCryptoLibException.Create('value invalid for F2m field element');
+    raise EArgumentCryptoLibException.CreateResFmt(@SValueInvalidForFieldElement, ['F2m']);
 
   LT := TNat.FromBigInteger64(FF2mFieldData.M, AX);
   Result := TF2mFieldElement.Create(FF2mFieldData, LT);

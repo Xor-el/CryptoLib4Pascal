@@ -50,7 +50,19 @@ uses
   ClpIX509Asn1Generators,
   ClpX509Asn1Generators;
 
+resourcestring
+  SSerialNumberMustBeAPositive = 'serial number must be a positive integer';
+  SOtherCrlNil = 'other CRL cannot be nil';
+  SExtensionNotPresent = 'extension %s not present';
+  SExtension = 'extension %s: %s';
+  SUnableToProcessKey = 'unable to process key - %s';
+
 type
+  /// <summary>
+  /// Generator for X.509 version 1 certificates as defined in RFC 5280.
+  /// Builds the TBSCertificate structure and signs the result via
+  /// <see cref="Generate"/>.
+  /// </summary>
   TX509V1CertificateGenerator = class(TInterfacedObject, IX509V1CertificateGenerator)
   strict private
     FTbsGen: IV1TbsCertificateGenerator;
@@ -70,6 +82,11 @@ type
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
+  /// <summary>
+  /// Generator for X.509 version 3 certificates as defined in RFC 5280.
+  /// Builds the TBSCertificate structure, optional v3 extensions, and signs via
+  /// <see cref="Generate"/>.
+  /// </summary>
   TX509V3CertificateGenerator = class(TInterfacedObject, IX509V3CertificateGenerator)
   strict private
     FExtGenerator: IX509ExtensionsGenerator;
@@ -77,8 +94,14 @@ type
 
     procedure ImplInitFromTemplate(const ATemplate: IX509CertificateStructure);
   public
+    /// <summary>Creates an empty version 3 certificate generator.</summary>
     constructor Create; overload;
+    /// <summary>Creates a generator initialised from another certificate.</summary>
     constructor Create(const ATemplate: IX509Certificate); overload;
+    /// <summary>
+    /// Creates a generator initialised from a parsed certificate structure, excluding alternate
+    /// public-key and alternate-signature extensions.
+    /// </summary>
     constructor Create(const ATemplate: IX509CertificateStructure); overload;
 
     procedure Reset;
@@ -108,7 +131,9 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure AddExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
-    procedure AddExtensions(const AExtensions: IX509Extensions);
+    procedure AddExtension(const AExtension: IExtension); overload;
+    procedure AddExtensions(const AExtensions: IX509Extensions); overload;
+    procedure AddExtensions(const AExtensions: IExtensions); overload;
     procedure CopyAndAddExtension(const AOid: IDerObjectIdentifier;
       ACritical: Boolean; const ACert: IX509Certificate);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
@@ -144,7 +169,9 @@ type
   end;
 
   /// <summary>
-  /// Class to produce an X.509 Version 2 CRL.
+  /// Generator for X.509 version 2 certificate revocation lists (CRLs) as defined in RFC 5280.
+  /// Builds the TBSCertList structure, optional CRL extensions, and signs via
+  /// <see cref="Generate"/>.
   /// </summary>
   TX509V2CrlGenerator = class(TInterfacedObject, IX509V2CrlGenerator)
   strict private
@@ -153,8 +180,11 @@ type
 
     procedure ImplInitFromTemplate(const ATemplate: ICertificateList);
   public
+    /// <summary>Creates an empty version 2 CRL generator.</summary>
     constructor Create; overload;
+    /// <summary>Creates a generator initialised from another CRL.</summary>
     constructor Create(const ATemplate: IX509Crl); overload;
+    /// <summary>Creates a generator initialised from a parsed <see cref="ICertificateList"/>.</summary>
     constructor Create(const ATemplate: ICertificateList); overload;
 
     procedure Reset;
@@ -206,7 +236,7 @@ end;
 procedure TX509V1CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigInteger);
 begin
   if ASerialNumber.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create('serial number must be a positive integer');
+    raise EArgumentCryptoLibException.CreateRes(@SSerialNumberMustBeAPositive);
   FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber));
 end;
 
@@ -252,7 +282,7 @@ begin
       TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(APublicKey));
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('unable to process key - ' + E.ToString);
+      raise EArgumentCryptoLibException.CreateResFmt(@SUnableToProcessKey, [E.ToString]);
   end;
 end;
 
@@ -331,7 +361,7 @@ end;
 procedure TX509V3CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigInteger);
 begin
   if ASerialNumber.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create('serial number must be a positive integer');
+    raise EArgumentCryptoLibException.CreateRes(@SSerialNumberMustBeAPositive);
   FTbsGen.SetSerialNumber(TDerInteger.Create(ASerialNumber) as IDerInteger);
 end;
 
@@ -433,7 +463,17 @@ begin
   FExtGenerator.AddExtension(AOid, AX509Extension);
 end;
 
+procedure TX509V3CertificateGenerator.AddExtension(const AExtension: IExtension);
+begin
+  FExtGenerator.AddExtension(AExtension);
+end;
+
 procedure TX509V3CertificateGenerator.AddExtensions(const AExtensions: IX509Extensions);
+begin
+  FExtGenerator.AddExtensions(AExtensions);
+end;
+
+procedure TX509V3CertificateGenerator.AddExtensions(const AExtensions: IExtensions);
 begin
   FExtGenerator.AddExtensions(AExtensions);
 end;
@@ -445,12 +485,12 @@ var
 begin
   LExt := ACert.CertificateStructure.Extensions.GetExtension(AOid);
   if LExt = nil then
-    raise EArgumentCryptoLibException.CreateFmt('extension %s not present', [AOid.Id]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SExtensionNotPresent, [AOid.Id]);
   try
     FExtGenerator.AddExtension(AOid, LExt);
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.CreateFmt('extension %s: %s', [AOid.Id, E.Message]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SExtension, [AOid.Id, E.Message]);
   end;
 end;
 
@@ -712,7 +752,7 @@ var
   LEntry: IX509CrlEntry;
 begin
   if AOther = nil then
-    raise EArgumentNilCryptoLibException.Create('AOther');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherCrlNil);
 
   LRevocations := AOther.GetRevokedCertificates;
   if LRevocations <> nil then

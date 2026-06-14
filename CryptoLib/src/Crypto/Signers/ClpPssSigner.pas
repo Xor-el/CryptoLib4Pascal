@@ -39,6 +39,7 @@ uses
 
 resourcestring
   SKeyTooSmall = 'key too small for specified hash and salt lengths';
+  SDigestSizeMismatch = 'digest size mismatch';
 
 type
   /// <summary>
@@ -312,7 +313,7 @@ var
 begin
   if FContentDigest1.GetDigestSize() <> FHLen then
   begin
-    raise EInvalidOperationCryptoLibException.Create('Digest size mismatch');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDigestSizeMismatch);
   end;
 
   // Ensure block is zero-initialized before use
@@ -373,7 +374,7 @@ var
 begin
   if FContentDigest1.GetDigestSize() <> FHLen then
   begin
-    raise EInvalidOperationCryptoLibException.Create('Digest size mismatch');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDigestSizeMismatch);
   end;
 
   // PSS requires first 8 bytes of mDash to be zeros (padding1)

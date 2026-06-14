@@ -42,6 +42,11 @@ uses
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SInStreamNil = 'input stream cannot be nil';
+  SStreamMustBeReadable = 'stream must be readable';
+  SFailedToReadCrl = 'failed to read CRL: %s';
+
 type
   TX509CrlParser = class sealed(TInterfacedObject, IX509CrlParser)
   strict private
@@ -205,10 +210,10 @@ var
   LStreamToUse: TStream;
 begin
   if AInStream = nil then
-    raise EArgumentNilCryptoLibException.Create('inStream');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInStreamNil);
 
   if not AInStream.CanRead then
-    raise EArgumentCryptoLibException.Create('Stream must be read-able');
+    raise EArgumentCryptoLibException.CreateRes(@SStreamMustBeReadable);
 
   if FCurrentCrlStream = nil then
   begin
@@ -282,7 +287,7 @@ begin
     on E: ECrlCryptoLibException do
       raise;
     on E: Exception do
-      raise ECrlCryptoLibException.Create('Failed to read CRL: ' + E.Message);
+      raise ECrlCryptoLibException.CreateResFmt(@SFailedToReadCrl, [E.Message]);
   end;
 end;
 

@@ -50,6 +50,16 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCrlEncodingIsNil = 'CRL encoding is nil';
+  SCertificateListNil = 'certificate list cannot be nil';
+  SCrlAlternativeSignatureDoesNotVerify = 'CRL alternative signature does not verify with supplied public key';
+  SCrlDoesNotVerifyWithSupplied = 'CRL does not verify with supplied public key';
+  SSignatureAlgorithmOnCertificateListMismatch = 'signature algorithm on CertificateList does not match TBSCertList';
+  SCrlContentsInvalid = 'CRL contents invalid: %s';
+  SExceptionReadingIssuingDistributionPoint = 'exception reading IssuingDistributionPoint: %s';
+  SFailedToDerEncodeCrl = 'failed to DER-encode CRL: %s';
+
 type
   TX509Crl = class(TX509ExtensionBase, IX509Crl)
   strict private
@@ -144,7 +154,7 @@ begin
   if FException <> nil then
     raise FException;
   if FEncoding = nil then
-    raise ECrlCryptoLibException.Create('CRL encoding is null');
+    raise ECrlCryptoLibException.CreateRes(@SCrlEncodingIsNil);
   Result := FEncoding;
 end;
 
@@ -161,7 +171,7 @@ var
 begin
   inherited Create();
   if ACertificateList = nil then
-    raise EArgumentNilCryptoLibException.Create('certificateList');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertificateListNil);
 
   FCertificateList := ACertificateList;
 
@@ -174,7 +184,7 @@ begin
     FIsIndirect := GetIsIndirectCrl;
   except
     on E: Exception do
-      raise ECrlCryptoLibException.Create('CRL contents invalid: ' + E.ToString);
+      raise ECrlCryptoLibException.CreateResFmt(@SCrlContentsInvalid, [E.ToString]);
   end;
 end;
 
@@ -202,7 +212,7 @@ begin
     Result := (LIdp <> nil) and LIdp.IsIndirectCrl;
   except
     on E: Exception do
-      raise ECrlCryptoLibException.Create('Exception reading IssuingDistributionPoint' + E.ToString);
+      raise ECrlCryptoLibException.CreateResFmt(@SExceptionReadingIssuingDistributionPoint, [E.ToString]);
   end;
 end;
 
@@ -430,13 +440,13 @@ end;
 procedure TX509Crl.VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 begin
   if not IsAlternativeSignatureValid(AVerifierProvider) then
-    raise EInvalidKeyCryptoLibException.Create('CRL alternative signature does not verify with supplied public key.');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SCrlAlternativeSignatureDoesNotVerify);
 end;
 
 procedure TX509Crl.CheckSignature(const AVerifier: IVerifierFactory);
 begin
   if not CheckSignatureValid(AVerifier) then
-    raise EInvalidKeyCryptoLibException.Create('CRL does not verify with supplied public key.');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SCrlDoesNotVerifyWithSupplied);
 end;
 
 function TX509Crl.CheckSignatureValid(const AVerifier: IVerifierFactory): Boolean;
@@ -445,7 +455,7 @@ var
 begin
   LTbsCertList := FCertificateList.TbsCertList;
   if not TX509Utilities.AreEquivalentAlgorithms(FCertificateList.SignatureAlgorithm, LTbsCertList.Signature) then
-    raise ECrlCryptoLibException.Create('Signature algorithm on CertificateList does not match TbsCertList.');
+    raise ECrlCryptoLibException.CreateRes(@SSignatureAlgorithmOnCertificateListMismatch);
   Result := TX509Utilities.VerifySignature(AVerifier, LTbsCertList as IAsn1Encodable, FCertificateList.Signature);
 end;
 

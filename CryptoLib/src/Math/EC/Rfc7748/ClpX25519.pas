@@ -28,9 +28,8 @@ uses
   ClpISecureRandom,
   ClpX25519Field;
 
-
 resourcestring
-  SInvalidKeyLength = 'Invalid key length';
+  SInvalidKeyLength = 'invalid key length';
 
 type
   TX25519 = class sealed

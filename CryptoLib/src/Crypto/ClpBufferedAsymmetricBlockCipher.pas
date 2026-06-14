@@ -30,9 +30,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherNil = 'Cipher instance cannot be nil';
-  SOutputBufferTooShort = 'Output buffer too short';
-  SDataTooLongForCipher = 'Attempt to process message too long for cipher';
+  SCipherNil = 'cipher instance cannot be nil';
+  SOutputBufferTooShort = 'output buffer too short';
+  SDataTooLongForCipher = 'attempt to process message too long for cipher';
+  SInputNil = 'input cannot be nil';
 
 type
   /// <summary>
@@ -151,7 +152,7 @@ begin
   end;
 
   if AInput = nil then
-    raise EArgumentNilCryptoLibException.Create('input');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
 
   if ALength > System.Length(FBuffer) - FBufOff then
     raise EDataLengthCryptoLibException.CreateRes(@SDataTooLongForCipher);

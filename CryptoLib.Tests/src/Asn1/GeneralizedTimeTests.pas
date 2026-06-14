@@ -273,7 +273,7 @@ begin
   except
     on E: EArgumentNilCryptoLibException do
     begin
-      if not E.Message.StartsWith('timeString') then
+      if not E.Message.StartsWith('time string') then
       begin
         Fail('Wrong exception message: ' + E.Message);
       end;

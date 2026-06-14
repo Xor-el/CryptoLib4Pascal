@@ -37,13 +37,13 @@ uses
   ClpPlatformUtilities;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer too Short';
-  SOutputBufferTooShort = 'Output Buffer too Short';
-  SAesEngineX86NotSupported = 'AES hardware engine not supported on this platform.';
-  SInvalidParameterAESX86Init = 'Invalid Parameter Passed to AES Init - "%s"';
-  SInvalidKeyLength = 'Key Length not 128/192/256 bits.';
-  SAesEngineX86NotInitialised = 'AES Engine not Initialised';
-  SNilPointerBuffer = 'Input or output pointer is nil.';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SAesEngineX86NotSupported = 'AES hardware engine not supported on this platform';
+  SInvalidParameterAESX86Init = 'invalid parameter passed to AES init: %s';
+  SInvalidKeyLength = 'key length not 128/192/256 bits';
+  SAesEngineX86NotInitialised = 'AES engine not initialized';
+  SNilPointerBuffer = 'input or output pointer is nil';
 
 type
   /// <summary>

@@ -31,22 +31,23 @@ uses
   ClpAsn1Utilities;
 
 resourcestring
-  SInvalidParameters = 'Invalid parameters';
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
-  SSeedNil = 'Seed Cannot be Nil';
-  SPGenCounterNil = 'PGenCounter Cannot be Nil';
-  SInvalidDHValidationParms = 'Invalid DHValidationParms: %s';
-  SPNil = 'P Cannot be Nil';
-  SGNil = 'G Cannot be Nil';
-  SQNil = 'Q Cannot be Nil';
-  SJNil = 'J Cannot be Nil';
-  SInvalidDHDomainParameters = 'Invalid DHDomainParameters: %s';
-  SYNil = 'Y Cannot be Nil';
-  SAlgorithmNil = 'Algorithm cannot be Nil';
-  SCounterNil = 'Counter cannot be Nil';
-  SKeyInfoNil = 'KeyInfo cannot be Nil';
-  SSuppPubInfoNil = 'SuppPubInfo cannot be Nil';
+  SInvalidParameters = 'invalid parameters';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SSeedNil = 'seed cannot be nil';
+  SPGenCounterNil = 'PGenCounter cannot be nil';
+  SInvalidDHValidationParms = 'invalid DHValidationParms: %s';
+  SPNil = 'P cannot be nil';
+  SGNil = 'G cannot be nil';
+  SQNil = 'Q cannot be nil';
+  SJNil = 'J cannot be nil';
+  SInvalidDHDomainParameters = 'invalid DHDomainParameters: %s';
+  SYNil = 'Y cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SCounterNil = 'counter cannot be nil';
+  SKeyInfoNil = 'KeyInfo cannot be nil';
+  SSuppPubInfoNil = 'SuppPubInfo cannot be nil';
+  SElementNil = 'element cannot be nil';
 
 type
   /// <summary>
@@ -379,7 +380,7 @@ var
   LSequence: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
 
   if Supports(AElement, IDHValidationParms, Result) then
     Exit;

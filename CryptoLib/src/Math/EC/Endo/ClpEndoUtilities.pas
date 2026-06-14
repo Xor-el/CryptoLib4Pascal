@@ -31,6 +31,9 @@ uses
   ClpEndoPreCompInfo,
   ClpCryptoLibTypes;
 
+resourcestring
+  SExpectedEndoPreCompInfo = 'expected EndoPreCompInfo';
+
 type
   TEndoUtilities = class sealed(TObject)
   strict private
@@ -131,7 +134,7 @@ begin
   LPreCompCallback := TEndoUtilities.TMapPointCallback.Create(AEndomorphism, AP);
   LPrecomp := AP.Curve.Precompute(AP, PRECOMP_NAME, LPreCompCallback);
   if not Supports(LPrecomp, IEndoPreCompInfo, LEndo) then
-    raise EInvalidCastCryptoLibException.Create('Expected EndoPreCompInfo');
+    raise EInvalidCastCryptoLibException.CreateRes(@SExpectedEndoPreCompInfo);
   Result := LEndo.MappedPoint;
 end;
 

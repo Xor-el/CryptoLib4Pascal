@@ -32,16 +32,15 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBuffertooShort = 'Input Buffer too Short';
-  SOutputBuffertooShort = 'Output Buffer too Short';
-  SUnsupportedBlock = 'Unknown Blocksize to Rijndael';
-  SInvalidKeyLength = 'Key Length not 128/160/192/224/256 bits.';
-  SRijndaelEngineNotInitialised = 'Rijndael Engine not Initialised';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SUnsupportedBlock = 'unknown blocksize to Rijndael';
+  SInvalidKeyLength = 'key length not 128/160/192/224/256 bits';
+  SRijndaelEngineNotInitialised = 'Rijndael engine not initialized';
   SInvalidParameterRijndaelInit =
-    'Invalid Parameter Passed to Rijndael Init - "%s"';
+    'invalid parameter passed to Rijndael init: %s';
 
 type
-
   /// <summary>
   /// <para>
   /// an implementation of Rijndael, based on the documentation and
@@ -880,8 +879,8 @@ begin
       (@SRijndaelEngineNotInitialised);
   end;
 
-  TCheck.DataLength(AInput, AInOff, (FBC div 2), SInputBuffertooShort);
-  TCheck.OutputLength(AOutput, AOutOff, (FBC div 2), SOutputBuffertooShort);
+  TCheck.DataLength(AInput, AInOff, (FBC div 2), SInputBufferTooShort);
+  TCheck.OutputLength(AOutput, AOutOff, (FBC div 2), SOutputBufferTooShort);
 
   UnPackBlock(AInput, AInOff);
 

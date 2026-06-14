@@ -62,6 +62,9 @@ uses
   ClpCryptoLibTypes,
   ClpPrivateKeyInfoFactory;
 
+resourcestring
+  SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';
+
 type
   /// <summary>
   /// Factory for creating private key parameters from PrivateKeyInfo.
@@ -266,7 +269,7 @@ begin
     Exit;
   end;
 
-  raise ENotSupportedCryptoLibException.CreateFmt('Key type with OID %s not yet supported', [LAlgOid.Id]);
+  raise ENotSupportedCryptoLibException.CreateResFmt(@SKeyTypeWithOidNotSupported, [LAlgOid.Id]);
 end;
 
 end.

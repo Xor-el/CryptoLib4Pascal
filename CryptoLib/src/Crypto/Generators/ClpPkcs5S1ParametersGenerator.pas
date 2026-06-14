@@ -32,8 +32,10 @@ uses
   ClpPbeParametersGenerator,
   ClpCryptoLibTypes;
 
-type
+resourcestring
+  SCannotGenerateDerivedKey = 'can''t generate a derived key %d bytes long';
 
+type
   /// <summary>
   /// Generator for PBE derived keys and IVs as defined by Pkcs 5 V2.0 Scheme 1.
   /// Note this generator is limited to the size of the hash produced by the
@@ -113,8 +115,7 @@ begin
   LKeySize := AKeySize div 8;
 
   if (LKeySize > FDigest.GetDigestSize()) then
-    raise EArgumentCryptoLibException.Create('Can''t Generate a derived key ' +
-      IntToStr(LKeySize) + ' bytes long.');
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotGenerateDerivedKey, [LKeySize]);
 
   LDKey := GenerateDerivedKey();
   Result := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0,
@@ -132,8 +133,7 @@ begin
   LIvSize := AIvSize div 8;
 
   if ((LKeySize + LIvSize) > FDigest.GetDigestSize()) then
-    raise EArgumentCryptoLibException.Create('Can''t Generate a derived key ' +
-      IntToStr(LKeySize + LIvSize) + ' bytes long.');
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotGenerateDerivedKey, [LKeySize + LIvSize]);
 
   LDKey := GenerateDerivedKey();
   LKey := TParameterUtilities.CreateKeyParameter(AAlgorithm, LDKey, 0,
@@ -150,8 +150,7 @@ begin
   LKeySize := AKeySize div 8;
 
   if (LKeySize > FDigest.GetDigestSize()) then
-    raise EArgumentCryptoLibException.Create('Can''t Generate a derived key ' +
-      IntToStr(LKeySize) + ' bytes long.');
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotGenerateDerivedKey, [LKeySize]);
 
   LDKey := GenerateDerivedKey();
   Result := TKeyParameter.Create(LDKey, 0, LKeySize);

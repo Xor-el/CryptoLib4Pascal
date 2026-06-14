@@ -27,15 +27,34 @@ uses
 
 type
   /// <summary>
-  /// Interface for Pkcs12Entry (PKCS#12 bag entry with attributes).
+  /// Base interface for PKCS#12 bag entries (private keys and certificates) carrying optional
+  /// PKCS#9 bag attributes such as friendly name and local key identifier.
   /// </summary>
   IPkcs12Entry = interface(IInterface)
     ['{3A4B5C6D-7E8F-9A0B-1C2D-3E4F5A6B7C8D}']
 
+    /// <summary>
+    /// Gets the bag attribute value for the given object identifier, or <c>nil</c> if absent.
+    /// </summary>
+    /// <param name="AOid">The bag attribute OID.</param>
     function GetItem(const AOid: IDerObjectIdentifier): IAsn1Encodable;
+    /// <summary>Gets the object identifiers of all bag attributes on this entry.</summary>
     function GetBagAttributeKeys: TCryptoLibGenericArray<IDerObjectIdentifier>;
+    /// <summary>
+    /// Returns <c>true</c> if this entry has a PKCS#9 friendly name attribute.
+    /// </summary>
     function GetHasFriendlyName: Boolean;
+    /// <summary>
+    /// Sets or replaces the PKCS#9 friendly name bag attribute on this entry.
+    /// </summary>
+    /// <param name="AName">The friendly name to store.</param>
     procedure SetFriendlyName(const AName: String);
+    /// <summary>
+    /// Attempts to retrieve a bag attribute by OID.
+    /// </summary>
+    /// <param name="AOid">The bag attribute OID.</param>
+    /// <param name="AAttribute">The attribute value, if present.</param>
+    /// <returns><c>true</c> if the attribute was found.</returns>
     function TryGetAttribute(const AOid: IDerObjectIdentifier;
       out AAttribute: IAsn1Encodable): Boolean;
 

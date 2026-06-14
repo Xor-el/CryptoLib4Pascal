@@ -35,13 +35,10 @@ uses
   ClpIDsaDigestSigner;
 
 resourcestring
-  SPrivateKey = 'Signing Requires Private Key.';
-  SPublicKey = 'Verification Requires Public Key.';
-  SDsaDigestSignerNotInitializedForSignatureGeneration =
-    'DSADigestSigner not Initialized for Signature Generation.';
-  SDsaDigestSignerNotInitializedForVerification =
-    'DSADigestSigner not Initialized for Verification';
-  SEncodingError = 'Unable to Encode Signature';
+  SSigningRequiresPrivateKey = 'signing requires private key';
+  SVerificationRequiresPublicKey = 'verification requires public key';
+  SNotInitialized = 'DSADigestSigner not initialized for %s';
+  SEncodingError = 'unable to encode signature';
 
 type
   TDsaDigestSigner = class(TInterfacedObject, ISigner, IDsaDigestSigner)
@@ -138,8 +135,8 @@ var
 begin
   if ((not FForSigning)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SDsaDigestSignerNotInitializedForSignatureGeneration);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signature generation']);
   end;
 
   SetLength(LHash, FDigest.GetDigestSize());
@@ -180,12 +177,12 @@ begin
 
   if ((AForSigning) and (not LK.IsPrivate)) then
   begin
-    raise EInvalidKeyCryptoLibException.CreateRes(@SPrivateKey);
+    raise EInvalidKeyCryptoLibException.CreateRes(@SSigningRequiresPrivateKey);
   end;
 
   if ((not AForSigning) and (LK.IsPrivate)) then
   begin
-    raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKey);
+    raise EInvalidKeyCryptoLibException.CreateRes(@SVerificationRequiresPublicKey);
   end;
 
   Reset();
@@ -211,8 +208,8 @@ var
 begin
   if (FForSigning) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SDsaDigestSignerNotInitializedForVerification);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verification']);
   end;
 
   SetLength(LHash, FDigest.GetDigestSize());

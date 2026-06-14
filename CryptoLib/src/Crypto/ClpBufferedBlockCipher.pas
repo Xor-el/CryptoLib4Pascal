@@ -36,16 +36,15 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidLength = 'Can''t Have a Negative Input Length!';
-  SInputNil = 'Input Cannot be Nil';
-  SCipherModeNil = 'CipherMode Cannot be Nil';
-  SCipherModeInvalidBlockSize = 'CipherMode Must Have a Positive Block Size';
-  SOutputBufferTooSmall = 'Output Buffer Too Short';
-  SDataNotBlockSizeAligned = 'Data not Block Size Aligned';
-  SOutputBufferTooSmallForDoFinal = 'Output Buffer Too Short for DoFinal()';
+  SInvalidLength = 'cannot have a negative input length';
+  SInputNil = 'input cannot be nil';
+  SCipherModeNil = 'cipher mode cannot be nil';
+  SCipherModeInvalidBlockSize = 'cipher mode must have a positive block size';
+  SOutputBufferTooSmall = 'output buffer too short';
+  SDataNotBlockSizeAligned = 'data not block size aligned';
+  SOutputBufferTooSmallForDoFinal = 'output buffer too short for DoFinal()';
 
 type
-
   /// <summary>
   /// A wrapper class that allows block ciphers to be used to process data in a piecemeal fashion.
   /// </summary>

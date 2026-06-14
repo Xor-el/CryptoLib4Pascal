@@ -35,10 +35,10 @@ uses
 
 resourcestring
   SInvalidIVLength =
-    'Initialisation Vector Must be the Same Length as Block Size';
-  SInvalidChangeState = 'Cannot Change Encrypting State Without Providing Key.';
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+    'initialization vector must be the same length as block size';
+  SInvalidChangeState = 'cannot change encrypting state without providing key';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   /// <summary>

@@ -31,6 +31,9 @@ uses
   ClpPkcs12Entry,
   ClpCryptoLibTypes;
 
+resourcestring
+  SKeyNil = 'key cannot be nil';
+
 type
   /// <summary>
   /// PKCS#12 asymmetric key bag entry.
@@ -65,7 +68,7 @@ begin
   LAttributes := TDictionary<IDerObjectIdentifier, IAsn1Encodable>.Create(TAsn1Comparers.OidEqualityComparer);
   inherited Create(LAttributes, True);
   if AKey = nil then
-    raise EArgumentNilCryptoLibException.Create('key');
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyNil);
   FKey := AKey;
 end;
 
@@ -74,7 +77,7 @@ constructor TAsymmetricKeyEntry.Create(const AKey: IAsymmetricKeyParameter;
 begin
   inherited Create(AAttributes, True);
   if AKey = nil then
-    raise EArgumentNilCryptoLibException.Create('key');
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyNil);
   FKey := AKey;
 end;
 

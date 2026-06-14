@@ -30,13 +30,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer too Small';
-  SKDFParameterNotFound = 'KDF Parameters Required For KDF Generator';
+  SOutputBufferTooSmall = 'output buffer too small';
+  SKDFParameterNotFound = 'KDF parameters required for KDF generator';
   SHashCannotNotProduceSufficientData =
     'Specified Hash Cannot Produce Sufficient Data for the Specified Operation.';
 
 type
-
   /// <summary>
   /// <para>
   /// KDF generator for compatibility with existing PascalCoin Implementation

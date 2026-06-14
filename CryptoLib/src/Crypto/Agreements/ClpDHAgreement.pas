@@ -38,12 +38,12 @@ uses
 
 resourcestring
   SDHPublicKeyWrongParameter =
-    'Diffie-Hellman Public Key has Wrong Parameters.';
-  SNotDHPrivateKeyParameters = 'DHEngine Expects DHPrivateKeyParameters';
-  SMessageNotInitialized = 'Message not Initialised';
-  SSharedKeyInvalid = 'Shared Key Can''t be 1';
-  SDHPublicKeyWeak = 'Diffie-Hellman Public Key is Weak';
-  SDHPublicKeyNil = 'DH Public Key Parameter Cannot be Nil';
+    'Diffie-Hellman public key has wrong parameters';
+  SNotDHPrivateKeyParameters = 'DHEngine expects DHPrivateKeyParameters';
+  SMessageNotInitialized = 'message not initialized';
+  SSharedKeyInvalid = 'shared key cannot be 1';
+  SDHPublicKeyWeak = 'Diffie-Hellman public key is weak';
+  SDHPublicKeyNil = 'DH public key parameter cannot be nil';
 
 type
   /// <summary>

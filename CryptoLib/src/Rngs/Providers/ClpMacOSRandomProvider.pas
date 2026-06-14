@@ -36,13 +36,13 @@ uses
 
 resourcestring
   SMacOSRandomError =
-    'An Error Occurred while generating random data using macOS random APIs.';
+    'an error occurred while generating random data using macOS random APIs';
 
+type
   /// <summary>
   /// macOS random source provider.
   /// Implements SecRandomCopyBytes on OS X 10.7+ when available, else /dev/urandom.
   /// </summary>
-type
   TMacOSRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

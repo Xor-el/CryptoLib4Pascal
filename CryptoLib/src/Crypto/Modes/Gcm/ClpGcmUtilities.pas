@@ -31,6 +31,10 @@ uses
   ClpIntrinsicsVector,
   ClpByteUtilities;
 
+resourcestring
+  SPclmulqdqMultiplyExtIsNotAvailable = 'PCLMULQDQ multiply-ext is not available on this target';
+  SFusedGhashRequiresSsse3 = 'fused %s-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout';
+
 type
   TFieldElement = record
     N0, N1: UInt64;
@@ -416,8 +420,7 @@ begin
     Exit;
   end;
 {$ENDIF}
-  raise EInvalidOperationCryptoLibException.Create(
-    'PCLMULQDQ multiply-ext is not available on this target.');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SPclmulqdqMultiplyExtIsNotAvailable);
 end;
 
 class procedure TGcmUtilities.XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte);
@@ -484,8 +487,8 @@ class procedure TGcmUtilities.FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: P
 begin
   if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
     (not TIntrinsicsVector.IsPacked) then
-    raise EInvalidOperationCryptoLibException.Create(
-      'Fused four-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SFusedGhashRequiresSsse3, ['four']);
 
   // Monolithic kernel: byte-reverse + state fold + 4-way multiply-accumulate +
   // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
@@ -496,8 +499,8 @@ class procedure TGcmUtilities.FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask:
 begin
   if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
     (not TIntrinsicsVector.IsPacked) then
-    raise EInvalidOperationCryptoLibException.Create(
-      'Fused eight-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout.');
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SFusedGhashRequiresSsse3, ['eight']);
 
   // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
   // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).

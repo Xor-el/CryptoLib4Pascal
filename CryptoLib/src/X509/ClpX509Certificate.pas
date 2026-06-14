@@ -55,6 +55,23 @@ uses
   ClpCollectionUtilities,
   ClpEncoders;
 
+resourcestring
+  SFailedToEncodeCertificate = 'failed to encode certificate';
+  SFailedToDerEncodeCertificate = 'failed to DER-encode certificate: %s';
+  SCertificateNil = 'certificate cannot be nil';
+  SIsCriticalNotApplicableToX509Certificate = 'IsCritical not applicable to X509Certificate';
+  SValueNotApplicableToX509Certificate = 'Value not applicable to X509Certificate';
+  SParsedValueNotApplicableToX509Certificate = 'ParsedValue not applicable to X509Certificate';
+  SPublicKeyPresentedNotForAlternativeSignature = 'public key presented not for certificate alternative signature';
+  SPublicKeyPresentedNotForCertificateSignature = 'public key presented not for certificate signature';
+  SSignatureAlgorithmInTbsCertNot = 'signature algorithm in TBS cert not same as outer cert';
+  SCertificateExpiredOn = 'certificate expired on %s';
+  SCertificateNotValidUntil = 'certificate not valid until %s';
+  SBadTagNumber = 'bad tag number: %d';
+  SCertificateContentsInvalid = 'certificate contents invalid: %s';
+  SCannotConstruct = 'cannot construct %s: %s';
+  SErrorProcessingExtendedKeyUsageExtension = 'error processing extended key usage extension: %s';
+
 type
   /// <summary>
   /// An Object representing an X509 Certificate.
@@ -201,7 +218,7 @@ begin
   if FException <> nil then
     raise FException;
   if FEncoding = nil then
-    raise EIOCryptoLibException.Create('Failed to encode certificate');
+    raise EIOCryptoLibException.CreateRes(@SFailedToEncodeCertificate);
   Result := FEncoding;
 end;
 
@@ -241,7 +258,7 @@ var
 begin
   inherited Create();
   if ACertificate = nil then
-    raise EArgumentNilCryptoLibException.Create('certificate');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertificateNil);
 
   FCertificateStructure := ACertificate;
 
@@ -253,7 +270,7 @@ begin
       FSigAlgParams := nil;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('Certificate contents invalid: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCertificateContentsInvalid, [E.Message]);
   end;
 
   try
@@ -263,7 +280,7 @@ begin
     );
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('cannot construct BasicConstraints: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotConstruct, ['BasicConstraints', E.Message]);
   end;
 
   try
@@ -288,7 +305,7 @@ begin
     end;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('cannot construct KeyUsage: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotConstruct, ['KeyUsage', E.Message]);
   end;
 end;
 
@@ -323,9 +340,9 @@ end;
 procedure TX509Certificate.CheckValidity(const ATime: TDateTime);
 begin
   if CompareDateTime(ATime, NotAfter) > 0 then
-    raise EArgumentCryptoLibException.CreateFmt('certificate expired on %s', [DateTimeToStr(FCertificateStructure.EndDate.ToDateTime())]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCertificateExpiredOn, [DateTimeToStr(FCertificateStructure.EndDate.ToDateTime())]);
   if CompareDateTime(ATime, NotBefore) < 0 then
-    raise EArgumentCryptoLibException.CreateFmt('certificate not valid until %s', [DateTimeToStr(FCertificateStructure.StartDate.ToDateTime())]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCertificateNotValidUntil, [DateTimeToStr(FCertificateStructure.StartDate.ToDateTime())]);
 end;
 
 function TX509Certificate.GetVersion: Int32;
@@ -384,17 +401,17 @@ end;
 
 function TX509Certificate.GetIsCritical: Boolean;
 begin
-  raise ENotSupportedCryptoLibException.Create('GetIsCritical not applicable to X509Certificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SIsCriticalNotApplicableToX509Certificate);
 end;
 
 function TX509Certificate.GetValue: IAsn1OctetString;
 begin
-  raise ENotSupportedCryptoLibException.Create('GetValue not applicable to X509Certificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SValueNotApplicableToX509Certificate);
 end;
 
 function TX509Certificate.GetParsedValue: IAsn1Object;
 begin
-  raise ENotSupportedCryptoLibException.Create('GetParsedValue not applicable to X509Certificate');
+  raise ENotSupportedCryptoLibException.CreateRes(@SParsedValueNotApplicableToX509Certificate);
 end;
 
 function TX509Certificate.GetSigAlgOid: String;
@@ -455,7 +472,7 @@ begin
     end;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('error processing extended key usage extension: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SErrorProcessingExtendedKeyUsageExtension, [E.Message]);
   end;
 end;
 
@@ -567,7 +584,7 @@ begin
               LEntry.Add(TValue.From<String>(LIPAddr));
             end;
         else
-          raise EIOCryptoLibException.CreateFmt('Bad tag number: %d', [LGn.TagNo]);
+          raise EIOCryptoLibException.CreateResFmt(@SBadTagNumber, [LGn.TagNo]);
         end;
 
         LResult.Add(TCollectionUtilities.ToArray<TValue>(LEntry));
@@ -879,13 +896,13 @@ end;
 procedure TX509Certificate.VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 begin
   if not IsAlternativeSignatureValid(AVerifierProvider) then
-    raise EInvalidKeyCryptoLibException.Create('Public key presented not for certificate alternative signature');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKeyPresentedNotForAlternativeSignature);
 end;
 
 procedure TX509Certificate.CheckSignature(const AVerifier: IVerifierFactory);
 begin
   if not CheckSignatureValid(AVerifier) then
-    raise EInvalidKeyCryptoLibException.Create('Public key presented not for certificate signature');
+    raise EInvalidKeyCryptoLibException.CreateRes(@SPublicKeyPresentedNotForCertificateSignature);
 end;
 
 function TX509Certificate.CheckSignatureValid(const AVerifier: IVerifierFactory): Boolean;
@@ -895,7 +912,7 @@ begin
   LTbsCertificate := FCertificateStructure.TbsCertificate;
 
   if not TX509Certificate.AreEquivalentAlgorithms(FCertificateStructure.SignatureAlgorithm, LTbsCertificate.Signature) then
-    raise EArgumentCryptoLibException.Create('signature algorithm in TBS cert not same as outer cert');
+    raise EArgumentCryptoLibException.CreateRes(@SSignatureAlgorithmInTbsCertNot);
 
   Result := TX509Certificate.VerifySignature(AVerifier, LTbsCertificate, FCertificateStructure.Signature);
 end;

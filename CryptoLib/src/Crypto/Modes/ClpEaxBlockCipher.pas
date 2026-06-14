@@ -47,11 +47,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidParametersEAX = 'invalid parameters passed to EAX';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInvalidParameters = 'invalid parameters passed to %s';
+  SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in EAX failed';
-  SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun.';
+  SMacCheckFailed = 'mac check in %s failed';
+  SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun';
 
 type
   TEaxBlockCipher = class(TInterfacedObject, IEaxBlockCipher,
@@ -243,7 +243,7 @@ begin
 
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersEAX);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['EAX']);
 
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
@@ -1011,7 +1011,8 @@ begin
     CalculateMac();
 
     if (not VerifyMac(FBufBlock, LExtra - FMacSize)) then
-      raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
+        ['EAX']);
 
     Reset(False);
 

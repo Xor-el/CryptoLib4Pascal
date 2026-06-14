@@ -30,6 +30,9 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCannotRecognizeCipher = 'cannot recognize cipher: %s';
+
 type
   /// <summary>
   /// Factory for creating CipherKeyGenerator instances by OID.
@@ -61,7 +64,7 @@ begin
   else if TNistObjectIdentifiers.IdAes256Cbc.Equals(AAlgorithm) then
     Result := CreateCipherKeyGenerator(ARandom, 256)
   else
-    raise EInvalidOperationCryptoLibException.Create('cannot recognise cipher: ' + AAlgorithm.Id);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SCannotRecognizeCipher, [AAlgorithm.Id]);
 end;
 
 class function TCipherKeyGeneratorFactory.CreateCipherKeyGenerator(

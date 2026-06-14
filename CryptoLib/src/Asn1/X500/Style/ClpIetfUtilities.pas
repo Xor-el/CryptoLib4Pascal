@@ -30,8 +30,12 @@ uses
   ClpConverters,
   ClpStreamUtilities,
   ClpStringUtilities,
-
   ClpEncoders;
+
+resourcestring
+  SInvalidHexEscapeInDirectoryString = 'invalid hex escape in directory string';
+  SOtherValueHasNoEncodedForm = 'other value has no encoded form';
+  SUnknownEncodingInName = 'unknown encoding in name: %s';
 
 type
   /// <summary>
@@ -97,7 +101,7 @@ end;
 class procedure TIetfUtilities.CheckCompleteHexPair(AHex1: Int32);
 begin
   if AHex1 >= 0 then
-    raise EArgumentCryptoLibException.Create('invalid hex escape in directory string');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidHexEscapeInDirectoryString);
 end;
 
 class function TIetfUtilities.IsHexDigit(AC: Char): Boolean;
@@ -127,7 +131,7 @@ begin
     Result := TAsn1Object.FromByteArray(LBytes);
   except
     on E: Exception do
-      raise EInvalidOperationCryptoLibException.Create('unknown encoding in name: ' + E.Message);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SUnknownEncodingInName, [E.Message]);
   end;
 end;
 
@@ -267,7 +271,7 @@ begin
         LVBuf.Append(THexEncoder.Encode(AValue.ToAsn1Object().GetEncoded(TAsn1Encodable.Der), False));
       except
         on E: Exception do
-          raise EArgumentCryptoLibException.Create('Other value has no encoded form');
+          raise EArgumentCryptoLibException.CreateRes(@SOtherValueHasNoEncodedForm);
       end;
     end;
 

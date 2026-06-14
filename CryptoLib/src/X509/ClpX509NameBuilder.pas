@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -31,7 +31,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SUnknownOid = 'Unknown Oid';
+  SUnknownOid = 'unknown OID: %s';
+  SOidNil = 'OID cannot be nil';
+  SValueCannotBeEmpty = 'value cannot be empty';
+  SX509NameMustHaveAtLeastOne = 'X509Name must have at least one RDN';
 
 type
   /// <summary>
@@ -164,9 +167,9 @@ var
   LIdx: Int32;
 begin
   if AOid = nil then
-    raise EArgumentNilCryptoLibException.Create('oid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
   if AValue = '' then
-    raise EArgumentCryptoLibException.Create('value cannot be empty');
+    raise EArgumentCryptoLibException.CreateRes(@SValueCannotBeEmpty);
 
   LIdx := FOrdering.IndexOf(AOid);
   if LIdx >= 0 then
@@ -207,7 +210,7 @@ function TX509NameBuilder.Build(): IX509Name;
 begin
   if FOrdering.Count = 0 then
   begin
-    raise EArgumentCryptoLibException.Create('X509Name must have at least one RDN');
+    raise EArgumentCryptoLibException.CreateRes(@SX509NameMustHaveAtLeastOne);
   end;
   Result := TX509Name.Create(FOrdering, FValues);
 end;

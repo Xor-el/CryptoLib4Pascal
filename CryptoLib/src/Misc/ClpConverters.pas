@@ -25,7 +25,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SEncodingInstanceNil = 'Encoding Instance Cannot Be Nil';
+  SEncodingInstanceNil = 'encoding instance cannot be nil';
 
 type
   TConverters = class sealed(TObject)

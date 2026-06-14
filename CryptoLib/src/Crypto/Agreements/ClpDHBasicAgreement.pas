@@ -32,11 +32,11 @@ uses
 
 resourcestring
   SDHPublicKeyWrongParameter =
-    'Diffie-Hellman Public Key has Wrong Parameters.';
-  SNotDHPrivateKeyParameters = 'DHEngine Expects DHPrivateKeyParameters';
-  SAlgorithmNotInitialized = 'Agreement Algorithm not Initialised';
-  SSharedKeyInvalid = 'Shared Key Can''t be 1';
-  SDHPublicKeyWeak = 'Diffie-Hellman Public Key is Weak';
+    'Diffie-Hellman public key has wrong parameters';
+  SNotDHPrivateKeyParameters = 'DHEngine expects DHPrivateKeyParameters';
+  SAlgorithmNotInitialized = 'agreement algorithm not initialized';
+  SSharedKeyInvalid = 'shared key cannot be 1';
+  SDHPublicKeyWeak = 'Diffie-Hellman public key is weak';
 
 type
   /// <summary>

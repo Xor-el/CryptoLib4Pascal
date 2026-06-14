@@ -40,22 +40,27 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SPoly1305Nil = 'poly1305';
-  SPoly1305MustBe128 = 'must be a 128-bit MAC';
-  SInvalidParametersFmt = 'invalid parameters passed to %s';
-  SKeyMustBeSpecified = 'Key must be specified in initial init';
-  SKeyMustBe256 = 'Key must be 256 bits';
-  SNonceMustBeBits = 'Nonce must be %d bits';
-  SCannotReuseNonceFmt = 'cannot reuse nonce for %s encryption';
-  SInvalidMacSize = 'Invalid value for MAC size: %d';
+  SPoly1305Nil = 'Poly1305 cannot be nil';
+  SPoly1305MustBeOneTwentyEight = 'must be a 128-bit MAC';
+  SInvalidParameters = 'invalid parameters passed to %s';
+  SKeyMustBeSpecified = 'key must be specified in initial init';
+  SKeyMustBeTwoFiftySix = 'key must be 256 bits';
+  SNonceMustBeBits = 'nonce must be %d bits';
+  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
+  SInvalidMacSize = 'invalid value for MAC size: %d';
   SCannotBeNegative = 'cannot be negative';
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailedFmt = 'mac check in %s failed';
-  SCannotReuseEncryption = ' cannot be reused for encryption';
-  SNeedsInit = ' needs to be initialized';
-  SLimitExceeded = 'Limit exceeded';
+  SMacCheckFailed = 'mac check in %s failed';
+  SCannotReuseEncryption = '%s cannot be reused for encryption';
+  SNeedsInit = '%s needs to be initialized';
+  SLimitExceeded = 'limit exceeded';
+  SCipherEngine = 'cipher engine';
+  SInvalidNonceOctetLength = 'invalid nonce octet length';
+  SInBytesNil = 'input bytes cannot be nil';
+  SInvalidOperationState = 'invalid operation state for current cipher state';
+  SOutBytesNil = 'output bytes cannot be nil';
 
 type
   /// <summary>
@@ -188,12 +193,12 @@ begin
   if (APoly1305 = nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SPoly1305Nil);
   if (MacSize <> APoly1305.GetMacSize()) then
-    raise EArgumentCryptoLibException.CreateRes(@SPoly1305MustBe128);
+    raise EArgumentCryptoLibException.CreateRes(@SPoly1305MustBeOneTwentyEight);
   if (AEngine = nil) then
-    raise EArgumentNilCryptoLibException.Create('cipher engine');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCipherEngine);
 
   if (ANonceBytes < 1) then
-    raise EArgumentCryptoLibException.Create('invalid nonce octet length');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidNonceOctetLength);
 
   FPoly1305 := APoly1305;
   FChaCha20 := AEngine;
@@ -223,7 +228,7 @@ var
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParametersFmt,
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters,
       [AlgorithmName]);
 
   LInitKeyParam := LChoice.KeyParameter;
@@ -248,7 +253,7 @@ begin
   else
   begin
     if (KeySize <> LInitKeyParam.KeyLength) then
-      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBe256);
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeTwoFiftySix);
   end;
 
   if (FNonceBytes <> System.Length(LInitNonce)) then
@@ -259,7 +264,7 @@ begin
     TArrayUtilities.AreEqual(FNonce, LInitNonce) then
   begin
     if (LInitKeyParam = nil) or LInitKeyParam.FixedTimeEquals(FKey) then
-      raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonceFmt,
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce,
         [AlgorithmName]);
   end;
 
@@ -329,7 +334,7 @@ procedure TChaCha20Poly1305.ProcessAadBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32);
 begin
   if (AInput = nil) then
-    raise EArgumentNilCryptoLibException.Create('inBytes');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
   if (AInOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
   if (ALen < 0) then
@@ -383,7 +388,7 @@ begin
       Exit;
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
   end;
 end;
 
@@ -393,7 +398,7 @@ var
   LResultLen, LAvailable, LInLimit1, LInLimit2: Int32;
 begin
   if (AInput = nil) then
-    raise EArgumentNilCryptoLibException.Create('inBytes');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
   if (AInOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
   if (ALen < 0) then
@@ -522,7 +527,7 @@ begin
       System.Move(AInput[AInOff], FBuf[0], FBufPos);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
   end;
 
   Result := LResultLen;
@@ -534,7 +539,7 @@ var
   LResultLen: Int32;
 begin
   if (AOutput = nil) then
-    raise EArgumentNilCryptoLibException.Create('outBytes');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOutBytesNil);
   if (AOutOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
 
@@ -561,7 +566,7 @@ begin
       FinishData(TState.DecFinal);
 
       if (not TArrayUtilities.FixedTimeEquals(MacSize, FMac, 0, FBuf, LResultLen)) then
-        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailedFmt,
+        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
           [AlgorithmName]);
     end;
     TState.EncData:
@@ -581,7 +586,7 @@ begin
       System.Move(FMac[0], AOutput[AOutOff + FBufPos], MacSize);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
   end;
 
   Reset(False, True);
@@ -609,9 +614,9 @@ begin
     TState.DecAad, TState.EncAad:
       ;
     TState.EncFinal:
-      raise EInvalidOperationCryptoLibException.Create(AlgorithmName + SCannotReuseEncryption);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SCannotReuseEncryption, [AlgorithmName]);
   else
-    raise EInvalidOperationCryptoLibException.Create(AlgorithmName + SNeedsInit);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNeedsInit, [AlgorithmName]);
   end;
 end;
 
@@ -625,9 +630,9 @@ begin
     TState.DecData, TState.EncData:
       ;
     TState.EncFinal:
-      raise EInvalidOperationCryptoLibException.Create(AlgorithmName + SCannotReuseEncryption);
+      raise EInvalidOperationCryptoLibException.CreateResFmt(@SCannotReuseEncryption, [AlgorithmName]);
   else
-    raise EInvalidOperationCryptoLibException.Create(AlgorithmName + SNeedsInit);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNeedsInit, [AlgorithmName]);
   end;
 end;
 
@@ -750,7 +755,7 @@ begin
       Exit;
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(AlgorithmName + SNeedsInit);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNeedsInit, [AlgorithmName]);
   end;
 
   if AResetCipher then

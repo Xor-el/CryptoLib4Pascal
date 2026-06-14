@@ -35,11 +35,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMuMustBe1OrMinus1 = 'mu must be 1 or -1';
-  SNoKoblitzCurve = 'No Koblitz curve (ABC), TNAF multiplication not possible';
+  SMuMustBeOneOrMinusOne = 'mu must be 1 or -1';
+  SNoKoblitzCurve = 'no Koblitz curve (ABC), TNAF multiplication not possible';
   SSiDefinedForKoblitzOnly = 'si is defined for Koblitz curves only';
-  SCofactorMustBe2Or4 = 'h (Cofactor) must be 2 or 4';
-  SOnlyAbstractF2mPointAllowed = 'Only AbstractF2mPoint can be used in WTauNafMultiplier';
+  SCofactorMustBeTwoOrFour = 'h (cofactor) must be 2 or 4';
+  SLambda0AndLambda1DifferentScale = 'lambda0 and lambda1 do not have same scale';
+  SPartModPreCompFailed = 'PartMod precomp failed';
 
 type
   TTnaf = class sealed(TObject)
@@ -273,7 +274,7 @@ begin
     Result := ALambda.V.ShiftLeft(1).Subtract(ALambda.U).Multiply(ALambda.V).Add(LS1);
   end
   else
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 end;
 
 class function TTnaf.Norm(AMu: ShortInt; const AU, AV: TSimpleBigDecimal): TSimpleBigDecimal;
@@ -296,7 +297,7 @@ begin
     LNorm := LS1.Subtract(LS2).Add(LS3);
   end
   else
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 
   Result := LNorm;
 end;
@@ -313,10 +314,10 @@ var
 begin
   LScale := ALambda0.Scale;
   if ALambda1.Scale <> LScale then
-    raise EArgumentCryptoLibException.Create('lambda0 and lambda1 do not have same scale');
+    raise EArgumentCryptoLibException.CreateRes(@SLambda0AndLambda1DifferentScale);
 
   if not ((AMu = 1) or (AMu = -1)) then
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 
   LF0 := ALambda0.Round();
   LF1 := ALambda1.Round();
@@ -419,7 +420,7 @@ var
   LTnaf: TCryptoLibShortIntArray;
 begin
   if not ((AMu = 1) or (AMu = -1)) then
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 
   LNorm := Norm(AMu, ALambda);
 
@@ -497,7 +498,7 @@ begin
   else if LA.Equals(TBigInteger.One) then
     Result := 1
   else
-    raise EArgumentCryptoLibException.Create(SNoKoblitzCurve);
+    raise EArgumentCryptoLibException.CreateRes(@SNoKoblitzCurve);
 end;
 
 class function TTnaf.GetMu(const ACurveA: IECFieldElement): ShortInt;
@@ -522,7 +523,7 @@ var
   LI: Int32;
 begin
   if not ((AMu = 1) or (AMu = -1)) then
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 
   if ADoV then
   begin
@@ -571,7 +572,7 @@ end;
 class function TTnaf.GetSi(const ACurve: IAbstractF2mCurve): TCryptoLibGenericArray<TBigInteger>;
 begin
   if not ACurve.IsKoblitz then
-    raise EArgumentCryptoLibException.Create(SSiDefinedForKoblitzOnly);
+    raise EArgumentCryptoLibException.CreateRes(@SSiDefinedForKoblitzOnly);
 
   Result := GetSi(ACurve.FieldSize,
     ACurve.A.ToBigInteger().Int32Value,
@@ -615,7 +616,7 @@ begin
       Exit(2);
   end;
 
-  raise EArgumentCryptoLibException.Create(SCofactorMustBe2Or4);
+  raise EArgumentCryptoLibException.CreateRes(@SCofactorMustBeTwoOrFour);
 end;
 
 class function TTnaf.PartModReduction(const ACurve: IAbstractF2mCurve;
@@ -631,7 +632,7 @@ var
 begin
   LCallback := TTnaf.TPartModPreCompCallback.Create(ACurve, AMu, True);
   if not Supports(ACurve.Precompute(PRECOMP_NAME, LCallback), IPartModPreCompInfo, LPreCompInfo) then
-    raise EInvalidOperationCryptoLibException.Create('PartMod precomp failed');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPartModPreCompFailed);
 
   LVm := LPreCompInfo.Lucas;
   LS0 := LPreCompInfo.S0;
@@ -741,7 +742,7 @@ var
   LT: TBigInteger;
 begin
   if not ((AMu = 1) or (AMu = -1)) then
-    raise EArgumentCryptoLibException.Create(SMuMustBe1OrMinus1);
+    raise EArgumentCryptoLibException.CreateRes(@SMuMustBeOneOrMinusOne);
 
   LNorm := Norm(AMu, ALambda);
 

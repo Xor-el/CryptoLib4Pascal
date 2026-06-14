@@ -25,6 +25,9 @@ uses
   ClpBinaryPrimitives,
   ClpCryptoLibTypes;
 
+resourcestring
+  SInvalidLength = 'invalid length';
+
 type
   /// <summary>
   /// Endian Conversion Utilities.
@@ -365,7 +368,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 4 - ALen;
   while LPos < 4 do
@@ -381,7 +384,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 0;
   while LPos < ALen do
@@ -442,7 +445,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -461,7 +464,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -538,7 +541,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 8 - ALen;
   while LPos < 8 do
@@ -554,7 +557,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 0;
   while LPos < ALen do
@@ -613,7 +616,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -632,7 +635,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -840,7 +843,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 4 - ALen;
   while LPos < 4 do
@@ -856,7 +859,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 0;
   while LPos < ALen do
@@ -917,7 +920,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -936,7 +939,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 4) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -1013,7 +1016,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 8 - ALen;
   while LPos < 8 do
@@ -1029,7 +1032,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LPos := 0;
   while LPos < ALen do
@@ -1089,7 +1092,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;
@@ -1108,7 +1111,7 @@ var
   LPos: Int32;
 begin
   if (ALen < 1) or (ALen > 8) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('len');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SInvalidLength);
 
   LResult := 0;
   LPos := 0;

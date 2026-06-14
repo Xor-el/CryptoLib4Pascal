@@ -96,7 +96,7 @@ var
   LXof: IXof;
 begin
   if AEd448PrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create(SCurve448Ed448PrivateKeyNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SCurve448Ed448PrivateKeyNil);
   LSeed := AEd448PrivateKey.GetEncoded();
   LXof := TDigestUtilities.GetDigest('SHAKE256-512') as IXof;
   System.SetLength(LHash, Ed448KeySizeBytes * 2);
@@ -114,7 +114,7 @@ var
   LY, LU, LV, LY2, LInv, LDummy: TCryptoLibUInt32Array;
 begin
   if AEd448PublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create(SCurve448Ed448PublicKeyNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SCurve448Ed448PublicKeyNil);
   LPk := AEd448PublicKey.GetEncoded();
   LY := TX448Field.Create();
   TX448Field.Decode448(LPk, 0, LY);
@@ -129,9 +129,9 @@ begin
   TX448Field.Mul(LY2, Ed448CurveParamD, LV);
   TX448Field.AddOne(LV);
   if not TX448Field.SqrtRatioVar(LU, LV, LDummy) then
-    raise EArgumentCryptoLibException.Create(SCurve448Ed448PublicKeyInvalid);
+    raise EArgumentCryptoLibException.CreateRes(@SCurve448Ed448PublicKeyInvalid);
   if TX448Field.IsZeroVar(LU) then
-    raise EArgumentCryptoLibException.Create(SCurve448Ed448PublicKeyInvalid);
+    raise EArgumentCryptoLibException.CreateRes(@SCurve448Ed448PublicKeyInvalid);
   TX448Field.Inv(LU, LInv);
   TX448Field.Mul(LY2, LInv, LU);
   TX448Field.Mul(LU, LV, LU);

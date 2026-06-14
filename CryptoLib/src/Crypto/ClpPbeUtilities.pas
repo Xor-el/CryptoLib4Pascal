@@ -60,6 +60,16 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities;
 
+resourcestring
+  SAlgorithmOidNil = 'algorithm OID cannot be nil';
+  SCipherHashAlgorithmAndRandomNil = 'cipherAlgorithm, hashAlgorithm and random must be non-nil';
+  SAlgIDNil = 'algorithm ID cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SUnknownPbeType = 'unknown PBE type: %s';
+  SInvalidObjectIdentifier = 'invalid object identifier %s';
+  SUnknownCipher = 'unknown cipher: %s';
+  SAlgorithmNotRecognized = 'algorithm %s not recognized';
+
 type
   /// <summary>
   /// PBE utilities for creating ciphers and generating cipher parameters
@@ -281,7 +291,7 @@ begin
   else if AType = OpenSsl then
     LGen := TOpenSslPbeParametersGenerator.Create()
   else
-    raise EArgumentCryptoLibException.Create('Unknown PBE type: ' + AType);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownPbeType, [AType]);
   LGen.Init(AKey, ASalt, AIterationCount);
   Result := LGen;
 end;
@@ -339,7 +349,7 @@ var
   LOidAlgorithm: IDerObjectIdentifier;
 begin
   if not TDerObjectIdentifier.TryFromID(AAlgorithm, LOidAlgorithm) then
-   raise EArgumentCryptoLibException.Create('Invalid Object Identifier ' + AAlgorithm);
+   raise EArgumentCryptoLibException.CreateResFmt(@SInvalidObjectIdentifier, [AAlgorithm]);
 
   Result := LOidAlgorithm.Equals(TNistObjectIdentifiers.IdAes128Cbc)
    or LOidAlgorithm.Equals(TNistObjectIdentifiers.IdAes192Cbc)
@@ -463,7 +473,7 @@ class function TPbeUtilities.GenerateAlgorithmParameters(const AAlgorithmOid: ID
   const ASalt: TCryptoLibByteArray; AIterationCount: Int32): IAsn1Encodable;
 begin
   if AAlgorithmOid = nil then
-    raise EArgumentNilCryptoLibException.Create('algorithmOid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmOidNil);
   Result := GenerateAlgorithmParameters(AAlgorithmOid.Id, ASalt, AIterationCount);
 end;
 
@@ -478,7 +488,7 @@ var
   LIV: TCryptoLibByteArray;
 begin
   if (ACipherAlgorithm = nil) or (AHashAlgorithm = nil) or (ARandom = nil) then
-    raise EArgumentNilCryptoLibException.Create('cipherAlgorithm, hashAlgorithm and random must be non-nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCipherHashAlgorithmAndRandomNil);
 
   if TNistObjectIdentifiers.IdAes128Cbc.Id.Equals(ACipherAlgorithm.Id) or
      TNistObjectIdentifiers.IdAes192Cbc.Id.Equals(ACipherAlgorithm.Id) or
@@ -493,7 +503,7 @@ begin
   end
   else
   begin
-    raise EArgumentCryptoLibException.Create('unknown cipher: ' + ACipherAlgorithm.Id);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownCipher, [ACipherAlgorithm.Id]);
   end;
 
   LPrf := TAlgorithmIdentifier.Create(AHashAlgorithm, TDerNull.Instance);
@@ -513,7 +523,7 @@ class function TPbeUtilities.GenerateCipherParameters(const AAlgorithmOid: IDerO
   const APbeParameters: IAsn1Encodable): ICipherParameters;
 begin
   if AAlgorithmOid = nil then
-    raise EArgumentNilCryptoLibException.Create('algorithmOid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmOidNil);
   Result := GenerateCipherParameters(AAlgorithmOid.Id, APassword, AWrongPkcs12Zero, APbeParameters);
 end;
 
@@ -527,7 +537,7 @@ class function TPbeUtilities.GenerateCipherParameters(const AAlgID: IAlgorithmId
   const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean): ICipherParameters;
 begin
   if AAlgID = nil then
-    raise EArgumentNilCryptoLibException.Create('algID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgIDNil);
 
   Result := GenerateCipherParameters(AAlgID.Algorithm.Id, APassword, AWrongPkcs12Zero, AAlgID.Parameters);
 end;
@@ -558,11 +568,11 @@ var
   LGen, LGenerator: IPbeParametersGenerator;
 begin
   if AAlgorithm = '' then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
 
   LMechanism := TCollectionUtilities.GetValueOrNull<String, String>(FAlgorithms, AAlgorithm);
   if LMechanism = '' then
-    raise ESecurityUtilityCryptoLibException.Create('Algorithm ' + AAlgorithm + ' not recognised.');
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SAlgorithmNotRecognized, [AAlgorithm]);
 
   LKeyBytes := nil;
   LSalt := nil;

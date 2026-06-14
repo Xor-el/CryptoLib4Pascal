@@ -43,9 +43,11 @@ resourcestring
   SPointNotInNormalForm = 'point not in normal form';
   SUnknownCoordinateSystem = 'unknown coordinate system';
   SUnsupportedCoordinateSystem = 'unsupported coordinate system';
-  SDetachedPointsMustBeInAffine = 'Detached points must be in affine coordinates';
+  SDetachedPointsMustBeInAffine = 'detached points must be in affine coordinates';
   SNotAProjectiveCoordinateSystem = 'not a projective coordinate system';
-  SInvalidTimesPow2Exponent = 'exponent cannot be negative';
+  SExponentCannotBeNegative = 'exponent cannot be negative';
+  SExactlyOneOfTheFieldElements = 'exactly one of the field elements is nil';
+  SCannotBeNegative = 'cannot be negative';
 
 type
   TECPoint = class abstract(TInterfacedObject, IECPoint)
@@ -286,7 +288,7 @@ begin
         TECCurveConstants.COORD_JACOBIAN_MODIFIED:
           Result := TCryptoLibGenericArray<IECFieldElement>.Create(LOne, ACurve.A);
       else
-        raise EArgumentCryptoLibException.Create(SUnknownCoordinateSystem);
+        raise EArgumentCryptoLibException.CreateRes(@SUnknownCoordinateSystem);
       end;
     end;
   end;
@@ -390,7 +392,7 @@ end;
 procedure TECPoint.CheckNormalized;
 begin
   if not IsNormalized then
-    raise EInvalidOperationCryptoLibException.Create(SPointNotInNormalForm);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotInNormalForm);
 end;
 
 function TECPoint.IsNormalized: Boolean;
@@ -442,7 +444,7 @@ begin
         Result := CreateScaledPoint(LZInv2, LZInv3);
       end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SNotAProjectiveCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SNotAProjectiveCoordinateSystem);
   end;
 end;
 
@@ -468,7 +470,7 @@ begin
         Exit(Self as IECPoint);
 
       if LCurve = nil then
-        raise EInvalidOperationCryptoLibException.Create(SDetachedPointsMustBeInAffine);
+        raise EInvalidOperationCryptoLibException.CreateRes(@SDetachedPointsMustBeInAffine);
 
       LB := LCurve.RandomFieldElementMult(TSecureRandom.MasterRandom);
       LZInv := LZ.Multiply(LB).Invert().Multiply(LB);
@@ -643,7 +645,7 @@ var
   P: IECPoint;
 begin
   if AE < 0 then
-    raise EArgumentCryptoLibException.Create(SInvalidTimesPow2Exponent);
+    raise EArgumentCryptoLibException.CreateRes(@SExponentCannotBeNegative);
   P := Self as IECPoint;
   while AE > 0 do
   begin
@@ -858,7 +860,7 @@ begin
         end;
       end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
   Rhs := X.Square().Add(A).Multiply(X).Add(B);
   Result := Lhs.Equals(Rhs);
@@ -877,7 +879,7 @@ constructor TFpPoint.Create(const ACurve: IECCurve; const AX, AY: IECFieldElemen
 begin
   inherited Create(ACurve, AX, AY);
   if (AX = nil) <> (AY = nil) then
-    raise EArgumentCryptoLibException.Create('Exactly one of the field elements is null');
+    raise EArgumentCryptoLibException.CreateRes(@SExactlyOneOfTheFieldElements);
 end;
 
 constructor TFpPoint.Create(const ACurve: IECCurve; const AX, AY: IECFieldElement;
@@ -1193,7 +1195,7 @@ begin
       Result := TFpPoint.Create(LCurve, X3, Y3, LZs);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1310,7 +1312,7 @@ begin
       Result := TwiceJacobianModified(True);
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1438,7 +1440,7 @@ var
   LZInv, LZInv2, LZInv3: IECFieldElement;
 begin
   if AE < 0 then
-    raise EArgumentCryptoLibException.Create('cannot be negative');
+    raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
   if (AE = 0) or IsInfinity then
     Exit(Self as IECPoint);
   if AE = 1 then
@@ -1530,7 +1532,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z1, W1));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1619,7 +1621,7 @@ begin
         end;
       end;
     else
-      raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+      raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
     end;
 
     Rhs := X.Add(A).Multiply(X.Square()).Add(B);
@@ -1790,7 +1792,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ1.Square())) as IAbstractF2mPoint;
     end
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1824,7 +1826,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ1.SquarePow(APow))) as IAbstractF2mPoint;
     end
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -1852,7 +1854,7 @@ constructor TF2mPoint.Create(const ACurve: IECCurve; const AX, AY: IECFieldEleme
 begin
   inherited Create(ACurve, AX, AY);
   if (AX = nil) <> (AY = nil) then
-    raise EArgumentCryptoLibException.Create('Exactly one of the field elements is null');
+    raise EArgumentCryptoLibException.CreateRes(@SExactlyOneOfTheFieldElements);
   if AX <> nil then
   begin
     TF2mFieldElement.CheckFieldElements(AX, AY);
@@ -2085,7 +2087,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z3));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -2185,7 +2187,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(Z3));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 
@@ -2296,7 +2298,7 @@ begin
         TCryptoLibGenericArray<IECFieldElement>.Create(LZ));
     end;
   else
-    raise EInvalidOperationCryptoLibException.Create(SUnsupportedCoordinateSystem);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedCoordinateSystem);
   end;
 end;
 

@@ -30,9 +30,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SEngineNil = 'Engine Cannot be Nil';
-  SCipherNotInitialised = 'Cipher not initialised';
-  SIesCipherParametersRequired = 'IIesCipherParameters required for Init';
+  SEngineNil = 'engine cannot be nil';
+  SCipherNotInitialized = 'cipher not initialized';
+  SIesCipherParametersRequired = 'IIesCipherParameters required for init';
+  SInputNil = 'input cannot be nil';
+  SInvalidOffsetLength = 'invalid offset/length';
 
 type
   TBufferedIesCipher = class sealed(TBufferedCipherBase)
@@ -119,7 +121,7 @@ var
   LBaseLen: Int32;
 begin
   if FEngine = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SCipherNotInitialised);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SCipherNotInitialized);
   LBaseLen := AInputLen + FBufferLen;
   if FForEncryption then
     Result := LBaseLen + SDefaultMacSize
@@ -149,10 +151,10 @@ var
   LNewLen: Int32;
 begin
   if AInput = nil then
-    raise EArgumentNilCryptoLibException.Create('input');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   if (AInOff < 0) or (ALength < 0) or
     (AInOff + ALength > System.Length(AInput)) then
-    raise EArgumentCryptoLibException.Create('invalid offset/length');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidOffsetLength);
   if ALength = 0 then
   begin
     Result := nil;

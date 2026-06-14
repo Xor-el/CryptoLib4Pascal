@@ -31,8 +31,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMalformedSignature = 'Malformed signature, "%s"';
-  SValueOutOfRange = 'Value out of range, "%s"';
+  SMalformedSignature = 'malformed signature, %s';
+  SValueOutOfRange = 'value out of range, %s';
 
 type
   TStandardDsaEncoding = class(TInterfacedObject, IDsaEncoding,

@@ -48,6 +48,9 @@ uses
   ClpIX9ECAsn1Objects,
   ClpIGlvTypeBParameters;
 
+resourcestring
+  SCurveOidNotRegistered = 'curve OID must be registered before defining alias';
+
 type
   /// <summary>Elliptic curve registry for various customized curve implementations (Custom/Sec subset).</summary>
   TCustomNamedCurves = class sealed(TObject)
@@ -139,7 +142,7 @@ class procedure TCustomNamedCurves.DefineCurveAlias(const AName: String;
   const AOid: IDerObjectIdentifier);
 begin
   if not FCurves.ContainsKey(AOid) then
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SCurveOidNotRegistered);
   FObjIds.Add(AName, AOid);
 end;
 

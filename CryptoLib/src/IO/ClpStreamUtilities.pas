@@ -26,6 +26,12 @@ uses
   ClpCryptoLibTypes,
   ClpStreams;
 
+resourcestring
+  SBufferCannotBeNil = 'buffer cannot be nil';
+  SOffsetOutOfRange = 'offset out of range';
+  SCountOutOfRange = 'count out of range';
+  SOutputBufferTooSmall = 'output buffer too small';
+
 type
   /// <summary>
   /// Utility class with static methods for stream operations.
@@ -228,13 +234,13 @@ var
   LAvailable, LRemaining: Int32;
 begin
   if ABuffer = nil then
-    raise EArgumentNilCryptoLibException.Create('Buffer cannot be nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SBufferCannotBeNil);
   LAvailable := System.Length(ABuffer) - AOffset;
   if ((AOffset or LAvailable) < 0) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('Offset out of range');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SOffsetOutOfRange);
   LRemaining := LAvailable - ACount;
   if ((ACount or LRemaining) < 0) then
-    raise EArgumentOutOfRangeCryptoLibException.Create('Count out of range');
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCountOutOfRange);
 end;
 
 class function TStreamUtilities.WriteBufTo(const ABuf: TMemoryStream;

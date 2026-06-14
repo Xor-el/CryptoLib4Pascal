@@ -31,13 +31,13 @@ uses
 
 resourcestring
   SLinuxGetRandomError =
-    'An Error Occurred while generating random data using getRandom API';
+    'an error occurred while generating random data using getRandom API';
 
+type
   /// <summary>
   /// Linux OS random source provider.
   /// Implements Linux getrandom and /dev/urandom fallback
   /// </summary>
-type
   TLinuxRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

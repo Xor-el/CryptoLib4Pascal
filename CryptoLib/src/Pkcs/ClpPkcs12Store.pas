@@ -72,23 +72,28 @@ uses
   ClpIPkcs12Store;
 
 resourcestring
-  SInputNil = 'input';
-  SMacInvalid = 'PKCS12 key store MAC invalid - wrong password or corrupted file.';
+  SInputNil = 'input cannot be nil';
+  SMacInvalid = 'PKCS12 key store MAC invalid - wrong password or corrupted file';
   SPasswordNotNeeded = 'password supplied for keystore that does not require one';
-  SUnsupportedCertType = 'Unsupported certificate type: %s';
-  SAliasNil = 'alias';
-  SCertEntryNil = 'certEntry';
-  SKeyEntryNil = 'keyEntry';
-  SKeyEntryWithName = 'There is a key entry with the name %s.';
-  SNoChainForPrivateKey = 'No certificate chain for private key';
-  SUnknownEncryption = 'Unknown encryption algorithm: %s';
+  SUnsupportedCertType = 'unsupported certificate type: %s';
+  SAliasNil = 'alias cannot be nil';
+  SCertEntryNil = 'certificate entry cannot be nil';
+  SKeyEntryNil = 'key entry cannot be nil';
+  SKeyEntryWithName = 'there is a key entry with the name %s';
+  SNoChainForPrivateKey = 'no certificate chain for private key';
+  SUnknownEncryption = 'unknown encryption algorithm: %s';
   SAttemptAddExistingAttr = 'attempt to add existing attribute with different value';
-  SStreamNil = 'stream';
-  SRandomNil = 'random';
+  SStreamNil = 'stream cannot be nil';
+  SRandomNil = 'random cannot be nil';
+  SMacAlgIDNil = 'MAC algorithm ID cannot be nil';
+  SCertNil = 'certificate cannot be nil';
+  SNewFriendlyNameNil = 'new friendly name cannot be nil';
+  SPbeEngineForMacNotFound = 'PBE engine for MAC not found for %s';
 
 type
   /// <summary>
-  /// PKCS#12 store for keys and certificates. Load/Save PFX (PKCS#12) and manage aliases.
+  /// In-memory PKCS#12 keystore (PFX) as defined in RFC 7292. Loads and saves password-protected bags of
+  /// private keys and X.509 certificates. Create instances via <see cref="TPkcs12StoreBuilder"/>.
   /// </summary>
   TPkcs12Store = class sealed(TInterfacedObject, IPkcs12Store)
   private
@@ -182,7 +187,10 @@ type
     const
       DefaultIterations = 1024;
       DefaultSaltSize = 20;
-    /// <summary>When True, ignore useless password.</summary>
+    /// <summary>
+    /// When <c>true</c>, suppresses the error raised when <see cref="Load"/> is called with a password
+    /// but the file does not require one.
+    /// </summary>
     class property IgnoreUselessPassword: Boolean read FIgnoreUselessPassword write FIgnoreUselessPassword;
     /// <summary>Calculate PBE MAC for PKCS#12 (exposed for Pkcs12Utilities).</summary>
     class function CalculatePbeMac(const AMacAlgID: IAlgorithmIdentifier;
@@ -205,22 +213,130 @@ type
       AMacIterations: Int32; AKeySaltSize: Int32;
       ACertSaltSize: Int32; AMacSaltSize: Int32); overload;
     destructor Destroy; override;
+    /// <summary>
+    /// Loads a PKCS#12 file from a stream, populating this store with keys and certificates.
+    /// </summary>
+    /// <param name="AInput">The stream containing the PKCS#12 PFX structure.</param>
+    /// <param name="APassword">
+    /// The password used to verify the MAC and decrypt shrouded key bags, or <c>nil</c> if none is required.
+    /// </param>
+    /// <exception cref="EArgumentNilCryptoLibException">
+    /// <paramref name="AInput"/> is <c>nil</c>.
+    /// </exception>
+    /// <exception cref="EIOCryptoLibException">
+    /// The MAC verification failed, a password was supplied when none is required (unless
+    /// <see cref="IgnoreUselessPassword"/> is <c>true</c>), or bag attributes conflict.
+    /// </exception>
     procedure Load(const AInput: TStream; const APassword: TCryptoLibCharArray);
+    /// <summary>
+    /// Returns the private-key entry for the given alias, or <c>nil</c> if not present.
+    /// </summary>
+    /// <param name="AAlias">The entry alias (friendly name or local key id hex string).</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function GetKey(const AAlias: String): IAsymmetricKeyEntry;
+    /// <summary>
+    /// Returns <c>true</c> if the alias refers to a certificate-only entry (no private key).
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function IsCertificateEntry(const AAlias: String): Boolean;
+    /// <summary>
+    /// Returns <c>true</c> if the alias refers to a private-key entry.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function IsKeyEntry(const AAlias: String): Boolean;
+    /// <summary>
+    /// Returns <c>true</c> if an entry exists under the given alias.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function ContainsAlias(const AAlias: String): Boolean;
+    /// <summary>
+    /// Returns the certificate entry for the alias — either a certificate-only entry or the end-entity
+    /// certificate associated with a private-key alias.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <returns>The certificate entry, or <c>nil</c> if not found.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function GetCertificate(const AAlias: String): IX509CertificateEntry;
+    /// <summary>
+    /// Finds the alias of the first entry whose certificate equals <paramref name="ACert"/>.
+    /// </summary>
+    /// <param name="ACert">The certificate to search for.</param>
+    /// <returns>The alias, or an empty string if not found.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="ACert"/> is <c>nil</c>.</exception>
     function GetCertificateAlias(const ACert: IX509Certificate): String;
+    /// <summary>
+    /// Builds the certificate chain for a private-key alias by following Authority Key Identifier
+    /// or issuer/subject matching.
+    /// </summary>
+    /// <param name="AAlias">The private-key alias.</param>
+    /// <returns>The chain from end entity to root, or <c>nil</c> if the alias is not a key entry.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     function GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>;
+    /// <summary>
+    /// Adds or replaces a certificate-only entry under the given alias.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <param name="ACertEntry">The certificate entry to store.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">
+    /// <paramref name="AAlias"/> is empty or <paramref name="ACertEntry"/> is <c>nil</c>.
+    /// </exception>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// A private-key entry already exists under <paramref name="AAlias"/>.
+    /// </exception>
     procedure SetCertificateEntry(const AAlias: String; const ACertEntry: IX509CertificateEntry);
+    /// <summary>
+    /// Renames an entry by updating its PKCS#9 friendly name and re-keying internal maps.
+    /// </summary>
+    /// <param name="AAlias">The current alias.</param>
+    /// <param name="ANewFriendlyName">The new friendly name.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">
+    /// <paramref name="AAlias"/> is empty or <paramref name="ANewFriendlyName"/> is empty.
+    /// </exception>
     procedure SetFriendlyName(const AAlias: String; const ANewFriendlyName: String);
+    /// <summary>
+    /// Adds or replaces a private-key entry and optional certificate chain under the given alias.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <param name="AKeyEntry">The private-key entry.</param>
+    /// <param name="AChain">
+    /// The certificate chain for the key (required when <paramref name="AKeyEntry"/> holds a private key).
+    /// </param>
+    /// <exception cref="EArgumentNilCryptoLibException">
+    /// <paramref name="AAlias"/> is empty or <paramref name="AKeyEntry"/> is <c>nil</c>.
+    /// </exception>
+    /// <exception cref="EArgumentCryptoLibException">
+    /// A private key was supplied without a certificate chain.
+    /// </exception>
     procedure SetKeyEntry(const AAlias: String; const AKeyEntry: IAsymmetricKeyEntry;
       const AChain: TCryptoLibGenericArray<IX509CertificateEntry>);
+    /// <summary>Removes the entry (certificate and/or key) for the given alias.</summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
     procedure DeleteEntry(const AAlias: String);
+    /// <summary>
+    /// Returns <c>true</c> if the alias refers to an entry assignable to <paramref name="AEntryType"/>.
+    /// </summary>
+    /// <param name="AAlias">The entry alias.</param>
+    /// <param name="AEntryType"><see cref="IX509CertificateEntry"/> or <see cref="IAsymmetricKeyEntry"/>.</param>
     function IsEntryOfType(const AAlias: String; AEntryType: PTypeInfo): Boolean;
+    /// <summary>
+    /// Writes this store as a PKCS#12 PFX structure to a stream.
+    /// </summary>
+    /// <param name="AStream">The output stream.</param>
+    /// <param name="APassword">
+    /// The password used to encrypt shrouded key bags and the integrity MAC, or <c>nil</c> for unencrypted keys.
+    /// </param>
+    /// <param name="ARandom">Randomness source for salts and IVs.</param>
+    /// <exception cref="EArgumentNilCryptoLibException">
+    /// <paramref name="AStream"/> or <paramref name="ARandom"/> is <c>nil</c>.
+    /// </exception>
     procedure Save(const AStream: TStream; const APassword: TCryptoLibCharArray; const ARandom: ISecureRandom);
+    /// <summary>Gets the number of distinct aliases in this store.</summary>
     property Count: Int32 read GetCount;
+    /// <summary>Gets all aliases in this store (union of certificate and key aliases).</summary>
     property Aliases: TCryptoLibStringArray read GetAliases;
   end;
 
@@ -536,13 +652,13 @@ var
   LEngine: TValue;
 begin
   if AMacAlgID = nil then
-    raise EArgumentNilCryptoLibException.Create('macAlgID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SMacAlgIDNil);
   LMacAlgOid := AMacAlgID.Algorithm;
   LPbeParameters := TPbeUtilities.GenerateAlgorithmParameters(LMacAlgOid, ASalt, AIterations);
   LCipherParameters := TPbeUtilities.GenerateCipherParameters(LMacAlgOid, APassword, AWrongPkcs12Zero, LPbeParameters);
   LEngine := TPbeUtilities.CreateEngine(LMacAlgOid);
   if not (LEngine.TryGetAsType<IMac>(LMac)) or (LMac = nil) then
-    raise ECryptoLibException.Create('PBE engine for MAC not found for ' + LMacAlgOid.Id);
+    raise ECryptoLibException.CreateResFmt(@SPbeEngineForMacNotFound, [LMacAlgOid.Id]);
   LMac.Init(LCipherParameters);
   Result := TMacUtilities.DoFinal(LMac, AData);
 end;
@@ -570,7 +686,7 @@ var
 begin
   LEngine := TPbeUtilities.CreateEngine(AAlgID);
   if not (LEngine.TryGetAsType<IBufferedCipher>(LCipher)) or (LCipher = nil) then
-    raise ECryptoLibException.Create(Format(SUnknownEncryption, [AAlgID.Algorithm.Id]));
+    raise ECryptoLibException.CreateResFmt(@SUnknownEncryption, [AAlgID.Algorithm.Id]);
   if TPkcsObjectIdentifiers.IdPbeS2.Equals(AAlgID.Algorithm) then
   begin
     AWrongPkcs12Zero := False;
@@ -617,7 +733,7 @@ begin
       if LAttributes.TryGetValue(LAOid, LExisting) then
       begin
         if not LExisting.Equals(LAttr) then
-          raise EIOCryptoLibException.Create(SAttemptAddExistingAttr);
+          raise EIOCryptoLibException.CreateRes(@SAttemptAddExistingAttr);
       end
       else
         LAttributes.Add(LAOid, LAttr);
@@ -692,7 +808,7 @@ var
   LUnmarkedKeyEntry: IAsymmetricKeyEntry;
 begin
   if AInput = nil then
-    raise EArgumentNilCryptoLibException.Create(SInputNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   AInput.Position := 0;
   SetLength(LBytes, AInput.Size);
   if AInput.Size > 0 then
@@ -712,7 +828,7 @@ begin
       if (System.Length(APassword) = 0) and VerifyPbeMac(LMacData, APassword, True, LData) then
         LWrongPkcs12Zero := True
       else
-        raise EIOCryptoLibException.Create(SMacInvalid);
+        raise EIOCryptoLibException.CreateRes(@SMacInvalid);
     end;
   end;
   ClearKeys;
@@ -766,7 +882,7 @@ begin
       LSafeBag := LCertBags[LI];
       LCertBag := TCertBag.GetInstance(LSafeBag.BagValueEncodable);
       if not TPkcsObjectIdentifiers.X509Certificate.Equals(LCertBag.CertID) then
-        raise ECryptoLibException.Create(Format(SUnsupportedCertType, [LCertBag.CertID.Id]));
+        raise ECryptoLibException.CreateResFmt(@SUnsupportedCertType, [LCertBag.CertID.Id]);
       LCertValue := TAsn1OctetString.GetInstance(LCertBag.CertValueEncodable);
       LCert := TX509Certificate.Create(LCertValue.GetOctets());
       LAttributes := TDictionary<IDerObjectIdentifier, IAsn1Encodable>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -791,7 +907,7 @@ begin
                 Continue;
             end;
             if not LExisting.Equals(LAttr) then
-              raise EIOCryptoLibException.Create(SAttemptAddExistingAttr);
+              raise EIOCryptoLibException.CreateRes(@SAttemptAddExistingAttr);
           end
           else
             LAttributes.Add(LAOid, LAttr);
@@ -831,7 +947,7 @@ begin
     begin
       LIgnore := FIgnoreUselessPassword;
       if not LIgnore then
-        raise EIOCryptoLibException.Create(SPasswordNotNeeded);
+        raise EIOCryptoLibException.CreateRes(@SPasswordNotNeeded);
     end;
   finally
     LCertBags.Free;
@@ -841,21 +957,21 @@ end;
 function TPkcs12Store.GetKey(const AAlias: String): IAsymmetricKeyEntry;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   Result := TCollectionUtilities.GetValueOrNull<String, IAsymmetricKeyEntry>(FKeys, AAlias);
 end;
 
 function TPkcs12Store.IsCertificateEntry(const AAlias: String): Boolean;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   Result := FCerts.ContainsKey(AAlias) and not FKeys.ContainsKey(AAlias);
 end;
 
 function TPkcs12Store.IsKeyEntry(const AAlias: String): Boolean;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   Result := FKeys.ContainsKey(AAlias);
 end;
 
@@ -879,7 +995,7 @@ end;
 function TPkcs12Store.ContainsAlias(const AAlias: String): Boolean;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   Result := FCerts.ContainsKey(AAlias) or FKeys.ContainsKey(AAlias);
 end;
 
@@ -889,7 +1005,7 @@ var
   LLocalID: String;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if FCerts.TryGetValue(AAlias, Result) then
     Exit;
   LKeyCertsKey := AAlias;
@@ -903,7 +1019,7 @@ var
   LEntry: TPair<String, IX509CertificateEntry>;
 begin
   if ACert = nil then
-    raise EArgumentNilCryptoLibException.Create('cert');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertNil);
   for LEntry in FCerts do
     if LEntry.Value.Certificate.Equals(ACert) then
     begin
@@ -934,7 +1050,7 @@ var
   LCert: IX509Certificate;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if not IsKeyEntry(AAlias) then
   begin
     Result := nil;
@@ -1005,11 +1121,11 @@ var
   LCertID: TCertID;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if ACertEntry = nil then
-    raise EArgumentNilCryptoLibException.Create(SCertEntryNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertEntryNil);
   if FKeys.ContainsKey(AAlias) then
-    raise EArgumentCryptoLibException.Create(Format(SKeyEntryWithName, [AAlias]));
+    raise EArgumentCryptoLibException.CreateResFmt(@SKeyEntryWithName, [AAlias]);
   MapCert(AAlias, ACertEntry);
   LCertID := TCertID.Create(ACertEntry);
   MapChainCert(LCertID, ACertEntry);
@@ -1024,9 +1140,9 @@ var
   LKeyCertEntry: IX509CertificateEntry;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if ANewFriendlyName = '' then
-    raise EArgumentNilCryptoLibException.Create('newFriendlyName');
+    raise EArgumentNilCryptoLibException.CreateRes(@SNewFriendlyNameNil);
   if SameText(AAlias, ANewFriendlyName) or FOverwriteFriendlyName then
     Exit;
   if TCollectionUtilities.Remove<String, IX509CertificateEntry>(FCerts, AAlias, LCertEntry) then
@@ -1064,12 +1180,12 @@ var
   LCertID: TCertID;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if AKeyEntry = nil then
-    raise EArgumentNilCryptoLibException.Create(SKeyEntryNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyEntryNil);
   LChainProvided := (AChain <> nil) and (System.Length(AChain) > 0);
   if AKeyEntry.Key.IsPrivate and not LChainProvided then
-    raise EArgumentCryptoLibException.Create(SNoChainForPrivateKey);
+    raise EArgumentCryptoLibException.CreateRes(@SNoChainForPrivateKey);
   if FKeys.ContainsKey(AAlias) then
     DeleteEntry(AAlias);
   MapKey(AAlias, AKeyEntry);
@@ -1119,7 +1235,7 @@ end;
 procedure TPkcs12Store.DeleteEntry(const AAlias: String);
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   DeleteCertsEntry(AAlias);
   DeleteKeysEntry(AAlias);
 end;
@@ -1127,7 +1243,7 @@ end;
 function TPkcs12Store.IsEntryOfType(const AAlias: String; AEntryType: PTypeInfo): Boolean;
 begin
   if AAlias = '' then
-    raise EArgumentNilCryptoLibException.Create(SAliasNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
   if AEntryType = nil then
     Result := False
   else if AEntryType = TypeInfo(IX509CertificateEntry) then
@@ -1224,9 +1340,9 @@ var
   LEffectiveKeyPrfAlgorithm, LEffectiveCertPrfAlgorithm, LEffectiveMacDigestAlgorithm: IDerObjectIdentifier;
 begin
   if AStream = nil then
-    raise EArgumentNilCryptoLibException.Create(SStreamNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SStreamNil);
   if ARandom = nil then
-    raise EArgumentNilCryptoLibException.Create(SRandomNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
 
   LEffectiveKeyPrfAlgorithm := FKeyPrfAlgorithm;
   LEffectiveCertPrfAlgorithm := FCertPrfAlgorithm;

@@ -28,9 +28,9 @@ uses
 
 resourcestring
   SRandomNumberGeneratorOutputBufferNil =
-    'Random Number Generator Output Buffer Cannot Be Nil';
+    'random number generator output buffer cannot be nil';
   SRandomSourceProviderNil =
-    'Random Source Provider Cannot Be Nil';
+    'random source provider cannot be nil';
 
 type
   TRandomNumberGenerator = class abstract(TInterfacedObject, IRandomNumberGenerator)

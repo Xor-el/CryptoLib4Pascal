@@ -30,8 +30,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   /// <summary>

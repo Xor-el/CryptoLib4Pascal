@@ -74,18 +74,20 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SUnrecognisedObject = 'unrecognised object: %s';
+  SUnrecognizedObject = 'unrecognized object: %s';
   SProblemParsingCert = 'problem parsing cert: %s';
-  SProblemParsingPkcs7 = 'problem parsing PKCS7 object: %s';
-  SMalformedSequenceRsa = 'malformed sequence in RSA private key';
-  SMalformedSequenceDsa = 'malformed sequence in DSA private key';
+  SProblemParsingPkcs7 = 'problem parsing PKCS#7 object: %s';
+  SMalformedSequence = 'malformed sequence in %s private key';
+  SWrongVersionDsa = 'wrong version for DSA private key';
   SProblemCreatingPrivateKey = 'problem creating %s private key: %s';
-  SUnknownKeyType = 'Unknown key type: %s';
-  SEncryptedPrivateKeyNotSupported = 'Encrypted private key is not supported';
-  SNoPasswordFinderSpecified = 'No password finder specified, but a password is required';
-  SPasswordIsNull = 'Password is null, but a password is required';
+  SUnknownKeyType = 'unknown key type: %s';
+  SEncryptedPrivateKeyNotSupported = 'encrypted private key is not supported';
+  SNoPasswordFinderSpecified = 'no password finder specified, but a password is required';
+  SPasswordIsNil = 'password is nil, but a password is required';
   SMissingDekInfo = 'missing DEK-info';
   SProblemExtractingECParams = 'exception extracting EC named curve: %s';
+  SExpectedTypeEndingWithPrivateKey = 'expected type ending with PRIVATE KEY';
+  SEcPrivateKeyExpected = 'EC private key expected';
 
 type
   /// <summary>
@@ -195,7 +197,7 @@ begin
     Exit;
   end;
 
-  raise EIOCryptoLibException.CreateResFmt(@SUnrecognisedObject, [LType]);
+  raise EIOCryptoLibException.CreateResFmt(@SUnrecognizedObject, [LType]);
 end;
 
 function TOpenSslPemReader.ReadECParameters(const APemObject: IPemObject): IX962Parameters;
@@ -277,7 +279,7 @@ var
   LSeq: IAsn1Sequence;
   LRsa: IRsaPrivateKeyStructure;
   LPubSpec, LPrivSpec: IAsymmetricKeyParameter;
-  LP, LQ, LG, LY, LX: IDerInteger;
+  LP, LQ, LG, LY, LX, LV: IDerInteger;
   LDsaParams: IDsaParameters;
   LPKey: IECPrivateKeyStructure;
   LAlgId: IAlgorithmIdentifier;
@@ -292,7 +294,7 @@ var
   LIV: TCryptoLibByteArray;
 begin
   if not TStringUtilities.EndsWith(APemObject.&Type, 'PRIVATE KEY') then
-    raise EArgumentCryptoLibException.Create('Expected type ending with PRIVATE KEY');
+    raise EArgumentCryptoLibException.CreateRes(@SExpectedTypeEndingWithPrivateKey);
 
   LType := TStringUtilities.Trim(TStringUtilities.Substring(APemObject.&Type, 1,
     Length(APemObject.&Type) - Length('PRIVATE KEY')));
@@ -310,18 +312,18 @@ begin
     if LProcType = '4,ENCRYPTED' then
     begin
       if FPasswordFinder = nil then
-        raise EArgumentCryptoLibException.Create(SNoPasswordFinderSpecified);
+        raise EArgumentCryptoLibException.CreateRes(@SNoPasswordFinderSpecified);
 
       LPasswordChars := FPasswordFinder.GetPassword();
       if (LPasswordChars = nil) then
-        raise EArgumentCryptoLibException.Create(SPasswordIsNull);
+        raise EArgumentCryptoLibException.CreateRes(@SPasswordIsNil);
 
       if not LFields.TryGetValue('DEK-Info', LDekInfo) then
-        raise EPemCryptoLibException.Create(SMissingDekInfo);
+        raise EPemCryptoLibException.CreateRes(@SMissingDekInfo);
 
       LTokens := TStringUtilities.SplitString(LDekInfo, ',');
       if System.Length(LTokens) < 2 then
-        raise EPemCryptoLibException.Create(SMissingDekInfo);
+        raise EPemCryptoLibException.CreateRes(@SMissingDekInfo);
 
       LDekAlgName := TStringUtilities.Trim(LTokens[0]);
       LIV := THexEncoder.Decode(TStringUtilities.Trim(LTokens[1]));
@@ -335,7 +337,7 @@ begin
       if LType = 'RSA' then
       begin
         if LSeq.Count <> 9 then
-          raise EPemCryptoLibException.Create(SMalformedSequenceRsa);
+          raise EPemCryptoLibException.CreateResFmt(@SMalformedSequence, ['RSA']);
 
         LRsa := TRsaPrivateKeyStructure.GetInstance(LSeq);
 
@@ -353,7 +355,11 @@ begin
       if LType = 'DSA' then
       begin
         if LSeq.Count <> 6 then
-          raise EPemCryptoLibException.Create(SMalformedSequenceDsa);
+          raise EPemCryptoLibException.CreateResFmt(@SMalformedSequence, ['DSA']);
+
+        LV := TDerInteger.GetInstance(LSeq[0]);
+        if not LV.HasValue(0) then
+          raise EPemCryptoLibException.CreateRes(@SWrongVersionDsa);
 
         LP := TDerInteger.GetInstance(LSeq[1]);
         LQ := TDerInteger.GetInstance(LSeq[2]);
@@ -388,7 +394,7 @@ begin
         else
         begin
           if not Supports(LPrivSpec, IECPrivateKeyParameters, LECPriv) then
-            raise EPemGenerationCryptoLibException.Create('EC private key expected');
+            raise EPemGenerationCryptoLibException.CreateRes(@SEcPrivateKeyExpected);
           LPubSpec := TECKeyPairGenerator.GetCorrespondingPublicKey(LECPriv);
         end;
 
@@ -400,10 +406,10 @@ begin
       if LType = 'ENCRYPTED' then
       begin
         if FPasswordFinder = nil then
-          raise EArgumentCryptoLibException.Create(SNoPasswordFinderSpecified);
+          raise EArgumentCryptoLibException.CreateRes(@SNoPasswordFinderSpecified);
         LPasswordChars := FPasswordFinder.GetPassword();
         if LPasswordChars = nil then
-          raise EArgumentCryptoLibException.Create(SPasswordIsNull);
+          raise EArgumentCryptoLibException.CreateRes(@SPasswordIsNil);
         Result := TValue.From<IAsymmetricKeyParameter>(
           TPrivateKeyFactory.DecryptKey(LPasswordChars, TEncryptedPrivateKeyInfo.GetInstance(LSeq)));
         Exit;

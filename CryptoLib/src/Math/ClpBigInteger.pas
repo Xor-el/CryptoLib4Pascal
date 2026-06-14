@@ -31,16 +31,24 @@ uses
   ClpIRandom;
 
 resourcestring
-  SZeroLengthBigInteger = 'Zero length BigInteger';
+  SZeroLengthBigInteger = 'zero length BigInteger';
   SSignBytesMismatch = 'sign value incompatible with magnitude (expected all-zero bytes when sign is zero)';
-  SInvalidSignValue = 'Invalid sign value';
-  SInvalidRadix = 'Only bases 2, 8, 10, or 16 allowed';
+  SInvalidSignValue = 'invalid sign value';
+  SInvalidRadix = 'only bases 2, 8, 10, or 16 allowed';
   SBigIntegerOutOfIntRange = 'BigInteger out of int range';
   SBigIntegerOutOfLongRange = 'BigInteger out of long range';
-  SModulusMustBePositive = 'Modulus must be positive';
-  SBitAddressLessThanZero = 'Bit address less than zero';
+  SModulusMustBePositive = 'modulus must be positive';
+  SBitAddressLessThanZero = 'bit address less than zero';
   SSizeInBitsMustBeNonNegative = 'sizeInBits must be non-negative';
-  SBitLengthLessThanTwo = 'bitLength < 2';
+  SBitLengthLessThanTwo = 'bitLength must be at least 2';
+  SDivisionByZeroError = 'division by zero';
+  SNumbersNotRelativelyPrime = 'numbers not relatively prime';
+  SNegativeExponent = 'negative exponent';
+  SResultTooLarge = 'result too large';
+  SNMustBePositiveAndOdd = 'n must be positive and odd';
+  SCannotBeCalledOnNegativeValue = 'cannot be called on a negative value';
+  SMMustBeGreaterThanZero = 'm must be greater than 0';
+  SBadCharacterInRadixString = 'bad character in radix %d string: %s';
 
 type
   /// <summary>
@@ -1367,16 +1375,16 @@ var
   LR, LRE: TBigInteger;
 begin
   if System.Length(AValue) = 0 then
-    raise EFormatCryptoLibException.Create(SZeroLengthBigInteger);
+    raise EFormatCryptoLibException.CreateRes(@SZeroLengthBigInteger);
   if not (ARadix in [2, 8, 10, 16]) then
-    raise EFormatCryptoLibException.Create(SInvalidRadix);
+    raise EFormatCryptoLibException.CreateRes(@SInvalidRadix);
   LStr := AValue;
   LIndex := 1; // Pascal strings are 1-indexed
   FSign := 1;
   if (System.Length(LStr) > 0) and (LStr[1] = '-') then
   begin
     if System.Length(LStr) = 1 then
-      raise EFormatCryptoLibException.Create(SZeroLengthBigInteger);
+      raise EFormatCryptoLibException.CreateRes(@SZeroLengthBigInteger);
     FSign := -1;
     LIndex := 2;
   end;
@@ -1418,7 +1426,7 @@ begin
     end;
   else
     // This should never be reached since we validate radix at the start
-    raise EFormatCryptoLibException.Create(SInvalidRadix);
+    raise EFormatCryptoLibException.CreateRes(@SInvalidRadix);
   end;
   LB := FZero;
   LNext := LIndex + LChunk;
@@ -1434,13 +1442,13 @@ begin
         2:
         begin
           if LUValue >= 2 then
-            raise EFormatCryptoLibException.Create('Bad character in radix 2 string: ' + LS);
+            raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, LS]);
           LB := LB.ShiftLeft(1);
         end;
         8:
         begin
           if LUValue >= 8 then
-            raise EFormatCryptoLibException.Create('Bad character in radix 8 string: ' + LS);
+            raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, LS]);
           LB := LB.ShiftLeft(3);
         end;
         16:
@@ -1567,11 +1575,11 @@ procedure TBigInteger.InitFromSignedBytes(const ASign: Int32; const ABytes: TCry
 begin
   TArrayUtilities.ValidateSegment(ABytes, AOffset, ALength);
   if (ASign < -1) or (ASign > 1) then
-    raise EFormatCryptoLibException.Create(SInvalidSignValue);
+    raise EFormatCryptoLibException.CreateRes(@SInvalidSignValue);
   if ASign = 0 then
   begin
     if not TArrayUtilities.AreAllZeroes(ABytes, AOffset, ALength) then
-      raise EFormatCryptoLibException.Create(SSignBytesMismatch);
+      raise EFormatCryptoLibException.CreateRes(@SSignBytesMismatch);
     FSign := 0;
     FMagnitude := nil;
   end
@@ -1597,7 +1605,7 @@ var
   LB: TCryptoLibByteArray;
 begin
   if ASizeInBits < 0 then
-    raise EArgumentCryptoLibException.Create(SSizeInBitsMustBeNonNegative);
+    raise EArgumentCryptoLibException.CreateRes(@SSizeInBitsMustBeNonNegative);
   FNBits := -1;
   FNBitLength := -1;
   if ASizeInBits = 0 then
@@ -1628,7 +1636,7 @@ var
   LB: TCryptoLibByteArray;
 begin
   if ABitLength < 2 then
-    raise EArithmeticCryptoLibException.Create(SBitLengthLessThanTwo);
+    raise EArithmeticCryptoLibException.CreateRes(@SBitLengthLessThanTwo);
   FSign := 1;
   FNBitLength := ABitLength;
   if ABitLength = 2 then
@@ -1939,7 +1947,7 @@ var
   LMag: TCryptoLibUInt32Array;
 begin
   if AValue.FSign = 0 then
-    raise EArithmeticCryptoLibException.Create('Division by zero error');
+    raise EArithmeticCryptoLibException.CreateRes(@SDivisionByZeroError);
   if FSign = 0 then
   begin
     Result := FZero;
@@ -1966,7 +1974,7 @@ var
   LVal, LRem: Int32;
 begin
   if AValue.FSign = 0 then
-    raise EArithmeticCryptoLibException.Create('Division by zero error');
+    raise EArithmeticCryptoLibException.CreateRes(@SDivisionByZeroError);
   if FSign = 0 then
   begin
     Result := FZero;
@@ -2016,7 +2024,7 @@ var
   LE: Int32;
 begin
   if AValue.FSign = 0 then
-    raise EArithmeticCryptoLibException.Create('Division by zero error');
+    raise EArithmeticCryptoLibException.CreateRes(@SDivisionByZeroError);
   System.SetLength(Result, 2);
   if FSign = 0 then
   begin
@@ -2047,7 +2055,7 @@ var
   LBiggie: TBigInteger;
 begin
   if AM.FSign < 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusMustBePositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusMustBePositive);
   LBiggie := Remainder(AM);
   if LBiggie.FSign >= 0 then
     Result := LBiggie
@@ -2060,7 +2068,7 @@ var
   LD, LGcd, LX: TBigInteger;
 begin
   if AM.FSign < 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusMustBePositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusMustBePositive);
   if AM.QuickPow2Check() then
   begin
     Result := ModInversePow2(AM);
@@ -2069,7 +2077,7 @@ begin
   LD := Remainder(AM);
   LGcd := ExtEuclid(LD, AM, LX);
   if not LGcd.Equals(FOne) then
-    raise EArithmeticCryptoLibException.Create('Numbers not relatively prime.');
+    raise EArithmeticCryptoLibException.CreateRes(@SNumbersNotRelativelyPrime);
   if LX.FSign < 0 then
   begin
     LX := LX.Add(AM);
@@ -2099,7 +2107,7 @@ var
   LYAccum: TCryptoLibUInt32Array;
 begin
   if AM.FSign < 1 then
-    raise EArithmeticCryptoLibException.Create(SModulusMustBePositive);
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusMustBePositive);
   if AM.Equals(FOne) then
   begin
     Result := FZero;
@@ -2147,7 +2155,7 @@ begin
   if AExponent <= 0 then
   begin
     if AExponent < 0 then
-      raise EArithmeticCryptoLibException.Create('Negative exponent');
+      raise EArithmeticCryptoLibException.CreateRes(@SNegativeExponent);
     Result := FOne;
     Exit;
   end;
@@ -2161,7 +2169,7 @@ begin
     // This is a power of two
     // Check for overflow
     if (Int64(AExponent) * (Int64(BitLength) - 1)) > Int32.MaxValue then
-      raise EArithmeticCryptoLibException.Create('Result too large');
+      raise EArithmeticCryptoLibException.CreateRes(@SResultTooLarge);
     Result := FOne.ShiftLeft((AExponent * (BitLength - 1)));
     Exit;
   end;
@@ -2250,7 +2258,7 @@ function TBigInteger.Int32ValueExact(): Int32;
 begin
   if BitLength > 31 then
   begin
-    raise EArithmeticCryptoLibException.Create(SBigIntegerOutOfIntRange);
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfIntRange);
   end;
 
   Result := Int32Value;
@@ -2260,7 +2268,7 @@ function TBigInteger.Int64ValueExact(): Int64;
 begin
   if BitLength > 63 then
   begin
-    raise EArithmeticCryptoLibException.Create(SBigIntegerOutOfLongRange);
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerOutOfLongRange);
   end;
 
   Result := Int64Value;
@@ -2539,7 +2547,7 @@ var
   LWord: UInt32;
 begin
   if AN < 0 then
-    raise EArithmeticCryptoLibException.Create(SBitAddressLessThanZero);
+    raise EArithmeticCryptoLibException.CreateRes(@SBitAddressLessThanZero);
   if FSign < 0 then
   begin
     Result := not &Not().TestBit(AN);
@@ -2558,7 +2566,7 @@ end;
 function TBigInteger.SetBit(const AN: Int32): TBigInteger;
 begin
   if AN < 0 then
-    raise EArithmeticCryptoLibException.Create(SBitAddressLessThanZero);
+    raise EArithmeticCryptoLibException.CreateRes(@SBitAddressLessThanZero);
   if TestBit(AN) then
   begin
     Result := Self;
@@ -2576,7 +2584,7 @@ end;
 function TBigInteger.ClearBit(const AN: Int32): TBigInteger;
 begin
   if AN < 0 then
-    raise EArithmeticCryptoLibException.Create(SBitAddressLessThanZero);
+    raise EArithmeticCryptoLibException.CreateRes(@SBitAddressLessThanZero);
   if not TestBit(AN) then
   begin
     Result := Self;
@@ -2594,7 +2602,7 @@ end;
 function TBigInteger.FlipBit(const AN: Int32): TBigInteger;
 begin
   if AN < 0 then
-    raise EArithmeticCryptoLibException.Create(SBitAddressLessThanZero);
+    raise EArithmeticCryptoLibException.CreateRes(@SBitAddressLessThanZero);
   // TODO: Handle negative values and zero
   if (FSign > 0) and (AN < (BitLength - 1)) then
   begin
@@ -2659,7 +2667,7 @@ var
 begin
   // n must be positive and odd
   if (AN.FSign <= 0) or (not AN.TestBit(0)) then
-    raise EArgumentCryptoLibException.Create('n must be positive and odd');
+    raise EArgumentCryptoLibException.CreateRes(@SNMustBePositiveAndOdd);
 
   // a := a mod n (ensure 0 <= a < n)
   LA := AA.Remainder(AN);
@@ -3061,19 +3069,19 @@ begin
       2:
       begin
         if (LChar < '0') or (LChar > '1') then
-          raise EFormatCryptoLibException.Create('Bad character in radix 2 string: ' + AChunk);
+          raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, AChunk]);
         LDigit := Ord(LChar) - Ord('0');
       end;
       8:
       begin
         if (LChar < '0') or (LChar > '7') then
-          raise EFormatCryptoLibException.Create('Bad character in radix 8 string: ' + AChunk);
+          raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, AChunk]);
         LDigit := Ord(LChar) - Ord('0');
       end;
       10:
       begin
         if (LChar < '0') or (LChar > '9') then
-          raise EFormatCryptoLibException.Create('Bad character in radix 10 string: ' + AChunk);
+          raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, AChunk]);
         LDigit := Ord(LChar) - Ord('0');
       end;
       16:
@@ -3085,10 +3093,10 @@ begin
         else if (LChar >= 'a') and (LChar <= 'f') then
           LDigit := Ord(LChar) - Ord('a') + 10
         else
-          raise EFormatCryptoLibException.Create('Bad character in radix 16 string: ' + AChunk);
+          raise EFormatCryptoLibException.CreateResFmt(@SBadCharacterInRadixString, [ARadix, AChunk]);
       end;
     else
-      raise EFormatCryptoLibException.Create('Invalid radix');
+      raise EFormatCryptoLibException.CreateRes(@SInvalidRadix);
     end;
     Result := Result * UInt64(ARadix) + LDigit;
   end;
@@ -3251,7 +3259,7 @@ var
   LScale: Int32;
 begin
   if not (ARadix in [2, 8, 10, 16]) then
-    raise EFormatCryptoLibException.Create(SInvalidRadix);
+    raise EFormatCryptoLibException.CreateRes(@SInvalidRadix);
   if ((not FIsInitialized) and (FMagnitude = nil)) then
   begin
     Result := 'nil';
@@ -3387,7 +3395,7 @@ var
   LN: TBigInteger;
 begin
   if FSign < 0 then
-    raise EArithmeticCryptoLibException.Create('Cannot be called on value < 0');
+    raise EArithmeticCryptoLibException.CreateRes(@SCannotBeCalledOnNegativeValue);
   if CompareTo(FTwo) < 0 then
   begin
     Result := FTwo;
@@ -3450,7 +3458,7 @@ begin
   System.Assert(AM.BitCount = 1);
 {$ENDIF DEBUG}
   if not TestBit(0) then
-    raise EArithmeticCryptoLibException.Create('Numbers not relatively prime.');
+    raise EArithmeticCryptoLibException.CreateRes(@SNumbersNotRelativelyPrime);
   LPow := AM.BitLength - 1;
   LInv64 := Int64(TMod.Inverse64(UInt64(Int64Value)));
   if LPow < 64 then
@@ -3727,7 +3735,7 @@ begin
   System.Assert(AM > 0);
 {$ENDIF DEBUG}
   if AM <= 0 then
-    raise EArgumentCryptoLibException.Create('m must be > 0');
+    raise EArgumentCryptoLibException.CreateRes(@SMMustBeGreaterThanZero);
 
   LAcc := 0;
   for LPos := 0 to System.Pred(System.Length(FMagnitude)) do

@@ -41,6 +41,7 @@ resourcestring
   SMustHaveLengthKeySize = 'must have length %d';
   SInvalidPublicKey = 'invalid public key';
   SInvalidPrivateKey = 'invalid private key (zero or >= n)';
+  SSecp256k1CurveNotFound = 'secp256k1 curve not found';
 
 type
   TBip340SchnorrPublicKeyParameters = class sealed(TAsymmetricKeyParameter,
@@ -119,7 +120,7 @@ begin
   System.Move(ABuf[AOff], FPubKey[0], KeySize * System.SizeOf(Byte));
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
-    raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
   LDomain := TECDomainParameters.FromX9ECParameters(LX9);
   TBip340SchnorrUtilities.LiftX(LDomain, FPubKey);
 end;
@@ -174,7 +175,7 @@ begin
   begin
     LX9 := TECUtilities.FindECCurveByName('secp256k1');
     if LX9 = nil then
-      raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
     LDomain := TECDomainParameters.FromX9ECParameters(LX9);
     LD := TBigInteger.Create(1, FData).&Mod(LDomain.N);
     if (LD.SignValue = 0) or (LD.CompareTo(LDomain.N) >= 0) then
@@ -198,7 +199,7 @@ begin
   inherited Create(True);
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
-    raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
   LDomain := TECDomainParameters.FromX9ECParameters(LX9);
   LN := LDomain.N;
   System.SetLength(FData, KeySize);
@@ -230,7 +231,7 @@ begin
   System.Move(ABuf[AOff], FData[0], KeySize * System.SizeOf(Byte));
   LX9 := TECUtilities.FindECCurveByName('secp256k1');
   if LX9 = nil then
-    raise EInvalidOperationCryptoLibException.Create('secp256k1 curve not found');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SSecp256k1CurveNotFound);
   LDomain := TECDomainParameters.FromX9ECParameters(LX9);
   LD := TBigInteger.Create(1, FData).&Mod(LDomain.N);
   if (LD.SignValue = 0) or (LD.CompareTo(LDomain.N) >= 0) then

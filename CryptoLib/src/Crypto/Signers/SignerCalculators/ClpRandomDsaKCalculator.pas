@@ -28,7 +28,7 @@ uses
   ClpIRandomDsaKCalculator;
 
 resourcestring
-  SUnSupportedOperation = 'Operation not Supported';
+  SUnsupportedOperation = 'operation not supported';
 
 type
   TRandomDsaKCalculator = class(TInterfacedObject, IDsaKCalculator,
@@ -70,7 +70,7 @@ end;
 procedure TRandomDsaKCalculator.Init(const AN, AD: TBigInteger;
   const AMessage: TCryptoLibByteArray);
 begin
-  raise EInvalidOperationCryptoLibException.CreateRes(@SUnSupportedOperation);
+  raise EInvalidOperationCryptoLibException.CreateRes(@SUnsupportedOperation);
 end;
 {$ENDIF}
 

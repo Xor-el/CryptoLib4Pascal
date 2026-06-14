@@ -43,6 +43,13 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SBuildBatchSeedArraysCannotBeNil = 'BuildBatchSeed: arrays cannot be nil';
+  SBuildBatchSeedArraysMustHaveSameLength = 'BuildBatchSeed: arrays must have same length (at least 1)';
+  SBatchVerifyRequiresAtLeastOneItem = 'BatchVerify requires at least one item';
+  SPublicKeyMustBeThirtyTwoBytes = 'public key must be 32 bytes';
+  SSignatureMustBeSixtyFourBytes = 'signature must be 64 bytes';
+
 type
   /// <summary>Single entry for BIP-340 batch verification: 32-byte public key, arbitrary message, 64-byte signature.</summary>
   TBip340SchnorrVerificationEntry = record
@@ -73,11 +80,11 @@ var
   LU, LI, LOffset: Int32;
 begin
   if (APublicKeys = nil) or (AMessages = nil) or (ASignatures = nil) then
-    raise EArgumentCryptoLibException.Create('BuildBatchSeed: arrays cannot be nil');
+    raise EArgumentCryptoLibException.CreateRes(@SBuildBatchSeedArraysCannotBeNil);
 
   LU := System.Length(APublicKeys);
   if (LU < 1) or (System.Length(AMessages) <> LU) or (System.Length(ASignatures) <> LU) then
-    raise EArgumentCryptoLibException.Create('BuildBatchSeed: arrays must have same length (at least 1)');
+    raise EArgumentCryptoLibException.CreateRes(@SBuildBatchSeedArraysMustHaveSameLength);
 
   LOffset := 0;
   for LI := 0 to System.Pred(LU) do
@@ -144,17 +151,17 @@ var
   LLhs, LRhs, LNhs, LRhsNorm: IECPoint;
 begin
   if (AItems = nil) or (System.Length(AItems) < 1) then
-    raise EArgumentCryptoLibException.Create('BatchVerify requires at least one item');
+    raise EArgumentCryptoLibException.CreateRes(@SBatchVerifyRequiresAtLeastOneItem);
 
   LU := System.Length(AItems);
 
   for LI := 0 to System.Pred(LU) do
   begin
     if (System.Length(AItems[LI].PublicKey) <> TBip340SchnorrUtilities.BIP340_PUBKEY_SIZE) then
-      raise EArgumentCryptoLibException.Create('PublicKey must be 32 bytes');
+      raise EArgumentCryptoLibException.CreateRes(@SPublicKeyMustBeThirtyTwoBytes);
 
     if (System.Length(AItems[LI].Signature) <> TBip340SchnorrUtilities.BIP340_SIG_SIZE) then
-      raise EArgumentCryptoLibException.Create('Signature must be 64 bytes');
+      raise EArgumentCryptoLibException.CreateRes(@SSignatureMustBeSixtyFourBytes);
   end;
 
   LX9 := TECUtilities.FindECCurveByName('secp256k1');

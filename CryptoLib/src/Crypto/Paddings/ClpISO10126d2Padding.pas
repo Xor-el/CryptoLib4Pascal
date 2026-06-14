@@ -28,7 +28,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCorruptedPadBlock = 'Pad Block Corrupted';
+  SCorruptedPadBlock = 'pad block corrupted';
 
 type
   TISO10126d2Padding = class sealed(TInterfacedObject, IISO10126d2Padding,

@@ -35,12 +35,25 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCmsBadSequenceSize = 'Bad sequence size: %d';
-  SCmsBadIssuerAndSerialNumberSize = 'Bad sequence size: %d';
-  SCmsBadSignerInfoSequenceSize = 'Bad sequence size: %d';
-  SCmsUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SCmsBadSequenceSize = 'bad sequence size: %d';
+  SCmsUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SCmsContentTypeNil = 'CMS content type cannot be nil';
+  SCmsAsn1ElementNil = 'ASN.1 encodable element cannot be nil';
+  SCmsIssuerNil = 'CMS issuer name cannot be nil';
+  SCmsSerialNumberNil = 'CMS serial number cannot be nil';
+  SCmsIssuerAndSerialNumberNil = 'CMS issuer and serial number cannot be nil';
+  SCmsSubjectKeyIdentifierNil = 'CMS subject key identifier cannot be nil';
+  SCmsSignerIDNil = 'CMS signer identifier cannot be nil';
+  SCmsDigestAlgorithmNil = 'CMS digest algorithm cannot be nil';
+  SCmsSignatureAlgorithmNil = 'CMS signature algorithm cannot be nil';
+  SCmsSignatureNil = 'CMS signature value cannot be nil';
+  SCmsDigestAlgorithmsNil = 'CMS digest algorithms set cannot be nil';
+  SCmsEncapContentInfoNil = 'CMS encapsulated content info cannot be nil';
+  SCmsSignerInfosNil = 'CMS signer infos set cannot be nil';
+
 
 type
+
   /// <summary>
   /// CMS ContentInfo (EncapsulatedContentInfo); supports DL/BER encoding choice.
   /// </summary>
@@ -371,7 +384,7 @@ constructor TCmsContentInfo.Create(const AContentType: IDerObjectIdentifier;
 begin
   Inherited Create();
   if AContentType = nil then
-    raise EArgumentNilCryptoLibException.Create('contentType');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsContentTypeNil);
   FContentType := AContentType;
   FContent := AContent;
   FIsDefiniteLength := IsDLContent(AContent);
@@ -447,7 +460,7 @@ var
   LSeq: IAsn1Sequence;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
   if Supports(AElement, ICmsIssuerAndSerialNumber, Result) then
     Exit;
   LSeq := TAsn1Sequence.GetOptional(AElement);
@@ -472,7 +485,7 @@ begin
   Inherited Create();
   LCount := ASeq.Count;
   if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadIssuerAndSerialNumberSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
   FIssuer := TX509Name.GetInstance(ASeq[0]);
   FSerialNumber := TDerInteger.GetInstance(ASeq[1]);
 end;
@@ -481,9 +494,9 @@ constructor TCmsIssuerAndSerialNumber.Create(const AIssuer: IX509Name; const ASe
 begin
   Inherited Create();
   if AIssuer = nil then
-    raise EArgumentNilCryptoLibException.Create('issuer');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsIssuerNil);
   if ASerialNumber = nil then
-    raise EArgumentNilCryptoLibException.Create('serialNumber');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSerialNumberNil);
   FIssuer := AIssuer;
   FSerialNumber := ASerialNumber;
 end;
@@ -550,7 +563,7 @@ var
   LTagged: IAsn1TaggedObject;
 begin
   if AElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
   if Supports(AElement, ICmsSignerIdentifier, Result) then
     Exit;
   LIssuerAndSerial := TCmsIssuerAndSerialNumber.GetOptional(AElement);
@@ -578,7 +591,7 @@ constructor TCmsSignerIdentifier.Create(const AIssuerAndSerialNumber: ICmsIssuer
 begin
   Inherited Create();
   if AIssuerAndSerialNumber = nil then
-    raise EArgumentNilCryptoLibException.Create('issuerAndSerialNumber');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsIssuerAndSerialNumberNil);
   FId := AIssuerAndSerialNumber;
 end;
 
@@ -586,7 +599,7 @@ constructor TCmsSignerIdentifier.Create(const ASubjectKeyIdentifier: IAsn1OctetS
 begin
   Inherited Create();
   if ASubjectKeyIdentifier = nil then
-    raise EArgumentNilCryptoLibException.Create('subjectKeyIdentifier');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSubjectKeyIdentifierNil);
   FId := TDerTaggedObject.Create(False, 0, ASubjectKeyIdentifier) as IAsn1Encodable;
 end;
 
@@ -656,7 +669,7 @@ begin
   Inherited Create();
   LCount := ASeq.Count;
   if (LCount < 5) or (LCount > 7) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSignerInfoSequenceSize, [LCount]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
   LPos := 0;
   FVersion := TDerInteger.GetInstance(ASeq[LPos]);
   System.Inc(LPos);
@@ -673,7 +686,7 @@ begin
   FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False,
     GetTaggedAsn1Set);
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SCmsUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
 end;
 
 class function TCmsSignerInfo.GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set;
@@ -688,13 +701,13 @@ constructor TCmsSignerInfo.Create(const ASignerID: ICmsSignerIdentifier;
 begin
   Inherited Create();
   if ASignerID = nil then
-    raise EArgumentNilCryptoLibException.Create('signerID');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSignerIDNil);
   if ADigestAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('digestAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsDigestAlgorithmNil);
   if ASignatureAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('signatureAlgorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSignatureAlgorithmNil);
   if ASignature = nil then
-    raise EArgumentNilCryptoLibException.Create('signature');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSignatureNil);
   FSignerID := ASignerID;
   FDigestAlgorithm := ADigestAlgorithm;
   FSignedAttrs := ASignedAttrs;
@@ -934,7 +947,7 @@ begin
   System.Inc(LPos);
 
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SCmsUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
 
   FDigsBer := Supports(FDigestAlgorithms, IBerSet);
   FSigsBer := Supports(FSignerInfos, IBerSet);
@@ -945,11 +958,11 @@ constructor TCmsSignedData.Create(const ADigestAlgorithms: IAsn1Set; const AEnca
 begin
   Inherited Create();
   if ADigestAlgorithms = nil then
-    raise EArgumentNilCryptoLibException.Create('digestAlgorithms');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsDigestAlgorithmsNil);
   if AEncapContentInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('contentInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsEncapContentInfoNil);
   if ASignerInfos = nil then
-    raise EArgumentNilCryptoLibException.Create('signerInfos');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsSignerInfosNil);
 
   FDigestAlgorithms := ADigestAlgorithms;
   FEncapContentInfo := AEncapContentInfo;

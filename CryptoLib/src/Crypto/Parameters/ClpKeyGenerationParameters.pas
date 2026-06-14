@@ -26,8 +26,8 @@ uses
   ClpISecureRandom;
 
 resourcestring
-  SRandomNil = 'Random Class Instance Can''t Be Nil';
-  SInvalidStrength = 'Strength Must Be Greater Than Zero But Was Given %d';
+  SRandomNil = 'random class instance cannot be nil';
+  SInvalidStrength = 'strength must be greater than zero but was given %d';
 
 type
   /// <summary>

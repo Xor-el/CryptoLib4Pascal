@@ -45,6 +45,9 @@ uses
   ClpIDigestAlgorithmFinder,
   ClpCryptoLibTypes;
 
+resourcestring
+  SDigestOidNil = 'digest OID cannot be nil';
+
 type
   /// <summary>
   /// Default implementation of IDigestAlgorithmFinder that maps signature/digest OIDs
@@ -292,7 +295,7 @@ var
   LDigestAlgorithm: IAlgorithmIdentifier;
 begin
   if ADigestOid = nil then
-    raise EArgumentNilCryptoLibException.Create('digestOid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SDigestOidNil);
 
   if FDigestOidToAlgIDs.TryGetValue(ADigestOid, LDigestAlgorithm) then
     Result := LDigestAlgorithm

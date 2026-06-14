@@ -30,6 +30,10 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes;
 
+resourcestring
+  SValueOutOfRangeForBitLength = 'value out of range for specified bit length';
+  SBitLengthMustBePositive = 'bit length must be positive';
+
 type
   TNat = class sealed
   private
@@ -1022,7 +1026,7 @@ begin
   LLen := GetLengthForBits(ABits);
   LZ := Create(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
-  raise EArgumentCryptoLibException.Create('');
+  raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
   LZ[0] := UInt32(AX.Int32Value);
   for LI := 1 to LLen - 1 do
   begin
@@ -1041,7 +1045,7 @@ begin
   LLen := GetLengthForBits64(ABits);
   LZ := Create64(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
-  raise EArgumentCryptoLibException.Create('');
+  raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
   LZ[0] := UInt64(AX.Int64Value);
   for LI := 1 to LLen - 1 do
   begin
@@ -1130,14 +1134,14 @@ end;
 class function TNat.GetLengthForBits(ABits: Int32): Int32;
 begin
   if ABits < 1 then
-  raise EArgumentCryptoLibException.Create('');
+  raise EArgumentCryptoLibException.CreateRes(@SBitLengthMustBePositive);
   Result := Int32((UInt32(ABits) + 31) shr 5);
 end;
 
 class function TNat.GetLengthForBits64(ABits: Int32): Int32;
 begin
   if ABits < 1 then
-  raise EArgumentCryptoLibException.Create('');
+  raise EArgumentCryptoLibException.CreateRes(@SBitLengthMustBePositive);
   Result := Int32((UInt32(ABits) + 63) shr 6);
 end;
 

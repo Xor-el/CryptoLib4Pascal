@@ -36,26 +36,24 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidRound = '"rounds" Must be a Positive, Even Number';
-  SInvalidKeySize = '%s Requires 128 bit or 256 bit key';
-  SMaxByteExceeded = '2^70 Byte Limit per IV; Change IV';
-  SMaxByteExceededTwo = '2^70 byte limit per IV would be exceeded; Change IV';
-  SEngineNotInitialized = '%s not Initialized';
-  SInputBuffertooShort = 'Input Buffer too Short';
-  SOutputBuffertooShort = 'Output Buffer too Short';
-  SRoundsMustbeEven = 'Number of Rounds Must be Even';
-  SIVRequired = '%s Init Requires an IV, "parameters"';
-  SInvalidIV = '%s Requires exactly %d bytes of IV';
+  SInvalidRound = 'rounds must be a positive, even number';
+  SInvalidKeySize = '%s requires 128 bit or 256 bit key';
+  SMaxByteExceeded = '2^70 byte limit per IV would be exceeded; change IV';
+  SEngineNotInitialized = '%s not initialized';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
+  SRoundsMustBeEven = 'number of rounds must be even';
+  SIVRequired = '%s init requires an IV';
+  SInvalidIV = '%s requires exactly %d bytes of IV';
   SInitError =
-    '%s Init Parameters must Contain a KeyParameter (or null for Re-Init)';
+    '%s init parameters must contain a KeyParameter (or nil for re-init)';
   SKeyParameterNullForFirstInit =
-    'KeyParameter can not be null for First Initialisation';
-  SInputStateMustBe16 = 'Salsa20 input state must be 16 UInt32 values';
-  SOutputStateMustBe16 = 'Salsa20 output buffer must be 16 UInt32 values';
-  SNotBlockAligned = '%s not in Block-Aligned State';
+    'KeyParameter cannot be nil for first initialization';
+  SInputStateMustBeSixteen = 'Salsa20 input state must be 16 UInt32 values';
+  SOutputStateMustBeSixteen = 'Salsa20 output buffer must be 16 UInt32 values';
+  SNotBlockAligned = '%s not in block-aligned state';
 
 type
-
   /// <summary>
   /// Implementation of Daniel J. Bernstein's Salsa20 stream cipher, Snuffle 2005
   /// </summary>
@@ -383,12 +381,12 @@ begin
       (@SEngineNotInitialized, [AlgorithmName]);
   end;
 
-  TCheck.DataLength(AInBytes, AInOff, ALen, SInputBuffertooShort);
-  TCheck.OutputLength(AOutBytes, AOutOff, ALen, SOutputBuffertooShort);
+  TCheck.DataLength(AInBytes, AInOff, ALen, SInputBufferTooShort);
+  TCheck.OutputLength(AOutBytes, AOutOff, ALen, SOutputBufferTooShort);
 
   if (LimitExceeded(UInt32(ALen))) then
   begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceededTwo);
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
 
   while ALen > 0 do
@@ -512,15 +510,15 @@ var
 begin
   if (System.Length(AInput) <> 16) then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SInputStateMustBe16);
+    raise EArgumentCryptoLibException.CreateRes(@SInputStateMustBeSixteen);
   end;
   if (System.Length(AX) <> 16) then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SOutputStateMustBe16);
+    raise EArgumentCryptoLibException.CreateRes(@SOutputStateMustBeSixteen);
   end;
   if ((ARounds mod 2) <> 0) then
   begin
-    raise EArgumentCryptoLibException.CreateRes(@SRoundsMustbeEven);
+    raise EArgumentCryptoLibException.CreateRes(@SRoundsMustBeEven);
   end;
 {$IFDEF CRYPTOLIB_X86_SIMD}
   case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE41]) of

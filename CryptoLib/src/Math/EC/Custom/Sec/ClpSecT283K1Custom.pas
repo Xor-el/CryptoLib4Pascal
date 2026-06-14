@@ -42,6 +42,7 @@ uses
 
 resourcestring
   SInvalidSecT283FieldElement = 'value invalid for SecT283FieldElement';
+  SDivisionByZeroInFieldInversion = 'division by zero in field inversion';
 
 type
   TSecT283Field = class sealed(TObject)
@@ -474,7 +475,7 @@ var
   LT0, LT1: TCryptoLibUInt64Array;
 begin
   if TNat320.IsZero64(AX) then
-    raise EInvalidOperationCryptoLibException.Create('');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SDivisionByZeroInFieldInversion);
   SetLength(LT0, 5);
   SetLength(LT1, 5);
   Square(AX, LT0);

@@ -28,7 +28,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SKeyParameterNotECPublicKey = 'AKeyParameter is not an IECPublicKeyParameters';
+  SKeyParameterNotECPublicKey = 'key parameter is not an IECPublicKeyParameters';
 
 type
   TECKeyEncoder = class(TInterfacedObject, IKeyEncoder)

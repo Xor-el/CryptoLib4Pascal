@@ -26,9 +26,9 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidLength = '%d " > " %d';
-  SBufferCannotBeNil = 'Buffer cannot be nil';
-  SInvalidBufferSegment = 'Invalid offset or length for buffer';
+  SInvalidLength = 'length %d exceeds %d';
+  SBufferCannotBeNil = 'buffer cannot be nil';
+  SInvalidBufferSegment = 'invalid offset or length for buffer';
 
 type
   TArrayUtilities = class sealed(TObject)

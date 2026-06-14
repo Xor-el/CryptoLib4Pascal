@@ -35,6 +35,10 @@ uses
   ClpIAsn1Objects,
   ClpCryptoLibTypes;
 
+resourcestring
+  SPrivateKeyInfoNil = 'private key info cannot be nil';
+  SCannotEncodePrivateKeyInfo = 'cannot encode PrivateKeyInfo';
+
 type
   /// <summary>
   /// Builder for PKCS#8 EncryptedPrivateKeyInfo.
@@ -75,7 +79,7 @@ constructor TPkcs8EncryptedPrivateKeyInfoBuilder.Create(const APrivateKeyInfo: I
 begin
   inherited Create();
   if APrivateKeyInfo = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKeyInfo');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyInfoNil);
   FPrivateKeyInfo := APrivateKeyInfo;
 end;
 
@@ -114,7 +118,7 @@ begin
     end;
   except
     on E: Exception do
-      raise EInvalidOperationCryptoLibException.Create('cannot encode privateKeyInfo');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SCannotEncodePrivateKeyInfo);
   end;
 end;
 

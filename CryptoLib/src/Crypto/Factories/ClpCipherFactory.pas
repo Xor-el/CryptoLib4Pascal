@@ -42,6 +42,10 @@ uses
   ClpIParametersWithIV,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCannotMatchParameters = 'cannot match parameters';
+  SCannotRecognizeCipher = 'cannot recognize cipher: %s';
+
 type
   /// <summary>
   /// Factory for creating content encryption ciphers.
@@ -88,7 +92,7 @@ begin
     end
     else
     begin
-      raise EInvalidOperationCryptoLibException.Create('cannot match parameters');
+      raise EInvalidOperationCryptoLibException.CreateRes(@SCannotMatchParameters);
     end;
   end
   else
@@ -111,7 +115,7 @@ begin
   end
   else
   begin
-    raise EInvalidOperationCryptoLibException.Create('cannot recognise cipher: ' + AAlgorithm.Id);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SCannotRecognizeCipher, [AAlgorithm.Id]);
   end;
 
   Result := TPaddedBufferedBlockCipher.Create(LCipherMode,

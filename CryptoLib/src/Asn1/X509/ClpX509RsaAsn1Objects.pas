@@ -31,9 +31,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SNotCA = 'Not a valid RSA modulus';
-  SNotValidPublicExponent = 'Not a valid RSA public exponent';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SInvalidRsaModulus = 'not a valid RSA modulus';
+  SInvalidRsaPublicExponent = 'not a valid RSA public exponent';
+  SModulusNil = 'modulus cannot be nil';
+  SPublicExponentNil = 'public exponent cannot be nil';
 
 type
   /// <summary>
@@ -143,13 +145,13 @@ begin
   inherited Create();
 
   if AModulus.IsInitialized = False then
-    raise EArgumentNilCryptoLibException.Create('modulus');
+    raise EArgumentNilCryptoLibException.CreateRes(@SModulusNil);
   if APublicExponent.IsInitialized = False then
-    raise EArgumentNilCryptoLibException.Create('publicExponent');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicExponentNil);
   if AModulus.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create(SNotCA);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidRsaModulus);
   if APublicExponent.SignValue <= 0 then
-    raise EArgumentCryptoLibException.Create(SNotValidPublicExponent);
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidRsaPublicExponent);
 
   FModulus := AModulus;
   FPublicExponent := APublicExponent;

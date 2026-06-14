@@ -36,7 +36,7 @@ begin
 {$IFDEF FPC}
   // FPC 3.2.x has TFormatSettings but no built-in TFormatSettings.Invariant.
   // Return a fully initialized invariant-style record.
-  Result.CurrencyString := #$00A4; // generic currency sign: ¤
+  Result.CurrencyString := #$00A4; // generic currency sign: Â¤
   Result.CurrencyFormat := 0;
   Result.NegCurrFormat := 0;
   Result.CurrencyDecimals := 2;

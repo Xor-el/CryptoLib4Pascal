@@ -37,8 +37,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SOutputBufferTooSmall = 'Output Buffer Too Short';
-  SIncompleteLastBlockInDecryption = 'Last Block Incomplete in Decryption';
+  SOutputBufferTooSmall = 'output buffer too short';
+  SIncompleteLastBlockInDecryption = 'last block incomplete in decryption';
   SBufOffInvariant = 'BufOff invariant violated: expected [0..blockSize-1] before AddPadding';
 type
 

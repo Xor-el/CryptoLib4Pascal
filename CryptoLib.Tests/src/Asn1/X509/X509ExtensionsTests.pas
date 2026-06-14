@@ -40,6 +40,7 @@ uses
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpCryptoLibTypes,
+  ClpArrayUtilities,
   CryptoLibTestBase;
 
 type
@@ -58,6 +59,9 @@ type
     procedure TestDuplicateExtensions;
     procedure TestAllowedDuplicateExtensions;
     procedure TestEqualsAndEquivalent;
+    procedure TestExtensionRoundTrip;
+    procedure TestExtensionsBridge;
+    procedure TestExtensionsGeneratorIExtension;
 
   end;
 
@@ -241,6 +245,80 @@ begin
         Fail(Format('wrong exception on repeated oid: %s', [E.Message]));
     end;
   end;
+end;
+
+procedure TX509ExtensionsTest.TestExtensionRoundTrip;
+var
+  LExt: IExtension;
+  LDecoded: IExtension;
+  LBytes: TCryptoLibByteArray;
+begin
+  LExt := TExtension.Create(FOid1, TDerBoolean.False,
+    TDerOctetString.FromContents([$01, $02, $03]));
+  LBytes := LExt.GetEncoded();
+  LDecoded := TExtension.GetInstance(LBytes);
+  CheckTrue(LDecoded.ExtnID.Equals(FOid1), 'extnID');
+  CheckTrue(LDecoded.Critical.IsFalse, 'critical false');
+  CheckTrue(TArrayUtilities.AreEqual(LDecoded.ExtnValue.GetOctets(), LExt.ExtnValue.GetOctets()),
+    'extnValue');
+
+  LExt := TExtension.Create(FOid2, TDerBoolean.True,
+    TDerOctetString.FromContents([$0A]));
+  LBytes := LExt.GetEncoded();
+  LDecoded := TExtension.GetInstance(LBytes);
+  CheckTrue(LDecoded.Critical.IsTrue, 'critical true');
+end;
+
+procedure TX509ExtensionsTest.TestExtensionsBridge;
+var
+  LGen: IX509ExtensionsGenerator;
+  LX509Exts: IX509Extensions;
+  LExts, LRoundTrip: IExtensions;
+  LBytes: TCryptoLibByteArray;
+begin
+  LGen := TX509ExtensionsGenerator.Create();
+  LGen.AddExtension(FOid1, True, TCryptoLibByteArray.Create(1, 2));
+  LGen.AddExtension(FOid2, False, TCryptoLibByteArray.Create(3));
+  LX509Exts := LGen.Generate();
+
+  LExts := TExtensions.FromX509Extensions(LX509Exts);
+  CheckTrue(LExts.Count = 2, 'extensions count');
+  CheckTrue(LExts.Equivalent(TExtensions.FromX509Extensions(LX509Exts)), 'self equivalent');
+
+  LRoundTrip := TExtensions.FromX509Extensions(TExtensions.ToX509Extensions(LExts));
+  CheckTrue(LExts.Equivalent(LRoundTrip), 'bridge round-trip');
+
+  LBytes := LExts.GetEncoded();
+  CheckTrue(TExtensions.GetInstance(TAsn1Sequence.GetInstance(LBytes)).Equivalent(LExts),
+    'encoded round-trip');
+end;
+
+procedure TX509ExtensionsTest.TestExtensionsGeneratorIExtension;
+var
+  LExtGen: IX509ExtensionsGenerator;
+  LExtension: IExtension;
+  LExts: IX509Extensions;
+  LReplacement: IExtension;
+begin
+  LExtension := TExtension.Create(FOid1, TDerBoolean.False,
+    TDerOctetString.FromContents([$05]));
+  LExtGen := TX509ExtensionsGenerator.Create();
+  LExtGen.AddExtension(LExtension);
+  LExts := LExtGen.Generate();
+  CheckNotNull(LExts.GetExtension(FOid1), 'added via IExtension');
+
+  LReplacement := TExtension.Create(FOid1, TDerBoolean.True,
+    TDerOctetString.FromContents([$06]));
+  LExtGen.ReplaceExtension(LReplacement);
+  LExts := LExtGen.Generate();
+  CheckTrue(LExts.GetExtension(FOid1).IsCritical, 'replaced critical flag');
+  CheckTrue(TArrayUtilities.AreEqual(LExts.GetExtension(FOid1).Value.GetOctets(),
+    LReplacement.ExtnValue.GetOctets()), 'replaced value');
+
+  LExtGen.Reset();
+  LExtGen.AddExtensions(TExtensions.Create(LExtension) as IExtensions);
+  LExts := LExtGen.Generate();
+  CheckNotNull(LExts.GetExtension(FOid1), 'added via IExtensions');
 end;
 
 initialization

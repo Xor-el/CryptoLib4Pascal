@@ -30,6 +30,13 @@ uses
   ClpPlatformUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  STaggedObjectNil = 'tagged object cannot be nil';
+  SElementNil = 'element cannot be nil';
+  SExpectedTagButFound = 'expected %s tag but found %s';
+  SFailedToConstructFromByte = 'failed to construct %s from byte array: %s';
+  SInvalidObject = 'invalid object: %s';
+
 type
   /// <summary>
   /// Utility class for ASN.1 operations.
@@ -260,7 +267,7 @@ begin
   begin
     LExpected := GetTagText(ATagClass, ATagNo);
     LFound := GetTagText(ATaggedObject);
-    raise EInvalidOperationCryptoLibException.CreateFmt('Expected %s tag but found %s', [LExpected, LFound]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExpectedTagButFound, [LExpected, LFound]);
   end;
   Result := ATaggedObject;
 end;
@@ -274,7 +281,7 @@ begin
   begin
     LExpected := GetTagText(ATagClass, ATagNo);
     LFound := GetTagText(ATaggedObjectParser);
-    raise EInvalidOperationCryptoLibException.CreateFmt('Expected %s tag but found %s', [LExpected, LFound]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExpectedTagButFound, [LExpected, LFound]);
   end;
   Result := ATaggedObjectParser;
 end;
@@ -288,7 +295,7 @@ begin
   begin
     LExpected := GetTagClassText(ATagClass);
     LFound := GetTagClassText(ATaggedObject);
-    raise EInvalidOperationCryptoLibException.CreateFmt('Expected %s tag but found %s', [LExpected, LFound]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExpectedTagButFound, [LExpected, LFound]);
   end;
   Result := ATaggedObject;
 end;
@@ -302,7 +309,7 @@ begin
   begin
     LExpected := GetTagClassText(ATagClass);
     LFound := GetTagClassText(ATaggedObjectParser);
-    raise EInvalidOperationCryptoLibException.CreateFmt('Expected %s tag but found %s', [LExpected, LFound]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SExpectedTagButFound, [LExpected, LFound]);
   end;
   Result := ATaggedObjectParser;
 end;
@@ -396,7 +403,7 @@ begin
     end;
   end;
 
-  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatformUtilities.GetTypeName(AObj));
+  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidObject, [TPlatformUtilities.GetTypeName(AObj)]);
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const AObj: IAsn1Object;
@@ -419,7 +426,7 @@ begin
     Exit;
   end;
 
-  raise EArgumentCryptoLibException.Create('Invalid object: ' + TPlatformUtilities.GetTypeName(AObj as TObject));
+  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidObject, [TPlatformUtilities.GetTypeName(AObj as TObject)]);
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const ABytes: TCryptoLibByteArray;
@@ -437,8 +444,7 @@ begin
     on E: EIOCryptoLibException do
     begin
       LChoiceName := TPlatformUtilities.GetTypeName(TypeInfo(TChoice));
-      raise EArgumentCryptoLibException.CreateFmt('failed to construct %s from byte[]: %s',
-        [LChoiceName, E.Message]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SFailedToConstructFromByte, [LChoiceName, E.Message]);
     end;
   end;
 
@@ -459,7 +465,7 @@ begin
     raise EArgumentCryptoLibException.Create(LMsg);
   end;
   if ATaggedObject = nil then
-    raise EArgumentNilCryptoLibException.Create('taggedObject');
+    raise EArgumentNilCryptoLibException.CreateRes(@STaggedObjectNil);
 
   Result := AConstructor(GetExplicitContextBaseObject(ATaggedObject));
 end;
@@ -478,7 +484,7 @@ begin
     raise EArgumentCryptoLibException.Create(LMsg);
   end;
   if ATaggedObject = nil then
-    raise EArgumentNilCryptoLibException.Create('taggedObject');
+    raise EArgumentNilCryptoLibException.CreateRes(@STaggedObjectNil);
 
   Result := AConstructor(ATaggedObject.GetExplicitBaseObject());
 end;
@@ -879,7 +885,7 @@ begin
   LElement := ASequence.Items[ASequencePosition];
   System.Inc(ASequencePosition);
   if LElement = nil then
-    raise EArgumentNilCryptoLibException.Create('element');
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
   LObj := LElement.ToAsn1Object();
   LTagged := TAsn1TaggedObject.GetInstance(LObj, ATagClass, ATagNo);
   Result := AConstructor(LTagged, AState);

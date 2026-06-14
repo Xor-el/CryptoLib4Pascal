@@ -41,10 +41,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SRsaKeyGenNotInit = 'RSA key pair generator not initialised';
-  SGeneratorNotInit = 'Generator not initialised';
-  SPublicKeyRequired = 'Generator requires RSA public key';
-  SRsaKeyParametersRequired = 'Parameters must support IRsaKeyParameters';
+  SRsaKeyGenNotInit = 'RSA key pair generator not initialized';
+  SGeneratorNotInit = 'generator not initialized';
+  SPublicKeyRequired = 'generator requires RSA public key';
+  SRsaKeyParametersRequired = 'parameters must support IRsaKeyParameters';
 
 type
   TRsaKeyPairGenerator = class(TInterfacedObject,

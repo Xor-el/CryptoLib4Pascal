@@ -30,7 +30,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherNil = 'Cipher Instance Cannot be Nil';
+  SCipherNil = 'cipher instance cannot be nil';
 
 type
   TBufferedStreamCipher = class(TBufferedCipherBase, IBufferedStreamCipher)

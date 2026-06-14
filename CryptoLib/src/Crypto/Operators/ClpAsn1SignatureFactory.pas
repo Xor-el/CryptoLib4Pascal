@@ -33,6 +33,11 @@ uses
   ClpDefaultSignatureCalculator,
   ClpCryptoLibTypes;
 
+resourcestring
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SPrivateKeyNil = 'private key cannot be nil';
+  SKeyForSigningMustBePrivate = 'key for signing must be private';
+
 type
   /// <summary>
   /// Calculator factory class for signature generation in ASN.1 based profiles.
@@ -86,11 +91,11 @@ constructor TAsn1SignatureFactory.Create(const AAlgorithm: String;
 begin
   inherited Create();
   if AAlgorithm = '' then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if APrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyNil);
   if not APrivateKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Key for signing must be private');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyForSigningMustBePrivate);
 
   FAlgID := TX509SignatureUtilities.GetSigAlgID(AAlgorithm);
   FAlgorithm := AAlgorithm;
@@ -109,11 +114,11 @@ constructor TAsn1SignatureFactory.Create(const AAlgorithm: IAlgorithmIdentifier;
 begin
   inherited Create();
   if AAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if APrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyNil);
   if not APrivateKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Key for signing must be private');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyForSigningMustBePrivate);
 
   FAlgID := AAlgorithm;
   FAlgorithm := TX509SignatureUtilities.GetSignatureName(AAlgorithm);

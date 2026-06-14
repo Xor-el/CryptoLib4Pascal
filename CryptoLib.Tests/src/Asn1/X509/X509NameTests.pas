@@ -240,7 +240,7 @@ begin
     Fail('invalid hex-encoded DN value should raise during construction');
   except
     on E: ECryptoLibException do
-      CheckTrue(Pos('can''t recode value', E.Message) > 0,
+      CheckTrue(Pos('cannot recode value', E.Message) > 0,
         'unexpected exception message: ' + E.Message);
   end;
 end;

@@ -37,27 +37,46 @@ uses
   ClpIX509Crl;
 
 type
+  /// <summary>
+  /// Generator for X.509 version 1 certificates as defined in RFC 5280.
+  /// Builds the TBSCertificate structure and signs the result via
+  /// <see cref="Generate"/>.
+  /// </summary>
   IX509V1CertificateGenerator = interface
     ['{8B7E875E-C0AE-4CB6-9F89-C86D1EA230BE}']
     procedure Reset;
+    /// <summary>Set the certificate serial number.</summary>
+    /// <remarks>
+    /// Make serial numbers long; if you have no serial number policy make sure the number is at least
+    /// 16 bytes of secure random data. You will be surprised how ugly a serial number collision can get.
+    /// </remarks>
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetIssuerDN(const AIssuer: IX509Name);
+    /// <summary>Sets the certificate validity period from a pre-built <see cref="IValidity"/> structure.</summary>
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
     procedure SetNotBeforeUtc(const AUtcDate: TDateTime);
     procedure SetNotAfterUtc(const AUtcDate: TDateTime);
     procedure SetSubjectDN(const ASubject: IX509Name);
+    /// <summary>Set the public key that this certificate identifies.</summary>
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
+  /// <summary>
+  /// Generator for X.509 version 3 certificates as defined in RFC 5280.
+  /// Builds the TBSCertificate structure, optional v3 extensions, and signs via
+  /// <see cref="Generate"/>.
+  /// </summary>
   IX509V3CertificateGenerator = interface
     ['{0B5BDF63-032B-4348-BBD1-30E75BA32731}']
     procedure Reset;
+    /// <summary>Set the certificate serial number.</summary>
     procedure SetSerialNumber(const ASerialNumber: TBigInteger);
     procedure SetIssuerDN(const AIssuer: IX509Name);
+    /// <summary>Sets the certificate validity period from a pre-built <see cref="IValidity"/> structure.</summary>
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
     procedure SetNotAfter(const ADate: TDateTime);
@@ -82,7 +101,13 @@ type
       const AExtValue: TCryptoLibByteArray); overload;
     procedure AddExtension(const AOid: IDerObjectIdentifier;
       const AX509Extension: IX509Extension); overload;
-    procedure AddExtensions(const AExtensions: IX509Extensions);
+    /// <summary>Adds a parsed ASN.1 extension to this certificate.</summary>
+    procedure AddExtension(const AExtension: IExtension); overload;
+    /// <summary>Adds all extensions from an <see cref="IX509Extensions"/> collection.</summary>
+    procedure AddExtensions(const AExtensions: IX509Extensions); overload;
+    /// <summary>Adds all extensions from an <see cref="IExtensions"/> collection.</summary>
+    procedure AddExtensions(const AExtensions: IExtensions); overload;
+    /// <summary>Copies an extension value from another certificate.</summary>
     procedure CopyAndAddExtension(const AOid: IDerObjectIdentifier;
       ACritical: Boolean; const ACert: IX509Certificate);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
@@ -113,7 +138,9 @@ type
   end;
 
   /// <summary>
-  /// Interface for X.509 Version 2 CRL generator.
+  /// Generator for X.509 version 2 certificate revocation lists (CRLs) as defined in RFC 5280.
+  /// Builds the TBSCertList structure, optional CRL extensions, and signs via
+  /// <see cref="Generate"/>.
   /// </summary>
   IX509V2CrlGenerator = interface
     ['{B6C7D8E9-F0A1-2345-6789-ABCDEF012345}']

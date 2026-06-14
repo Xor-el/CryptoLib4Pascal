@@ -31,11 +31,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotInitializedForSigning =
-    'Ed448PhSigner not Initialised for Signature Generation.';
-  SNotInitializedForVerifying =
-    'Ed448PhSigner not Initialised for Verification';
-  SPreHashDigestFailed = 'PreHash Digest Failed';
+  SNotInitialized = 'Ed448PhSigner not initialized for %s';
+  SPreHashDigestFailed = 'PreHash digest failed';
 
 type
   /// <summary>
@@ -172,8 +169,8 @@ var
 begin
   if ((not FForSigning) or (FPrivateKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForSigning);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['signature generation']);
   end;
   System.SetLength(LMsg, TEd448.PrehashSize);
 
@@ -196,8 +193,8 @@ var
 begin
   if ((FForSigning) or (FPublicKey = nil)) then
   begin
-    raise EInvalidOperationCryptoLibException.CreateRes
-      (@SNotInitializedForVerifying);
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialized, ['verification']);
   end;
   if (TEd448.SignatureSize <> System.Length(ASignature)) then
   begin

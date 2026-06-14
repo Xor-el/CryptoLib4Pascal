@@ -30,14 +30,14 @@ uses
   ClpBaseRandomProvider;
 
 resourcestring
-  SiOSRandomError =
-    'An Error Occurred while generating random data using iOS random APIs.';
+  SIOSRandomError =
+    'an error occurred while generating random data using iOS random APIs';
 
+type
   /// <summary>
   /// iOS random source provider.
   /// Implements SecRandomCopyBytes when available, else /dev/urandom.
   /// </summary>
-type
   TIOSRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private
@@ -113,7 +113,7 @@ begin
 
   if GenRandomBytesIOS(LCount, PByte(AData)) <> 0 then
   begin
-    raise EOSRandomCryptoLibException.CreateRes(@SiOSRandomError);
+    raise EOSRandomCryptoLibException.CreateRes(@SIOSRandomError);
   end;
 end;
 

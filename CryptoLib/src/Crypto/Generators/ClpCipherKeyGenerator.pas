@@ -32,13 +32,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SInvalidStrengthValue =
-    'Strength must be a Positive Value, "defaultStrength"';
-  SParametersNil = 'Parameters Cannot be Nil';
-  SGeneratorNotInitialized = 'Generator has not been Initialised';
+  SInvalidStrengthValue = 'strength must be a positive value';
+  SParametersNil = 'parameters cannot be nil';
+  SGeneratorNotInitialized = 'generator has not been initialized';
 
 type
-
   /// <summary>
   /// The base class for symmetric, or secret, cipher key generators.
   /// </summary>

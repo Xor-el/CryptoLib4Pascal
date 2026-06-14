@@ -25,7 +25,6 @@ uses
   ClpIOidTokenizer;
 
 type
-
   /// <summary>
   /// Legacy OID string tokenizer.
   /// Prefer TDerObjectIdentifier / TAsn1RelativeOid string constructors; this type may be removed later.

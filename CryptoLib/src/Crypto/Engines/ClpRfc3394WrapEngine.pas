@@ -33,14 +33,14 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SNotSetForWrapping = 'Not set for wrapping';
-  SNotSetForUnwrapping = 'Not set for unwrapping';
-  SWrapDataMustBeAtLeast8Bytes = 'Wrap data must be at least 8 bytes';
-  SWrapDataMustBeMultipleOf8 = 'Wrap data must be a multiple of 8 bytes';
-  SUnwrapDataTooShort = 'Unwrap data too short';
-  SUnwrapDataMustBeMultipleOf8 = 'Unwrap data must be a multiple of 8 bytes';
-  SIVLengthNotEqualTo8 = 'IV length not equal to 8';
-  SChecksumFailed = 'Checksum failed';
+  SNotSetForWrapping = 'not set for wrapping';
+  SNotSetForUnwrapping = 'not set for unwrapping';
+  SWrapDataMustBeAtLeastEightBytes = 'wrap data must be at least 8 bytes';
+  SWrapDataMustBeMultipleOfEight = 'wrap data must be a multiple of 8 bytes';
+  SUnwrapDataTooShort = 'unwrap data too short';
+  SUnwrapDataMustBeMultipleOfEight = 'unwrap data must be a multiple of 8 bytes';
+  SIVLengthNotEqualToEight = 'IV length not equal to 8';
+  SChecksumFailed = 'checksum failed';
 
 type
   TRfc3394WrapEngine = class(TInterfacedObject, IRfc3394WrapEngine, IWrapper)
@@ -128,7 +128,7 @@ begin
   begin
     LIv := LWithIV.GetIV();
     if System.Length(LIv) <> 8 then
-      raise EArgumentCryptoLibException.CreateRes(@SIVLengthNotEqualTo8);
+      raise EArgumentCryptoLibException.CreateRes(@SIVLengthNotEqualToEight);
 
     Supports(LWithIV.Parameters, IKeyParameter, FKey);
     System.Move(LIv[0], FIv[0], 8 * System.SizeOf(Byte));
@@ -145,12 +145,12 @@ begin
   if not FForWrapping then
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotSetForWrapping);
   if AInLen < 8 then
-    raise EDataLengthCryptoLibException.CreateRes(@SWrapDataMustBeAtLeast8Bytes);
+    raise EDataLengthCryptoLibException.CreateRes(@SWrapDataMustBeAtLeastEightBytes);
 
   LN := AInLen div 8;
 
   if (LN * 8) <> AInLen then
-    raise EDataLengthCryptoLibException.CreateRes(@SWrapDataMustBeMultipleOf8);
+    raise EDataLengthCryptoLibException.CreateRes(@SWrapDataMustBeMultipleOfEight);
 
   FEngine.Init(FWrapCipherMode, FKey);
 
@@ -207,7 +207,7 @@ begin
   LN := AInLen div 8;
 
   if (LN * 8) <> AInLen then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeMultipleOf8);
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SUnwrapDataMustBeMultipleOfEight);
 
   FEngine.Init(not FWrapCipherMode, FKey);
 

@@ -33,10 +33,12 @@ uses
   ClpAsn1Utilities;
 
 resourcestring
-  SBadSequenceSize = 'Bad sequence size: %d';
-  SKeyNil = 'key';
-  SOrderBitLengthTooSmall = 'must be >= key bitlength';
-  SUnexpectedElementsInSequence = 'Unexpected elements in sequence';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SKeyNil = 'key cannot be nil';
+  SOrderBitLengthTooSmall = 'order must be at least the key bit length';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
+  SPrivateKeyNil = 'private key cannot be nil';
+
 
 type
   /// <summary>
@@ -178,7 +180,7 @@ begin
     GetTaggedDerBitString);
   
   if LPos <> LCount then
-    raise EArgumentCryptoLibException.Create(SUnexpectedElementsInSequence);
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
 end;
 
 constructor TECPrivateKeyStructure.Create(AOrderBitLength: Int32; const AKey: TBigInteger);
@@ -200,9 +202,9 @@ begin
   inherited Create();
   
   if not AKey.IsInitialized then
-    raise EArgumentNilCryptoLibException.Create(SKeyNil);
+    raise EArgumentNilCryptoLibException.CreateRes(@SKeyNil);
   if AOrderBitLength < AKey.BitLength then
-    raise EArgumentCryptoLibException.Create(SOrderBitLengthTooSmall);
+    raise EArgumentCryptoLibException.CreateRes(@SOrderBitLengthTooSmall);
 
   LPrivateKeyContents := TBigIntegerUtilities.AsUnsignedByteArray((AOrderBitLength + 7) div 8, AKey);
 
@@ -218,7 +220,7 @@ begin
   inherited Create();
 
   if APrivateKey = nil then
-    raise EArgumentNilCryptoLibException.Create('privateKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPrivateKeyNil);
 
   FVersion := TDerInteger.One;
   FPrivateKey := APrivateKey;

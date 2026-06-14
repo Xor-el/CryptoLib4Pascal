@@ -35,14 +35,12 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SSizeTooBigHKDF = 'HKDF Cannot Generate More Than 255 Blocks of HashLen Size';
-  SSizeTooBigHKDF2 = 'HKDF May Only Be Used For 255 * HashLen Bytes of Output';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
-  SInvalidParameterHKDF =
-    'HKDF Parameters Required For "HkdfBytesGenerator", "parameters"';
+  SHkdfTooManyBlocks = 'HKDF cannot generate more than 255 blocks of HashLen size';
+  SHkdfOutputTooLarge = 'HKDF may only be used for 255 * HashLen bytes of output';
+  SOutputBufferTooShort = 'output buffer too short';
+  SInvalidParameterHKDF = 'HKDF parameters required for HkdfBytesGenerator';
 
 type
-
   /// <summary>
   /// HMAC-based Extract-and-Expand Key Derivation Function (HKDF)
   /// implemented <br />according to IETF RFC 5869, May 2010 as specified by
@@ -124,7 +122,7 @@ begin
   LN := (FGeneratedBytes div FHashLen) + 1;
   if LN >= 256 then
   begin
-    raise EDataLengthCryptoLibException.CreateRes(@SSizeTooBigHKDF);
+    raise EDataLengthCryptoLibException.CreateRes(@SHkdfTooManyBlocks);
   end;
   // special case for T(0): T(0) is empty, so no update
   if (FGeneratedBytes <> 0) then
@@ -169,7 +167,7 @@ begin
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
   if (FGeneratedBytes + ALen) > (255 * FHashLen) then
-    raise EDataLengthCryptoLibException.CreateRes(@SSizeTooBigHKDF2);
+    raise EDataLengthCryptoLibException.CreateRes(@SHkdfOutputTooLarge);
 
   if FGeneratedBytes mod FHashLen = 0 then
     ExpandNext();

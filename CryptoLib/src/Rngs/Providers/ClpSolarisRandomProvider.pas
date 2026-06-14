@@ -31,13 +31,13 @@ uses
 
 resourcestring
   SSolarisGetRandomError =
-    'An Error Occurred while generating random data using getRandom API';
+    'an error occurred while generating random data using getRandom API';
 
+type
   /// <summary>
   /// Solaris OS random source provider.
   /// Implements Solaris getrandom and /dev/urandom fallback
   /// </summary>
-type
   TSolarisRandomProvider = class sealed(TBaseRandomProvider)
 
   strict private

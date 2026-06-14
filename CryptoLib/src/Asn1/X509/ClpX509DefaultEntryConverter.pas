@@ -30,6 +30,10 @@ uses
   ClpX509Asn1Objects,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCannotRecodeValueForOid = 'cannot recode value for OID %s';
+  SCountryCodeAttributeMustBeExactlyTwoChars = 'country code attribute %s must be exactly 2 characters per ISO 3166-1 / X.520, got %d: %s';
+
 type
   /// <summary>
   /// The default converter for X509 DN entries when going from their string value to ASN.1 strings.
@@ -61,7 +65,7 @@ begin
       Exit;
     except
       on E: Exception do
-        raise ECryptoLibException.CreateFmt('can''t recode value for oid %s', [AOid.Id]);
+        raise ECryptoLibException.CreateResFmt(@SCannotRecodeValueForOid, [AOid.Id]);
     end;
   end;
 
@@ -90,9 +94,7 @@ begin
   if AOid.Equals(TX509Name.C) or AOid.Equals(TX509Name.JurisdictionC) then
   begin
     if System.Length(LValue) <> 2 then
-      raise EArgumentCryptoLibException.CreateFmt(
-        'country code attribute %s must be exactly 2 characters per ISO 3166-1 / X.520, got %d: ''%s''',
-        [AOid.Id, System.Length(LValue), LValue]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCountryCodeAttributeMustBeExactlyTwoChars, [AOid.Id, System.Length(LValue), LValue]);
 
     Result := TDerPrintableString.Create(LValue);
     Exit;

@@ -37,11 +37,10 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SDSAPrivateKeyNotFound = 'DSA Private Key Required For Signing';
-  SDSAPublicKeyNotFound = 'DSA Public Key Required For Verification';
+  SDSAPrivateKeyNotFound = 'DSA private key required for signing';
+  SDSAPublicKeyNotFound = 'DSA public key required for verification';
 
 type
-
   /// <summary>
   /// The Digital Signature Algorithm - as described in "Handbook of Applied <br />
   /// Cryptography", pages 452 - 453.

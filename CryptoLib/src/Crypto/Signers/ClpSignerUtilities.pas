@@ -75,9 +75,9 @@ uses
   ClpX509Asn1Objects;
 
 resourcestring
-  SMechanismNil = 'Mechanism Cannot be Nil';
-  SAlgorithmNil = 'Algorithm Cannot be Nil';
-  SUnRecognizedAlgorithm = 'Signer " %s " not recognised.';
+  SMechanismNil = 'mechanism cannot be nil';
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SUnrecognizedAlgorithm = 'signer %s not recognized';
 
 type
   /// <summary>
@@ -755,7 +755,7 @@ begin
     end;
   end;
 
-  raise ESecurityUtilityCryptoLibException.CreateRes(@SUnRecognizedAlgorithm);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AOid.ID]);
 end;
 
 class function TSignerUtilities.GetSigner(const AAlgorithm: String): ISigner;
@@ -777,7 +777,7 @@ begin
     Exit;
   end;
 
-  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm, [AAlgorithm]);
+  raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AAlgorithm]);
 end;
 
 class function TSignerUtilities.GetDefaultX509Parameters(const AOid: IDerObjectIdentifier): IAsn1Encodable;
@@ -997,7 +997,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
 
   if not FAlgorithmOidMap.TryGetValue(AAlgorithmOid, LMechanism) then
-    raise ESecurityUtilityCryptoLibException.CreateRes(@SUnRecognizedAlgorithm);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AAlgorithmOid.ID]);
 
   Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
 end;
@@ -1026,7 +1026,7 @@ var
 begin
   LSigner := GetSignerForMechanism(AMechanism);
   if LSigner = nil then
-    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnRecognizedAlgorithm, [AMechanism]);
+    raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AMechanism]);
 
   LCipherParameters := AKey;
   if AForSigning and (not FNoRandom.ContainsKey(AMechanism)) then

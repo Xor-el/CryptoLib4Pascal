@@ -45,8 +45,8 @@ uses
   ClpIAsymmetricCipherKeyPairGenerator;
 
 resourcestring
-  SAlgorithmNil = 'Algorithm Cannot be Empty';
-  SInvalidKeySize = 'Unknown Key Size "%d"';
+  SAlgorithmNil = 'algorithm cannot be empty';
+  SInvalidKeySize = 'unknown key size %d';
 
 type
   TECKeyPairGenerator = class sealed(TInterfacedObject, IECKeyPairGenerator,

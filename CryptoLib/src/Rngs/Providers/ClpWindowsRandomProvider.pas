@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -29,7 +29,7 @@ uses
 
 resourcestring
   SWindowsCryptoApiGenerationError =
-    'An Error Occurred while generating random data using MS Windows Cryptography API.';
+    'an error occurred while generating random data using MS Windows Cryptography API';
 
 type
   /// <summary>

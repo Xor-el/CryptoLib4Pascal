@@ -28,8 +28,8 @@ uses
   ClpICipherParameters;
 
 resourcestring
-  SParameters = 'Parameters';
-  SRandom = 'Random';
+  SParametersNil = 'parameters cannot be nil';
+  SRandomNil = 'random cannot be nil';
 
 type
   /// <summary>
@@ -78,12 +78,12 @@ begin
   inherited Create();
   if (AParameters = nil) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SParameters);
+    raise EArgumentNilCryptoLibException.CreateRes(@SParametersNil);
   end;
 
   if (ARandom = nil) then
   begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SRandom);
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
   end;
 
   FParameters := AParameters;

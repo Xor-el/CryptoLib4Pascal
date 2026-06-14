@@ -26,7 +26,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SConstantTimeLookupNotSupported = 'Constant-time lookup not supported';
+  SConstantTimeLookupNotSupported = 'constant-time lookup not supported';
 
 type
   TAbstractECLookupTable = class abstract(TInterfacedObject, IECLookupTable)
@@ -86,7 +86,7 @@ end;
 
 function TSimpleLookupTable.Lookup(AIndex: Int32): IECPoint;
 begin
-  raise ENotSupportedCryptoLibException.Create(SConstantTimeLookupNotSupported);
+  raise ENotSupportedCryptoLibException.CreateRes(@SConstantTimeLookupNotSupported);
 end;
 
 function TSimpleLookupTable.LookupVar(AIndex: Int32): IECPoint;

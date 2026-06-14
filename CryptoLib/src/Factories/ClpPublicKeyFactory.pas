@@ -61,6 +61,9 @@ uses
   ClpBigInteger,
   ClpCryptoLibTypes;
 
+resourcestring
+  SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';
+
 type
   /// <summary>
   /// Factory for creating public key parameters from SubjectPublicKeyInfo.
@@ -283,7 +286,7 @@ begin
     Exit;
   end;
 
-  raise ENotSupportedCryptoLibException.CreateFmt('Key type with OID %s not yet supported', [LAlgOid.Id]);
+  raise ENotSupportedCryptoLibException.CreateResFmt(@SKeyTypeWithOidNotSupported, [LAlgOid.Id]);
 end;
 
 end.

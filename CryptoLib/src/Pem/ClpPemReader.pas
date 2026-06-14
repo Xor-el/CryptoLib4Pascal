@@ -35,6 +35,20 @@ uses
   ClpAsn1Objects,
   ClpCollectionUtilities;
 
+resourcestring
+  SPemReaderNil = 'reader cannot be nil';
+  SPemNoDataAfterLeadingDashes = 'no data after consuming leading dashes';
+  SPemRanOutOfDataReadingType = 'ran out of data before consuming PEM type';
+  SPemRanOutOfDataAfterTypeDashes = 'ran out of data consuming dashes after PEM type';
+  SPemRanOutOfDataReadingHeaderKey = 'ran out of data reading header key';
+  SPemExpectedColonAfterHeaderKey = 'expected colon after header key';
+  SPemRanOutOfDataReadingHeaderValue = 'ran out of data before consuming header value';
+  SPemRanOutOfDataReadingPayload = 'ran out of data before consuming payload';
+  SPemNoLeadingDashBeforeEnd = 'did not find leading ''-'' before END block';
+  SPemNoDataAfterTrailingDashes = 'no data after consuming trailing dashes';
+  SPemEndMarkerNotFound = 'END %s was not found';
+  SPemNoEndingDash = 'did not find ending ''-''';
+
 type
   /// <summary>
   /// PEM reader implementation.
@@ -76,7 +90,7 @@ constructor TPemReader.Create(const AReader: TStream);
 begin
   Inherited Create();
   if AReader = nil then
-    raise EArgumentNilCryptoLibException.Create('Reader cannot be nil');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPemReaderNil);
   FReader := AReader;
   FTextBuffer := TStringBuilder.Create();
   FPushback := TStack<Int32>.Create();
@@ -280,7 +294,7 @@ begin
 
     // consume dash [-----]BEGIN ...
     if not ConsumeDash() then
-      raise EIOCryptoLibException.Create('no data after consuming leading dashes');
+      raise EIOCryptoLibException.CreateRes(@SPemNoDataAfterLeadingDashes);
 
     SkipWhiteSpace();
 
@@ -292,13 +306,13 @@ begin
 
   // Consume type, accepting whitespace
   if not BufferUntilStopChar('-', False) then
-    raise EIOCryptoLibException.Create('ran out of data before consuming type');
+    raise EIOCryptoLibException.CreateRes(@SPemRanOutOfDataReadingType);
 
   LType := TStringUtilities.Trim(BufferedString());
 
   // Consume dashes after type.
   if not ConsumeDash() then
-    raise EIOCryptoLibException.Create('ran out of data consuming header');
+    raise EIOCryptoLibException.CreateRes(@SPemRanOutOfDataAfterTypeDashes);
 
   SkipWhiteSpace();
 
@@ -309,18 +323,18 @@ begin
     while SeekColon(LineLength) do
     begin
       if not BufferUntilStopChar(':', False) then
-        raise EIOCryptoLibException.Create('ran out of data reading header key value');
+        raise EIOCryptoLibException.CreateRes(@SPemRanOutOfDataReadingHeaderKey);
 
       LKey := TStringUtilities.Trim(BufferedString());
 
       LC := ReadChar();
       if LC <> Ord(':') then
-        raise EIOCryptoLibException.Create('expected colon');
+        raise EIOCryptoLibException.CreateRes(@SPemExpectedColonAfterHeaderKey);
 
       // We are going to look for well formed headers, if they do not end with a "LF" we cannot
       // discern where they end.
       if not BufferUntilStopChar(#10, False) then
-        raise EIOCryptoLibException.Create('ran out of data before consuming header value');
+        raise EIOCryptoLibException.CreateRes(@SPemRanOutOfDataReadingHeaderValue);
 
       SkipWhiteSpace();
 
@@ -332,22 +346,22 @@ begin
     SkipWhiteSpace();
 
     if not BufferUntilStopChar('-', True) then
-      raise EIOCryptoLibException.Create('ran out of data before consuming payload');
+      raise EIOCryptoLibException.CreateRes(@SPemRanOutOfDataReadingPayload);
 
     LPayload := BufferedString();
 
     // Seek the start of the end.
     if not SeekDash() then
-      raise EIOCryptoLibException.Create('did not find leading ''-''');
+      raise EIOCryptoLibException.CreateRes(@SPemNoLeadingDashBeforeEnd);
 
     if not ConsumeDash() then
-      raise EIOCryptoLibException.Create('no data after consuming trailing dashes');
+      raise EIOCryptoLibException.CreateRes(@SPemNoDataAfterTrailingDashes);
 
     if not Expect('END ' + LType) then
-      raise EIOCryptoLibException.Create('END ' + LType + ' was not found.');
+      raise EIOCryptoLibException.CreateResFmt(@SPemEndMarkerNotFound, [LType]);
 
     if not SeekDash() then
-      raise EIOCryptoLibException.Create('did not find ending ''-''');
+      raise EIOCryptoLibException.CreateRes(@SPemNoEndingDash);
 
     // consume trailing dashes.
     ConsumeDash();

@@ -32,6 +32,10 @@ uses
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SMalformedData = 'malformed data: %s';
+  SUnableToReadEncryptedData = 'unable to read encrypted data: %s';
+
 type
   /// <summary>
   /// A holding class for a PKCS#8 encrypted private key info object that allows for its decryption.
@@ -70,9 +74,9 @@ begin
     Result := TEncryptedPrivateKeyInfo.GetInstance(APkcs8Encoding);
   except
     on E: EArgumentCryptoLibException do
-      raise EPkcsIOCryptoLibException.Create('malformed data: ' + E.Message);
+      raise EPkcsIOCryptoLibException.CreateResFmt(@SMalformedData, [E.Message]);
     on E: Exception do
-      raise EPkcsIOCryptoLibException.Create('malformed data: ' + E.Message);
+      raise EPkcsIOCryptoLibException.CreateResFmt(@SMalformedData, [E.Message]);
   end;
 end;
 
@@ -128,7 +132,7 @@ begin
     end;
   except
     on E: Exception do
-      raise EPkcsCryptoLibException.Create('unable to read encrypted data: ' + E.Message);
+      raise EPkcsCryptoLibException.CreateResFmt(@SUnableToReadEncryptedData, [E.Message]);
   end;
 end;
 

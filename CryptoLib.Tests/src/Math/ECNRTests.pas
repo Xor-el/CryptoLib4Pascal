@@ -519,7 +519,7 @@ begin
   except
     on e: EDataLengthCryptoLibException do
     begin
-      CheckEquals(e.Message, 'Input Too Large For ECNR Key.');
+      CheckEquals(e.Message, 'input too large for ECNR key');
     end;
 
   end;

@@ -47,16 +47,16 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherRequired = 'cipher required with a block size of %d.';
-  SInvalidParametersCCM = 'invalid parameters passed to CCM';
+  SCipherRequired = 'cipher required with a block size of %d';
+  SInvalidParameters = 'invalid parameters passed to %s';
   SNonceLengthRange = 'nonce must have length from 7 to 13 octets';
-  SCcmUninitialised = 'CCM cipher unitialized.';
-  SCcmPacketTooLarge = 'CCM packet too large for choice of q.';
+  SCcmUninitialised = 'CCM cipher uninitialized';
+  SCcmPacketTooLarge = 'CCM packet too large for choice of q';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in CCM failed';
+  SMacCheckFailed = 'mac check in %s failed';
   STagLengthOctets = 'tag length in octets must be one of {4,6,8,10,12,14,16}';
-  SInputBufferTooShort = 'Input Buffer Too Short';
-  SOutputBufferTooShort = 'Output Buffer Too Short';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
   TCcmBlockCipher = class(TInterfacedObject, ICcmBlockCipher,
@@ -187,7 +187,7 @@ begin
 
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidParametersCCM);
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['CCM']);
 
   FNonce := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
@@ -496,7 +496,7 @@ begin
     CalculateMac(AOutput, AOutOff, LOutputLen, LCalculatedMacBlock);
 
     if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock)) then
-      raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
   end;
 
   Result := LOutputLen;
@@ -813,7 +813,7 @@ begin
   System.Move(LMacState[0], LComputedMac[0], FMacSize);
 
   if not TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac) then
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+    raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
 
   Result := True;
 end;

@@ -29,6 +29,11 @@ uses
   ClpIX509Extension,
   ClpCryptoLibTypes;
 
+resourcestring
+  SCannotConvertExtension = 'cannot convert extension: %s';
+  SCriticalNil = 'critical cannot be nil';
+  SValueNil = 'value cannot be nil';
+
 type
   /// <summary>
   /// An object for the elements in the X.509 V3 extension block.
@@ -73,7 +78,7 @@ begin
     Result := TAsn1Object.FromByteArray(AExt.Value.GetOctets());
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.Create('can''t convert extension: ' + E.Message);
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotConvertExtension, [E.Message]);
   end;
 end;
 
@@ -81,9 +86,9 @@ constructor TX509Extension.Create(const ACritical: IDerBoolean; const AValue: IA
 begin
   inherited Create();
   if ACritical = nil then
-    raise EArgumentNilCryptoLibException.Create('critical');
+    raise EArgumentNilCryptoLibException.CreateRes(@SCriticalNil);
   if AValue = nil then
-    raise EArgumentNilCryptoLibException.Create('value');
+    raise EArgumentNilCryptoLibException.CreateRes(@SValueNil);
   FCritical := ACritical.IsTrue;
   FValue := AValue;
 end;
@@ -92,7 +97,7 @@ constructor TX509Extension.Create(ACritical: Boolean; const AValue: IAsn1OctetSt
 begin
   inherited Create();
   if AValue = nil then
-    raise EArgumentNilCryptoLibException.Create('value');
+    raise EArgumentNilCryptoLibException.CreateRes(@SValueNil);
   FCritical := ACritical;
   FValue := AValue;
 end;

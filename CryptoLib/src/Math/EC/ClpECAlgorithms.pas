@@ -36,6 +36,13 @@ uses
   ClpNat,
   ClpCryptoLibTypes;
 
+resourcestring
+  SInvalidPoint = 'invalid point';
+  SPointMustBeOnSameCurve = 'point must be on the same curve';
+  SInvalidResult = 'invalid result';
+  SInvalidPointAndScalarArrays = 'point and scalar arrays should be non-nil, and of equal, non-zero, length';
+  SFixedPointCombScalarTooLarge = 'fixed-point comb doesn''t support scalars larger than the curve order';
+
 type
   TECAlgorithms = class(TObject)
   public
@@ -168,7 +175,7 @@ end;
 class function TECAlgorithms.ValidatePoint(const AP: IECPoint): IECPoint;
 begin
   if not AP.IsValid() then
-    raise EInvalidOperationCryptoLibException.Create('Invalid point');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
   Result := AP;
 end;
 
@@ -179,7 +186,7 @@ var
 begin
   LCurve := AP.Curve;
   if not AC.Equals(LCurve) then
-    raise EArgumentCryptoLibException.Create('Point must be on the same curve');
+    raise EArgumentCryptoLibException.CreateRes(@SPointMustBeOnSameCurve);
   LEncoded := AP.GetEncoded(False);
   Result := AC.DecodePoint(LEncoded);
 end;
@@ -190,7 +197,7 @@ var
 begin
   LCurve := AP.Curve;
   if not AC.Equals(LCurve) then
-    raise EArgumentCryptoLibException.Create('Point must be on the same curve');
+    raise EArgumentCryptoLibException.CreateRes(@SPointMustBeOnSameCurve);
   Result := AC.ImportPoint(AP);
 end;
 
@@ -205,8 +212,7 @@ var
 begin
   if (APs = nil) or (AKs = nil) or (System.Length(APs) <> System.Length(AKs)) or
     (System.Length(APs) < 1) then
-    raise EArgumentCryptoLibException.Create(
-      'point and scalar arrays should be non-null, and of equal, non-zero, length');
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPointAndScalarArrays);
   LCount := System.Length(APs);
   case LCount of
     1:
@@ -295,7 +301,7 @@ end;
 class function TECAlgorithms.ImplCheckResult(const AP: IECPoint): IECPoint;
 begin
   if not AP.IsValidPartial() then
-    raise EInvalidOperationCryptoLibException.Create('Invalid result');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidResult);
   Result := AP;
 end;
 
@@ -400,8 +406,7 @@ begin
   LC := AP.Curve;
   LCombSize := TFixedPointUtilities.GetCombSize(LC);
   if (AK.BitLength > LCombSize) or (AL.BitLength > LCombSize) then
-    raise EInvalidOperationCryptoLibException.Create(
-      'fixed-point comb doesn''t support scalars larger than the curve order');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SFixedPointCombScalarTooLarge);
   LInfoP := TFixedPointUtilities.Precompute(AP);
   LInfoQ := TFixedPointUtilities.Precompute(AQ);
   LLookupTableP := LInfoP.LookupTable;

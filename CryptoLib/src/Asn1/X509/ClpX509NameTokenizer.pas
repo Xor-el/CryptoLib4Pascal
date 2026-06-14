@@ -26,6 +26,11 @@ uses
   ClpCryptoLibTypes,
   ClpIX509NameTokenizer;
 
+resourcestring
+  SOidNil = 'OID cannot be empty';
+  SReservedSeparatorCharacter = 'reserved separator character';
+  SBadlyFormattedDirectoryString = 'badly formatted directory string';
+
 type
   /// <summary>
   /// Class for breaking up an X500 Name into its component tokens.
@@ -61,9 +66,9 @@ constructor TX509NameTokenizer.Create(const AOid: String; ASeparator: Char);
 begin
   inherited Create();
   if AOid = '' then
-    raise EArgumentNilCryptoLibException.Create('oid');
+    raise EArgumentNilCryptoLibException.CreateRes(@SOidNil);
   if (ASeparator = '"') or (ASeparator = '\') then
-    raise EArgumentCryptoLibException.Create('reserved separator character');
+    raise EArgumentCryptoLibException.CreateRes(@SReservedSeparatorCharacter);
 
   FValue := AOid;
   FSeparator := ASeparator;
@@ -128,7 +133,7 @@ begin
   end;
 
   if LEscaped or LQuoted then
-    raise EArgumentCryptoLibException.Create('badly formatted directory string');
+    raise EArgumentCryptoLibException.CreateRes(@SBadlyFormattedDirectoryString);
 
   Result := TStringUtilities.Substring(FValue, LBeginIndex, FIndex - (LBeginIndex - 1));
 end;

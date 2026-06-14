@@ -43,6 +43,11 @@ uses
   ClpIPkcsAsn1Objects,
   ClpPkcsObjectIdentifiers;
 
+resourcestring
+  SInStreamNil = 'input stream cannot be nil';
+  SStreamMustBeReadable = 'stream must be readable';
+  SFailedToReadAttributeCertificate = 'failed to read attribute certificate: %s';
+
 type
   /// <summary>
   /// Class for dealing with X509 Attribute Certificates.
@@ -230,10 +235,10 @@ var
   LStreamToUse: TStream;
 begin
   if AInStream = nil then
-    raise EArgumentNilCryptoLibException.Create('inStream');
+    raise EArgumentNilCryptoLibException.CreateRes(@SInStreamNil);
 
   if not AInStream.CanRead then
-    raise EArgumentCryptoLibException.Create('Stream must be read-able');
+    raise EArgumentCryptoLibException.CreateRes(@SStreamMustBeReadable);
 
   if FCurrentStream = nil then
   begin
@@ -307,7 +312,7 @@ begin
     on E: ECertificateCryptoLibException do
       raise;
     on E: Exception do
-      raise ECertificateCryptoLibException.Create('Failed to read attribute certificate: ' + E.Message);
+      raise ECertificateCryptoLibException.CreateResFmt(@SFailedToReadAttributeCertificate, [E.Message]);
   end;
 end;
 

@@ -35,7 +35,7 @@ uses
 
 resourcestring
   SInvalidAesRngSeedLength =
-    'AES RNG Seed Length must be either one of these "128/192/256 bits".';
+    'AES RNG seed length must be one of 128/192/256 bits';
 
 type
   /// <summary>

@@ -32,6 +32,11 @@ uses
   ClpDefaultVerifierCalculator,
   ClpCryptoLibTypes;
 
+resourcestring
+  SAlgorithmNil = 'algorithm cannot be nil';
+  SPublicKeyNil = 'public key cannot be nil';
+  SKeyForVerifyingMustBePublic = 'key for verifying must be public';
+
 type
   /// <summary>
   /// Verifier class for signature verification in ASN.1 based profiles.
@@ -67,11 +72,11 @@ constructor TAsn1VerifierFactory.Create(const AAlgorithm: String;
 begin
   inherited Create();
   if AAlgorithm = '' then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if APublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('publicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicKeyNil);
   if APublicKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Key for verifying must be public');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyForVerifyingMustBePublic);
 
   FAlgID := TX509SignatureUtilities.GetSigAlgID(AAlgorithm);
   FAlgorithm := AAlgorithm;
@@ -83,11 +88,11 @@ constructor TAsn1VerifierFactory.Create(const AAlgorithm: IAlgorithmIdentifier;
 begin
   inherited Create();
   if AAlgorithm = nil then
-    raise EArgumentNilCryptoLibException.Create('algorithm');
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
   if APublicKey = nil then
-    raise EArgumentNilCryptoLibException.Create('publicKey');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicKeyNil);
   if APublicKey.IsPrivate then
-    raise EArgumentCryptoLibException.Create('Key for verifying must be public');
+    raise EArgumentCryptoLibException.CreateRes(@SKeyForVerifyingMustBePublic);
 
   FAlgID := AAlgorithm;
   FAlgorithm := TX509SignatureUtilities.GetSignatureName(AAlgorithm);

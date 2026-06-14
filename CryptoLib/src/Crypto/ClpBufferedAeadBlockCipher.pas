@@ -30,8 +30,8 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCipherNil = 'Cipher Instance Cannot be Nil';
-  SInputNil = 'Input Cannot be Nil';
+  SCipherNil = 'cipher instance cannot be nil';
+  SInputNil = 'input cannot be nil';
 
 type
   TBufferedAeadBlockCipher = class(TBufferedCipherBase, IBufferedAeadBlockCipher)

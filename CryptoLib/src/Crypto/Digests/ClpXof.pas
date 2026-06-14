@@ -30,6 +30,9 @@ uses
   ClpCheck,
   ClpCryptoLibTypes;
 
+resourcestring
+  SHashMustImplementIXof = 'hash must implement IXof';
+
 type
   IXofCore = HlpIHashInfo.IXOF;
   TXof = class(TDigest, IDigest, IXof)
@@ -67,7 +70,7 @@ end;
 constructor TXof.Create(const AHash: IHash);
 begin
   if not Supports(AHash, IXofCore) then
-    raise EArgumentCryptoLibException.Create('AHash must implement IXOF');
+    raise EArgumentCryptoLibException.CreateRes(@SHashMustImplementIXof);
   inherited Create(AHash);
 end;
 

@@ -27,8 +27,12 @@ uses
   ClpCryptoLibTypes,
   ClpIAsn1Encodings;
 
-type
+resourcestring
+  SInvalidTypeForComparison = 'invalid type for comparison';
+  SContentsElementNil = 'contents element cannot be nil';
+  SOctetsLengthMustBeGreaterThanZero = '%s length must be > 0';
 
+type
   /// <summary>
   /// Abstract base class for DER encoding.
   /// </summary>
@@ -360,7 +364,7 @@ var
   LI, LLength: Int32;
 begin
   if not Supports(AOther, IConstructedDerEncoding, LThat) then
-    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTypeForComparison);
 
   if FContentsLength <> LThat.ContentsLength then
   begin
@@ -411,7 +415,7 @@ constructor TTaggedDerEncoding.Create(ATagClass, ATagNo: Int32;
 begin
   inherited Create(ATagClass, ATagNo);
   if AContentsElement = nil then
-    raise EArgumentNilCryptoLibException.Create('contentsElement');
+    raise EArgumentNilCryptoLibException.CreateRes(@SContentsElementNil);
   FContentsElement := AContentsElement;
   FContentsLength := AContentsElement.GetLength();
 end;
@@ -421,7 +425,7 @@ var
   LThat: ITaggedDerEncoding;
 begin
   if not Supports(AOther, ITaggedDerEncoding, LThat) then
-    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTypeForComparison);
 
   if FContentsLength <> LThat.ContentsLength then
   begin
@@ -564,7 +568,7 @@ begin
   end;
 
   if not Supports(AOther, IPrimitiveDerEncoding, LThat) then
-    raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+    raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTypeForComparison);
 
   LThatOctets := LThat.ContentsOctets;
   LLength := System.Length(FContentsOctets);
@@ -643,7 +647,7 @@ constructor TPrimitiveDerEncodingSuffixed.Create(ATagClass, ATagNo: Int32;
 begin
   inherited Create(ATagClass, ATagNo);
   if System.Length(AContentsOctets) = 0 then
-    raise EArgumentCryptoLibException.Create('contentsOctets length must be > 0');
+    raise EArgumentCryptoLibException.CreateResFmt(@SOctetsLengthMustBeGreaterThanZero, ['contents octets']);
   FContentsOctets := AContentsOctets;
   FContentsSuffix := AContentsSuffix;
 end;
@@ -677,7 +681,7 @@ begin
     Exit;
   end;
 
-  raise EInvalidOperationCryptoLibException.Create('Invalid type for comparison');
+  raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidTypeForComparison);
 end;
 
 class function TPrimitiveDerEncodingSuffixed.CompareSuffixed(const AOctetsA: TCryptoLibByteArray;
@@ -686,7 +690,7 @@ var
   LLength, LI, LLast: Int32;
 begin
   if (System.Length(AOctetsA) = 0) or (System.Length(AOctetsB) = 0) then
-    raise EArgumentCryptoLibException.Create('Octets length must be > 0');
+    raise EArgumentCryptoLibException.CreateResFmt(@SOctetsLengthMustBeGreaterThanZero, ['octets']);
 
   LLength := System.Length(AOctetsA);
   if LLength <> System.Length(AOctetsB) then

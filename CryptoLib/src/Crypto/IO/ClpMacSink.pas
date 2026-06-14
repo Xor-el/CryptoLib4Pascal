@@ -26,6 +26,9 @@ uses
   ClpStreams,
   ClpCryptoLibTypes;
 
+resourcestring
+  SMacNil = 'MAC cannot be nil';
+
 type
   /// <summary>
   /// A stream that writes data to an IMac for MAC calculation.
@@ -53,7 +56,7 @@ constructor TMacSink.Create(const AMac: IMac);
 begin
   inherited Create();
   if AMac = nil then
-    raise EArgumentNilCryptoLibException.Create('mac');
+    raise EArgumentNilCryptoLibException.CreateRes(@SMacNil);
   FMac := AMac;
 end;
 

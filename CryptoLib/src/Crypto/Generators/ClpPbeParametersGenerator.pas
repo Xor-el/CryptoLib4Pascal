@@ -28,6 +28,10 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
+resourcestring
+  SPasswordNil = 'password cannot be nil';
+  SSaltNil = 'salt cannot be nil';
+
 type
 
   /// <summary>
@@ -152,9 +156,9 @@ procedure TPbeParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArr
   AIterationCount: Int32);
 begin
  (* if APassword = nil then
-    raise EArgumentNilCryptoLibException.Create('APassword');
+    raise EArgumentNilCryptoLibException.CreateRes(@SPasswordNil);
   if ASalt = nil then
-    raise EArgumentNilCryptoLibException.Create('ASalt');  *)
+    raise EArgumentNilCryptoLibException.CreateRes(@SSaltNil);  *)
 
   FPassword := System.Copy(APassword);
   FSalt := System.Copy(ASalt);
