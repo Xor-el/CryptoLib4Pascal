@@ -7,6 +7,7 @@ Connect4ServerNoTrailingNl,Cert/Chains/Certificate2NoTrailingNl.pem,PEM,Chains,,
 CertChainCrlf,Cert/Chains/CertChainCrlf.pem,PEM,Chains,,CertTests,false
 CertChainNl,Cert/Chains/CertChainNl.pem,PEM,Chains,,CertTests,false
 Crl2,Cert/Crl/Crl2.pem,PEM,Crl,,CertTests,false
+MalformedGeneralizedTimeCrl,Cert/Crl/MalformedGeneralizedTimeCrl.der,DER,Crl,,CertTests,false
 Pkcs7CrlProblem,Cert/Pkcs7/CrlProblem.der,DER,Pkcs7,,CertTests,false
 LegacyTestX509Ssleay,Cert/Legacy/LegacyTestX509Ssleay.der,DER,Legacy,testx509.pem,CertificateTests,false
 LegacyV3Cert1Nasa,Cert/Legacy/LegacyV3Cert1Nasa.der,DER,Legacy,v3-cert1.pem,CertificateTests,false

@@ -147,7 +147,7 @@ resourcestring
   SInvalidOid = '%s not a valid OID';
   SInvalidRelativeOid = '%s not a valid relative OID';
   SFailedToConstructRelativeOidFrom = 'failed to construct relative OID from byte array: %s';
-  SInvalidDateString = 'invalid date string: %s';
+  SInvalidDateString = 'invalid %s format: %s';
   SFailedToConstructGeneralizedTimeFrom = 'failed to construct generalized time from byte array: %s';
   SFailedToConstructUtcTimeFrom = 'failed to construct UTC time from byte array: %s';
   SFailedToConstructObjectDescriptorFrom = 'failed to construct object descriptor from byte array: %s';
@@ -9694,7 +9694,7 @@ begin
     FDateTime := FromString(ATimeString);
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, [E.Message]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, ['GeneralizedTime', E.Message]);
   end;
 end;
 
@@ -10042,7 +10042,7 @@ begin
     FDateTimeLocked := False;
   except
     on E: Exception do
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, [E.Message]);
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidDateString, ['UTCTime', E.Message]);
   end;
 end;
 

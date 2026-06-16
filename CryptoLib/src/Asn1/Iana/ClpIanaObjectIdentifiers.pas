@@ -31,7 +31,9 @@ type
     class var
       FInternet, FDirectory, FMgmt, FExperimental, FClsPrivate, FSecurity,
       FSNMPv2, FMail, FSecurityMechanisms, FSecurityNametypes, FPkix, FIpsec,
-      FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160: IDerObjectIdentifier;
+      FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160,
+      FIdAlg, FIdRsassaPssShake128, FIdRsassaPssShake256, FIdEcdsaWithShake128,
+      FIdEcdsaWithShake256, FIdAlgUnsigned: IDerObjectIdentifier;
 
     class function GetInternet: IDerObjectIdentifier; static; inline;
     class function GetDirectory: IDerObjectIdentifier; static; inline;
@@ -50,6 +52,12 @@ type
     class function GetHmacSha1: IDerObjectIdentifier; static; inline;
     class function GetHmacTiger: IDerObjectIdentifier; static; inline;
     class function GetHmacRipeMD160: IDerObjectIdentifier; static; inline;
+    class function GetIdAlg: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPssShake128: IDerObjectIdentifier; static; inline;
+    class function GetIdRsassaPssShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdEcdsaWithShake128: IDerObjectIdentifier; static; inline;
+    class function GetIdEcdsaWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgUnsigned: IDerObjectIdentifier; static; inline;
 
     class constructor Create;
   public
@@ -70,6 +78,18 @@ type
     class property HmacSha1: IDerObjectIdentifier read GetHmacSha1;
     class property HmacTiger: IDerObjectIdentifier read GetHmacTiger;
     class property HmacRipeMD160: IDerObjectIdentifier read GetHmacRipeMD160;
+    /// <summary>id-alg: 1.3.6.1.5.5.7.6</summary>
+    class property IdAlg: IDerObjectIdentifier read GetIdAlg;
+    /// <summary>id-RSASSA-PSS-SHAKE128</summary>
+    class property IdRsassaPssShake128: IDerObjectIdentifier read GetIdRsassaPssShake128;
+    /// <summary>id-RSASSA-PSS-SHAKE256</summary>
+    class property IdRsassaPssShake256: IDerObjectIdentifier read GetIdRsassaPssShake256;
+    /// <summary>id-ecdsa-with-shake128</summary>
+    class property IdEcdsaWithShake128: IDerObjectIdentifier read GetIdEcdsaWithShake128;
+    /// <summary>id-ecdsa-with-shake256</summary>
+    class property IdEcdsaWithShake256: IDerObjectIdentifier read GetIdEcdsaWithShake256;
+    /// <summary>id-alg-unsigned</summary>
+    class property IdAlgUnsigned: IDerObjectIdentifier read GetIdAlgUnsigned;
   end;
 
 implementation
@@ -95,6 +115,12 @@ begin
   FHmacSha1 := FIsakmpOakley.Branch('2');
   FHmacTiger := FIsakmpOakley.Branch('3');
   FHmacRipeMD160 := FIsakmpOakley.Branch('4');
+  FIdAlg := FPkix.Branch('6');
+  FIdRsassaPssShake128 := FIdAlg.Branch('30');
+  FIdRsassaPssShake256 := FIdAlg.Branch('31');
+  FIdEcdsaWithShake128 := FIdAlg.Branch('32');
+  FIdEcdsaWithShake256 := FIdAlg.Branch('33');
+  FIdAlgUnsigned := FIdAlg.Branch('36');
 end;
 
 class function TIanaObjectIdentifiers.GetClsPrivate: IDerObjectIdentifier;
@@ -130,6 +156,36 @@ end;
 class function TIanaObjectIdentifiers.GetHmacTiger: IDerObjectIdentifier;
 begin
   Result := FHmacTiger;
+end;
+
+class function TIanaObjectIdentifiers.GetIdAlg: IDerObjectIdentifier;
+begin
+  Result := FIdAlg;
+end;
+
+class function TIanaObjectIdentifiers.GetIdAlgUnsigned: IDerObjectIdentifier;
+begin
+  Result := FIdAlgUnsigned;
+end;
+
+class function TIanaObjectIdentifiers.GetIdEcdsaWithShake128: IDerObjectIdentifier;
+begin
+  Result := FIdEcdsaWithShake128;
+end;
+
+class function TIanaObjectIdentifiers.GetIdEcdsaWithShake256: IDerObjectIdentifier;
+begin
+  Result := FIdEcdsaWithShake256;
+end;
+
+class function TIanaObjectIdentifiers.GetIdRsassaPssShake128: IDerObjectIdentifier;
+begin
+  Result := FIdRsassaPssShake128;
+end;
+
+class function TIanaObjectIdentifiers.GetIdRsassaPssShake256: IDerObjectIdentifier;
+begin
+  Result := FIdRsassaPssShake256;
 end;
 
 class function TIanaObjectIdentifiers.GetInternet: IDerObjectIdentifier;

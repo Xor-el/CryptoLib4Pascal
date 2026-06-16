@@ -319,7 +319,7 @@ begin
   except
     on E: EArgumentCryptoLibException do
     begin
-      if not E.Message.Contains('invalid date string') then
+      if not E.Message.Contains('invalid GeneralizedTime format') then
       begin
         Fail('Wrong exception message' + E.Message);
       end;
