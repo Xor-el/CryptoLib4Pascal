@@ -237,7 +237,7 @@ begin
       except
         on E: EInvalidOperationCryptoLibException do
         begin
-          if E.Message.IndexOf('Too many iterations') >= 0 then
+          if E.Message.IndexOf('too many iterations') >= 0 then
             Continue;
           raise;
         end;
