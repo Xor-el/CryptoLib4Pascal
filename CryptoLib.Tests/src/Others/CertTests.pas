@@ -1203,6 +1203,21 @@ begin
   finally
     LStream.Free;
   end;
+
+  // thisUpdate/nextUpdate are 13-character UTCTime-shaped values tagged as GeneralizedTime
+  // ("240123000000Z" reads as year 2401, month 23 - out of range), so the CRL must fail to parse.
+  try
+    LCrlParser.ReadCrl(TCertVectors.LoadDer('MalformedGeneralizedTimeCrl'));
+    Fail('malformed GeneralizedTime CRL - no exception');
+  except
+    on E: ECrlCryptoLibException do
+    begin
+      if not E.Message.Contains('invalid GeneralizedTime format') then
+        Fail('Wrong exception message: ' + E.Message);
+    end
+    else
+      raise;
+  end;
 end;
 
 procedure TCertTest.PemFileTestWithNl;
