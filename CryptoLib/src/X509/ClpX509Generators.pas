@@ -105,7 +105,23 @@ type
     constructor Create(const ATemplate: IX509CertificateStructure); overload;
 
     procedure Reset;
-    procedure SetSerialNumber(const ASerialNumber: TBigInteger);
+    /// <summary>Set the certificate serial number.</summary>
+    /// <remarks>
+    /// Make serial numbers long; if you have no serial number policy make sure the number is at least
+    /// 16 bytes of secure random data. You will be surprised how ugly a serial number collision can get.
+    /// </remarks>
+    /// <param name="ASerialNumber">The serial number.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="ASerialNumber"/> is <c>nil</c>.</exception>
+    /// <exception cref="EArgumentCryptoLibException"><paramref name="ASerialNumber"/> is not a positive integer.</exception>
+    procedure SetSerialNumber(const ASerialNumber: IDerInteger); overload;
+    /// <summary>Set the certificate serial number.</summary>
+    /// <remarks>
+    /// Make serial numbers long; if you have no serial number policy make sure the number is at least
+    /// 16 bytes of secure random data. You will be surprised how ugly a serial number collision can get.
+    /// </remarks>
+    /// <param name="ASerialNumber">The serial number.</param>
+    /// <exception cref="EArgumentCryptoLibException"><paramref name="ASerialNumber"/> is not a positive integer.</exception>
+    procedure SetSerialNumber(const ASerialNumber: TBigInteger); overload;
     procedure SetIssuerDN(const AIssuer: IX509Name);
     procedure SetValidity(const AValidity: IValidity);
     procedure SetNotBefore(const ADate: TDateTime);
@@ -356,6 +372,13 @@ procedure TX509V3CertificateGenerator.Reset;
 begin
   FExtGenerator := TX509ExtensionsGenerator.Create;
   FTbsGen := TV3TbsCertificateGenerator.Create;
+end;
+
+procedure TX509V3CertificateGenerator.SetSerialNumber(const ASerialNumber: IDerInteger);
+begin
+  if (ASerialNumber = nil) or ASerialNumber.IsNegative or ASerialNumber.HasValue(0) then
+    raise EArgumentCryptoLibException.CreateRes(@SSerialNumberMustBeAPositive);
+  FTbsGen.SetSerialNumber(ASerialNumber);
 end;
 
 procedure TX509V3CertificateGenerator.SetSerialNumber(const ASerialNumber: TBigInteger);

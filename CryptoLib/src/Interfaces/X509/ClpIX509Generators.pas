@@ -74,7 +74,22 @@ type
     ['{0B5BDF63-032B-4348-BBD1-30E75BA32731}']
     procedure Reset;
     /// <summary>Set the certificate serial number.</summary>
-    procedure SetSerialNumber(const ASerialNumber: TBigInteger);
+    /// <remarks>
+    /// Make serial numbers long; if you have no serial number policy make sure the number is at least
+    /// 16 bytes of secure random data. You will be surprised how ugly a serial number collision can get.
+    /// </remarks>
+    /// <param name="ASerialNumber">The serial number.</param>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="ASerialNumber"/> is <c>nil</c>.</exception>
+    /// <exception cref="EArgumentCryptoLibException"><paramref name="ASerialNumber"/> is not a positive integer.</exception>
+    procedure SetSerialNumber(const ASerialNumber: IDerInteger); overload;
+    /// <summary>Set the certificate serial number.</summary>
+    /// <remarks>
+    /// Make serial numbers long; if you have no serial number policy make sure the number is at least
+    /// 16 bytes of secure random data. You will be surprised how ugly a serial number collision can get.
+    /// </remarks>
+    /// <param name="ASerialNumber">The serial number.</param>
+    /// <exception cref="EArgumentCryptoLibException"><paramref name="ASerialNumber"/> is not a positive integer.</exception>
+    procedure SetSerialNumber(const ASerialNumber: TBigInteger); overload;
     procedure SetIssuerDN(const AIssuer: IX509Name);
     /// <summary>Sets the certificate validity period from a pre-built <see cref="IValidity"/> structure.</summary>
     procedure SetValidity(const AValidity: IValidity);
