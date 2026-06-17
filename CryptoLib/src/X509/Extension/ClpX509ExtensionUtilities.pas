@@ -80,6 +80,10 @@ type
     /// </summary>
     class function CreateAuthorityKeyIdentifier(const ASpki: ISubjectPublicKeyInfo): IAuthorityKeyIdentifier; overload; static;
     /// <summary>
+    /// Create AuthorityKeyIdentifier from SubjectKeyIdentifier.
+    /// </summary>
+    class function CreateAuthorityKeyIdentifier(const ASki: ISubjectKeyIdentifier): IAuthorityKeyIdentifier; overload; static;
+    /// <summary>
     /// Create AuthorityKeyIdentifier from SubjectPublicKeyInfo with issuer and serial number.
     /// </summary>
     class function CreateAuthorityKeyIdentifier(const ASpki: ISubjectPublicKeyInfo;
@@ -234,6 +238,12 @@ end;
 class function TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(const ASpki: ISubjectPublicKeyInfo): IAuthorityKeyIdentifier;
 begin
   Result := TAuthorityKeyIdentifier.Create(CalculateKeyIdentifier(ASpki));
+end;
+
+class function TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(const ASki: ISubjectKeyIdentifier): IAuthorityKeyIdentifier;
+begin
+  Result := TAuthorityKeyIdentifier.Create(
+    TDerOctetString.WithContents(ASki.GetKeyIdentifier()));
 end;
 
 class function TX509ExtensionUtilities.CreateAuthorityKeyIdentifier(const ASpki: ISubjectPublicKeyInfo;

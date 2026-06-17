@@ -356,7 +356,6 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpArrayUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpAsn1DigestFactory.pas"/>
@@ -635,6 +634,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIX25519Parameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIX25519Generators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509Asn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X500\ClpIX500Asn1Objects.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509Asn1Generators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509NameEntryConverter.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\X509\ClpIX509NameTokenizer.pas"/>
@@ -649,7 +649,25 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpKeyGenerationParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpKeyParameter.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpKMac.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpLongArray.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\BinPoly\ClpIBinPolyMul.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\BinPoly\ClpIBinPolyInv.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyMulBaseBinomialReduce.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyMulBaseTrinomialReduce.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyMulBasePentanomialReduce.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyScalarKernels.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyScalarMedium.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyScalarLarge.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyScalarBackend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyX86V128Kernels.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyX86V128Sizes.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyX86V128Medium.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyX86V128Large.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyX86V128Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyMulBase.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpItohTsujiiInv.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolys.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\ClpIF2mFieldData.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpF2mFieldData.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpMacUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas"/>
@@ -737,6 +755,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpX25519Parameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpX25519Generators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Asn1Objects.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Asn1\X500\ClpX500Asn1Objects.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509DefaultEntryConverter.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Extension.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\X509\ClpX509Asn1Generators.pas"/>
@@ -1059,7 +1078,9 @@
         <DCCReference Include="..\src\Crypto\BlowfishTests.pas"/>
         <DCCReference Include="..\src\Crypto\RijndaelTests.pas"/>
         <DCCReference Include="..\src\Asn1\Asn1IntegerTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1GeneratorTests.pas"/>
         <DCCReference Include="..\src\Asn1\Asn1SequenceParserTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1TimeFormatTests.pas"/>
         <DCCReference Include="..\src\Asn1\BitStringTests.pas"/>
         <DCCReference Include="..\src\Asn1\DerUtf8StringTests.pas"/>
         <DCCReference Include="..\src\Asn1\EnumeratedTests.pas"/>
@@ -1078,6 +1099,7 @@
         <DCCReference Include="..\src\Asn1\TagTests.pas"/>
         <DCCReference Include="..\src\Math\BigIntegerTests.pas"/>
         <DCCReference Include="..\src\Math\PrimesTests.pas"/>
+        <DCCReference Include="..\src\Math\BinPoly\BinPolyTests.pas"/>
         <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP384R1FieldTests.pas"/>
         <DCCReference Include="..\src\Others\DigestTests.pas"/>
         <DCCReference Include="..\src\Others\ECDsa5Tests.pas"/>
@@ -1151,6 +1173,7 @@
         <DCCReference Include="..\src\Crypto\X931SignerTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\CertificateTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\IdpRelativeNameTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\GeneralNameTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\KeyUsageTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\SubjectKeyIdentifierTests.pas"/>
@@ -1195,6 +1218,8 @@
         <DCCReference Include="..\src\Crypto\Bip340SchnorrTests.pas"/>
         <DCCReference Include="..\src\Crypto\Bip327MuSig2Tests.pas"/>
         <DCCReference Include="..\src\Misc\SimdSelectSlotTests.pas"/>
+        <DCCReference Include="..\src\Misc\BinaryPrimitivesTests.pas"/>
+        <DCCReference Include="..\src\Utils\NumberUtilities\ByteUtilitiesTests.pas"/>
         <DCCReference Include="..\src\Utils\CryptoLibTestResourceLoader.pas"/>
         <DCCReference Include="..\src\Utils\Parsers\CsvVectorParser.pas"/>
         <DCCReference Include="..\src\Utils\Parsers\JsonVectorParser.pas"/>
@@ -1213,6 +1238,7 @@
         <DCCReference Include="..\src\Utils\Vectors\PemDerCodec.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\CertVectors.pas"/>
         <DCCReference Include="..\src\CryptoLibTestBase.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
