@@ -31,16 +31,14 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SHashMustImplementIXof = 'hash must implement IXof';
+  SHashMustImplementIXof = 'hash must implement IXOF and IXOFStream';
 
 type
   IXofCore = HlpIHashInfo.IXOF;
+  IXofStreamCore = HlpIHashInfo.IXOFStream;
   TXof = class(TDigest, IDigest, IXof)
 
   strict private
-  var
-    FOutputBytes: Int32;
-
     constructor Create(); overload;
 
   public
@@ -57,8 +55,6 @@ type
 
     function GetDigestSize(): Int32; override;
 
-    procedure Reset(); override;
-
     function Clone(): IDigest; override;
 
   end;
@@ -74,10 +70,9 @@ end;
 
 constructor TXof.Create(const AHash: IHash);
 begin
-  if not Supports(AHash, IXofCore) then
+  if (not Supports(AHash, IXofCore)) or (not Supports(AHash, IXofStreamCore)) then
     raise EArgumentCryptoLibException.CreateRes(@SHashMustImplementIXof);
   inherited Create(AHash);
-  FOutputBytes := 0;
 end;
 
 function TXof.DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -107,22 +102,12 @@ end;
 function TXof.Output(const AOutput: TCryptoLibByteArray;
   AOutOff, AOutLen: Int32): Int32;
 var
- LXof: IXofCore;
- LTotalBytes: Int32;
+ LStream: IXofStreamCore;
 begin
   TCheck.OutputLength(AOutput, AOutOff, AOutLen, 'output buffer is too short');
-  LXof := FHash as IXofCore;
-  LTotalBytes := FOutputBytes + AOutLen;
-  LXof.XOFSizeInBits := UInt64(LTotalBytes) * 8;
-  LXof.DoOutput(AOutput, AOutOff, AOutLen);
-  Inc(FOutputBytes, AOutLen);
+  LStream := FHash as IXofStreamCore;
+  LStream.Squeeze(AOutput, AOutOff, AOutLen);
   Result := AOutLen;
-end;
-
-procedure TXof.Reset;
-begin
-  inherited Reset;
-  FOutputBytes := 0;
 end;
 
 function TXof.Clone(): IDigest;
@@ -131,7 +116,6 @@ var
 begin
   LXof := TXof.Create();
   LXof.FHash := FHash.Clone();
-  LXof.FOutputBytes := FOutputBytes;
   Result := LXof;
 end;
 
