@@ -118,6 +118,11 @@ type
   TCryptoLibShortIntArray = TCryptoLibGenericArray<ShortInt>;
 
   /// <summary>
+  /// Represents a dynamic array of SmallInt.
+  /// </summary>
+  TCryptoLibSmallIntArray = TCryptoLibGenericArray<SmallInt>;
+
+  /// <summary>
   /// Represents a dynamic array of Int32.
   /// </summary>
   TCryptoLibInt32Array = TCryptoLibGenericArray<Int32>;

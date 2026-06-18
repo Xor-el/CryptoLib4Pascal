@@ -41,6 +41,12 @@ uses
   ClpEd448Parameters,
   ClpX25519Parameters,
   ClpX448Parameters,
+  ClpMlDsaParameters,
+  ClpMlKemParameters,
+  ClpIMlDsaParameters,
+  ClpIMlKemParameters,
+  ClpMlKemEngine,
+  ClpArrayUtilities,
   ClpPkcsObjectIdentifiers,
   ClpX509ObjectIdentifiers,
   ClpX9ObjectIdentifiers,
@@ -64,13 +70,21 @@ uses
 
 resourcestring
   SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';
+  SInvalidMlDsaPrivateKey = 'invalid %s private key';
+  SInconsistentMlDsaPrivateKey = 'inconsistent %s private key';
+  SInvalidMlKemPrivateKey = 'invalid %s private key';
+  SInconsistentMlKemPrivateKey = 'inconsistent %s private key';
 
 type
   /// <summary>
   /// Factory for creating private key parameters from PrivateKeyInfo.
   /// </summary>
   TPrivateKeyFactory = class sealed(TObject)
-
+  strict private
+    class function ParseMlDsaPrivateKey(const AParameters: IMlDsaParameters;
+      const APrivateKey: IAsn1OctetString): IMlDsaPrivateKeyParameters; static;
+    class function ParseMlKemPrivateKey(const AParameters: IMlKemParameters;
+      const APrivateKey: IAsn1OctetString): IMlKemPrivateKeyParameters; static;
   public
     class function CreateKey(const APrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter; overload; static;
     class function CreateKey(const AInStr: TStream): IAsymmetricKeyParameter; overload; static;
@@ -97,6 +111,108 @@ type
 implementation
 
 { TPrivateKeyFactory }
+
+class function TPrivateKeyFactory.ParseMlDsaPrivateKey(const AParameters: IMlDsaParameters;
+  const APrivateKey: IAsn1OctetString): IMlDsaPrivateKeyParameters;
+var
+  LLength: Int32;
+  LAsn1Object: IAsn1Object;
+  LTagged: IAsn1TaggedObject;
+  LSequence: IAsn1Sequence;
+  LOct: IAsn1OctetString;
+  LSeed, LEncoding, LFromSeedEncoding: TCryptoLibByteArray;
+  LFromSeed: IMlDsaPrivateKeyParameters;
+begin
+  LLength := APrivateKey.GetOctetsLength();
+  if LLength = AParameters.ParameterSet.SeedLength then
+    Exit(TMlDsaPrivateKeyParameters.FromSeed(AParameters, APrivateKey.GetOctets()));
+  if LLength = AParameters.ParameterSet.PrivateKeyLength then
+    Exit(TMlDsaPrivateKeyParameters.FromEncoding(AParameters, APrivateKey.GetOctets()));
+  try
+    LAsn1Object := TAsn1Object.FromByteArray(APrivateKey.GetOctets());
+    if Supports(LAsn1Object, IAsn1TaggedObject, LTagged) then
+    begin
+      if LTagged.HasContextTag(0) then
+      begin
+        LSeed := TAsn1OctetString.GetTagged(LTagged, False).GetOctets();
+        Exit(TMlDsaPrivateKeyParameters.FromSeed(AParameters, LSeed));
+      end;
+    end
+    else if Supports(LAsn1Object, IAsn1OctetString, LOct) then
+    begin
+      LEncoding := LOct.GetOctets();
+      Exit(TMlDsaPrivateKeyParameters.FromEncoding(AParameters, LEncoding));
+    end
+    else if Supports(LAsn1Object, IAsn1Sequence, LSequence) then
+    begin
+      if LSequence.Count = 2 then
+      begin
+        LSeed := TAsn1OctetString.GetInstance(LSequence[0]).GetOctets();
+        LEncoding := TAsn1OctetString.GetInstance(LSequence[1]).GetOctets();
+        LFromSeed := TMlDsaPrivateKeyParameters.FromSeed(AParameters, LSeed, TMlDsaPrivateKeyFormat.SeedAndEncoding);
+        LFromSeedEncoding := LFromSeed.GetEncoded();
+        if not TArrayUtilities.FixedTimeEquals(LFromSeedEncoding, LEncoding) then
+          raise EArgumentCryptoLibException.CreateResFmt(@SInconsistentMlDsaPrivateKey, [AParameters.Name]);
+        Exit(LFromSeed);
+      end;
+    end;
+  except
+    on E: EArgumentCryptoLibException do
+      raise;
+  end;
+  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMlDsaPrivateKey, [AParameters.Name]);
+end;
+
+class function TPrivateKeyFactory.ParseMlKemPrivateKey(const AParameters: IMlKemParameters;
+  const APrivateKey: IAsn1OctetString): IMlKemPrivateKeyParameters;
+var
+  LLength: Int32;
+  LAsn1Object: IAsn1Object;
+  LTagged: IAsn1TaggedObject;
+  LSequence: IAsn1Sequence;
+  LOct: IAsn1OctetString;
+  LSeed, LEncoding, LFromSeedEncoding: TCryptoLibByteArray;
+  LFromSeed: IMlKemPrivateKeyParameters;
+begin
+  LLength := APrivateKey.GetOctetsLength();
+  if LLength = TMlKemEngine.SeedBytes then
+    Exit(TMlKemPrivateKeyParameters.FromSeed(AParameters, APrivateKey.GetOctets()));
+  if LLength = AParameters.ParameterSet.Engine.SecretKeyBytes then
+    Exit(TMlKemPrivateKeyParameters.FromEncoding(AParameters, APrivateKey.GetOctets()));
+  try
+    LAsn1Object := TAsn1Object.FromByteArray(APrivateKey.GetOctets());
+    if Supports(LAsn1Object, IAsn1TaggedObject, LTagged) then
+    begin
+      if LTagged.HasContextTag(0) then
+      begin
+        LSeed := TAsn1OctetString.GetTagged(LTagged, False).GetOctets();
+        Exit(TMlKemPrivateKeyParameters.FromSeed(AParameters, LSeed));
+      end;
+    end
+    else if Supports(LAsn1Object, IAsn1OctetString, LOct) then
+    begin
+      LEncoding := LOct.GetOctets();
+      Exit(TMlKemPrivateKeyParameters.FromEncoding(AParameters, LEncoding));
+    end
+    else if Supports(LAsn1Object, IAsn1Sequence, LSequence) then
+    begin
+      if LSequence.Count = 2 then
+      begin
+        LSeed := TAsn1OctetString.GetInstance(LSequence[0]).GetOctets();
+        LEncoding := TAsn1OctetString.GetInstance(LSequence[1]).GetOctets();
+        LFromSeed := TMlKemPrivateKeyParameters.FromSeed(AParameters, LSeed, TMlKemPrivateKeyFormat.SeedAndEncoding);
+        LFromSeedEncoding := LFromSeed.GetEncoded();
+        if not TArrayUtilities.FixedTimeEquals(LFromSeedEncoding, LEncoding) then
+          raise EArgumentCryptoLibException.CreateResFmt(@SInconsistentMlKemPrivateKey, [AParameters.Name]);
+        Exit(LFromSeed);
+      end;
+    end;
+  except
+    on E: EArgumentCryptoLibException do
+      raise;
+  end;
+  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMlKemPrivateKey, [AParameters.Name]);
+end;
 
 class function TPrivateKeyFactory.CreateKey(const APrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter;
 var
@@ -155,6 +271,8 @@ var
   LLVal: Int32;
   LDHParams: IDHParameters;
   LRawKey: TCryptoLibByteArray;
+  LMlDsaParameters: IMlDsaParameters;
+  LMlKemParameters: IMlKemParameters;
 begin
   if AKeyInfo = nil then
   begin
@@ -266,6 +384,20 @@ begin
     else
       LRawKey := TAsn1OctetString.GetInstance(AKeyInfo.ParsePrivateKey()).GetOctets();
     Result := TX448PrivateKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
+  LMlDsaParameters := TMlDsaParameters.GetByOid(LAlgOid);
+  if LMlDsaParameters <> nil then
+  begin
+    Result := ParseMlDsaPrivateKey(LMlDsaParameters, AKeyInfo.PrivateKey);
+    Exit;
+  end;
+
+  LMlKemParameters := TMlKemParameters.GetByOid(LAlgOid);
+  if LMlKemParameters <> nil then
+  begin
+    Result := ParseMlKemPrivateKey(LMlKemParameters, AKeyInfo.PrivateKey);
     Exit;
   end;
 

@@ -68,6 +68,10 @@ uses
   ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
+  ClpIMlDsaParameters,
+  ClpMlDsaParameters,
+  ClpMlDsaSigner,
+  ClpHashMlDsaSigner,
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
   ClpCryptoLibTypes,
@@ -107,11 +111,13 @@ type
     class function GetMechanism(const AAlgorithm: String): String; static;
     class function GetAlgorithms: TCryptoLibStringArray; static;
 
-    class function GetSignerForMechanism(const AMechanism: String): ISigner; static;
+    class function GetSignerForMechanism(const AMechanism: String;
+      ADeterministic: Boolean = False): ISigner; static;
     class function GetDefaultX509ParametersForMechanism(const AMechanism: String): IAsn1Encodable; static;
     class function GetPssX509Parameters(const ADigestName: String): IAsn1Encodable; static;
     class function InitSignerForMechanism(const AMechanism: String; AForSigning: Boolean;
-      const AKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; static;
+      const AKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom;
+      ADeterministic: Boolean = False): ISigner; static;
     class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier; AIsNoRandom: Boolean); static;
     class constructor Create;
     class destructor Destroy;
@@ -143,12 +149,25 @@ type
       static;
 
     /// <summary>
+    /// Resolve and instantiate an <see cref="ISigner"/> for <paramref name="AOid"/>, optionally in ML-DSA
+    /// deterministic mode when <paramref name="ADeterministic"/> is <c>true</c>.
+    /// </summary>
+    class function GetSigner(const AOid: IDerObjectIdentifier; ADeterministic: Boolean): ISigner; overload;
+      static;
+
+    /// <summary>
     /// Resolve and instantiate an <see cref="ISigner"/> by name (for example <c>SHA256withRSA</c>,
     /// <c>SHA1withECDSA</c>, <c>Ed25519</c>).
     /// </summary>
     /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
     /// <exception cref="ESecurityUtilityCryptoLibException">If the algorithm name is not recognised.</exception>
     class function GetSigner(const AAlgorithm: String): ISigner; overload;
+      static;
+
+    /// <summary>
+    /// Resolve and instantiate an <see cref="ISigner"/> by name, optionally in ML-DSA deterministic mode.
+    /// </summary>
+    class function GetSigner(const AAlgorithm: String; ADeterministic: Boolean): ISigner; overload;
       static;
 
     /// <summary>
@@ -180,12 +199,29 @@ type
       static;
 
     /// <summary>
+    /// Resolve a signer for <paramref name="AAlgorithmOid"/> and initialise it, optionally in ML-DSA
+    /// deterministic mode when <paramref name="ADeterministic"/> is <c>true</c>.
+    /// </summary>
+    class function InitSigner(const AAlgorithmOid: IDerObjectIdentifier; AForSigning: Boolean;
+      const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom;
+      ADeterministic: Boolean): ISigner; overload;
+      static;
+
+    /// <summary>
     /// Resolve a signer by name and initialise it for signing or verification. See the OID overload for parameter semantics.
     /// </summary>
     /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgorithm"/> is empty.</exception>
     /// <exception cref="ESecurityUtilityCryptoLibException">If the mechanism cannot be resolved.</exception>
     class function InitSigner(const AAlgorithm: String; AForSigning: Boolean;
       const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner; overload;
+      static;
+
+    /// <summary>
+    /// Resolve a signer by name and initialise it, optionally in ML-DSA deterministic mode.
+    /// </summary>
+    class function InitSigner(const AAlgorithm: String; AForSigning: Boolean;
+      const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom;
+      ADeterministic: Boolean): ISigner; overload;
       static;
 
     /// <summary>The set of canonical signature algorithm names registered in this factory.</summary>
@@ -215,6 +251,8 @@ begin
 end;
 
 class constructor TSignerUtilities.Create;
+var
+  LPair: TPair<String, IMlDsaParameters>;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -687,6 +725,9 @@ begin
   AddAlgorithm('Ed448ph', nil, True);
 
   AddAlgorithm('BIP340Schnorr', nil, True);
+
+  for LPair in TMlDsaParameters.ByName do
+    AddAlgorithm(LPair.Key, LPair.Value.Oid, False);
 end;
 
 class destructor TSignerUtilities.Destroy;
@@ -738,6 +779,12 @@ begin
 end;
 
 class function TSignerUtilities.GetSigner(const AOid: IDerObjectIdentifier): ISigner;
+begin
+  Result := GetSigner(AOid, False);
+end;
+
+class function TSignerUtilities.GetSigner(const AOid: IDerObjectIdentifier;
+  ADeterministic: Boolean): ISigner;
 var
   LMechanism: String;
   LSigner: ISigner;
@@ -747,7 +794,7 @@ begin
 
   if FAlgorithmOidMap.TryGetValue(AOid, LMechanism) then
   begin
-    LSigner := GetSignerForMechanism(LMechanism);
+    LSigner := GetSignerForMechanism(LMechanism, ADeterministic);
     if LSigner <> nil then
     begin
       Result := LSigner;
@@ -759,6 +806,12 @@ begin
 end;
 
 class function TSignerUtilities.GetSigner(const AAlgorithm: String): ISigner;
+begin
+  Result := GetSigner(AAlgorithm, False);
+end;
+
+class function TSignerUtilities.GetSigner(const AAlgorithm: String;
+  ADeterministic: Boolean): ISigner;
 var
   LMechanism: String;
   LSigner: ISigner;
@@ -770,7 +823,7 @@ begin
   if LMechanism = '' then
     LMechanism := TStringUtilities.ToUpperInvariant(AAlgorithm);
 
-  LSigner := GetSignerForMechanism(LMechanism);
+  LSigner := GetSignerForMechanism(LMechanism, ADeterministic);
   if LSigner <> nil then
   begin
     Result := LSigner;
@@ -848,8 +901,10 @@ begin
     TDerInteger.ValueOf(LSaltLen), TRsassaPssParameters.DefaultTrailerField);
 end;
 
-class function TSignerUtilities.GetSignerForMechanism(const AMechanism: String): ISigner;
+class function TSignerUtilities.GetSignerForMechanism(const AMechanism: String;
+  ADeterministic: Boolean): ISigner;
 var
+  LParams: IMlDsaParameters;
   LDigestName: String;
   LDigest: IDigest;
   LWithPos, LEndPos: Int32;
@@ -892,6 +947,16 @@ begin
   if AMechanism = 'BIP340Schnorr' then
   begin
     Result := TBip340SchnorrSigner.Create();
+    Exit;
+  end;
+
+  LParams := TMlDsaParameters.GetByName(AMechanism);
+  if LParams <> nil then
+  begin
+    if LParams.PreHashOid = nil then
+      Result := TMlDsaSigner.Create(LParams, ADeterministic)
+    else
+      Result := THashMlDsaSigner.Create(LParams, ADeterministic);
     Exit;
   end;
 
@@ -990,6 +1055,13 @@ end;
 class function TSignerUtilities.InitSigner(const AAlgorithmOid: IDerObjectIdentifier;
   AForSigning: Boolean; const APrivateKey: IAsymmetricKeyParameter;
   const ARandom: ISecureRandom): ISigner;
+begin
+  Result := InitSigner(AAlgorithmOid, AForSigning, APrivateKey, ARandom, False);
+end;
+
+class function TSignerUtilities.InitSigner(const AAlgorithmOid: IDerObjectIdentifier;
+  AForSigning: Boolean; const APrivateKey: IAsymmetricKeyParameter;
+  const ARandom: ISecureRandom; ADeterministic: Boolean): ISigner;
 var
   LMechanism: String;
 begin
@@ -999,11 +1071,18 @@ begin
   if not FAlgorithmOidMap.TryGetValue(AAlgorithmOid, LMechanism) then
     raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AAlgorithmOid.ID]);
 
-  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
+  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom, ADeterministic);
 end;
 
 class function TSignerUtilities.InitSigner(const AAlgorithm: String; AForSigning: Boolean;
   const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom): ISigner;
+begin
+  Result := InitSigner(AAlgorithm, AForSigning, APrivateKey, ARandom, False);
+end;
+
+class function TSignerUtilities.InitSigner(const AAlgorithm: String; AForSigning: Boolean;
+  const APrivateKey: IAsymmetricKeyParameter; const ARandom: ISecureRandom;
+  ADeterministic: Boolean): ISigner;
 var
   LMechanism: String;
 begin
@@ -1014,22 +1093,22 @@ begin
   if LMechanism = '' then
     LMechanism := TStringUtilities.ToUpperInvariant(AAlgorithm);
 
-  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom);
+  Result := InitSignerForMechanism(LMechanism, AForSigning, APrivateKey, ARandom, ADeterministic);
 end;
 
 class function TSignerUtilities.InitSignerForMechanism(const AMechanism: String;
   AForSigning: Boolean; const AKey: IAsymmetricKeyParameter;
-  const ARandom: ISecureRandom): ISigner;
+  const ARandom: ISecureRandom; ADeterministic: Boolean): ISigner;
 var
   LSigner: ISigner;
   LCipherParameters: ICipherParameters;
 begin
-  LSigner := GetSignerForMechanism(AMechanism);
+  LSigner := GetSignerForMechanism(AMechanism, ADeterministic);
   if LSigner = nil then
     raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AMechanism]);
 
   LCipherParameters := AKey;
-  if AForSigning and (not FNoRandom.ContainsKey(AMechanism)) then
+  if AForSigning and (not ADeterministic) and (not FNoRandom.ContainsKey(AMechanism)) then
   begin
     LCipherParameters := TParameterUtilities.WithRandom(LCipherParameters, ARandom);
   end;

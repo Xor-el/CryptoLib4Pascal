@@ -37,17 +37,19 @@ uses
   RijndaelTests, BlowfishTests, CcmTests, ChaCha20Poly1305Tests, CMacTests,
   EaxTests, OcbTests, MacTests, Poly1305Tests, AeadTestUtilities,
   GcmReorderTests, GCMTests, GcmSivTests, GMacTests, Pkcs12Tests,
-  Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
-  CryptoLibTestBase, SimdSelectSlotTests, BinaryPrimitivesTests,
-  PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests, OpenSslReaderTests,
-  OpenSslWriterTests, X509CertGenTests, X509CertificatePairTests,
-  X509UtilitiesTests, FixedSecureRandom, ShortenedDigest, CertTestUtilities,
-  CryptoTestKeys, FusedKernelToggle, CryptoLibTestResourceLoader,
-  CsvVectorParser, JsonVectorParser, Bip327Vectors, Bip340Vectors, HmacVectors,
-  AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
-  OpenSslVectors, PkcsVectors, CertVectors, CsvVectorLoaderBase,
-  TestKeyBuilders, PemDerCodec, PemReaderVectors, Argon2Vectors, Int32Tests,
-  Int64Tests, ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
+  Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests, MlKemTests,
+  MlDsaTests, PqcPkcsTests, CryptoLibTestBase, SimdSelectSlotTests,
+  BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests,
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  X509CertificatePairTests, X509UtilitiesTests, FixedSecureRandom,
+  ShortenedDigest, CertTestUtilities, CryptoTestKeys, FusedKernelToggle,
+  CryptoLibTestResourceLoader, NistSecureRandom, CsvVectorParser,
+  JsonVectorParser, RspTxtVectorParser, RspTxtVectorParserTests, Bip327Vectors,
+  Bip340Vectors, HmacVectors, AsymmetricTestVectors, SymmetricBlockVectors,
+  ChaChaPoly1305Vectors, OpenSslVectors, PkcsVectors, CertVectors,
+  CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
+  Argon2Vectors, PqcTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
+  IPAddressUtilitiesTests, PemReaderTests;
 
 type
 
