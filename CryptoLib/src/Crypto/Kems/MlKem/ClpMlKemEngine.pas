@@ -91,7 +91,7 @@ type
 
     procedure GenerateKemKeyPair(const ARandom: ISecureRandom;
       out ASeed, AEncoding: TCryptoLibByteArray);
-    procedure GenerateKemKeyPairInternal(const ASeed: TCryptoLibByteArray;
+    procedure GenerateKemKeyPairFromSeed(const ASeed: TCryptoLibByteArray;
       out AEncoding: TCryptoLibByteArray);
 
     procedure KemDecrypt(const ADecapKey, AEncBuf: TCryptoLibByteArray; AEncOff: Int32;
@@ -217,10 +217,10 @@ procedure TMlKemEngine.GenerateKemKeyPair(const ARandom: ISecureRandom;
   out ASeed, AEncoding: TCryptoLibByteArray);
 begin
   ASeed := TSecureRandom.GetNextBytes(ARandom, SymBytes * 2);
-  GenerateKemKeyPairInternal(ASeed, AEncoding);
+  GenerateKemKeyPairFromSeed(ASeed, AEncoding);
 end;
 
-procedure TMlKemEngine.GenerateKemKeyPairInternal(const ASeed: TCryptoLibByteArray;
+procedure TMlKemEngine.GenerateKemKeyPairFromSeed(const ASeed: TCryptoLibByteArray;
   out AEncoding: TCryptoLibByteArray);
 begin
   System.SetLength(AEncoding, FSecretKeyBytes);

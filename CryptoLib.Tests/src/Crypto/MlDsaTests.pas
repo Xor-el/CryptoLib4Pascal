@@ -461,10 +461,10 @@ begin
   if SameText(LContextValue, 'none') then
   begin
     SetLength(LRnd, 32);
-    LGenerated := LPrivateKeyConcrete.SignInternal(LRnd, LMsg, 0, System.Length(LMsg));
-    CheckTrue(AreEqual(LSm, LGenerated), AName + ' ' + LCount + ': SignInternal');
-    CheckTrue(LPublicKeyConcrete.VerifyInternal(LMsg, 0, System.Length(LMsg), LSm),
-      AName + ' ' + LCount + ': VerifyInternal');
+    LGenerated := LPrivateKeyConcrete.SignRaw(LRnd, LMsg, 0, System.Length(LMsg));
+    CheckTrue(AreEqual(LSm, LGenerated), AName + ' ' + LCount + ': SignRaw');
+    CheckTrue(LPublicKeyConcrete.VerifyRaw(LMsg, 0, System.Length(LMsg), LSm),
+      AName + ' ' + LCount + ': VerifyRaw');
     Exit;
   end;
 
@@ -500,7 +500,7 @@ begin
     SetLength(LRnd, 32);
   LPrivateKey := TMlDsaPrivateKeyParameters.FromEncoding(AParameters, LSk);
   LPrivateKeyConcrete := LPrivateKey as TMlDsaPrivateKeyParameters;
-  LGenerated := LPrivateKeyConcrete.SignInternal(LRnd, LMessage, 0, System.Length(LMessage));
+  LGenerated := LPrivateKeyConcrete.SignRaw(LRnd, LMessage, 0, System.Length(LMessage));
   CheckTrue(AreEqual(LGenerated, LSignature), AName + ': signature');
 end;
 
@@ -519,7 +519,7 @@ begin
   LSignature := DecodeHex(AData['signature']);
   LPublicKey := TMlDsaPublicKeyParameters.FromEncoding(AParameters, LPk);
   LPublicKeyConcrete := LPublicKey as TMlDsaPublicKeyParameters;
-  LVerified := LPublicKeyConcrete.VerifyInternal(LMessage, 0, System.Length(LMessage), LSignature);
+  LVerified := LPublicKeyConcrete.VerifyRaw(LMessage, 0, System.Length(LMessage), LSignature);
   CheckEquals(LTestPassed, LVerified, AName + ': expected ' + SysUtils.BoolToStr(LTestPassed, True));
 end;
 

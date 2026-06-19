@@ -63,6 +63,10 @@ type
     FSymmetric: IMlDsaSymmetric;
     class function FixedTimeEquals(ALen: Int32; const AA: TCryptoLibByteArray; AAOff: Int32;
       const AB: TCryptoLibByteArray; ABOff: Int32): Boolean; static;
+    procedure MsgRepEndSignCore(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
+      const ARho, AK, AT0Enc, AS1Enc, AS2Enc, ARnd: TCryptoLibByteArray);
+    function MsgRepEndVerifyCore(const ADigest: IXof; const ASig: TCryptoLibByteArray; ASigLen: Int32;
+      const ARho, AEncT1: TCryptoLibByteArray): Boolean;
   public
     constructor Create(AMode: Int32; const ARandom: ISecureRandom);
 
@@ -88,7 +92,7 @@ type
 
     procedure GenerateKeyPair(const ARandom: ISecureRandom; out ASeed: TCryptoLibByteArray;
       out ARho, AK, ATr, AS1, AS2, AT0, AEncT1: TCryptoLibByteArray);
-    procedure GenerateKeyPairInternal(const ASeed: TCryptoLibByteArray;
+    procedure GenerateKeyPairFromSeed(const ASeed: TCryptoLibByteArray;
       out ARho, AK, ATr, AS1, AS2, AT0, AEncT1: TCryptoLibByteArray);
     function DeriveT1(const ARho, AS1Enc, AS2Enc, AT0Enc: TCryptoLibByteArray): TCryptoLibByteArray;
 
@@ -96,17 +100,15 @@ type
     function CreateMsgRepDigest: IXof;
     procedure MsgRepEndSign(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
       const ARho, AK, AT0Enc, AS1Enc, AS2Enc: TCryptoLibByteArray);
-    procedure MsgRepEndSignInternal(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
-      const ARho, AK, AT0Enc, AS1Enc, AS2Enc, ARnd: TCryptoLibByteArray);
-    function MsgRepEndVerifyInternal(const ADigest: IXof; const ASig: TCryptoLibByteArray; ASigLen: Int32;
+    function MsgRepEndVerify(const ADigest: IXof; const ASig: TCryptoLibByteArray; ASigLen: Int32;
       const ARho, AEncT1: TCryptoLibByteArray): Boolean;
     function MsgRepPreHash(const ATr, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32): IXof;
 
     procedure Sign(var ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
       AMsgOff, AMsgLen: Int32; const ARho, AK, ATr, AT0Enc, AS1Enc, AS2Enc: TCryptoLibByteArray);
-    procedure SignInternal(var ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
+    procedure SignRaw(var ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
       AMsgOff, AMsgLen: Int32; const ARho, AK, ATr, AT0Enc, AS1Enc, AS2Enc, ARnd: TCryptoLibByteArray);
-    function VerifyInternal(const ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
+    function VerifyRaw(const ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
       AMsgOff, AMsgLen: Int32; const ARho, AEncT1, ATr: TCryptoLibByteArray): Boolean;
   end;
 
@@ -295,10 +297,10 @@ procedure TMlDsaEngine.GenerateKeyPair(const ARandom: ISecureRandom; out ASeed: 
   out ARho, AK, ATr, AS1, AS2, AT0, AEncT1: TCryptoLibByteArray);
 begin
   ASeed := TSecureRandom.GetNextBytes(ARandom, SeedBytes);
-  GenerateKeyPairInternal(ASeed, ARho, AK, ATr, AS1, AS2, AT0, AEncT1);
+  GenerateKeyPairFromSeed(ASeed, ARho, AK, ATr, AS1, AS2, AT0, AEncT1);
 end;
 
-procedure TMlDsaEngine.GenerateKeyPairInternal(const ASeed: TCryptoLibByteArray;
+procedure TMlDsaEngine.GenerateKeyPairFromSeed(const ASeed: TCryptoLibByteArray;
   out ARho, AK, ATr, AS1, AS2, AT0, AEncT1: TCryptoLibByteArray);
 var
   LBuf, LRhoPrime: TCryptoLibByteArray;
@@ -400,10 +402,16 @@ begin
     LRnd := TSecureRandom.GetNextBytes(FRandom, RndBytes)
   else
     FillChar(LRnd[0], RndBytes, 0);
-  MsgRepEndSignInternal(ADigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc, LRnd);
+  MsgRepEndSignCore(ADigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc, LRnd);
 end;
 
-procedure TMlDsaEngine.MsgRepEndSignInternal(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
+function TMlDsaEngine.MsgRepEndVerify(const ADigest: IXof; const ASig: TCryptoLibByteArray;
+  ASigLen: Int32; const ARho, AEncT1: TCryptoLibByteArray): Boolean;
+begin
+  Result := MsgRepEndVerifyCore(ADigest, ASig, ASigLen, ARho, AEncT1);
+end;
+
+procedure TMlDsaEngine.MsgRepEndSignCore(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
   const ARho, AK, AT0Enc, AS1Enc, AS2Enc, ARnd: TCryptoLibByteArray);
 var
   LMu, LRhoPrime: TCryptoLibByteArray;
@@ -487,7 +495,7 @@ begin
   end;
 end;
 
-function TMlDsaEngine.MsgRepEndVerifyInternal(const ADigest: IXof; const ASig: TCryptoLibByteArray;
+function TMlDsaEngine.MsgRepEndVerifyCore(const ADigest: IXof; const ASig: TCryptoLibByteArray;
   ASigLen: Int32; const ARho, AEncT1: TCryptoLibByteArray): Boolean;
 var
   LBuf: TCryptoLibByteArray;
@@ -547,22 +555,23 @@ begin
   MsgRepEndSign(LDigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc);
 end;
 
-procedure TMlDsaEngine.SignInternal(var ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
+procedure TMlDsaEngine.SignRaw(var ASig: TCryptoLibByteArray; ASigLen: Int32; const AMsg: TCryptoLibByteArray;
   AMsgOff, AMsgLen: Int32; const ARho, AK, ATr, AT0Enc, AS1Enc, AS2Enc, ARnd: TCryptoLibByteArray);
 var
   LDigest: IXof;
 begin
   LDigest := MsgRepPreHash(ATr, AMsg, AMsgOff, AMsgLen);
-  MsgRepEndSignInternal(LDigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc, ARnd);
+  MsgRepEndSignCore(LDigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc, ARnd);
 end;
 
-function TMlDsaEngine.VerifyInternal(const ASig: TCryptoLibByteArray; ASigLen: Int32;
-  const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32; const ARho, AEncT1, ATr: TCryptoLibByteArray): Boolean;
+function TMlDsaEngine.VerifyRaw(const ASig: TCryptoLibByteArray; ASigLen: Int32;
+  const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32; const ARho, AEncT1,
+  ATr: TCryptoLibByteArray): Boolean;
 var
   LDigest: IXof;
 begin
   LDigest := MsgRepPreHash(ATr, AMsg, AMsgOff, AMsgLen);
-  Result := MsgRepEndVerifyInternal(LDigest, ASig, ASigLen, ARho, AEncT1);
+  Result := MsgRepEndVerifyCore(LDigest, ASig, ASigLen, ARho, AEncT1);
 end;
 
 end.

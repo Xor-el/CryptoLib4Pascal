@@ -27,7 +27,6 @@ uses
   ClpIMlDsaParameters,
   ClpMlDsaParameters,
   ClpIMlDsaEngine,
-  ClpMlDsaEngine,
   ClpParameterUtilities,
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
@@ -154,13 +153,10 @@ begin
 end;
 
 function TMlDsaSigner.VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
-var
-  LEngineConcrete: TMlDsaEngine;
 begin
   if FPublicKey = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SNotInitializedForVerify);
-  LEngineConcrete := FEngine as TMlDsaEngine;
-  Result := LEngineConcrete.MsgRepEndVerifyInternal(FMsgRepDigest, ASignature, System.Length(ASignature),
+  Result := FEngine.MsgRepEndVerify(FMsgRepDigest, ASignature, System.Length(ASignature),
     FPublicKey.GetRho, FPublicKey.GetT1);
   Reset;
 end;

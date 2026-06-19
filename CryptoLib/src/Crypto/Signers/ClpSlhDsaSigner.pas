@@ -154,7 +154,7 @@ begin
     System.SetLength(LOptRand, LN);
     ARandom.NextBytes(LOptRand);
   end;
-  Result := LPrivateKey.SignInternal(LOptRand, FBuffer, 0, FCount);
+  Result := LPrivateKey.SignRaw(LOptRand, FBuffer, 0, FCount);
   Reset;
 end;
 
@@ -164,7 +164,7 @@ var
   LPublicKey: TSlhDsaPublicKeyParameters;
 begin
   LPublicKey := APublicKey as TSlhDsaPublicKeyParameters;
-  Result := LPublicKey.VerifyInternal(FBuffer, 0, FCount, ASignature);
+  Result := LPublicKey.VerifyRaw(FBuffer, 0, FCount, ASignature);
   Reset;
 end;
 

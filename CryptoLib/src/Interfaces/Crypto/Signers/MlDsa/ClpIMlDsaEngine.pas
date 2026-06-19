@@ -56,6 +56,8 @@ type
     function CreateMsgRepDigest: IXof;
     procedure MsgRepEndSign(const ADigest: IXof; var ASig: TCryptoLibByteArray; ASigLen: Int32;
       const ARho, AK, AT0Enc, AS1Enc, AS2Enc: TCryptoLibByteArray);
+    function MsgRepEndVerify(const ADigest: IXof; const ASig: TCryptoLibByteArray; ASigLen: Int32;
+      const ARho, AEncT1: TCryptoLibByteArray): Boolean;
 
     property K: Int32 read GetK;
     property L: Int32 read GetL;

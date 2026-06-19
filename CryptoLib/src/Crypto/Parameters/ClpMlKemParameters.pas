@@ -130,14 +130,14 @@ type
   strict private
   var
     FEncoding: TCryptoLibByteArray;
+    procedure InternalEncapsulate(const ARandBytes: TCryptoLibByteArray;
+      const AEnc, ASec: TCryptoLibByteArray; AEncOff, ASecOff: Int32);
   public
     class function FromEncoding(const AParameters: IMlKemParameters;
       const AEncoding: TCryptoLibByteArray): IMlKemPublicKeyParameters; static;
     constructor Create(const AParameters: IMlKemParameters; const AEncoding: TCryptoLibByteArray);
     function GetEncoded(): TCryptoLibByteArray;
     function GetEncoding: TCryptoLibByteArray;
-    procedure InternalEncapsulate(const ARandBytes: TCryptoLibByteArray;
-      const AEnc, ASec: TCryptoLibByteArray; AEncOff, ASecOff: Int32);
   end;
 
   TMlKemPrivateKeyParameters = class sealed(TMlKemKeyParameters, IMlKemPrivateKeyParameters)
@@ -443,6 +443,7 @@ class function TMlKemPrivateKeyParameters.FromSeed(const AParameters: IMlKemPara
   const ASeed: TCryptoLibByteArray; APreferredFormat: TMlKemPrivateKeyFormat): IMlKemPrivateKeyParameters;
 var
   LSeedCopy, LEncoding: TCryptoLibByteArray;
+  LEngineConcrete: TMlKemEngine;
 begin
   if AParameters = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersNil);
@@ -452,7 +453,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SInvalidMlKemLength);
   APreferredFormat := CheckFormat(APreferredFormat, ASeed);
   LSeedCopy := System.Copy(ASeed);
-  AParameters.ParameterSet.Engine.GenerateKemKeyPairInternal(LSeedCopy, LEncoding);
+  LEngineConcrete := AParameters.ParameterSet.Engine as TMlKemEngine;
+  LEngineConcrete.GenerateKemKeyPairFromSeed(LSeedCopy, LEncoding);
   Result := TMlKemPrivateKeyParameters.Create(AParameters, LSeedCopy, LEncoding, APreferredFormat);
 end;
 

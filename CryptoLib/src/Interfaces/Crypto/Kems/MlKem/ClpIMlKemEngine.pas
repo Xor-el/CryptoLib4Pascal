@@ -45,8 +45,6 @@ type
 
     procedure GenerateKemKeyPair(const ARandom: ISecureRandom;
       out ASeed, AEncoding: TCryptoLibByteArray);
-    procedure GenerateKemKeyPairInternal(const ASeed: TCryptoLibByteArray;
-      out AEncoding: TCryptoLibByteArray);
 
     procedure KemDecrypt(const ADecapKey, AEncBuf: TCryptoLibByteArray; AEncOff: Int32;
       const ASecBuf: TCryptoLibByteArray; ASecOff: Int32);

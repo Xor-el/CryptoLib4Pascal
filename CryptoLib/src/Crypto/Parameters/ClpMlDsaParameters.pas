@@ -135,7 +135,7 @@ type
     function GetRho: TCryptoLibByteArray;
     function GetT1: TCryptoLibByteArray;
     function GetPublicKeyHash: TCryptoLibByteArray;
-    function VerifyInternal(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+    function VerifyRaw(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray): Boolean;
   end;
   TMlDsaPrivateKeyParameters = class sealed(TMlDsaKeyParameters, IMlDsaPrivateKeyParameters)
@@ -166,7 +166,7 @@ type
     function GetS1: TCryptoLibByteArray;
     function GetS2: TCryptoLibByteArray;
     function GetT0: TCryptoLibByteArray;
-    function SignInternal(const ARnd, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
+    function SignRaw(const ARnd, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
   end;
   TMlDsaKeyGenerationParameters = class sealed(TKeyGenerationParameters,
     IMlDsaKeyGenerationParameters)
@@ -433,7 +433,7 @@ begin
   Result := FT1;
 end;
 
-function TMlDsaPublicKeyParameters.VerifyInternal(const AMsg: TCryptoLibByteArray;
+function TMlDsaPublicKeyParameters.VerifyRaw(const AMsg: TCryptoLibByteArray;
   AMsgOff, AMsgLen: Int32; const ASig: TCryptoLibByteArray): Boolean;
 var
   LEngine: IMlDsaEngine;
@@ -441,7 +441,7 @@ var
 begin
   LEngine := Parameters.ParameterSet.GetEngine(nil);
   LEngineConcrete := LEngine as TMlDsaEngine;
-  Result := LEngineConcrete.VerifyInternal(ASig, System.Length(ASig), AMsg, AMsgOff, AMsgLen, FRho, FT1,
+  Result := LEngineConcrete.VerifyRaw(ASig, System.Length(ASig), AMsg, AMsgOff, AMsgLen, FRho, FT1,
     EnsurePublicKeyHash);
 end;
 
@@ -526,7 +526,7 @@ begin
   LSeedCopy := System.Copy(ASeed);
   LEngine := AParameters.ParameterSet.GetEngine(nil);
   LEngineConcrete := LEngine as TMlDsaEngine;
-  LEngineConcrete.GenerateKeyPairInternal(LSeedCopy, LRho, LK, LTr, LS1, LS2, LT0, LT1);
+  LEngineConcrete.GenerateKeyPairFromSeed(LSeedCopy, LRho, LK, LTr, LS1, LS2, LT0, LT1);
   Result := TMlDsaPrivateKeyParameters.Create(AParameters, LRho, LK, LTr, LS1, LS2, LT0, LT1,
     LSeedCopy, APreferredFormat);
 end;
@@ -617,7 +617,7 @@ begin
   Result := FTr;
 end;
 
-function TMlDsaPrivateKeyParameters.SignInternal(const ARnd, AMsg: TCryptoLibByteArray;
+function TMlDsaPrivateKeyParameters.SignRaw(const ARnd, AMsg: TCryptoLibByteArray;
   AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
 var
   LEngine: IMlDsaEngine;
@@ -626,7 +626,7 @@ begin
   LEngine := Parameters.ParameterSet.GetEngine(nil);
   System.SetLength(Result, LEngine.CryptoBytes);
   LEngineConcrete := LEngine as TMlDsaEngine;
-  LEngineConcrete.SignInternal(Result, System.Length(Result), AMsg, AMsgOff, AMsgLen, FRho, FK, FTr, FT0, FS1, FS2,
+  LEngineConcrete.SignRaw(Result, System.Length(Result), AMsg, AMsgOff, AMsgLen, FRho, FK, FTr, FT0, FS1, FS2,
     ARnd);
 end;
 

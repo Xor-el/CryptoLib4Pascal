@@ -170,7 +170,7 @@ type
     constructor Create(const AParameters: ISlhDsaParameters; const ASeed, ARoot: TCryptoLibByteArray); overload;
     function GetEncoded: TCryptoLibByteArray;
     function GetPk: TSlhDsaPK;
-    function VerifyInternal(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+    function VerifyRaw(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASignature: TCryptoLibByteArray): Boolean;
   end;
 
@@ -188,7 +188,7 @@ type
     function GetPublicKeyEncoded: TCryptoLibByteArray;
     function GetSk: TSlhDsaSK;
     function GetPk: TSlhDsaPK;
-    function SignInternal(const AOptRand: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
+    function SignRaw(const AOptRand: TCryptoLibByteArray; const AMsg: TCryptoLibByteArray;
       AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
   end;
 
@@ -555,7 +555,7 @@ begin
   Result := FPk;
 end;
 
-function TSlhDsaPublicKeyParameters.VerifyInternal(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
+function TSlhDsaPublicKeyParameters.VerifyRaw(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
   const ASignature: TCryptoLibByteArray): Boolean;
 var
   LEngine: ISlhDsaEngine;
@@ -660,7 +660,7 @@ begin
   Result := FSk;
 end;
 
-function TSlhDsaPrivateKeyParameters.SignInternal(const AOptRand: TCryptoLibByteArray;
+function TSlhDsaPrivateKeyParameters.SignRaw(const AOptRand: TCryptoLibByteArray;
   const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
 var
   LEngine: ISlhDsaEngine;

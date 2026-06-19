@@ -603,7 +603,7 @@ begin
     LAdditionalRandomness := nil;
   LPrivateKey := TSlhDsaPrivateKeyParameters.FromEncoding(AParameters, LSk);
   LPrivateKeyConcrete := LPrivateKey as TSlhDsaPrivateKeyParameters;
-  LGenerated := LPrivateKeyConcrete.SignInternal(LAdditionalRandomness, LMessage, 0, System.Length(LMessage));
+  LGenerated := LPrivateKeyConcrete.SignRaw(LAdditionalRandomness, LMessage, 0, System.Length(LMessage));
   CheckTrue(AreEqual(LGenerated, LSignature), AName + ': signature');
 end;
 
@@ -622,7 +622,7 @@ begin
   LSignature := DecodeHex(AData['signature']);
   LPublicKey := TSlhDsaPublicKeyParameters.FromEncoding(AParameters, LPk);
   LPublicKeyConcrete := LPublicKey as TSlhDsaPublicKeyParameters;
-  LVerified := LPublicKeyConcrete.VerifyInternal(LMessage, 0, System.Length(LMessage), LSignature);
+  LVerified := LPublicKeyConcrete.VerifyRaw(LMessage, 0, System.Length(LMessage), LSignature);
   CheckTrue(LVerified = LTestPassed, AName + ': expected ' + SysUtils.BoolToStr(LTestPassed, True));
 end;
 
