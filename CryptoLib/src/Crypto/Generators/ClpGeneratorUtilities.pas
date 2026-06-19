@@ -48,8 +48,10 @@ uses
   ClpIX448Generators,
   ClpIMlDsaGenerators,
   ClpIMlKemGenerators,
+  ClpISlhDsaGenerators,
   ClpMlDsaGenerators,
   ClpMlKemGenerators,
+  ClpSlhDsaGenerators,
   ClpIanaObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
@@ -287,6 +289,7 @@ begin
   AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
   AddKpgAlgorithm('ML-DSA', []);
   AddKpgAlgorithm('ML-KEM', []);
+  AddKpgAlgorithm('SLH-DSA', []);
   AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
   AddKpgAlgorithm('X448', [TEdECObjectIdentifiers.IdX448.ID]);
 
@@ -444,6 +447,11 @@ begin
   if LCanonicalName = 'ML-KEM' then
   begin
     Result := TMlKemKeyPairGenerator.Create() as IMlKemKeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'SLH-DSA' then
+  begin
+    Result := TSlhDsaKeyPairGenerator.Create() as ISlhDsaKeyPairGenerator;
     Exit;
   end;
 

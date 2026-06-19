@@ -43,8 +43,10 @@ uses
   ClpX448Parameters,
   ClpMlDsaParameters,
   ClpMlKemParameters,
+  ClpSlhDsaParameters,
   ClpIMlDsaParameters,
   ClpIMlKemParameters,
+  ClpISlhDsaParameters,
   ClpMlKemEngine,
   ClpArrayUtilities,
   ClpPkcsObjectIdentifiers,
@@ -74,6 +76,7 @@ resourcestring
   SInconsistentMlDsaPrivateKey = 'inconsistent %s private key';
   SInvalidMlKemPrivateKey = 'invalid %s private key';
   SInconsistentMlKemPrivateKey = 'inconsistent %s private key';
+  SInvalidSlhDsaPrivateKey = 'invalid %s private key';
 
 type
   /// <summary>
@@ -85,6 +88,8 @@ type
       const APrivateKey: IAsn1OctetString): IMlDsaPrivateKeyParameters; static;
     class function ParseMlKemPrivateKey(const AParameters: IMlKemParameters;
       const APrivateKey: IAsn1OctetString): IMlKemPrivateKeyParameters; static;
+    class function ParseSlhDsaPrivateKey(const AParameters: ISlhDsaParameters;
+      const APrivateKey: IAsn1OctetString): ISlhDsaPrivateKeyParameters; static;
   public
     class function CreateKey(const APrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter; overload; static;
     class function CreateKey(const AInStr: TStream): IAsymmetricKeyParameter; overload; static;
@@ -214,6 +219,34 @@ begin
   raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMlKemPrivateKey, [AParameters.Name]);
 end;
 
+class function TPrivateKeyFactory.ParseSlhDsaPrivateKey(const AParameters: ISlhDsaParameters;
+  const APrivateKey: IAsn1OctetString): ISlhDsaPrivateKeyParameters;
+var
+  LPrivateKeyLength, LOctetsLength: Int32;
+  LAsn1Object: IAsn1Object;
+  LOct: IAsn1OctetString;
+begin
+  LPrivateKeyLength := AParameters.ParameterSet.PrivateKeyLength;
+  LOctetsLength := APrivateKey.GetOctetsLength();
+  if LOctetsLength = LPrivateKeyLength then
+    Exit(TSlhDsaPrivateKeyParameters.FromEncoding(AParameters, APrivateKey.GetOctets()));
+  if LOctetsLength > LPrivateKeyLength then
+  begin
+    try
+      LAsn1Object := TAsn1Object.FromByteArray(APrivateKey.GetOctets());
+      if Supports(LAsn1Object, IAsn1OctetString, LOct) then
+      begin
+        if LOct.GetOctetsLength() = LPrivateKeyLength then
+          Exit(TSlhDsaPrivateKeyParameters.FromEncoding(AParameters, LOct.GetOctets()));
+      end;
+    except
+      on E: EArgumentCryptoLibException do
+        raise;
+    end;
+  end;
+  raise EArgumentCryptoLibException.CreateResFmt(@SInvalidSlhDsaPrivateKey, [AParameters.Name]);
+end;
+
 class function TPrivateKeyFactory.CreateKey(const APrivateKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter;
 var
   LAsn1Obj: IAsn1Object;
@@ -273,6 +306,7 @@ var
   LRawKey: TCryptoLibByteArray;
   LMlDsaParameters: IMlDsaParameters;
   LMlKemParameters: IMlKemParameters;
+  LSlhDsaParameters: ISlhDsaParameters;
 begin
   if AKeyInfo = nil then
   begin
@@ -398,6 +432,13 @@ begin
   if LMlKemParameters <> nil then
   begin
     Result := ParseMlKemPrivateKey(LMlKemParameters, AKeyInfo.PrivateKey);
+    Exit;
+  end;
+
+  LSlhDsaParameters := TSlhDsaParameters.GetByOid(LAlgOid);
+  if LSlhDsaParameters <> nil then
+  begin
+    Result := ParseSlhDsaPrivateKey(LSlhDsaParameters, AKeyInfo.PrivateKey);
     Exit;
   end;
 

@@ -38,7 +38,7 @@ uses
   EaxTests, OcbTests, MacTests, Poly1305Tests, AeadTestUtilities,
   GcmReorderTests, GCMTests, GcmSivTests, GMacTests, Pkcs12Tests,
   Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests, MlKemTests,
-  MlDsaTests, PqcPkcsTests, CryptoLibTestBase, SimdSelectSlotTests,
+  MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests, CryptoLibTestBase, SimdSelectSlotTests,
   BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests,
   OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, X509UtilitiesTests, FixedSecureRandom,

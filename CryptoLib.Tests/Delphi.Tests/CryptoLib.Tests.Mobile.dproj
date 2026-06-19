@@ -763,6 +763,18 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Kems\MlKem\ClpMlKemEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpMlKemGenerators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpMlKemParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpHashSlhDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIHashSlhDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SlhDsa\ClpISlhDsaCore.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\SlhDsa\ClpISlhDsaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpISlhDsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpISlhDsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpISlhDsaSigner.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SlhDsa\ClpSlhDsaCore.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SlhDsa\ClpSlhDsaEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpSlhDsaGenerators.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpSlhDsaParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpSlhDsaSigner.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Abc\ClpSimpleBigDecimal.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSpeckEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSpeckLegacyEngine.pas"/>
@@ -1232,6 +1244,8 @@
         <DCCReference Include="..\src\Utils\NistSecureRandom.pas"/>
         <DCCReference Include="..\src\Crypto\MlKemTests.pas"/>
         <DCCReference Include="..\src\Crypto\MlDsaTests.pas"/>
+        <DCCReference Include="..\src\Crypto\SlhDsaTests.pas"/>
+        <DCCReference Include="..\src\Utils\PqcTestSampler.pas"/>
         <DCCReference Include="..\src\Crypto\PqcPkcsTests.pas"/>
         <DCCReference Include="..\src\Utils\NumberUtilities\Int32Tests.pas"/>
         <DCCReference Include="..\src\Utils\NumberUtilities\Int64Tests.pas"/>

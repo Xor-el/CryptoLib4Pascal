@@ -43,6 +43,8 @@ uses
   ClpEdECObjectIdentifiers,
   ClpIMlDsaParameters,
   ClpMlDsaParameters,
+  ClpISlhDsaParameters,
+  ClpSlhDsaParameters,
   ClpCollectionUtilities,
   ClpIDigestAlgorithmFinder,
   ClpCryptoLibTypes;
@@ -89,6 +91,7 @@ end;
 class constructor TDefaultDigestAlgorithmFinder.Create;
 var
   LParams: IMlDsaParameters;
+  LSlhParams: ISlhDsaParameters;
 begin
   FDigestOids := TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
   FDigestNameToOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -258,6 +261,12 @@ begin
   begin
     if LParams.PreHashOid <> nil then
       FDigestOids.Add(LParams.Oid, LParams.PreHashOid);
+  end;
+
+  for LSlhParams in TSlhDsaParameters.ByName.Values do
+  begin
+    if LSlhParams.PreHashOid <> nil then
+      FDigestOids.Add(LSlhParams.Oid, LSlhParams.PreHashOid);
   end;
 
   FInstance := TDefaultDigestAlgorithmFinder.Create;

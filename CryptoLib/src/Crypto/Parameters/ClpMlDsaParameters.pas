@@ -46,23 +46,27 @@ resourcestring
 type
   TMlDsaParameterSet = class sealed(TInterfacedObject, IMlDsaParameterSet)
   strict private
+  class var
+    FMlDsa44: IMlDsaParameterSet;
+    FMlDsa65: IMlDsaParameterSet;
+    FMlDsa87: IMlDsaParameterSet;
   var
     FName: String;
     FMode: Int32;
   public
-    class var
-      MlDsa44: IMlDsaParameterSet;
-      MlDsa65: IMlDsaParameterSet;
-      MlDsa87: IMlDsaParameterSet;
     class constructor Create;
     class destructor Destroy;
     class function FromName(const AName: String): IMlDsaParameterSet; static;
-    constructor CreateInstance(const AName: String; AMode: Int32);
+    constructor Create(const AName: String; AMode: Int32); overload;
     function GetName: String;
     function GetPrivateKeyLength: Int32;
     function GetPublicKeyLength: Int32;
     function GetSeedLength: Int32;
     function GetEngine(const ARandom: ISecureRandom): IMlDsaEngine;
+
+    class property MlDsa44: IMlDsaParameterSet read FMlDsa44;
+    class property MlDsa65: IMlDsaParameterSet read FMlDsa65;
+    class property MlDsa87: IMlDsaParameterSet read FMlDsa87;
   end;
   TMlDsaParametersImpl = class sealed(TInterfacedObject, IMlDsaParameters)
   strict private
@@ -85,20 +89,26 @@ type
   class var
     FByName: TDictionary<string, IMlDsaParameters>;
     FByOid: TDictionary<IDerObjectIdentifier, IMlDsaParameters>;
+    FMlDsa44: IMlDsaParameters;
+    FMlDsa65: IMlDsaParameters;
+    FMlDsa87: IMlDsaParameters;
+    FMlDsa44WithSha512: IMlDsaParameters;
+    FMlDsa65WithSha512: IMlDsaParameters;
+    FMlDsa87WithSha512: IMlDsaParameters;
   public
-    class var
-      MlDsa44: IMlDsaParameters;
-      MlDsa65: IMlDsaParameters;
-      MlDsa87: IMlDsaParameters;
-      MlDsa44WithSha512: IMlDsaParameters;
-      MlDsa65WithSha512: IMlDsaParameters;
-      MlDsa87WithSha512: IMlDsaParameters;
     class constructor Create;
     class destructor Destroy;
     class function ByName: TDictionary<string, IMlDsaParameters>; static;
     class function ByOid: TDictionary<IDerObjectIdentifier, IMlDsaParameters>; static;
     class function GetByName(const AName: String): IMlDsaParameters; static;
     class function GetByOid(const AOid: IDerObjectIdentifier): IMlDsaParameters; static;
+
+    class property MlDsa44: IMlDsaParameters read FMlDsa44;
+    class property MlDsa65: IMlDsaParameters read FMlDsa65;
+    class property MlDsa87: IMlDsaParameters read FMlDsa87;
+    class property MlDsa44WithSha512: IMlDsaParameters read FMlDsa44WithSha512;
+    class property MlDsa65WithSha512: IMlDsaParameters read FMlDsa65WithSha512;
+    class property MlDsa87WithSha512: IMlDsaParameters read FMlDsa87WithSha512;
   end;
   TMlDsaKeyParameters = class abstract(TAsymmetricKeyParameter, IMlDsaKeyParameters)
   strict private
@@ -175,19 +185,19 @@ implementation
 
 class constructor TMlDsaParameterSet.Create;
 begin
-  MlDsa44 := TMlDsaParameterSet.CreateInstance('ML-DSA-44', 2);
-  MlDsa65 := TMlDsaParameterSet.CreateInstance('ML-DSA-65', 3);
-  MlDsa87 := TMlDsaParameterSet.CreateInstance('ML-DSA-87', 5);
+  FMlDsa44 := TMlDsaParameterSet.Create('ML-DSA-44', 2);
+  FMlDsa65 := TMlDsaParameterSet.Create('ML-DSA-65', 3);
+  FMlDsa87 := TMlDsaParameterSet.Create('ML-DSA-87', 5);
 end;
 
 class destructor TMlDsaParameterSet.Destroy;
 begin
-  MlDsa44 := nil;
-  MlDsa65 := nil;
-  MlDsa87 := nil;
+  FMlDsa44 := nil;
+  FMlDsa65 := nil;
+  FMlDsa87 := nil;
 end;
 
-constructor TMlDsaParameterSet.CreateInstance(const AName: String; AMode: Int32);
+constructor TMlDsaParameterSet.Create(const AName: String; AMode: Int32);
 begin
   inherited Create;
   FName := AName;
@@ -285,19 +295,19 @@ end;
 
 class constructor TMlDsaParameters.Create;
 begin
-  MlDsa44 := TMlDsaParametersImpl.Create('ML-DSA-44', TMlDsaParameterSet.MlDsa44,
+  FMlDsa44 := TMlDsaParametersImpl.Create('ML-DSA-44', TMlDsaParameterSet.MlDsa44,
     TNistObjectIdentifiers.IdMlDsa44, nil);
-  MlDsa65 := TMlDsaParametersImpl.Create('ML-DSA-65', TMlDsaParameterSet.MlDsa65,
+  FMlDsa65 := TMlDsaParametersImpl.Create('ML-DSA-65', TMlDsaParameterSet.MlDsa65,
     TNistObjectIdentifiers.IdMlDsa65, nil);
-  MlDsa87 := TMlDsaParametersImpl.Create('ML-DSA-87', TMlDsaParameterSet.MlDsa87,
+  FMlDsa87 := TMlDsaParametersImpl.Create('ML-DSA-87', TMlDsaParameterSet.MlDsa87,
     TNistObjectIdentifiers.IdMlDsa87, nil);
-  MlDsa44WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-44-WITH-SHA512',
+  FMlDsa44WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-44-WITH-SHA512',
     TMlDsaParameterSet.MlDsa44, TNistObjectIdentifiers.IdHashMlDsa44WithSha512,
     TNistObjectIdentifiers.IdSha512);
-  MlDsa65WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-65-WITH-SHA512',
+  FMlDsa65WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-65-WITH-SHA512',
     TMlDsaParameterSet.MlDsa65, TNistObjectIdentifiers.IdHashMlDsa65WithSha512,
     TNistObjectIdentifiers.IdSha512);
-  MlDsa87WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-87-WITH-SHA512',
+  FMlDsa87WithSha512 := TMlDsaParametersImpl.Create('ML-DSA-87-WITH-SHA512',
     TMlDsaParameterSet.MlDsa87, TNistObjectIdentifiers.IdHashMlDsa87WithSha512,
     TNistObjectIdentifiers.IdSha512);
   FByName := TDictionary<string, IMlDsaParameters>.Create(
@@ -322,12 +332,12 @@ class destructor TMlDsaParameters.Destroy;
 begin
   FByOid.Free;
   FByName.Free;
-  MlDsa44 := nil;
-  MlDsa65 := nil;
-  MlDsa87 := nil;
-  MlDsa44WithSha512 := nil;
-  MlDsa65WithSha512 := nil;
-  MlDsa87WithSha512 := nil;
+  FMlDsa44 := nil;
+  FMlDsa65 := nil;
+  FMlDsa87 := nil;
+  FMlDsa44WithSha512 := nil;
+  FMlDsa65WithSha512 := nil;
+  FMlDsa87WithSha512 := nil;
 end;
 
 class function TMlDsaParameters.ByName: TDictionary<string, IMlDsaParameters>;

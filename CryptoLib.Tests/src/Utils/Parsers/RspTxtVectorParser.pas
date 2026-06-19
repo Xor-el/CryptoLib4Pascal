@@ -58,7 +58,6 @@ begin
     LPath := ARelativePath1
   else
     LPath := IncludeTrailingPathDelimiter(ARelativePath1) + ARelativePath2;
-  LPath := StringReplace(LPath, '\', '/', [rfReplaceAll]);
   RunVectors(LPath, ACallback);
 end;
 
@@ -77,8 +76,7 @@ begin
   if not Assigned(ACallback) then
     Exit;
 
-  LContent := TCryptoLibTestResourceLoader.Instance.LoadAsString(
-    StringReplace(ARelativePath, '\', '/', [rfReplaceAll]));
+  LContent := TCryptoLibTestResourceLoader.Instance.LoadAsString(ARelativePath);
   LReader := TStringList.Create;
   LData := TRspTxtRecord.Create;
   try

@@ -34,7 +34,6 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
-  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -50,22 +49,26 @@ resourcestring
 type
   TMlKemParameterSet = class sealed(TInterfacedObject, IMlKemParameterSet)
   strict private
+  class var
+    FMlKem512: IMlKemParameterSet;
+    FMlKem768: IMlKemParameterSet;
+    FMlKem1024: IMlKemParameterSet;
   var
     FName: String;
     FEngine: IMlKemEngine;
   public
-    class var
-      MlKem512: IMlKemParameterSet;
-      MlKem768: IMlKemParameterSet;
-      MlKem1024: IMlKemParameterSet;
     class constructor Create;
     class destructor Destroy;
     class function FromName(const AName: String): IMlKemParameterSet; static;
-    constructor CreateInstance(const AName: String; AK: Int32);
+    constructor Create(const AName: String; AK: Int32); overload;
     function GetName: String;
     function GetEncapsulationLength: Int32;
     function GetSecretLength: Int32;
     function GetEngine: IMlKemEngine;
+
+    class property MlKem512: IMlKemParameterSet read FMlKem512;
+    class property MlKem768: IMlKemParameterSet read FMlKem768;
+    class property MlKem1024: IMlKemParameterSet read FMlKem1024;
   end;
 
   TMlKemParameters = class sealed(TObject)
@@ -73,26 +76,29 @@ type
   class var
     FByName: TDictionary<string, IMlKemParameters>;
     FByOid: TDictionary<IDerObjectIdentifier, IMlKemParameters>;
+    FMlKem512: IMlKemParameters;
+    FMlKem768: IMlKemParameters;
+    FMlKem1024: IMlKemParameters;
   var
     FName: String;
     FParameterSet: IMlKemParameterSet;
     FOid: IDerObjectIdentifier;
   public
-    class var
-      MlKem512: IMlKemParameters;
-      MlKem768: IMlKemParameters;
-      MlKem1024: IMlKemParameters;
     class constructor Create;
     class destructor Destroy;
     class function ByName: TDictionary<string, IMlKemParameters>; static;
     class function ByOid: TDictionary<IDerObjectIdentifier, IMlKemParameters>; static;
     class function GetByName(const AName: String): IMlKemParameters; static;
     class function GetByOid(const AOid: IDerObjectIdentifier): IMlKemParameters; static;
-    constructor CreateInstance(const AName: String; const AParameterSet: IMlKemParameterSet;
-      const AOid: IDerObjectIdentifier);
+    constructor Create(const AName: String; const AParameterSet: IMlKemParameterSet;
+      const AOid: IDerObjectIdentifier); overload;
     function GetName: String;
     function GetParameterSet: IMlKemParameterSet;
     function GetOid: IDerObjectIdentifier;
+
+    class property MlKem512: IMlKemParameters read FMlKem512;
+    class property MlKem768: IMlKemParameters read FMlKem768;
+    class property MlKem1024: IMlKemParameters read FMlKem1024;
   end;
 
   TMlKemParametersImpl = class sealed(TInterfacedObject, IMlKemParameters)
@@ -177,19 +183,19 @@ implementation
 
 class constructor TMlKemParameterSet.Create;
 begin
-  MlKem512 := TMlKemParameterSet.CreateInstance('ML-KEM-512', 2);
-  MlKem768 := TMlKemParameterSet.CreateInstance('ML-KEM-768', 3);
-  MlKem1024 := TMlKemParameterSet.CreateInstance('ML-KEM-1024', 4);
+  FMlKem512 := TMlKemParameterSet.Create('ML-KEM-512', 2);
+  FMlKem768 := TMlKemParameterSet.Create('ML-KEM-768', 3);
+  FMlKem1024 := TMlKemParameterSet.Create('ML-KEM-1024', 4);
 end;
 
 class destructor TMlKemParameterSet.Destroy;
 begin
-  MlKem512 := nil;
-  MlKem768 := nil;
-  MlKem1024 := nil;
+  FMlKem512 := nil;
+  FMlKem768 := nil;
+  FMlKem1024 := nil;
 end;
 
-constructor TMlKemParameterSet.CreateInstance(const AName: String; AK: Int32);
+constructor TMlKemParameterSet.Create(const AName: String; AK: Int32);
 begin
   inherited Create;
   FName := AName;
@@ -232,11 +238,11 @@ end;
 
 class constructor TMlKemParameters.Create;
 begin
-  MlKem512 := TMlKemParametersImpl.Create('ML-KEM-512', TMlKemParameterSet.MlKem512,
+  FMlKem512 := TMlKemParametersImpl.Create('ML-KEM-512', TMlKemParameterSet.MlKem512,
     TNistObjectIdentifiers.IdAlgMlKem512);
-  MlKem768 := TMlKemParametersImpl.Create('ML-KEM-768', TMlKemParameterSet.MlKem768,
+  FMlKem768 := TMlKemParametersImpl.Create('ML-KEM-768', TMlKemParameterSet.MlKem768,
     TNistObjectIdentifiers.IdAlgMlKem768);
-  MlKem1024 := TMlKemParametersImpl.Create('ML-KEM-1024', TMlKemParameterSet.MlKem1024,
+  FMlKem1024 := TMlKemParametersImpl.Create('ML-KEM-1024', TMlKemParameterSet.MlKem1024,
     TNistObjectIdentifiers.IdAlgMlKem1024);
   FByName := TDictionary<string, IMlKemParameters>.Create(
     TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -254,9 +260,9 @@ class destructor TMlKemParameters.Destroy;
 begin
   FByOid.Free;
   FByName.Free;
-  MlKem512 := nil;
-  MlKem768 := nil;
-  MlKem1024 := nil;
+  FMlKem512 := nil;
+  FMlKem768 := nil;
+  FMlKem1024 := nil;
 end;
 
 class function TMlKemParameters.ByName: TDictionary<string, IMlKemParameters>;
@@ -281,7 +287,7 @@ begin
     Result := nil;
 end;
 
-constructor TMlKemParameters.CreateInstance(const AName: String;
+constructor TMlKemParameters.Create(const AName: String;
   const AParameterSet: IMlKemParameterSet; const AOid: IDerObjectIdentifier);
 begin
   inherited Create;

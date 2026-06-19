@@ -46,6 +46,23 @@ uses
 
 type
   TTestMlKem = class(TCryptoLibAlgorithmTestCase)
+  private
+    FRandom: ISecureRandom;
+    procedure ImplDecap(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlKemParameters);
+    procedure ImplEncap(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlKemParameters);
+    procedure ImplKeyGen(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlKemParameters);
+    procedure ImplKatRsp(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlKemParameters);
+    procedure ImplWithPreferredFormat(const APrivateKey: IMlKemPrivateKeyParameters;
+      AFormat: TMlKemPrivateKeyFormat);
+    procedure ImplConsistency(const AParameters: IMlKemParameters);
+    procedure ImplModulus(const ARelativePath: string;
+      const AParameters: IMlKemParameters);
+    function GetParameters(const AName: string): IMlKemParameters;
+    function LoadHexTestResource(const ARelativePath: string): TCryptoLibByteArray;
   published
     procedure TestConsistency512;
     procedure TestConsistency768;
@@ -74,23 +91,6 @@ type
     procedure TestKemUtilities;
   public
     procedure SetUp; override;
-  private
-    FRandom: ISecureRandom;
-    procedure ImplDecap(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlKemParameters);
-    procedure ImplEncap(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlKemParameters);
-    procedure ImplKeyGen(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlKemParameters);
-    procedure ImplKatRsp(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlKemParameters);
-    procedure ImplWithPreferredFormat(const APrivateKey: IMlKemPrivateKeyParameters;
-      AFormat: TMlKemPrivateKeyFormat);
-    procedure ImplConsistency(const AParameters: IMlKemParameters);
-    procedure ImplModulus(const ARelativePath: string;
-      const AParameters: IMlKemParameters);
-    function GetParameters(const AName: string): IMlKemParameters;
-    function LoadHexTestResource(const ARelativePath: string): TCryptoLibByteArray;
   end;
 
   TKeyGenVectorCallback = class(TRspTxtVectorCallback)

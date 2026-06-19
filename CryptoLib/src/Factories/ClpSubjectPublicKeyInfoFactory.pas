@@ -35,8 +35,10 @@ uses
   ClpIX448Parameters,
   ClpIMlDsaParameters,
   ClpIMlKemParameters,
+  ClpISlhDsaParameters,
   ClpMlDsaParameters,
   ClpMlKemParameters,
+  ClpSlhDsaParameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
@@ -107,6 +109,7 @@ var
   LX448Key: IX448PublicKeyParameters;
   LMlDsaKey: IMlDsaPublicKeyParameters;
   LMlKemKey: IMlKemPublicKeyParameters;
+  LSlhDsaKey: ISlhDsaPublicKeyParameters;
   LKp: IDsaParameters;
   LParams: IECDomainParameters;
   LX962: IX962Parameters;
@@ -198,6 +201,13 @@ begin
   begin
     LAlgID := TAlgorithmIdentifier.Create(LMlKemKey.Parameters.Oid);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LMlKemKey.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, ISlhDsaPublicKeyParameters, LSlhDsaKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LSlhDsaKey.Parameters.Oid);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LSlhDsaKey.GetEncoded());
     Exit;
   end;
 

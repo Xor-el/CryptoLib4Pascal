@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="177">
+    <Units Count="179">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -748,6 +748,14 @@
         <Filename Value="..\src\Utils\NistSecureRandom.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit176>
+      <Unit177>
+        <Filename Value="..\src\Utils\PqcTestSampler.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit177>
+      <Unit178>
+        <Filename Value="..\src\Crypto\SlhDsaTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit178>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

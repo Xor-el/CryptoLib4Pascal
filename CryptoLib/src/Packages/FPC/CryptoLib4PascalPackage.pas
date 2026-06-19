@@ -241,7 +241,10 @@ uses
   ClpIMlDsaGenerators, ClpIMlKemGenerators, ClpIMlKemCore, ClpIMlKemEngine, 
   ClpIKemDecapsulator, ClpIKemEncapsulator, ClpIParametersWithContext, 
   ClpIMlDsaParameters, ClpIMlKemParameters, ClpIMlDsaCore, ClpIMlDsaEngine, 
-  ClpIHashMlDsaSigner;
+  ClpIHashMlDsaSigner, ClpSlhDsaGenerators, ClpSlhDsaParameters, 
+  ClpHashSlhDsaSigner, ClpSlhDsaSigner, ClpSlhDsaCore, ClpSlhDsaEngine, 
+  ClpISlhDsaGenerators, ClpISlhDsaParameters, ClpIHashSlhDsaSigner, 
+  ClpISlhDsaSigner, ClpISlhDsaCore, ClpISlhDsaEngine;
 
 implementation
 

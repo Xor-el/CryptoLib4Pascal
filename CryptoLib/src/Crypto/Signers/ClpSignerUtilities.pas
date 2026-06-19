@@ -72,6 +72,10 @@ uses
   ClpMlDsaParameters,
   ClpMlDsaSigner,
   ClpHashMlDsaSigner,
+  ClpISlhDsaParameters,
+  ClpSlhDsaParameters,
+  ClpSlhDsaSigner,
+  ClpHashSlhDsaSigner,
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
   ClpCryptoLibTypes,
@@ -253,6 +257,7 @@ end;
 class constructor TSignerUtilities.Create;
 var
   LPair: TPair<String, IMlDsaParameters>;
+  LSlhPair: TPair<String, ISlhDsaParameters>;
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
@@ -728,6 +733,9 @@ begin
 
   for LPair in TMlDsaParameters.ByName do
     AddAlgorithm(LPair.Key, LPair.Value.Oid, False);
+
+  for LSlhPair in TSlhDsaParameters.ByName do
+    AddAlgorithm(LSlhPair.Key, LSlhPair.Value.Oid, False);
 end;
 
 class destructor TSignerUtilities.Destroy;
@@ -905,6 +913,7 @@ class function TSignerUtilities.GetSignerForMechanism(const AMechanism: String;
   ADeterministic: Boolean): ISigner;
 var
   LParams: IMlDsaParameters;
+  LSlhParams: ISlhDsaParameters;
   LDigestName: String;
   LDigest: IDigest;
   LWithPos, LEndPos: Int32;
@@ -957,6 +966,16 @@ begin
       Result := TMlDsaSigner.Create(LParams, ADeterministic)
     else
       Result := THashMlDsaSigner.Create(LParams, ADeterministic);
+    Exit;
+  end;
+
+  LSlhParams := TSlhDsaParameters.GetByName(AMechanism);
+  if LSlhParams <> nil then
+  begin
+    if LSlhParams.PreHashOid = nil then
+      Result := TSlhDsaSigner.Create(LSlhParams, ADeterministic)
+    else
+      Result := THashSlhDsaSigner.Create(LSlhParams, ADeterministic);
     Exit;
   end;
 

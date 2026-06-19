@@ -1,3 +1,19 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
 unit MlDsaTests;
 
 interface
@@ -51,6 +67,22 @@ uses
 
 type
   TTestMlDsa = class(TCryptoLibAlgorithmTestCase)
+  private
+    FRandom: ISecureRandom;
+    procedure ImplConsistency(const AParameters: IMlDsaParameters);
+    procedure ImplKeyGen(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlDsaParameters);
+    procedure ImplContext(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlDsaParameters);
+    procedure ImplSigGen(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlDsaParameters);
+    procedure ImplSigVer(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlDsaParameters);
+    function GetParameters(const AName: string): IMlDsaParameters;
+    function CreateSigner(const AParameters: IMlDsaParameters;
+      ADeterministic: Boolean): ISigner;
+    procedure RunSignerKat(const ARelativePath: string);
+    procedure ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
   published
     procedure TestConsistency44;
     procedure TestConsistency65;
@@ -81,22 +113,6 @@ type
     procedure TestMlDsaRandomSig;
   public
     procedure SetUp; override;
-  private
-    FRandom: ISecureRandom;
-    procedure ImplConsistency(const AParameters: IMlDsaParameters);
-    procedure ImplKeyGen(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlDsaParameters);
-    procedure ImplContext(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlDsaParameters);
-    procedure ImplSigGen(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlDsaParameters);
-    procedure ImplSigVer(const AName: string; const AData: TRspTxtRecord;
-      const AParameters: IMlDsaParameters);
-    function GetParameters(const AName: string): IMlDsaParameters;
-    function CreateSigner(const AParameters: IMlDsaParameters;
-      ADeterministic: Boolean): ISigner;
-    procedure RunSignerKat(const ARelativePath: string);
-    procedure ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
   end;
 
   TSignerKatVectorCallback = class(TRspTxtVectorCallback)

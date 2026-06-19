@@ -25,8 +25,7 @@ uses
   ClpCryptoLibTypes,
   ClpNat,
   ClpBitOperations,
-  ClpIBinPolyMul,
-  ClpBinPolyMulBase;
+  ClpIBinPolyMul;
 
 type
   /// <summary>
