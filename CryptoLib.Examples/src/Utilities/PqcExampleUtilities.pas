@@ -50,7 +50,8 @@ uses
   ClpEncoders,
   ClpCryptoLibTypes,
   ExampleBase,
-  ExampleLogger;
+  ExampleLogger,
+  ClpParameterUtilities;
 
 type
   TPqcExampleUtilities = class sealed
@@ -68,9 +69,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpParameterUtilities;
 
 class procedure TPqcExampleUtilities.DoRunSignVerify(const AAlgorithmName: string;
   const AMessage: TBytes; const ASignInitParams, AVerifyInitParams: ICipherParameters);

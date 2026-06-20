@@ -77,7 +77,7 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\HybridEncryption.pas"/>
+        <Filename Value="..\src\Utilities\HybridEncryption.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -94,6 +94,18 @@
       </Unit>
       <Unit>
         <Filename Value="..\src\Examples\SlhDsaExample.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Utilities\CertificateExampleUtilities.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Utilities\CipherExampleUtilities.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Utilities\DigestExampleUtilities.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>

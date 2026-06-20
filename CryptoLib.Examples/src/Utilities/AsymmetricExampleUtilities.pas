@@ -44,9 +44,12 @@ uses
   ClpECGenerators,
   ClpIECGenerators,
   ClpEncoders,
+  ClpConverters,
   ClpCryptoLibTypes,
+  ClpStringUtilities,
   ExampleBase,
-  ExampleLogger;
+  ExampleLogger,
+  KeyEncodingExampleUtilities;
 
 type
   TAsymmetricExampleUtilities = class sealed
@@ -55,15 +58,36 @@ type
     /// Generate a classical key pair from a key spec: Ed25519, RSA/RSA-{size}, or EC curve name.
     /// </summary>
     class function GenerateKeyPair(const AKeySpec: string): IAsymmetricCipherKeyPair; static;
-    class function GenerateRsaKeyPair(AKeySize: Int32 = 2048): IAsymmetricCipherKeyPair; static;
+    class function TryGenerateKeyPair(const AKeySpec: string;
+      out AKeyPair: IAsymmetricCipherKeyPair): Boolean; static;
+    class procedure RunSignVerify(const AKeySpec, AAlgorithmName, AMessageText: string); overload; static;
     class procedure RunSignVerify(const AAlgorithmName: string;
-      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes); static;
+      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes); overload; static;
+    class procedure RunDerRoundtrip(const AKeySpec, AKeyType: string); static;
+    class procedure RunPemRoundtrip(const AKeySpec, AKeyType: string); static;
   end;
 
 implementation
 
-uses
-  ClpStringUtilities;
+class function TAsymmetricExampleUtilities.TryGenerateKeyPair(const AKeySpec: string;
+  out AKeyPair: IAsymmetricCipherKeyPair): Boolean;
+var
+  LLogger: ILogger;
+begin
+  Result := False;
+  AKeyPair := nil;
+  LLogger := TExampleLogger.GetDefaultLogger;
+  try
+    AKeyPair := GenerateKeyPair(AKeySpec);
+    LLogger.LogInformation('Key spec: {0}', [AKeySpec]);
+    Result := True;
+  except
+    on E: EArgumentCryptoLibException do
+      LLogger.LogWarning('Key spec "{0}" not found: {1}', [AKeySpec, E.Message]);
+    on E: EArgumentNilCryptoLibException do
+      LLogger.LogWarning('Key spec must not be empty.', []);
+  end;
+end;
 
 class function TAsymmetricExampleUtilities.GenerateKeyPair(
   const AKeySpec: string): IAsymmetricCipherKeyPair;
@@ -118,13 +142,16 @@ begin
   Result := LKpg.GenerateKeyPair();
 end;
 
-class function TAsymmetricExampleUtilities.GenerateRsaKeyPair(
-  AKeySize: Int32): IAsymmetricCipherKeyPair;
+class procedure TAsymmetricExampleUtilities.RunSignVerify(const AKeySpec,
+  AAlgorithmName, AMessageText: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LMsg: TBytes;
 begin
-  if AKeySize = 2048 then
-    Result := GenerateKeyPair('RSA')
-  else
-    Result := GenerateKeyPair('RSA-' + IntToStr(AKeySize));
+  if not TryGenerateKeyPair(AKeySpec, LKp) then
+    Exit;
+  LMsg := TConverters.ConvertStringToBytes(AMessageText, TEncoding.UTF8);
+  RunSignVerify(AAlgorithmName, LKp, LMsg);
 end;
 
 class procedure TAsymmetricExampleUtilities.RunSignVerify(const AAlgorithmName: string;
@@ -153,6 +180,26 @@ begin
     on E: ESecurityUtilityCryptoLibException do
       LLogger.LogWarning('Signer "{0}" not available: {1}', [AAlgorithmName, E.Message]);
   end;
+end;
+
+class procedure TAsymmetricExampleUtilities.RunDerRoundtrip(const AKeySpec,
+  AKeyType: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+begin
+  if not TryGenerateKeyPair(AKeySpec, LKp) then
+    Exit;
+  TKeyEncodingExampleUtilities.VerifyDerRoundtrip(LKp, AKeyType);
+end;
+
+class procedure TAsymmetricExampleUtilities.RunPemRoundtrip(const AKeySpec,
+  AKeyType: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+begin
+  if not TryGenerateKeyPair(AKeySpec, LKp) then
+    Exit;
+  TKeyEncodingExampleUtilities.VerifyPemRoundtrip(LKp, AKeyType);
 end;
 
 end.

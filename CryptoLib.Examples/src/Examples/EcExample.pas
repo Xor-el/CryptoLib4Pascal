@@ -27,212 +27,68 @@ interface
 uses
   SysUtils,
   Classes,
-  ClpECUtilities,
-  ClpIAsn1Objects,
   ClpBigInteger,
   ClpECParameters,
   ClpIECParameters,
-  ClpEncoders,
-  ClpConverters,
-  ClpArrayUtilities,
-  ClpCryptoLibTypes,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
-  ClpIX9ECAsn1Objects,
   ClpIECCommon,
-  HybridEncryption,
+  ClpConverters,
+  ClpArrayUtilities,
   ExampleBase,
   AsymmetricExampleUtilities,
-  KeyEncodingExampleUtilities;
+  HybridEncryption;
 
 type
   TEcExample = class(TExampleBase)
   private
-    function LookupEcDomain(const ACurveName: string): IECDomainParameters;
-    procedure RunEcdsaSignVerify(const ACurveName: string;
-      const ASignatureAlgorithm: string);
-    procedure RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
+    procedure DoEcHybridRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
+      const ADomain: IECDomainParameters; const APlainText, AAadContext: string);
+    procedure DoEcHybridStreamRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
+      const ADomain: IECDomainParameters; const APlainText, AAadContext: string);
     procedure RunPublicKeyFromXY(const ACurveName: string);
-    procedure RunEcPemExportImport(const ACurveName: string);
-    procedure RunEcHybridEncryptDecrypt(const ACurveName: string);
-    procedure RunEcHybridStreamEncryptDecrypt(const ACurveName: string);
+    procedure RunCurveDemos(const ACurveName, ASignatureAlgorithm, AMessageText: string);
+    procedure RunEcHybridDemos(const ACurveName: string);
   public
     procedure Run; override;
   end;
 
 implementation
 
-function TEcExample.LookupEcDomain(const ACurveName: string): IECDomainParameters;
+procedure TEcExample.DoEcHybridRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
+  const ADomain: IECDomainParameters; const APlainText, AAadContext: string);
 var
-  LCurve: IX9ECParameters;
-begin
-  Result := nil;
-  LCurve := TECUtilities.FindECCurveByName(ACurveName);
-  if LCurve = nil then
-  begin
-    Logger.LogWarning('Curve "{0}" not found.', [ACurveName]);
-    Exit;
-  end;
-  Result := TECDomainParameters.Create(LCurve.Curve, LCurve.G,
-    LCurve.N, LCurve.H, LCurve.GetSeed);
-end;
-
-procedure TEcExample.RunEcdsaSignVerify(const ACurveName: string;
-  const ASignatureAlgorithm: string);
-var
-  LKp: IAsymmetricCipherKeyPair;
-  LMsg: TBytes;
-begin
-  try
-    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
-      Exit;
-    end;
-    on E: EArgumentNilCryptoLibException do
-    begin
-      Logger.LogWarning('Curve name empty.', []);
-      Exit;
-    end;
-  end;
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-  LMsg := TConverters.ConvertStringToBytes('PascalECDSA', TEncoding.UTF8);
-  TAsymmetricExampleUtilities.RunSignVerify(ASignatureAlgorithm, LKp, LMsg);
-end;
-
-procedure TEcExample.RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
-var
-  LKp: IAsymmetricCipherKeyPair;
-begin
-  try
-    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
-      Exit;
-    end;
-    on E: EArgumentNilCryptoLibException do
-    begin
-      Logger.LogWarning('Curve name empty.', []);
-      Exit;
-    end;
-  end;
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-  TKeyEncodingExampleUtilities.VerifyDerRoundtrip(LKp, 'EC');
-end;
-
-procedure TEcExample.RunPublicKeyFromXY(const ACurveName: string);
-var
-  LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
-  LPub: IECPublicKeyParameters;
-  LXBytes, LYBytes: TBytes;
-  LBigX, LBigY: TBigInteger;
-  LPoint: IECPoint;
-  LRegenPub: IECPublicKeyParameters;
-  LCurve: IX9ECParameters;
-begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-  if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
-  begin
-    Logger.LogError('EC public key type mismatch.', []);
-    Exit;
-  end;
-  LCurve := TECUtilities.FindECCurveByName(ACurveName);
-  LXBytes := LPub.Q.Normalize.AffineXCoord.ToBigInteger.ToByteArray();
-  LYBytes := LPub.Q.Normalize.AffineYCoord.ToBigInteger.ToByteArray();
-  LBigX := TBigInteger.Create(1, LXBytes);
-  LBigY := TBigInteger.Create(1, LYBytes);
-  LPoint := LCurve.Curve.CreatePoint(LBigX, LBigY);
-  LRegenPub := TECPublicKeyParameters.Create(LPoint, LDomain)
-    as IECPublicKeyParameters;
-  if LPub.Equals(LRegenPub) then
-    Logger.LogInformation('Public key from X/Y recreation: match.', [])
-  else
-    Logger.LogError('Public key from X/Y recreation: mismatch.', []);
-end;
-
-procedure TEcExample.RunEcPemExportImport(const ACurveName: string);
-var
-  LKp: IAsymmetricCipherKeyPair;
-begin
-  try
-    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
-      Exit;
-    end;
-    on E: EArgumentNilCryptoLibException do
-    begin
-      Logger.LogWarning('Curve name empty.', []);
-      Exit;
-    end;
-  end;
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-  TKeyEncodingExampleUtilities.VerifyPemRoundtrip(LKp, 'EC');
-end;
-
-procedure TEcExample.RunEcHybridEncryptDecrypt(const ACurveName: string);
-var
-  LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
   LPlain, LAad, LEnvelope, LDecrypted: TBytes;
 begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-
-  LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Encryption!', TEncoding.UTF8);
-  LAad := TConverters.ConvertStringToBytes('EH01-example-context', TEncoding.UTF8);
-
-  LEnvelope := TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlain, LAad);
+  LPlain := TConverters.ConvertStringToBytes(APlainText, TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes(AAadContext, TEncoding.UTF8);
+  LEnvelope := TEcHybridEncryption.Encrypt(AKeyPair.Public, ADomain, LPlain, LAad);
   Logger.LogInformation('EC hybrid envelope: {0} bytes', [IntToStr(System.Length(LEnvelope))]);
-
-  LDecrypted := TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEnvelope, LAad);
+  LDecrypted := TEcHybridEncryption.Decrypt(AKeyPair.Private, ADomain, LEnvelope, LAad);
   if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
     Logger.LogInformation('EC hybrid encrypt/decrypt roundtrip: success.', [])
   else
     Logger.LogError('EC hybrid encrypt/decrypt roundtrip: failed.', []);
 end;
 
-procedure TEcExample.RunEcHybridStreamEncryptDecrypt(const ACurveName: string);
+procedure TEcExample.DoEcHybridStreamRoundtrip(const AKeyPair: IAsymmetricCipherKeyPair;
+  const ADomain: IECDomainParameters; const APlainText, AAadContext: string);
 var
-  LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
   LPlainStream, LEncStream, LDecStream: TBytesStream;
   LPlain, LAad, LDecrypted: TBytes;
 begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
-  Logger.LogInformation('Curve: {0}', [ACurveName]);
-
-  LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Stream!', TEncoding.UTF8);
-  LAad := TConverters.ConvertStringToBytes('EH01-stream-context', TEncoding.UTF8);
-
+  LPlain := TConverters.ConvertStringToBytes(APlainText, TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes(AAadContext, TEncoding.UTF8);
   LPlainStream := TBytesStream.Create(LPlain);
   try
     LEncStream := TBytesStream.Create(nil);
     try
-      TEcHybridEncryption.Encrypt(LKp.Public, LDomain, LPlainStream, LEncStream, LAad);
+      TEcHybridEncryption.Encrypt(AKeyPair.Public, ADomain, LPlainStream, LEncStream, LAad);
       Logger.LogInformation('EC hybrid stream envelope: {0} bytes', [IntToStr(LEncStream.Size)]);
-
       LEncStream.Position := 0;
       LDecStream := TBytesStream.Create(nil);
       try
-        TEcHybridEncryption.Decrypt(LKp.Private, LDomain, LEncStream, LDecStream, LAad);
+        TEcHybridEncryption.Decrypt(AKeyPair.Private, ADomain, LEncStream, LDecStream, LAad);
         LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
         if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
           Logger.LogInformation('EC hybrid stream roundtrip: success.', [])
@@ -249,25 +105,79 @@ begin
   end;
 end;
 
-procedure TEcExample.Run;
+procedure TEcExample.RunPublicKeyFromXY(const ACurveName: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+  LPub: IECPublicKeyParameters;
+  LRegenPub: IECPublicKeyParameters;
+  LXBytes, LYBytes: TBytes;
+  LBigX, LBigY: TBigInteger;
+  LPoint: IECPoint;
 begin
-  LogWithLineBreak('--- EC example: ECDSA sign/verify ---');
-  RunEcdsaSignVerify('secp256k1', 'SHA-256withECDSA');
+  if not TAsymmetricExampleUtilities.TryGenerateKeyPair(ACurveName, LKp) then
+    Exit;
+  if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
+  begin
+    Logger.LogError('EC public key type mismatch.', []);
+    Exit;
+  end;
+  LDomain := LPub.Parameters;
+  LXBytes := LPub.Q.Normalize.AffineXCoord.ToBigInteger.ToByteArray();
+  LYBytes := LPub.Q.Normalize.AffineYCoord.ToBigInteger.ToByteArray();
+  LBigX := TBigInteger.Create(1, LXBytes);
+  LBigY := TBigInteger.Create(1, LYBytes);
+  LPoint := LDomain.Curve.CreatePoint(LBigX, LBigY);
+  LRegenPub := TECPublicKeyParameters.Create(LPoint, LDomain)
+    as IECPublicKeyParameters;
+  if LPub.Equals(LRegenPub) then
+    Logger.LogInformation('Public key from X/Y recreation: match.', [])
+  else
+    Logger.LogError('Public key from X/Y recreation: mismatch.', []);
+end;
 
-  LogWithLineBreak('--- EC example: Key recreate from DER bytes ---');
-  RunEcKeyRecreateFromDEREncodedBytes('secp256k1');
+procedure TEcExample.RunCurveDemos(const ACurveName, ASignatureAlgorithm,
+  AMessageText: string);
+begin
+  LogWithLineBreak(Format('--- EC example: ECDSA sign/verify (%s) ---', [ACurveName]));
+  TAsymmetricExampleUtilities.RunSignVerify(ACurveName, ASignatureAlgorithm, AMessageText);
 
-  LogWithLineBreak('--- EC example: Public key from X/Y ---');
-  RunPublicKeyFromXY('secp256k1');
+  LogWithLineBreak(Format('--- EC example: Key recreate from DER bytes (%s) ---', [ACurveName]));
+  TAsymmetricExampleUtilities.RunDerRoundtrip(ACurveName, 'EC');
 
-  LogWithLineBreak('--- EC example: PEM export/import ---');
-  RunEcPemExportImport('secp256k1');
+  LogWithLineBreak(Format('--- EC example: Public key from X/Y (%s) ---', [ACurveName]));
+  RunPublicKeyFromXY(ACurveName);
+
+  LogWithLineBreak(Format('--- EC example: PEM export/import (%s) ---', [ACurveName]));
+  TAsymmetricExampleUtilities.RunPemRoundtrip(ACurveName, 'EC');
+end;
+
+procedure TEcExample.RunEcHybridDemos(const ACurveName: string);
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LDomain: IECDomainParameters;
+  LPub: IECPublicKeyParameters;
+begin
+  if not TAsymmetricExampleUtilities.TryGenerateKeyPair(ACurveName, LKp) then
+    Exit;
+  if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
+  begin
+    Logger.LogError('EC public key type mismatch.', []);
+    Exit;
+  end;
+  LDomain := LPub.Parameters;
 
   LogWithLineBreak('--- EC example: Hybrid encrypt/decrypt (ECDH + HKDF + AES-256-GCM) ---');
-  RunEcHybridEncryptDecrypt('secp256r1');
+  DoEcHybridRoundtrip(LKp, LDomain, 'Hello EC Hybrid Encryption!', 'EH01-example-context');
 
   LogWithLineBreak('--- EC example: Hybrid stream encrypt/decrypt ---');
-  RunEcHybridStreamEncryptDecrypt('secp256r1');
+  DoEcHybridStreamRoundtrip(LKp, LDomain, 'Hello EC Hybrid Stream!', 'EH01-stream-context');
+end;
+
+procedure TEcExample.Run;
+begin
+  RunCurveDemos('secp256k1', 'SHA-256withECDSA', 'PascalECDSA');
+  RunEcHybridDemos('secp256r1');
 end;
 
 end.
