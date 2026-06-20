@@ -31,3 +31,13 @@ CriticalExtendedKeyUsage,Cert/Extensions/CriticalExtendedKeyUsage.der,DER,Extens
 DeltaEcDsaRoot,Cert/Delta/DeltaEcDsaRoot.pem,PEM,Delta,ec_dsa_root,DeltaCertificateTests,false
 DeltaEcDsaDualXchEe,Cert/Delta/DeltaEcDsaDualXchEe.pem,PEM,Delta,base_dual_use,DeltaCertificateTests,false
 DeltaEcDsaDualSigEe,Cert/Delta/DeltaEcDsaDualSigEe.pem,PEM,Delta,extracted_delta,DeltaCertificateTests,false
+DeltaMlDsaRoot,Cert/Delta/DeltaMlDsaRoot.pem,PEM,Delta,ml_dsa_root,DeltaCertificateTests,false
+DeltaMlDsaEe,Cert/Delta/DeltaMlDsaEe.pem,PEM,Delta,ml_dsa_ee,DeltaCertificateTests,false
+DeltaEcDsaEe,Cert/Delta/DeltaEcDsaEe.pem,PEM,Delta,ec_dsa_ee,DeltaCertificateTests,false
+PqcMlDsa44,Cert/Pqc/MlDsa44.pem,PEM,Pqc,ML-DSA-44.pem,PqcCertCredentialsTests,false
+PqcMlDsa65,Cert/Pqc/MlDsa65.pem,PEM,Pqc,ML-DSA-65.pem,PqcCertCredentialsTests,false
+PqcMlDsa87,Cert/Pqc/MlDsa87.pem,PEM,Pqc,ML-DSA-87.pem,PqcCertCredentialsTests,false
+PqcMlKem512,Cert/Pqc/MlKem512.pem,PEM,Pqc,ML-KEM-512.pem,PqcCertCredentialsTests,false
+PqcMlKem768,Cert/Pqc/MlKem768.pem,PEM,Pqc,ML-KEM-768.pem,PqcCertCredentialsTests,false
+PqcMlKem1024,Cert/Pqc/MlKem1024.pem,PEM,Pqc,ML-KEM-1024.pem,PqcCertCredentialsTests,false
+PqcSlhDsaSha2128S,Cert/Pqc/SlhDsaSha2128S.pem,PEM,Pqc,SLH-DSA-SHA2-128S.pem,PqcCertCredentialsTests,false

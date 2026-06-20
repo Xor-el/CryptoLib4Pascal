@@ -18,12 +18,12 @@ unit PqcTestSampler;
 
 interface
 
-uses
-  SysUtils;
-
 {$IFDEF FPC}
 {$MODE DELPHI}
 {$ENDIF FPC}
+
+uses
+  SysUtils;
 
 type
   TPqcTestSampler = class sealed(TObject)

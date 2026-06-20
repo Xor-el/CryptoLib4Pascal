@@ -23,7 +23,7 @@ uses
   X25519Tests, X448Tests, Ed25519Tests, Ed448Tests, X25519HigherLevelTests,
   Ed25519HigherLevelTests, Curve25519KeyUtilitiesTests, ShortenedDigestTests,
   Kdf1GeneratorTests, Kdf2GeneratorTests, DHKekGeneratorTests,
-  ECDHKekGeneratorTests, Argon2Tests, ScryptTests, DigestTests, CertTests,
+  ECDHKekGeneratorTests, Argon2Tests, ScryptTests, DigestTests, CertTests, PqcCertCredentialsTests,
   Ed448HigherLevelTests, X448HigherLevelTests, Curve448KeyUtilitiesTests,
   DigestUtilitiesTests, ParameterUtilitiesTests, DHTests, Asn1IntegerTests,
   GeneralizedTimeTests, BitStringTests, InputStreamTests, UtcTimeTests,
@@ -46,7 +46,7 @@ uses
   CryptoLibTestResourceLoader, NistSecureRandom, CsvVectorParser,
   JsonVectorParser, RspTxtVectorParser, RspTxtVectorParserTests, Bip327Vectors,
   Bip340Vectors, HmacVectors, AsymmetricTestVectors, SymmetricBlockVectors,
-  ChaChaPoly1305Vectors, OpenSslVectors, PkcsVectors, CertVectors,
+  ChaChaPoly1305Vectors, OpenSslVectors, PkcsVectors, CertVectors, PqcSampleCredentials,
   CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
   Argon2Vectors, PqcTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
   IPAddressUtilitiesTests, PemReaderTests;

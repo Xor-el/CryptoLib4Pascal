@@ -906,6 +906,7 @@ uses
   X509CertGenTests in '..\src\X509\X509CertGenTests.pas',
   X509UtilitiesTests in '..\src\X509\X509UtilitiesTests.pas',
   CertTests in '..\src\Others\CertTests.pas',
+  PqcCertCredentialsTests in '..\src\Others\PqcCertCredentialsTests.pas',
   Curve25519KeyUtilitiesTests in '..\src\Others\Curve25519KeyUtilitiesTests.pas',
   OpenSslReaderTests in '..\src\OpenSsl\OpenSslReaderTests.pas',
   OpenSslWriterTests in '..\src\OpenSsl\OpenSslWriterTests.pas',
@@ -968,6 +969,7 @@ uses
   TestKeyBuilders in '..\src\Utils\Vectors\TestKeyBuilders.pas',
   PemDerCodec in '..\src\Utils\Vectors\PemDerCodec.pas',
   CertVectors in '..\src\Utils\Vectors\CertVectors.pas',
+  PqcSampleCredentials in '..\src\Utils\Vectors\PqcSampleCredentials.pas',
   CryptoLibTestBase in '..\src\CryptoLibTestBase.pas';
 
 begin

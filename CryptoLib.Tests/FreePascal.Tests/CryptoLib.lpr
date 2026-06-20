@@ -22,7 +22,7 @@ uses
   X25519Tests, X448Tests, Ed25519Tests, Ed448Tests, X25519HigherLevelTests,
   Ed25519HigherLevelTests, ShortenedDigestTests, Kdf1GeneratorTests,
   Kdf2GeneratorTests, DHKekGeneratorTests, ECDHKekGeneratorTests, Argon2Tests,
-  ScryptTests, DigestTests, CertTests, Curve25519KeyUtilitiesTests,
+  ScryptTests, DigestTests, CertTests, PqcCertCredentialsTests, Curve25519KeyUtilitiesTests,
   Ed448HigherLevelTests, X448HigherLevelTests, Curve448KeyUtilitiesTests,
   DigestUtilitiesTests, ParameterUtilitiesTests, DHTests, Asn1IntegerTests,
   BitStringTests, GeneralizedTimeTests, OctetStringTests, RelativeOidTests,
@@ -47,7 +47,7 @@ uses
   RspTxtVectorParserTests, Bip327Vectors, Bip340Vectors, HmacVectors,
   Argon2Vectors, AsymmetricTestVectors, SymmetricBlockVectors,
   ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
-  CertVectors, TestKeyBuilders, PemDerCodec, PqcTestVectors, Int32Tests,
+  CertVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec, PqcTestVectors, Int32Tests,
   Int64Tests, ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}

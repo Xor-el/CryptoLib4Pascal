@@ -1225,6 +1225,7 @@
         <DCCReference Include="..\src\X509\X509CertGenTests.pas"/>
         <DCCReference Include="..\src\X509\X509UtilitiesTests.pas"/>
         <DCCReference Include="..\src\Others\CertTests.pas"/>
+        <DCCReference Include="..\src\Others\PqcCertCredentialsTests.pas"/>
         <DCCReference Include="..\src\Others\Curve25519KeyUtilitiesTests.pas"/>
         <DCCReference Include="..\src\OpenSsl\OpenSslReaderTests.pas"/>
         <DCCReference Include="..\src\OpenSsl\OpenSslWriterTests.pas"/>
@@ -1286,6 +1287,7 @@
         <DCCReference Include="..\src\Utils\Vectors\TestKeyBuilders.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\PemDerCodec.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\CertVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\PqcSampleCredentials.pas"/>
         <DCCReference Include="..\src\CryptoLibTestBase.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
