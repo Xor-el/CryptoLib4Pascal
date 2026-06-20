@@ -39,12 +39,9 @@ uses
   ClpX25519Agreement,
   ClpCurve25519KeyUtilities,
   HybridEncryption,
-  ClpISigner,
-  ClpPrivateKeyInfoFactory,
-  ClpPrivateKeyFactory,
-  ClpSubjectPublicKeyInfoFactory,
-  ClpPublicKeyFactory,
-  ExampleBase;
+  ExampleBase,
+  AsymmetricExampleUtilities,
+  KeyEncodingExampleUtilities;
 
 type
   TEdExample = class(TExampleBase)
@@ -67,104 +64,49 @@ implementation
 procedure TEdExample.RunEd25519SignVerify;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LMsg: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519');
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   LMsg := TConverters.ConvertStringToBytes('PascalEd25519', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519 signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519 verification passed.', [])
-  else
-    Logger.LogError('Ed25519 verification failed.', []);
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519', LKp, LMsg);
 end;
 
 procedure TEdExample.RunEd25519CtxSignVerify;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LMsg: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519ctx', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519ctx');
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   LMsg := TConverters.ConvertStringToBytes('PascalEd25519ctx', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519ctx signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519ctx verification passed.', [])
-  else
-    Logger.LogError('Ed25519ctx verification failed.', []);
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519ctx', LKp, LMsg);
 end;
 
 procedure TEdExample.RunEd25519PhSignVerify;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LMsg: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519ph', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519ph');
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   LMsg := TConverters.ConvertStringToBytes('PascalEd25519ph', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519ph signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519ph verification passed.', [])
-  else
-    Logger.LogError('Ed25519ph verification failed.', []);
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519ph', LKp, LMsg);
 end;
 
 procedure TEdExample.RunEd25519KeyRecreateFromDEREncodedBytes;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LPrivBytes, LPubBytes: TBytes;
-  LRegenPriv, LRegenPub: IAsymmetricKeyParameter;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   Logger.LogInformation('Key type: Ed25519', []);
-
-  LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
-
-  LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
-
-  LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
-  if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.', [])
-  else
-    Logger.LogError('Private key roundtrip: mismatch.', []);
-
-  LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
-  if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.', [])
-  else
-    Logger.LogError('Public key roundtrip: mismatch.', []);
+  TKeyEncodingExampleUtilities.VerifyDerRoundtrip(LKp, 'Ed25519');
 end;
 
 procedure TEdExample.RunEd25519PemExportImport;
 var
   LKp: IAsymmetricCipherKeyPair;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   Logger.LogInformation('Key type: Ed25519', []);
-  VerifyPemRoundtrip(LKp, 'Ed25519');
+  TKeyEncodingExampleUtilities.VerifyPemRoundtrip(LKp, 'Ed25519');
 end;
 
 procedure TEdExample.RunEd25519ToX25519KeyConversion;
@@ -175,7 +117,7 @@ var
   LX25519Priv: IX25519PrivateKeyParameters;
   LX25519PubFromConversion, LX25519PubFromPriv: IX25519PublicKeyParameters;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
   begin
     Logger.LogError('Ed25519 private key type mismatch.', []);
@@ -212,8 +154,8 @@ var
   LAgreeA, LAgreeB: IX25519Agreement;
   LSecretA, LSecretB: TBytes;
 begin
-  LKpA := GenerateEd25519KeyPair;
-  LKpB := GenerateEd25519KeyPair;
+  LKpA := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  LKpB := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
 
   if not Supports(LKpA.Private, IEd25519PrivateKeyParameters, LEdPrivA) then
   begin
@@ -269,7 +211,7 @@ var
   LX25519Pub: IX25519PublicKeyParameters;
   LPlain, LAad, LEnvelope, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
   begin
     Logger.LogError('Ed25519 private key type mismatch.', []);
@@ -307,7 +249,7 @@ var
   LPlainStream, LEncStream, LDecStream: TBytesStream;
   LPlain, LAad, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
   if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
   begin
     Logger.LogError('Ed25519 private key type mismatch.', []);

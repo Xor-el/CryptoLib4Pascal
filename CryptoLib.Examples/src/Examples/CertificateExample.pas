@@ -61,7 +61,9 @@ uses
   ClpIX509CrlEntry,
   ClpIX9ECAsn1Objects,
   ClpDateTimeHelper,
-  ExampleBase;
+  ExampleBase,
+  AsymmetricExampleUtilities,
+  KeyEncodingExampleUtilities;
 
 type
   TCertificateArtifactsPem = record
@@ -262,19 +264,19 @@ var
   LReq: IPkcs10CertificationRequest;
   LCert: IX509Certificate;
 begin
-  Result.PrivateKeyPem := ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
+  Result.PrivateKeyPem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IAsymmetricKeyParameter>(AKeyPair.Private));
   Result.CertificateRequestPem := '';
   Result.CertificatePem := '';
   Result.CrlPem := '';
 
   LCrl := CreateCrl(AKeyPair, ASubject, ASignatureAlgorithm);
-  Result.CrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+  Result.CrlPem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IX509Crl>(LCrl));
 
   LReq := CreateCertificationRequest(AKeyPair, ASubject, ASignatureAlgorithm);
-  Result.CertificateRequestPem := ExportToPem(TValue.From<IPkcs10CertificationRequest>(LReq));
+  Result.CertificateRequestPem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IPkcs10CertificationRequest>(LReq));
 
   LCert := CreateSelfSignedCertificate(AKeyPair, ASubject, ASignatureAlgorithm, AValidDaysCert);
-  Result.CertificatePem := ExportToPem(TValue.From<IX509Certificate>(LCert));
+  Result.CertificatePem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IX509Certificate>(LCert));
 end;
 
 procedure TCertificateExample.RunCrlCreateExportVerifyRsa(const ASignatureAlgorithm: string);
@@ -285,10 +287,10 @@ var
   LCrlPem: string;
 begin
   Logger.LogInformation('--- CRL: create, export to PEM, import and verify (RSA {0}) ---', [ASignatureAlgorithm]);
-  LKp := GenerateRsaKeyPair();
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair();
   LSubject := BuildX509NameSubject();
   LCrl := CreateCrl(LKp, LSubject, ASignatureAlgorithm);
-  LCrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+  LCrlPem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IX509Crl>(LCrl));
   Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LCrlPem]);
   RunCrlImportVerify(LCrl.GetEncoded(), LKp.Public);
 end;
@@ -297,14 +299,13 @@ procedure TCertificateExample.RunCrlCreateExportVerifyEc(const ACurveName: strin
   const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LDomainParams: IECDomainParameters;
   LSubject: IX509Name;
   LCrl: IX509Crl;
   LCrlPem: string;
 begin
   Logger.LogInformation('--- CRL: create, export to PEM, import and verify (EC {0} {1}) ---', [ACurveName, ASignatureAlgorithm]);
   try
-    LDomainParams := TECDomainParameters.LookupName(ACurveName);
+    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
   except
     on E: EArgumentCryptoLibException do
     begin
@@ -317,10 +318,9 @@ begin
       Exit;
     end;
   end;
-  LKp := GenerateEcKeyPair(LDomainParams);
   LSubject := BuildX509NameSubject();
   LCrl := CreateCrl(LKp, LSubject, ASignatureAlgorithm);
-  LCrlPem := ExportToPem(TValue.From<IX509Crl>(LCrl));
+  LCrlPem := TKeyEncodingExampleUtilities.ExportToPem(TValue.From<IX509Crl>(LCrl));
   Logger.LogInformation('CRL PEM:{0}{1}', [sLineBreak, LCrlPem]);
   RunCrlImportVerify(LCrl.GetEncoded(), LKp.Public);
 end;
@@ -332,7 +332,7 @@ var
   LArtifacts: TCertificateArtifactsPem;
 begin
   Logger.LogInformation('--- Certificate artifacts: RSA ({0}) ---', [ASignatureAlgorithm]);
-  LKp := GenerateRsaKeyPair();
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair();
   LSubject := BuildX509NameSubject();
   LArtifacts := CreateCertificateArtifacts(LKp, LSubject, ASignatureAlgorithm, 365);
 
@@ -346,13 +346,12 @@ procedure TCertificateExample.RunCertificateArtifactsEc(const ACurveName: string
   const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LDomainParams: IECDomainParameters;
   LSubject: IX509Name;
   LArtifacts: TCertificateArtifactsPem;
 begin
   Logger.LogInformation('--- Certificate artifacts: EC {0} ({1}) ---', [ACurveName, ASignatureAlgorithm]);
   try
-    LDomainParams := TECDomainParameters.LookupName(ACurveName);
+    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
   except
     on E: EArgumentCryptoLibException do
     begin
@@ -365,7 +364,6 @@ begin
       Exit;
     end;
   end;
-  LKp := GenerateEcKeyPair(LDomainParams);
   LSubject := BuildX509NameSubject();
   LArtifacts := CreateCertificateArtifacts(LKp, LSubject, ASignatureAlgorithm, 365);
 

@@ -27,21 +27,16 @@ interface
 uses
   SysUtils,
   Classes,
-  ClpSignerUtilities,
-  ClpEncoders,
   ClpConverters,
   ClpIAsymmetricCipherKeyPair,
-  ClpIAsymmetricKeyParameter,
-  ClpISigner,
   ClpIBufferedCipher,
   ClpCipherUtilities,
   ClpArrayUtilities,
-  ClpPrivateKeyInfoFactory,
-  ClpPrivateKeyFactory,
-  ClpSubjectPublicKeyInfoFactory,
-  ClpPublicKeyFactory,
+  ClpEncoders,
   HybridEncryption,
-  ExampleBase;
+  ExampleBase,
+  AsymmetricExampleUtilities,
+  KeyEncodingExampleUtilities;
 
 type
   TRsaExample = class(TExampleBase)
@@ -63,63 +58,27 @@ implementation
 procedure TRsaExample.RunRsaSignVerify(const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LMsg: TBytes;
 begin
-  Logger.LogInformation('Algorithm: {0}', [ASignatureAlgorithm]);
-  LKp := GenerateRsaKeyPair;
-  LSigner := TSignerUtilities.GetSigner(ASignatureAlgorithm);
-  if LSigner = nil then
-  begin
-    Logger.LogWarning('Signer "{0}" not available.', [ASignatureAlgorithm]);
-    Exit;
-  end;
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair;
   LMsg := TConverters.ConvertStringToBytes('Message to sign', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('{0} signature (hex):{1}{2}', [ASignatureAlgorithm, sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('{0} verification passed.', [ASignatureAlgorithm])
-  else
-    Logger.LogWarning('{0} verification failed.', [ASignatureAlgorithm]);
+  TAsymmetricExampleUtilities.RunSignVerify(ASignatureAlgorithm, LKp, LMsg);
 end;
 
 procedure TRsaExample.RunRsaKeyRecreateFromDEREncodedBytes;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LPrivBytes, LPubBytes: TBytes;
-  LRegenPriv, LRegenPub: IAsymmetricKeyParameter;
 begin
-  LKp := GenerateRsaKeyPair;
-
-  LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
-
-  LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
-
-  LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
-  if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.', [])
-  else
-    Logger.LogError('Private key roundtrip: mismatch.', []);
-
-  LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
-  if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.', [])
-  else
-    Logger.LogError('Public key roundtrip: mismatch.', []);
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair;
+  TKeyEncodingExampleUtilities.VerifyDerRoundtrip(LKp, 'RSA');
 end;
 
 procedure TRsaExample.RunRsaPemExportImport;
 var
   LKp: IAsymmetricCipherKeyPair;
 begin
-  LKp := GenerateRsaKeyPair;
-  VerifyPemRoundtrip(LKp, 'RSA');
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair;
+  TKeyEncodingExampleUtilities.VerifyPemRoundtrip(LKp, 'RSA');
 end;
 
 procedure TRsaExample.DoRsaEncryptDecrypt(const ACipherAlgorithm: string;
@@ -154,7 +113,7 @@ procedure TRsaExample.RunRsaEncryptDecrypt;
 var
   LKp: IAsymmetricCipherKeyPair;
 begin
-  LKp := GenerateRsaKeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair;
   DoRsaEncryptDecrypt('RSA/NONE/PKCS1PADDING', LKp);
   DoRsaEncryptDecrypt('RSA/NONE/OAEPPADDING', LKp);
   DoRsaEncryptDecrypt('RSA/NONE/OAEPWITHSHA-256ANDMGF1PADDING', LKp);
@@ -165,7 +124,7 @@ var
   LKp: IAsymmetricCipherKeyPair;
   LPlain, LAad, LEnvelope, LDecrypted: TBytes;
 begin
-  LKp := GenerateRsaKeyPair(3072);
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair(3072);
   LPlain := TConverters.ConvertStringToBytes('Hello RSA Hybrid Encryption!', TEncoding.UTF8);
   LAad := TConverters.ConvertStringToBytes('RH01-example-context', TEncoding.UTF8);
 
@@ -185,7 +144,7 @@ var
   LPlainStream, LEncStream, LDecStream: TBytesStream;
   LPlain, LAad, LDecrypted: TBytes;
 begin
-  LKp := GenerateRsaKeyPair(3072);
+  LKp := TAsymmetricExampleUtilities.GenerateRsaKeyPair(3072);
   LPlain := TConverters.ConvertStringToBytes('Hello RSA Hybrid Stream!', TEncoding.UTF8);
   LAad := TConverters.ConvertStringToBytes('RH01-stream-context', TEncoding.UTF8);
 

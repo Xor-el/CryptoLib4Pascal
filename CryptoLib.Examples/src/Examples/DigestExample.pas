@@ -49,6 +49,7 @@ type
   public
     procedure Run; override;
   private
+    procedure LogDerivedKey(const ALabel: string; const AParams: ICipherParameters);
     procedure RunHash(const ADigestAlgorithm: string);
     procedure RunHmac(const AHmacAlgorithm: string);
     procedure RunPbkdf2(const ADigestAlgorithm: string);
@@ -59,6 +60,22 @@ type
   end;
 
 implementation
+
+procedure TDigestExample.LogDerivedKey(const ALabel: string;
+  const AParams: ICipherParameters);
+var
+  LKey: IKeyParameter;
+  LDerived: TBytes;
+begin
+  if Supports(AParams, IKeyParameter, LKey) then
+  begin
+    LDerived := LKey.GetKey();
+    Logger.LogInformation('{0} derived {1} bytes:{2}{3}', [ALabel, IntToStr(System.Length(LDerived)), sLineBreak,
+      THexEncoder.Encode(LDerived, False)]);
+  end
+  else
+    Logger.LogWarning('{0}: could not get key parameter.', [ALabel]);
+end;
 
 procedure TDigestExample.RunHash(const ADigestAlgorithm: string);
 var

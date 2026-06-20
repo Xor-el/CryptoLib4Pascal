@@ -40,18 +40,24 @@ uses
   EdExample,
   DigestExample,
   CipherExample,
+  MlKemExample,
+  MlDsaExample,
+  SlhDsaExample,
   CertificateExample;
 
 type
   TExampleBaseClass = class of TExampleBase;
 
 const
-  KnownExamples: array[0..5] of TExampleBaseClass = (
+  KnownExamples: array[0..8] of TExampleBaseClass = (
     TDigestExample,
     TCipherExample,
     TEcExample,
     TEdExample,
     TRsaExample,
+    TMlKemExample,
+    TMlDsaExample,
+    TSlhDsaExample,
     TCertificateExample
   );
 

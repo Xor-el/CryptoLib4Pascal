@@ -32,21 +32,18 @@ uses
   ClpBigInteger,
   ClpECParameters,
   ClpIECParameters,
-  ClpSignerUtilities,
   ClpEncoders,
   ClpConverters,
   ClpArrayUtilities,
+  ClpCryptoLibTypes,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
   ClpIX9ECAsn1Objects,
   ClpIECCommon,
-  ClpISigner,
-  ClpPrivateKeyInfoFactory,
-  ClpPrivateKeyFactory,
-  ClpSubjectPublicKeyInfoFactory,
-  ClpPublicKeyFactory,
   HybridEncryption,
-  ExampleBase;
+  ExampleBase,
+  AsymmetricExampleUtilities,
+  KeyEncodingExampleUtilities;
 
 type
   TEcExample = class(TExampleBase)
@@ -84,64 +81,47 @@ procedure TEcExample.RunEcdsaSignVerify(const ACurveName: string;
   const ASignatureAlgorithm: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LMsg: TBytes;
 begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := GenerateEcKeyPair(LDomain);
-  Logger.LogInformation('Curve: {0}, Algorithm: {1}', [ACurveName, ASignatureAlgorithm]);
-  LSigner := TSignerUtilities.GetSigner(ASignatureAlgorithm);
-  if LSigner = nil then
-  begin
-    Logger.LogWarning('Signer "{0}" not available.', [ASignatureAlgorithm]);
-    Exit;
+  try
+    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
+      Exit;
+    end;
+    on E: EArgumentNilCryptoLibException do
+    begin
+      Logger.LogWarning('Curve name empty.', []);
+      Exit;
+    end;
   end;
+  Logger.LogInformation('Curve: {0}', [ACurveName]);
   LMsg := TConverters.ConvertStringToBytes('PascalECDSA', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('{0} signature (hex):{1}{2}', [ASignatureAlgorithm, sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('{0} verification passed.', [ASignatureAlgorithm])
-  else
-    Logger.LogError('{0} verification failed.', [ASignatureAlgorithm]);
+  TAsymmetricExampleUtilities.RunSignVerify(ASignatureAlgorithm, LKp, LMsg);
 end;
 
 procedure TEcExample.RunEcKeyRecreateFromDEREncodedBytes(const ACurveName: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
-  LPrivBytes, LPubBytes: TBytes;
-  LRegenPriv, LRegenPub: IAsymmetricKeyParameter;
 begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := GenerateEcKeyPair(LDomain);
+  try
+    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
+      Exit;
+    end;
+    on E: EArgumentNilCryptoLibException do
+    begin
+      Logger.LogWarning('Curve name empty.', []);
+      Exit;
+    end;
+  end;
   Logger.LogInformation('Curve: {0}', [ACurveName]);
-
-  LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
-
-  LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
-
-  LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
-  if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.', [])
-  else
-    Logger.LogError('Private key roundtrip: mismatch.', []);
-
-  LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
-  if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.', [])
-  else
-    Logger.LogError('Public key roundtrip: mismatch.', []);
+  TKeyEncodingExampleUtilities.VerifyDerRoundtrip(LKp, 'EC');
 end;
 
 procedure TEcExample.RunPublicKeyFromXY(const ACurveName: string);
@@ -158,7 +138,7 @@ begin
   LDomain := LookupEcDomain(ACurveName);
   if LDomain = nil then
     Exit;
-  LKp := GenerateEcKeyPair(LDomain);
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
   Logger.LogInformation('Curve: {0}', [ACurveName]);
   if not Supports(LKp.Public, IECPublicKeyParameters, LPub) then
   begin
@@ -182,14 +162,23 @@ end;
 procedure TEcExample.RunEcPemExportImport(const ACurveName: string);
 var
   LKp: IAsymmetricCipherKeyPair;
-  LDomain: IECDomainParameters;
 begin
-  LDomain := LookupEcDomain(ACurveName);
-  if LDomain = nil then
-    Exit;
-  LKp := GenerateEcKeyPair(LDomain);
+  try
+    LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      Logger.LogWarning('Curve "{0}" not found: {1}', [ACurveName, E.Message]);
+      Exit;
+    end;
+    on E: EArgumentNilCryptoLibException do
+    begin
+      Logger.LogWarning('Curve name empty.', []);
+      Exit;
+    end;
+  end;
   Logger.LogInformation('Curve: {0}', [ACurveName]);
-  VerifyPemRoundtrip(LKp, 'EC');
+  TKeyEncodingExampleUtilities.VerifyPemRoundtrip(LKp, 'EC');
 end;
 
 procedure TEcExample.RunEcHybridEncryptDecrypt(const ACurveName: string);
@@ -201,7 +190,7 @@ begin
   LDomain := LookupEcDomain(ACurveName);
   if LDomain = nil then
     Exit;
-  LKp := GenerateEcKeyPair(LDomain);
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
   Logger.LogInformation('Curve: {0}', [ACurveName]);
 
   LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Encryption!', TEncoding.UTF8);
@@ -227,7 +216,7 @@ begin
   LDomain := LookupEcDomain(ACurveName);
   if LDomain = nil then
     Exit;
-  LKp := GenerateEcKeyPair(LDomain);
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair(ACurveName);
   Logger.LogInformation('Curve: {0}', [ACurveName]);
 
   LPlain := TConverters.ConvertStringToBytes('Hello EC Hybrid Stream!', TEncoding.UTF8);
