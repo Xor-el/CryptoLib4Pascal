@@ -26,134 +26,60 @@ interface
 
 uses
   SysUtils,
-  Math,
-  ClpIBufferedCipher,
-  ClpCipherUtilities,
-  ClpParameterUtilities,
-  ClpParametersWithIV,
   ClpConverters,
-  ClpSecureRandom,
-  ClpISecureRandom,
-  ClpArrayUtilities,
-  ClpCryptoLibTypes,
-  ClpICipherParameters,
-  ExampleBase;
+  ExampleBase,
+  CipherExampleUtilities;
 
 type
   TCipherExample = class(TExampleBase)
   private
-    function GetKeyAlgorithmName(const ACipherAlgorithm: string): string;
-    function GetAesKeySizeLabel(AKeySizeBytes: Int32): string;
-    function ProcessIncrementally(const ACipher: IBufferedCipher;
-  const AInput: TBytes): TBytes;
-    procedure RunCipherEncryptDecrypt(const ACipherAlgorithm: string;
-      const AParams: ICipherParameters);
-    procedure RunAesEncryptDecrypt(const ACipherAlgorithm: string;
-      AKeySizeBytes: Int32);
+    procedure RunAesDemo(const ACipherAlgorithm: string; AKeySizeBytes: Int32;
+      const APlain: TBytes);
+    procedure RunCipherDemos;
   public
     procedure Run; override;
   end;
 
 implementation
 
-function TCipherExample.GetKeyAlgorithmName(const ACipherAlgorithm: string): string;
+procedure TCipherExample.RunAesDemo(const ACipherAlgorithm: string; AKeySizeBytes: Int32;
+  const APlain: TBytes);
 var
-  LSlash: Int32;
-begin
-  LSlash := Pos('/', ACipherAlgorithm);
-  if LSlash > 0 then
-    Result := Copy(ACipherAlgorithm, 1, LSlash - 1)
-  else
-    Result := ACipherAlgorithm;
-end;
-
-function TCipherExample.GetAesKeySizeLabel(AKeySizeBytes: Int32): string;
+  LCipherTextLen: Int32;
+  LKeyLabel: string;
 begin
   case AKeySizeBytes of
-    16: Result := 'AES-128';
-    24: Result := 'AES-192';
-    32: Result := 'AES-256';
+    16: LKeyLabel := 'AES-128';
+    24: LKeyLabel := 'AES-192';
+    32: LKeyLabel := 'AES-256';
   else
-    raise EArgumentException.Create(Format('Invalid AES key size: %d bytes. Valid sizes are 16, 24, 32.', [AKeySizeBytes]));
+    LKeyLabel := Format('AES (%d-byte key)', [AKeySizeBytes]);
   end;
+  Logger.LogInformation('Cipher: {0} {1} ({2}-byte key)', [LKeyLabel, ACipherAlgorithm, IntToStr(AKeySizeBytes)]);
+  if TCipherExampleUtilities.AesEncryptDecryptRoundtripMatches(ACipherAlgorithm, AKeySizeBytes, APlain,
+    LCipherTextLen) then
+  begin
+    Logger.LogInformation('{0} encrypted length: {1}', [ACipherAlgorithm, IntToStr(LCipherTextLen)]);
+    Logger.LogInformation('{0} decrypt match: success.', [ACipherAlgorithm]);
+  end
+  else
+    Logger.LogError('{0} encrypt/decrypt roundtrip failed.', [ACipherAlgorithm]);
 end;
 
-function TCipherExample.ProcessIncrementally(const ACipher: IBufferedCipher;
-  const AInput: TBytes): TBytes;
-const
-  BufferSize = 1024;
+procedure TCipherExample.RunCipherDemos;
 var
-  LInOff, LOutOff, LChunk, LCount, LInputLen: Int32;
+  LPlain: TBytes;
 begin
-  LInputLen := System.Length(AInput);
-  System.SetLength(Result, ACipher.GetOutputSize(LInputLen));
-  LInOff := 0;
-  LOutOff := 0;
-  while LInOff < LInputLen do
-  begin
-    LChunk := Min(BufferSize, LInputLen - LInOff);
-    LCount := ACipher.ProcessBytes(AInput, LInOff, LChunk, Result, LOutOff);
-    System.Inc(LOutOff, LCount);
-    System.Inc(LInOff, LChunk);
-  end;
-  LCount := ACipher.DoFinal(Result, LOutOff);
-  System.Inc(LOutOff, LCount);
-  System.SetLength(Result, LOutOff);
-end;
-
-procedure TCipherExample.RunCipherEncryptDecrypt(const ACipherAlgorithm: string;
-  const AParams: ICipherParameters);
-var
-  LCipher: IBufferedCipher;
-  LPlain, LCipherText, LDecrypted: TBytes;
-begin
-  Logger.LogInformation('Cipher: {0}', [ACipherAlgorithm]);
-  LCipher := TCipherUtilities.GetCipher(ACipherAlgorithm);
-  if LCipher = nil then
-  begin
-    Logger.LogWarning('Cipher "{0}" not available.', [ACipherAlgorithm]);
-    Exit;
-  end;
   LPlain := TConverters.ConvertStringToBytes('Secret message', TEncoding.UTF8);
-
-  LCipher.Init(True, AParams);
-  LCipherText := ProcessIncrementally(LCipher, LPlain);
-  Logger.LogInformation('{0} encrypted length: {1}', [ACipherAlgorithm, IntToStr(System.Length(LCipherText))]);
-
-  LCipher.Init(False, AParams);
-  LDecrypted := ProcessIncrementally(LCipher, LCipherText);
-
-  if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation('{0} decrypt match: success.', [ACipherAlgorithm])
-  else
-    Logger.LogError('{0} decrypt match: failed.', [ACipherAlgorithm]);
-end;
-
-procedure TCipherExample.RunAesEncryptDecrypt(const ACipherAlgorithm: string;
-  AKeySizeBytes: Int32);
-var
-  LKey, LIV: TBytes;
-  LSecureRandom: ISecureRandom;
-  LParams: ICipherParameters;
-  LKeyAlg: string;
-begin
-  Logger.LogInformation('{0} {1} ({2}-byte key)', [GetAesKeySizeLabel(AKeySizeBytes), ACipherAlgorithm, IntToStr(AKeySizeBytes)]);
-  LSecureRandom := TSecureRandom.Create();
-  System.SetLength(LKey, AKeySizeBytes);
-  System.SetLength(LIV, 16);
-  LSecureRandom.NextBytes(LKey);
-  LSecureRandom.NextBytes(LIV);
-  LKeyAlg := GetKeyAlgorithmName(ACipherAlgorithm);
-  LParams := TParametersWithIV.Create(TParameterUtilities.CreateKeyParameter(LKeyAlg, LKey), LIV) as ICipherParameters;
-  RunCipherEncryptDecrypt(ACipherAlgorithm, LParams);
+  LogWithLineBreak('--- Cipher example: encrypt/decrypt ---');
+  RunAesDemo('AES/CBC/PKCS7PADDING', 16, LPlain);
+  RunAesDemo('AES/CBC/PKCS7PADDING', 24, LPlain);
+  RunAesDemo('AES/CBC/PKCS7PADDING', 32, LPlain);
 end;
 
 procedure TCipherExample.Run;
 begin
-  LogWithLineBreak('--- Cipher example: encrypt/decrypt ---');
-  RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 16);
-  RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 24);
-  RunAesEncryptDecrypt('AES/CBC/PKCS7PADDING', 32);
+  RunCipherDemos;
 end;
 
 end.

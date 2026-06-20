@@ -27,144 +27,112 @@ interface
 uses
   SysUtils,
   Classes,
-  ClpSignerUtilities,
   ClpEncoders,
-  ClpConverters,
   ClpArrayUtilities,
+  ClpConverters,
   ClpIAsymmetricCipherKeyPair,
-  ClpIAsymmetricKeyParameter,
   ClpIEd25519Parameters,
   ClpIX25519Parameters,
   ClpIX25519Agreement,
   ClpX25519Agreement,
   ClpCurve25519KeyUtilities,
-  HybridEncryption,
-  ClpISigner,
-  ClpPrivateKeyInfoFactory,
-  ClpPrivateKeyFactory,
-  ClpSubjectPublicKeyInfoFactory,
-  ClpPublicKeyFactory,
-  ExampleBase;
+  ExampleBase,
+  AsymmetricExampleUtilities,
+  HybridEncryption;
 
 type
   TEdExample = class(TExampleBase)
   private
-    procedure RunEd25519SignVerify;
-    procedure RunEd25519CtxSignVerify;
-    procedure RunEd25519PhSignVerify;
-    procedure RunEd25519KeyRecreateFromDEREncodedBytes;
-    procedure RunEd25519PemExportImport;
+    function TryGetX25519KeysFromEdKeyPair(const AKeyPair: IAsymmetricCipherKeyPair;
+      out APriv: IX25519PrivateKeyParameters;
+      out APub: IX25519PublicKeyParameters): Boolean;
+    procedure DoX25519HybridRoundtrip(const APriv: IX25519PrivateKeyParameters;
+      const APub: IX25519PublicKeyParameters; const APlainText, AAadContext: string);
+    procedure DoX25519HybridStreamRoundtrip(const APriv: IX25519PrivateKeyParameters;
+      const APub: IX25519PublicKeyParameters; const APlainText, AAadContext: string);
     procedure RunEd25519ToX25519KeyConversion;
     procedure RunX25519KeyAgreement;
     procedure RunX25519HybridEncryptDecrypt;
     procedure RunX25519HybridStreamEncryptDecrypt;
+    procedure RunEd25519Demos;
   public
     procedure Run; override;
   end;
 
 implementation
 
-procedure TEdExample.RunEd25519SignVerify;
+function TEdExample.TryGetX25519KeysFromEdKeyPair(const AKeyPair: IAsymmetricCipherKeyPair;
+  out APriv: IX25519PrivateKeyParameters;
+  out APub: IX25519PublicKeyParameters): Boolean;
 var
-  LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LEdPriv: IEd25519PrivateKeyParameters;
+  LEdPub: IEd25519PublicKeyParameters;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519');
-  LMsg := TConverters.ConvertStringToBytes('PascalEd25519', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519 signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519 verification passed.', [])
-  else
-    Logger.LogError('Ed25519 verification failed.', []);
+  APriv := nil;
+  APub := nil;
+  if not Supports(AKeyPair.Private, IEd25519PrivateKeyParameters, LEdPriv) then
+  begin
+    Logger.LogError('Ed25519 private key type mismatch.', []);
+    Exit(False);
+  end;
+  if not Supports(AKeyPair.Public, IEd25519PublicKeyParameters, LEdPub) then
+  begin
+    Logger.LogError('Ed25519 public key type mismatch.', []);
+    Exit(False);
+  end;
+  APriv := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPriv);
+  APub := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPub);
+  Result := True;
 end;
 
-procedure TEdExample.RunEd25519CtxSignVerify;
+procedure TEdExample.DoX25519HybridRoundtrip(const APriv: IX25519PrivateKeyParameters;
+  const APub: IX25519PublicKeyParameters; const APlainText, AAadContext: string);
 var
-  LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LPlain, LAad, LEnvelope, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519ctx', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519ctx');
-  LMsg := TConverters.ConvertStringToBytes('PascalEd25519ctx', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519ctx signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519ctx verification passed.', [])
+  LPlain := TConverters.ConvertStringToBytes(APlainText, TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes(AAadContext, TEncoding.UTF8);
+  LEnvelope := TX25519HybridEncryption.Encrypt(APub, LPlain, LAad);
+  Logger.LogInformation('X25519 hybrid envelope: {0} bytes', [IntToStr(System.Length(LEnvelope))]);
+  LDecrypted := TX25519HybridEncryption.Decrypt(APriv, LEnvelope, LAad);
+  if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+    Logger.LogInformation('X25519 hybrid encrypt/decrypt roundtrip: success.', [])
   else
-    Logger.LogError('Ed25519ctx verification failed.', []);
+    Logger.LogError('X25519 hybrid encrypt/decrypt roundtrip: failed.', []);
 end;
 
-procedure TEdExample.RunEd25519PhSignVerify;
+procedure TEdExample.DoX25519HybridStreamRoundtrip(const APriv: IX25519PrivateKeyParameters;
+  const APub: IX25519PublicKeyParameters; const APlainText, AAadContext: string);
 var
-  LKp: IAsymmetricCipherKeyPair;
-  LSigner: ISigner;
-  LMsg, LSig: TBytes;
+  LPlainStream, LEncStream, LDecStream: TBytesStream;
+  LPlain, LAad, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Algorithm: Ed25519ph', []);
-  LSigner := TSignerUtilities.GetSigner('Ed25519ph');
-  LMsg := TConverters.ConvertStringToBytes('PascalEd25519ph', TEncoding.UTF8);
-  LSigner.Init(True, LKp.Private);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  LSig := LSigner.GenerateSignature();
-  Logger.LogInformation('Ed25519ph signature (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LSig, False)]);
-  LSigner.Init(False, LKp.Public);
-  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  if LSigner.VerifySignature(LSig) then
-    Logger.LogInformation('Ed25519ph verification passed.', [])
-  else
-    Logger.LogError('Ed25519ph verification failed.', []);
-end;
-
-procedure TEdExample.RunEd25519KeyRecreateFromDEREncodedBytes;
-var
-  LKp: IAsymmetricCipherKeyPair;
-  LPrivBytes, LPubBytes: TBytes;
-  LRegenPriv, LRegenPub: IAsymmetricKeyParameter;
-begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Key type: Ed25519', []);
-
-  LPrivBytes := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LKp.Private).GetEncoded();
-  Logger.LogInformation('Private key DER encoded: {0} bytes', [IntToStr(System.Length(LPrivBytes))]);
-
-  LPubBytes := TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LKp.Public).GetEncoded();
-  Logger.LogInformation('Public key DER encoded: {0} bytes', [IntToStr(System.Length(LPubBytes))]);
-
-  LRegenPriv := TPrivateKeyFactory.CreateKey(LPrivBytes);
-  if LRegenPriv.Equals(LKp.Private) then
-    Logger.LogInformation('Private key roundtrip: match.', [])
-  else
-    Logger.LogError('Private key roundtrip: mismatch.', []);
-
-  LRegenPub := TPublicKeyFactory.CreateKey(LPubBytes);
-  if LRegenPub.Equals(LKp.Public) then
-    Logger.LogInformation('Public key roundtrip: match.', [])
-  else
-    Logger.LogError('Public key roundtrip: mismatch.', []);
-end;
-
-procedure TEdExample.RunEd25519PemExportImport;
-var
-  LKp: IAsymmetricCipherKeyPair;
-begin
-  LKp := GenerateEd25519KeyPair;
-  Logger.LogInformation('Key type: Ed25519', []);
-  VerifyPemRoundtrip(LKp, 'Ed25519');
+  LPlain := TConverters.ConvertStringToBytes(APlainText, TEncoding.UTF8);
+  LAad := TConverters.ConvertStringToBytes(AAadContext, TEncoding.UTF8);
+  LPlainStream := TBytesStream.Create(LPlain);
+  try
+    LEncStream := TBytesStream.Create(nil);
+    try
+      TX25519HybridEncryption.Encrypt(APub, LPlainStream, LEncStream, LAad);
+      Logger.LogInformation('X25519 hybrid stream envelope: {0} bytes', [IntToStr(LEncStream.Size)]);
+      LEncStream.Position := 0;
+      LDecStream := TBytesStream.Create(nil);
+      try
+        TX25519HybridEncryption.Decrypt(APriv, LEncStream, LDecStream, LAad);
+        LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
+        if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
+          Logger.LogInformation('X25519 hybrid stream roundtrip: success.', [])
+        else
+          Logger.LogError('X25519 hybrid stream roundtrip: failed.', []);
+      finally
+        LDecStream.Free;
+      end;
+    finally
+      LEncStream.Free;
+    end;
+  finally
+    LPlainStream.Free;
+  end;
 end;
 
 procedure TEdExample.RunEd25519ToX25519KeyConversion;
@@ -175,20 +143,15 @@ var
   LX25519Priv: IX25519PrivateKeyParameters;
   LX25519PubFromConversion, LX25519PubFromPriv: IX25519PublicKeyParameters;
 begin
-  LKp := GenerateEd25519KeyPair;
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  Logger.LogInformation('Key spec: {0}', ['Ed25519']);
+  if not TryGetX25519KeysFromEdKeyPair(LKp, LX25519Priv, LX25519PubFromConversion) then
+    Exit;
   if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
-  begin
-    Logger.LogError('Ed25519 private key type mismatch.', []);
     Exit;
-  end;
   if not Supports(LKp.Public, IEd25519PublicKeyParameters, LEdPub) then
-  begin
-    Logger.LogError('Ed25519 public key type mismatch.', []);
     Exit;
-  end;
 
-  LX25519Priv := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPriv);
-  LX25519PubFromConversion := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPub);
   LX25519PubFromPriv := LX25519Priv.GeneratePublicKey();
 
   Logger.LogInformation('Ed25519 public key (hex):{0}{1}', [sLineBreak, THexEncoder.Encode(LEdPub.GetEncoded(), False)]);
@@ -205,41 +168,17 @@ end;
 procedure TEdExample.RunX25519KeyAgreement;
 var
   LKpA, LKpB: IAsymmetricCipherKeyPair;
-  LEdPrivA, LEdPrivB: IEd25519PrivateKeyParameters;
-  LEdPubA, LEdPubB: IEd25519PublicKeyParameters;
   LX25519SkA, LX25519SkB: IX25519PrivateKeyParameters;
   LX25519PubA, LX25519PubB: IX25519PublicKeyParameters;
   LAgreeA, LAgreeB: IX25519Agreement;
   LSecretA, LSecretB: TBytes;
 begin
-  LKpA := GenerateEd25519KeyPair;
-  LKpB := GenerateEd25519KeyPair;
-
-  if not Supports(LKpA.Private, IEd25519PrivateKeyParameters, LEdPrivA) then
-  begin
-    Logger.LogError('Party A: Ed25519 private key type mismatch.', []);
+  LKpA := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  LKpB := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  if not TryGetX25519KeysFromEdKeyPair(LKpA, LX25519SkA, LX25519PubA) then
     Exit;
-  end;
-  if not Supports(LKpA.Public, IEd25519PublicKeyParameters, LEdPubA) then
-  begin
-    Logger.LogError('Party A: Ed25519 public key type mismatch.', []);
+  if not TryGetX25519KeysFromEdKeyPair(LKpB, LX25519SkB, LX25519PubB) then
     Exit;
-  end;
-  if not Supports(LKpB.Private, IEd25519PrivateKeyParameters, LEdPrivB) then
-  begin
-    Logger.LogError('Party B: Ed25519 private key type mismatch.', []);
-    Exit;
-  end;
-  if not Supports(LKpB.Public, IEd25519PublicKeyParameters, LEdPubB) then
-  begin
-    Logger.LogError('Party B: Ed25519 public key type mismatch.', []);
-    Exit;
-  end;
-
-  LX25519SkA := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPrivA);
-  LX25519PubA := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPubA);
-  LX25519SkB := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPrivB);
-  LX25519PubB := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPubB);
 
   LAgreeA := TX25519Agreement.Create() as IX25519Agreement;
   LAgreeA.Init(LX25519SkA);
@@ -263,111 +202,45 @@ end;
 procedure TEdExample.RunX25519HybridEncryptDecrypt;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LEdPriv: IEd25519PrivateKeyParameters;
-  LEdPub: IEd25519PublicKeyParameters;
   LX25519Priv: IX25519PrivateKeyParameters;
   LX25519Pub: IX25519PublicKeyParameters;
-  LPlain, LAad, LEnvelope, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
-  begin
-    Logger.LogError('Ed25519 private key type mismatch.', []);
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  if not TryGetX25519KeysFromEdKeyPair(LKp, LX25519Priv, LX25519Pub) then
     Exit;
-  end;
-  if not Supports(LKp.Public, IEd25519PublicKeyParameters, LEdPub) then
-  begin
-    Logger.LogError('Ed25519 public key type mismatch.', []);
-    Exit;
-  end;
-
-  LX25519Priv := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPriv);
-  LX25519Pub := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPub);
-
-  LPlain := TConverters.ConvertStringToBytes('Hello X25519 Hybrid Encryption!', TEncoding.UTF8);
-  LAad := TConverters.ConvertStringToBytes('EX01-example-context', TEncoding.UTF8);
-
-  LEnvelope := TX25519HybridEncryption.Encrypt(LX25519Pub, LPlain, LAad);
-  Logger.LogInformation('X25519 hybrid envelope: {0} bytes', [IntToStr(System.Length(LEnvelope))]);
-
-  LDecrypted := TX25519HybridEncryption.Decrypt(LX25519Priv, LEnvelope, LAad);
-  if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-    Logger.LogInformation('X25519 hybrid encrypt/decrypt roundtrip: success.', [])
-  else
-    Logger.LogError('X25519 hybrid encrypt/decrypt roundtrip: failed.', []);
+  DoX25519HybridRoundtrip(LX25519Priv, LX25519Pub,
+    'Hello X25519 Hybrid Encryption!', 'EX01-example-context');
 end;
 
 procedure TEdExample.RunX25519HybridStreamEncryptDecrypt;
 var
   LKp: IAsymmetricCipherKeyPair;
-  LEdPriv: IEd25519PrivateKeyParameters;
-  LEdPub: IEd25519PublicKeyParameters;
   LX25519Priv: IX25519PrivateKeyParameters;
   LX25519Pub: IX25519PublicKeyParameters;
-  LPlainStream, LEncStream, LDecStream: TBytesStream;
-  LPlain, LAad, LDecrypted: TBytes;
 begin
-  LKp := GenerateEd25519KeyPair;
-  if not Supports(LKp.Private, IEd25519PrivateKeyParameters, LEdPriv) then
-  begin
-    Logger.LogError('Ed25519 private key type mismatch.', []);
+  LKp := TAsymmetricExampleUtilities.GenerateKeyPair('Ed25519');
+  if not TryGetX25519KeysFromEdKeyPair(LKp, LX25519Priv, LX25519Pub) then
     Exit;
-  end;
-  if not Supports(LKp.Public, IEd25519PublicKeyParameters, LEdPub) then
-  begin
-    Logger.LogError('Ed25519 public key type mismatch.', []);
-    Exit;
-  end;
-
-  LX25519Priv := TCurve25519KeyUtilities.ToX25519PrivateKey(LEdPriv);
-  LX25519Pub := TCurve25519KeyUtilities.ToX25519PublicKey(LEdPub);
-
-  LPlain := TConverters.ConvertStringToBytes('Hello X25519 Hybrid Stream!', TEncoding.UTF8);
-  LAad := TConverters.ConvertStringToBytes('EX01-stream-context', TEncoding.UTF8);
-
-  LPlainStream := TBytesStream.Create(LPlain);
-  try
-    LEncStream := TBytesStream.Create(nil);
-    try
-      TX25519HybridEncryption.Encrypt(LX25519Pub, LPlainStream, LEncStream, LAad);
-      Logger.LogInformation('X25519 hybrid stream envelope: {0} bytes', [IntToStr(LEncStream.Size)]);
-
-      LEncStream.Position := 0;
-      LDecStream := TBytesStream.Create(nil);
-      try
-        TX25519HybridEncryption.Decrypt(LX25519Priv, LEncStream, LDecStream, LAad);
-        LDecrypted := Copy(LDecStream.Bytes, 0, LDecStream.Size);
-        if TArrayUtilities.AreEqual(LPlain, LDecrypted) then
-          Logger.LogInformation('X25519 hybrid stream roundtrip: success.', [])
-        else
-          Logger.LogError('X25519 hybrid stream roundtrip: failed.', []);
-      finally
-        LDecStream.Free;
-      end;
-    finally
-      LEncStream.Free;
-    end;
-  finally
-    LPlainStream.Free;
-  end;
+  DoX25519HybridStreamRoundtrip(LX25519Priv, LX25519Pub,
+    'Hello X25519 Hybrid Stream!', 'EX01-stream-context');
 end;
 
-procedure TEdExample.Run;
+procedure TEdExample.RunEd25519Demos;
 begin
   LogWithLineBreak('--- Ed example: Ed25519 sign/verify ---');
-  RunEd25519SignVerify;
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519', 'Ed25519', 'PascalEd25519');
 
   LogWithLineBreak('--- Ed example: Ed25519ctx sign/verify ---');
-  RunEd25519CtxSignVerify;
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519', 'Ed25519ctx', 'PascalEd25519ctx');
 
   LogWithLineBreak('--- Ed example: Ed25519ph sign/verify ---');
-  RunEd25519PhSignVerify;
+  TAsymmetricExampleUtilities.RunSignVerify('Ed25519', 'Ed25519ph', 'PascalEd25519ph');
 
   LogWithLineBreak('--- Ed example: Key recreate from DER bytes ---');
-  RunEd25519KeyRecreateFromDEREncodedBytes;
+  TAsymmetricExampleUtilities.RunDerRoundtrip('Ed25519', 'Ed25519');
 
   LogWithLineBreak('--- Ed example: PEM export/import ---');
-  RunEd25519PemExportImport;
+  TAsymmetricExampleUtilities.RunPemRoundtrip('Ed25519', 'Ed25519');
 
   LogWithLineBreak('--- Ed example: Ed25519 -> X25519 key conversion ---');
   RunEd25519ToX25519KeyConversion;
@@ -380,6 +253,11 @@ begin
 
   LogWithLineBreak('--- Ed example: X25519 hybrid stream encrypt/decrypt ---');
   RunX25519HybridStreamEncryptDecrypt;
+end;
+
+procedure TEdExample.Run;
+begin
+  RunEd25519Demos;
 end;
 
 end.

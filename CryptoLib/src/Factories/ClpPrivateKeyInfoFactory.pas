@@ -25,6 +25,7 @@ uses
   Rtti,
   ClpValueHelper,
   ClpAsn1Objects,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIAsymmetricKeyParameter,
   ClpIRsaParameters,
@@ -36,6 +37,12 @@ uses
   ClpIEd448Parameters,
   ClpIX25519Parameters,
   ClpIX448Parameters,
+  ClpIMlDsaParameters,
+  ClpIMlKemParameters,
+  ClpISlhDsaParameters,
+  ClpMlDsaParameters,
+  ClpMlKemParameters,
+  ClpSlhDsaParameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
@@ -64,7 +71,7 @@ resourcestring
   SPrivateKeyNil = 'private key cannot be nil';
   SPublicKeyPassedPrivateKeyExpected = 'public key passed - private key expected';
   SPrivateKeyRequiresParameters = 'private key requires parameters for %s';
-  SKeyTypeNotSupportedForPrivateKeyInfo = 'key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519, X448, Ed448)';
+  SKeyTypeNotSupportedForPrivateKeyInfo = 'key type not supported for PrivateKeyInfo (supported: RSA, DSA, EC, DH, X25519, Ed25519, X448, Ed448, ML-DSA, ML-KEM)';
   SUnknownEncryptionAlgorithm = 'unknown encryption algorithm: %s';
 
 type
@@ -72,6 +79,10 @@ type
   /// A factory to produce <see cref="IPrivateKeyInfo"/> (PKCS#8) objects from asymmetric private key parameters.
   /// </summary>
   TPrivateKeyInfoFactory = class sealed(TObject)
+  strict private
+    class function GetMlDsaPrivateKeyAsn1(const AKey: IMlDsaPrivateKeyParameters): IAsn1Encodable; static;
+    class function GetMlKemPrivateKeyAsn1(const AKey: IMlKemPrivateKeyParameters): IAsn1Encodable; static;
+    class function GetSlhDsaPrivateKeyAsn1(const AKey: ISlhDsaPrivateKeyParameters): IAsn1Encodable; static;
   public
     /// <summary>
     /// Create an <see cref="IPrivateKeyInfo"/> representation of a private key.
@@ -127,6 +138,44 @@ implementation
 
 { TPrivateKeyInfoFactory }
 
+class function TPrivateKeyInfoFactory.GetMlDsaPrivateKeyAsn1(
+  const AKey: IMlDsaPrivateKeyParameters): IAsn1Encodable;
+begin
+  case AKey.PreferredFormat of
+    TMlDsaPrivateKeyFormat.EncodingOnly:
+      Result := TDerOctetString.Create(AKey.GetEncoded()) as IAsn1Encodable;
+    TMlDsaPrivateKeyFormat.SeedOnly:
+      Result := TDerTaggedObject.Create(False, 0,
+        TDerOctetString.Create(AKey.GetSeed()) as IAsn1Encodable);
+  else
+    Result := TDerSequence.Create(
+      TDerOctetString.Create(AKey.GetSeed()) as IAsn1Encodable,
+      TDerOctetString.Create(AKey.GetEncoded()) as IAsn1Encodable);
+  end;
+end;
+
+class function TPrivateKeyInfoFactory.GetMlKemPrivateKeyAsn1(
+  const AKey: IMlKemPrivateKeyParameters): IAsn1Encodable;
+begin
+  case AKey.PreferredFormat of
+    TMlKemPrivateKeyFormat.EncodingOnly:
+      Result := TDerOctetString.Create(AKey.GetEncoded()) as IAsn1Encodable;
+    TMlKemPrivateKeyFormat.SeedOnly:
+      Result := TDerTaggedObject.Create(False, 0,
+        TDerOctetString.Create(AKey.GetSeed()) as IAsn1Encodable);
+  else
+    Result := TDerSequence.Create(
+      TDerOctetString.Create(AKey.GetSeed()) as IAsn1Encodable,
+      TDerOctetString.Create(AKey.GetEncoded()) as IAsn1Encodable);
+  end;
+end;
+
+class function TPrivateKeyInfoFactory.GetSlhDsaPrivateKeyAsn1(
+  const AKey: ISlhDsaPrivateKeyParameters): IAsn1Encodable;
+begin
+  Result := TDerOctetString.Create(AKey.GetEncoded()) as IAsn1Encodable;
+end;
+
 class function TPrivateKeyInfoFactory.CreatePrivateKeyInfo(const APrivateKey: IAsymmetricKeyParameter): IPrivateKeyInfo;
 begin
   Result := CreatePrivateKeyInfo(APrivateKey, nil);
@@ -175,6 +224,9 @@ var
   LEd25519Key: IEd25519PrivateKeyParameters;
   LX448Key: IX448PrivateKeyParameters;
   LEd448Key: IEd448PrivateKeyParameters;
+  LMlDsaKey: IMlDsaPrivateKeyParameters;
+  LMlKemKey: IMlKemPrivateKeyParameters;
+  LSlhDsaKey: ISlhDsaPrivateKeyParameters;
   LPub: IECPublicKeyParameters;
   LPubEnc: TCryptoLibByteArray;
   LDerPub: IDerBitString;
@@ -302,6 +354,27 @@ begin
     LPrivBytes := LEd448Key.GetEncoded();
     LPubBytes := LEd448Key.GeneratePublicKey().GetEncoded();
     Result := TPrivateKeyInfo.Create(LAlgID, TDerOctetString.Create(LPrivBytes) as IDerOctetString, AAttributes, LPubBytes);
+    Exit;
+  end;
+
+  if Supports(APrivateKey, IMlDsaPrivateKeyParameters, LMlDsaKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LMlDsaKey.Parameters.Oid);
+    Result := TPrivateKeyInfo.Create(LAlgID, GetMlDsaPrivateKeyAsn1(LMlDsaKey), AAttributes, nil);
+    Exit;
+  end;
+
+  if Supports(APrivateKey, IMlKemPrivateKeyParameters, LMlKemKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LMlKemKey.Parameters.Oid);
+    Result := TPrivateKeyInfo.Create(LAlgID, GetMlKemPrivateKeyAsn1(LMlKemKey), AAttributes, nil);
+    Exit;
+  end;
+
+  if Supports(APrivateKey, ISlhDsaPrivateKeyParameters, LSlhDsaKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LSlhDsaKey.Parameters.Oid);
+    Result := TPrivateKeyInfo.Create(LAlgID, GetSlhDsaPrivateKeyAsn1(LSlhDsaKey), AAttributes, nil);
     Exit;
   end;
 

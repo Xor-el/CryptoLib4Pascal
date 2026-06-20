@@ -40,6 +40,10 @@ uses
   ClpBsiObjectIdentifiers,
   ClpEdECObjectIdentifiers,
   ClpX509ObjectIdentifiers,
+  ClpMlDsaParameters,
+  ClpSlhDsaParameters,
+  ClpIMlDsaParameters,
+  ClpISlhDsaParameters,
   ClpSignerUtilities,
   ClpX509Utilities,
   ClpAsn1Comparers,
@@ -81,6 +85,8 @@ implementation
 class constructor TX509SignatureUtilities.Create;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
+  LParams: IMlDsaParameters;
+  LSlhParams: ISlhDsaParameters;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FExParams := TDictionary<String, IAsn1Encodable>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -288,6 +294,18 @@ begin
   //
   AddAlgorithm('Ed25519', TEdECObjectIdentifiers.IdEd25519, True);
   AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, True);
+
+  //
+  // ML-DSA
+  //
+  for LParams in TMlDsaParameters.ByName.Values do
+    AddAlgorithm(LParams.Name, LParams.Oid, True);
+
+  //
+  // SLH-DSA
+  //
+  for LSlhParams in TSlhDsaParameters.ByName.Values do
+    AddAlgorithm(LSlhParams.Name, LSlhParams.Oid, True);
 end;
 
 class destructor TX509SignatureUtilities.Destroy;

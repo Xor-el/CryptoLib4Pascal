@@ -156,10 +156,12 @@ begin
 
   for algorithm in TSignerUtilities.Algorithms do
   begin
+    upper := UpperCase(algorithm);
+    if (Pos('ML-DSA-', upper) = 1) or (Pos('SLH-DSA-', upper) = 1) then
+      Continue;
 
     signer := TSignerUtilities.GetSigner(algorithm);
 
-    upper := UpperCase(algorithm);
     withPos := System.Pos('WITH', upper);
 
     if withPos = 0 then

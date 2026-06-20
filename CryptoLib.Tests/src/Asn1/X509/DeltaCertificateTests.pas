@@ -59,6 +59,11 @@ uses
   ClpIX9ECAsn1Objects,
   ClpIECParameters,
   ClpISignatureFactory,
+  ClpMlDsaParameters,
+  ClpIMlDsaParameters,
+  ClpSubjectPublicKeyInfoFactory,
+  ClpIAsymmetricKeyParameter,
+  ClpDateTimeUtilities,
   CryptoLibTestBase,
   CertVectors;
 
@@ -67,19 +72,20 @@ type
   TDeltaCertificateTest = class(TCryptoLibAlgorithmTestCase)
   strict private
   var
-    FDeltaEcDsaRoot, FDeltaEcDsaDualXchEe, FDeltaEcDsaDualSigEe: string;
     FSecureRandom: ISecureRandom;
 
-    procedure SetUpTestData;
-    function ReadCert(const APemData: string): IX509Certificate;
+    function ReadCert(const ACertId: string): IX509Certificate;
 
   protected
     procedure SetUp; override;
 
   published
     procedure TestDraftDualUseECDsaEndEntity;
+    procedure TestDraftMlDsaRoot;
+    procedure TestDraftMlDsaEndEntity;
     procedure TestSameName;
     procedure TestDeltaCertWithExtensions;
+    procedure TestCheckCreationAltCertWithDelta;
 
   end;
 
@@ -87,28 +93,20 @@ implementation
 
 { TDeltaCertificateTest }
 
-procedure TDeltaCertificateTest.SetUpTestData;
-begin
-  FSecureRandom := TSecureRandom.Create();
-  FDeltaEcDsaRoot := TCertVectors.LoadPemString('DeltaEcDsaRoot');
-  FDeltaEcDsaDualXchEe := TCertVectors.LoadPemString('DeltaEcDsaDualXchEe');
-  FDeltaEcDsaDualSigEe := TCertVectors.LoadPemString('DeltaEcDsaDualSigEe');
-end;
-
 procedure TDeltaCertificateTest.SetUp;
 begin
   inherited SetUp;
-  SetUpTestData;
+  FSecureRandom := TSecureRandom.Create();
 end;
 
-function TDeltaCertificateTest.ReadCert(const APemData: string): IX509Certificate;
+function TDeltaCertificateTest.ReadCert(const ACertId: string): IX509Certificate;
 var
   LStream: TStringStream;
   LPemReader: IPemReader;
   LPemObj: IPemObject;
   LStruct: IX509CertificateStructure;
 begin
-  LStream := TStringStream.Create(APemData, TEncoding.ASCII);
+  LStream := TStringStream.Create(TCertVectors.LoadPemString(ACertId), TEncoding.ASCII);
   try
     LPemReader := TPemReader.Create(LStream);
     LPemObj := LPemReader.ReadPemObject();
@@ -125,13 +123,39 @@ procedure TDeltaCertificateTest.TestDraftDualUseECDsaEndEntity;
 var
   LEcRootCert, LBaseCert, LDeltaCert, LExtCert: IX509Certificate;
 begin
-  LEcRootCert := ReadCert(FDeltaEcDsaRoot);
-  LBaseCert := ReadCert(FDeltaEcDsaDualXchEe);
+  LEcRootCert := ReadCert('DeltaEcDsaRoot');
+  LBaseCert := ReadCert('DeltaEcDsaDualXchEe');
   Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'base signed by ec_dsa_root');
   LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
-  LExtCert := ReadCert(FDeltaEcDsaDualSigEe);
+  LExtCert := ReadCert('DeltaEcDsaDualSigEe');
   Check(AreEqual(LExtCert.GetEncoded, LDeltaCert.GetEncoded), 'delta equals ec_dsa_dual_sig_ee');
   Check(LDeltaCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'delta signed by ec_dsa_root');
+end;
+
+procedure TDeltaCertificateTest.TestDraftMlDsaRoot;
+var
+  LBaseCert, LDeltaCert, LExtCert: IX509Certificate;
+begin
+  LBaseCert := ReadCert('DeltaMlDsaRoot');
+  Check(LBaseCert.IsSignatureValid(LBaseCert.GetPublicKey), 'ml_dsa_root self-signed');
+  LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
+  Check(LDeltaCert.IsSignatureValid(LDeltaCert.GetPublicKey), 'extracted delta self-signed');
+  LExtCert := ReadCert('DeltaEcDsaRoot');
+  Check(LExtCert.Equals(LDeltaCert), 'extracted delta equals ec_dsa_root');
+end;
+
+procedure TDeltaCertificateTest.TestDraftMlDsaEndEntity;
+var
+  LRootCert, LEcRootCert, LBaseCert, LDeltaCert, LExtCert: IX509Certificate;
+begin
+  LRootCert := ReadCert('DeltaMlDsaRoot');
+  LEcRootCert := ReadCert('DeltaEcDsaRoot');
+  LBaseCert := ReadCert('DeltaEcDsaEe');
+  Check(LBaseCert.IsSignatureValid(LEcRootCert.GetPublicKey), 'ec_dsa_ee signed by ec_dsa_root');
+  LDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LBaseCert);
+  Check(LDeltaCert.IsSignatureValid(LRootCert.GetPublicKey), 'delta signed by ml_dsa_root');
+  LExtCert := ReadCert('DeltaMlDsaEe');
+  Check(LExtCert.Equals(LDeltaCert), 'extracted delta equals ml_dsa_ee');
 end;
 
 procedure TDeltaCertificateTest.TestSameName;
@@ -255,6 +279,93 @@ begin
 
   LExDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LChameleonCert);
   Check(LExDeltaCert.IsSignatureValid(LKpB.Public), 'extracted delta signature valid with kpB');
+end;
+
+procedure TDeltaCertificateTest.TestCheckCreationAltCertWithDelta;
+var
+  LKpgB, LKpGen, LEcKpGen: IAsymmetricCipherKeyPairGenerator;
+  LKpB, LKp, LEcKp: IAsymmetricCipherKeyPair;
+  LEcPrivKey, LEcPubKey, LPubKey: IAsymmetricKeyParameter;
+  LNotBefore, LNotAfter: TDateTime;
+  LIssuer, LSubject: IX509Name;
+  LSigGen, LAltSigGen, LSignerB: ISignatureFactory;
+  LCertGen, LDeltaBldr: IX509V3CertificateGenerator;
+  LDeltaCert, LCert, LExDeltaCert: IX509Certificate;
+  LDeltaExt: IX509Extension;
+  LBasicConstraints: IBasicConstraints;
+  LSubjectAltPubKeyInfo: ISubjectAltPublicKeyInfo;
+  LEcP: IX9ECParameters;
+  LDomainParams: IECDomainParameters;
+begin
+  LEcP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP256r1);
+  LDomainParams := TECDomainParameters.Create(LEcP.Curve, LEcP.G, LEcP.N, LEcP.H, LEcP.GetSeed());
+
+  LKpgB := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  LKpgB.Init(TECKeyGenerationParameters.Create(LDomainParams, FSecureRandom) as IECKeyGenerationParameters);
+  LKpB := LKpgB.GenerateKeyPair();
+
+  LKpGen := TGeneratorUtilities.GetKeyPairGenerator('ML-DSA');
+  LKpGen.Init(TMlDsaKeyGenerationParameters.Create(FSecureRandom, TMlDsaParameters.MlDsa44) as IMlDsaKeyGenerationParameters);
+  LKp := LKpGen.GenerateKeyPair();
+  LPubKey := LKp.Public;
+
+  LEcKpGen := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  LEcKpGen.Init(TECKeyGenerationParameters.Create(LDomainParams, FSecureRandom) as IECKeyGenerationParameters);
+  LEcKp := LEcKpGen.GenerateKeyPair();
+  LEcPrivKey := LEcKp.Private;
+  LEcPubKey := LEcKp.Public;
+
+  LNotBefore := IncSecond(Now, -5);
+  LNotAfter := IncHour(Now, 1);
+
+  LIssuer := TX509Name.Create('CN=Chameleon Base Issuer');
+  LSubject := TX509Name.Create('CN=Chameleon Base Subject');
+
+  LSigGen := TAsn1SignatureFactory.Create('SHA256withECDSA', LEcPrivKey);
+  LAltSigGen := TAsn1SignatureFactory.Create('ML-DSA-44', LKp.Private);
+
+  LCertGen := TX509V3CertificateGenerator.Create;
+  LCertGen.SetIssuerDN(LIssuer);
+  LCertGen.SetSerialNumber(TBigInteger.One);
+  LCertGen.SetNotBefore(LNotBefore);
+  LCertGen.SetNotAfter(LNotAfter);
+  LCertGen.SetSubjectDN(LSubject);
+  LCertGen.SetPublicKey(LEcPubKey);
+  LBasicConstraints := TBasicConstraints.Create(False);
+  LCertGen.AddExtension(TX509Extensions.BasicConstraints, True, LBasicConstraints);
+  LSubjectAltPubKeyInfo := TSubjectAltPublicKeyInfo.Create(
+    TSubjectPublicKeyInfoFactory.CreateSubjectPublicKeyInfo(LPubKey));
+  LCertGen.AddExtension(TX509Extensions.SubjectAltPublicKeyInfo, False, LSubjectAltPubKeyInfo);
+
+  LSignerB := TAsn1SignatureFactory.Create('SHA256withECDSA', LKpB.Private);
+
+  LDeltaBldr := TX509V3CertificateGenerator.Create;
+  LDeltaBldr.SetIssuerDN(TX509Name.Create('CN=Chameleon CA 2'));
+  LDeltaBldr.SetSerialNumber(TBigInteger.ValueOf(TDateTimeUtilities.CurrentUnixMs));
+  LDeltaBldr.SetNotBefore(LNotBefore);
+  LDeltaBldr.SetNotAfter(LNotAfter);
+  LDeltaBldr.SetSubjectDN(LSubject);
+  LDeltaBldr.SetPublicKey(LKpB.Public);
+  LDeltaBldr.AddExtension(TX509Extensions.BasicConstraints, True, LBasicConstraints);
+  LDeltaBldr.AddExtension(TX509Extensions.SubjectAltPublicKeyInfo, False, LSubjectAltPubKeyInfo);
+  LDeltaCert := LDeltaBldr.Generate(LSignerB, False, LAltSigGen);
+
+  Check(LDeltaCert.IsSignatureValid(LKpB.Public), 'delta cert primary signature valid');
+
+  LDeltaExt := TDeltaCertificateTool.CreateDeltaCertificateExtension(False, LDeltaCert);
+  LCertGen.AddExtension(TX509Extensions.DraftDeltaCertificateDescriptor, LDeltaExt);
+  LCert := LCertGen.Generate(LSigGen, False, LAltSigGen);
+
+  LCert.CheckValidity();
+  LCert.Verify(LCert.GetPublicKey);
+  Check(System.Length(LCert.GetEncoded) > 0, 'base cert encoded');
+  Check(LCert.IsAlternativeSignatureValid(LPubKey), 'alt sig value wrong');
+
+  LExDeltaCert := TDeltaCertificateTool.ExtractDeltaCertificate(LCert);
+  Check(LExDeltaCert.IsSignatureValid(LKpB.Public), 'extracted delta primary signature valid');
+  Check(LExDeltaCert.IsAlternativeSignatureValid(LPubKey), 'extracted delta alt signature valid');
+  Check(LCert.IsSignatureValid(LEcPubKey), 'base cert primary signature valid with ec pub');
+  Check(LCert.IsAlternativeSignatureValid(LPubKey), 'base cert alt signature valid with ml-dsa pub');
 end;
 
 initialization

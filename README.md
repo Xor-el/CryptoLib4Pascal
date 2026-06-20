@@ -14,7 +14,7 @@
 
 ---
 
-**CryptoLib4Pascal** brings production-grade cryptography to Delphi and FreePascal. From AES-GCM and ChaCha20-Poly1305 to ECDSA, EdDSA, RSA, Argon2, and X.509 certificates -- everything you need to build secure applications in Object Pascal, released under the permissive [MIT License](LICENSE).
+**CryptoLib4Pascal** brings production-grade cryptography to Delphi and FreePascal. From AES-GCM and ChaCha20-Poly1305 to ECDSA, EdDSA, RSA, Argon2, NIST post-quantum algorithms (ML-KEM, ML-DSA, SLH-DSA), and X.509 certificates -- everything you need to build secure applications in Object Pascal, released under the permissive [MIT License](LICENSE).
 
 ## Table of Contents
 
@@ -36,6 +36,7 @@
 - **Symmetric encryption** -- AES, Rijndael, Blowfish, Speck, (X)ChaCha20, (X)Salsa20
 - **Authenticated encryption (AEAD)** -- GCM, GCM-SIV, CCM, EAX, OCB, (X)ChaCha20-Poly1305
 - **Asymmetric cryptography** -- RSA, DSA, ECDSA, EdDSA (Ed25519, Ed448), ECNR, Schnorr (Bip340), MuSig2 (Bip327)
+- **Post-quantum cryptography (PQC)** -- ML-KEM ([FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)), ML-DSA ([FIPS 204](https://csrc.nist.gov/pubs/fips/204/final)), SLH-DSA ([FIPS 205](https://csrc.nist.gov/pubs/fips/205/final))
 - **Key exchange** -- DH, ECDH, X25519, X448
 - **Hashing** -- SHA-2, SHA-3, Blake2, Keccak, RIPEMD, and more
 - **Password hashing** -- Argon2 (2i/2d/2id), Scrypt, PBKDF2
@@ -94,7 +95,53 @@
 <details>
 <summary><strong>Key Agreement / Exchange</strong></summary>
 
-`DH` | `ECDH` | `ECDHC` | `X25519` | `X448`
+`DH` | `ECDH` | `ECDHC` | `X25519` | `X448` | `ML-KEM`
+
+</details>
+
+<details>
+<summary><strong>Post-Quantum Cryptography (PQC)</strong></summary>
+
+NIST-standardized post-quantum algorithms with NIST-assigned OIDs, PKCS#8 / SubjectPublicKeyInfo encoding, optional signing/KEM context ([FIPS 204](https://csrc.nist.gov/pubs/fips/204/final) / [FIPS 205](https://csrc.nist.gov/pubs/fips/205/final)), and NIST ACVP test-vector coverage.
+
+#### ML-KEM — [FIPS 203](https://csrc.nist.gov/pubs/fips/203/final)
+
+Module-Lattice-Based Key-Encapsulation Mechanism (CRYSTALS-Kyber).
+
+| Parameter set | NIST security category |
+|---|---|
+| `ML-KEM-512` | 1 |
+| `ML-KEM-768` | 3 |
+| `ML-KEM-1024` | 5 |
+
+Key generation, encapsulation, and decapsulation via `TGeneratorUtilities` / `TKemUtilities`.
+
+#### ML-DSA — [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final)
+
+Module-Lattice-Based Digital Signature Algorithm (CRYSTALS-Dilithium).
+
+| Parameter set | NIST security category |
+|---|---|
+| `ML-DSA-44` | 2 |
+| `ML-DSA-65` | 3 |
+| `ML-DSA-87` | 5 |
+
+**HashML-DSA** pre-hash variants (SHA-512): `ML-DSA-44-WITH-SHA512`, `ML-DSA-65-WITH-SHA512`, `ML-DSA-87-WITH-SHA512`
+
+Sign and verify via `TSignerUtilities` (`TMlDsaSigner`, `THashMlDsaSigner`).
+
+#### SLH-DSA — [FIPS 205](https://csrc.nist.gov/pubs/fips/205/final)
+
+Stateless Hash-Based Digital Signature Algorithm (SPHINCS+).
+
+| Family | Parameter sets |
+|---|---|
+| SHA-2 | `SLH-DSA-SHA2-128s`, `128f`, `192s`, `192f`, `256s`, `256f` |
+| SHAKE | `SLH-DSA-SHAKE-128s`, `128f`, `192s`, `192f`, `256s`, `256f` |
+
+**HashSLH-DSA** pre-hash variants for each parameter set — SHA-2 sets use `WITH-SHA256` (128-bit) or `WITH-SHA512` (192/256-bit); SHAKE sets use `WITH-SHAKE128` (128-bit) or `WITH-SHAKE256` (192/256-bit). Examples: `SLH-DSA-SHA2-128F-WITH-SHA256`, `SLH-DSA-SHAKE-256S-WITH-SHAKE256`.
+
+Sign and verify via `TSignerUtilities` (`TSlhDsaSigner`, `THashSlhDsaSigner`).
 
 </details>
 
@@ -283,7 +330,7 @@ begin
 end;
 ```
 
-More examples (RSA, certificates, password hashing, etc.) are available in the [`CryptoLib.Examples`](CryptoLib.Examples/src/Examples/) directory.
+More examples (RSA, EC, Ed25519, ML-KEM, ML-DSA, SLH-DSA, certificates, password hashing, etc.) are available in the [`CryptoLib.Examples`](CryptoLib.Examples/src/Examples/) directory.
 
 ## Supported Platforms
 

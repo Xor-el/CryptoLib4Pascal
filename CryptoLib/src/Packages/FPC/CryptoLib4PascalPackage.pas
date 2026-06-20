@@ -233,7 +233,18 @@ uses
   ClpBinPolyX86V128Large, ClpBinPolyX86V128Medium, ClpBinPolyX86V128Sizes, 
   ClpBinPolyScalarBackend, ClpBinPolyScalarKernels, ClpBinPolyScalarLarge, 
   ClpBinPolyScalarMedium, ClpBinPolyMulBaseBinomialReduce, 
-  ClpBinPolyMulBasePentanomialReduce, ClpBinPolyMulBaseTrinomialReduce;
+  ClpBinPolyMulBasePentanomialReduce, ClpBinPolyMulBaseTrinomialReduce, 
+  ClpMlDsaGenerators, ClpMlKemGenerators, ClpMlKemCore, ClpMlKemEngine, 
+  ClpKemUtilities, ClpMlKemDecapsulator, ClpMlKemEncapsulator, 
+  ClpMlDsaParameters, ClpMlKemParameters, ClpParametersWithContext, 
+  ClpMlDsaCore, ClpMlDsaEngine, ClpHashMlDsaSigner, ClpMlDsaSigner, 
+  ClpIMlDsaGenerators, ClpIMlKemGenerators, ClpIMlKemCore, ClpIMlKemEngine, 
+  ClpIKemDecapsulator, ClpIKemEncapsulator, ClpIParametersWithContext, 
+  ClpIMlDsaParameters, ClpIMlKemParameters, ClpIMlDsaCore, ClpIMlDsaEngine, 
+  ClpIHashMlDsaSigner, ClpSlhDsaGenerators, ClpSlhDsaParameters, 
+  ClpHashSlhDsaSigner, ClpSlhDsaSigner, ClpSlhDsaCore, ClpSlhDsaEngine, 
+  ClpISlhDsaGenerators, ClpISlhDsaParameters, ClpIHashSlhDsaSigner, 
+  ClpISlhDsaSigner, ClpISlhDsaCore, ClpISlhDsaEngine;
 
 implementation
 

@@ -39,6 +39,10 @@ uses
   ClpRosstandartObjectIdentifiers,
   ClpBsiObjectIdentifiers,
   ClpEdECObjectIdentifiers,
+  ClpIMlDsaParameters,
+  ClpMlDsaParameters,
+  ClpISlhDsaParameters,
+  ClpSlhDsaParameters,
   ClpX509ObjectIdentifiers,
   ClpEacObjectIdentifiers,
   ClpMiscObjectIdentifiers,
@@ -94,6 +98,8 @@ class constructor TDefaultSignatureAlgorithmFinder.Create;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
   LSha3_224AlgId, LSha3_256AlgId, LSha3_384AlgId, LSha3_512AlgId: IAlgorithmIdentifier;
+  LParams: IMlDsaParameters;
+  LSlhParams: ISlhDsaParameters;
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(
   TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -405,6 +411,15 @@ begin
   //
   AddAlgorithm('Ed25519', TEdECObjectIdentifiers.IdEd25519, nil, True);
   AddAlgorithm('Ed448', TEdECObjectIdentifiers.IdEd448, nil, True);
+
+  //
+  // ML-DSA
+  //
+  for LParams in TMlDsaParameters.ByName.Values do
+    AddAlgorithm(LParams.Name, LParams.Oid, LParams.PreHashOid, True);
+
+  for LSlhParams in TSlhDsaParameters.ByName.Values do
+    AddAlgorithm(LSlhParams.Name, LSlhParams.Oid, LSlhParams.PreHashOid, True);
 
   FInstance := TDefaultSignatureAlgorithmFinder.Create;
 end;

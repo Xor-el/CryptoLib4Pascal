@@ -27,7 +27,6 @@ uses
   ClpIECFieldElement,
   ClpIECParameters,
   ClpIDigest,
-  ClpECUtilities,
   ClpECAlgorithms,
   ClpByteUtilities,
   ClpDigestUtilities,

@@ -152,7 +152,9 @@ type
     procedure AddExtensions(const AExtensions: IExtensions); overload;
     procedure CopyAndAddExtension(const AOid: IDerObjectIdentifier;
       ACritical: Boolean; const ACert: IX509Certificate);
-    function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
+    function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate; overload;
+    function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
+      const AAltSignatureFactory: ISignatureFactory): IX509Certificate; overload;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
@@ -544,6 +546,58 @@ begin
 
     FTbsGen.SetExtensions(FExtGenerator.Generate);
   end;
+
+  LTbs := FTbsGen.GenerateTbsCertificate;
+  LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbs);
+  LStruct := TX509CertificateStructure.Create(LTbs, LSigAlgID, LSignature);
+  Result := TX509Certificate.Create(LStruct);
+end;
+
+function TX509V3CertificateGenerator.Generate(const ASignatureFactory: ISignatureFactory;
+  AIsCritical: Boolean; const AAltSignatureFactory: ISignatureFactory): IX509Certificate;
+var
+  LSigAlgID, LAltSigAlgID: IAlgorithmIdentifier;
+  LDeltaExt: IX509Extension;
+  LDescriptor: IDeltaCertificateDescriptor;
+  LTmpExtGenerator: IX509ExtensionsGenerator;
+  LDummyAltSigValue: IAsn1Encodable;
+  LAltSignature: IDerBitString;
+  LTbs: ITbsCertificateStructure;
+  LSignature: IDerBitString;
+  LStruct: IX509CertificateStructure;
+begin
+  LSigAlgID := ASignatureFactory.AlgorithmDetails;
+  LAltSigAlgID := AAltSignatureFactory.AlgorithmDetails;
+
+  FExtGenerator.AddExtension(TX509Extensions.AltSignatureAlgorithm, AIsCritical, LAltSigAlgID);
+
+  LDeltaExt := FExtGenerator.GetExtension(TX509Extensions.DraftDeltaCertificateDescriptor);
+  if LDeltaExt <> nil then
+  begin
+    FTbsGen.SetSignature(LSigAlgID);
+
+    LTmpExtGenerator := TX509ExtensionsGenerator.Create;
+    LTmpExtGenerator.AddExtensions(FExtGenerator.Generate);
+    LDummyAltSigValue := TDerNull.Instance;
+    LTmpExtGenerator.AddExtension(TX509Extensions.AltSignatureValue, False, LDummyAltSigValue);
+
+    LDescriptor := TDeltaCertificateTool.TrimDeltaCertificateDescriptor(
+      TDeltaCertificateDescriptor.GetInstance(LDeltaExt.GetParsedValue),
+      FTbsGen.GenerateTbsCertificate,
+      LTmpExtGenerator.Generate);
+    FExtGenerator.ReplaceExtension(TX509Extensions.DraftDeltaCertificateDescriptor,
+      LDeltaExt.IsCritical, LDescriptor);
+  end;
+
+  FTbsGen.SetSignature(nil);
+  FTbsGen.SetExtensions(FExtGenerator.Generate);
+
+  LAltSignature := TX509Utilities.GenerateSignature(AAltSignatureFactory,
+    FTbsGen.GeneratePreTbsCertificate);
+  FExtGenerator.AddExtension(TX509Extensions.AltSignatureValue, AIsCritical, LAltSignature);
+
+  FTbsGen.SetSignature(LSigAlgID);
+  FTbsGen.SetExtensions(FExtGenerator.Generate);
 
   LTbs := FTbsGen.GenerateTbsCertificate;
   LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbs);

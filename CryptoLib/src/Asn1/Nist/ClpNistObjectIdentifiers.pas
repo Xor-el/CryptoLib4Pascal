@@ -45,7 +45,19 @@ type
       FIdRsassaPkcs1V15WithSha3_512, FIdAes128Gcm, FIdAes192Gcm, FIdAes256Gcm,
       FIdAes128Wrap, FIdAes128WrapPad,
       FIdAes192Wrap, FIdAes192WrapPad, FIdAes256Wrap,
-      FIdAes256WrapPad: IDerObjectIdentifier;
+      FIdAes256WrapPad,
+      FKems, FIdMlDsa44, FIdMlDsa65, FIdMlDsa87,
+      FIdHashMlDsa44WithSha512, FIdHashMlDsa65WithSha512, FIdHashMlDsa87WithSha512,
+      FIdSlhDsaSha2_128s, FIdSlhDsaSha2_128f, FIdSlhDsaSha2_192s, FIdSlhDsaSha2_192f,
+      FIdSlhDsaSha2_256s, FIdSlhDsaSha2_256f, FIdSlhDsaShake_128s, FIdSlhDsaShake_128f,
+      FIdSlhDsaShake_192s, FIdSlhDsaShake_192f, FIdSlhDsaShake_256s, FIdSlhDsaShake_256f,
+      FIdHashSlhDsaSha2_128sWithSha256, FIdHashSlhDsaSha2_128fWithSha256,
+      FIdHashSlhDsaSha2_192sWithSha512, FIdHashSlhDsaSha2_192fWithSha512,
+      FIdHashSlhDsaSha2_256sWithSha512, FIdHashSlhDsaSha2_256fWithSha512,
+      FIdHashSlhDsaShake_128sWithShake128, FIdHashSlhDsaShake_128fWithShake128,
+      FIdHashSlhDsaShake_192sWithShake256, FIdHashSlhDsaShake_192fWithShake256,
+      FIdHashSlhDsaShake_256sWithShake256, FIdHashSlhDsaShake_256fWithShake256,
+      FIdAlgMlKem512, FIdAlgMlKem768, FIdAlgMlKem1024: IDerObjectIdentifier;
 
     class function GetNistAlgorithm: IDerObjectIdentifier; static; inline;
     class function GetHashAlgs: IDerObjectIdentifier; static; inline;
@@ -116,6 +128,41 @@ type
     class function GetIdRsassaPkcs1V15WithSha3_256: IDerObjectIdentifier; static; inline;
     class function GetIdRsassaPkcs1V15WithSha3_384: IDerObjectIdentifier; static; inline;
     class function GetIdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier; static; inline;
+
+    class function GetKems: IDerObjectIdentifier; static; inline;
+    class function GetIdMlDsa44: IDerObjectIdentifier; static; inline;
+    class function GetIdMlDsa65: IDerObjectIdentifier; static; inline;
+    class function GetIdMlDsa87: IDerObjectIdentifier; static; inline;
+    class function GetIdHashMlDsa44WithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashMlDsa65WithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashMlDsa87WithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_128s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_128f: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_192s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_192f: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_256s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaSha2_256f: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_128s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_128f: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_192s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_192f: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_256s: IDerObjectIdentifier; static; inline;
+    class function GetIdSlhDsaShake_256f: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_128sWithSha256: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_128fWithSha256: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_192sWithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_192fWithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_256sWithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaSha2_256fWithSha512: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_128sWithShake128: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_128fWithShake128: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_192sWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_192fWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_256sWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdHashSlhDsaShake_256fWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgMlKem512: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgMlKem768: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgMlKem1024: IDerObjectIdentifier; static; inline;
 
     class constructor Create();
 
@@ -213,6 +260,56 @@ type
       read GetIdRsassaPkcs1V15WithSha3_384;
     class property IdRsassaPkcs1V15WithSha3_512: IDerObjectIdentifier
       read GetIdRsassaPkcs1V15WithSha3_512;
+
+    class property Kems: IDerObjectIdentifier read GetKems;
+    class property IdMlDsa44: IDerObjectIdentifier read GetIdMlDsa44;
+    class property IdMlDsa65: IDerObjectIdentifier read GetIdMlDsa65;
+    class property IdMlDsa87: IDerObjectIdentifier read GetIdMlDsa87;
+    class property IdHashMlDsa44WithSha512: IDerObjectIdentifier
+      read GetIdHashMlDsa44WithSha512;
+    class property IdHashMlDsa65WithSha512: IDerObjectIdentifier
+      read GetIdHashMlDsa65WithSha512;
+    class property IdHashMlDsa87WithSha512: IDerObjectIdentifier
+      read GetIdHashMlDsa87WithSha512;
+    class property IdSlhDsaSha2_128s: IDerObjectIdentifier read GetIdSlhDsaSha2_128s;
+    class property IdSlhDsaSha2_128f: IDerObjectIdentifier read GetIdSlhDsaSha2_128f;
+    class property IdSlhDsaSha2_192s: IDerObjectIdentifier read GetIdSlhDsaSha2_192s;
+    class property IdSlhDsaSha2_192f: IDerObjectIdentifier read GetIdSlhDsaSha2_192f;
+    class property IdSlhDsaSha2_256s: IDerObjectIdentifier read GetIdSlhDsaSha2_256s;
+    class property IdSlhDsaSha2_256f: IDerObjectIdentifier read GetIdSlhDsaSha2_256f;
+    class property IdSlhDsaShake_128s: IDerObjectIdentifier read GetIdSlhDsaShake_128s;
+    class property IdSlhDsaShake_128f: IDerObjectIdentifier read GetIdSlhDsaShake_128f;
+    class property IdSlhDsaShake_192s: IDerObjectIdentifier read GetIdSlhDsaShake_192s;
+    class property IdSlhDsaShake_192f: IDerObjectIdentifier read GetIdSlhDsaShake_192f;
+    class property IdSlhDsaShake_256s: IDerObjectIdentifier read GetIdSlhDsaShake_256s;
+    class property IdSlhDsaShake_256f: IDerObjectIdentifier read GetIdSlhDsaShake_256f;
+    class property IdHashSlhDsaSha2_128sWithSha256: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_128sWithSha256;
+    class property IdHashSlhDsaSha2_128fWithSha256: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_128fWithSha256;
+    class property IdHashSlhDsaSha2_192sWithSha512: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_192sWithSha512;
+    class property IdHashSlhDsaSha2_192fWithSha512: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_192fWithSha512;
+    class property IdHashSlhDsaSha2_256sWithSha512: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_256sWithSha512;
+    class property IdHashSlhDsaSha2_256fWithSha512: IDerObjectIdentifier
+      read GetIdHashSlhDsaSha2_256fWithSha512;
+    class property IdHashSlhDsaShake_128sWithShake128: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_128sWithShake128;
+    class property IdHashSlhDsaShake_128fWithShake128: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_128fWithShake128;
+    class property IdHashSlhDsaShake_192sWithShake256: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_192sWithShake256;
+    class property IdHashSlhDsaShake_192fWithShake256: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_192fWithShake256;
+    class property IdHashSlhDsaShake_256sWithShake256: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_256sWithShake256;
+    class property IdHashSlhDsaShake_256fWithShake256: IDerObjectIdentifier
+      read GetIdHashSlhDsaShake_256fWithShake256;
+    class property IdAlgMlKem512: IDerObjectIdentifier read GetIdAlgMlKem512;
+    class property IdAlgMlKem768: IDerObjectIdentifier read GetIdAlgMlKem768;
+    class property IdAlgMlKem1024: IDerObjectIdentifier read GetIdAlgMlKem1024;
   end;
 
 implementation
@@ -525,6 +622,176 @@ begin
   Result := FIdRsassaPkcs1V15WithSha3_512;
 end;
 
+class function TNistObjectIdentifiers.GetKems: IDerObjectIdentifier;
+begin
+  Result := FKems;
+end;
+
+class function TNistObjectIdentifiers.GetIdMlDsa44: IDerObjectIdentifier;
+begin
+  Result := FIdMlDsa44;
+end;
+
+class function TNistObjectIdentifiers.GetIdMlDsa65: IDerObjectIdentifier;
+begin
+  Result := FIdMlDsa65;
+end;
+
+class function TNistObjectIdentifiers.GetIdMlDsa87: IDerObjectIdentifier;
+begin
+  Result := FIdMlDsa87;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashMlDsa44WithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashMlDsa44WithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashMlDsa65WithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashMlDsa65WithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashMlDsa87WithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashMlDsa87WithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_128s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_128s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_128f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_128f;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_192s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_192s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_192f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_192f;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_256s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_256s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaSha2_256f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaSha2_256f;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_128s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_128s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_128f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_128f;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_192s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_192s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_192f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_192f;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_256s: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_256s;
+end;
+
+class function TNistObjectIdentifiers.GetIdSlhDsaShake_256f: IDerObjectIdentifier;
+begin
+  Result := FIdSlhDsaShake_256f;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_128sWithSha256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_128sWithSha256;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_128fWithSha256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_128fWithSha256;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_192sWithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_192sWithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_192fWithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_192fWithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_256sWithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_256sWithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaSha2_256fWithSha512: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaSha2_256fWithSha512;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_128sWithShake128: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_128sWithShake128;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_128fWithShake128: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_128fWithShake128;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_192sWithShake256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_192sWithShake256;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_192fWithShake256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_192fWithShake256;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_256sWithShake256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_256sWithShake256;
+end;
+
+class function TNistObjectIdentifiers.GetIdHashSlhDsaShake_256fWithShake256: IDerObjectIdentifier;
+begin
+  Result := FIdHashSlhDsaShake_256fWithShake256;
+end;
+
+class function TNistObjectIdentifiers.GetIdAlgMlKem512: IDerObjectIdentifier;
+begin
+  Result := FIdAlgMlKem512;
+end;
+
+class function TNistObjectIdentifiers.GetIdAlgMlKem768: IDerObjectIdentifier;
+begin
+  Result := FIdAlgMlKem768;
+end;
+
+class function TNistObjectIdentifiers.GetIdAlgMlKem1024: IDerObjectIdentifier;
+begin
+  Result := FIdAlgMlKem1024;
+end;
+
 class function TNistObjectIdentifiers.GetNistAlgorithm: IDerObjectIdentifier;
 begin
   Result := FNistAlgorithm;
@@ -612,6 +879,50 @@ begin
   FIdRsassaPkcs1V15WithSha3_256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.14');
   FIdRsassaPkcs1V15WithSha3_384 := TDerObjectIdentifier.Create(SigAlgs.ID + '.15');
   FIdRsassaPkcs1V15WithSha3_512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.16');
+
+  // "pure" ML-DSA
+  FIdMlDsa44 := TDerObjectIdentifier.Create(SigAlgs.ID + '.17');
+  FIdMlDsa65 := TDerObjectIdentifier.Create(SigAlgs.ID + '.18');
+  FIdMlDsa87 := TDerObjectIdentifier.Create(SigAlgs.ID + '.19');
+
+  // "pure" SLH-DSA
+  FIdSlhDsaSha2_128s := TDerObjectIdentifier.Create(SigAlgs.ID + '.20');
+  FIdSlhDsaSha2_128f := TDerObjectIdentifier.Create(SigAlgs.ID + '.21');
+  FIdSlhDsaSha2_192s := TDerObjectIdentifier.Create(SigAlgs.ID + '.22');
+  FIdSlhDsaSha2_192f := TDerObjectIdentifier.Create(SigAlgs.ID + '.23');
+  FIdSlhDsaSha2_256s := TDerObjectIdentifier.Create(SigAlgs.ID + '.24');
+  FIdSlhDsaSha2_256f := TDerObjectIdentifier.Create(SigAlgs.ID + '.25');
+  FIdSlhDsaShake_128s := TDerObjectIdentifier.Create(SigAlgs.ID + '.26');
+  FIdSlhDsaShake_128f := TDerObjectIdentifier.Create(SigAlgs.ID + '.27');
+  FIdSlhDsaShake_192s := TDerObjectIdentifier.Create(SigAlgs.ID + '.28');
+  FIdSlhDsaShake_192f := TDerObjectIdentifier.Create(SigAlgs.ID + '.29');
+  FIdSlhDsaShake_256s := TDerObjectIdentifier.Create(SigAlgs.ID + '.30');
+  FIdSlhDsaShake_256f := TDerObjectIdentifier.Create(SigAlgs.ID + '.31');
+
+  // "pre-hash" ML-DSA
+  FIdHashMlDsa44WithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.32');
+  FIdHashMlDsa65WithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.33');
+  FIdHashMlDsa87WithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.34');
+
+  // "pre-hash" SLH-DSA
+  FIdHashSlhDsaSha2_128sWithSha256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.35');
+  FIdHashSlhDsaSha2_128fWithSha256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.36');
+  FIdHashSlhDsaSha2_192sWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.37');
+  FIdHashSlhDsaSha2_192fWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.38');
+  FIdHashSlhDsaSha2_256sWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.39');
+  FIdHashSlhDsaSha2_256fWithSha512 := TDerObjectIdentifier.Create(SigAlgs.ID + '.40');
+  FIdHashSlhDsaShake_128sWithShake128 := TDerObjectIdentifier.Create(SigAlgs.ID + '.41');
+  FIdHashSlhDsaShake_128fWithShake128 := TDerObjectIdentifier.Create(SigAlgs.ID + '.42');
+  FIdHashSlhDsaShake_192sWithShake256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.43');
+  FIdHashSlhDsaShake_192fWithShake256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.44');
+  FIdHashSlhDsaShake_256sWithShake256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.45');
+  FIdHashSlhDsaShake_256fWithShake256 := TDerObjectIdentifier.Create(SigAlgs.ID + '.46');
+
+  // KEMs - Key-Establishment Mechanisms
+  FKems := NistAlgorithm.Branch('4');
+  FIdAlgMlKem512 := Kems.Branch('1');
+  FIdAlgMlKem768 := Kems.Branch('2');
+  FIdAlgMlKem1024 := Kems.Branch('3');
 end;
 
 end.

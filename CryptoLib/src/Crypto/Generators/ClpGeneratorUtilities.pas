@@ -46,6 +46,12 @@ uses
   ClpIRsaGenerators,
   ClpIX25519Generators,
   ClpIX448Generators,
+  ClpIMlDsaGenerators,
+  ClpIMlKemGenerators,
+  ClpISlhDsaGenerators,
+  ClpMlDsaGenerators,
+  ClpMlKemGenerators,
+  ClpSlhDsaGenerators,
   ClpIanaObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
@@ -281,6 +287,9 @@ begin
   AddKpgAlgorithm('Ed448', ['Ed448ph', TEdECObjectIdentifiers.IdEd448.ID]);
   AddKpgAlgorithm('BIP340Schnorr', []);
   AddKpgAlgorithm('GOST3410', ['GOST-3410', 'GOST-3410-94']);
+  AddKpgAlgorithm('ML-DSA', []);
+  AddKpgAlgorithm('ML-KEM', []);
+  AddKpgAlgorithm('SLH-DSA', []);
   AddKpgAlgorithm('X25519', [TEdECObjectIdentifiers.IdX25519.ID]);
   AddKpgAlgorithm('X448', [TEdECObjectIdentifiers.IdX448.ID]);
 
@@ -428,6 +437,21 @@ begin
   if LCanonicalName = 'BIP340Schnorr' then
   begin
     Result := TBip340SchnorrKeyPairGenerator.Create() as IBip340SchnorrKeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'ML-DSA' then
+  begin
+    Result := TMlDsaKeyPairGenerator.Create() as IMlDsaKeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'ML-KEM' then
+  begin
+    Result := TMlKemKeyPairGenerator.Create() as IMlKemKeyPairGenerator;
+    Exit;
+  end;
+  if LCanonicalName = 'SLH-DSA' then
+  begin
+    Result := TSlhDsaKeyPairGenerator.Create() as ISlhDsaKeyPairGenerator;
     Exit;
   end;
 

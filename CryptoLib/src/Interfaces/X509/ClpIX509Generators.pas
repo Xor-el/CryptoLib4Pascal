@@ -125,7 +125,9 @@ type
     /// <summary>Copies an extension value from another certificate.</summary>
     procedure CopyAndAddExtension(const AOid: IDerObjectIdentifier;
       ACritical: Boolean; const ACert: IX509Certificate);
-    function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
+    function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate; overload;
+    function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
+      const AAltSignatureFactory: ISignatureFactory): IX509Certificate; overload;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 

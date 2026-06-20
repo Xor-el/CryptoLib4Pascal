@@ -33,6 +33,12 @@ uses
   ClpIEd448Parameters,
   ClpIX25519Parameters,
   ClpIX448Parameters,
+  ClpIMlDsaParameters,
+  ClpIMlKemParameters,
+  ClpISlhDsaParameters,
+  ClpMlDsaParameters,
+  ClpMlKemParameters,
+  ClpSlhDsaParameters,
   ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpEdECObjectIdentifiers,
@@ -101,6 +107,9 @@ var
   LEd448Key: IEd448PublicKeyParameters;
   LX25519Key: IX25519PublicKeyParameters;
   LX448Key: IX448PublicKeyParameters;
+  LMlDsaKey: IMlDsaPublicKeyParameters;
+  LMlKemKey: IMlKemPublicKeyParameters;
+  LSlhDsaKey: ISlhDsaPublicKeyParameters;
   LKp: IDsaParameters;
   LParams: IECDomainParameters;
   LX962: IX962Parameters;
@@ -178,6 +187,27 @@ begin
   begin
     LAlgID := TAlgorithmIdentifier.Create(TEdECObjectIdentifiers.IdEd448);
     Result := TSubjectPublicKeyInfo.Create(LAlgID, LEd448Key.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, IMlDsaPublicKeyParameters, LMlDsaKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LMlDsaKey.Parameters.Oid);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LMlDsaKey.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, IMlKemPublicKeyParameters, LMlKemKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LMlKemKey.Parameters.Oid);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LMlKemKey.GetEncoded());
+    Exit;
+  end;
+
+  if Supports(APublicKey, ISlhDsaPublicKeyParameters, LSlhDsaKey) then
+  begin
+    LAlgID := TAlgorithmIdentifier.Create(LSlhDsaKey.Parameters.Oid);
+    Result := TSubjectPublicKeyInfo.Create(LAlgID, LSlhDsaKey.GetEncoded());
     Exit;
   end;
 

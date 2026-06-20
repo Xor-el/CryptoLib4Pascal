@@ -31,10 +31,11 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SHashMustImplementIXof = 'hash must implement IXof';
+  SHashMustImplementIXof = 'hash must implement IXOF and IXOFStream';
 
 type
   IXofCore = HlpIHashInfo.IXOF;
+  IXofStreamCore = HlpIHashInfo.IXOFStream;
   TXof = class(TDigest, IDigest, IXof)
 
   strict private
@@ -69,7 +70,7 @@ end;
 
 constructor TXof.Create(const AHash: IHash);
 begin
-  if not Supports(AHash, IXofCore) then
+  if (not Supports(AHash, IXofCore)) or (not Supports(AHash, IXofStreamCore)) then
     raise EArgumentCryptoLibException.CreateRes(@SHashMustImplementIXof);
   inherited Create(AHash);
 end;
@@ -101,12 +102,11 @@ end;
 function TXof.Output(const AOutput: TCryptoLibByteArray;
   AOutOff, AOutLen: Int32): Int32;
 var
- LXof: IXofCore;
+ LStream: IXofStreamCore;
 begin
   TCheck.OutputLength(AOutput, AOutOff, AOutLen, 'output buffer is too short');
-  LXof := FHash as IXofCore;
-  LXof.XOFSizeInBits := AOutLen * 8;
-  LXof.DoOutput(AOutput, AOutOff, AOutLen);
+  LStream := FHash as IXofStreamCore;
+  LStream.Squeeze(AOutput, AOutOff, AOutLen);
   Result := AOutLen;
 end;
 

@@ -22,7 +22,7 @@ uses
   X25519Tests, X448Tests, Ed25519Tests, Ed448Tests, X25519HigherLevelTests,
   Ed25519HigherLevelTests, ShortenedDigestTests, Kdf1GeneratorTests,
   Kdf2GeneratorTests, DHKekGeneratorTests, ECDHKekGeneratorTests, Argon2Tests,
-  ScryptTests, DigestTests, CertTests, Curve25519KeyUtilitiesTests,
+  ScryptTests, DigestTests, CertTests, PqcCertCredentialsTests, Curve25519KeyUtilitiesTests,
   Ed448HigherLevelTests, X448HigherLevelTests, Curve448KeyUtilitiesTests,
   DigestUtilitiesTests, ParameterUtilitiesTests, DHTests, Asn1IntegerTests,
   BitStringTests, GeneralizedTimeTests, OctetStringTests, RelativeOidTests,
@@ -36,17 +36,19 @@ uses
   RijndaelTests, BlowfishTests, Poly1305Tests, MacTests, ChaCha20Poly1305Tests,
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
   GCMTests, GcmSivTests, GMacTests, Pkcs12Tests, Bip327MuSig2Tests,
-  Bip340SchnorrTests, AlgorithmFinderTests, CryptoLibTestBase,
-  SimdSelectSlotTests, BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests,
-  Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  Bip340SchnorrTests, AlgorithmFinderTests, MlKemTests, MlDsaTests,
+  PqcPkcsTests, SlhDsaTests, CryptoLibTestBase, SimdSelectSlotTests,
+  BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests,
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, X509UtilitiesTests, FixedSecureRandom,
   ShortenedDigest, CertTestUtilities, FusedKernelToggle,
-  CryptoLibTestResourceLoader, CryptoTestKeys, CsvVectorParser,
-  JsonVectorParser, Bip327Vectors, Bip340Vectors, HmacVectors, Argon2Vectors,
-  AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
-  OpenSslVectors, PemReaderVectors, PkcsVectors, CertVectors, TestKeyBuilders,
-  PemDerCodec, Int32Tests, Int64Tests, ByteUtilitiesTests,
-  IPAddressUtilitiesTests, PemReaderTests;
+  CryptoLibTestResourceLoader, CryptoTestKeys, NistSecureRandom, PqcTestSampler,
+  CsvVectorParser, JsonVectorParser, RspTxtVectorParser,
+  RspTxtVectorParserTests, Bip327Vectors, Bip340Vectors, HmacVectors,
+  Argon2Vectors, AsymmetricTestVectors, SymmetricBlockVectors,
+  ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
+  CertVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec, PqcTestVectors, Int32Tests,
+  Int64Tests, ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}
 

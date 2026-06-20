@@ -22,6 +22,7 @@ interface
 
 uses
   Classes,
+  SysUtils,
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpIAsn1Objects,
@@ -39,6 +40,12 @@ uses
   ClpEd448Parameters,
   ClpX25519Parameters,
   ClpX448Parameters,
+  ClpMlDsaParameters,
+  ClpMlKemParameters,
+  ClpSlhDsaParameters,
+  ClpIMlDsaParameters,
+  ClpIMlKemParameters,
+  ClpISlhDsaParameters,
   ClpPkcsObjectIdentifiers,
   ClpX509ObjectIdentifiers,
   ClpX9ObjectIdentifiers,
@@ -74,6 +81,12 @@ type
     class function IsPkcsDHParam(const ASeq: IAsn1Sequence): Boolean; static;
     class function ReadPkcsDHParam(const AAlgOid: IDerObjectIdentifier;
       const AY: TBigInteger; const ASeq: IAsn1Sequence): IAsymmetricKeyParameter; static;
+    class function GetMlDsaPublicKey(const AParameters: IMlDsaParameters;
+      const APublicKey: IDerBitString): IMlDsaPublicKeyParameters; static;
+    class function GetMlKemPublicKey(const AParameters: IMlKemParameters;
+      const APublicKey: IDerBitString): IMlKemPublicKeyParameters; static;
+    class function GetSlhDsaPublicKey(const AParameters: ISlhDsaParameters;
+      const APublicKey: IDerBitString): ISlhDsaPublicKeyParameters; static;
 
   public
     class function CreateKey(const AKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter; overload; static;
@@ -85,6 +98,76 @@ type
 implementation
 
 { TPublicKeyFactory }
+
+class function TPublicKeyFactory.GetMlDsaPublicKey(const AParameters: IMlDsaParameters;
+  const APublicKey: IDerBitString): IMlDsaPublicKeyParameters;
+var
+  LPublicKeyLength, LBytesLength: Int32;
+  LObj: IAsn1Object;
+  LOct: IAsn1OctetString;
+begin
+  if not APublicKey.IsOctetAligned() then
+    raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+  LPublicKeyLength := AParameters.ParameterSet.PublicKeyLength;
+  LBytesLength := APublicKey.GetBytesLength();
+  if LBytesLength = LPublicKeyLength then
+    Exit(TMlDsaPublicKeyParameters.FromEncoding(AParameters, APublicKey.GetOctets()));
+  if LBytesLength > LPublicKeyLength then
+  begin
+    try
+      LObj := TAsn1Object.FromByteArray(APublicKey.GetOctets());
+      if Supports(LObj, IAsn1OctetString, LOct) then
+      begin
+        if LOct.GetOctetsLength() = LPublicKeyLength then
+          Exit(TMlDsaPublicKeyParameters.FromEncoding(AParameters, LOct.GetOctets()));
+      end;
+    except
+    end;
+  end;
+  raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+end;
+
+class function TPublicKeyFactory.GetMlKemPublicKey(const AParameters: IMlKemParameters;
+  const APublicKey: IDerBitString): IMlKemPublicKeyParameters;
+var
+  LPublicKeyLength, LBytesLength: Int32;
+begin
+  if not APublicKey.IsOctetAligned() then
+    raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+  LPublicKeyLength := AParameters.ParameterSet.Engine.PublicKeyBytes;
+  LBytesLength := APublicKey.GetBytesLength();
+  if LBytesLength = LPublicKeyLength then
+    Exit(TMlKemPublicKeyParameters.FromEncoding(AParameters, APublicKey.GetOctets()));
+  raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+end;
+
+class function TPublicKeyFactory.GetSlhDsaPublicKey(const AParameters: ISlhDsaParameters;
+  const APublicKey: IDerBitString): ISlhDsaPublicKeyParameters;
+var
+  LPublicKeyLength, LBytesLength: Int32;
+  LObj: IAsn1Object;
+  LOct: IAsn1OctetString;
+begin
+  if not APublicKey.IsOctetAligned() then
+    raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+  LPublicKeyLength := AParameters.ParameterSet.PublicKeyLength;
+  LBytesLength := APublicKey.GetBytesLength();
+  if LBytesLength = LPublicKeyLength then
+    Exit(TSlhDsaPublicKeyParameters.FromEncoding(AParameters, APublicKey.GetOctets()));
+  if LBytesLength > LPublicKeyLength then
+  begin
+    try
+      LObj := TAsn1Object.FromByteArray(APublicKey.GetOctets());
+      if Supports(LObj, IAsn1OctetString, LOct) then
+      begin
+        if LOct.GetOctetsLength() = LPublicKeyLength then
+          Exit(TSlhDsaPublicKeyParameters.FromEncoding(AParameters, LOct.GetOctets()));
+      end;
+    except
+    end;
+  end;
+  raise EArgumentCryptoLibException.CreateFmt('invalid %s public key', [AParameters.Name]);
+end;
 
 class function TPublicKeyFactory.CreateKey(const AKeyInfoData: TCryptoLibByteArray): IAsymmetricKeyParameter;
 begin
@@ -157,6 +240,9 @@ var
   LPGenCounter: TBigInteger;
   LDerY: IDerInteger;
   LRawKey: TCryptoLibByteArray;
+  LMlDsaParameters: IMlDsaParameters;
+  LMlKemParameters: IMlKemParameters;
+  LSlhDsaParameters: ISlhDsaParameters;
 begin
   if AKeyInfo = nil then
   begin
@@ -283,6 +369,27 @@ begin
   begin
     LRawKey := AKeyInfo.PublicKey.GetOctets();
     Result := TEd448PublicKeyParameters.Create(LRawKey);
+    Exit;
+  end;
+
+  LMlDsaParameters := TMlDsaParameters.GetByOid(LAlgOid);
+  if LMlDsaParameters <> nil then
+  begin
+    Result := GetMlDsaPublicKey(LMlDsaParameters, AKeyInfo.PublicKey);
+    Exit;
+  end;
+
+  LMlKemParameters := TMlKemParameters.GetByOid(LAlgOid);
+  if LMlKemParameters <> nil then
+  begin
+    Result := GetMlKemPublicKey(LMlKemParameters, AKeyInfo.PublicKey);
+    Exit;
+  end;
+
+  LSlhDsaParameters := TSlhDsaParameters.GetByOid(LAlgOid);
+  if LSlhDsaParameters <> nil then
+  begin
+    Result := GetSlhDsaPublicKey(LSlhDsaParameters, AKeyInfo.PublicKey);
     Exit;
   end;
 

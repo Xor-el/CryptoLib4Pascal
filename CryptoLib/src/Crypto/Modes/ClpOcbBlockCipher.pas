@@ -630,7 +630,7 @@ begin
     // itself only feeds register arithmetic and the `[InPtr + 16..]`
     // loads, all of which resolve inside AInput.
     LBlock0Ptr := @FMainBlock[0];
-    LInPtr := Pointer(NativeInt(@AInput[AInOff]) - BLOCK_SIZE);
+    LInPtr := Pointer(NativeUInt(@AInput[AInOff]) - BLOCK_SIZE);
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
       @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
       LBlock0Ptr, ABlockCount);

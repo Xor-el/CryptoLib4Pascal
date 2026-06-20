@@ -32,12 +32,14 @@ uses
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpIParametersWithRandom,
+  ClpIParametersWithContext,
   ClpISecureRandom,
   ClpKeyParameter,
   ClpMiscObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpParametersWithRandom,
+  ClpParametersWithContext,
   ClpParametersWithIV,
   ClpSecureRandom;
 
@@ -45,6 +47,7 @@ resourcestring
   SAlgorithmNil = 'algorithm cannot be nil';
   SAlgorithmNotRecognized = 'algorithm %s not recognized';
   SCouldNotProcessAsn1Parameters = 'could not process ASN.1 parameters: %s';
+  SContextLengthOutOfRange = 'Context length must be in range [%d, %d]';
 
 type
   /// <summary>
@@ -148,6 +151,25 @@ type
 
     /// <summary>Strips any <see cref="IParametersWithRandom"/> wrapper and returns the inner parameters.</summary>
     class function IgnoreRandom(const ACipherParameters: ICipherParameters): ICipherParameters; static;
+
+    /// <summary>
+    /// Unwraps <see cref="IParametersWithContext"/>, returning inner parameters and copying context bytes.
+    /// If absent, <paramref name="AContext"/> is nil and input is returned unchanged.
+    /// </summary>
+    class function GetContext(const ACipherParameters: ICipherParameters;
+      AMinLen, AMaxLen: Int32; out AContext: TCryptoLibByteArray): ICipherParameters; static;
+
+    /// <summary>Strips any <see cref="IParametersWithContext"/> wrapper.</summary>
+    class function IgnoreContext(const ACipherParameters: ICipherParameters): ICipherParameters; static;
+
+    /// <summary>
+    /// Wraps <paramref name="ACp"/> in a <see cref="TParametersWithContext"/> envelope when
+    /// <paramref name="AContext"/> is assigned; when <paramref name="AContext"/> is nil, returns
+    /// <paramref name="ACp"/> unchanged unless <paramref name="AWrapEmptyContext"/> is
+    /// <c>True</c> (zero-length context — in Pascal, nil and empty dynamic arrays are the same).
+    /// </summary>
+    class function WithContext(const ACp: ICipherParameters;
+      const AContext: TCryptoLibByteArray; AWrapEmptyContext: Boolean = False): ICipherParameters; static;
 
     /// <summary>
     /// Wraps <paramref name="ACp"/> with randomness when <paramref name="ARandom"/> is assigned; otherwise returns <paramref name="ACp"/> unchanged.
@@ -385,6 +407,38 @@ begin
     Result := ACipherParameters;
 end;
 
+class function TParameterUtilities.GetContext(const ACipherParameters
+  : ICipherParameters; AMinLen, AMaxLen: Int32;
+  out AContext: TCryptoLibByteArray): ICipherParameters;
+var
+  LWithContext: IParametersWithContext;
+  LLen: Int32;
+begin
+  AContext := nil;
+  if Supports(ACipherParameters, IParametersWithContext, LWithContext) then
+  begin
+    LLen := LWithContext.ContextLength;
+    if (LLen < AMinLen) or (LLen > AMaxLen) then
+      raise EArgumentOutOfRangeCryptoLibException.CreateResFmt(
+        @SContextLengthOutOfRange, [AMinLen, AMaxLen]);
+    AContext := LWithContext.GetContext;
+    Result := LWithContext.Parameters;
+  end
+  else
+    Result := ACipherParameters;
+end;
+
+class function TParameterUtilities.IgnoreContext(const ACipherParameters
+  : ICipherParameters): ICipherParameters;
+var
+  LWithContext: IParametersWithContext;
+begin
+  if Supports(ACipherParameters, IParametersWithContext, LWithContext) then
+    Result := LWithContext.Parameters
+  else
+    Result := ACipherParameters;
+end;
+
 class function TParameterUtilities.WithRandom(const ACp: ICipherParameters;
   const ARandom: ISecureRandom): ICipherParameters;
 var
@@ -394,6 +448,20 @@ begin
   if ARandom <> nil then
     LCp := TParametersWithRandom.Create(LCp, ARandom);
   Result := LCp;
+end;
+
+class function TParameterUtilities.WithContext(const ACp: ICipherParameters;
+  const AContext: TCryptoLibByteArray; AWrapEmptyContext: Boolean): ICipherParameters;
+begin
+  if (AContext = nil) then
+  begin
+    if AWrapEmptyContext then
+      Result := TParametersWithContext.Create(ACp, AContext, 0, 0)
+    else
+      Result := ACp;
+  end
+  else
+    Result := TParametersWithContext.Create(ACp, AContext);
 end;
 
 end.

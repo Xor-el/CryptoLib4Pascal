@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="170">
+    <Units Count="181">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -761,6 +761,50 @@
         <Filename Value="..\src\Utils\NumberUtilities\ByteUtilitiesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit169>
+      <Unit170>
+        <Filename Value="..\src\Crypto\MlKemTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit170>
+      <Unit171>
+        <Filename Value="..\src\Crypto\MlDsaTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit171>
+      <Unit172>
+        <Filename Value="..\src\Crypto\PqcPkcsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit172>
+      <Unit173>
+        <Filename Value="..\src\Utils\Parsers\RspTxtVectorParser.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit173>
+      <Unit174>
+        <Filename Value="..\src\Utils\Parsers\RspTxtVectorParserTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit174>
+      <Unit175>
+        <Filename Value="..\src\Utils\Vectors\PqcTestVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit175>
+      <Unit176>
+        <Filename Value="..\src\Utils\NistSecureRandom.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit176>
+      <Unit177>
+        <Filename Value="..\src\Utils\PqcTestSampler.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit177>
+      <Unit178>
+        <Filename Value="..\src\Crypto\SlhDsaTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit178>
+      <Unit179>
+        <Filename Value="..\src\Utils\Vectors\PqcSampleCredentials.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit179>
+      <Unit180>
+        <Filename Value="..\src\Others\PqcCertCredentialsTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit180>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
