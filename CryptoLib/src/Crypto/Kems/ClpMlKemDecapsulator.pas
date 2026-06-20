@@ -32,7 +32,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMlKemDecapsulatorExpectsPrivateKey = 'TMlKemDecapsulator expects IMlKemPrivateKeyParameters';
+  SMlKemDecapsulationRequiresPrivateKey = 'ML-KEM decapsulation requires private key';
   SMismatchingKeyParameterSet = 'mismatching key parameter set';
 
 type
@@ -100,7 +100,7 @@ var
 begin
   LParameters := TParameterUtilities.IgnoreRandom(AParameters);
   if not Supports(LParameters, IMlKemPrivateKeyParameters, FPrivateKey) then
-    raise EArgumentCryptoLibException.CreateRes(@SMlKemDecapsulatorExpectsPrivateKey);
+    raise EArgumentCryptoLibException.CreateRes(@SMlKemDecapsulationRequiresPrivateKey);
   FEngine := GetEngine(FPrivateKey.Parameters);
 end;
 

@@ -36,7 +36,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SMlKemEncapsulatorExpectsPublicKey = 'TMlKemEncapsulator expects IMlKemPublicKeyParameters';
+  SMlKemEncapsulationRequiresPublicKey = 'ML-KEM encapsulation requires public key';
   SMismatchingKeyParameterSet = 'mismatching key parameter set';
 
 type
@@ -110,7 +110,7 @@ begin
   LParameters := AParameters;
   LParameters := TParameterUtilities.GetRandom(LParameters, LProvidedRandom);
   if not Supports(LParameters, IMlKemPublicKeyParameters, FPublicKey) then
-    raise EArgumentCryptoLibException.CreateRes(@SMlKemEncapsulatorExpectsPublicKey);
+    raise EArgumentCryptoLibException.CreateRes(@SMlKemEncapsulationRequiresPublicKey);
   FRandom := TCryptoServicesRegistrar.GetSecureRandom(LProvidedRandom);
   FEngine := GetEngine(FPublicKey.Parameters);
 end;
