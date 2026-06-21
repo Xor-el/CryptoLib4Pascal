@@ -55,6 +55,11 @@ type
     class function CPUHasCRC32(): Boolean; static;
     class function CPUHasPMULL(): Boolean; static;
 
+    // Clears all the "extra" CPU feature flags (AES, SHA-1, SHA-256,
+    // SHA-512, SHA-3, CRC32, PMULL). Used by ApplyBuildOverrides to give
+    // every CRYPTOLIB_FORCE_* branch a uniform "no accelerated extras" baseline.
+    class procedure DisableAllExtraFeatures(); static;
+
   private
     class procedure ProbeHardwareAndCache(); static;
     class procedure ApplyBuildOverrides(); static;
@@ -374,6 +379,17 @@ end;
 
 { ========================= Probe & Override ================================= }
 
+class procedure TArmSimdFeatures.DisableAllExtraFeatures();
+begin
+  FHasAES := False;
+  FHasSHA1 := False;
+  FHasSHA256 := False;
+  FHasSHA512 := False;
+  FHasSHA3 := False;
+  FHasCRC32 := False;
+  FHasPMULL := False;
+end;
+
 class procedure TArmSimdFeatures.ProbeHardwareAndCache();
 var
   LHasNEON, LHasSVE, LHasSVE2, LHasAES: Boolean;
@@ -419,19 +435,15 @@ class procedure TArmSimdFeatures.ApplyBuildOverrides();
 begin
 {$IF DEFINED(CRYPTOLIB_FORCE_SCALAR)}
   FActiveSimdLevel := TArmSimdLevel.Scalar;
-  FHasAES := False;
-  FHasSHA1 := False;
-  FHasSHA256 := False;
-  FHasSHA512 := False;
-  FHasSHA3 := False;
-  FHasCRC32 := False;
-  FHasPMULL := False;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_NEON)}
   if FActiveSimdLevel > TArmSimdLevel.NEON then
     FActiveSimdLevel := TArmSimdLevel.NEON;
+  DisableAllExtraFeatures;
 {$ELSEIF DEFINED(CRYPTOLIB_FORCE_SVE)}
   if FActiveSimdLevel > TArmSimdLevel.SVE then
     FActiveSimdLevel := TArmSimdLevel.SVE;
+  DisableAllExtraFeatures;
 {$IFEND}
 end;
 
