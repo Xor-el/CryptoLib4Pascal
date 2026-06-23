@@ -244,7 +244,7 @@ uses
   ClpIHashMlDsaSigner, ClpSlhDsaGenerators, ClpSlhDsaParameters, 
   ClpHashSlhDsaSigner, ClpSlhDsaSigner, ClpSlhDsaCore, ClpSlhDsaEngine, 
   ClpISlhDsaGenerators, ClpISlhDsaParameters, ClpIHashSlhDsaSigner, 
-  ClpISlhDsaSigner, ClpISlhDsaCore, ClpISlhDsaEngine;
+  ClpISlhDsaSigner, ClpISlhDsaCore, ClpISlhDsaEngine, ClpLib25519;
 
 implementation
 

@@ -412,6 +412,7 @@ uses
   ClpIMlKemGenerators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIMlKemGenerators.pas',
   ClpIMlKemParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIMlKemParameters.pas',
   ClpKemUtilities in '..\..\CryptoLib\src\Crypto\Kems\ClpKemUtilities.pas',
+  ClpLib25519 in '..\..\CryptoLib\src\Crypto\ClpLib25519.pas',
   ClpMlDsaCore in '..\..\CryptoLib\src\Crypto\Signers\MlDsa\ClpMlDsaCore.pas',
   ClpMlDsaEngine in '..\..\CryptoLib\src\Crypto\Signers\MlDsa\ClpMlDsaEngine.pas',
   ClpMlDsaGenerators in '..\..\CryptoLib\src\Crypto\Generators\ClpMlDsaGenerators.pas',

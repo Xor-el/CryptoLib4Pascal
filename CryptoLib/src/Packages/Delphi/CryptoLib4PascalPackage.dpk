@@ -437,6 +437,7 @@ contains
   ClpIMlKemGenerators in '..\..\Interfaces\Crypto\Generators\ClpIMlKemGenerators.pas',
   ClpIMlKemParameters in '..\..\Interfaces\Crypto\Parameters\ClpIMlKemParameters.pas',
   ClpKemUtilities in '..\..\Crypto\Kems\ClpKemUtilities.pas',
+  ClpLib25519 in '..\..\Crypto\ClpLib25519.pas',
   ClpMlDsaCore in '..\..\Crypto\Signers\MlDsa\ClpMlDsaCore.pas',
   ClpMlDsaEngine in '..\..\Crypto\Signers\MlDsa\ClpMlDsaEngine.pas',
   ClpMlDsaGenerators in '..\..\Crypto\Generators\ClpMlDsaGenerators.pas',
