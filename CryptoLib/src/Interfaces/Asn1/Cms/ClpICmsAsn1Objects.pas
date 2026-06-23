@@ -35,6 +35,8 @@ type
   ICmsSignerIdentifier = interface;
   ICmsSignedData = interface;
   ICmsSignerInfo = interface;
+  ICcmParameters = interface;
+  IGcmParameters = interface;
 
   /// <summary>
   /// RFC 6019 BinaryTime: seconds since 1970-01-01T00:00:00Z (UTC).
@@ -132,6 +134,32 @@ type
     property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;
     property Signature: IAsn1OctetString read GetSignature;
     property UnsignedAttrs: IAsn1Set read GetUnsignedAttrs;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-CCM AlgorithmIdentifier parameters.
+  /// </summary>
+  ICcmParameters = interface(IAsn1Encodable)
+    ['{D1E2F3A4-B5C6-4789-A012-3456789ABCDE}']
+
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-GCM AlgorithmIdentifier parameters.
+  /// </summary>
+  IGcmParameters = interface(IAsn1Encodable)
+    ['{E2F3A4B5-C6D7-4890-B123-456789ABCDEF}']
+
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
   end;
 
 implementation

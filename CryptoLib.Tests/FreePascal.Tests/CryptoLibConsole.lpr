@@ -30,7 +30,7 @@ uses
   InputStreamTests, UtcTimeTests, RelativeOidTests, OctetStringTests, SetTests,
   X9Tests, PrivateKeyInfoTests, DerUtf8StringTests,
   EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
-  RelatedCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  RelatedCertificateTests, CcmParametersTests, GcmParametersTests, CertificateTests, X509AltTests, X509ExtensionsTests,
   AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests, RSATests,

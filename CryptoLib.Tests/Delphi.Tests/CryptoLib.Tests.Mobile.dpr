@@ -886,6 +886,8 @@ uses
   Pkcs10CertRequestTests in '..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas',
   DeltaCertificateTests in '..\src\Asn1\X509\DeltaCertificateTests.pas',
   RelatedCertificateTests in '..\src\Asn1\X509\RelatedCertificateTests.pas',
+  CcmParametersTests in '..\src\Asn1\Cms\CcmParametersTests.pas',
+  GcmParametersTests in '..\src\Asn1\Cms\GcmParametersTests.pas',
   X509CertGenTests in '..\src\X509\X509CertGenTests.pas',
   X509UtilitiesTests in '..\src\X509\X509UtilitiesTests.pas',
   CertTests in '..\src\Others\CertTests.pas',

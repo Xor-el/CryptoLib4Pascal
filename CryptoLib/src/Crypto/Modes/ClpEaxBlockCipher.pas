@@ -47,6 +47,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
+  SInvalidMacSize = 'invalid value for MAC size: %d';
   SInvalidParameters = 'invalid parameters passed to %s';
   SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
@@ -122,6 +123,7 @@ type
     procedure Reset(AClearMac: Boolean); overload;
     function Process(AB: Byte; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
     function VerifyMac(const AMac: TCryptoLibByteArray; AOff: Int32): Boolean;
+    class function GetMacSize(ARequestedMacBits, ABlockSize: Int32): Int32; static;
 
     // ----- Fused-body helpers (only touched when FUseFusedBody). -----
     /// <summary>Derive OMAC subkeys B = 2*L and P = 4*L from
@@ -247,9 +249,9 @@ begin
 
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
-    FMacSize := LChoice.MacSizeBits div 8
+    FMacSize := GetMacSize(LChoice.MacSizeBits, FBlockSize)
   else
-    FMacSize := FMac.GetMacSize() div 2;
+    FMacSize := GetMacSize((FMac.GetMacSize() div 2) * 8, FBlockSize);
 
   if FForEncryption then
     System.SetLength(FBufBlock, FBlockSize)
@@ -1118,6 +1120,17 @@ begin
   end;
 
   Result := 0;
+end;
+
+class function TEaxBlockCipher.GetMacSize(ARequestedMacBits,
+  ABlockSize: Int32): Int32;
+begin
+  if (ARequestedMacBits < 32) or (ARequestedMacBits > ABlockSize * 8) or
+    (ARequestedMacBits and 7 <> 0) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize,
+      [ARequestedMacBits]);
+
+  Result := ARequestedMacBits shr 3;
 end;
 
 function TEaxBlockCipher.VerifyMac(const AMac: TCryptoLibByteArray;

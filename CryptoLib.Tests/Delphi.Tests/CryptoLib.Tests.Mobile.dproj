@@ -1224,6 +1224,8 @@
         <DCCReference Include="..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\DeltaCertificateTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\RelatedCertificateTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Cms\CcmParametersTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Cms\GcmParametersTests.pas"/>
         <DCCReference Include="..\src\X509\X509CertGenTests.pas"/>
         <DCCReference Include="..\src\X509\X509UtilitiesTests.pas"/>
         <DCCReference Include="..\src\Others\CertTests.pas"/>

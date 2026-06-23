@@ -33,6 +33,7 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpDateTimeUtilities,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -55,6 +56,7 @@ resourcestring
   SCmsBinaryTimeOutOfDateTimeRange = 'BinaryTime out of DateTime range';
   SCmsNoContentFound = 'No content found.';
   SCmsMalformedContent = 'Malformed content.';
+  SCmsInvalidIcvLen = 'Invalid ICV length: %d';
 
 
 type
@@ -128,6 +130,80 @@ type
     property ContentType: IDerObjectIdentifier read GetContentType;
     property Content: IAsn1Encodable read GetContent;
     property IsDefiniteLength: Boolean read GetIsDefiniteLength;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-CCM AlgorithmIdentifier parameters.
+  /// </summary>
+  TCcmParameters = class(TAsn1Encodable, ICcmParameters)
+  strict private
+  const
+    DefaultIcvLen = 12;
+
+  var
+    FNonce: IAsn1OctetString;
+    FIcvLen: Int32;
+
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+
+  strict protected
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): ICcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ICcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICcmParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICcmParameters; static;
+
+    constructor Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-GCM AlgorithmIdentifier parameters.
+  /// </summary>
+  TGcmParameters = class(TAsn1Encodable, IGcmParameters)
+  strict private
+  const
+    DefaultIcvLen = 12;
+
+  var
+    FNonce: IAsn1OctetString;
+    FIcvLen: Int32;
+
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+
+  strict protected
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IGcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IGcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IGcmParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IGcmParameters; static;
+
+    constructor Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
   end;
 
   /// <summary>
@@ -1196,6 +1272,204 @@ begin
     Result := TBerSequence.Create(LV)
   else
     Result := TDLSequence.Create(LV);
+end;
+
+{ TCcmParameters }
+
+class function TCcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
+end;
+
+class function TCcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+begin
+  if (AIcvLen < 4) or (AIcvLen > 16) or ((AIcvLen and 1) <> 0) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
+  Result := AIcvLen;
+end;
+
+class function TCcmParameters.GetInstance(AObj: TObject): ICcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, ICcmParameters, Result) then
+    Exit;
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCcmParameters.GetInstance(const AObj: IAsn1Convertible): ICcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, ICcmParameters, Result) then
+    Exit;
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCcmParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICcmParameters;
+begin
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCcmParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICcmParameters;
+begin
+  Result := TCcmParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCcmParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LIcvLen: IDerInteger;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 1) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
+
+  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+
+  if LIcvLen = nil then
+    FIcvLen := ValidateIcvLen(DefaultIcvLen)
+  else
+    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+end;
+
+constructor TCcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
+begin
+  inherited Create();
+  FNonce := TDerOctetString.FromContents(ANonce);
+  FIcvLen := ValidateIcvLen(AIcvLen);
+end;
+
+function TCcmParameters.GetNonce: TCryptoLibByteArray;
+begin
+  Result := TArrayUtilities.CopyOfRange<Byte>(FNonce.GetOctets(), 0,
+    FNonce.GetOctetsLength());
+end;
+
+function TCcmParameters.GetIcvLen: Int32;
+begin
+  Result := FIcvLen;
+end;
+
+function TCcmParameters.ToAsn1Object: IAsn1Object;
+begin
+  if FIcvLen = DefaultIcvLen then
+    Result := TDerSequence.Create([FNonce])
+  else
+    Result := TDerSequence.Create([FNonce, TDerInteger.ValueOf(FIcvLen)]);
+end;
+
+{ TGcmParameters }
+
+class function TGcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
+end;
+
+class function TGcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+begin
+  if (AIcvLen < 12) or (AIcvLen > 16) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
+  Result := AIcvLen;
+end;
+
+class function TGcmParameters.GetInstance(AObj: TObject): IGcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, IGcmParameters, Result) then
+    Exit;
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGcmParameters.GetInstance(const AObj: IAsn1Convertible): IGcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, IGcmParameters, Result) then
+    Exit;
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGcmParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IGcmParameters;
+begin
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TGcmParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IGcmParameters;
+begin
+  Result := TGcmParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TGcmParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LIcvLen: IDerInteger;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 1) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
+
+  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+
+  if LIcvLen = nil then
+    FIcvLen := ValidateIcvLen(DefaultIcvLen)
+  else
+    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+end;
+
+constructor TGcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
+begin
+  inherited Create();
+  FNonce := TDerOctetString.FromContents(ANonce);
+  FIcvLen := ValidateIcvLen(AIcvLen);
+end;
+
+function TGcmParameters.GetNonce: TCryptoLibByteArray;
+begin
+  Result := TArrayUtilities.CopyOfRange<Byte>(FNonce.GetOctets(), 0,
+    FNonce.GetOctetsLength());
+end;
+
+function TGcmParameters.GetIcvLen: Int32;
+begin
+  Result := FIcvLen;
+end;
+
+function TGcmParameters.ToAsn1Object: IAsn1Object;
+begin
+  if FIcvLen = DefaultIcvLen then
+    Result := TDerSequence.Create([FNonce])
+  else
+    Result := TDerSequence.Create([FNonce, TDerInteger.ValueOf(FIcvLen)]);
 end;
 
 end.
