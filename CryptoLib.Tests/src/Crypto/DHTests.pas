@@ -132,6 +132,7 @@ type
      * proposed in RFC 2785.
      *)
     procedure TestDHSubgroupConfinement;
+    procedure TestModulusSizeBound;
   end;
 
 implementation
@@ -402,6 +403,28 @@ begin
   end;
   if not caught then
     Fail('Expected EInvalidOperationCryptoLibException when agreement not initialised');
+end;
+
+procedure TTestDH.TestModulusSizeBound;
+var
+  LHugeP: TBigInteger;
+  LParams: IDHParameters;
+  LKey: IDHPublicKeyParameters;
+begin
+  LHugeP := TBigInteger.One.ShiftLeft(20000).Add(TBigInteger.One);
+  try
+    TDHPublicKeyParameters.Create(TBigInteger.Two,
+      TDHParameters.Create(LHugeP, TBigInteger.Two) as IDHParameters);
+    Fail('oversized DH modulus accepted');
+  except
+    on E: EArgumentCryptoLibException do
+      CheckEquals('DH modulus out of range', E.Message);
+  end;
+
+  // A normally-sized modulus is still accepted (Q is uninitialized, so validation returns after the
+  // cheap range check) -- the cap must not reject ordinary keys.
+  LParams := TDHParameters.Create(Fp512, Fg512);
+  LKey := TDHPublicKeyParameters.Create(TBigInteger.Two, LParams);
 end;
 
 procedure TTestDH.TestDHSubgroupConfinement;

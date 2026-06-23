@@ -36,6 +36,7 @@ resourcestring
   SGUninitialized = 'G cannot be uninitialized';
   SSeedNil = 'seed cannot be nil';
   SYUninitialized = 'Y cannot be uninitialized';
+  SDsaModulusOutOfRange = 'DSA modulus out of range';
   SInvalidYInCorrectGroup = 'Y value does not appear to be in the correct group';
   SXUninitialized = 'X cannot be uninitialized';
 
@@ -119,15 +120,32 @@ type
     IDsaPublicKeyParameters)
 
   strict private
-  var
+    /// <summary>
+    /// Default maximum DSA modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
+    /// </summary>
+    const
+      DefaultMaxBitLength = 16384;
+    class var
+      FMaxSize: Int32;
+
+    var
     FY: TBigInteger;
 
+    class constructor Create;
+
+    class function GetEffectiveMaxSize: Int32; static;
     class function Validate(const AY: TBigInteger;
       const AParameters: IDsaParameters): TBigInteger; static; inline;
 
     function GetY: TBigInteger; inline;
 
   public
+    /// <summary>
+    /// Maximum allowed DSA modulus bit length for externally supplied keys.
+    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
+    /// </summary>
+    class property MaxSize: Int32 read FMaxSize write FMaxSize;
+
     constructor Create(const AY: TBigInteger; const AParameters: IDsaParameters);
 
     function Equals(const AOther: IDsaPublicKeyParameters): Boolean;
@@ -388,6 +406,19 @@ end;
 
 { TDsaPublicKeyParameters }
 
+class constructor TDsaPublicKeyParameters.Create;
+begin
+  FMaxSize := -1;
+end;
+
+class function TDsaPublicKeyParameters.GetEffectiveMaxSize: Int32;
+begin
+  if FMaxSize < 0 then
+    Result := DefaultMaxBitLength
+  else
+    Result := FMaxSize;
+end;
+
 function TDsaPublicKeyParameters.GetY: TBigInteger;
 begin
   Result := FY;
@@ -402,6 +433,8 @@ begin
   end;
   if (AParameters <> nil) then
   begin
+    if AParameters.P.BitLength > GetEffectiveMaxSize then
+      raise EArgumentCryptoLibException.CreateRes(@SDsaModulusOutOfRange);
     if ((AY.CompareTo(TBigInteger.Two) < 0) or
       (AY.CompareTo(AParameters.P.Subtract(TBigInteger.Two)) > 0) or
       (not AY.ModPow(AParameters.Q, AParameters.P).Equals(TBigInteger.One))) then

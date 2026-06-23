@@ -48,6 +48,7 @@ resourcestring
   SSeedNil = 'seed cannot be nil';
   SYUninitialized = 'Y cannot be uninitialized';
   SInvalidDHPublicKey = 'invalid DH public key';
+  SDHModulusOutOfRange = 'DH modulus out of range';
   SInvalidYInCorrectGroup = 'Y value does not appear to be in the correct group';
   SXUninitialized = 'X cannot be uninitialized';
 
@@ -157,9 +158,20 @@ type
     IDHPublicKeyParameters)
 
   strict private
-  var
+    /// <summary>
+    /// Default maximum DH modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
+    /// </summary>
+    const
+      DefaultMaxBitLength = 16384;
+    class var
+      FMaxSize: Int32;
+
+    var
     FY: TBigInteger;
 
+    class constructor Create;
+
+    class function GetEffectiveMaxSize: Int32; static;
     class function Legendre(const AA, AB: TBigInteger): Int32; static;
 
     class function Validate(const AY: TBigInteger; const ADHParams: IDHParameters)
@@ -170,6 +182,12 @@ type
     function GetY: TBigInteger; virtual;
 
   public
+    /// <summary>
+    /// Maximum allowed DH modulus bit length for externally supplied keys.
+    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
+    /// </summary>
+    class property MaxSize: Int32 read FMaxSize write FMaxSize;
+
     constructor Create(const AY: TBigInteger;
       const AParameters: IDHParameters); overload;
 
@@ -564,6 +582,19 @@ begin
   end;
 end;
 
+class constructor TDHPublicKeyParameters.Create;
+begin
+  FMaxSize := -1;
+end;
+
+class function TDHPublicKeyParameters.GetEffectiveMaxSize: Int32;
+begin
+  if FMaxSize < 0 then
+    Result := DefaultMaxBitLength
+  else
+    Result := FMaxSize;
+end;
+
 class function TDHPublicKeyParameters.Validate(const AY: TBigInteger;
   const ADHParams: IDHParameters): TBigInteger;
 var
@@ -575,6 +606,9 @@ begin
   end;
 
   LP := ADHParams.P;
+
+  if LP.BitLength > GetEffectiveMaxSize then
+    raise EArgumentCryptoLibException.CreateRes(@SDHModulusOutOfRange);
 
   if ((AY.CompareTo(TBigInteger.Two) < 0) or
     (AY.CompareTo(LP.Subtract(TBigInteger.Two)) > 0)) then

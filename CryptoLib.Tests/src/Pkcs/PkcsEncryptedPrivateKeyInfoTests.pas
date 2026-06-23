@@ -44,7 +44,9 @@ uses
   ClpEncryptedPrivateKeyInfoFactory,
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
+  ClpPbeUtilities,
   ClpIPkcsAsn1Objects,
+  ClpPkcsAsn1Objects,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
   PkcsVectors;
@@ -69,6 +71,8 @@ type
     procedure TestOpensslPbes2AesEcbKeys;
     procedure TestOpensslPbes2AesOfbKeys;
     procedure TestOpensslPbes2AesDefaultKeys;
+    procedure TestPbkdf2IterationCountBound;
+    procedure TestPkcs5V1PbeIterationCountBound;
 
   end;
 
@@ -201,6 +205,77 @@ begin
   DoTestOpensslKey('pbes2.aes192', TPkcsEncryptedPrivateKeyInfoVectors.LoadKeyBytes('Pbes2Aes192'), LPassword);
 
   DoTestOpensslKey('pbes2.aes256', TPkcsEncryptedPrivateKeyInfoVectors.LoadKeyBytes('Pbes2Aes256'), LPassword);
+end;
+
+procedure TTestPkcsEncryptedPrivateKeyInfo.TestPbkdf2IterationCountBound;
+var
+  LPGen: IAsymmetricCipherKeyPairGenerator;
+  LGenParam: IRsaKeyGenerationParameters;
+  LPair: IAsymmetricCipherKeyPair;
+  LPlain: IPrivateKeyInfo;
+  LEncInfo: IEncryptedPrivateKeyInfo;
+  LSalt: TCryptoLibByteArray;
+  LPassword: TCryptoLibCharArray;
+  LOldMax: Int32;
+begin
+  LPGen := TGeneratorUtilities.GetKeyPairGenerator('RSA');
+  LGenParam := TRsaKeyGenerationParameters.Create(
+    TBigInteger.ValueOf($10001), TSecureRandom.Create() as ISecureRandom,
+    512, 25);
+  LPGen.Init(LGenParam);
+  LPair := LPGen.GenerateKeyPair();
+  LPlain := TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LPair.Private);
+
+  LPassword := StringToCharArray('hello');
+  LSalt := DecodeHex('0102030405060708090A');
+
+  LEncInfo := TEncryptedPrivateKeyInfoFactory.CreateEncryptedPrivateKeyInfo(
+    TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256,
+    LPassword, LSalt, 2048, TSecureRandom.Create() as ISecureRandom, LPlain);
+
+  LOldMax := TPbeUtilities.MaxIterationCount;
+  try
+    TPbeUtilities.MaxIterationCount := 1;
+    try
+      TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LPassword, LEncInfo);
+      Fail('excessive PBKDF2 iteration count accepted');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckTrue(Pos('greater than 1', E.Message) > 0,
+          'unexpected message: ' + E.Message);
+    end;
+  finally
+    TPbeUtilities.MaxIterationCount := LOldMax;
+  end;
+end;
+
+procedure TTestPkcsEncryptedPrivateKeyInfo.TestPkcs5V1PbeIterationCountBound;
+const
+  LPbeAlgorithm = 'PBEWITHMD5AND128BITAES-CBC-OPENSSL';
+var
+  LSalt: TCryptoLibByteArray;
+  LPassword: TCryptoLibCharArray;
+  LPbeParams: IPbeParameter;
+  LOldMax: Int32;
+begin
+  LPassword := StringToCharArray('hello');
+  LSalt := DecodeHex('0102030405060708');
+  LPbeParams := TPbeParameter.Create(LSalt, 2048);
+
+  LOldMax := TPbeUtilities.MaxIterationCount;
+  try
+    TPbeUtilities.MaxIterationCount := 1;
+    try
+      TPbeUtilities.GenerateCipherParameters(LPbeAlgorithm, LPassword, LPbeParams);
+      Fail('excessive PBE iteration count accepted');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckTrue(Pos('greater than 1', E.Message) > 0,
+          'unexpected message: ' + E.Message);
+    end;
+  finally
+    TPbeUtilities.MaxIterationCount := LOldMax;
+  end;
 end;
 
 initialization
