@@ -173,6 +173,7 @@ type
     FIdAAEtsCertValues, FIdAAEtsRevocationValues, FIdAAEtsEscTimeStamp, FIdAAEtsCertCrlTimestamp,
     FIdAAEtsArchiveTimestamp,
     FIdAADecryptKeyID, FIdAAImplCryptoAlgs, FIdAAAsymmDecryptKeyID, FIdAAImplCompressAlgs, FIdAACommunityIdentifiers,
+    FIdAARelatedCertRequest,
     FIdAAEtsArchiveTimestampV2,
     FId_spq,
     FIdSpqEtsUri, FIdSpqEtsUNotice,
@@ -322,6 +323,7 @@ type
     class function GetIdAAAsymmDecryptKeyID: IDerObjectIdentifier; static; inline;
     class function GetIdAAImplCompressAlgs: IDerObjectIdentifier; static; inline;
     class function GetIdAACommunityIdentifiers: IDerObjectIdentifier; static; inline;
+    class function GetIdAARelatedCertRequest: IDerObjectIdentifier; static; inline;
     class function GetIdAAEtsArchiveTimestampV2: IDerObjectIdentifier; static; inline;
     class function GetId_spq: IDerObjectIdentifier; static; inline;
     class function GetIdSpqEtsUri: IDerObjectIdentifier; static; inline;
@@ -502,6 +504,10 @@ type
     class property IdAAAsymmDecryptKeyID: IDerObjectIdentifier read GetIdAAAsymmDecryptKeyID;
     class property IdAAImplCompressAlgs: IDerObjectIdentifier read GetIdAAImplCompressAlgs;
     class property IdAACommunityIdentifiers: IDerObjectIdentifier read GetIdAACommunityIdentifiers;
+    /// <summary>
+    /// RFC 9763 sec. 4 id-aa-relatedCertRequest ({ id-aa 60 }): CMS signed attribute binding a CSR to a related certificate.
+    /// </summary>
+    class property IdAARelatedCertRequest: IDerObjectIdentifier read GetIdAARelatedCertRequest;
     class property IdAAEtsArchiveTimestampV2: IDerObjectIdentifier read GetIdAAEtsArchiveTimestampV2;
     class property Id_spq: IDerObjectIdentifier read GetId_spq;
     class property IdSpqEtsUri: IDerObjectIdentifier read GetIdSpqEtsUri;
@@ -1176,6 +1182,11 @@ begin
   Result := FIdAACommunityIdentifiers;
 end;
 
+class function TPkcsObjectIdentifiers.GetIdAARelatedCertRequest: IDerObjectIdentifier;
+begin
+  Result := FIdAARelatedCertRequest;
+end;
+
 class function TPkcsObjectIdentifiers.GetIdAAEtsArchiveTimestampV2: IDerObjectIdentifier;
 begin
   Result := FIdAAEtsArchiveTimestampV2;
@@ -1397,6 +1408,7 @@ begin
   FIdAAAsymmDecryptKeyID := FId_aa.Branch('54');
   FIdAAImplCompressAlgs := FId_aa.Branch('43');
   FIdAACommunityIdentifiers := FId_aa.Branch('40');
+  FIdAARelatedCertRequest := FId_aa.Branch('60');
   FIdAASigningCertificateV2 := FId_aa.Branch('47');
   FIdAAEtsArchiveTimestampV2 := FId_aa.Branch('48');
   FId_spq := FIdSmime.Branch('5');

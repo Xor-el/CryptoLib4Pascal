@@ -28,7 +28,7 @@ uses
   BitStringTests, GeneralizedTimeTests, OctetStringTests, RelativeOidTests,
   UtcTimeTests, InputStreamTests, SetTests, X9Tests, PrivateKeyInfoTests,
   DerUtf8StringTests, EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests,
-  DeltaCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  DeltaCertificateTests, RelatedCertificateTests, CertificateTests, X509AltTests, X509ExtensionsTests,
   AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   RSATests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,

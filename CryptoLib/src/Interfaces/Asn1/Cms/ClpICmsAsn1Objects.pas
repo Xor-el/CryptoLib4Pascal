@@ -21,6 +21,7 @@ unit ClpICmsAsn1Objects;
 interface
 
 uses
+  SysUtils,
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIX509Asn1Objects,
@@ -28,11 +29,25 @@ uses
 
 type
   // Forward declarations
+  IBinaryTime = interface;
   ICmsContentInfo = interface;
   ICmsIssuerAndSerialNumber = interface;
   ICmsSignerIdentifier = interface;
   ICmsSignedData = interface;
   ICmsSignerInfo = interface;
+
+  /// <summary>
+  /// RFC 6019 BinaryTime: seconds since 1970-01-01T00:00:00Z (UTC).
+  /// </summary>
+  IBinaryTime = interface(IAsn1Encodable)
+    ['{A4E8B2C1-7D3F-4A91-B6E0-2C8F9D1E5A3B}']
+
+    function GetTime: IDerInteger;
+    function GetDateTime: TDateTime;
+    function TryGetDateTime(out ADateTime: TDateTime): Boolean;
+
+    property Time: IDerInteger read GetTime;
+  end;
 
   /// <summary>
   /// Interface for CMS ContentInfo (EncapsulatedContentInfo).

@@ -32,6 +32,7 @@ uses
   ClpCmsObjectIdentifiers,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpDateTimeUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -50,9 +51,41 @@ resourcestring
   SCmsDigestAlgorithmsNil = 'CMS digest algorithms set cannot be nil';
   SCmsEncapContentInfoNil = 'CMS encapsulated content info cannot be nil';
   SCmsSignerInfosNil = 'CMS signer infos set cannot be nil';
+  SCmsBinaryTimeCannotBeNegative = 'BinaryTime seconds cannot be negative';
+  SCmsBinaryTimeOutOfDateTimeRange = 'BinaryTime out of DateTime range';
 
 
 type
+
+  /// <summary>
+  /// RFC 6019 BinaryTime type: unsigned integer count of seconds since 1970-01-01T00:00:00Z (UTC).
+  /// </summary>
+  TBinaryTime = class(TAsn1Encodable, IBinaryTime)
+  strict private
+  var
+    FTime: IDerInteger;
+
+  strict protected
+    function GetTime: IDerInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IBinaryTime; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IBinaryTime; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IBinaryTime; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IBinaryTime; static;
+
+    constructor Create(const ADateTime: TDateTime); overload;
+    constructor Create(ASeconds: Int64); overload;
+    constructor Create(const ATime: IDerInteger); overload;
+
+    function GetDateTime: TDateTime;
+    function TryGetDateTime(out ADateTime: TDateTime): Boolean;
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Time: IDerInteger read GetTime;
+  end;
 
   /// <summary>
   /// CMS ContentInfo (EncapsulatedContentInfo); supports DL/BER encoding choice.
@@ -266,6 +299,100 @@ type
   end;
 
 implementation
+
+{ TBinaryTime }
+
+class function TBinaryTime.GetInstance(AObj: TObject): IBinaryTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IBinaryTime, Result) then
+    Exit;
+
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TBinaryTime.GetInstance(const AObj: IAsn1Convertible): IBinaryTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IBinaryTime, Result) then
+    Exit;
+
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TBinaryTime.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IBinaryTime;
+begin
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TBinaryTime.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IBinaryTime;
+begin
+  Result := TBinaryTime.Create(TDerInteger.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TBinaryTime.Create(const ADateTime: TDateTime);
+begin
+  Create(TDateTimeUtilities.DateTimeToUnixMs(ADateTime) div 1000);
+end;
+
+constructor TBinaryTime.Create(ASeconds: Int64);
+begin
+  Create(TDerInteger.ValueOf(ASeconds));
+end;
+
+constructor TBinaryTime.Create(const ATime: IDerInteger);
+begin
+  inherited Create();
+  if ATime = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
+  if ATime.IsNegative then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCmsBinaryTimeCannotBeNegative);
+
+  FTime := ATime;
+end;
+
+function TBinaryTime.GetTime: IDerInteger;
+begin
+  Result := FTime;
+end;
+
+function TBinaryTime.GetDateTime: TDateTime;
+begin
+  if not TryGetDateTime(Result) then
+    raise EArithmeticCryptoLibException.CreateRes(@SCmsBinaryTimeOutOfDateTimeRange);
+end;
+
+function TBinaryTime.TryGetDateTime(out ADateTime: TDateTime): Boolean;
+var
+  LSeconds: Int64;
+begin
+  if FTime.TryGetLongValueExact(LSeconds) and (LSeconds <= High(Int64) div 1000) then
+  begin
+    ADateTime := TDateTimeUtilities.UnixMsToDateTime(LSeconds * 1000);
+    Result := True;
+    Exit;
+  end;
+
+  ADateTime := 0;
+  Result := False;
+end;
+
+function TBinaryTime.ToAsn1Object: IAsn1Object;
+begin
+  Result := FTime;
+end;
 
 { TCmsContentInfo }
 

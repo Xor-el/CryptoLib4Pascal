@@ -764,6 +764,10 @@
         <Filename Value="..\src\Others\PqcCertCredentialsTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit180>
+      <Unit181>
+        <Filename Value="..\src\Asn1\X509\RelatedCertificateTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit181>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

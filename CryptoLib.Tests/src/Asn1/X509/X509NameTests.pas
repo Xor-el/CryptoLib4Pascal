@@ -62,6 +62,7 @@ type
     procedure TestRfc4514UnescapedEqualsInAttributeValue;
     procedure TestInvalidHexDnFailsAtConstruction;
     procedure TestCountryCodeLength;
+    procedure TestCommonNameLength;
     procedure TestDnQualifierAttributeAliases;
     procedure TestStateOrProvinceAttributeAliases;
     procedure TestHexEscapedUtf8Parse;
@@ -297,7 +298,7 @@ begin
   LParsed := TX509Name.Create('C=AU');
 
   try
-    TX509Name.Create('C=USA');
+    LParsed := TX509Name.Create('C=USA');
     Fail('X509Name(''C=USA'') accepted 3-character country code');
   except
     on EArgumentCryptoLibException do
@@ -313,6 +314,35 @@ begin
           TDerPrintableString.Create('USA') as IDerPrintableString]) as IDerSequence)));
   CheckEquals('USA', LParsed.GetValueList(TX509Name.C)[0],
     'lenient parse of 3-character C failed');
+end;
+
+procedure TX509NameTest.TestCommonNameLength;
+var
+  LCn64, LCn65: String;
+  LName, LParsed: IX509Name;
+begin
+  LCn64 := StringOfChar('A', 64);
+  LCn65 := StringOfChar('A', 65);
+
+  LName := TX509Name.Create('CN=' + LCn64);
+
+  try
+    LName := TX509Name.Create('CN=' + LCn65);
+    Fail('X509Name(''CN=...'') accepted 65-char CN');
+  except
+    on EArgumentCryptoLibException do
+      ; // expected
+  end;
+
+  // Lenient parse of existing DER with an over-length CN (do not block reading wild certs).
+  LParsed := TX509Name.GetInstance(
+    TDerSequence.FromElement(
+      TDerSet.FromElement(
+        TDerSequence.Create([
+          TX509Name.CN,
+          TDerUtf8String.Create(LCn65) as IDerUtf8String]) as IDerSequence)));
+  CheckEquals(LCn65, LParsed.GetValueList(TX509Name.CN)[0],
+    'lenient parse of 65-char CN failed');
 end;
 
 procedure TX509NameTest.TestDnQualifierAttributeAliases;
