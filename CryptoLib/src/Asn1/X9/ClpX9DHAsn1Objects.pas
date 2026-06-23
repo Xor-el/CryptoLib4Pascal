@@ -214,7 +214,7 @@ type
     property Seed: IDerBitString read GetSeed;
     property PGenCounter: IDerInteger read GetPGenCounter;
 
-  end;
+  end deprecated 'Use TValidationParams instead';
 
   /// <summary>
   /// The DHDomainParameters object.
@@ -277,7 +277,7 @@ type
     property ValidationParms: IDHValidationParms read GetValidationParms;
     property ValidationParams: IValidationParams read GetValidationParams;
 
-  end;
+  end deprecated 'Use TDomainParameters instead';
 
   /// <summary>
   /// ASN.1 KeySpecificInfo structure (RFC 2631 / X9.42).

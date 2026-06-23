@@ -68,7 +68,7 @@ type
 
     property Seed: IDerBitString read GetSeed;
     property PGenCounter: IDerInteger read GetPGenCounter;
-  end;
+  end deprecated 'Use IValidationParams instead';
 
   /// <summary>
   /// Interface for DHPublicKey.
@@ -98,7 +98,7 @@ type
     property Q: IDerInteger read GetQ;
     property J: IDerInteger read GetJ;
     property ValidationParms: IDHValidationParms read GetValidationParms;
-  end;
+  end deprecated 'Use IDomainParameters instead';
 
   /// <summary>
   /// ASN.1 KeySpecificInfo (RFC 2631 / X9.42).
