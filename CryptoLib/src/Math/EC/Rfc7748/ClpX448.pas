@@ -30,6 +30,7 @@ uses
 
 resourcestring
   SInvalidKeyLength = 'invalid key length';
+  SRandomNil = 'random cannot be nil';
 
 type
   TX448 = class sealed
@@ -79,6 +80,7 @@ end;
 
 class procedure TX448.ClampPrivateKey(AK: TCryptoLibByteArray);
 begin
+  TArrayUtilities.ValidateBuffer(AK);
   if System.Length(AK) <> ScalarSize then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   AK[0] := AK[0] and $FC;
@@ -101,6 +103,8 @@ end;
 class procedure TX448.GeneratePrivateKey(const ARandom: ISecureRandom;
   const AK: TCryptoLibByteArray);
 begin
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
   if System.Length(AK) <> ScalarSize then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   ARandom.NextBytes(AK);
@@ -140,6 +144,9 @@ var
   LT1, LT2: TCryptoLibUInt32Array;
   LBit, LSwap, LWord, LShift, LKt, LI: Int32;
 begin
+  TArrayUtilities.ValidateSegment(AK, AKOff, ScalarSize);
+  TArrayUtilities.ValidateSegment(AU, AUOff, PointSize);
+  TArrayUtilities.ValidateSegment(AR, AROff, PointSize);
   System.SetLength(LN, 14);
   DecodeScalar(AK, AKOff, LN);
 
@@ -205,6 +212,8 @@ class procedure TX448.ScalarMultBase(const AK: TCryptoLibByteArray; AKOff: Int32
 var
   LX, LY: TCryptoLibUInt32Array;
 begin
+  TArrayUtilities.ValidateSegment(AK, AKOff, ScalarSize);
+  TArrayUtilities.ValidateSegment(AR, AROff, PointSize);
   LX := TX448Field.Create;
   LY := TX448Field.Create;
 

@@ -39,6 +39,8 @@ resourcestring
   SInvalidPoint = 'invalid point';
   SInvalidContext = 'invalid context';
   SInvalidBufferLength = 'invalid buffer length';
+  SRandomNil = 'random cannot be nil';
+  SPublicPointNil = 'public point cannot be nil';
 
 type
   /// <summary>
@@ -1137,6 +1139,11 @@ var
   LN: TCryptoLibByteArray;
   LP: TPointAccum;
 begin
+  TArrayUtilities.ValidateSegment(AK, AKOff, ScalarBytes);
+  if (AY = nil) or (System.Length(AY) <> TX25519Field.Size) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  if (AZ = nil) or (System.Length(AZ) <> TX25519Field.Size) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
   System.SetLength(LN, ScalarBytes);
   PruneScalar(AK, AKOff, LN);
   InitPointAccum(LP);
@@ -1200,6 +1207,9 @@ class procedure TEd25519.EncodePublicPoint(const APublicPoint: IPublicPoint; APk
 var
   LData: TCryptoLibInt32Array;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LData := APublicPoint.Data;
   TX25519Field.Encode(LData, TX25519Field.Size, APk, APkOff);
   APk[APkOff + PointBytes - 1] := APk[APkOff + PointBytes - 1] or Byte((LData[0] and 1) shl 7);
@@ -1210,6 +1220,7 @@ var
   LD: IDigest;
   LH: TCryptoLibByteArray;
 begin
+  TArrayUtilities.ValidateSegment(&AS, ASOff, SecretKeySize);
   LD := CreateAndValidateDigest();
   System.SetLength(LH, DigestSize);
   ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
@@ -1221,6 +1232,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   System.SetLength(LA, PublicKeySize);
   System.Move(APk[APkOff], LA[0], PublicKeySize);
   if not CheckPointFullVar(LA) then
@@ -1236,6 +1248,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   Result := nil;
   System.SetLength(LA, PublicKeySize);
   System.Move(APk[APkOff], LA[0], PublicKeySize);
@@ -1254,6 +1267,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   System.SetLength(LA, PublicKeySize);
   System.Move(APk[APkOff], LA[0], PublicKeySize);
   if not CheckPointFullVar(LA) then
@@ -1267,6 +1281,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   Result := nil;
   System.SetLength(LA, PublicKeySize);
   System.Move(APk[APkOff], LA[0], PublicKeySize);
@@ -1484,6 +1499,10 @@ end;
 
 procedure TEd25519.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 begin
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
+  if System.Length(AK) <> SecretKeySize then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
   ARandom.NextBytes(AK);
 end;
 
@@ -1493,6 +1512,8 @@ var
   LH: TCryptoLibByteArray;
   LS: TCryptoLibByteArray;
 begin
+  TArrayUtilities.ValidateSegment(&AS, ASOff, SecretKeySize);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LD := CreateAndValidateDigest();
   System.SetLength(LH, DigestSize);
   ExpandPrivateKey(LD, &AS, ASOff, LH, 0);
@@ -1617,12 +1638,16 @@ end;
 function TEd25519.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
   const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, nil, $00, AM, AMOff, AMLen);
 end;
 
 function TEd25519.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
   const ACtx, AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   if not CheckContextVar(ACtx, $00) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $00, AM, AMOff, AMLen);
@@ -1650,6 +1675,8 @@ end;
 function TEd25519.VerifyPreHash(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
   const ACtx, APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   if not CheckContextVar(ACtx, $01) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidContext);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $01, APh, APhOff, PrehashSize);
@@ -1660,6 +1687,8 @@ function TEd25519.VerifyPreHash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
 var
   LM: TCryptoLibByteArray;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   System.SetLength(LM, PrehashSize);
   if APh.DoFinal(LM, 0) <> PrehashSize then
     raise EArgumentCryptoLibException.CreateRes(@SDigestMustProduce64Bytes);
@@ -1838,8 +1867,7 @@ end;
 
 procedure TEd25519.TExpandedKey.CheckSeedBuffer(const ABuf: TCryptoLibByteArray; AOff: Int32);
 begin
-  if (ABuf = nil) or (System.Length(ABuf) - AOff < SecretKeySize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  TArrayUtilities.ValidateSegment(ABuf, AOff, SecretKeySize);
 end;
 
 procedure TEd25519.TExpandedKey.ExpandPrivateKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
@@ -1858,6 +1886,8 @@ procedure TEd25519.TExpandedKey.GeneratePrivateKey(const ARandom: ISecureRandom;
 var
   LSk: TCryptoLibByteArray;
 begin
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
   CheckExpandedBuffer(AXk, AXkOff);
   System.SetLength(LSk, SecretKeySize);
   try
@@ -1874,8 +1904,7 @@ var
   LS: TCryptoLibByteArray;
 begin
   CheckExpandedBuffer(AXk, AXkOff);
-  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   System.SetLength(LS, ScalarBytes);
   PruneScalar(AXk, AXkOff, LS);
   ScalarMultBaseEncoded(LS, APk, APkOff);
@@ -1900,6 +1929,8 @@ var
   LPk: TCryptoLibByteArray;
 begin
   CheckExpandedBuffer(AXk, AXkOff);
+  TArrayUtilities.ValidateSegment(AM, AMOff, AMLen);
+  TArrayUtilities.ValidateSegment(ASig, ASigOff, SignatureSize);
   System.SetLength(LPk, PublicKeySize);
   GeneratePublicKey(AXk, AXkOff, LPk, 0);
   Sign(AXk, AXkOff, LPk, 0, AM, AMOff, AMLen, ASig, ASigOff);
@@ -1915,10 +1946,9 @@ var
   LNullCtx: TCryptoLibByteArray;
 begin
   CheckExpandedBuffer(AXk, AXkOff);
-  if (APk = nil) or (System.Length(APk) - APkOff < PublicKeySize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
-  if (ASig = nil) or (System.Length(ASig) - ASigOff < SignatureSize) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
+  TArrayUtilities.ValidateSegment(AM, AMOff, AMLen);
+  TArrayUtilities.ValidateSegment(ASig, ASigOff, SignatureSize);
   LD := FOwner.CreateAndValidateDigest();
   System.SetLength(LH, DigestSize);
   System.Move(AXk[AXkOff], LH[0], DigestSize);

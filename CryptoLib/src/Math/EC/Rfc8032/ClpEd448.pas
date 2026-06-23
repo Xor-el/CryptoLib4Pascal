@@ -21,6 +21,7 @@ unit ClpEd448;
 interface
 
 uses
+  ClpArrayUtilities,
   ClpDigestUtilities,
   ClpCodec,
   ClpBitOperations,
@@ -37,6 +38,9 @@ resourcestring
   SInvalidContext = 'invalid context';
   SInvalidPrehashDigestSize = 'invalid prehash digest size';
   SInvalidSecretKeySize = 'invalid secret key size';
+  SInvalidBufferLength = 'invalid buffer length';
+  SRandomNil = 'random cannot be nil';
+  SPublicPointNil = 'public point cannot be nil';
 
 type
   TEd448 = class(TObject)
@@ -127,6 +131,8 @@ type
   class function CopyBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): TCryptoLibByteArray; static;
   class function DecodePointVar(const AP: TCryptoLibByteArray; ANegate: Boolean; var AR: TPointAffine): Boolean; static;
   class procedure Dom4(const AD: IXof; APhflag: Byte; const ACtx: TCryptoLibByteArray); static;
+  class procedure ExpandPrivateKey(const AD: IXof; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+    const AH: TCryptoLibByteArray; AHOff: Int32); static;
   class procedure EncodePoint(var AP: TPointAffine; const AR: TCryptoLibByteArray; AROff: Int32); static;
   class function EncodeResult(var AP: TPointProjective; const AR: TCryptoLibByteArray; AROff: Int32): Int32; static;
   class function ExportPoint(var AP: TPointAffine): IPublicPoint; static;
@@ -246,6 +252,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpX448;
 
 { TEd448.TPublicPoint }
 
@@ -521,6 +530,13 @@ begin
   AD.BlockUpdate(LT, 0, System.Length(LT));
 end;
 
+class procedure TEd448.ExpandPrivateKey(const AD: IXof; const ASk: TCryptoLibByteArray; ASkOff: Int32;
+  const AH: TCryptoLibByteArray; AHOff: Int32);
+begin
+  AD.BlockUpdate(ASk, ASkOff, SecretKeySize);
+  AD.OutputFinal(AH, AHOff, XofSize);
+end;
+
 class procedure TEd448.EncodePoint(var AP: TPointAffine; const AR: TCryptoLibByteArray; AROff: Int32);
 begin
   TX448Field.Encode(AP.Y, AR, AROff);
@@ -529,6 +545,9 @@ end;
 
 class procedure TEd448.EncodePublicPoint(const APublicPoint: IPublicPoint; const APk: TCryptoLibByteArray; APkOff: Int32);
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   TX448Field.Encode(APublicPoint.Data, TX448Field.Size, APk, APkOff);
   APk[APkOff + PointBytes - 1] := Byte((APublicPoint.Data[0] and 1) shl 7);
 end;
@@ -1147,6 +1166,11 @@ var
   LN: TCryptoLibByteArray;
   LP: TPointProjective;
 begin
+  TArrayUtilities.ValidateSegment(AK, AKOff, TX448.ScalarSize);
+  if (AX = nil) or (System.Length(AX) <> TX448Field.Size) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
+  if (AY = nil) or (System.Length(AY) <> TX448Field.Size) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
   System.SetLength(LN, ScalarBytes);
   PruneScalar(AK, AKOff, LN);
 
@@ -1308,8 +1332,7 @@ begin
 
   LD := CreateAndValidateXof();
   System.SetLength(LH, XofSize);
-  LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
-  LD.OutputFinal(LH, 0, System.Length(LH));
+  ExpandPrivateKey(LD, ASk, ASkOff, LH, 0);
 
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
@@ -1332,8 +1355,7 @@ begin
 
   LD := CreateAndValidateXof();
   System.SetLength(LH, XofSize);
-  LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
-  LD.OutputFinal(LH, 0, System.Length(LH));
+  ExpandPrivateKey(LD, ASk, ASkOff, LH, 0);
 
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
@@ -1494,6 +1516,10 @@ end;
 
 procedure TEd448.GeneratePrivateKey(const ARandom: ISecureRandom; const AK: TCryptoLibByteArray);
 begin
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
+  if AK = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SInvalidSecretKeySize);
   if System.Length(AK) <> SecretKeySize then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidSecretKeySize);
   ARandom.NextBytes(AK);
@@ -1502,13 +1528,12 @@ end;
 procedure TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32;
   APk: TCryptoLibByteArray; APkOff: Int32);
 var
-  LD: IXof;
   LH, LS: TCryptoLibByteArray;
 begin
-  LD := CreateAndValidateXof();
+  TArrayUtilities.ValidateSegment(ASk, ASkOff, SecretKeySize);
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   System.SetLength(LH, XofSize);
-  LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
-  LD.OutputFinal(LH, 0, System.Length(LH));
+  ExpandPrivateKey(CreateAndValidateXof(), ASk, ASkOff, LH, 0);
 
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
@@ -1517,15 +1542,13 @@ end;
 
 function TEd448.GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint;
 var
-  LD: IXof;
   LH, LS: TCryptoLibByteArray;
   LP: TPointProjective;
   LQ: TPointAffine;
 begin
-  LD := CreateAndValidateXof();
+  TArrayUtilities.ValidateSegment(ASk, ASkOff, SecretKeySize);
   System.SetLength(LH, XofSize);
-  LD.BlockUpdate(ASk, ASkOff, SecretKeySize);
-  LD.OutputFinal(LH, 0, System.Length(LH));
+  ExpandPrivateKey(CreateAndValidateXof(), ASk, ASkOff, LH, 0);
 
   System.SetLength(LS, ScalarBytes);
   PruneScalar(LH, 0, LS);
@@ -1597,6 +1620,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LA := CopyBytes(APk, APkOff, PublicKeySize);
 
   if not CheckPointFullVar(LA) then
@@ -1620,6 +1644,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LA := CopyBytes(APk, APkOff, PublicKeySize);
 
   if not CheckPointFullVar(LA) then
@@ -1649,6 +1674,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LA := CopyBytes(APk, APkOff, PublicKeySize);
 
   if not CheckPointFullVar(LA) then
@@ -1666,6 +1692,7 @@ var
   LA: TCryptoLibByteArray;
   LPA: TPointAffine;
 begin
+  TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
   LA := CopyBytes(APk, APkOff, PublicKeySize);
 
   if not CheckPointFullVar(LA) then
@@ -1693,6 +1720,8 @@ end;
 function TEd448.Verify(const ASig: TCryptoLibByteArray; ASigOff: Int32; const APublicPoint: IPublicPoint;
   const ACtx: TCryptoLibByteArray; const AM: TCryptoLibByteArray; AMOff, AMLen: Int32): Boolean;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $00, AM, AMOff, AMLen);
 end;
 
@@ -1707,6 +1736,8 @@ function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
   const APublicPoint: IPublicPoint; const ACtx: TCryptoLibByteArray;
   const APh: TCryptoLibByteArray; APhOff: Int32): Boolean;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   Result := ImplVerify(ASig, ASigOff, APublicPoint, ACtx, $01, APh, APhOff, PrehashSize);
 end;
 
@@ -1726,6 +1757,8 @@ function TEd448.VerifyPrehash(const ASig: TCryptoLibByteArray; ASigOff: Int32;
 var
   LM: TCryptoLibByteArray;
 begin
+  if APublicPoint = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   System.SetLength(LM, PrehashSize);
   if PrehashSize <> APh.OutputFinal(LM, 0, PrehashSize) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidPrehashDigestSize);
