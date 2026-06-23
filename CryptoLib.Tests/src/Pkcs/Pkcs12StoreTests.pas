@@ -101,6 +101,8 @@ type
     FSentrix2: TBytes;
     FSentrix3: TBytes;
     FRawKeyBagStore: TBytes;
+    FCertChainCycle: TBytes;
+    FCertChainCyclePassword: TCryptoLibCharArray;
 
     function CreateCert(const APubKey, APrivKey: IAsymmetricKeyParameter;
       const AIssuerEmail, ASubjectEmail: String; const ALocalKeyId: TBytes): IX509CertificateEntry;
@@ -155,6 +157,7 @@ type
     procedure TestRawKeyBagStore;
     procedure TestWrongPassword;
     procedure TestEmptyInputRejectedCleanly;
+    procedure TestChainCycle;
   end;
 
 implementation
@@ -186,6 +189,8 @@ begin
   FSentrix2 := TPkcs12StoreVectors.LoadStoreBytes('Sentrix2');
   FSentrix3 := TPkcs12StoreVectors.LoadStoreBytes('Sentrix3');
   FRawKeyBagStore := TPkcs12StoreVectors.LoadStoreBytes('RawKeyBagStore');
+  FCertChainCyclePassword := StringToCharArray(TPkcs12StoreVectors.GetPassword('CertChainCycle'));
+  FCertChainCycle := TPkcs12StoreVectors.LoadStoreBytes('CertChainCycle');
 end;
 
 function TTestPkcs12Store.GetFirst(const AAliases: TCryptoLibStringArray): String;
@@ -1148,6 +1153,20 @@ begin
   else
     raise;
   end;
+end;
+
+procedure TTestPkcs12Store.TestChainCycle;
+var
+  LStore: IPkcs12Store;
+  LChain: TCryptoLibGenericArray<IX509CertificateEntry>;
+begin
+  LStore := BuildPkcs12Store;
+  LoadStoreFromBytes(LStore, FCertChainCycle, FCertChainCyclePassword);
+  LChain := LStore.GetCertificateChain('cycle');
+  if (LChain = nil) or (System.Length(LChain) = 0) then
+    Fail('expected non-empty certificate chain for cyclic store');
+  if System.Length(LChain) > 2 then
+    Fail('cyclic certificate chain did not terminate');
 end;
 
 procedure TTestPkcs12Store.TestWrongPassword;

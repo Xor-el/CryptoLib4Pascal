@@ -26,6 +26,38 @@ uses
 
 type
   /// <summary>
+  /// Diffie-Hellman domain validation parameters (X9.44).
+  /// </summary>
+  IValidationParams = interface(IAsn1Encodable)
+    ['{B4E2A1C8-3F5D-4E90-9A12-7C8D6E5F4A3B}']
+
+    function GetSeed: IDerBitString;
+    function GetPgenCounter: IDerInteger;
+
+    property Seed: IDerBitString read GetSeed;
+    property PgenCounter: IDerInteger read GetPgenCounter;
+  end;
+
+  /// <summary>
+  /// X9.44 Diffie-Hellman domain parameters.
+  /// </summary>
+  IDomainParameters = interface(IAsn1Encodable)
+    ['{C5F3B2D9-406E-5FA1-AB23-8D9E7F605B4C}']
+
+    function GetP: IDerInteger;
+    function GetG: IDerInteger;
+    function GetQ: IDerInteger;
+    function GetJ: IDerInteger;
+    function GetValidationParams: IValidationParams;
+
+    property P: IDerInteger read GetP;
+    property G: IDerInteger read GetG;
+    property Q: IDerInteger read GetQ;
+    property J: IDerInteger read GetJ;
+    property ValidationParams: IValidationParams read GetValidationParams;
+  end;
+
+  /// <summary>
   /// Interface for DHValidationParms.
   /// </summary>
   IDHValidationParms = interface(IAsn1Encodable)

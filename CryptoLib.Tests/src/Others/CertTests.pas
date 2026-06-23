@@ -443,7 +443,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(FRsaPublic);
 
@@ -464,7 +464,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(FRsaPublic);
   LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -513,7 +513,7 @@ begin
   LCertGen1.SetSerialNumber(TBigInteger.One);
   LCertGen1.SetIssuerDN(LName);
   LCertGen1.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen1.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen1.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen1.SetSubjectDN(LName);
   LCertGen1.SetPublicKey(FRsaPublic);
 
@@ -553,7 +553,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(LKp.Public);
 
@@ -622,7 +622,7 @@ begin
     LCertGen.SetIssuerDN(LName);
     LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
 
@@ -704,7 +704,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -718,7 +718,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.CopyAndAddExtension(TDerObjectIdentifier.Create('2.5.29.15') as IDerObjectIdentifier, True, LBaseCert);
@@ -1100,7 +1100,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(TX509Name.Create('CN=Test') as IX509Name);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(TX509Name.Create('CN=Test') as IX509Name);
   LCertGen.SetPublicKey(LKp.Public);
   LCert := LCertGen.Generate(TAsn1SignatureFactory.Create('MD5WithRSAEncryption', LKp.Private, nil) as ISignatureFactory);
@@ -1433,7 +1433,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LKp.Public);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -1500,7 +1500,7 @@ begin
     LCertGen.SetIssuerDN(LName);
     LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
 

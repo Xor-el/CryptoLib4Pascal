@@ -1109,11 +1109,16 @@ begin
           end;
         end;
       end;
-      LCs.Add(LC);
-      if (LNextC = nil) or (LNextC = LC) then
+      if LCs.IndexOf(LC) >= 0 then
         LC := nil
       else
-        LC := LNextC;
+      begin
+        LCs.Add(LC);
+        if (LNextC = nil) or (LNextC = LC) then
+          LC := nil
+        else
+          LC := LNextC;
+      end;
     end;
     Result := TCollectionUtilities.ToArray<IX509CertificateEntry>(LCs);
   finally

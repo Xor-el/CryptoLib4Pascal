@@ -55,6 +55,14 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpIAsymmetricKeyParameter,
   ClpPkcsObjectIdentifiers,
+  ClpX9ObjectIdentifiers,
+  ClpIAsn1Objects,
+  ClpAsn1Objects,
+  ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
+  ClpEncoders,
+  ClpIX9DHAsn1Objects,
+  ClpX9DHAsn1Objects,
   ClpBigInteger,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -133,6 +141,8 @@ type
      *)
     procedure TestDHSubgroupConfinement;
     procedure TestModulusSizeBound;
+    procedure TestDHBounds;
+    procedure TestDHPgenCounterBound;
     procedure TestDHMaliciousMessage;
   end;
 
@@ -428,6 +438,135 @@ begin
   LKey := TDHPublicKeyParameters.Create(TBigInteger.Two, LParams);
 end;
 
+procedure TTestDH.TestDHBounds;
+var
+  random: ISecureRandom;
+  p1, g1, p2, g2: TBigInteger;
+  l1, l2: Int32;
+  kpGen: IDHBasicKeyPairGenerator;
+begin
+  random := TSecureRandom.Create();
+  p1 := TBigInteger.Create(
+    '00C8028E9151C6B51BCDB35C1F6B2527986A72D8546AE7A4BF41DC4289FF9837' +
+    'EE01592D36C324A0F066149B8B940C86C87D194206A39038AE3396F8E12435BB' +
+    '74449B70222D117B8A2BB77CB0D67A5D664DDE7B75E0FEC13CE0CAF258DAF3AD' +
+    'A0773F6FF0F2051D1859929AAA53B07809E496B582A89C3D7DA8B6E383056266' +
+    '21', 16);
+  g1 := TBigInteger.Create(
+    '1F869713181464577FE4026B47102FA0D7675503A4FCDA810881FAEC3524E6DB' +
+    'AEA9B96561EF7F8BEA76466DF11C2F3EB1A90CC5851735BF860606481257EECE' +
+    '6418C0204E61004E85D7131CE54BCBC7AD67E53C79DCB715E7C8D083DCD85D72' +
+    '8283EC8F96839B4C9FA7C0727C472BEB94E4613CAFA8D580119C0AF4BF8AF252', 16);
+  l1 := 1023;
+
+  kpGen := GetDHBasicKeyPairGenerator(g1, p1, l1);
+  kpGen.Init(TDHKeyGenerationParameters.Create(random,
+    TDHParameters.Create(p1, g1, TBigInteger.GetDefault, l1) as IDHParameters) as IKeyGenerationParameters);
+
+  p2 := TBigInteger.Create(
+    '00B333C98720220CC3946F494E25231B3E19F9AD5F6B19F4E7ABF80D8826C491' +
+    'C3224D4F7415A14A7C11D1BE584405FED12C3554F103E56A72D986CA5E325BB9' +
+    'DE07AC37D1EAE5E5AC724D32EF638F0E4462D4C1FC7A45B9FD3A5DF5EC36A1FA' +
+    '4DAA3FBB66AA42B1B71DF416AB547E987513426C7BB8634F5F4D37705514FDC1' +
+    'E1', 16);
+  g2 := TBigInteger.Create(
+    '2592F5A99FE46313650CCE66C94C15DBED9F4A45BD05C329986CF5D3E12139F0' +
+    '405A47C6385FEA27BFFEDC4CBABC5BB151F3BEE7CC3D51567F1E2B12A975AA9F' +
+    '48A70BDAAE7F5B87E70ADCF902490A3CBEFEDA41EBA8E12E02B56120B5FDEFBE' +
+    'D07F5EAD3AE020DF3C8233216F8F0D35E13A7AE4DA5CBCC0D91EADBF20C281C6', 16);
+  l2 := 1024;
+
+  try
+    TDHKeyGenerationParameters.Create(random,
+      TDHParameters.Create(p2, g2, TBigInteger.GetDefault, l2) as IDHParameters);
+    Fail('oversized DH ''l'' value accepted');
+  except
+    on E: EArgumentCryptoLibException do
+      ;
+  else
+    raise;
+  end;
+end;
+
+procedure TTestDH.TestDHPgenCounterBound;
+var
+  LP, LQ, LG, LY, LOversized: TBigInteger;
+  LSeed: TCryptoLibByteArray;
+  LDomainParams: IDomainParameters;
+  LAlgId: IAlgorithmIdentifier;
+  LSpki: ISubjectPublicKeyInfo;
+  LKey: IAsymmetricKeyParameter;
+  LDhPub: IDHPublicKeyParameters;
+  LValidation: IDHValidationParameters;
+const
+  COUNTER_IN_RANGE = 12345;
+begin
+  LP := TBigInteger.Create(
+    'eedb3431b31d30851ddcd4dce57e1b8fc3b83cc7913bc049281d713d9f8fa91b' +
+    'fd0fde2e1ec5eb45a0d6483cfa6b5055ffa88622a1aa83b9f9c1df561e88b702' +
+    '866f17af2defea0b04cf3fbdd817140ad49c415909fc2bb2c5d160b77273e958' +
+    'a181bf73cf72118e1c8670d53d0e459d14d61ecb5b7c7f63a9cb019cd66aecb3' +
+    'a01d0402f1c18218f142653f4bc922e5baa35964b7432f311fa5a9b34e3b9158' +
+    '2db366ad1493f25ea659540f87758ae34678dc864fb2c9d4aba18cb757285292' +
+    'c7d0bac73cc4632a2d54b89f2dc9656d1c50edd49dcbe2102510c70563a96f35' +
+    'dd8a21f0fdc5a1e23ce31fce0ee3023eafdca623508ffd2412fe4dc5b5dd0f75', 16);
+  LQ := TBigInteger.Create('e90a78d5da01e926462e5c17a61ff97b09b6ac18f9137e7b99298705', 16);
+  LG := TBigInteger.Create(
+    '9da3567e2f7396dd2ee4716d3477a53a47f811b2275a95ed07024d7231b739c7' +
+    '9e88e5377479b23d460a41f981b1af619915e4d8b2dabf2cb716168d02dfb81e' +
+    '76048e23fff6c773f496b2ac3ae06e2eb12c39787a8244452aef404ce631aec9' +
+    'cf4027eefae492ce55517db0af3939354c5414e23205ae3bcd17faedecf80101' +
+    'fa75c619249a43b41aa15ee2d7699ee32e227b641129fe1c78b20c6655b09fa7' +
+    'fead338e179b4b4416c359b16e3773d141e1a876b7ee4281b61120607717f7ed' +
+    'c8da8de42b16b54d0802d67d41fc173cd33227436f7c66bd2fe711b37fb01625' +
+    '43c268857414f4188f243fbf92e128388329c9f2df8db4e7808ab539891da798', 16);
+  LY := TBigInteger.Create(
+    'e485cd4b82e82dafd35f89d40361049e6100c16b17ca156d072832319a40bf7a' +
+    '3f5081182397b8fbd9d33391896bb35d9cc890d8c0a9e5b642b773ce0690f1bb' +
+    'd4596a9604708edb9c27f45117a7395b7407b43eebd8b82bef4a925e2a93185d' +
+    'f21fbf012ec9059a9c9efc0b64afe0505aa1864d79a2a9833863c16163b48c9f' +
+    'cc26a9b9e2741097bdeabc2b7208589e4154e1de7ecf77e928668b28abb8113b' +
+    '322c6d426701df979d47ccd50d493b7fb6f20050c3e67cb876c1550d8c867752' +
+    '7600eab07196213252bd9a48d5023788fdb4b65f85144cf6654e092550646be4' +
+    '882125b286ced6578eedc981304ff88725e4138f90a7a4a07c94105d796b038f', 16);
+  LSeed := THexEncoder.Decode('0102030405060708090a0b0c0d0e0f10');
+  LOversized := TBigInteger.ValueOf(MaxInt).Add(TBigInteger.One);
+
+  try
+    LDomainParams := TDomainParameters.Create(
+      TDerInteger.Create(LP) as IDerInteger,
+      TDerInteger.Create(LG) as IDerInteger,
+      TDerInteger.Create(LQ) as IDerInteger,
+      nil,
+      TValidationParams.Create(TDerBitString.Create(LSeed) as IDerBitString,
+        TDerInteger.Create(LOversized) as IDerInteger) as IValidationParams);
+    LAlgId := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.DHPublicNumber, LDomainParams);
+    LSpki := TSubjectPublicKeyInfo.Create(LAlgId, TDerInteger.Create(LY) as IDerInteger);
+    TPublicKeyFactory.CreateKey(LSpki);
+    Fail('oversized DH pgenCounter accepted');
+  except
+    on E: EArithmeticCryptoLibException do
+      ;
+  else
+    raise;
+  end;
+
+  LDomainParams := TDomainParameters.Create(
+    TDerInteger.Create(LP) as IDerInteger,
+    TDerInteger.Create(LG) as IDerInteger,
+    TDerInteger.Create(LQ) as IDerInteger,
+    nil,
+    TValidationParams.Create(TDerBitString.Create(LSeed) as IDerBitString,
+      TDerInteger.Create(TBigInteger.ValueOf(COUNTER_IN_RANGE)) as IDerInteger) as IValidationParams);
+  LAlgId := TAlgorithmIdentifier.Create(TX9ObjectIdentifiers.DHPublicNumber, LDomainParams);
+  LSpki := TSubjectPublicKeyInfo.Create(LAlgId, TDerInteger.Create(LY) as IDerInteger);
+  LKey := TPublicKeyFactory.CreateKey(LSpki);
+  LDhPub := LKey as IDHPublicKeyParameters;
+  LValidation := LDhPub.Parameters.ValidationParameters;
+  if (LValidation = nil) or (LValidation.Counter <> COUNTER_IN_RANGE) then
+    Fail('in-range DH pgenCounter not round-tripped');
+end;
+
 procedure TTestDH.TestDHMaliciousMessage;
 var
   kpGen: IDHKeyPairGenerator;
@@ -436,8 +575,8 @@ var
   goodPub: IDHPublicKeyParameters;
   goodMessage: TBigInteger;
   orderTwo: TBigInteger;
-  badMessages: array[0..2] of TBigInteger;
-  weakYs: array[0..2] of TBigInteger;
+  badMessages: array[0..3] of TBigInteger;
+  weakYs: array[0..3] of TBigInteger;
   i: Int32;
   pair: IAsymmetricCipherKeyPair;
 begin
@@ -459,9 +598,10 @@ begin
   goodMessage := (pair.Public as IDHPublicKeyParameters).Y;
 
   orderTwo := dhParams.P.Subtract(TBigInteger.One);
-  badMessages[0] := TBigInteger.One;
-  badMessages[1] := orderTwo;
-  badMessages[2] := dhParams.P;
+  badMessages[0] := TBigInteger.Zero;
+  badMessages[1] := TBigInteger.One;
+  badMessages[2] := orderTwo;
+  badMessages[3] := dhParams.P;
 
   for i := 0 to High(badMessages) do
   begin
@@ -476,9 +616,10 @@ begin
     end;
   end;
 
-  weakYs[0] := TBigInteger.One;
-  weakYs[1] := orderTwo;
-  weakYs[2] := dhParams.P;
+  weakYs[0] := TBigInteger.Zero;
+  weakYs[1] := TBigInteger.One;
+  weakYs[2] := orderTwo;
+  weakYs[3] := dhParams.P;
 
   for i := 0 to High(weakYs) do
   begin
