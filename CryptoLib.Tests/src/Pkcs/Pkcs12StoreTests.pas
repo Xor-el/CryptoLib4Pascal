@@ -154,6 +154,7 @@ type
     procedure TestRawKeyBagNoAttributes;
     procedure TestRawKeyBagStore;
     procedure TestWrongPassword;
+    procedure TestEmptyInputRejectedCleanly;
   end;
 
 implementation
@@ -1129,6 +1130,24 @@ begin
   LEmptyPass := nil;
   LoadStoreFromBytes(LStore, FRawKeyBagStore, LEmptyPass);
   Check(LStore.IsKeyEntry('ONVIF_Test_Alias'), 'expected ONVIF_Test_Alias key entry');
+end;
+
+procedure TTestPkcs12Store.TestEmptyInputRejectedCleanly;
+var
+  LStore: IPkcs12Store;
+begin
+  // Loading an empty/EOF stream must throw an I/O exception (the declared contract),
+  // not dereference a null top-level Pfx. Empty is the trigger.
+  LStore := BuildPkcs12Store;
+  try
+    LoadStoreFromBytes(LStore, nil, StringToCharArray('x'));
+    Fail('expected EIOCryptoLibException');
+  except
+    on E: EIOCryptoLibException do
+      CheckEquals('malformed PKCS#12 data: no PFX structure found', E.Message);
+  else
+    raise;
+  end;
 end;
 
 procedure TTestPkcs12Store.TestWrongPassword;

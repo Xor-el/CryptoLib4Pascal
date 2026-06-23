@@ -133,6 +133,7 @@ type
      *)
     procedure TestDHSubgroupConfinement;
     procedure TestModulusSizeBound;
+    procedure TestDHMaliciousMessage;
   end;
 
 implementation
@@ -425,6 +426,74 @@ begin
   // cheap range check) -- the cap must not reject ordinary keys.
   LParams := TDHParameters.Create(Fp512, Fg512);
   LKey := TDHPublicKeyParameters.Create(TBigInteger.Two, LParams);
+end;
+
+procedure TTestDH.TestDHMaliciousMessage;
+var
+  kpGen: IDHKeyPairGenerator;
+  dhParams: IDHParameters;
+  dh: IDHAgreement;
+  goodPub: IDHPublicKeyParameters;
+  goodMessage: TBigInteger;
+  orderTwo: TBigInteger;
+  badMessages: array[0..2] of TBigInteger;
+  weakYs: array[0..2] of TBigInteger;
+  i: Int32;
+  pair: IAsymmetricCipherKeyPair;
+begin
+  // Both peer-supplied values to CalculateAgreement are raised to our (potentially static)
+  // private key, so a peer sending a small-order or out-of-range element could mount a
+  // small-subgroup confinement attack and recover our private key. Both must be validated
+  // as DH public values, even when the other value is well-formed and uses our own parameters.
+  kpGen := GetDHKeyPairGenerator(Fg512, Fp512);
+  pair := kpGen.GenerateKeyPair();
+  dhParams := (pair.Public as IDHPublicKeyParameters).Parameters;
+
+  dh := TDHAgreement.Create();
+  dh.Init(pair.Private as ICipherParameters);
+  dh.CalculateMessage();
+
+  pair := kpGen.GenerateKeyPair();
+  goodPub := pair.Public as IDHPublicKeyParameters;
+  pair := kpGen.GenerateKeyPair();
+  goodMessage := (pair.Public as IDHPublicKeyParameters).Y;
+
+  orderTwo := dhParams.P.Subtract(TBigInteger.One);
+  badMessages[0] := TBigInteger.One;
+  badMessages[1] := orderTwo;
+  badMessages[2] := dhParams.P;
+
+  for i := 0 to High(badMessages) do
+  begin
+    try
+      dh.CalculateAgreement(goodPub, badMessages[i]);
+      Fail(Format('DHAgreement accepted malicious message %s', [badMessages[i].ToString()]));
+    except
+      on E: EArgumentCryptoLibException do
+        ;
+    else
+      raise;
+    end;
+  end;
+
+  weakYs[0] := TBigInteger.One;
+  weakYs[1] := orderTwo;
+  weakYs[2] := dhParams.P;
+
+  for i := 0 to High(weakYs) do
+  begin
+    try
+      dh.CalculateAgreement(
+        TDHWeakPublicKeyStub.Create(weakYs[i], dhParams) as IDHPublicKeyParameters,
+        goodMessage);
+      Fail(Format('DHAgreement accepted malicious public key %s', [weakYs[i].ToString()]));
+    except
+      on E: EArgumentCryptoLibException do
+        ;
+    else
+      raise;
+    end;
+  end;
 end;
 
 procedure TTestDH.TestDHSubgroupConfinement;

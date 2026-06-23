@@ -62,6 +62,7 @@ type
     procedure TestNoWhiteSpace;
     procedure TestPemLength;
     procedure TestMalformed;
+    procedure TestMalformedBase64;
   end;
 
 implementation
@@ -255,6 +256,33 @@ begin
   LHeaders[1] := TPemHeader.Create('DEK-Info', 'DES3,0001020304050607');
   SetLength(LData, 103);
   LengthTest('RSA PRIVATE KEY', LHeaders, LData);
+end;
+
+procedure TPemReaderTest.TestMalformedBase64;
+var
+  LStream: TStringStream;
+  LPemReader: IPemReader;
+begin
+  // A PEM block with valid framing but a corrupt base64 body must surface as an I/O error,
+  // not a raw format exception from callers parsing untrusted PEM.
+  LStream := TStringStream.Create(
+    '-----BEGIN CERTIFICATE-----' + sLineBreak +
+    '!!!not base64!!!' + sLineBreak +
+    '-----END CERTIFICATE-----' + sLineBreak, TEncoding.ASCII);
+  try
+    LPemReader := TPemReader.Create(LStream);
+    try
+      LPemReader.ReadPemObject();
+      Fail('must fail on malformed base64');
+    except
+      on E: EIOCryptoLibException do
+        CheckEquals(1, Pos('malformed PEM data:', E.Message), 'unexpected message: ' + E.Message);
+      on E: Exception do
+        Fail('Expected EIOCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
+    end;
+  finally
+    LStream.Free;
+  end;
 end;
 
 procedure TPemReaderTest.TestMalformed;

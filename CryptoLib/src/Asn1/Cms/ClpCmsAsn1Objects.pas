@@ -53,6 +53,8 @@ resourcestring
   SCmsSignerInfosNil = 'CMS signer infos set cannot be nil';
   SCmsBinaryTimeCannotBeNegative = 'BinaryTime seconds cannot be negative';
   SCmsBinaryTimeOutOfDateTimeRange = 'BinaryTime out of DateTime range';
+  SCmsNoContentFound = 'No content found.';
+  SCmsMalformedContent = 'Malformed content.';
 
 
 type
@@ -283,6 +285,7 @@ type
       AExplicitly: Boolean): ICmsSignedData; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ICmsSignedData; static;
+    class function FromContentInfo(const AInfo: ICmsContentInfo): ICmsSignedData; static;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const ADigestAlgorithms: IAsn1Set; const AEncapContentInfo: ICmsContentInfo;
@@ -425,14 +428,17 @@ begin
 end;
 
 class function TCmsContentInfo.GetInstance(const AEncoded: TCryptoLibByteArray): ICmsContentInfo;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AEncoded = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
+    raise EArgumentCryptoLibException.CreateRes(@SCmsNoContentFound);
 
-  Result := TCmsContentInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+  LSeq := TAsn1Sequence.GetInstance(AEncoded);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsNoContentFound);
+
+  Result := TCmsContentInfo.Create(LSeq);
 end;
 
 class function TCmsContentInfo.GetInstance(const AObj: IAsn1TaggedObject;
@@ -1007,6 +1013,8 @@ begin
 end;
 
 class function TCmsSignedData.GetInstance(AObj: TObject): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AObj = nil then
   begin
@@ -1015,10 +1023,15 @@ begin
   end;
   if Supports(AObj, ICmsSignedData, Result) then
     Exit;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AObj));
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AObj: IAsn1Convertible): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AObj = nil then
   begin
@@ -1027,17 +1040,25 @@ begin
   end;
   if Supports(AObj, ICmsSignedData, Result) then
     Exit;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AObj));
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AEncoded: TCryptoLibByteArray): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AEncoded = nil then
   begin
     Result := nil;
     Exit;
   end;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AEncoded));
+  LSeq := TAsn1Sequence.GetInstance(AEncoded);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AObj: IAsn1TaggedObject;
@@ -1050,6 +1071,17 @@ class function TCmsSignedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): ICmsSignedData;
 begin
   Result := GetInstance(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TCmsSignedData.FromContentInfo(const AInfo: ICmsContentInfo): ICmsSignedData;
+begin
+  // Empty input and content-less ContentInfo (valid DER, optional [0] content) must be rejected
+  // with a declared exception, not an access violation on the next field access.
+  if AInfo = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
+  Result := GetInstance(AInfo.Content);
+  if Result = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
 end;
 
 constructor TCmsSignedData.Create(const ASeq: IAsn1Sequence);
