@@ -82,7 +82,7 @@ type
     FCcmKernel: IFusedCcmKernel;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-    function GetMacSize(AForEncryption: Boolean; ARequestedMacBits: Int32): Int32;
+    class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
     function GetAssociatedTextLength(): Int32;
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
@@ -195,7 +195,7 @@ begin
     LRequestedMacSizeBits := LChoice.MacSizeBits
   else
     LRequestedMacSizeBits := 64;
-  FMacSize := GetMacSize(AForEncryption, LRequestedMacSizeBits);
+  FMacSize := GetMacSize(LRequestedMacSizeBits);
 
   if (LChoice.CipherKey <> nil) then
     FKeyParam := LChoice.CipherKey;
@@ -587,11 +587,10 @@ begin
   Result := LCMac.DoFinal(AMacBlock, 0);
 end;
 
-function TCcmBlockCipher.GetMacSize(AForEncryption: Boolean;
-  ARequestedMacBits: Int32): Int32;
+class function TCcmBlockCipher.GetMacSize(ARequestedMacBits: Int32): Int32;
 begin
-  if AForEncryption and ((ARequestedMacBits < 32) or (ARequestedMacBits > 128) or
-    (0 <> (ARequestedMacBits and 15))) then
+  if (ARequestedMacBits < 32) or (ARequestedMacBits > 128) or
+    (0 <> (ARequestedMacBits and 15)) then
     raise EArgumentCryptoLibException.CreateRes(@STagLengthOctets);
 
   Result := ARequestedMacBits shr 3;

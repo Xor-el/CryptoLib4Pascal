@@ -48,6 +48,7 @@ resourcestring
   SPemNoDataAfterTrailingDashes = 'no data after consuming trailing dashes';
   SPemEndMarkerNotFound = 'END %s was not found';
   SPemNoEndingDash = 'did not find ending ''-''';
+  SPemMalformedBase64 = 'malformed PEM data: %s';
 
 type
   /// <summary>
@@ -367,7 +368,18 @@ begin
     ConsumeDash();
 
     // Decode base64 payload
-    LDecodedContent := TBase64Encoder.Decode(LPayload);
+    try
+      LDecodedContent := TBase64Encoder.Decode(LPayload);
+    except
+      on E: Exception do
+      begin
+        if E is EIOCryptoLibException then
+          raise;
+        // Honour the I/O parse contract: a corrupt base64 body must not surface a raw
+        // format exception to callers that only catch I/O errors when parsing untrusted PEM.
+        raise EIOCryptoLibException.CreateResFmt(@SPemMalformedBase64, [E.Message]);
+      end;
+    end;
 
     // Convert headers list to array
     LHeadersArray := TCollectionUtilities.ToArray<IPemHeader>(LHeaders);

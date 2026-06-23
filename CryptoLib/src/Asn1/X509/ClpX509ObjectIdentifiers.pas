@@ -62,6 +62,7 @@ type
     FIdADOcsp: IDerObjectIdentifier;
     FIdADCAIssuers: IDerObjectIdentifier;
     FIdCe: IDerObjectIdentifier;
+    FIdPeRelatedCert: IDerObjectIdentifier;
 
     class function GetAttributeType: IDerObjectIdentifier; static; inline;
     class function GetCommonName: IDerObjectIdentifier; static; inline;
@@ -89,6 +90,7 @@ type
     class function GetIdADOcsp: IDerObjectIdentifier; static; inline;
     class function GetIdADCAIssuers: IDerObjectIdentifier; static; inline;
     class function GetIdCe: IDerObjectIdentifier; static; inline;
+    class function GetIdPeRelatedCert: IDerObjectIdentifier; static; inline;
     class constructor Create();
 
   public
@@ -132,6 +134,11 @@ type
     // Certificate Extensions
     class property IdCe: IDerObjectIdentifier read GetIdCe;
 
+    /// <summary>
+    /// RFC 9763 sec. 3 id-pe-relatedCert ({ id-pe 36 }): RelatedCertificate certificate extension for hybrid PQ migration.
+    /// </summary>
+    class property IdPeRelatedCert: IDerObjectIdentifier read GetIdPeRelatedCert;
+
   end;
 
 implementation
@@ -169,6 +176,7 @@ begin
   // PKIX: 1.3.6.1.5.5.7
   FIdPkix := TDerObjectIdentifier.Create('1.3.6.1.5.5.7');
   FIdPE := FIdPkix.Branch('1');
+  FIdPeRelatedCert := FIdPE.Branch('36');
   FPkixAlgorithms := FIdPkix.Branch('6');
   FIdRsassaPssShake128 := FPkixAlgorithms.Branch('30');
   FIdRsassaPssShake256 := FPkixAlgorithms.Branch('31');
@@ -313,6 +321,11 @@ end;
 class function TX509ObjectIdentifiers.GetIdCe: IDerObjectIdentifier;
 begin
   Result := FIdCe;
+end;
+
+class function TX509ObjectIdentifiers.GetIdPeRelatedCert: IDerObjectIdentifier;
+begin
+  Result := FIdPeRelatedCert;
 end;
 
 end.

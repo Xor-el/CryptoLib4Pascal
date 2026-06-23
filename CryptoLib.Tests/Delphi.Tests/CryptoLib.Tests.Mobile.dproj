@@ -752,6 +752,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIMlKemGenerators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIMlKemParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Kems\ClpKemUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpLib25519.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\MlDsa\ClpMlDsaCore.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\MlDsa\ClpMlDsaEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpMlDsaGenerators.pas"/>
@@ -1222,6 +1223,9 @@
         <DCCReference Include="..\src\Asn1\X509\X509NameTests.pas"/>
         <DCCReference Include="..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\DeltaCertificateTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\RelatedCertificateTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Cms\CcmParametersTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Cms\GcmParametersTests.pas"/>
         <DCCReference Include="..\src\X509\X509CertGenTests.pas"/>
         <DCCReference Include="..\src\X509\X509UtilitiesTests.pas"/>
         <DCCReference Include="..\src\Others\CertTests.pas"/>
@@ -1244,6 +1248,7 @@
         <DCCReference Include="..\src\Crypto\Poly1305Tests.pas"/>
         <DCCReference Include="..\src\Utils\NistSecureRandom.pas"/>
         <DCCReference Include="..\src\Crypto\MlKemTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Lib25519Tests.pas"/>
         <DCCReference Include="..\src\Crypto\MlDsaTests.pas"/>
         <DCCReference Include="..\src\Crypto\SlhDsaTests.pas"/>
         <DCCReference Include="..\src\Utils\PqcTestSampler.pas"/>

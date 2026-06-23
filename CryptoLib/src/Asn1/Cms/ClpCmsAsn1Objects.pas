@@ -32,6 +32,8 @@ uses
   ClpCmsObjectIdentifiers,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpDateTimeUtilities,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -50,9 +52,44 @@ resourcestring
   SCmsDigestAlgorithmsNil = 'CMS digest algorithms set cannot be nil';
   SCmsEncapContentInfoNil = 'CMS encapsulated content info cannot be nil';
   SCmsSignerInfosNil = 'CMS signer infos set cannot be nil';
+  SCmsBinaryTimeCannotBeNegative = 'BinaryTime seconds cannot be negative';
+  SCmsBinaryTimeOutOfDateTimeRange = 'BinaryTime out of DateTime range';
+  SCmsNoContentFound = 'No content found.';
+  SCmsMalformedContent = 'Malformed content.';
+  SCmsInvalidIcvLen = 'Invalid ICV length: %d';
 
 
 type
+
+  /// <summary>
+  /// RFC 6019 BinaryTime type: unsigned integer count of seconds since 1970-01-01T00:00:00Z (UTC).
+  /// </summary>
+  TBinaryTime = class(TAsn1Encodable, IBinaryTime)
+  strict private
+  var
+    FTime: IDerInteger;
+
+  strict protected
+    function GetTime: IDerInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IBinaryTime; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IBinaryTime; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IBinaryTime; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IBinaryTime; static;
+
+    constructor Create(const ADateTime: TDateTime); overload;
+    constructor Create(ASeconds: Int64); overload;
+    constructor Create(const ATime: IDerInteger); overload;
+
+    function GetDateTime: TDateTime;
+    function TryGetDateTime(out ADateTime: TDateTime): Boolean;
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Time: IDerInteger read GetTime;
+  end;
 
   /// <summary>
   /// CMS ContentInfo (EncapsulatedContentInfo); supports DL/BER encoding choice.
@@ -93,6 +130,80 @@ type
     property ContentType: IDerObjectIdentifier read GetContentType;
     property Content: IAsn1Encodable read GetContent;
     property IsDefiniteLength: Boolean read GetIsDefiniteLength;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-CCM AlgorithmIdentifier parameters.
+  /// </summary>
+  TCcmParameters = class(TAsn1Encodable, ICcmParameters)
+  strict private
+  const
+    DefaultIcvLen = 12;
+
+  var
+    FNonce: IAsn1OctetString;
+    FIcvLen: Int32;
+
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+
+  strict protected
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): ICcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): ICcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ICcmParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ICcmParameters; static;
+
+    constructor Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
+  end;
+
+  /// <summary>
+  /// RFC 5084 AES-GCM AlgorithmIdentifier parameters.
+  /// </summary>
+  TGcmParameters = class(TAsn1Encodable, IGcmParameters)
+  strict private
+  const
+    DefaultIcvLen = 12;
+
+  var
+    FNonce: IAsn1OctetString;
+    FIcvLen: Int32;
+
+    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
+    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+
+  strict protected
+    function GetNonce: TCryptoLibByteArray;
+    function GetIcvLen: Int32;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IGcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IGcmParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IGcmParameters; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IGcmParameters; static;
+
+    constructor Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Nonce: TCryptoLibByteArray read GetNonce;
+    property IcvLen: Int32 read GetIcvLen;
   end;
 
   /// <summary>
@@ -250,6 +361,7 @@ type
       AExplicitly: Boolean): ICmsSignedData; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ICmsSignedData; static;
+    class function FromContentInfo(const AInfo: ICmsContentInfo): ICmsSignedData; static;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const ADigestAlgorithms: IAsn1Set; const AEncapContentInfo: ICmsContentInfo;
@@ -266,6 +378,100 @@ type
   end;
 
 implementation
+
+{ TBinaryTime }
+
+class function TBinaryTime.GetInstance(AObj: TObject): IBinaryTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IBinaryTime, Result) then
+    Exit;
+
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TBinaryTime.GetInstance(const AObj: IAsn1Convertible): IBinaryTime;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IBinaryTime, Result) then
+    Exit;
+
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj));
+end;
+
+class function TBinaryTime.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IBinaryTime;
+begin
+  Result := TBinaryTime.Create(TDerInteger.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TBinaryTime.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IBinaryTime;
+begin
+  Result := TBinaryTime.Create(TDerInteger.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TBinaryTime.Create(const ADateTime: TDateTime);
+begin
+  Create(TDateTimeUtilities.DateTimeToUnixMs(ADateTime) div 1000);
+end;
+
+constructor TBinaryTime.Create(ASeconds: Int64);
+begin
+  Create(TDerInteger.ValueOf(ASeconds));
+end;
+
+constructor TBinaryTime.Create(const ATime: IDerInteger);
+begin
+  inherited Create();
+  if ATime = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
+  if ATime.IsNegative then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SCmsBinaryTimeCannotBeNegative);
+
+  FTime := ATime;
+end;
+
+function TBinaryTime.GetTime: IDerInteger;
+begin
+  Result := FTime;
+end;
+
+function TBinaryTime.GetDateTime: TDateTime;
+begin
+  if not TryGetDateTime(Result) then
+    raise EArithmeticCryptoLibException.CreateRes(@SCmsBinaryTimeOutOfDateTimeRange);
+end;
+
+function TBinaryTime.TryGetDateTime(out ADateTime: TDateTime): Boolean;
+var
+  LSeconds: Int64;
+begin
+  if FTime.TryGetLongValueExact(LSeconds) and (LSeconds <= High(Int64) div 1000) then
+  begin
+    ADateTime := TDateTimeUtilities.UnixMsToDateTime(LSeconds * 1000);
+    Result := True;
+    Exit;
+  end;
+
+  ADateTime := 0;
+  Result := False;
+end;
+
+function TBinaryTime.ToAsn1Object: IAsn1Object;
+begin
+  Result := FTime;
+end;
 
 { TCmsContentInfo }
 
@@ -298,14 +504,17 @@ begin
 end;
 
 class function TCmsContentInfo.GetInstance(const AEncoded: TCryptoLibByteArray): ICmsContentInfo;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AEncoded = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
+    raise EArgumentCryptoLibException.CreateRes(@SCmsNoContentFound);
 
-  Result := TCmsContentInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+  LSeq := TAsn1Sequence.GetInstance(AEncoded);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsNoContentFound);
+
+  Result := TCmsContentInfo.Create(LSeq);
 end;
 
 class function TCmsContentInfo.GetInstance(const AObj: IAsn1TaggedObject;
@@ -880,6 +1089,8 @@ begin
 end;
 
 class function TCmsSignedData.GetInstance(AObj: TObject): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AObj = nil then
   begin
@@ -888,10 +1099,15 @@ begin
   end;
   if Supports(AObj, ICmsSignedData, Result) then
     Exit;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AObj));
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AObj: IAsn1Convertible): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AObj = nil then
   begin
@@ -900,17 +1116,25 @@ begin
   end;
   if Supports(AObj, ICmsSignedData, Result) then
     Exit;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AObj));
+  LSeq := TAsn1Sequence.GetInstance(AObj);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AEncoded: TCryptoLibByteArray): ICmsSignedData;
+var
+  LSeq: IAsn1Sequence;
 begin
   if AEncoded = nil then
   begin
     Result := nil;
     Exit;
   end;
-  Result := TCmsSignedData.Create(TAsn1Sequence.GetInstance(AEncoded));
+  LSeq := TAsn1Sequence.GetInstance(AEncoded);
+  if LSeq = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
+  Result := TCmsSignedData.Create(LSeq);
 end;
 
 class function TCmsSignedData.GetInstance(const AObj: IAsn1TaggedObject;
@@ -923,6 +1147,17 @@ class function TCmsSignedData.GetTagged(const ATaggedObject: IAsn1TaggedObject;
   ADeclaredExplicit: Boolean): ICmsSignedData;
 begin
   Result := GetInstance(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TCmsSignedData.FromContentInfo(const AInfo: ICmsContentInfo): ICmsSignedData;
+begin
+  // Empty input and content-less ContentInfo (valid DER, optional [0] content) must be rejected
+  // with a declared exception, not an access violation on the next field access.
+  if AInfo = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
+  Result := GetInstance(AInfo.Content);
+  if Result = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsMalformedContent);
 end;
 
 constructor TCmsSignedData.Create(const ASeq: IAsn1Sequence);
@@ -1037,6 +1272,204 @@ begin
     Result := TBerSequence.Create(LV)
   else
     Result := TDLSequence.Create(LV);
+end;
+
+{ TCcmParameters }
+
+class function TCcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
+end;
+
+class function TCcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+begin
+  if (AIcvLen < 4) or (AIcvLen > 16) or ((AIcvLen and 1) <> 0) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
+  Result := AIcvLen;
+end;
+
+class function TCcmParameters.GetInstance(AObj: TObject): ICcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, ICcmParameters, Result) then
+    Exit;
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCcmParameters.GetInstance(const AObj: IAsn1Convertible): ICcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, ICcmParameters, Result) then
+    Exit;
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TCcmParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ICcmParameters;
+begin
+  Result := TCcmParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TCcmParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ICcmParameters;
+begin
+  Result := TCcmParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TCcmParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LIcvLen: IDerInteger;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 1) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
+
+  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+
+  if LIcvLen = nil then
+    FIcvLen := ValidateIcvLen(DefaultIcvLen)
+  else
+    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+end;
+
+constructor TCcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
+begin
+  inherited Create();
+  FNonce := TDerOctetString.FromContents(ANonce);
+  FIcvLen := ValidateIcvLen(AIcvLen);
+end;
+
+function TCcmParameters.GetNonce: TCryptoLibByteArray;
+begin
+  Result := TArrayUtilities.CopyOfRange<Byte>(FNonce.GetOctets(), 0,
+    FNonce.GetOctetsLength());
+end;
+
+function TCcmParameters.GetIcvLen: Int32;
+begin
+  Result := FIcvLen;
+end;
+
+function TCcmParameters.ToAsn1Object: IAsn1Object;
+begin
+  if FIcvLen = DefaultIcvLen then
+    Result := TDerSequence.Create([FNonce])
+  else
+    Result := TDerSequence.Create([FNonce, TDerInteger.ValueOf(FIcvLen)]);
+end;
+
+{ TGcmParameters }
+
+class function TGcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AEnc);
+end;
+
+class function TGcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+begin
+  if (AIcvLen < 12) or (AIcvLen > 16) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
+  Result := AIcvLen;
+end;
+
+class function TGcmParameters.GetInstance(AObj: TObject): IGcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, IGcmParameters, Result) then
+    Exit;
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGcmParameters.GetInstance(const AObj: IAsn1Convertible): IGcmParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  if Supports(AObj, IGcmParameters, Result) then
+    Exit;
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGcmParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IGcmParameters;
+begin
+  Result := TGcmParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TGcmParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IGcmParameters;
+begin
+  Result := TGcmParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TGcmParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+  LIcvLen: IDerInteger;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 1) or (LCount > 2) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
+
+  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+
+  if LIcvLen = nil then
+    FIcvLen := ValidateIcvLen(DefaultIcvLen)
+  else
+    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+end;
+
+constructor TGcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
+begin
+  inherited Create();
+  FNonce := TDerOctetString.FromContents(ANonce);
+  FIcvLen := ValidateIcvLen(AIcvLen);
+end;
+
+function TGcmParameters.GetNonce: TCryptoLibByteArray;
+begin
+  Result := TArrayUtilities.CopyOfRange<Byte>(FNonce.GetOctets(), 0,
+    FNonce.GetOctetsLength());
+end;
+
+function TGcmParameters.GetIcvLen: Int32;
+begin
+  Result := FIcvLen;
+end;
+
+function TGcmParameters.ToAsn1Object: IAsn1Object;
+begin
+  if FIcvLen = DefaultIcvLen then
+    Result := TDerSequence.Create([FNonce])
+  else
+    Result := TDerSequence.Create([FNonce, TDerInteger.ValueOf(FIcvLen)]);
 end;
 
 end.

@@ -42,6 +42,8 @@ resourcestring
   SQNil = 'Q cannot be nil';
   SJNil = 'J cannot be nil';
   SInvalidDHDomainParameters = 'invalid DHDomainParameters: %s';
+  SInvalidDomainParameters = 'invalid DomainParameters: %s';
+  SInvalidValidationParams = 'invalid ValidationParams: %s';
   SYNil = 'Y cannot be nil';
   SAlgorithmNil = 'algorithm cannot be nil';
   SCounterNil = 'counter cannot be nil';
@@ -76,6 +78,87 @@ type
     function ToAsn1Object: IAsn1Object; override;
 
     property Y: IDerInteger read GetY;
+
+  end;
+
+  /// <summary>
+  /// Diffie-Hellman domain validation parameters (X9.44).
+  /// </summary>
+  TValidationParams = class sealed(TAsn1Encodable, IValidationParams)
+
+  strict private
+  var
+    FSeed: IDerBitString;
+    FPgenCounter: IDerInteger;
+
+  strict protected
+    function GetSeed: IDerBitString;
+    function GetPgenCounter: IDerInteger;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IValidationParams; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IValidationParams; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IValidationParams; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IValidationParams; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IValidationParams; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IValidationParams; static;
+
+    constructor Create(const ASeed: IDerBitString;
+      const APgenCounter: IDerInteger); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Seed: IDerBitString read GetSeed;
+    property PgenCounter: IDerInteger read GetPgenCounter;
+
+  end;
+
+  /// <summary>
+  /// X9.44 Diffie-Hellman domain parameters.
+  /// </summary>
+  TDomainParameters = class sealed(TAsn1Encodable, IDomainParameters)
+
+  strict private
+  var
+    FP, FG, FQ, FJ: IDerInteger;
+    FValidationParams: IValidationParams;
+
+    class function ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger; static;
+    class function ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams; static;
+
+  strict protected
+    function GetP: IDerInteger;
+    function GetG: IDerInteger;
+    function GetQ: IDerInteger;
+    function GetJ: IDerInteger;
+    function GetValidationParams: IValidationParams;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+
+  public
+    class function GetInstance(AObj: TObject): IDomainParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1Convertible): IDomainParameters; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IDomainParameters; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IDomainParameters; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IDomainParameters; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IDomainParameters; static;
+
+    constructor Create(const AP, AG, AQ, AJ: IDerInteger;
+      const AValidationParams: IValidationParams); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property P: IDerInteger read GetP;
+    property G: IDerInteger read GetG;
+    property Q: IDerInteger read GetQ;
+    property J: IDerInteger read GetJ;
+    property ValidationParams: IValidationParams read GetValidationParams;
 
   end;
 
@@ -131,7 +214,7 @@ type
     property Seed: IDerBitString read GetSeed;
     property PGenCounter: IDerInteger read GetPGenCounter;
 
-  end;
+  end deprecated 'Use TValidationParams instead';
 
   /// <summary>
   /// The DHDomainParameters object.
@@ -141,10 +224,10 @@ type
   strict private
   var
     FP, FG, FQ, FJ: IDerInteger;
-    FValidationParms: IDHValidationParms;
+    FValidationParams: IValidationParams;
 
     class function ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger; static;
-    class function ReadOptionalValidationParms(AElement: IAsn1Encodable): IDHValidationParms; static;
+    class function ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams; static;
 
   strict protected
     function GetP: IDerInteger;
@@ -152,6 +235,7 @@ type
     function GetQ: IDerInteger;
     function GetJ: IDerInteger;
     function GetValidationParms: IDHValidationParms;
+    function GetValidationParams: IValidationParams;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
 
@@ -181,6 +265,8 @@ type
 
     constructor Create(const AP, AG, AQ, AJ: IDerInteger;
       const AValidationParms: IDHValidationParms); overload;
+    constructor Create(const AP, AG, AQ, AJ: IDerInteger;
+      const AValidationParams: IValidationParams); overload;
 
     function ToAsn1Object: IAsn1Object; override;
 
@@ -189,8 +275,9 @@ type
     property Q: IDerInteger read GetQ;
     property J: IDerInteger read GetJ;
     property ValidationParms: IDHValidationParms read GetValidationParms;
+    property ValidationParams: IValidationParams read GetValidationParams;
 
-  end;
+  end deprecated 'Use TDomainParameters instead';
 
   /// <summary>
   /// ASN.1 KeySpecificInfo structure (RFC 2631 / X9.42).
@@ -332,6 +419,270 @@ end;
 function TDHPublicKey.ToAsn1Object: IAsn1Object;
 begin
   Result := FY;
+end;
+
+{ TValidationParams }
+
+class function TValidationParams.GetInstance(AObj: TObject): IValidationParams;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IValidationParams, Result) then
+    Exit;
+
+  Result := TValidationParams.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TValidationParams.GetInstance(const AObj: IAsn1Convertible): IValidationParams;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IValidationParams, Result) then
+    Exit;
+
+  Result := TValidationParams.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TValidationParams.GetInstance(const AEncoded: TCryptoLibByteArray): IValidationParams;
+begin
+  Result := TValidationParams.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TValidationParams.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IValidationParams;
+begin
+  Result := TValidationParams.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TValidationParams.GetOptional(const AElement: IAsn1Encodable): IValidationParams;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
+
+  if Supports(AElement, IValidationParams, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TValidationParams.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TValidationParams.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IValidationParams;
+begin
+  Result := TValidationParams.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TValidationParams.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  if ASeq.Count <> 2 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASeq.Count]);
+
+  FSeed := TDerBitString.GetInstance(ASeq[0]);
+  FPgenCounter := TDerInteger.GetInstance(ASeq[1]);
+end;
+
+constructor TValidationParams.Create(const ASeed: IDerBitString;
+  const APgenCounter: IDerInteger);
+begin
+  inherited Create();
+
+  if ASeed = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SSeedNil);
+
+  if APgenCounter = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPGenCounterNil);
+
+  FSeed := ASeed;
+  FPgenCounter := APgenCounter;
+end;
+
+function TValidationParams.GetSeed: IDerBitString;
+begin
+  Result := FSeed;
+end;
+
+function TValidationParams.GetPgenCounter: IDerInteger;
+begin
+  Result := FPgenCounter;
+end;
+
+function TValidationParams.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create([FSeed, FPgenCounter]);
+end;
+
+{ TDomainParameters }
+
+class function TDomainParameters.GetInstance(AObj: TObject): IDomainParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDomainParameters, Result) then
+    Exit;
+
+  Result := TDomainParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TDomainParameters.GetInstance(const AObj: IAsn1Convertible): IDomainParameters;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IDomainParameters, Result) then
+    Exit;
+
+  Result := TDomainParameters.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TDomainParameters.GetInstance(const AEncoded: TCryptoLibByteArray): IDomainParameters;
+begin
+  Result := TDomainParameters.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TDomainParameters.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IDomainParameters;
+begin
+  Result := TDomainParameters.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TDomainParameters.GetOptional(const AElement: IAsn1Encodable): IDomainParameters;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
+
+  if Supports(AElement, IDomainParameters, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TDomainParameters.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TDomainParameters.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IDomainParameters;
+begin
+  Result := TDomainParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TDomainParameters.ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger;
+begin
+  Result := TDerInteger.GetOptional(AElement);
+end;
+
+class function TDomainParameters.ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams;
+begin
+  Result := TValidationParams.GetOptional(AElement);
+end;
+
+constructor TDomainParameters.Create(const ASeq: IAsn1Sequence);
+var
+  LCount, LPos: Int32;
+begin
+  inherited Create();
+  LCount := ASeq.Count;
+  LPos := 0;
+  if (LCount < 3) or (LCount > 5) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+
+  FP := TDerInteger.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FG := TDerInteger.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FQ := TDerInteger.GetInstance(ASeq[LPos]);
+  System.Inc(LPos);
+
+  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalSubgroupFactor);
+
+  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos,
+    ReadOptionalValidationParams);
+
+  if LPos <> LCount then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+constructor TDomainParameters.Create(const AP, AG, AQ, AJ: IDerInteger;
+  const AValidationParams: IValidationParams);
+begin
+  inherited Create();
+
+  if AP = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPNil);
+
+  if AG = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SGNil);
+
+  if AQ = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SQNil);
+
+  FP := AP;
+  FG := AG;
+  FQ := AQ;
+  FJ := AJ;
+  FValidationParams := AValidationParams;
+end;
+
+function TDomainParameters.GetP: IDerInteger;
+begin
+  Result := FP;
+end;
+
+function TDomainParameters.GetG: IDerInteger;
+begin
+  Result := FG;
+end;
+
+function TDomainParameters.GetQ: IDerInteger;
+begin
+  Result := FQ;
+end;
+
+function TDomainParameters.GetJ: IDerInteger;
+begin
+  Result := FJ;
+end;
+
+function TDomainParameters.GetValidationParams: IValidationParams;
+begin
+  Result := FValidationParams;
+end;
+
+function TDomainParameters.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create([FP, FG, FQ]);
+  if FJ <> nil then
+    LV.Add([FJ]);
+  if FValidationParams <> nil then
+    LV.Add([FValidationParams]);
+  Result := TDerSequence.Create(LV);
 end;
 
 { TDHValidationParms }
@@ -490,9 +841,9 @@ begin
   Result := TDerInteger.GetOptional(AElement);
 end;
 
-class function TDHDomainParameters.ReadOptionalValidationParms(AElement: IAsn1Encodable): IDHValidationParms;
+class function TDHDomainParameters.ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams;
 begin
-  Result := TDHValidationParms.GetOptional(AElement);
+  Result := TValidationParams.GetOptional(AElement);
 end;
 
 constructor TDHDomainParameters.Create(const ASeq: IAsn1Sequence);
@@ -516,7 +867,8 @@ begin
 
   FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalSubgroupFactor);
 
-  FValidationParms := TAsn1Utilities.ReadOptional<IDHValidationParms>(ASeq, LPos, ReadOptionalValidationParms);
+  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos,
+    ReadOptionalValidationParams);
 
   if LPos <> LCount then
     raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
@@ -524,6 +876,19 @@ end;
 
 constructor TDHDomainParameters.Create(const AP, AG, AQ, AJ: IDerInteger;
   const AValidationParms: IDHValidationParms);
+var
+  LValidationParams: IValidationParams;
+begin
+  if AValidationParms <> nil then
+    LValidationParams := TValidationParams.Create(AValidationParms.Seed,
+      AValidationParms.PGenCounter)
+  else
+    LValidationParams := nil;
+  Create(AP, AG, AQ, AJ, LValidationParams);
+end;
+
+constructor TDHDomainParameters.Create(const AP, AG, AQ, AJ: IDerInteger;
+  const AValidationParams: IValidationParams);
 begin
   inherited Create();
 
@@ -540,7 +905,7 @@ begin
   FG := AG;
   FQ := AQ;
   FJ := AJ;
-  FValidationParms := AValidationParms;
+  FValidationParams := AValidationParams;
 end;
 
 function TDHDomainParameters.GetP: IDerInteger;
@@ -565,7 +930,16 @@ end;
 
 function TDHDomainParameters.GetValidationParms: IDHValidationParms;
 begin
-  Result := FValidationParms;
+  if FValidationParams = nil then
+    Result := nil
+  else
+    Result := TDHValidationParms.Create(FValidationParams.Seed,
+      FValidationParams.PgenCounter);
+end;
+
+function TDHDomainParameters.GetValidationParams: IValidationParams;
+begin
+  Result := FValidationParams;
 end;
 
 function TDHDomainParameters.ToAsn1Object: IAsn1Object;
@@ -575,8 +949,8 @@ begin
   LV := TAsn1EncodableVector.Create([FP, FG, FQ]);
   if FJ <> nil then
     LV.Add([FJ]);
-  if FValidationParms <> nil then
-    LV.Add([FValidationParms]);
+  if FValidationParams <> nil then
+    LV.Add([FValidationParams]);
   Result := TDerSequence.Create(LV);
 end;
 

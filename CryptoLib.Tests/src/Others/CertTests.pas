@@ -158,6 +158,8 @@ type
     procedure TestPemNoTrailingNewline;
     procedure TestInvalidCrls;
     procedure TestPkcs7Test;
+    procedure TestCmsMalformedContentRejectedCleanly;
+    procedure TestCmsOversizedDeclaredLengthRejected;
     procedure TestCreatePssCertSha1;
     procedure TestCreatePssCertSha224;
     procedure TestCreatePssCertSha256;
@@ -441,7 +443,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(FRsaPublic);
 
@@ -462,7 +464,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(FRsaPublic);
   LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -511,7 +513,7 @@ begin
   LCertGen1.SetSerialNumber(TBigInteger.One);
   LCertGen1.SetIssuerDN(LName);
   LCertGen1.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen1.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen1.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen1.SetSubjectDN(LName);
   LCertGen1.SetPublicKey(FRsaPublic);
 
@@ -551,7 +553,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(LName);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(LName);
   LCertGen.SetPublicKey(LKp.Public);
 
@@ -620,7 +622,7 @@ begin
     LCertGen.SetIssuerDN(LName);
     LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
 
@@ -702,7 +704,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -716,7 +718,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
     LCertGen.CopyAndAddExtension(TDerObjectIdentifier.Create('2.5.29.15') as IDerObjectIdentifier, True, LBaseCert);
@@ -1098,7 +1100,7 @@ begin
   LCertGen.SetSerialNumber(TBigInteger.One);
   LCertGen.SetIssuerDN(TX509Name.Create('CN=Test') as IX509Name);
   LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-  LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+  LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
   LCertGen.SetSubjectDN(TX509Name.Create('CN=Test') as IX509Name);
   LCertGen.SetPublicKey(LKp.Public);
   LCert := LCertGen.Generate(TAsn1SignatureFactory.Create('MD5WithRSAEncryption', LKp.Private, nil) as ISignatureFactory);
@@ -1431,7 +1433,7 @@ begin
     LCertGen.SetSerialNumber(TBigInteger.One);
     LCertGen.SetIssuerDN(LName);
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LKp.Public);
     LCertGen.AddExtension('2.5.29.15', True, TKeyUsage.Create(TKeyUsage.EncipherOnly) as IKeyUsage);
@@ -1498,7 +1500,7 @@ begin
     LCertGen.SetIssuerDN(LName);
     LUtc := Now.ToUniversalTime();
     LCertGen.SetNotBeforeUtc(IncSecond(LUtc, -50));
-    LCertGen.SetNotAfterUtc(IncSecond(LUtc, 50));
+    LCertGen.SetNotAfterUtc(IncMonth(LUtc, 6));
     LCertGen.SetSubjectDN(LName);
     LCertGen.SetPublicKey(LPubKey);
 
@@ -1608,6 +1610,53 @@ end;
 procedure TCertTest.TestPkcs7Test;
 begin
   Pkcs7Test;
+end;
+
+procedure TCertTest.TestCmsMalformedContentRejectedCleanly;
+var
+  LContentInfo: ICmsContentInfo;
+  LEmpty: TCryptoLibByteArray;
+begin
+  // Empty input and content-less ContentInfo must be rejected with a declared exception,
+  // not an access violation on the next field access.
+  LEmpty := nil;
+  try
+    TCmsContentInfo.GetInstance(LEmpty);
+    Fail('expected EArgumentCryptoLibException for empty CMS input');
+  except
+    on E: EArgumentCryptoLibException do
+      CheckEquals('No content found.', E.Message);
+  else
+    raise;
+  end;
+
+  LContentInfo := TCmsContentInfo.Create(TCmsObjectIdentifiers.SignedData, nil);
+  try
+    TCmsSignedData.FromContentInfo(LContentInfo);
+    Fail('expected EArgumentCryptoLibException for content-less SignedData');
+  except
+    on E: EArgumentCryptoLibException do
+      CheckEquals('Malformed content.', E.Message);
+  else
+    raise;
+  end;
+end;
+
+procedure TCertTest.TestCmsOversizedDeclaredLengthRejected;
+var
+  LTiny: TCryptoLibByteArray;
+begin
+  // A tiny input declaring an enormous definite length must be rejected at the length bound
+  // before allocating the declared size — not allocated then truncated at EOF.
+  LTiny := THexEncoder.Decode('3084000F4240010203');
+  try
+    TCmsContentInfo.GetInstance(LTiny);
+    Fail('expected length-bound rejection');
+  except
+    on E: Exception do
+      CheckTrue(Pos('out of bounds length found', E.Message) > 0,
+        'expected length-bound rejection, got: ' + E.Message);
+  end;
 end;
 
 procedure TCertTest.TestCreatePssCertSha1;

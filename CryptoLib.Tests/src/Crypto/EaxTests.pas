@@ -93,11 +93,15 @@ type
     procedure DoTestVectors;
     procedure DoTestIvParameters;
     procedure DoTestExceptionsAndRandomised;
+    procedure DoTestInvalidTagLength;
+    procedure DoTestValidTagLength;
 
   published
     procedure TestVectors;
     procedure TestIvParameters;
     procedure TestExceptionsAndRandomised;
+    procedure TestInvalidTagLength;
+    procedure TestValidTagLength;
 
   end;
 
@@ -464,6 +468,78 @@ begin
   RandomTests;
 end;
 
+procedure TTestEax.DoTestInvalidTagLength;
+const
+  InvalidMacSizeBits: array[0..6] of Int32 = (0, 24, 28, 36, 124, 132, 136);
+var
+  LEax: IEaxBlockCipher;
+  LI: Int32;
+begin
+  for LI := 0 to High(InvalidMacSizeBits) do
+  begin
+    LEax := CreateEaxCipher;
+    try
+      LEax.Init(True,
+        TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+        InvalidMacSizeBits[LI], FN1, FA1) as ICipherParameters);
+      Fail('invalid tag length not rejected on encryption');
+    except
+      on E: EArgumentCryptoLibException do
+      begin
+        // expected
+      end;
+    end;
+
+    LEax := CreateEaxCipher;
+    try
+      LEax.Init(False,
+        TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+        InvalidMacSizeBits[LI], FN1, FA1) as ICipherParameters);
+      Fail('invalid tag length not rejected on decryption');
+    except
+      on E: EArgumentCryptoLibException do
+      begin
+        // expected
+      end;
+    end;
+  end;
+end;
+
+procedure TTestEax.DoTestValidTagLength;
+var
+  LEax: IEaxBlockCipher;
+  LPlaintext, LCt, LPt: TBytes;
+  LMacSizeBits, LLen, LN: Int32;
+begin
+  LPlaintext := DecodeHex('202122232425262728292a2b2c2d2e2f3031323334353637');
+
+  for LMacSizeBits := 32 to 128 do
+  begin
+    if (LMacSizeBits mod 8) <> 0 then
+      Continue;
+
+    LEax := CreateEaxCipher;
+    LEax.Init(True,
+      TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+      LMacSizeBits, FN1, FA1) as ICipherParameters);
+    SetLength(LCt, LEax.GetOutputSize(Length(LPlaintext)));
+    LLen := LEax.ProcessBytes(LPlaintext, 0, Length(LPlaintext), LCt, 0);
+    LLen := LLen + LEax.DoFinal(LCt, LLen);
+
+    LEax := CreateEaxCipher;
+    LEax.Init(False,
+      TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+      LMacSizeBits, FN1, FA1) as ICipherParameters);
+    SetLength(LPt, LEax.GetOutputSize(LLen));
+    LN := LEax.ProcessBytes(LCt, 0, LLen, LPt, 0);
+    LN := LN + LEax.DoFinal(LPt, LN);
+    SetLength(LPt, LN);
+
+    if not AreEqual(LPlaintext, LPt) then
+      Fail(Format('EAX round-trip failed for tag length %d bits', [LMacSizeBits]));
+  end;
+end;
+
 procedure TTestEax.TestVectors;
 begin
   RunWithFusedToggle(DoTestVectors);
@@ -477,6 +553,16 @@ end;
 procedure TTestEax.TestExceptionsAndRandomised;
 begin
   RunWithFusedToggle(DoTestExceptionsAndRandomised);
+end;
+
+procedure TTestEax.TestInvalidTagLength;
+begin
+  RunWithFusedToggle(DoTestInvalidTagLength);
+end;
+
+procedure TTestEax.TestValidTagLength;
+begin
+  RunWithFusedToggle(DoTestValidTagLength);
 end;
 
 initialization

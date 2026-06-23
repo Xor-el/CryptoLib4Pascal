@@ -676,6 +676,7 @@ type
       FSubjectInfoAccess: IDerObjectIdentifier;
       FLogoType: IDerObjectIdentifier;
       FNoRevAvail: IDerObjectIdentifier;
+      FRelatedCertificate: IDerObjectIdentifier;
       FTargetInformation: IDerObjectIdentifier;
       FExpiredCertsOnCrl: IDerObjectIdentifier;
       FSubjectAltPublicKeyInfo: IDerObjectIdentifier;
@@ -728,6 +729,10 @@ type
     class property SubjectInfoAccess: IDerObjectIdentifier read FSubjectInfoAccess;
     class property LogoType: IDerObjectIdentifier read FLogoType;
     class property NoRevAvail: IDerObjectIdentifier read FNoRevAvail;
+    /// <summary>
+    /// RFC 9763 sec. 3 RelatedCertificate extension ({ id-pe 36 }) for hybrid PQ migration; SHOULD NOT be critical.
+    /// </summary>
+    class property RelatedCertificate: IDerObjectIdentifier read FRelatedCertificate;
     class property TargetInformation: IDerObjectIdentifier read FTargetInformation;
     class property ExpiredCertsOnCrl: IDerObjectIdentifier read FExpiredCertsOnCrl;
     class property SubjectAltPublicKeyInfo: IDerObjectIdentifier read FSubjectAltPublicKeyInfo;
@@ -6115,6 +6120,7 @@ begin
   FSubjectInfoAccess := TX509ObjectIdentifiers.IdPE.Branch('11');
   FLogoType := TX509ObjectIdentifiers.IdPE.Branch('12');
   FNoRevAvail := TDerObjectIdentifier.Create('2.5.29.56');
+  FRelatedCertificate := TX509ObjectIdentifiers.IdPeRelatedCert;
   FTargetInformation := TDerObjectIdentifier.Create('2.5.29.55');
   FExpiredCertsOnCrl := TDerObjectIdentifier.Create('2.5.29.60');
   FSubjectAltPublicKeyInfo := TDerObjectIdentifier.Create('2.5.29.72');

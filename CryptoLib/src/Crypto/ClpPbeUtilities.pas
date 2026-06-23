@@ -69,6 +69,8 @@ resourcestring
   SInvalidObjectIdentifier = 'invalid object identifier %s';
   SUnknownCipher = 'unknown cipher: %s';
   SAlgorithmNotRecognized = 'algorithm %s not recognized';
+  SInvalidPbeIterationCount = 'invalid PBE iteration count';
+  SPbeIterationExceedsMax = 'PBE iteration count (%d) greater than %d';
 
 type
   /// <summary>
@@ -82,13 +84,17 @@ type
     Pkcs5S2 = 'Pkcs5S2';
     Pkcs12 = 'Pkcs12';
     OpenSsl = 'OpenSsl';
+    DefaultMaxIterationCount = 10000000;
   class var
     FAlgorithms: TDictionary<String, String>;
     FAlgorithmType: TDictionary<String, String>;
     FOids: TDictionary<String, IDerObjectIdentifier>;
+    FMaxIterationCount: Int32;
   class constructor Create;
   class destructor Destroy;
   strict private
+    class function GetEffectiveMaxIterationCount: Int32; static;
+    class function CheckPbeIterationCount(const AIterationCountObject: IDerInteger): Int32; static;
     class function MakePbeGenerator(const AType: String; const ADigest: IDigest;
       const AKey: TCryptoLibByteArray; const ASalt: TCryptoLibByteArray;
       AIterationCount: Int32): IPbeParametersGenerator; static;
@@ -167,6 +173,12 @@ type
     class function GenerateCipherParameters(const AAlgorithm: String;
       const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
       const APbeParameters: IAsn1Encodable): ICipherParameters; overload; static;
+
+    /// <summary>
+    /// Maximum allowed PBE iteration count when decrypting PKCS#8 / PEM keys.
+    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxIterationCount"/>.
+    /// </summary>
+    class property MaxIterationCount: Int32 read FMaxIterationCount write FMaxIterationCount;
   end;
 
 implementation
@@ -176,7 +188,8 @@ uses
 
 class constructor TPbeUtilities.Create;
 begin
-FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FMaxIterationCount := -1;
+  FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmType := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
@@ -274,6 +287,30 @@ begin
   FAlgorithms.Free;
   FAlgorithmType.Free;
   FOids.Free;
+end;
+
+class function TPbeUtilities.GetEffectiveMaxIterationCount: Int32;
+begin
+  if FMaxIterationCount < 0 then
+    Result := DefaultMaxIterationCount
+  else
+    Result := FMaxIterationCount;
+end;
+
+class function TPbeUtilities.CheckPbeIterationCount(
+  const AIterationCountObject: IDerInteger): Int32;
+var
+  LIterationCount, LMax: Int32;
+begin
+  if (AIterationCountObject = nil) or
+    (not AIterationCountObject.TryGetIntValueExact(LIterationCount)) or
+    (LIterationCount <= 0) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPbeIterationCount);
+  LMax := GetEffectiveMaxIterationCount;
+  if LIterationCount > LMax then
+    raise EArgumentCryptoLibException.CreateResFmt(@SPbeIterationExceedsMax,
+      [LIterationCount, LMax]);
+  Result := LIterationCount;
 end;
 
 class function TPbeUtilities.MakePbeGenerator(const AType: String; const ADigest: IDigest;
@@ -593,7 +630,7 @@ begin
   begin
     LPbeParam := TPbeParameter.GetInstance(APbeParameters);
     LSalt := LPbeParam.Salt.GetOctets();
-    LIterationCount := LPbeParam.IterationCountObject.IntValueExact;
+    LIterationCount := CheckPbeIterationCount(LPbeParam.IterationCountObject);
     LKeyBytes := TPbeParametersGenerator.Pkcs5PasswordToBytes(APassword);
   end;
 
@@ -612,7 +649,7 @@ begin
     LIv := TAsn1OctetString.GetInstance(LEncParams).GetOctets();
 
     LSalt := LPbkdf2Params.GetSaltBytes();
-    LIterationCount := LPbkdf2Params.IterationCountObject.IntValueExact;
+    LIterationCount := CheckPbeIterationCount(LPbkdf2Params.IterationCountObject);
     LKeyBytes := TPbeParametersGenerator.Pkcs5PasswordToBytes(APassword);
 
     LKeyLengthObject := LPbkdf2Params.KeyLengthObject;

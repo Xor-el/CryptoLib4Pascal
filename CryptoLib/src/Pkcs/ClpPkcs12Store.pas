@@ -73,6 +73,7 @@ uses
 
 resourcestring
   SInputNil = 'input cannot be nil';
+  SMalformedPkcs12NoPfx = 'malformed PKCS#12 data: no PFX structure found';
   SMacInvalid = 'PKCS12 key store MAC invalid - wrong password or corrupted file';
   SPasswordNotNeeded = 'password supplied for keystore that does not require one';
   SUnsupportedCertType = 'unsupported certificate type: %s';
@@ -814,6 +815,10 @@ begin
   if AInput.Size > 0 then
     AInput.ReadBuffer(LBytes[0], AInput.Size);
   LPfx := TPfx.GetInstance(LBytes);
+  // An empty/EOF stream decodes to a null top-level Pfx; the next field access
+  // would escape the declared I/O contract. Reject early with a clear message.
+  if LPfx = nil then
+    raise EIOCryptoLibException.CreateRes(@SMalformedPkcs12NoPfx);
   LInfo := LPfx.AuthSafe;
   LWrongPkcs12Zero := False;
   LPasswordNeeded := False;
@@ -1104,11 +1109,16 @@ begin
           end;
         end;
       end;
-      LCs.Add(LC);
-      if (LNextC = nil) or (LNextC = LC) then
+      if LCs.IndexOf(LC) >= 0 then
         LC := nil
       else
-        LC := LNextC;
+      begin
+        LCs.Add(LC);
+        if (LNextC = nil) or (LNextC = LC) then
+          LC := nil
+        else
+          LC := LNextC;
+      end;
     end;
     Result := TCollectionUtilities.ToArray<IX509CertificateEntry>(LCs);
   finally

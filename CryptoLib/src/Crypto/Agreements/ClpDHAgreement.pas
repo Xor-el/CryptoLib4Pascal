@@ -42,7 +42,6 @@ resourcestring
   SNotDHPrivateKeyParameters = 'DHEngine expects DHPrivateKeyParameters';
   SMessageNotInitialized = 'message not initialized';
   SSharedKeyInvalid = 'shared key cannot be 1';
-  SDHPublicKeyWeak = 'Diffie-Hellman public key is weak';
   SDHPublicKeyNil = 'DH public key parameter cannot be nil';
 
 type
@@ -99,7 +98,9 @@ implementation
 function TDHAgreement.CalculateAgreement(const APub: IDHPublicKeyParameters;
   const AMessage: TBigInteger): TBigInteger;
 var
-  LP, LPeerY: TBigInteger;
+  LP, LPeerY, LPeerMessage: TBigInteger;
+  LParameter: IDHPublicKeyParameters;
+  LPubConcrete: TDHPublicKeyParameters;
 begin
   if (APub = nil) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SDHPublicKeyNil);
@@ -113,18 +114,28 @@ begin
 
   LP := FDhParams.P;
 
-  LPeerY := APub.Y;
+  // Both peer-supplied values are raised to our (potentially static) private key, so both must
+  // satisfy the DH public-value range/subgroup checks; otherwise a peer can submit a small-order or
+  // out-of-range element to mount a small-subgroup confinement attack and, when our private key
+  // is reused, recover it via CRT. The message is a raw TBigInteger, so validate it by
+  // construction. A normally-constructed TDHPublicKeyParameters already validated its Y; but GetY
+  // is overridable and a subclass can return an unvalidated value, so re-validate unless pub
+  // is exactly the base type.
+  LParameter := TDHPublicKeyParameters.Create(AMessage, FDhParams);
+  LPeerMessage := LParameter.Y;
+  LPubConcrete := APub as TDHPublicKeyParameters;
 
-  if ((not LPeerY.IsInitialized) or (LPeerY.CompareTo(TBigInteger.One) <= 0) or
-    (LPeerY.CompareTo(LP.Subtract(TBigInteger.One)) >= 0)) then
-    raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWeak);
+  if LPubConcrete.ClassType = TDHPublicKeyParameters then
+    LPeerY := APub.Y
+  else
+    LPeerY := TDHPublicKeyParameters.Create(APub.Y, FDhParams).Y;
 
   Result := LPeerY.ModPow(FPrivateValue, LP);
 
   if Result.Equals(TBigInteger.One) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
 
-  Result := AMessage.ModPow(FKey.X, LP).Multiply(Result).&Mod(LP);
+  Result := LPeerMessage.ModPow(FKey.X, LP).Multiply(Result).&Mod(LP);
 end;
 
 function TDHAgreement.CalculateMessage: TBigInteger;

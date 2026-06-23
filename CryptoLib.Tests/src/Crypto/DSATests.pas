@@ -129,6 +129,7 @@ type
     procedure TestDsa2Parameters;
     procedure TestKeyGenerationAll;
     procedure TestParameters;
+    procedure TestModulusSizeBound;
 
     /// <summary>
     /// <para>
@@ -1010,6 +1011,21 @@ end;
 procedure TTestDSA.TestParameters;
 begin
   RunParametersSmokeCase();
+end;
+
+procedure TTestDSA.TestModulusSizeBound;
+var
+  LHugeP: TBigInteger;
+begin
+  LHugeP := TBigInteger.One.ShiftLeft(20000);
+  try
+    TDsaPublicKeyParameters.Create(TBigInteger.Two,
+      TDsaParameters.Create(LHugeP, TBigInteger.ValueOf(11), TBigInteger.Two));
+    Fail('oversized DSA modulus accepted');
+  except
+    on E: EArgumentCryptoLibException do
+      CheckEquals('DSA modulus out of range', E.Message);
+  end;
 end;
 
 { TDSATestSecureRandom }

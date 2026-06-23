@@ -1012,7 +1012,7 @@ begin
     Result := TDerOctetString.WithContents(FStream.ToArray());
   except
     on E: EIOCryptoLibException do
-      raise EInvalidOperationCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
+      raise EAsn1ParsingCryptoLibException.CreateResFmt(@SIOExceptionConvertingStreamToByteArray, [E.Message]);
   end;
 end;
 

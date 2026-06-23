@@ -84,6 +84,8 @@ type
     procedure DoTestCcmIvParameters;
     procedure DoTestOffsets;
     procedure DoTestRandomised;
+    procedure DoTestInvalidTagLength;
+    procedure DoTestValidTagLength;
 
   published
     procedure TestNistVectorsAndLongData;
@@ -91,6 +93,8 @@ type
     procedure TestOffsets;
     procedure TestRandomised;
     procedure TestExceptions;
+    procedure TestInvalidTagLength;
+    procedure TestValidTagLength;
 
   end;
 
@@ -543,6 +547,83 @@ begin
       // expected
     end;
   end;
+end;
+
+procedure TTestCcm.DoTestInvalidTagLength;
+const
+  InvalidMacSizeBits: array[0..9] of Int32 = (0, 8, 24, 40, 56, 72, 88, 104, 120, 136);
+var
+  LCcm: ICcmBlockCipher;
+  LI: Int32;
+begin
+  for LI := 0 to High(InvalidMacSizeBits) do
+  begin
+    LCcm := CreateCcmCipher;
+    try
+      LCcm.Init(True,
+        TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+        InvalidMacSizeBits[LI], FN1, FA1) as ICipherParameters);
+      Fail('invalid tag length not rejected on encryption');
+    except
+      on E: EArgumentCryptoLibException do
+      begin
+        // expected
+      end;
+    end;
+
+    LCcm := CreateCcmCipher;
+    try
+      LCcm.Init(False,
+        TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+        InvalidMacSizeBits[LI], FN1, FA1) as ICipherParameters);
+      Fail('invalid tag length not rejected on decryption');
+    except
+      on E: EArgumentCryptoLibException do
+      begin
+        // expected
+      end;
+    end;
+  end;
+end;
+
+procedure TTestCcm.DoTestValidTagLength;
+var
+  LCcm: ICcmBlockCipher;
+  LPlaintext, LCt, LRecovered: TBytes;
+  LMacSizeBits: Int32;
+begin
+  LPlaintext := DecodeHex('202122232425262728292a2b2c2d2e2f3031323334353637');
+
+  for LMacSizeBits := 32 to 128 do
+  begin
+    if (LMacSizeBits mod 16) <> 0 then
+      Continue;
+
+    LCcm := CreateCcmCipher;
+    LCcm.Init(True,
+      TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+      LMacSizeBits, FN1, FA1) as ICipherParameters);
+    LCt := LCcm.ProcessPacket(LPlaintext, 0, Length(LPlaintext));
+
+    LCcm := CreateCcmCipher;
+    LCcm.Init(False,
+      TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+      LMacSizeBits, FN1, FA1) as ICipherParameters);
+    LRecovered := LCcm.ProcessPacket(LCt, 0, Length(LCt));
+
+    if not AreEqual(LPlaintext, LRecovered) then
+      Fail(Format('CCM round-trip failed for tag length %d bits', [LMacSizeBits]));
+  end;
+end;
+
+procedure TTestCcm.TestInvalidTagLength;
+begin
+  RunWithFusedToggle(DoTestInvalidTagLength);
+end;
+
+procedure TTestCcm.TestValidTagLength;
+begin
+  RunWithFusedToggle(DoTestValidTagLength);
 end;
 
 initialization

@@ -232,12 +232,12 @@ var
   LSeq: IAsn1Sequence;
   LDHPublicKey: IDHPublicKey;
   LY: TBigInteger;
-  LDHDomainParams: IDHDomainParameters;
+  LDHDomainParams: IDomainParameters;
   LP, LG, LBigQ, LJ: TBigInteger;
   LValidation: IDHValidationParameters;
-  LDHValParms: IDHValidationParms;
+  LValidationParams: IValidationParams;
   LSeed: TCryptoLibByteArray;
-  LPGenCounter: TBigInteger;
+  LPGenCounter: Int32;
   LDerY: IDerInteger;
   LRawKey: TCryptoLibByteArray;
   LMlDsaParameters: IMlDsaParameters;
@@ -277,7 +277,7 @@ begin
       Exit;
     end;
 
-    LDHDomainParams := TDHDomainParameters.GetInstance(LSeq);
+    LDHDomainParams := TDomainParameters.GetInstance(LSeq);
     LP := LDHDomainParams.P.Value;
     LG := LDHDomainParams.G.Value;
     LBigQ := LDHDomainParams.Q.Value;
@@ -287,12 +287,12 @@ begin
       LJ := LDHDomainParams.J.Value;
 
     LValidation := nil;
-    LDHValParms := LDHDomainParams.ValidationParms;
-    if LDHValParms <> nil then
+    LValidationParams := LDHDomainParams.ValidationParams;
+    if LValidationParams <> nil then
     begin
-      LSeed := LDHValParms.Seed.GetBytes();
-      LPGenCounter := LDHValParms.PGenCounter.Value;
-      LValidation := TDHValidationParameters.Create(LSeed, LPGenCounter.Int32Value);
+      LSeed := LValidationParams.Seed.GetBytes();
+      LPGenCounter := LValidationParams.PgenCounter.IntPositiveValueExact;
+      LValidation := TDHValidationParameters.Create(LSeed, LPGenCounter);
     end;
 
     Result := TDHPublicKeyParameters.Create(LY,

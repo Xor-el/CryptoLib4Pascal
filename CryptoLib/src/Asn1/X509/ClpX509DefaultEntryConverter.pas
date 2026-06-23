@@ -33,6 +33,7 @@ uses
 resourcestring
   SCannotRecodeValueForOid = 'cannot recode value for OID %s';
   SCountryCodeAttributeMustBeExactlyTwoChars = 'country code attribute %s must be exactly 2 characters per ISO 3166-1 / X.520, got %d: %s';
+  SCommonNameAttributeExceedsMaxLength = 'commonName length %d exceeds RFC 5280 ub-common-name (64): %s';
 
 type
   /// <summary>
@@ -108,6 +109,13 @@ begin
     Result := TDerPrintableString.Create(LValue);
     Exit;
   end;
+
+  // RFC 5280 sec. A.1 / X.520: commonName is DirectoryString { ub-common-name } with ub-common-name = 64.
+  // Reject over-length CNs at build time; most validators reject them anyway.
+  // Parsing existing DER with longer CNs remains lenient because the decode path does not use this converter.
+  if AOid.Equals(TX509Name.CN) and (System.Length(LValue) > 64) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCommonNameAttributeExceedsMaxLength,
+      [System.Length(LValue), LValue]);
 
   Result := TDerUtf8String.Create(LValue);
 end;
