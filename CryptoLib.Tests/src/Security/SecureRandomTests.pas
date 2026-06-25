@@ -38,6 +38,7 @@ uses
   ClpIRandomNumberGenerator,
   ClpCryptoApiRandomGenerator,
   ClpICryptoApiRandomGenerator,
+  ClpIRandomGenerator,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
 
@@ -60,12 +61,67 @@ type
     procedure TestAESPRNG();
     procedure TestAESPRNGRandom();
     procedure TestDefault();
+    procedure TestNextDouble();
     procedure TestSha1Prng();
+    procedure TestSha1PrngReplicable();
     procedure TestSha256Prng();
 
   end;
 
 implementation
+
+type
+  TTestRandomGenerator = class abstract(TInterfacedObject, IRandomGenerator)
+  public
+    procedure AddSeedMaterial(const ASeed: TCryptoLibByteArray); overload; virtual;
+    procedure AddSeedMaterial(ASeed: Int64); overload; virtual;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray); overload; virtual;
+    procedure NextBytes(const ABytes: TCryptoLibByteArray; AStart, ALen: Int32);
+      overload; virtual; abstract;
+  end;
+
+  TFixedRandomGenerator = class sealed(TTestRandomGenerator)
+  strict private
+    FB: Byte;
+  public
+    constructor Create(AB: Byte);
+    procedure NextBytes(const ABytes: TCryptoLibByteArray; AStart, ALen: Int32);
+      overload; override;
+  end;
+
+{ TFixedRandomGenerator }
+
+constructor TFixedRandomGenerator.Create(AB: Byte);
+begin
+  inherited Create;
+  FB := AB;
+end;
+
+procedure TFixedRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray;
+  AStart, ALen: Int32);
+var
+  LI: Int32;
+begin
+  for LI := AStart to AStart + ALen - 1 do
+  begin
+    ABytes[LI] := FB;
+  end;
+end;
+
+{ TTestRandomGenerator }
+
+procedure TTestRandomGenerator.AddSeedMaterial(const ASeed: TCryptoLibByteArray);
+begin
+end;
+
+procedure TTestRandomGenerator.AddSeedMaterial(ASeed: Int64);
+begin
+end;
+
+procedure TTestRandomGenerator.NextBytes(const ABytes: TCryptoLibByteArray);
+begin
+  NextBytes(ABytes, 0, System.Length(ABytes));
+end;
 
 { TTestSecureRandom }
 
@@ -284,6 +340,40 @@ begin
   random := TSecureRandom.Create();
 
   CheckSecureRandom(random);
+end;
+
+procedure TTestSecureRandom.TestNextDouble;
+var
+  &random: ISecureRandom;
+  LValue: Double;
+begin
+  random := TSecureRandom.Create(TFixedRandomGenerator.Create($00) as IRandomGenerator);
+  LValue := random.NextDouble();
+  CheckTrue(LValue >= 0.0);
+  CheckTrue(LValue < 1.0);
+
+  random := TSecureRandom.Create(TFixedRandomGenerator.Create($FF) as IRandomGenerator);
+  LValue := random.NextDouble();
+  CheckTrue(LValue >= 0.0);
+  CheckTrue(LValue < 1.0);
+end;
+
+procedure TTestSecureRandom.TestSha1PrngReplicable;
+var
+  LRandom, LSx, LSy: ISecureRandom;
+  LSeed, LBx, LBy: TBytes;
+begin
+  LRandom := TSecureRandom.Create();
+  LSeed := TSecureRandom.GetNextBytes(LRandom, 16);
+  LSx := TSecureRandom.GetInstance('SHA1PRNG', False);
+  LSy := TSecureRandom.GetInstance('SHA1PRNG', False);
+  LSx.SetSeed(LSeed);
+  LSy.SetSeed(LSeed);
+  System.SetLength(LBx, 128);
+  System.SetLength(LBy, 128);
+  LSx.NextBytes(LBx);
+  LSy.NextBytes(LBy);
+  CheckTrue(AreEqual(LBx, LBy));
 end;
 
 procedure TTestSecureRandom.TestSha1Prng;

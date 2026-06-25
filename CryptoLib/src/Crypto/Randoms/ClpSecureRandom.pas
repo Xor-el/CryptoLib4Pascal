@@ -21,7 +21,6 @@ unit ClpSecureRandom;
 interface
 
 uses
-  Math,
   SyncObjs,
   SysUtils,
   ClpBitOperations,
@@ -38,9 +37,11 @@ uses
   ClpICryptoApiRandomGenerator,
   ClpDigestRandomGenerator,
   ClpIDigestRandomGenerator,
-  ClpISecureRandom;
+  ClpISecureRandom,
+  ClpPack;
 
 resourcestring
+  SAlgorithmNil = 'algorithm cannot be nil';
   SUnrecognizedPRNGAlgorithm = 'unrecognized PRNG algorithm: %s';
   SMaxValueCannotBeNegative = 'maxValue cannot be negative';
   SInvalidMaxValue = 'maxValue cannot be less than minValue';
@@ -60,6 +61,9 @@ type
     class function NextCounterValue(): Int64; static; inline;
 
     class function CreatePrng(const ADigestName: String; AAutoSeed: Boolean): IDigestRandomGenerator; static; inline;
+
+    class procedure AutoSeed(const AGenerator: IRandomGenerator;
+      ASeedLength: Int32); static;
 
     class constructor Create(); overload;
     class destructor Destroy();
@@ -164,7 +168,7 @@ begin
     LBits := NextInt32() and System.High(Int32);
     Result := LBits mod AMaxValue;
     // Ignore results near overflow
-  until (not((LBits - (Result + (AMaxValue - 1))) < 0));
+  until (LBits - Result + (AMaxValue - 1)) >= 0;
 
 end;
 
@@ -229,31 +233,29 @@ begin
 end;
 
 function TSecureRandom.NextDouble: Double;
+var
+  LValue: UInt64;
 begin
-  Result := UInt64(NextInt64()) / FDoubleScale;
+  LValue := UInt64(NextInt64()) shr 11;
+  Result := LValue * FDoubleScale;
 end;
 
 function TSecureRandom.NextInt32: Int32;
 var
-  LTempRes: UInt32;
   LBytes: TCryptoLibByteArray;
 begin
   System.SetLength(LBytes, 4);
   NextBytes(LBytes);
-
-  LTempRes := LBytes[0];
-  LTempRes := LTempRes shl 8;
-  LTempRes := LTempRes or LBytes[1];
-  LTempRes := LTempRes shl 8;
-  LTempRes := LTempRes or LBytes[2];
-  LTempRes := LTempRes shl 8;
-  LTempRes := LTempRes or LBytes[3];
-  Result := Int32(LTempRes);
+  Result := Int32(TPack.BE_To_UInt32(LBytes));
 end;
 
 function TSecureRandom.NextInt64: Int64;
+var
+  LBytes: TCryptoLibByteArray;
 begin
-  Result := (Int64(UInt32(NextInt32())) shl 32) or (Int64(UInt32(NextInt32())));
+  System.SetLength(LBytes, 8);
+  NextBytes(LBytes);
+  Result := Int64(TPack.BE_To_UInt64(LBytes));
 end;
 
 class constructor TSecureRandom.Create;
@@ -262,8 +264,7 @@ begin
   FCounter := TDateTimeUtilities.DateTimeToTicks(Now.ToUniversalTime());
   FMasterRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
       as ICryptoApiRandomGenerator);
-  FDoubleScale := Power(2.0, 64.0);
-  TOSRandomProvider.Instance;
+  FDoubleScale := 1.0 / (UInt64(1) shl 53);
 end;
 
 class destructor TSecureRandom.Destroy;
@@ -281,12 +282,22 @@ begin
   FGenerator.AddSeedMaterial(ASeed);
 end;
 
+class procedure TSecureRandom.AutoSeed(const AGenerator: IRandomGenerator;
+  ASeedLength: Int32);
+var
+  LSeed: TCryptoLibByteArray;
+begin
+  AGenerator.AddSeedMaterial(NextCounterValue());
+  System.SetLength(LSeed, ASeedLength);
+  TOSRandomProvider.Instance.GetBytes(LSeed);
+  AGenerator.AddSeedMaterial(LSeed);
+end;
+
 class function TSecureRandom.CreatePrng(const ADigestName: String;
   AAutoSeed: Boolean): IDigestRandomGenerator;
 var
   LDigest: IDigest;
   LPrng: IDigestRandomGenerator;
-  LSeedLength: Int32;
 begin
   LDigest := TDigestUtilities.GetDigest(ADigestName);
   if (LDigest = nil) then
@@ -298,9 +309,7 @@ begin
   LPrng := TDigestRandomGenerator.Create(LDigest);
   if (AAutoSeed) then
   begin
-    LSeedLength := 2 * LDigest.GetDigestSize;
-    LPrng.AddSeedMaterial(NextCounterValue());
-    LPrng.AddSeedMaterial(GetNextBytes(MasterRandom, LSeedLength));
+    AutoSeed(LPrng, 2 * LDigest.GetDigestSize);
   end;
   Result := LPrng;
 end;
@@ -312,23 +321,19 @@ end;
 
 class function TSecureRandom.GetInstance(const AAlgorithm: String; AAutoSeed: Boolean): ISecureRandom;
 var
-  LUpper, LDigestName: String;
+  LDigestName: String;
   LPrng: IDigestRandomGenerator;
-  LPrngIndex: Int32;
+  LPrngSuffixLen: Int32;
 begin
-  LUpper := TStringUtilities.ToUpperInvariant(AAlgorithm);
-
-  if TStringUtilities.EndsWith(LUpper, 'PRNG', True) then
+  if AAlgorithm = '' then
   begin
-    LPrngIndex := TStringUtilities.LastIndexOf(LUpper, 'PRNG');
-    if LPrngIndex > 0 then
-    begin
-      LDigestName := TStringUtilities.Substring(LUpper, 1, LPrngIndex - 1);
-    end
-    else
-    begin
-      LDigestName := '';
-    end;
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+  end;
+
+  LPrngSuffixLen := Length('PRNG');
+  if TStringUtilities.EndsWith(AAlgorithm, 'PRNG', True) then
+  begin
+    LDigestName := Copy(AAlgorithm, 1, Length(AAlgorithm) - LPrngSuffixLen);
 
     LPrng := CreatePrng(LDigestName, AAutoSeed);
     if (LPrng <> nil) then
@@ -349,7 +354,8 @@ end;
 
 function TSecureRandom.GenerateSeed(ALength: Int32): TCryptoLibByteArray;
 begin
-  Result := GetNextBytes(MasterRandom, ALength);
+  System.SetLength(Result, ALength);
+  TOSRandomProvider.Instance.GetBytes(Result);
 end;
 
 end.
