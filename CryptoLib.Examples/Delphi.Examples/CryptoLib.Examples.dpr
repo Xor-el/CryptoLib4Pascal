@@ -24,6 +24,8 @@ uses
   MlKemExample in '..\src\Examples\MlKemExample.pas',
   MlDsaExample in '..\src\Examples\MlDsaExample.pas',
   SlhDsaExample in '..\src\Examples\SlhDsaExample.pas',
+  SecureRandomExampleUtilities in '..\src\Utilities\SecureRandomExampleUtilities.pas',
+  SecureRandomExample in '..\src\Examples\SecureRandomExample.pas',
   HybridEncryption in '..\src\Utilities\HybridEncryption.pas',
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpIAesEngineX86 in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',

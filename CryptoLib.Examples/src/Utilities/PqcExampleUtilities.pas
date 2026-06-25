@@ -57,21 +57,29 @@ type
   TPqcExampleUtilities = class sealed
   strict private
     class procedure DoRunSignVerify(const AAlgorithmName: string; const AMessage: TBytes;
-      const ASignInitParams, AVerifyInitParams: ICipherParameters); static;
+      const ASignInitParams, AVerifyInitParams: ICipherParameters;
+      ADeterministic: Boolean = False); static;
   public
-    class function GenerateKeyPair(const AParameterSetName: string): IAsymmetricCipherKeyPair; static;
+    class function GenerateKeyPair(const AParameterSetName: string;
+      const ARandom: ISecureRandom = nil): IAsymmetricCipherKeyPair; static;
     class procedure RunKemRoundtrip(const AParameterSetName: string;
-      const AKeyPair: IAsymmetricCipherKeyPair); static;
+      const AKeyPair: IAsymmetricCipherKeyPair;
+      const AEncapsRandom: ISecureRandom = nil); static;
     class procedure RunSignVerify(const AAlgorithmName: string;
-      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes); static;
+      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes;
+      const ASigningRandom: ISecureRandom = nil;
+      ADeterministic: Boolean = False); static;
     class procedure RunContextSignVerify(const AAlgorithmName: string;
-      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage, AContext: TBytes); static;
+      const AKeyPair: IAsymmetricCipherKeyPair; const AMessage, AContext: TBytes;
+      const ASigningRandom: ISecureRandom = nil;
+      ADeterministic: Boolean = False); static;
   end;
 
 implementation
 
 class procedure TPqcExampleUtilities.DoRunSignVerify(const AAlgorithmName: string;
-  const AMessage: TBytes; const ASignInitParams, AVerifyInitParams: ICipherParameters);
+  const AMessage: TBytes; const ASignInitParams, AVerifyInitParams: ICipherParameters;
+  ADeterministic: Boolean);
 var
   LSigner: ISigner;
   LSig: TBytes;
@@ -80,7 +88,7 @@ begin
   LLogger := TExampleLogger.GetDefaultLogger;
   LLogger.LogInformation('Algorithm: {0}', [AAlgorithmName]);
   try
-    LSigner := TSignerUtilities.GetSigner(AAlgorithmName);
+    LSigner := TSignerUtilities.GetSigner(AAlgorithmName, ADeterministic);
     LSigner.Init(True, ASignInitParams);
     LSigner.BlockUpdate(AMessage, 0, System.Length(AMessage));
     LSig := LSigner.GenerateSignature();
@@ -98,8 +106,8 @@ begin
   end;
 end;
 
-class function TPqcExampleUtilities.GenerateKeyPair(
-  const AParameterSetName: string): IAsymmetricCipherKeyPair;
+class function TPqcExampleUtilities.GenerateKeyPair(const AParameterSetName: string;
+  const ARandom: ISecureRandom): IAsymmetricCipherKeyPair;
 var
   LRandom: ISecureRandom;
   LKpg: IAsymmetricCipherKeyPairGenerator;
@@ -109,7 +117,10 @@ var
   LSlhDsaParams: ISlhDsaParameters;
   LGeneratorName: string;
 begin
-  LRandom := TSecureRandom.Create() as ISecureRandom;
+  if ARandom = nil then
+    LRandom := TSecureRandom.Create()
+  else
+    LRandom := ARandom;
   LGeneratorName := '';
   LKeyGenParams := nil;
 
@@ -150,7 +161,7 @@ begin
 end;
 
 class procedure TPqcExampleUtilities.RunKemRoundtrip(const AParameterSetName: string;
-  const AKeyPair: IAsymmetricCipherKeyPair);
+  const AKeyPair: IAsymmetricCipherKeyPair; const AEncapsRandom: ISecureRandom);
 var
   LRandom: ISecureRandom;
   LEnc: IKemEncapsulator;
@@ -180,7 +191,10 @@ begin
   end;
 
   LLogger.LogInformation('KEM via TKemUtilities: {0}', [AParameterSetName]);
-  LRandom := TSecureRandom.Create() as ISecureRandom;
+  if AEncapsRandom = nil then
+    LRandom := TSecureRandom.Create()
+  else
+    LRandom := AEncapsRandom;
 
   // Alice: Init with Bob's public key (+ randomness for ML-KEM encapsulation).
   LEnc.Init(TParametersWithRandom.Create(AKeyPair.Public, LRandom) as IParametersWithRandom);
@@ -203,19 +217,33 @@ begin
 end;
 
 class procedure TPqcExampleUtilities.RunSignVerify(const AAlgorithmName: string;
-  const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes);
+  const AKeyPair: IAsymmetricCipherKeyPair; const AMessage: TBytes;
+  const ASigningRandom: ISecureRandom; ADeterministic: Boolean);
+var
+  LSignInit: ICipherParameters;
 begin
-  DoRunSignVerify(AAlgorithmName, AMessage, AKeyPair.Private, AKeyPair.Public);
+  if ADeterministic then
+    LSignInit := AKeyPair.Private
+  else if ASigningRandom = nil then
+    LSignInit := AKeyPair.Private
+  else
+    LSignInit := TParametersWithRandom.Create(AKeyPair.Private, ASigningRandom);
+  DoRunSignVerify(AAlgorithmName, AMessage, LSignInit, AKeyPair.Public, ADeterministic);
 end;
 
 class procedure TPqcExampleUtilities.RunContextSignVerify(const AAlgorithmName: string;
-  const AKeyPair: IAsymmetricCipherKeyPair; const AMessage, AContext: TBytes);
+  const AKeyPair: IAsymmetricCipherKeyPair; const AMessage, AContext: TBytes;
+  const ASigningRandom: ISecureRandom; ADeterministic: Boolean);
 var
-  LSignInit, LVerifyInit: ICipherParameters;
+  LSignKeyParams, LSignInit, LVerifyInit: ICipherParameters;
 begin
-  LSignInit := TParameterUtilities.WithContext(AKeyPair.Private, AContext);
+  if ADeterministic or (ASigningRandom = nil) then
+    LSignKeyParams := AKeyPair.Private
+  else
+    LSignKeyParams := TParameterUtilities.WithRandom(AKeyPair.Private, ASigningRandom);
+  LSignInit := TParameterUtilities.WithContext(LSignKeyParams, AContext);
   LVerifyInit := TParameterUtilities.WithContext(AKeyPair.Public, AContext);
-  DoRunSignVerify(AAlgorithmName, AMessage, LSignInit, LVerifyInit);
+  DoRunSignVerify(AAlgorithmName, AMessage, LSignInit, LVerifyInit, ADeterministic);
 end;
 
 end.
