@@ -47,6 +47,10 @@ resourcestring
   SBlockCipherNil = 'blockCipher cannot be nil';
 
 type
+  /// <summary>
+  /// Fluent builder for <see cref="TSP800SecureRandom"/> instances
+  /// using Hash, HMAC, or AES CTR DRBG.
+  /// </summary>
   TSP800SecureRandomBuilder = class sealed(TInterfacedObject, ISP800SecureRandomBuilder)
   strict private
   type
@@ -98,9 +102,18 @@ type
     FEntropyBitsRequired: Int32;
 
   public
+    /// <summary>
+    /// Create a builder using the default secure random as entropy with 256-bit defaults.
+    /// </summary>
     constructor Create(); overload;
+    /// <summary>
+    /// Create a builder backed by <paramref name="AEntropySource"/>.
+    /// </summary>
     constructor Create(const AEntropySource: ISecureRandom;
       APredictionResistant: Boolean); overload;
+    /// <summary>
+    /// Create a builder using a custom entropy source provider.
+    /// </summary>
     constructor Create(const AEntropySourceProvider: IEntropySourceProvider);
       overload;
 
@@ -112,12 +125,15 @@ type
     function SetEntropyBitsRequired(
       AEntropyBitsRequired: Int32): ISP800SecureRandomBuilder;
 
+    /// <summary>Build a Hash_DRBG-backed secure random.</summary>
     function BuildHash(const ADigest: IDigest;
       const ANonce: TCryptoLibByteArray;
       APredictionResistant: Boolean): ISecureRandom;
+    /// <summary>Build an AES CTR_DRBG-backed secure random.</summary>
     function BuildCtr(const ACipher: IBlockCipher; AKeySizeInBits: Int32;
       const ANonce: TCryptoLibByteArray;
       APredictionResistant: Boolean): ISecureRandom;
+    /// <summary>Build an HMAC_DRBG-backed secure random.</summary>
     function BuildHMac(const AHMac: IMac; const ANonce: TCryptoLibByteArray;
       APredictionResistant: Boolean): ISecureRandom;
   end;

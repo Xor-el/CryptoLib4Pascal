@@ -30,6 +30,9 @@ uses
   ClpCryptoLibComparers;
 
 type
+  /// <summary>
+  /// Shared SP 800-90A DRBG helpers: security-strength lookup and Hash_df derivation.
+  /// </summary>
   TDrbgUtilities = class sealed(TObject)
   strict private
     class var
@@ -38,9 +41,26 @@ type
     class constructor Create;
     class destructor Destroy;
   public
+    /// <summary>
+    /// Return the maximum security strength (in bits) supported by the given digest.
+    /// </summary>
     class function GetMaxSecurityStrength(const ADigest: IDigest): Int32; overload; static;
+    /// <summary>
+    /// Return the maximum security strength (in bits) supported by the HMAC
+    /// underlying <paramref name="AMac"/> (base digest name before any suffix).
+    /// </summary>
     class function GetMaxSecurityStrength(const AMac: IMac): Int32; overload; static;
 
+    /// <summary>
+    /// SP 800-90A Hash_df: derive <paramref name="ASeedLength"/> bits from
+    /// <paramref name="ASeedMaterial"/> into <paramref name="AOutput"/>.
+    /// </summary>
+    /// <param name="ADigest">Hash function used for derivation.</param>
+    /// <param name="ASeedMaterial">Input string to the derivation function.</param>
+    /// <param name="ASeedLength">Number of bits to return.</param>
+    /// <param name="AOutput">
+    /// Pre-sized buffer of length <c>(ASeedLength + 7) div 8</c> bytes.
+    /// </param>
     class procedure HashDF(const ADigest: IDigest;
       const ASeedMaterial: TCryptoLibByteArray; ASeedLength: Int32;
       const AOutput: TCryptoLibByteArray); static;
@@ -95,14 +115,18 @@ var
   LDig, LHeader: TCryptoLibByteArray;
   LCarry, LB: UInt32;
 begin
+  // 1. temp = empty string (accumulated into AOutput)
   LOutputLength := (ASeedLength + 7) div 8;
   LDigestSize := ADigest.GetDigestSize;
+  // 2. len = no_of_bits_to_return; n = ceil(len / hashlen)
   LLen := LOutputLength div LDigestSize;
+  // 3. counter = 1
   LCounter := 1;
   System.SetLength(LDig, LDigestSize);
   System.SetLength(LHeader, 5);
   TPack.UInt32_To_BE(UInt32(ASeedLength), LHeader, 1);
 
+  // 4. For i = 1 to n: K = Hash(counter || len || input_string); temp = temp || K
   for LI := 0 to LLen do
   begin
     LHeader[0] := Byte(LCounter);
@@ -117,6 +141,7 @@ begin
     Inc(LCounter);
   end;
 
+  // 5-6. Return leftmost len bits (right-shift when len is not a multiple of 8)
   if (ASeedLength mod 8) <> 0 then
   begin
     LCarry := 0;

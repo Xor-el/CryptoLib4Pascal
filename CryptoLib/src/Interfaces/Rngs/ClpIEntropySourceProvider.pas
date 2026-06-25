@@ -28,6 +28,12 @@ type
   IEntropySourceProvider = interface(IInterface)
     ['{F5C8B3A2-4D6E-5A7F-8B2C-3E9F1D4A5B67}']
 
+    /// <summary>
+    /// Return an <see cref="IEntropySource"/> that supplies the requested number of
+    /// bits per <see cref="IEntropySource.GetEntropy"/> call.
+    /// </summary>
+    /// <param name="ABitsRequired">Number of bits of entropy required per fetch.</param>
+    /// <returns>A new entropy source configured for the requested bit length.</returns>
     function Get(ABitsRequired: Int32): IEntropySource;
   end;
 

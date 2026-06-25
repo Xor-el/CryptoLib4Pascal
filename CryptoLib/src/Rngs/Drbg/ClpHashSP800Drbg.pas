@@ -42,6 +42,9 @@ resourcestring
     'Insufficient entropy provided by entropy source';
 
 type
+  /// <summary>
+  /// SP 800-90A Hash_DRBG implementation using a configurable hash function.
+  /// </summary>
   THashSP800Drbg = class sealed(TInterfacedObject, ISP80090Drbg)
   strict private
   const
@@ -75,15 +78,33 @@ type
     function GetBlockSize: Int32; inline;
 
   public
+    /// <summary>
+    /// Instantiate Hash_DRBG (Hash_DRBG_Instantiate_algorithm).
+    /// </summary>
+    /// <param name="ADigest">Approved hash function.</param>
+    /// <param name="ASecurityStrength">Requested security strength in bits.</param>
+    /// <param name="AEntropySource">Entropy source for instantiate and reseed.</param>
+    /// <param name="APersonalizationString">Optional personalization string; may be nil.</param>
+    /// <param name="ANonce">Nonce from the consuming application; may be nil.</param>
     constructor Create(const ADigest: IDigest; ASecurityStrength: Int32;
       const AEntropySource: IEntropySource;
       const APersonalizationString, ANonce: TCryptoLibByteArray);
 
+    /// <summary>
+    /// Generate pseudorandom bytes (Hash_DRBG_Generate_algorithm).
+    /// </summary>
+    /// <returns>
+    /// Number of bits generated, or <c>-1</c> when reseed is required before further output.
+    /// </returns>
     function Generate(const AOutput: TCryptoLibByteArray; AOutputOff, AOutputLen: Int32;
       const AAdditionalInput: TCryptoLibByteArray;
       APredictionResistant: Boolean): Int32;
+    /// <summary>
+    /// Reseed the internal state (Hash_DRBG_Reseed_algorithm).
+    /// </summary>
     procedure Reseed(const AAdditionalInput: TCryptoLibByteArray);
 
+    /// <summary>Internal state size in bits (<c>seedlen</c> for the chosen digest).</summary>
     property BlockSize: Int32 read GetBlockSize;
   end;
 
@@ -96,6 +117,7 @@ var
   LOff, LI: Int32;
   LCarry: UInt32;
 begin
+  // Add AShorter into the low-order bytes of ALonger (big-endian, mod 2^seedlen)
   LOff := System.Length(ALonger) - System.Length(AShorter);
   LCarry := 0;
 
@@ -157,13 +179,16 @@ begin
   FSecurityStrength := ASecurityStrength;
   FSeedLength := GetSeedLength(ADigest.AlgorithmName);
 
+  // 1. seed_material = entropy_input || nonce || personalization_string
   LEntropy := GetEntropy();
   LSeedMaterial := TArrayUtilities.Concatenate<Byte>([LEntropy, ANonce,
     APersonalizationString]);
 
+  // 2. V = Hash_df(seed_material, seedlen)
   System.SetLength(FV, (FSeedLength + 7) div 8);
   TDrbgUtilities.HashDF(FDigest, LSeedMaterial, FSeedLength, FV);
 
+  // 3. C = Hash_df(0x00 || V, seedlen)
   System.SetLength(LSubV, System.Length(FV) + 1);
   if System.Length(FV) > 0 then
   begin
@@ -173,6 +198,7 @@ begin
   System.SetLength(FC, (FSeedLength + 7) div 8);
   TDrbgUtilities.HashDF(FDigest, LSubV, FSeedLength, FC);
 
+  // 4. reseed_counter = 1
   FReseedCounter := 1;
 end;
 
@@ -201,6 +227,7 @@ begin
       (@SNumberOfBitsPerRequestLimitedTo, [MAX_BITS_REQUEST]);
   end;
 
+  // 1. If reseed_counter > reseed_interval, return indication that a reseed is required
   if FReseedCounter > RESEED_MAX then
   begin
     Result := -1;
@@ -208,12 +235,14 @@ begin
   end;
 
   LAdditionalInput := AAdditionalInput;
+  // 2. If prediction_resistance_request, Hash_DRBG_Reseed with additional_input
   if APredictionResistant then
   begin
     Reseed(LAdditionalInput);
     LAdditionalInput := nil;
   end;
 
+  // 3. If additional_input != Null: w = Hash(0x02 || V || additional_input); V = (V + w) mod 2^seedlen
   if LAdditionalInput <> nil then
   begin
     System.SetLength(LNewInput,
@@ -232,8 +261,10 @@ begin
     AddTo(FV, LW);
   end;
 
+  // 4. returned_bits = Hashgen(V, requested_number_of_bits)
   LRv := Hashgen(FV, AOutputLen);
 
+  // 5. H = Hash(0x03 || V); V = (V + H + C + reseed_counter) mod 2^seedlen
   System.SetLength(LSubH, System.Length(FV) + 1);
   LSubH[0] := $03;
   if System.Length(FV) > 0 then
@@ -249,6 +280,7 @@ begin
   TPack.UInt32_To_BE(UInt32(FReseedCounter), LC);
   AddTo(FV, LC);
 
+  // 6. reseed_counter = reseed_counter + 1
   Inc(FReseedCounter);
 
   if AOutputLen > 0 then
@@ -256,6 +288,7 @@ begin
     System.Move(LRv[0], AOutput[AOutputOff], AOutputLen * System.SizeOf(Byte));
   end;
 
+  // 7. Return SUCCESS and returned_bits
   Result := LNumberOfBits;
 end;
 
@@ -296,6 +329,7 @@ var
   LDigestSize, LM, LI, LBytesToCopy: Int32;
   LData, LDig: TCryptoLibByteArray;
 begin
+  // Hashgen: concatenate Hash(data), Hash(data+1), ... until requested_number_of_bits obtained
   LDigestSize := FDigest.GetDigestSize();
   LM := ALength div LDigestSize;
   LData := System.Copy(AInput);
@@ -323,11 +357,14 @@ procedure THashSP800Drbg.Reseed(const AAdditionalInput: TCryptoLibByteArray);
 var
   LEntropy, LSeedMaterial, LSubV: TCryptoLibByteArray;
 begin
+  // 1. seed_material = 0x01 || V || entropy_input || additional_input
   LEntropy := GetEntropy();
   LSeedMaterial := TArrayUtilities.Concatenate<Byte>([FOne, FV, LEntropy,
     AAdditionalInput]);
+  // 2. V = Hash_df(seed_material, seedlen)
   TDrbgUtilities.HashDF(FDigest, LSeedMaterial, FSeedLength, FV);
 
+  // 3. C = Hash_df(0x00 || V, seedlen)
   System.SetLength(LSubV, System.Length(FV) + 1);
   LSubV[0] := $00;
   if System.Length(FV) > 0 then
@@ -336,6 +373,7 @@ begin
   end;
   TDrbgUtilities.HashDF(FDigest, LSubV, FSeedLength, FC);
 
+  // 4. reseed_counter = 1
   FReseedCounter := 1;
 end;
 

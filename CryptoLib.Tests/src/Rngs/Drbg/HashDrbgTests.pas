@@ -41,6 +41,10 @@ uses
   CryptoLibTestBase;
 
 type
+  /// <summary>
+  /// NIST SP 800-90A Hash_DRBG known-answer tests using JSON vectors under
+  /// <c>CryptoLib.Tests/Data/Crypto/Drbg/</c>.
+  /// </summary>
   TTestHashDrbg = class(TCryptoLibAlgorithmTestCase)
   published
     procedure TestHashDrbgVectors;

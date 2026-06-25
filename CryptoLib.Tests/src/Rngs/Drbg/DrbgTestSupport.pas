@@ -33,6 +33,9 @@ uses
   CryptoLibTestBase;
 
 type
+  /// <summary>
+  /// Deterministic entropy provider and helpers shared by DRBG vector tests.
+  /// </summary>
   TTestEntropySourceProvider = class sealed(TInterfacedObject, IEntropySourceProvider)
   strict private
   type
@@ -60,6 +63,9 @@ type
     function Get(ABitsRequired: Int32): IEntropySource;
   end;
 
+  /// <summary>
+  /// Factory and assertion helpers for DRBG KAT execution.
+  /// </summary>
   TDrbgTestSupport = class sealed(TObject)
   public
     class function CreateEntropyProvider(const AProviderName: string)

@@ -32,9 +32,16 @@ resourcestring
   SSecureRandomNil = 'secureRandom cannot be nil';
 
 type
+  /// <summary>
+  /// <see cref="IEntropySourceProvider"/> implementation that
+  /// wraps an <see cref="ISecureRandom"/> and uses GetNextBytes for each entropy request.
+  /// </summary>
   TBasicEntropySourceProvider = class sealed(TInterfacedObject, IEntropySourceProvider)
   strict private
   type
+    /// <summary>
+    /// Entropy source backed by a secure random instance.
+    /// </summary>
     TBasicEntropySource = class sealed(TInterfacedObject, IEntropySource)
     strict private
       FSecureRandom: ISecureRandom;
@@ -54,8 +61,18 @@ type
     FIsPredictionResistant: Boolean;
 
   public
+    /// <summary>
+    /// Create a provider that delegates entropy to <paramref name="ASecureRandom"/>.
+    /// </summary>
+    /// <param name="ASecureRandom">Underlying secure random; must not be nil.</param>
+    /// <param name="AIsPredictionResistant">
+    /// Whether returned sources are prediction-resistant.
+    /// </param>
     constructor Create(const ASecureRandom: ISecureRandom;
       AIsPredictionResistant: Boolean);
+    /// <summary>
+    /// Return an entropy source sized for <paramref name="ABitsRequired"/> bits.
+    /// </summary>
     function Get(ABitsRequired: Int32): IEntropySource;
   end;
 

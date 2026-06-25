@@ -41,6 +41,9 @@ resourcestring
     'Insufficient entropy provided by entropy source';
 
 type
+  /// <summary>
+  /// SP 800-90A HMAC_DRBG implementation using a configurable HMAC function.
+  /// </summary>
   THMacSP800Drbg = class sealed(TInterfacedObject, ISP80090Drbg)
   strict private
   const
@@ -62,15 +65,33 @@ type
       AVValue: Byte); inline;
 
   public
+    /// <summary>
+    /// Instantiate HMAC_DRBG (HMAC_DRBG_Instantiate_algorithm).
+    /// </summary>
+    /// <param name="AHMac">Approved HMAC instance (underlying digest determines strength).</param>
+    /// <param name="ASecurityStrength">Requested security strength in bits.</param>
+    /// <param name="AEntropySource">Entropy source for instantiate and reseed.</param>
+    /// <param name="APersonalizationString">Optional personalization string; may be nil.</param>
+    /// <param name="ANonce">Nonce from the consuming application; may be nil.</param>
     constructor Create(const AHMac: IMac; ASecurityStrength: Int32;
       const AEntropySource: IEntropySource;
       const APersonalizationString, ANonce: TCryptoLibByteArray);
 
+    /// <summary>
+    /// Generate pseudorandom bytes (HMAC_DRBG_Generate_algorithm).
+    /// </summary>
+    /// <returns>
+    /// Number of bits generated, or <c>-1</c> when reseed is required before further output.
+    /// </returns>
     function Generate(const AOutput: TCryptoLibByteArray; AOutputOff, AOutputLen: Int32;
       const AAdditionalInput: TCryptoLibByteArray;
       APredictionResistant: Boolean): Int32;
+    /// <summary>
+    /// Reseed the internal state (HMAC_DRBG_Reseed_algorithm).
+    /// </summary>
     procedure Reseed(const AAdditionalInput: TCryptoLibByteArray);
 
+    /// <summary>Internal value size in bits (HMAC output length).</summary>
     property BlockSize: Int32 read GetBlockSize;
   end;
 
@@ -103,10 +124,12 @@ begin
   FSecurityStrength := ASecurityStrength;
   FEntropySource := AEntropySource;
 
+  // 1. seed_material = entropy_input || nonce || personalization_string
   LEntropy := GetEntropy();
   LSeedMaterial := TArrayUtilities.Concatenate<Byte>([LEntropy, ANonce,
     APersonalizationString]);
 
+  // 2. Key = 0x00...00; V = 0x01...01 (outlen bytes each)
   System.SetLength(FK, AHMac.GetMacSize());
   System.SetLength(FV, System.Length(FK));
   for LI := 0 to System.Pred(System.Length(FV)) do
@@ -114,6 +137,7 @@ begin
     FV[LI] := Byte(1);
   end;
 
+  // 3. HMAC_DRBG_Update(seed_material); 4. reseed_counter = 1
   HmacDrbgUpdate(LSeedMaterial);
   FReseedCounter := 1;
 end;
@@ -132,6 +156,7 @@ begin
       (@SNumberOfBitsPerRequestLimitedTo, [MAX_BITS_REQUEST]);
   end;
 
+  // 1. If reseed_counter > reseed_interval, return indication that a reseed is required
   if FReseedCounter > RESEED_MAX then
   begin
     Result := -1;
@@ -139,17 +164,20 @@ begin
   end;
 
   LAdditionalInput := AAdditionalInput;
+  // 2. If prediction_resistance_request, HMAC_DRBG_Reseed with additional_input
   if APredictionResistant then
   begin
     Reseed(LAdditionalInput);
     LAdditionalInput := nil;
   end;
 
+  // 3. If additional_input != Null: HMAC_DRBG_Update(additional_input)
   if LAdditionalInput <> nil then
   begin
     HmacDrbgUpdate(LAdditionalInput);
   end;
 
+  // 4. returned_bits = empty; while len(returned_bits) < requested_number_of_bits: V = HMAC(Key, V); returned_bits = returned_bits || V
   System.SetLength(LRv, AOutputLen);
   LM := AOutputLen div System.Length(FV);
 
@@ -171,6 +199,7 @@ begin
       LRemaining * System.SizeOf(Byte));
   end;
 
+  // 5. HMAC_DRBG_Update(additional_input); 6. reseed_counter = reseed_counter + 1
   HmacDrbgUpdate(LAdditionalInput);
   Inc(FReseedCounter);
 
@@ -180,6 +209,7 @@ begin
     System.Move(LRv[0], AOutput[AOutputOff], LCopyLen);
   end;
 
+  // 7. Return SUCCESS and returned_bits
   Result := LNumberOfBits;
 end;
 
@@ -200,6 +230,7 @@ end;
 
 procedure THMacSP800Drbg.HmacDrbgUpdate(const ASeedMaterial: TCryptoLibByteArray);
 begin
+  // HMAC_DRBG_Update: Update with 0x00, then with 0x01 when seed material is present
   HmacDrbgUpdateFunc(ASeedMaterial, $00);
   if ASeedMaterial <> nil then
   begin
@@ -209,6 +240,7 @@ end;
 
 procedure THMacSP800Drbg.HmacDrbgUpdateFunc(const ASeedMaterial: TCryptoLibByteArray; AVValue: Byte);
 begin
+  // K = HMAC(K, V || 0x00 [|| provided_data]); V = HMAC(K, V)
   FHMac.Init(TKeyParameter.Create(FK) as IKeyParameter);
   FHMac.BlockUpdate(FV, 0, System.Length(FV));
   FHMac.Update(AVValue);
@@ -229,8 +261,10 @@ procedure THMacSP800Drbg.Reseed(const AAdditionalInput: TCryptoLibByteArray);
 var
   LEntropy, LSeedMaterial: TCryptoLibByteArray;
 begin
+  // 1. seed_material = entropy_input || additional_input
   LEntropy := GetEntropy();
   LSeedMaterial := TArrayUtilities.Concatenate<Byte>([LEntropy, AAdditionalInput]);
+  // 2. HMAC_DRBG_Update(seed_material); 3. reseed_counter = 1
   HmacDrbgUpdate(LSeedMaterial);
   FReseedCounter := 1;
 end;

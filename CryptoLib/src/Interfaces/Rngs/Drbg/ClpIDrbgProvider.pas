@@ -29,6 +29,11 @@ type
   IDrbgProvider = interface(IInterface)
     ['{0E5BD1F7-4FE8-4304-901B-95E76A46E7E1}']
 
+    /// <summary>
+    /// Create a new <see cref="ISP80090Drbg"/> bound to the given entropy source.
+    /// </summary>
+    /// <param name="AEntropySource">Entropy source for seeding and reseeding.</param>
+    /// <returns>A new DRBG instance.</returns>
     function Get(const AEntropySource: IEntropySource): ISP80090Drbg;
   end;
 

@@ -32,10 +32,17 @@ resourcestring
   SRngNil = 'rng cannot be nil';
 
 type
+  /// <summary>
+  /// <see cref="IEntropySourceProvider"/> implementation that
+  /// wraps an <see cref="IRandomNumberGenerator"/>.
+  /// </summary>
   TCryptoApiEntropySourceProvider = class sealed(TInterfacedObject,
     IEntropySourceProvider)
   strict private
   type
+    /// <summary>
+    /// Entropy source backed by a platform random number generator.
+    /// </summary>
     TCryptoApiEntropySource = class sealed(TInterfacedObject, IEntropySource)
     strict private
       FRng: IRandomNumberGenerator;
@@ -55,9 +62,23 @@ type
     FIsPredictionResistant: Boolean;
 
   public
+    /// <summary>
+    /// Create a provider using a default OS-backed random number generator with
+    /// prediction resistance enabled.
+    /// </summary>
     constructor Create(); overload;
+    /// <summary>
+    /// Create a provider that delegates entropy to <paramref name="ARng"/>.
+    /// </summary>
+    /// <param name="ARng">Underlying RNG; must not be nil.</param>
+    /// <param name="AIsPredictionResistant">
+    /// Whether returned sources are prediction-resistant.
+    /// </param>
     constructor Create(const ARng: IRandomNumberGenerator;
       AIsPredictionResistant: Boolean); overload;
+    /// <summary>
+    /// Return an entropy source sized for <paramref name="ABitsRequired"/> bits.
+    /// </summary>
     function Get(ABitsRequired: Int32): IEntropySource;
   end;
 

@@ -76,6 +76,10 @@ type
     Expected: TCryptoLibGenericArray<TCryptoLibByteArray>;
   end;
 
+  /// <summary>
+  /// Lazy-loaded SP 800-90A DRBG test vectors parsed from JSON under
+  /// <c>CryptoLib.Tests/Data/Crypto/Drbg/</c>.
+  /// </summary>
   TDrbgTestVectors = class sealed(TObject)
   strict private
     class var

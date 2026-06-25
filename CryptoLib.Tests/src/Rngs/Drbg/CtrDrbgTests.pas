@@ -42,6 +42,10 @@ uses
   CryptoLibTestBase;
 
 type
+  /// <summary>
+  /// NIST SP 800-90A AES CTR_DRBG known-answer tests using JSON vectors under
+  /// <c>CryptoLib.Tests/Data/Crypto/Drbg/</c>.
+  /// </summary>
   TTestCtrDrbg = class(TCryptoLibAlgorithmTestCase)
   published
     procedure TestCtrDrbgVectors;

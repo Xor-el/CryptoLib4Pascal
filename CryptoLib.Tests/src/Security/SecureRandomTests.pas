@@ -73,8 +73,11 @@ type
     procedure TestSha1Prng();
     procedure TestSha1PrngReplicable();
     procedure TestSha256Prng();
+    /// <summary>Smoke test for AES CTR_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
     procedure TestSP800Ctr();
+    /// <summary>Smoke test for Hash_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
     procedure TestSP800Hash();
+    /// <summary>Smoke test for HMAC_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
     procedure TestSP800HMac();
 
   end;

@@ -26,8 +26,19 @@ uses
   ClpIEntropySource;
 
 type
+  /// <summary>
+  /// Helper methods for assembling entropy from an
+  /// <see cref="IEntropySource"/>.
+  /// </summary>
   TEntropyUtilities = class sealed(TObject)
   public
+    /// <summary>
+    /// Repeatedly calls <paramref name="AEntropySource"/>.GetEntropy until
+    /// <paramref name="ANumBytes"/> have been copied into the result buffer.
+    /// </summary>
+    /// <param name="AEntropySource">Source supplying entropy bytes.</param>
+    /// <param name="ANumBytes">Required output length in bytes.</param>
+    /// <returns>A byte array of length <paramref name="ANumBytes"/>.</returns>
     class function GenerateSeed(const AEntropySource: IEntropySource;
       ANumBytes: Int32): TCryptoLibByteArray; static;
   end;

@@ -31,6 +31,12 @@ uses
   ClpIDrbgProvider;
 
 type
+  /// <summary>
+  /// Thread-safe <see cref="ISecureRandom"/> wrapper around an
+  /// SP 800-90A DRBG. Lazily instantiates the DRBG on first use and automatically
+  /// reseeds when <see cref="ISP80090Drbg.Generate"/> returns
+  /// <c>-1</c>.
+  /// </summary>
   TSP800SecureRandom = class(TSecureRandom, ISecureRandom)
   strict private
     FDrbgProvider: IDrbgProvider;
@@ -41,17 +47,40 @@ type
     FLock: TCriticalSection;
 
   public
+    /// <summary>
+    /// Create an SP 800-90A secure random backed by <paramref name="ADrbgProvider"/>.
+    /// </summary>
+    /// <param name="ARandomSource">
+    /// Optional secure random whose seed is updated by <see cref="SetSeed"/>; may be nil.
+    /// </param>
+    /// <param name="AEntropySource">
+    /// Entropy source passed to the DRBG provider when the DRBG is created.
+    /// </param>
+    /// <param name="ADrbgProvider">Factory that constructs the concrete DRBG instance.</param>
+    /// <param name="APredictionResistant">
+    /// When true, each <see cref="NextBytes"/> call requests prediction resistance.
+    /// </param>
     constructor Create(const ARandomSource: ISecureRandom;
       const AEntropySource: IEntropySource; const ADrbgProvider: IDrbgProvider;
       APredictionResistant: Boolean);
     destructor Destroy; override;
 
+    /// <summary>
+    /// Forward seed material to the configured <see cref="ISecureRandom"/> when present.
+    /// Does not reseed the DRBG directly.
+    /// </summary>
     procedure SetSeed(const ASeed: TCryptoLibByteArray); overload; override;
     procedure SetSeed(ASeed: Int64); overload; override;
     procedure NextBytes(const ABuf: TCryptoLibByteArray); overload; override;
     procedure NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32);
       overload; override;
+    /// <summary>
+    /// Assemble seed bytes from the configured entropy source.
+    /// </summary>
     function GenerateSeed(ALength: Int32): TCryptoLibByteArray; override;
+    /// <summary>
+    /// Explicitly reseed the underlying DRBG with optional additional input.
+    /// </summary>
     procedure Reseed(const AAdditionalInput: TCryptoLibByteArray); virtual;
   end;
 
@@ -98,6 +127,7 @@ begin
       FDrbg := FDrbgProvider.Get(FEntropySource);
     end;
 
+    // Auto-reseed when Generate returns -1 (reseed interval exceeded)
     if FDrbg.Generate(ABuf, AOff, ALen, nil, FPredictionResistant) < 0 then
     begin
       FDrbg.Reseed(nil);

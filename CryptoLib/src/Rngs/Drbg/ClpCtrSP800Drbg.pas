@@ -46,6 +46,10 @@ resourcestring
     'Insufficient entropy provided by entropy source';
 
 type
+  /// <summary>
+  /// SP 800-90A CTR_DRBG implementation. Only AES block ciphers are supported
+  /// (TDEA/3DES is not implemented).
+  /// </summary>
   TCtrSP800Drbg = class sealed(TInterfacedObject, ISP80090Drbg)
   strict private
   const
@@ -90,15 +94,34 @@ type
     function GetBlockSize: Int32; inline;
 
   public
+    /// <summary>
+    /// Instantiate CTR_DRBG (CTR_DRBG_Instantiate_algorithm).
+    /// </summary>
+    /// <param name="AEngine">AES block cipher engine.</param>
+    /// <param name="AKeySizeInBits">Key length in bits (128, 192, or 256 for AES).</param>
+    /// <param name="ASecurityStrength">Requested security strength in bits.</param>
+    /// <param name="AEntropySource">Entropy source for instantiate and reseed.</param>
+    /// <param name="APersonalizationString">Optional personalization string; may be nil.</param>
+    /// <param name="ANonce">Nonce from the consuming application; may be nil.</param>
     constructor Create(const AEngine: IBlockCipher; AKeySizeInBits,
       ASecurityStrength: Int32; const AEntropySource: IEntropySource;
       const APersonalizationString, ANonce: TCryptoLibByteArray);
 
+    /// <summary>
+    /// Generate pseudorandom bytes (CTR_DRBG_Generate_algorithm).
+    /// </summary>
+    /// <returns>
+    /// Number of bits generated, or <c>-1</c> when reseed is required before further output.
+    /// </returns>
     function Generate(const AOutput: TCryptoLibByteArray; AOutputOff, AOutputLen: Int32;
       const AAdditionalInput: TCryptoLibByteArray;
       APredictionResistant: Boolean): Int32;
+    /// <summary>
+    /// Reseed the internal state (CTR_DRBG_Reseed_algorithm).
+    /// </summary>
     procedure Reseed(const AAdditionalInput: TCryptoLibByteArray);
 
+    /// <summary>Block size of the underlying cipher in bits.</summary>
     property BlockSize: Int32 read GetBlockSize;
   end;
 
@@ -128,6 +151,7 @@ var
   LBlockSize, LN, LI: Int32;
   LChainingValue, LInputBlock: TCryptoLibByteArray;
 begin
+  // BCC: chaining value = E(Key, IV); for each block of data, chaining value = E(Key, chaining_value XOR block)
   LBlockSize := FEngine.GetBlockSize();
   System.SetLength(LChainingValue, LBlockSize);
   System.SetLength(LInputBlock, LBlockSize);
@@ -155,9 +179,11 @@ var
   LOutLen, LL, LSLen, LBlockLen, LI, LBytesToCopy: Int32;
   LS, LTemp, LBccOut, LIV, LK, LX: TCryptoLibByteArray;
 begin
+  // Block_Cipher_df: derive N bytes from input_string using BCC and counter-mode expansion
   LOutLen := FEngine.GetBlockSize();
   LL := System.Length(AInput);
 
+  // S = L || N || input_string || 0x80, padded to a multiple of outlen
   LSlen := 4 + 4 + LL + 1;
   LBlockLen := ((LSLen + LOutLen - 1) div LOutLen) * LOutLen;
   System.SetLength(LS, LBlockLen);
@@ -169,6 +195,7 @@ begin
   end;
   LS[8 + LL] := $80;
 
+  // temp = BCC(K, 0, S) || BCC(K, 1, S) || ... until temp holds key || X
   System.SetLength(LTemp, (FKeySizeInBits div 8) + LOutLen);
   System.SetLength(LBccOut, LOutLen);
   System.SetLength(LIV, LOutLen);
@@ -200,6 +227,7 @@ begin
     Inc(LI);
   end;
 
+  // Split temp into K and X; expand in counter mode to produce requested output
   System.SetLength(LX, LOutLen);
   if System.Length(LK) > 0 then
   begin
@@ -281,15 +309,18 @@ var
   LEntropy, LSeedMaterial, LSeed: TCryptoLibByteArray;
   LBlockSize: Int32;
 begin
+  // 1. seed_material = entropy_input || nonce || personalization_string
   LEntropy := GetEntropy();
   LSeedMaterial := TArrayUtilities.Concatenate<Byte>([LEntropy, ANonce,
     APersonalizationString]);
+  // 2. seed = Block_Cipher_df(seed_material, seedlen)
   LSeed := BlockCipherDF(LSeedMaterial, FSeedLength div 8);
 
   LBlockSize := FEngine.GetBlockSize();
   System.SetLength(FKey, (FKeySizeInBits + 7) div 8);
   System.SetLength(FV, LBlockSize);
 
+  // 3. CTR_DRBG_Update(seed); 4. reseed_counter = 1
   CtrDrbgUpdate(LSeed, FKey, FV);
   FReseedCounter := 1;
 end;
@@ -299,10 +330,13 @@ procedure TCtrSP800Drbg.CtrDrbgReseedAlgorithm(
 var
   LEntropy, LInput, LSeedMaterial: TCryptoLibByteArray;
 begin
+  // 1. seed_material = entropy_input || additional_input
   LEntropy := GetEntropy();
   LInput := TArrayUtilities.Concatenate<Byte>([LEntropy, AAdditionalInput]);
+  // 2. seed = Block_Cipher_df(seed_material, seedlen)
   LSeedMaterial := BlockCipherDF(LInput, FSeedLength div 8);
 
+  // 3. CTR_DRBG_Update(seed); 4. reseed_counter = 1
   CtrDrbgUpdate(LSeedMaterial, FKey, FV);
   FReseedCounter := 1;
 end;
@@ -313,6 +347,7 @@ var
   LSeedLength, LI, LOutLen, LBytesToCopy: Int32;
   LTemp, LOutputBlock: TCryptoLibByteArray;
 begin
+  // CTR_DRBG_Update: temp = E(Key, V+1) || E(Key, V+2) || ...; (Key, V) = temp XOR provided_data
   LSeedLength := System.Length(ASeed);
   System.SetLength(LTemp, LSeedLength);
   System.SetLength(LOutputBlock, FEngine.GetBlockSize());
@@ -365,6 +400,7 @@ var
   LAdditionalInput, LTmp: TCryptoLibByteArray;
   LI, LLimit, LBytesToCopy: Int32;
 begin
+  // 1. If reseed_counter > reseed_interval, return indication that a reseed is required
   if FReseedCounter > AES_RESEED_MAX then
   begin
     Result := -1;
@@ -378,12 +414,14 @@ begin
   end;
 
   LAdditionalInput := AAdditionalInput;
+  // 2. If prediction_resistance_request, CTR_DRBG_Reseed with additional_input
   if APredictionResistant then
   begin
     CtrDrbgReseedAlgorithm(LAdditionalInput);
     LAdditionalInput := nil;
   end;
 
+  // 3. If additional_input != Null: additional_input = Block_Cipher_df(...); CTR_DRBG_Update
   if LAdditionalInput <> nil then
   begin
     LAdditionalInput := BlockCipherDF(LAdditionalInput, FSeedLength div 8);
@@ -394,6 +432,7 @@ begin
     System.SetLength(LAdditionalInput, FSeedLength div 8);
   end;
 
+  // 4. returned_bits = empty; while len(returned_bits) < requested_number_of_bits: V = V+1; output block = E(Key, V)
   System.SetLength(LTmp, System.Length(FV));
   FEngine.Init(True, ExpandToKeyParameter(FKey));
 
@@ -414,9 +453,11 @@ begin
     end;
   end;
 
+  // 5. CTR_DRBG_Update(additional_input); 6. reseed_counter = reseed_counter + 1
   CtrDrbgUpdate(LAdditionalInput, FKey, FV);
   Inc(FReseedCounter);
 
+  // 7. Return SUCCESS and returned_bits
   Result := AOutputLen * 8;
 end;
 
