@@ -29,7 +29,8 @@ uses
   OctetStringTests, RelativeOidTests, UtcTimeTests, InputStreamTests, SetTests,
   X9Tests, PrivateKeyInfoTests, DerUtf8StringTests,
   EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
-  RelatedCertificateTests, CcmParametersTests, GcmParametersTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  RelatedCertificateTests, CcmParametersTests, GcmParametersTests,
+  CertificateTests, X509AltTests, X509ExtensionsTests,
   AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   RSATests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,
@@ -38,9 +39,10 @@ uses
   OcbTests, CcmTests, EaxTests, CMacTests, AeadTestUtilities, GcmReorderTests,
   GCMTests, GcmSivTests, GMacTests, Pkcs12Tests, Bip327MuSig2Tests,
   Bip340SchnorrTests, AlgorithmFinderTests, MlKemTests, MlDsaTests,
-  PqcPkcsTests, SlhDsaTests, Lib25519Tests, CryptoLibTestBase,
-  SimdSelectSlotTests, BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests,
-  Pkcs12StoreTests, OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
+  PqcPkcsTests, SlhDsaTests, Lib25519Tests, CryptoLibTestBase, CtrDrbgTests,
+  DrbgTestSupport, HashDrbgTests, HMacDrbgTests, SimdSelectSlotTests,
+  BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests,
+  OpenSslReaderTests, OpenSslWriterTests, X509CertGenTests,
   X509CertificatePairTests, X509UtilitiesTests, FixedSecureRandom,
   ShortenedDigest, CertTestUtilities, FusedKernelToggle,
   CryptoLibTestResourceLoader, CryptoTestKeys, NistSecureRandom, PqcTestSampler,
@@ -49,7 +51,7 @@ uses
   Argon2Vectors, AsymmetricTestVectors, SymmetricBlockVectors,
   ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
   CertVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec,
-  PqcTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
+  PqcTestVectors, DrbgTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
   IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}

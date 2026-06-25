@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="185">
+    <Units Count="190">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -780,6 +780,26 @@
         <Filename Value="..\src\Asn1\Cms\GcmParametersTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit184>
+      <Unit185>
+        <Filename Value="..\src\Utils\Vectors\DrbgTestVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit185>
+      <Unit186>
+        <Filename Value="..\src\Rngs\Drbg\CtrDrbgTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit186>
+      <Unit187>
+        <Filename Value="..\src\Rngs\Drbg\DrbgTestSupport.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit187>
+      <Unit188>
+        <Filename Value="..\src\Rngs\Drbg\HashDrbgTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit188>
+      <Unit189>
+        <Filename Value="..\src\Rngs\Drbg\HMacDrbgTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit189>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -790,7 +810,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Asn1\Cms;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Math\BinPoly;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Asn1\Cms;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Math\BinPoly;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Other>

@@ -334,7 +334,7 @@ begin
   begin
     LP := RandomBlocks(100);
     LA := RandomBytes(1000);
-    LPA := TArrayUtilities.Concatenate<Byte>(LP, LA);
+    LPA := TArrayUtilities.Concatenate<Byte>([LP, LA]);
 
     LGhashP := Ghash(LP, FEmpty);
     LGhashA := Ghash(LA, FEmpty);
@@ -358,7 +358,7 @@ begin
   begin
     LP := RandomBlocks(100);
     LA := RandomBytes(1000);
-    LPA := TArrayUtilities.Concatenate<Byte>(LP, LA);
+    LPA := TArrayUtilities.Concatenate<Byte>([LP, LA]);
 
     LGhashP := Ghash(FEmpty, LP);
     LGhashA := Ghash(FEmpty, LA);
