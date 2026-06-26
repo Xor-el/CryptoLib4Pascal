@@ -32,7 +32,7 @@ uses
   EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
   RelatedCertificateTests, CcmParametersTests, GcmParametersTests,
   CertificateTests, X509AltTests, X509ExtensionsTests,
-  AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
+  AuthorityKeyIdentifierTests, IdpRelativeNameTests, IetfUtilitiesTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests, RSATests,
   X931SignerTests, CryptoIOStreamTests, CryptoIOSinkTests, OaepTests,

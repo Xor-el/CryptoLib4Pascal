@@ -118,7 +118,6 @@ var
   LKeyAlg: string;
 begin
   ACipherTextLen := 0;
-  Result := False;
   if not (AKeySizeBytes in [16, 24, 32]) then
     raise EArgumentException.Create(Format('Invalid AES key size: %d bytes. Valid sizes are 16, 24, 32.', [AKeySizeBytes]));
 

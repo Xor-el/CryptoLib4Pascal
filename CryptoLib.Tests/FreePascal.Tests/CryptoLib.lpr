@@ -31,7 +31,7 @@ uses
   EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
   RelatedCertificateTests, CcmParametersTests, GcmParametersTests,
   CertificateTests, X509AltTests, X509ExtensionsTests,
-  AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
+  AuthorityKeyIdentifierTests, IdpRelativeNameTests, IetfUtilitiesTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   RSATests, PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests,
   X931SignerTests, CryptoIOStreamTests, CryptoIOSinkTests, OaepTests,

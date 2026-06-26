@@ -52,6 +52,7 @@ type
     class procedure FlushHexBytes(ABuf: TStringBuilder; AHexBytes: TMemoryStream;
       var ALastEscaped: Int32); static;
     class procedure CheckCompleteHexPair(AHex1: Int32); static;
+    class procedure AppendValue(ABuf: TStringBuilder; const AAttrValue: String); static;
 
   public
     /// <summary>
@@ -246,22 +247,69 @@ begin
   end;
 end;
 
+class procedure TIetfUtilities.AppendValue(ABuf: TStringBuilder; const AAttrValue: String);
+var
+  LLen, LFirstNonSpace, LLastNonSpace, LIndex: Int32;
+  LHashPrefix, LEscape: Boolean;
+  LC: Char;
+begin
+  LLen := System.Length(AAttrValue);
+
+  LHashPrefix := (LLen >= 2) and (AAttrValue[1] = '\') and (AAttrValue[2] = '#');
+
+  LFirstNonSpace := 1;
+  while (LFirstNonSpace <= LLen) and (AAttrValue[LFirstNonSpace] = ' ') do
+    System.Inc(LFirstNonSpace);
+
+  if LFirstNonSpace <= LLen then
+  begin
+    LLastNonSpace := LLen;
+    while AAttrValue[LLastNonSpace] = ' ' do
+      System.Dec(LLastNonSpace);
+  end
+  else
+    LLastNonSpace := 0;
+
+  LIndex := 1;
+  if LHashPrefix then
+  begin
+    ABuf.Append('\#');
+    LIndex := 3;
+  end;
+
+  while LIndex <= LLen do
+  begin
+    LC := AAttrValue[LIndex];
+    case LC of
+      ',', '"', '\', '+', '=', '<', '>', ';':
+        LEscape := True;
+      ' ':
+        LEscape := (not LHashPrefix) and (LIndex < LFirstNonSpace) or (LIndex > LLastNonSpace);
+    else
+      LEscape := False;
+    end;
+
+    if LEscape then
+      ABuf.Append('\');
+    ABuf.Append(LC);
+    System.Inc(LIndex);
+  end;
+end;
+
 class function TIetfUtilities.ValueToString(const AValue: IAsn1Encodable): String;
 var
-  LVBuf: TStringBuilder;
+  LVBuf, LResultBuf: TStringBuilder;
   LV: String;
   LStr: IAsn1String;
-  LEnd, LIndex, LStart, LEndBuf: Int32;
 begin
   LVBuf := TStringBuilder.Create();
+  LResultBuf := TStringBuilder.Create(64);
   try
     if Supports(AValue, IAsn1String, LStr) and (not Supports(AValue, IDerUniversalString)) then
     begin
       LV := LStr.GetString();
       if (System.Length(LV) > 0) and (LV[1] = '#') then
-      begin
         LVBuf.Append('\');
-      end;
       LVBuf.Append(LV);
     end
     else
@@ -275,48 +323,10 @@ begin
       end;
     end;
 
-    LEnd := LVBuf.Length;
-    LIndex := 0; // TStringBuilder.Chars uses 0-based indexing
-
-    if (LVBuf.Length >= 2) and (LVBuf.Chars[0] = '\') and (LVBuf.Chars[1] = '#') then
-    begin
-      System.Inc(LIndex, 2);
-    end;
-
-    while LIndex < LEnd do
-    begin
-      case LVBuf.Chars[LIndex] of
-        ',', '"', '\', '+', '=', '<', '>', ';':
-          begin
-            LVBuf.Insert(LIndex, '\');
-            System.Inc(LIndex, 2);
-            System.Inc(LEnd);
-          end;
-      else
-        System.Inc(LIndex);
-      end;
-    end;
-
-    LStart := 0;
-    if LVBuf.Length > 0 then
-    begin
-      while (LVBuf.Length > LStart) and (LVBuf.Chars[LStart] = ' ') do
-      begin
-        LVBuf.Insert(LStart, '\');
-        System.Inc(LStart, 2);
-      end;
-    end;
-
-    LEndBuf := LVBuf.Length - 1;
-
-    while (LEndBuf >= 0) and (LVBuf.Chars[LEndBuf] = ' ') do
-    begin
-      LVBuf.Insert(LEndBuf, '\');
-      System.Dec(LEndBuf);
-    end;
-
-    Result := LVBuf.ToString();
+    AppendValue(LResultBuf, LVBuf.ToString());
+    Result := LResultBuf.ToString();
   finally
+    LResultBuf.Free;
     LVBuf.Free;
   end;
 end;

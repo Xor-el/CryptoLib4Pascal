@@ -567,10 +567,6 @@ begin
 end;
 
 function TECPointBase.GetEncoded(ACompressed: Boolean): TCryptoLibByteArray;
-var
-  LNormed: IECPoint;
-  LX, LY: TCryptoLibByteArray;
-  LLen: Int32;
 begin
   if IsInfinity then
   begin
@@ -578,23 +574,8 @@ begin
     Result[0] := $00;
     Exit;
   end;
-  LNormed := Normalize();
-  LX := LNormed.XCoord.GetEncoded();
-  if ACompressed then
-  begin
-    System.SetLength(Result, 1 + System.Length(LX));
-    Result[0] := $02;
-    if LNormed.GetCompressionYTilde then
-      Result[0] := $03;
-    System.Move(LX[0], Result[1], System.Length(LX) * System.SizeOf(Byte));
-    Exit;
-  end;
-  LY := LNormed.YCoord.GetEncoded();
-  LLen := 1 + System.Length(LX) + System.Length(LY);
-  System.SetLength(Result, LLen);
-  Result[0] := $04;
-  System.Move(LX[0], Result[1], System.Length(LX) * System.SizeOf(Byte));
-  System.Move(LY[0], Result[1 + System.Length(LX)], System.Length(LY) * System.SizeOf(Byte));
+  System.SetLength(Result, GetEncodedLength(ACompressed));
+  EncodeTo(ACompressed, Result, 0);
 end;
 
 function TECPointBase.GetEncodedLength(ACompressed: Boolean): Int32;

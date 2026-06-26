@@ -309,8 +309,7 @@ begin
               TECCurveConstants.COORD_JACOBIAN_MODIFIED:
                 begin
                   LIso := LIsoTwiceP.GetZCoord(0);
-                  LIsoTwiceP := LC.CreatePoint(LIsoTwiceP.XCoord.ToBigInteger(),
-                    LIsoTwiceP.YCoord.ToBigInteger());
+                  LIsoTwiceP := LC.CreateRawPoint(LIsoTwiceP.XCoord, LIsoTwiceP.YCoord);
                   LIso2 := LIso.Square();
                   LIso3 := LIso2.Multiply(LIso);
                   LLast := LLast.ScaleX(LIso2).ScaleY(LIso3);

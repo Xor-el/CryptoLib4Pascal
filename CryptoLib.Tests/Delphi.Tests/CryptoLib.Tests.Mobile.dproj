@@ -447,7 +447,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECCurve.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECCurveConstants.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHRawAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHCBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpECDHCRawAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpECParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\ClpECDsaSigner.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\CryptoPro\ClpECGost3410NamedCurves.pas"/>
@@ -531,7 +533,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECCommon.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\ClpIECFieldElement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHRawAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCBasicAgreement.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIECDHCRawAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIECParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIECDsaSigner.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parsers\ClpIECIESPublicKeyParser.pas"/>
@@ -1234,6 +1238,7 @@
         <DCCReference Include="..\src\Asn1\X509\CertificateTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\IdpRelativeNameTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X500\IetfUtilitiesTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\GeneralNameTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\KeyUsageTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\SubjectKeyIdentifierTests.pas"/>

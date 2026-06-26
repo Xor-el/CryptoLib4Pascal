@@ -270,7 +270,8 @@ end;
 
 function TECFieldElement.GetEncoded: TCryptoLibByteArray;
 begin
-  Result := TBigIntegerUtilities.AsUnsignedByteArray(GetEncodedLength(), ToBigInteger);
+  System.SetLength(Result, GetEncodedLength());
+  EncodeTo(Result, 0);
 end;
 
 function TECFieldElement.GetEncodedLength: Int32;
