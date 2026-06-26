@@ -30,7 +30,8 @@ uses
   InputStreamTests, UtcTimeTests, RelativeOidTests, OctetStringTests, SetTests,
   X9Tests, PrivateKeyInfoTests, DerUtf8StringTests,
   EncryptedPrivateKeyInfoTests, Pkcs10CertRequestTests, DeltaCertificateTests,
-  RelatedCertificateTests, CcmParametersTests, GcmParametersTests, CertificateTests, X509AltTests, X509ExtensionsTests,
+  RelatedCertificateTests, CcmParametersTests, GcmParametersTests,
+  CertificateTests, X509AltTests, X509ExtensionsTests,
   AuthorityKeyIdentifierTests, IdpRelativeNameTests, X509NameTests,
   SubjectKeyIdentifierTests, KeyUsageTests, GeneralNameTests, KMacTests,
   PssTests, ISO9796Tests, RSABlindedTests, RSADigestSignerTests, RSATests,
@@ -40,7 +41,8 @@ uses
   GcmReorderTests, GCMTests, GcmSivTests, GMacTests, Pkcs12Tests,
   Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests, MlKemTests,
   MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests, Lib25519Tests,
-  CryptoLibTestBase, SimdSelectSlotTests, BinaryPrimitivesTests,
+  CryptoLibTestBase, CtrDrbgTests, DrbgTestSupport, HashDrbgTests,
+  HMacDrbgTests, SimdSelectSlotTests, BinaryPrimitivesTests,
   PkcsEncryptedPrivateKeyInfoTests, Pkcs12StoreTests, OpenSslReaderTests,
   OpenSslWriterTests, X509CertGenTests, X509CertificatePairTests,
   X509UtilitiesTests, FixedSecureRandom, ShortenedDigest, CertTestUtilities,
@@ -50,8 +52,8 @@ uses
   AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
   OpenSslVectors, PkcsVectors, CertVectors, PqcSampleCredentials,
   CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
-  Argon2Vectors, PqcTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
-  IPAddressUtilitiesTests, PemReaderTests;
+  Argon2Vectors, PqcTestVectors, DrbgTestVectors, Int32Tests, Int64Tests,
+  ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
 
 type
 

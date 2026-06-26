@@ -37,6 +37,7 @@ Data/
 | `Ed25519`, `Ed448` | RFC 8032 regression vectors |
 | `Bip340`, `Bip327` | BIP-340 Schnorr and BIP-327 MuSig2 vectors |
 | `Rsa`, `Dsa`, `Ecdsa` | Asymmetric algorithm vectors |
+| `Drbg/` | SP 800-90A DRBG vectors (Hash, HMAC, CTR-AES) |
 | `Pqc/` | Post-quantum vectors (`MlKem`, `MlDsa`, `SlhDsa`) |
 
 ### Other roots
@@ -113,6 +114,15 @@ Several test areas iterate a `Manifest.csv` index. The `File` column holds paths
 | `Crypto/Dsa/Fips1862Golden.json` | FIPS 186-2 appendix golden cases: `{"cases":[{testId,paramGen,keyGen,sign},…]}` |
 | `Crypto/Ecdsa/Curves.json` | X9.62 curves: `{"curves":[{curveId,curveType,…}]}` |
 | `Crypto/Ecdsa/Vectors.json` | ECDSA vectors: `{"vectors":[{vectorId,curveId,algorithm,…}]}` |
+
+### SP 800-90A DRBG (`Crypto/Drbg/`)
+
+| Path | Format |
+|------|--------|
+| `Crypto/Drbg/EntropyProviders.json` | Deterministic entropy streams: `{"providers":[{id,predictionResistant,hex},…]}` |
+| `Crypto/Drbg/HashDrbgVectors.json` | Hash_DRBG KAT: `{"vectors":[{id,digest,entropyProvider,entropyBits,predictionResistant,nonceHex,securityStrength,personalizationHex,additionalInputsHex,expectedHex},…]}` |
+| `Crypto/Drbg/HMacDrbgVectors.json` | HMAC_DRBG KAT: `{"vectors":[{id,mac,digest,entropyProvider,…,expectedHex},…]}` |
+| `Crypto/Drbg/CtrDrbgAesVectors.json` | CTR_DRBG (AES) KAT: `{"vectors":[{id,cipher,keySizeBits,entropyProvider,…,expectedHex},…]}` |
 
 ### Post-quantum (`Crypto/Pqc/`)
 

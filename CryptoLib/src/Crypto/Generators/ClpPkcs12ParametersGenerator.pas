@@ -137,7 +137,7 @@ begin
     RepeatFill(FPassword, LP);
   end;
 
-  LI := TArrayUtilities.Concatenate<Byte>(LS, LP);
+  LI := TArrayUtilities.Concatenate<Byte>([LS, LP]);
 
   System.SetLength(LA, FU);
   System.SetLength(LB, FV);

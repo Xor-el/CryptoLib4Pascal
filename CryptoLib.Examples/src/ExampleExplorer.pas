@@ -43,13 +43,14 @@ uses
   MlKemExample,
   MlDsaExample,
   SlhDsaExample,
-  CertificateExample;
+  CertificateExample,
+  SecureRandomExample;
 
 type
   TExampleBaseClass = class of TExampleBase;
 
 const
-  KnownExamples: array[0..8] of TExampleBaseClass = (
+  KnownExamples: array[0..9] of TExampleBaseClass = (
     TDigestExample,
     TCipherExample,
     TEcExample,
@@ -58,7 +59,8 @@ const
     TMlKemExample,
     TMlDsaExample,
     TSlhDsaExample,
-    TCertificateExample
+    TCertificateExample,
+    TSecureRandomExample
   );
 
 class procedure TExampleExplorer.Execute;

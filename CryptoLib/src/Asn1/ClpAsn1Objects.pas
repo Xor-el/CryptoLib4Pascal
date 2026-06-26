@@ -8879,7 +8879,7 @@ begin
   begin
     LContents := TAsn1RelativeOid.ParseIdentifier(ABranchID);
     CheckContentsLength(System.Length(FContents) + System.Length(LContents));
-    LContents := TArrayUtilities.Concatenate<Byte>(FContents, LContents);
+    LContents := TArrayUtilities.Concatenate<Byte>([FContents, LContents]);
   end;
 
   LRootID := GetID();
@@ -9548,7 +9548,7 @@ begin
   begin
     LBranchContents := ParseIdentifier(ABranchID);
     CheckContentsLength(System.Length(FContents) + System.Length(LBranchContents));
-    LContents := TArrayUtilities.Concatenate<Byte>(FContents, LBranchContents);
+    LContents := TArrayUtilities.Concatenate<Byte>([FContents, LBranchContents]);
   end;
 
   LRootID := GetID();

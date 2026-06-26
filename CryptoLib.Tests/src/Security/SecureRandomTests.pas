@@ -40,6 +40,14 @@ uses
   ClpICryptoApiRandomGenerator,
   ClpIRandomGenerator,
   ClpCryptoLibTypes,
+  ClpDigestUtilities,
+  ClpIDigest,
+  ClpHMac,
+  ClpIMac,
+  ClpIBlockCipher,
+  ClpAesUtilities,
+  ClpISP800SecureRandomBuilder,
+  ClpSP800SecureRandomBuilder,
   CryptoLibTestBase;
 
 type
@@ -65,6 +73,12 @@ type
     procedure TestSha1Prng();
     procedure TestSha1PrngReplicable();
     procedure TestSha256Prng();
+    /// <summary>Smoke test for AES CTR_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
+    procedure TestSP800Ctr();
+    /// <summary>Smoke test for Hash_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
+    procedure TestSP800Hash();
+    /// <summary>Smoke test for HMAC_DRBG via <see cref="TSP800SecureRandomBuilder"/>.</summary>
+    procedure TestSP800HMac();
 
   end;
 
@@ -252,24 +266,24 @@ end;
 
 procedure TTestSecureRandom.TestOSRandom;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
+  LRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
     (TRandomNumberGenerator.CreateRng(TOSRandomProvider.Instance))
     as ICryptoApiRandomGenerator);
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
 end;
 
 procedure TTestSecureRandom.TestAESPRNG;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
+  LRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create
     (TRandomNumberGenerator.CreateRng(TAesRandomProvider.Instance))
     as ICryptoApiRandomGenerator);
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
 end;
 
 procedure TTestSecureRandom.TestAESPRNGRandom;
@@ -325,35 +339,35 @@ end;
 
 procedure TTestSecureRandom.TestCryptoApi;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
+  LRandom := TSecureRandom.Create(TCryptoApiRandomGenerator.Create()
     as ICryptoApiRandomGenerator);
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
 end;
 
 procedure TTestSecureRandom.TestDefault;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.Create();
+  LRandom := TSecureRandom.Create();
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
 end;
 
 procedure TTestSecureRandom.TestNextDouble;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
   LValue: Double;
 begin
-  random := TSecureRandom.Create(TFixedRandomGenerator.Create($00) as IRandomGenerator);
-  LValue := random.NextDouble();
+  LRandom := TSecureRandom.Create(TFixedRandomGenerator.Create($00) as IRandomGenerator);
+  LValue := LRandom.NextDouble();
   CheckTrue(LValue >= 0.0);
   CheckTrue(LValue < 1.0);
 
-  random := TSecureRandom.Create(TFixedRandomGenerator.Create($FF) as IRandomGenerator);
-  LValue := random.NextDouble();
+  LRandom := TSecureRandom.Create(TFixedRandomGenerator.Create($FF) as IRandomGenerator);
+  LValue := LRandom.NextDouble();
   CheckTrue(LValue >= 0.0);
   CheckTrue(LValue < 1.0);
 end;
@@ -378,20 +392,67 @@ end;
 
 procedure TTestSecureRandom.TestSha1Prng;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.GetInstance('SHA1PRNG');
+  LRandom := TSecureRandom.GetInstance('SHA1PRNG');
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
 end;
 
 procedure TTestSecureRandom.TestSha256Prng;
 var
-  &random: ISecureRandom;
+  LRandom: ISecureRandom;
 begin
-  random := TSecureRandom.GetInstance('SHA256PRNG');
+  LRandom := TSecureRandom.GetInstance('SHA256PRNG');
 
-  CheckSecureRandom(random);
+  CheckSecureRandom(LRandom);
+end;
+
+procedure TTestSecureRandom.TestSP800Ctr;
+var
+  LNonce: TCryptoLibByteArray;
+  LBuilder: ISP800SecureRandomBuilder;
+  LEngine: IBlockCipher;
+  LRandom: ISecureRandom;
+begin
+  System.SetLength(LNonce, 32);
+  LBuilder := TSP800SecureRandomBuilder.Create();
+  LEngine := TAesUtilities.CreateEngine();
+  LRandom := LBuilder.BuildCtr(LEngine, 256, LNonce, False);
+
+  CheckSecureRandom(LRandom);
+end;
+
+procedure TTestSecureRandom.TestSP800Hash;
+var
+  LNonce: TCryptoLibByteArray;
+  LBuilder: ISP800SecureRandomBuilder;
+  LDigest: IDigest;
+  LRandom: ISecureRandom;
+begin
+  System.SetLength(LNonce, 32);
+  LBuilder := TSP800SecureRandomBuilder.Create();
+  LDigest := TDigestUtilities.GetDigest('SHA-256');
+  LRandom := LBuilder.BuildHash(LDigest, LNonce, False);
+
+  CheckSecureRandom(LRandom);
+end;
+
+procedure TTestSecureRandom.TestSP800HMac;
+var
+  LNonce: TCryptoLibByteArray;
+  LBuilder: ISP800SecureRandomBuilder;
+  LDigest: IDigest;
+  LHMac: IMac;
+  LRandom: ISecureRandom;
+begin
+  System.SetLength(LNonce, 32);
+  LBuilder := TSP800SecureRandomBuilder.Create();
+  LDigest := TDigestUtilities.GetDigest('SHA-256');
+  LHMac := THMac.Create(LDigest);
+  LRandom := LBuilder.BuildHMac(LHMac, LNonce, False);
+
+  CheckSecureRandom(LRandom);
 end;
 
 initialization

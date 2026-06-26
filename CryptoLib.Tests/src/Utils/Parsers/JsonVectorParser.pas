@@ -68,6 +68,7 @@ type
     function IsNullField(const AName: string): Boolean;
     function GetString(const AName: string): string;
     function GetInt(const AName: string; ADefault: Integer = 0): Integer;
+    function GetBool(const AName: string; ADefault: Boolean = False): Boolean;
     function GetStringArray(const AName: string): TCryptoLibStringArray;
     function GetIntArray(const AName: string): TCryptoLibGenericArray<Int32>;
     function GetBoolArray(const AName: string): TCryptoLibBooleanArray;
@@ -209,6 +210,16 @@ begin
   if not HasField(AName) or IsNullField(AName) then
     Exit(ADefault);
   Result := StrToIntDef(GetString(AName), ADefault);
+end;
+
+function TJsonVectorObject.GetBool(const AName: string; ADefault: Boolean): Boolean;
+var
+  LNode: TJsonNode;
+begin
+  LNode := GetField(AName);
+  if (LNode = nil) or NodeIsNull(LNode) then
+    Exit(ADefault);
+  Result := NodeAsBoolean(LNode);
 end;
 
 function TJsonVectorObject.GetStringArray(const AName: string): TCryptoLibStringArray;

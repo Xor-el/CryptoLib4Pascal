@@ -45,7 +45,7 @@ type
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
     class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean; overload; static;
 
-    class function Concatenate<T>(const A, B: TCryptoLibGenericArray<T>)
+    class function Concatenate<T>(const AArrays: TCryptoLibMatrixGenericArray<T>)
       : TCryptoLibGenericArray<T>; static;
 
     class function AreAllZeroes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32)
@@ -185,18 +185,24 @@ begin
   Result := CompareMem(@A[0], @B[0], LLen * System.SizeOf(Int32));
 end;
 
-class function TArrayUtilities.Concatenate<T>(const A, B: TCryptoLibGenericArray<T>)
+class function TArrayUtilities.Concatenate<T>(const AArrays: TCryptoLibMatrixGenericArray<T>)
   : TCryptoLibGenericArray<T>;
 var
-  LI, LLenA, LLenB: Int32;
+  LI, LJ, LTotalLen, LOffset: Int32;
 begin
-  LLenA := System.Length(A);
-  LLenB := System.Length(B);
-  System.SetLength(Result, LLenA + LLenB);
-  for LI := 0 to LLenA - 1 do
-    Result[LI] := A[LI];
-  for LI := 0 to LLenB - 1 do
-    Result[LLenA + LI] := B[LI];
+  LTotalLen := 0;
+  for LI := 0 to System.High(AArrays) do
+    Inc(LTotalLen, System.Length(AArrays[LI]));
+
+  System.SetLength(Result, LTotalLen);
+
+  LOffset := 0;
+  for LI := 0 to System.High(AArrays) do
+  begin
+    for LJ := 0 to System.Length(AArrays[LI]) - 1 do
+      Result[LOffset + LJ] := AArrays[LI][LJ];
+    Inc(LOffset, System.Length(AArrays[LI]));
+  end;
 end;
 
 class function TArrayUtilities.AreAllZeroes(const ABuf: TCryptoLibByteArray;
