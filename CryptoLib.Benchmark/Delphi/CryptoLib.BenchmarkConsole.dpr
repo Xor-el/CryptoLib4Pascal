@@ -568,6 +568,7 @@ uses
   ClpBits in '..\..\CryptoLib\src\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\CryptoLib\src\Math\Raw\ClpMod.pas',
   ClpInterleave in '..\..\CryptoLib\src\Math\Raw\ClpInterleave.pas',
+  ClpGF256Aes in '..\..\CryptoLib\src\Math\Raw\ClpGF256Aes.pas',
   ClpNat in '..\..\CryptoLib\src\Math\Raw\ClpNat.pas',
   ClpNat128 in '..\..\CryptoLib\src\Math\Raw\ClpNat128.pas',
   ClpNat160 in '..\..\CryptoLib\src\Math\Raw\ClpNat160.pas',

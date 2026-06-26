@@ -567,6 +567,7 @@ contains
   ClpBits in '..\..\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\Math\Raw\ClpMod.pas',
   ClpInterleave in '..\..\Math\Raw\ClpInterleave.pas',
+  ClpGF256Aes in '..\..\Math\Raw\ClpGF256Aes.pas',
   ClpNat in '..\..\Math\Raw\ClpNat.pas',
   ClpNat128 in '..\..\Math\Raw\ClpNat128.pas',
   ClpNat160 in '..\..\Math\Raw\ClpNat160.pas',

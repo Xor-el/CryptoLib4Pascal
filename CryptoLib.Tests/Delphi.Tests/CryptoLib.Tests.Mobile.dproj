@@ -908,6 +908,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpBits.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpMod.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpInterleave.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpGF256Aes.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat128.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpNat160.pas"/>
@@ -1159,6 +1160,7 @@
         <DCCReference Include="..\src\Math\BigIntegerTests.pas"/>
         <DCCReference Include="..\src\Math\PrimesTests.pas"/>
         <DCCReference Include="..\src\Math\BinPoly\BinPolyTests.pas"/>
+        <DCCReference Include="..\src\Math\Raw\GF256AesTests.pas"/>
         <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP384R1FieldTests.pas"/>
         <DCCReference Include="..\src\Others\DigestTests.pas"/>
         <DCCReference Include="..\src\Others\ECDsa5Tests.pas"/>

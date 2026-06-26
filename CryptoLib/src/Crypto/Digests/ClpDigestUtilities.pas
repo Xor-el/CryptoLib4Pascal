@@ -38,6 +38,7 @@ uses
   ClpEnumUtilities,
   ClpIDigest,
   ClpIAsn1Objects,
+  ClpIX509Asn1Objects,
   ClpMiscObjectIdentifiers,
   ClpNistObjectIdentifiers,
   ClpOiwObjectIdentifiers,
@@ -51,6 +52,8 @@ resourcestring
   SUnRecognizedDigest = 'digest %s not recognized';
   SOidNotRecognised = 'digest OID not recognized';
   SOidNil = 'OID cannot be nil';
+  SAlgIDNil = 'algorithm identifier cannot be nil';
+  SDigestAlgorithmNotRecognized = 'digest algorithm not recognized';
 
 type
   /// <summary>
@@ -135,6 +138,15 @@ type
     class function GetDigest(const AOid: IDerObjectIdentifier): IDigest; overload; static;
 
     /// <summary>
+    /// Resolve and instantiate an <see cref="IDigest"/> for the given ASN.1 algorithm identifier.
+    /// </summary>
+    /// <param name="AAlgID">Digest algorithm identifier.</param>
+    /// <returns>A new digest instance.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException">If <paramref name="AAlgID"/> is <c>nil</c>.</exception>
+    /// <exception cref="ESecurityUtilityCryptoLibException">If parameters are present or the algorithm is not recognized.</exception>
+    class function GetDigest(const AAlgID: IAlgorithmIdentifier): IDigest; overload; static;
+
+    /// <summary>
     /// Resolve and instantiate an <see cref="IDigest"/> by name or alias.
     /// </summary>
     /// <param name="AAlgorithm">Digest name such as <c>SHA-256</c>, <c>SHA3-512</c>, or <c>BLAKE2B-512</c>.</param>
@@ -169,6 +181,23 @@ type
     class function CalculateDigest(const AOid: IDerObjectIdentifier; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static; inline;
 
     /// <summary>
+    /// One-shot digest of <paramref name="AInput"/> using the algorithm identified by <paramref name="AAlgID"/>.
+    /// </summary>
+    class function CalculateDigest(const AAlgID: IAlgorithmIdentifier; const AInput: TCryptoLibByteArray): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
+    /// One-shot digest of <paramref name="ALength"/> bytes from <paramref name="AInput"/> at <paramref name="AOffset"/>,
+    /// using the algorithm identified by <paramref name="AAlgID"/>.
+    /// </summary>
+    class function CalculateDigest(const AAlgID: IAlgorithmIdentifier; const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
+    /// One-shot digest of <paramref name="ALength"/> bytes from <paramref name="AInput"/> at <paramref name="AOffset"/>,
+    /// using the algorithm identified by <paramref name="AOid"/>.
+    /// </summary>
+    class function CalculateDigest(const AOid: IDerObjectIdentifier; const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray; overload; static; inline;
+
+    /// <summary>
     /// One-shot digest of <paramref name="AInput"/> using <paramref name="AAlgorithm"/>.
     /// </summary>
     /// <exception cref="ESecurityUtilityCryptoLibException">If <paramref name="AAlgorithm"/> is not recognised.</exception>
@@ -182,7 +211,19 @@ type
 
 implementation
 
+uses
+  ClpX509Utilities;
+
 { TDigestUtilities }
+
+class function TDigestUtilities.GetDigest(const AAlgID: IAlgorithmIdentifier): IDigest;
+begin
+  if AAlgID = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAlgIDNil);
+  if not TX509Utilities.HasAbsentParameters(AAlgID) then
+    raise ESecurityUtilityCryptoLibException.CreateRes(@SDigestAlgorithmNotRecognized);
+  Result := GetDigest(AAlgID.Algorithm);
+end;
 
 class function TDigestUtilities.GetDigest(const AOid: IDerObjectIdentifier): IDigest;
 var
@@ -354,6 +395,33 @@ var
 begin
   LDigest := GetDigest(AOid);
   Result := DoFinal(LDigest, AInput);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AAlgID: IAlgorithmIdentifier;
+  const AInput: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AAlgID);
+  Result := DoFinal(LDigest, AInput);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AAlgID: IAlgorithmIdentifier;
+  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AAlgID);
+  Result := DoFinal(LDigest, AInput, AOffset, ALength);
+end;
+
+class function TDigestUtilities.CalculateDigest(const AOid: IDerObjectIdentifier;
+  const AInput: TCryptoLibByteArray; AOffset, ALength: Int32): TCryptoLibByteArray;
+var
+  LDigest: IDigest;
+begin
+  LDigest := GetDigest(AOid);
+  Result := DoFinal(LDigest, AInput, AOffset, ALength);
 end;
 
 class function TDigestUtilities.CalculateDigest(const AAlgorithm: String;
