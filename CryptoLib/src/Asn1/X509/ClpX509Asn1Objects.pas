@@ -1081,9 +1081,10 @@ type
     class function CreateDefaultConverter: IX509NameEntryConverter; static;
     class function DecodeOid(const AName: String;
       const ALookup: TDictionary<String, IDerObjectIdentifier>): IDerObjectIdentifier; static;
-    class procedure AppendValue(const ABuf: TStringBuilder;
+    class procedure AppendTypeAndValue(const ABuf: TStringBuilder;
       const AOidSymbols: TDictionary<IDerObjectIdentifier, String>;
       const AOid: IDerObjectIdentifier; const AVal: String); static;
+    class procedure AppendValue(const ABuf: TStringBuilder; const AAttrValue: String); static;
     class function EquivalentStrings(const AS1, AS2: String): Boolean; static;
     class function NextToken(const ATokenizer: IX509NameTokenizer): String; static;
   strict private
@@ -7187,12 +7188,12 @@ begin
       if FAdded[LI] then
       begin
         LAva.Append('+');
-        AppendValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
+        AppendTypeAndValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
       end
       else
       begin
         LAva := TStringBuilder.Create();
-        AppendValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
+        AppendTypeAndValue(LAva, AOidSymbols, FOids[LI], FValues[LI]);
         LComponents.Add(LAva);
       end;
     end;
@@ -7562,13 +7563,11 @@ begin
   AAddedList.Add(AAdded);
 end;
 
-class procedure TX509Name.AppendValue(const ABuf: TStringBuilder;
+class procedure TX509Name.AppendTypeAndValue(const ABuf: TStringBuilder;
   const AOidSymbols: TDictionary<IDerObjectIdentifier, String>;
   const AOid: IDerObjectIdentifier; const AVal: String);
 var
   LSym: String;
-  LStart, LEnd, LIndex: Int32;
-  LC: Char;
 begin
   if AOidSymbols.TryGetValue(AOid, LSym) then
     ABuf.Append(LSym)
@@ -7576,50 +7575,55 @@ begin
     ABuf.Append(AOid.Id);
 
   ABuf.Append('=');
-  LStart := ABuf.Length;
+  AppendValue(ABuf, AVal);
+end;
 
-  ABuf.Append(AVal);
-  LEnd := ABuf.Length;
+class procedure TX509Name.AppendValue(const ABuf: TStringBuilder; const AAttrValue: String);
+var
+  LLen, LFirstNonSpace, LLastNonSpace, LIndex: Int32;
+  LHashPrefix, LEscape: Boolean;
+  LC: Char;
+begin
+  LLen := System.Length(AAttrValue);
 
-  // Skip escaped hash prefix if present
-  LIndex := LStart;
-  if (LIndex + 1 < LEnd) and (ABuf.Chars[LIndex] = '\') and (ABuf.Chars[LIndex + 1] = '#') then
-    System.Inc(LIndex, 2);
+  LHashPrefix := (LLen >= 2) and (AAttrValue[1] = '\') and (AAttrValue[2] = '#');
 
-  // Escape special characters
-  while LIndex <> LEnd do
+  LFirstNonSpace := 1;
+  while (LFirstNonSpace <= LLen) and (AAttrValue[LFirstNonSpace] = ' ') do
+    System.Inc(LFirstNonSpace);
+
+  if LFirstNonSpace <= LLen then
   begin
-    LC := ABuf.Chars[LIndex];
+    LLastNonSpace := LLen;
+    while AAttrValue[LLastNonSpace] = ' ' do
+      System.Dec(LLastNonSpace);
+  end
+  else
+    LLastNonSpace := 0;
+
+  LIndex := 1;
+  if LHashPrefix then
+  begin
+    ABuf.Append('\#');
+    LIndex := 3;
+  end;
+
+  while LIndex <= LLen do
+  begin
+    LC := AAttrValue[LIndex];
     case LC of
       ',', '"', '\', '+', '=', '<', '>', ';':
-      begin
-        ABuf.Insert(LIndex, '\');
-        System.Inc(LIndex, 2);
-        System.Inc(LEnd);
-      end;
+        LEscape := True;
+      ' ':
+        LEscape := (not LHashPrefix) and (LIndex < LFirstNonSpace) or (LIndex > LLastNonSpace);
     else
-      begin
-        System.Inc(LIndex);
-      end;
+      LEscape := False;
     end;
-  end;
 
-  while (LStart < LEnd) and (ABuf.Chars[LStart] = ' ') do
-  begin
-    ABuf.Insert(LStart, '\');
-    System.Inc(LStart, 2);
-    System.Inc(LEnd);
-  end;
-
-  // Escape trailing spaces
-  // Pre-decrement end at start of each iteration, then check
-  // First decrement before loop
-  System.Dec(LEnd);
-  while (LEnd > LStart) and (ABuf.Chars[LEnd] = ' ') do
-  begin
-    ABuf.Insert(LEnd, '\');
-    // Decrement for next iteration (matches --end in while condition)
-    System.Dec(LEnd);
+    if LEscape then
+      ABuf.Append('\');
+    ABuf.Append(LC);
+    System.Inc(LIndex);
   end;
 end;
 

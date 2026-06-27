@@ -32,6 +32,7 @@ type
     const M64: UInt64 = UInt64($5555555555555555);
     const M64R: UInt64 = UInt64($AAAAAAAAAAAAAAAA);
   public
+    class function Expand4to8(AX: Byte): UInt32; static;
     class function Expand8to16(AX: Byte): UInt32; static;
     class function Expand16to32(AX: UInt16): UInt32; static;
     class function Expand32to64(AX: UInt32): UInt64; static;
@@ -62,6 +63,16 @@ type
 implementation
 
 { TInterleave }
+
+class function TInterleave.Expand4to8(AX: Byte): UInt32;
+var
+  LT: UInt32;
+begin
+  LT := AX and $0F;
+  LT := (LT or (LT shl 2)) and $33;
+  LT := (LT or (LT shl 1)) and $55;
+  Result := LT;
+end;
 
 class function TInterleave.Expand8to16(AX: Byte): UInt32;
 var

@@ -102,6 +102,8 @@ type
 
     function GetFieldName: String; override;
     function GetFieldSize: Int32; override;
+    function GetEncodedLength: Int32; override;
+    procedure EncodeTo(var ABuf: TCryptoLibByteArray; AOff: Int32); override;
     function GetIsOne: Boolean; override;
     function GetIsZero: Boolean; override;
     function ToBigInteger: TBigInteger; override;
@@ -177,6 +179,7 @@ type
 
     function CloneCurve: IECCurve; override;
     function GetFieldSize: Int32; override;
+    function GetFieldElementEncodingLength: Int32; override;
     function GetInfinity: IECPoint; override;
     function FromBigInteger(const AX: TBigInteger): IECFieldElement; override;
     function CreateRawPoint(const AX, AY: IECFieldElement): IECPoint; override;
@@ -599,7 +602,20 @@ end;
 
 function TSecP384R1FieldElement.GetFieldSize: Int32;
 begin
-  Result := FQ.BitLength;
+  Result := 384;
+end;
+
+function TSecP384R1FieldElement.GetEncodedLength: Int32;
+begin
+  Result := 48;
+end;
+
+procedure TSecP384R1FieldElement.EncodeTo(var ABuf: TCryptoLibByteArray; AOff: Int32);
+var
+  LI: Int32;
+begin
+  for LI := 11 downto 0 do
+    TPack.UInt32_To_BE(FX[LI], ABuf, AOff + ((11 - LI) shl 2));
 end;
 
 function TSecP384R1FieldElement.GetIsOne: Boolean;
@@ -1029,7 +1045,7 @@ end;
 function TSecP384R1Curve.TSecP384R1LookupTable.CreatePoint(const AX, AY: TCryptoLibUInt32Array): IECPoint;
 begin
   Result := FOuter.CreateRawPoint(TSecP384R1FieldElement.Create(AX) as IECFieldElement,
-    TSecP384R1FieldElement.Create(AY) as IECFieldElement, TSecP384R1Curve.SecP384R1AffineZs);
+    TSecP384R1FieldElement.Create(AY) as IECFieldElement);
 end;
 
 function TSecP384R1Curve.TSecP384R1LookupTable.Lookup(AIndex: Int32): IECPoint;
@@ -1114,7 +1130,12 @@ end;
 
 function TSecP384R1Curve.GetFieldSize: Int32;
 begin
-  Result := TSecP384R1Curve.Q.BitLength;
+  Result := 384;
+end;
+
+function TSecP384R1Curve.GetFieldElementEncodingLength: Int32;
+begin
+  Result := 48;
 end;
 
 function TSecP384R1Curve.GetInfinity: IECPoint;
@@ -1129,7 +1150,7 @@ end;
 
 function TSecP384R1Curve.CreateRawPoint(const AX, AY: IECFieldElement): IECPoint;
 begin
-  Result := TSecP384R1Point.Create(Self as IECCurve, AX, AY);
+  Result := TSecP384R1Point.Create(Self as IECCurve, AX, AY, TSecP384R1Curve.SecP384R1AffineZs);
 end;
 
 function TSecP384R1Curve.CreateRawPoint(const AX, AY: IECFieldElement;

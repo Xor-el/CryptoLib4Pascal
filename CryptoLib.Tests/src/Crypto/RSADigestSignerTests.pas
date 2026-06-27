@@ -87,6 +87,7 @@ type
     procedure TestNullDigestSha1;
     procedure TestNullDigestSha256;
     procedure TestNullFormatError;
+    procedure TestNoNullDigestInfoTailBytesChecked;
   end;
 
 implementation
@@ -262,26 +263,58 @@ end;
 
 procedure TTestRSADigestSigner.TestNullFormatError;
 var
-  signer: ISigner;
-  exceptionRaised: Boolean;
+  LSigner: ISigner;
+  LExceptionRaised: Boolean;
 begin
-  signer := CreatePrehashSigner();
-  signer.Init(True, FRsaPrivate);
-  signer.BlockUpdate(TCryptoLibByteArray.Create(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0), 0, 20);
+  LSigner := CreatePrehashSigner();
+  LSigner.Init(True, FRsaPrivate);
+  LSigner.BlockUpdate(TCryptoLibByteArray.Create(0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0), 0, 20);
 
-  exceptionRaised := False;
+  LExceptionRaised := False;
   try
-    signer.GenerateSignature();
+    LSigner.GenerateSignature();
   except
     on E: Exception do
     begin
-      exceptionRaised := True;
+      LExceptionRaised := True;
       CheckTrue(Pos('unable to encode signature', E.Message) > 0,
         'Wrong exception message: ' + E.Message);
     end;
   end;
 
-  CheckTrue(exceptionRaised, 'Expected exception not raised');
+  CheckTrue(LExceptionRaised, 'Expected exception not raised');
+end;
+
+procedure TTestRSADigestSigner.TestNoNullDigestInfoTailBytesChecked;
+var
+  LMsg, LHash, LTampered, LLooseEnc, LForgedSig: TCryptoLibByteArray;
+  LDigest: IDigest;
+  LLoose: IDigestInfo;
+  LLooseSigner, LVerifier: ISigner;
+begin
+  LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
+
+  LDigest := TDigestUtilities.GetDigest('SHA-256');
+  LHash := TDigestUtilities.DoFinal(LDigest, LMsg);
+
+  LTampered := System.Copy(LHash);
+  LTampered[System.Length(LTampered) - 1] := LTampered[System.Length(LTampered) - 1] xor $01;
+  LTampered[System.Length(LTampered) - 2] := LTampered[System.Length(LTampered) - 2] xor $80;
+
+  LLoose := TDigestInfo.Create(
+    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, nil) as IAlgorithmIdentifier, LTampered);
+  LLooseEnc := LLoose.GetDerEncoded();
+
+  LLooseSigner := CreatePrehashSigner();
+  LLooseSigner.Init(True, FRsaPrivate);
+  LLooseSigner.BlockUpdate(LLooseEnc, 0, System.Length(LLooseEnc));
+  LForgedSig := LLooseSigner.GenerateSignature();
+
+  LVerifier := TRsaDigestSigner.Create(LDigest, TNistObjectIdentifiers.IdSha256);
+  LVerifier.Init(False, FRsaPublic);
+  LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  CheckFalse(LVerifier.VerifySignature(LForgedSig),
+    'no-NULL DigestInfo with wrong final hash bytes must be rejected');
 end;
 
 initialization

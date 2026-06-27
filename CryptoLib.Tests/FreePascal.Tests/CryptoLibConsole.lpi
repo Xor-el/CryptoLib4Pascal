@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="190">
+    <Units Count="192">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -800,6 +800,14 @@
         <Filename Value="..\src\Rngs\Drbg\HMacDrbgTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit189>
+      <Unit190>
+        <Filename Value="..\src\Asn1\X500\IetfUtilitiesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit190>
+      <Unit191>
+        <Filename Value="..\src\Math\Raw\GF256AesTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit191>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -810,7 +818,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Asn1\Cms;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Math\BinPoly;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg"/>
+      <OtherUnitFiles Value="..\src\Others;..\src\Asn1;..\src\Asn1\Cms;..\src\Asn1\X500;..\src\Math\EC\Custom\Sec;..\src\Math;..\src\Math\BinPoly;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg;..\src\Math\Raw"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Other>

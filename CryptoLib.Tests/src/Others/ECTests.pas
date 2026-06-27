@@ -40,6 +40,9 @@ uses
   ClpIBasicAgreement,
   ClpECDHBasicAgreement,
   ClpECDHCBasicAgreement,
+  ClpECDHRawAgreement,
+  ClpECDHCRawAgreement,
+  ClpIRawAgreement,
   ClpParametersWithRandom,
   ClpIParametersWithRandom,
   ClpECParameters,
@@ -52,6 +55,7 @@ uses
   ClpIECFieldElement,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
@@ -125,6 +129,7 @@ type
     procedure TestECDHPrime239v1;
     procedure TestECDHCPrime239v1;
     procedure TestECDHMismatchedCurves;
+    procedure TestECDHRawAgreement;
 
   end;
 
@@ -900,6 +905,59 @@ begin
   end;
   if not caught then
     Fail('Expected EInvalidOperationCryptoLibException for mismatched EC domain parameters');
+end;
+
+procedure TTestEC.TestECDHRawAgreement;
+var
+  LRandom: ISecureRandom;
+  LX9: IX9ECParameters;
+  LSpec: IECDomainParameters;
+  LGen: IAsymmetricCipherKeyPairGenerator;
+  LPair1, LPair2: IAsymmetricCipherKeyPair;
+  LBasic: IBasicAgreement;
+  LRaw: IRawAgreement;
+  LRawDhc: IRawAgreement;
+  LAgreement: TBigInteger;
+  LExpected, LActual, LActualDhc: TCryptoLibByteArray;
+  LFieldSize: Int32;
+begin
+  LRandom := TSecureRandom.Create();
+  LX9 := TECNamedCurveTable.GetByName('prime239v1');
+  if LX9 = nil then
+    Fail('prime239v1 not found');
+  LSpec := TECDomainParameters.FromX9ECParameters(LX9);
+
+  LGen := TGeneratorUtilities.GetKeyPairGenerator('EC');
+  LGen.Init(TECKeyGenerationParameters.Create(LSpec, LRandom) as IKeyGenerationParameters);
+  LPair1 := LGen.GenerateKeyPair();
+  LGen.Init(TECKeyGenerationParameters.Create(LSpec, LRandom) as IKeyGenerationParameters);
+  LPair2 := LGen.GenerateKeyPair();
+
+  LBasic := TECDHBasicAgreement.Create();
+  LBasic.Init(LPair1.Private as ICipherParameters);
+  LAgreement := LBasic.CalculateAgreement(LPair2.Public as ICipherParameters);
+  LFieldSize := LBasic.GetFieldSize();
+  LExpected := TBigIntegerUtilities.AsUnsignedByteArray(LFieldSize, LAgreement);
+
+  LRaw := TECDHRawAgreement.Create();
+  LRaw.Init(LPair1.Private as ICipherParameters);
+  CheckEquals(LFieldSize, LRaw.GetAgreementSize(), 'ECDH raw agreement size');
+  System.SetLength(LActual, LFieldSize);
+  LRaw.CalculateAgreement(LPair2.Public as ICipherParameters, LActual, 0);
+  CheckTrue(TArrayUtilities.FixedTimeEquals(LExpected, LActual),
+    'ECDH raw agreement must match fixed-width basic agreement encoding');
+
+  LBasic := TECDHCBasicAgreement.Create();
+  LBasic.Init(LPair1.Private as ICipherParameters);
+  LAgreement := LBasic.CalculateAgreement(LPair2.Public as ICipherParameters);
+  LExpected := TBigIntegerUtilities.AsUnsignedByteArray(LFieldSize, LAgreement);
+
+  LRawDhc := TECDHCRawAgreement.Create();
+  LRawDhc.Init(LPair1.Private as ICipherParameters);
+  System.SetLength(LActualDhc, LFieldSize);
+  LRawDhc.CalculateAgreement(LPair2.Public as ICipherParameters, LActualDhc, 0);
+  CheckTrue(TArrayUtilities.FixedTimeEquals(LExpected, LActualDhc),
+    'ECDHC raw agreement must match fixed-width basic agreement encoding');
 end;
 
 initialization

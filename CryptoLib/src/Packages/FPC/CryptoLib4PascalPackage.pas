@@ -245,11 +245,13 @@ uses
   ClpHashSlhDsaSigner, ClpSlhDsaSigner, ClpSlhDsaCore, ClpSlhDsaEngine, 
   ClpISlhDsaGenerators, ClpISlhDsaParameters, ClpIHashSlhDsaSigner, 
   ClpISlhDsaSigner, ClpISlhDsaCore, ClpISlhDsaEngine, ClpLib25519, 
-  ClpIEntropySource, ClpIEntropySourceProvider, ClpISP80090Drbg, ClpIDrbgProvider, 
-  ClpEntropyUtilities, ClpBasicEntropySourceProvider, 
+  ClpIEntropySource, ClpIEntropySourceProvider, ClpISP80090Drbg, 
+  ClpIDrbgProvider, ClpEntropyUtilities, ClpBasicEntropySourceProvider, 
   ClpCryptoApiEntropySourceProvider, ClpDrbgUtilities, ClpHashSP800Drbg, 
   ClpHMacSP800Drbg, ClpCtrSP800Drbg, ClpSP800SecureRandom, 
-  ClpISP800SecureRandomBuilder, ClpSP800SecureRandomBuilder;
+  ClpISP800SecureRandomBuilder, ClpSP800SecureRandomBuilder, 
+  ClpECDHRawAgreement, ClpECDHCRawAgreement, ClpIECDHRawAgreement, 
+  ClpIECDHCRawAgreement, ClpGF256Aes;
 
 implementation
 

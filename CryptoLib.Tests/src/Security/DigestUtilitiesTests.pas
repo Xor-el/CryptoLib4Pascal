@@ -34,6 +34,13 @@ uses
   ClpIDigest,
   ClpDigest,
   ClpDigestUtilities,
+  ClpAsn1Objects,
+  ClpIAsn1Objects,
+  ClpIX509Asn1Objects,
+  ClpX509Asn1Objects,
+  ClpNistObjectIdentifiers,
+  ClpPkcsObjectIdentifiers,
+  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type
@@ -51,7 +58,13 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
   published
-    procedure TestAlgorithms();
+    procedure TestAlgorithms;
+    procedure TestGetDigestAlgorithmIdentifier;
+    procedure TestGetDigestAlgorithmIdentifierNullParameters;
+    procedure TestGetDigestAlgorithmIdentifierRejectsParameters;
+    procedure TestGetDigestAlgorithmIdentifierNil;
+    procedure TestCalculateDigestAlgorithmIdentifier;
+    procedure TestCalculateDigestOidOffset;
 
   end;
 
@@ -210,6 +223,92 @@ begin
 
   CheckPlainDigestAlgorithm('Whirlpool',
     TDigest.Create(THashFactory.TCrypto.CreateWhirlPool()) as IDigest);
+end;
+
+procedure TTestDigestUtilities.TestGetDigestAlgorithmIdentifier;
+var
+  LAlgID: IAlgorithmIdentifier;
+  LDigestByName, LDigestByAlgID: IDigest;
+begin
+  LAlgID := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, nil);
+  LDigestByName := TDigestUtilities.GetDigest('SHA-256');
+  LDigestByAlgID := TDigestUtilities.GetDigest(LAlgID);
+  if LDigestByName.GetDigestSize() <> LDigestByAlgID.GetDigestSize() then
+    Fail('GetDigest(IAlgorithmIdentifier) digest size mismatch');
+end;
+
+procedure TTestDigestUtilities.TestGetDigestAlgorithmIdentifierNullParameters;
+var
+  LAlgID: IAlgorithmIdentifier;
+begin
+  LAlgID := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, TDerNull.Instance);
+  if TDigestUtilities.GetDigest(LAlgID) = nil then
+    Fail('GetDigest with DerNull parameters failed');
+end;
+
+procedure TTestDigestUtilities.TestGetDigestAlgorithmIdentifierRejectsParameters;
+var
+  LAlgID: IAlgorithmIdentifier;
+  LRaised: Boolean;
+begin
+  LAlgID := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256,
+    TDerInteger.Create(1) as IDerInteger);
+  LRaised := False;
+  try
+    TDigestUtilities.GetDigest(LAlgID);
+  except
+    on E: ESecurityUtilityCryptoLibException do
+      LRaised := True;
+  end;
+  if not LRaised then
+    Fail('expected ESecurityUtilityCryptoLibException for non-absent parameters');
+end;
+
+procedure TTestDigestUtilities.TestGetDigestAlgorithmIdentifierNil;
+var
+  LAlgID: IAlgorithmIdentifier;
+  LRaised: Boolean;
+begin
+  LAlgID := nil;
+  LRaised := False;
+  try
+    TDigestUtilities.GetDigest(LAlgID);
+  except
+    on E: EArgumentNilCryptoLibException do
+      LRaised := True;
+  end;
+  if not LRaised then
+    Fail('expected EArgumentNilCryptoLibException for nil algorithm identifier');
+end;
+
+procedure TTestDigestUtilities.TestCalculateDigestAlgorithmIdentifier;
+var
+  LAlgID: IAlgorithmIdentifier;
+  LHashByOid, LHashByAlgID: TCryptoLibByteArray;
+begin
+  LAlgID := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, nil);
+  LHashByOid := TDigestUtilities.CalculateDigest(TNistObjectIdentifiers.IdSha256, FTestBytes);
+  LHashByAlgID := TDigestUtilities.CalculateDigest(LAlgID, FTestBytes);
+  if not AreEqual(LHashByOid, LHashByAlgID) then
+    Fail('CalculateDigest(IAlgorithmIdentifier) mismatch');
+end;
+
+procedure TTestDigestUtilities.TestCalculateDigestOidOffset;
+var
+  LBuf, LMiddle: TCryptoLibByteArray;
+  LHashMiddle, LHashSlice: TCryptoLibByteArray;
+  I: Int32;
+begin
+  System.SetLength(LBuf, System.Length(FTestBytes) + 8);
+  for I := 0 to System.High(LBuf) do
+    LBuf[I] := Byte(I);
+  System.SetLength(LMiddle, System.Length(FTestBytes));
+  System.Move(LBuf[4], LMiddle[0], System.Length(FTestBytes));
+  LHashMiddle := TDigestUtilities.CalculateDigest(TNistObjectIdentifiers.IdSha256, LMiddle);
+  LHashSlice := TDigestUtilities.CalculateDigest(TNistObjectIdentifiers.IdSha256, LBuf, 4,
+    System.Length(FTestBytes));
+  if not AreEqual(LHashMiddle, LHashSlice) then
+    Fail('CalculateDigest OID offset overload mismatch');
 end;
 
 initialization

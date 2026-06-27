@@ -27,6 +27,7 @@ uses
   ClpICipherParameters,
   ClpIECParameters,
   ClpIECCommon,
+  ClpIECFieldElement,
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIParametersWithRandom,
@@ -75,6 +76,9 @@ type
     /// </summary>
     function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger; virtual;
 
+    class function CalculateAgreementFieldElement(const APrivateKey: IECPrivateKeyParameters;
+      const APublicKey: IECPublicKeyParameters): IECFieldElement; static;
+
   end;
 
 implementation
@@ -85,25 +89,32 @@ function TECDHBasicAgreement.CalculateAgreement(const APubKey: ICipherParameters
   : TBigInteger;
 var
   LPub: IECPublicKeyParameters;
-  LParams: IECDomainParameters;
-  LP, LQ: IECPoint;
-  LD, LH: TBigInteger;
 begin
   if not Supports(APubKey, IECPublicKeyParameters, LPub) then
     raise EInvalidCastCryptoLibException.CreateRes(@SWrongDomainParameter);
 
-  LParams := FPrivKey.Parameters;
-  if not LParams.Equals(LPub.Parameters) then
+  Result := CalculateAgreementFieldElement(FPrivKey, LPub).ToBigInteger();
+end;
+
+class function TECDHBasicAgreement.CalculateAgreementFieldElement(
+  const APrivateKey: IECPrivateKeyParameters; const APublicKey: IECPublicKeyParameters)
+  : IECFieldElement;
+var
+  LParams: IECDomainParameters;
+  LP, LQ: IECPoint;
+  LD, LH: TBigInteger;
+begin
+  LParams := APrivateKey.Parameters;
+  if not LParams.Equals(APublicKey.Parameters) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
-  LD := FPrivKey.d;
-
-  LQ := TECAlgorithms.CleanPoint(LParams.Curve, LPub.Q);
+  LQ := TECAlgorithms.CleanPoint(LParams.Curve, APublicKey.Q);
 
   if LQ.IsInfinity then
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInfinityInvalidPublicKey);
 
+  LD := APrivateKey.D;
   LH := LParams.H;
 
   if not LH.Equals(TBigInteger.One) then
@@ -118,7 +129,7 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInvalidAgreementValue);
 
-  Result := LP.XCoord.ToBigInteger();
+  Result := LP.XCoord;
 end;
 
 function TECDHBasicAgreement.GetFieldSize: Int32;

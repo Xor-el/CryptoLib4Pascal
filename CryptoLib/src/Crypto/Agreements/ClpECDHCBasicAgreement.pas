@@ -26,6 +26,7 @@ uses
   ClpECAlgorithms,
   ClpICipherParameters,
   ClpIECCommon,
+  ClpIECFieldElement,
   ClpIBasicAgreement,
   ClpIECParameters,
   ClpIECDHCBasicAgreement,
@@ -55,6 +56,9 @@ type
     function GetFieldSize(): Int32; virtual;
     function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger; virtual;
 
+    class function CalculateAgreementFieldElement(const APrivateKey: IECPrivateKeyParameters;
+      const APublicKey: IECPublicKeyParameters): IECFieldElement; static;
+
   end;
 
 implementation
@@ -65,20 +69,28 @@ function TECDHCBasicAgreement.CalculateAgreement(const APubKey
   : ICipherParameters): TBigInteger;
 var
   LPub: IECPublicKeyParameters;
-  LParams: IECDomainParameters;
-  LHd: TBigInteger;
-  LP, LPubPoint: IECPoint;
 begin
   if not Supports(APubKey, IECPublicKeyParameters, LPub) then
     raise EInvalidCastCryptoLibException.CreateRes(@SWrongDomainParameter);
 
-  LParams := FPrivKey.Parameters;
-  if not LParams.Equals(LPub.Parameters) then
+  Result := CalculateAgreementFieldElement(FPrivKey, LPub).ToBigInteger();
+end;
+
+class function TECDHCBasicAgreement.CalculateAgreementFieldElement(
+  const APrivateKey: IECPrivateKeyParameters; const APublicKey: IECPublicKeyParameters)
+  : IECFieldElement;
+var
+  LParams: IECDomainParameters;
+  LHd: TBigInteger;
+  LP, LPubPoint: IECPoint;
+begin
+  LParams := APrivateKey.Parameters;
+  if not LParams.Equals(APublicKey.Parameters) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SWrongDomainParameter);
 
-  LHd := LParams.H.Multiply(FPrivKey.D).&Mod(LParams.N);
+  LHd := LParams.H.Multiply(APrivateKey.D).&Mod(LParams.N);
 
-  LPubPoint := TECAlgorithms.CleanPoint(LParams.Curve, LPub.Q);
+  LPubPoint := TECAlgorithms.CleanPoint(LParams.Curve, APublicKey.Q);
   if LPubPoint.IsInfinity then
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInfinityInvalidPublicKey);
@@ -89,7 +101,7 @@ begin
     raise EInvalidOperationCryptoLibException.CreateRes
       (@SInvalidAgreementValue);
 
-  Result := LP.XCoord.ToBigInteger();
+  Result := LP.XCoord;
 end;
 
 function TECDHCBasicAgreement.GetFieldSize: Int32;
