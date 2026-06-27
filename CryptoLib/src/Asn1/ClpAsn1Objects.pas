@@ -7328,7 +7328,7 @@ end;
 
 constructor TDerExternal.Create(const AVector: IAsn1EncodableVector);
 begin
-  Create(TBerSequence.Create(AVector));
+  Create(TBerSequence.Create(AVector) as IBerSequence);
 end;
 
 constructor TDerExternal.Create(const ASequence: IAsn1Sequence);
