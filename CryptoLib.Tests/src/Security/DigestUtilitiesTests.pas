@@ -252,7 +252,7 @@ var
   LRaised: Boolean;
 begin
   LAlgID := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256,
-    TDerInteger.Create(1) as IDerInteger);
+    TDerInteger.ValueOf(1));
   LRaised := False;
   try
     TDigestUtilities.GetDigest(LAlgID);
