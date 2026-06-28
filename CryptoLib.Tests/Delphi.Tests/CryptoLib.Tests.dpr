@@ -28,6 +28,7 @@ uses
   TextTestRunner,
   {$ENDIF }
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
+  ClpIAesHardwareEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas',
   ClpIAesEngineX86 in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',
   ClpAesEngineX86 in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas',
   ClpAesUtilities in '..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas',
@@ -862,7 +863,7 @@ uses
   AesBlockCipherTestBase in '..\src\Crypto\AesBlockCipherTestBase.pas',
   AesLightTests in '..\src\Crypto\AesLightTests.pas',
   FusedExternalRegistrationTests in '..\src\Crypto\FusedExternalRegistrationTests.pas',
-  AesX86Tests in '..\src\Crypto\AesX86Tests.pas',
+  AesHardwareEngineTests in '..\src\Crypto\AesHardwareEngineTests.pas',
   IESCipherTests in '..\src\Math\IESCipherTests.pas',
   AESSICTests in '..\src\Crypto\AESSICTests.pas',
   SicBulkParityTests in '..\src\Crypto\SicBulkParityTests.pas',

@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   ClpIAesEngineX86,
+  ClpIAesHardwareEngine,
   ClpIBulkBlockCipher,
   ClpIBlockCipher,
   ClpICipherParameters,
@@ -49,7 +50,8 @@ type
   /// <summary>
   /// AES using AES-NI when supported (see <see cref="IsSupported" />).
   /// </summary>
-  TAesEngineX86 = class sealed(TInterfacedObject, IAesEngineX86, IBulkBlockCipher, IBlockCipher)
+  TAesEngineX86 = class sealed(TInterfacedObject, IAesEngineX86, IAesHardwareEngine,
+    IBulkBlockCipher, IBlockCipher)
   strict private
   type
     TAesX86Mode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);

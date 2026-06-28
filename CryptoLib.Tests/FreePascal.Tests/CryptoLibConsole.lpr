@@ -11,7 +11,7 @@ uses
   SecP256R1FieldTests, SecP384R1FieldTests, ECDsa5Tests, ECTests,
   NamedCurveTests, SignerUtilitiesTests, SecureRandomTests,
   DigestRandomNumberTests, FixedPointTests, AESTests, AesLightTests,
-  FusedExternalRegistrationTests, AesX86Tests, AESSICTests, SicBulkParityTests,
+  FusedExternalRegistrationTests, AesHardwareEngineTests, AESSICTests, SicBulkParityTests,
   EcbBulkParityTests, CbcBulkParityTests, SpeckBlockCipherTestBase,
   SpeckLegacyTests, SpeckTests, IESCipherTests, MD5HMacTests, SHA1HMacTests,
   SHA224HMacTests, SHA256HMacTests, SHA384HMacTests, SHA512HMacTests,

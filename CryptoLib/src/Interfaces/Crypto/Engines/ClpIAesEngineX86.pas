@@ -21,16 +21,17 @@ unit ClpIAesEngineX86;
 interface
 
 uses
-  ClpIBulkBlockCipher;
+  ClpIAesHardwareEngine;
 
 type
   /// <summary>
-  /// AES-NI engine interface. Surfaces the AES round-key schedule pointers
+  /// AES-NI engine interface. Extends the architecture-neutral
+  /// <see cref="IAesHardwareEngine" /> with the AES round-key schedule pointers
   /// required by the concrete fused AES-NI AEAD kernels. Internal-use: only
   /// TAesEngineX86 implements it in-tree. Modes wanting plain multi-block
   /// batching should query IBulkBlockCipher instead to stay cipher-agnostic.
   /// </summary>
-  IAesEngineX86 = interface(IBulkBlockCipher)
+  IAesEngineX86 = interface(IAesHardwareEngine)
     ['{B2F8C4A1-9E3D-4F6B-8C0D-1A2B3C4D5E6F}']
 
     /// <summary>
