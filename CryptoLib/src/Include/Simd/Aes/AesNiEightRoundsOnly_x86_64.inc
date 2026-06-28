@@ -1,9 +1,10 @@
 // AES-NI 8-wide round chain, reusable kernel, merged Enc + Dec, merged key sizes (x86-64).
 // -------------------------------------------------------------------
-// Shared round chain consumed by every 8-wide AES-NI aggregator and
-// fused AEAD kernel in this tree (AesNiEightCipher[InOut], OCB, CCM,
-// GCM, GCM-SIV, EAX). Keeping the round loop in one file guarantees
-// that any future micro-optimisation lands everywhere at once.
+//
+// Shared 8-wide AES round chain consumed by the merged AesNiEightCipher_x86_64
+// wrapper. The fused AEAD kernels (OCB / GCM / CCM / EAX) carry their
+// own round chains with different register allocations and do NOT
+// include this file.
 //
 // Variant selection:
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
@@ -11,20 +12,19 @@
 //                              (10 / 12 / 14 rounds).
 //
 // On entry:
-//   xmm0..xmm7 = 8 data blocks (LE, NOT pre-XORed with the whitening key;
-//                  K_0 XOR happens in round 0 inside this file).
-//   r8         = expanded round-key schedule pointer; must match the
-//                  direction (decrypt consumers pass the inverse-
-//                  MixColumns schedule). See IAesEngineX86 in
-//                  ClpIAesEngineX86.
+//   xmm0..xmm7 = 8 data blocks (NOT pre-whitened; K_0 XOR happens in round 0
+//                  inside this file).
+//   r8 = expanded round-key schedule pointer; must match the direction
+//                  (decrypt consumers pass the inverse-MixColumns schedule).
+//   each round key is loaded into xmm8 and broadcast across the lanes.
 //
 // On exit:
 //   xmm0..xmm7 = 8 post-AES blocks, ready for caller storeback / XOR.
-//   r8         = unchanged (aggregators rely on this).
-//   xmm8       = clobbered (shared round-key broadcast register).
+//   r8 = unchanged.
+//   Scratch: xmm8 (clobbered: shared round-key broadcast register)
 //
-// AES-NI instructions, plus pxor forms touching xmm8, are db-encoded
-// for broad assembler compatibility.
+// AES-NI instructions, plus pxor forms touching extended registers,
+// are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}

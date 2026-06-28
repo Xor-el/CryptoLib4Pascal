@@ -1,221 +1,39 @@
-// AES-NI one-block cipher, in-place, merged Enc + Dec, merged key sizes (i386).
-// Straight-line AES on a single 16-byte block: XOR K_0, run N_R - 1 aesenc
-// (or aesdec when CRYPTOLIB_AESNI_DECRYPT is set) rounds on K_1..K_{N_R-1},
-// and finish with aesenclast (or aesdeclast) on K_{N_R}. N_R = 10 / 12 / 14
-// for AES-128 / 192 / 256.
+// AES-NI 1-wide cipher wrapper, merged in-place + out-of-place, merged Enc + Dec, merged key sizes (i386).
+// -------------------------------------------------------------------
 //
-// Variant selection:
-//   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
+// Thin load/store shell over AesNiOneRoundsOnly_i386.inc, operating on
+// a single 16-byte block.
+//
+// Mode selection:
+//   CRYPTOLIB_AESNI_INOUT defined  -> out-of-place (read RIn, write ROut).
+//   undefined                      -> in-place (read/write state).
+// In-place (SimdProc2Begin): ebx = state, esi = keys.
+// Out-of-place (SimdProc3Begin, CRYPTOLIB_AESNI_INOUT): ebx = RIn, esi = ROut, edi = keys.
+//
+// In-place must move the keys pointer into the canonical rounds-only
+// register (edi); the 2-param prologue did not push edi, so it is
+// saved/restored locally. Out-of-place keys are already in edi and
+// the 3-param epilogue pops edi/esi/ebx.
+//
+// Variant selection (forwarded to the rounds-only include):
+//   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
-//
-// After SimdProc2Begin_i386.inc: ebx = state (16 bytes, in/out), esi = keys.
-// Schedule layout: 11 / 13 / 15 consecutive 16-byte round keys
-// (see ClpAesEngineX86 for the allocation / key-expansion site).
-// Uses xmm0 (data) and xmm1 (round-key scratch).
-// AES-NI instructions are db-encoded for broad assembler compatibility.
-{$IFDEF CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_AESNI_KEY128}
-  movdqu    xmm0, [ebx]
-  movdqa    xmm1, [esi]
-  db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
-  movdqa    xmm1, [esi + 16]
-  db $66, $0F, $38, $DE, $C1         // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 32]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 48]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 64]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 80]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 96]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 112]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 128]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 144]
-  db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-  movdqa    xmm1, [esi + 160]
-  db $66, $0F, $38, $DF, $C1         // aesdeclast xmm0, xmm1
-  movdqu    [ebx], xmm0
-  pop esi
-  pop ebx
-{$ELSE}
-  {$IFDEF CRYPTOLIB_AESNI_KEY192}
-    movdqu    xmm0, [ebx]
-    movdqa    xmm1, [esi]
-    db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
-    movdqa    xmm1, [esi + 16]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 32]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 48]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 64]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 80]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 96]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 112]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 128]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 144]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 160]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 176]
-    db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-    movdqa    xmm1, [esi + 192]
-    db $66, $0F, $38, $DF, $C1              // aesdeclast xmm0, xmm1
-    movdqu    [ebx], xmm0
-    pop esi
-    pop ebx
-  {$ELSE}
-    {$IFDEF CRYPTOLIB_AESNI_KEY256}
-      movdqu    xmm0, [ebx]
-      movdqa    xmm1, [esi]
-      db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
-      movdqa    xmm1, [esi + 16]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 32]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 48]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 64]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 80]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 96]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 112]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 128]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 144]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 160]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 176]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 192]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 208]
-      db $66, $0F, $38, $DE, $C1              // aesdec xmm0, xmm1
-      movdqa    xmm1, [esi + 224]
-      db $66, $0F, $38, $DF, $C1              // aesdeclast xmm0, xmm1
-      movdqu    [ebx], xmm0
-      pop esi
-      pop ebx
-    {$ELSE}
-    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
-    {$ENDIF}
-  {$ENDIF}
+  movdqu    xmm0, [ebx + 0]
+{$IFNDEF CRYPTOLIB_AESNI_INOUT}
+  push      edi
+  mov       edi, esi
 {$ENDIF}
-
-{$ELSE}
-
-{$IFDEF CRYPTOLIB_AESNI_KEY128}
-  movdqu    xmm0, [ebx]
-  movdqa    xmm1, [esi]
-  db $66, $0F, $EF, $C1              // pxor xmm0, xmm1
-  movdqa    xmm1, [esi + 16]
-  db $66, $0F, $38, $DC, $C1         // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 32]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 48]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 64]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 80]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 96]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 112]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 128]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 144]
-  db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-  movdqa    xmm1, [esi + 160]
-  db $66, $0F, $38, $DD, $C1         // aesenclast xmm0, xmm1
-  movdqu    [ebx], xmm0
-  pop esi
-  pop ebx
-{$ELSE}
-  {$IFDEF CRYPTOLIB_AESNI_KEY192}
-    movdqu    xmm0, [ebx]
-    movdqa    xmm1, [esi]
-    db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
-    movdqa    xmm1, [esi + 16]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 32]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 48]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 64]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 80]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 96]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 112]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 128]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 144]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 160]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 176]
-    db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-    movdqa    xmm1, [esi + 192]
-    db $66, $0F, $38, $DD, $C1              // aesenclast xmm0, xmm1
-    movdqu    [ebx], xmm0
-    pop esi
-    pop ebx
-  {$ELSE}
-    {$IFDEF CRYPTOLIB_AESNI_KEY256}
-      movdqu    xmm0, [ebx]
-      movdqa    xmm1, [esi]
-      db $66, $0F, $EF, $C1                   // pxor xmm0, xmm1
-      movdqa    xmm1, [esi + 16]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 32]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 48]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 64]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 80]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 96]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 112]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 128]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 144]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 160]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 176]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 192]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 208]
-      db $66, $0F, $38, $DC, $C1              // aesenc xmm0, xmm1
-      movdqa    xmm1, [esi + 224]
-      db $66, $0F, $38, $DD, $C1              // aesenclast xmm0, xmm1
-      movdqu    [ebx], xmm0
-      pop esi
-      pop ebx
-    {$ELSE}
-    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
-    {$ENDIF}
-  {$ENDIF}
+{$I ..\..\Include\Simd\Aes\AesNiOneRoundsOnly_i386.inc}
+{$IFNDEF CRYPTOLIB_AESNI_INOUT}
+  pop       edi
 {$ENDIF}
-
+{$IFDEF CRYPTOLIB_AESNI_INOUT}
+  movdqu    [esi + 0], xmm0
+{$ELSE}
+  movdqu    [ebx + 0], xmm0
 {$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_INOUT}
+  pop       edi
+{$ENDIF}
+  pop       esi
+  pop       ebx

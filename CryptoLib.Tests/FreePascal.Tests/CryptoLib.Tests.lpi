@@ -618,7 +618,7 @@
         <IsPartOfProject Value="True"/>
       </Unit133>
       <Unit134>
-        <Filename Value="..\src\Crypto\AesX86Tests.pas"/>
+        <Filename Value="..\src\Crypto\AesHardwareEngineTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit134>
       <Unit135>

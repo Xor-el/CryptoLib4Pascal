@@ -251,7 +251,7 @@ uses
   ClpHMacSP800Drbg, ClpCtrSP800Drbg, ClpSP800SecureRandom, 
   ClpISP800SecureRandomBuilder, ClpSP800SecureRandomBuilder, 
   ClpECDHRawAgreement, ClpECDHCRawAgreement, ClpIECDHRawAgreement, 
-  ClpIECDHCRawAgreement, ClpGF256Aes;
+  ClpIECDHCRawAgreement, ClpGF256Aes, ClpIAesHardwareEngine;
 
 implementation
 

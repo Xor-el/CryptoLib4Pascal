@@ -1,18 +1,23 @@
-// AES-NI 8-wide cipher aggregator, in-place, merged Enc + Dec, merged key sizes (i386).
+// AES-NI 8-wide cipher wrapper, merged in-place + out-of-place, merged Enc + Dec, merged key sizes (i386).
 // -------------------------------------------------------------------
-// Thin wrapper over AesNiEightRoundsOnly_i386.inc. Entry (after
-// SimdProc2Begin_i386.inc has pushed ebx/esi and remapped):
-//   ebx = state (8 consecutive 16-byte blocks)
-//   esi = keys (expanded round-key schedule)
-// The rounds-only include takes its keys pointer in edi (its canonical
-// register, shared with every fused AEAD kernel). edi is callee-saved
-// and the shared 2-param prologue does NOT push it, so we push/pop it
-// here locally. Epilogue pops esi then ebx before return.
 //
-// Variant selection:
+// Thin load/store shell over AesNiEightRoundsOnly_i386.inc, operating on
+// 8 consecutive 16-byte blocks.
+//
+// Mode selection:
+//   CRYPTOLIB_AESNI_INOUT defined  -> out-of-place (read RIn, write ROut).
+//   undefined                      -> in-place (read/write state).
+// In-place (SimdProc2Begin): ebx = state, esi = keys.
+// Out-of-place (SimdProc3Begin, CRYPTOLIB_AESNI_INOUT): ebx = RIn, esi = ROut, edi = keys.
+//
+// In-place must move the keys pointer into the canonical rounds-only
+// register (edi); the 2-param prologue did not push edi, so it is
+// saved/restored locally. Out-of-place keys are already in edi and
+// the 3-param epilogue pops edi/esi/ebx.
+//
+// Variant selection (forwarded to the rounds-only include):
 //   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
-// Both defines are forwarded verbatim to the rounds-only include.
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]
@@ -21,10 +26,24 @@
   movdqu    xmm5, [ebx + 80]
   movdqu    xmm6, [ebx + 96]
   movdqu    xmm7, [ebx + 112]
+{$IFNDEF CRYPTOLIB_AESNI_INOUT}
   push      edi
   mov       edi, esi
+{$ENDIF}
 {$I ..\..\Include\Simd\Aes\AesNiEightRoundsOnly_i386.inc}
+{$IFNDEF CRYPTOLIB_AESNI_INOUT}
   pop       edi
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_INOUT}
+  movdqu    [esi + 0], xmm0
+  movdqu    [esi + 16], xmm1
+  movdqu    [esi + 32], xmm2
+  movdqu    [esi + 48], xmm3
+  movdqu    [esi + 64], xmm4
+  movdqu    [esi + 80], xmm5
+  movdqu    [esi + 96], xmm6
+  movdqu    [esi + 112], xmm7
+{$ELSE}
   movdqu    [ebx + 0], xmm0
   movdqu    [ebx + 16], xmm1
   movdqu    [ebx + 32], xmm2
@@ -33,5 +52,9 @@
   movdqu    [ebx + 80], xmm5
   movdqu    [ebx + 96], xmm6
   movdqu    [ebx + 112], xmm7
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_INOUT}
+  pop       edi
+{$ENDIF}
   pop       esi
   pop       ebx
