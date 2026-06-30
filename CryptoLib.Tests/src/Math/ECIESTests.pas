@@ -66,6 +66,9 @@ uses
   ClpBigInteger,
   ClpDigestUtilities,
   ClpCryptoLibTypes,
+  ClpArrayUtilities,
+  ClpKeyParameter,
+  ClpIKeyParameter,
   CryptoLibTestBase;
 
 type
@@ -80,6 +83,7 @@ type
 
     procedure DoStaticTest(const iv: TBytes);
     procedure DoShortTest();
+    procedure DoForgeryTest();
     procedure DoTest(const p1, p2: IAsymmetricCipherKeyPair);
     procedure DoEphemeralTest(const iv: TBytes; usePointCompression: Boolean);
 
@@ -89,6 +93,7 @@ type
   published
 
     procedure TestECIES;
+    procedure TestForgery;
 
   end;
 
@@ -435,7 +440,7 @@ begin
   out1 := i1.ProcessBlock(&message, 0, System.Length(&message));
 
   if (not AreEqual(out1,
-    DecodeHex('468d89877e8238802403ec4cb6b329faeccfa6f3a730f2cdb3c0a8e8'))) then
+    DecodeHex('609ae8fe2727572da30a1d04e3dd0530de24ee89e7313f6c400992a6'))) then
   begin
     Fail('stream cipher test failed on enc');
   end;
@@ -510,6 +515,102 @@ begin
     Fail('AES cipher test failed');
   end;
 
+end;
+
+procedure TTestECIES.DoForgeryTest();
+var
+  n: TBigInteger;
+  curve: IFpCurve;
+  params: IECDomainParameters;
+  priKey: IECPrivateKeyParameters;
+  pubKey: IECPublicKeyParameters;
+  p1, p2: IAsymmetricCipherKeyPair;
+  LMacKeyBytes, LForgeLen, LI: Int32;
+  LParam: ICipherParameters;
+  LEnc, LDec: IIesEngine;
+  LKnownPt, LLeaked, LForgedPt, LForgedC, LForgedTag, LForged: TBytes;
+  LHMac: IHMac;
+begin
+  // Regression for CVD ANT-2026-WZ2GJBGD: in static-key stream mode the MAC key must not be
+  // recoverable from the keystream. The legacy layout placed the keystream K1 before the MAC key
+  // K2, so a single known-plaintext leak of K1 (= M ^ C) also exposed the MAC key of any shorter
+  // message - letting an attacker forge a valid ciphertext+tag from one observation. With K2 now
+  // taken from a fixed prefix of the KDF output, that slice of the leaked keystream is no longer
+  // the MAC key, so the constructed forgery must be rejected.
+
+  n := TBigInteger.Create
+    ('6277101735386680763835789423176059013767194773182842284081');
+
+  curve := TFpCurve.Create
+    (TBigInteger.Create
+    ('6277101735386680763835789423207666416083908700390324961279'),
+    TBigInteger.Create('fffffffffffffffffffffffffffffffefffffffffffffffc', 16),
+    TBigInteger.Create('64210519e59c80e70fa7e9ab72243049feb8deecc146b9b1', 16),
+    n, TBigInteger.One);
+
+  params := TECDomainParameters.Create(curve,
+    curve.DecodePoint
+    (DecodeHex('03188da80eb03090f67cbf20eb43a18800f4ff0afd82ff1012')), n);
+
+  priKey := TECPrivateKeyParameters.Create
+    (TBigInteger.Create
+    ('651056770906015076056810763456358567190100156695615665659'), params);
+
+  pubKey := TECPublicKeyParameters.Create
+    (curve.DecodePoint
+    (DecodeHex('0262b12d60690cdcf330babab6e69763b471f994dd702d16a5')), params);
+
+  p1 := TAsymmetricCipherKeyPair.Create(pubKey, priKey);
+  p2 := TAsymmetricCipherKeyPair.Create(pubKey, priKey);
+
+  LMacKeyBytes := 8; // 64-bit MAC key
+  // no encoding vector, so the MAC is taken over the ciphertext only (keeps the forgery construction simple)
+  LParam := TIesParameters.Create(TBytes.Create(1, 2, 3, 4, 5, 6, 7, 8), nil,
+    LMacKeyBytes * 8);
+
+  // 1. attacker observes one known-plaintext ciphertext of length L (>= macKeyBytes)
+  LKnownPt := DecodeHex('000102030405060708090a0b0c0d0e0f10111213'); // L = 20
+  LEnc := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+    TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
+    as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
+    as IHMac);
+  LEnc.Init(true, p1.Private, p2.Public, LParam);
+  LForgedC := LEnc.ProcessBlock(LKnownPt, 0, System.Length(LKnownPt));
+
+  SetLength(LLeaked, System.Length(LKnownPt)); // recovered keystream = M ^ C over the L plaintext bytes
+  for LI := 0 to System.Pred(System.Length(LLeaked)) do
+    LLeaked[LI] := LKnownPt[LI] xor LForgedC[LI];
+
+  // 2. forge a shorter message, assuming the legacy keystream-then-MAC-key layout
+  LForgeLen := System.Length(LKnownPt) - LMacKeyBytes; // L'
+  LForgedPt := DecodeHex('ffffffffffffffffffffffff'); // 12 bytes (= L')
+  SetLength(LForgedC, LForgeLen);
+  for LI := 0 to System.Pred(LForgeLen) do
+    LForgedC[LI] := LForgedPt[LI] xor LLeaked[LI]; // K1' = leaked[0..L']
+
+  LHMac := THMac.Create(TDigestUtilities.GetDigest('SHA-1')) as IHMac;
+  LHMac.Init(TKeyParameter.Create(TArrayUtilities.CopyOfRange<Byte>(LLeaked,
+    LForgeLen, LForgeLen + LMacKeyBytes)) as IKeyParameter); // K2' = leaked[L'..]
+  LHMac.BlockUpdate(LForgedC, 0, System.Length(LForgedC));
+  LForgedTag := LHMac.DoFinal();
+
+  LForged := TArrayUtilities.Concatenate<Byte>([LForgedC, LForgedTag]);
+
+  // 3. the recipient must reject the forgery
+  LDec := TIesEngine.Create(TECDHBasicAgreement.Create() as IECDHBasicAgreement,
+    TKDF2BytesGenerator.Create(TDigestUtilities.GetDigest('SHA-1'))
+    as IKDF2BytesGenerator, THMac.Create(TDigestUtilities.GetDigest('SHA-1'))
+    as IHMac);
+  LDec.Init(false, p2.Private, p1.Public, LParam);
+  try
+    LDec.ProcessBlock(LForged, 0, System.Length(LForged));
+    Fail('static-key stream IES accepted a cross-message MAC forgery');
+  except
+    on E: EInvalidCipherTextCryptoLibException do
+    begin
+      // expected: K2 is a fixed prefix of the KDF output, not a recoverable slice of the keystream
+    end;
+  end;
 end;
 
 procedure TTestECIES.DoTest(const p1, p2: IAsymmetricCipherKeyPair);
@@ -615,6 +716,7 @@ begin
   DoStaticTest(Nil);
   DoStaticTest(FAES_IV);
   DoShortTest();
+  DoForgeryTest();
 
   n := TBigInteger.Create
     ('6277101735386680763835789423176059013767194773182842284081');
@@ -648,6 +750,11 @@ begin
   DoEphemeralTest(Nil, true);
   DoEphemeralTest(FAES_IV, false);
   DoEphemeralTest(FAES_IV, true);
+end;
+
+procedure TTestECIES.TestForgery;
+begin
+  DoForgeryTest();
 end;
 
 initialization

@@ -44,6 +44,7 @@ uses
   ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -51,7 +52,7 @@ resourcestring
     'Unable to Recover Ephemeral Public Key: "%s"';
   SInvalidCipherTextLength =
     'Length of Input Must be Greater than the MAC and V Combined';
-  SInvalidMAC = 'invalid MAC';
+  SInvalidMAC = 'Invalid MAC.';
   SIesParametersMustSupportIIesWithCipherParameters = 'IES parameters must support IIesWithCipherParameters for block cipher mode';
   SParametersMustSupportIesParameters = 'parameters must support IIesParameters';
 
@@ -106,6 +107,15 @@ type
     /// Set up for use with stream mode, where the key derivation function is
     /// used to provide a stream of bytes to xor with the message.
     /// </summary>
+    /// <remarks>
+    /// <b>Security note:</b> when this engine is initialised with static keys on both sides (the
+    /// Init overload that supplies no ephemeral component) the key-derivation input is the same
+    /// for every message, so the stream-mode keystream is identical from message to message -
+    /// encrypting more than one message under a given key pair is a many-time pad and leaks
+    /// plaintext relationships. Use the ephemeral sender-key initialisation (the standard ECIES
+    /// mode) for messages that must remain confidential; the static-static mode is effectively
+    /// deterministic encryption.
+    /// </remarks>
     /// <param name="AAgree">
     /// the key agreement used as the basis for the encryption
     /// </param>
@@ -272,12 +282,13 @@ function TIesEngine.DecryptBlock(const AInEnc: TCryptoLibByteArray;
   AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
   LM, LK, LK1, LK2, LP2, LL2, LT1, LT2: TCryptoLibByteArray;
-  LLen, LI, LEnd: Int32;
+  LLen, LMacSize: Int32;
   LCp: ICipherParameters;
 begin
   LLen := 0;
+  LMacSize := FMac.GetMacSize();
   // Ensure that the length of the input is greater than the MAC in bytes
-  if (AInLen < (System.Length(FV) + FMac.GetMacSize)) then
+  if (AInLen < (System.Length(FV) + LMacSize)) then
   begin
     raise EInvalidCipherTextCryptoLibException.CreateRes
       (@SInvalidCipherTextLength);
@@ -285,44 +296,25 @@ begin
   // note order is important: set up keys, do simple encryptions, check mac, do final encryption.
   if (FCipher = nil) then
   begin
-
     // Streaming mode.
-    System.SetLength(LK1, AInLen - System.Length(FV) - FMac.GetMacSize);
+    System.SetLength(LK1, AInLen - System.Length(FV) - LMacSize);
     System.SetLength(LK2, FParam.MacKeySize div 8);
     System.SetLength(LK, System.Length(LK1) + System.Length(LK2));
 
     FKdf.GenerateBytes(LK, 0, System.Length(LK));
 
-    if (System.Length(FV) <> 0) then
+    // K2 (MAC key) from a fixed prefix, K1 (keystream) from the remainder - see EncryptBlock.
+    System.Move(LK[0], LK2[0], System.Length(LK2) * System.SizeOf(Byte));
+    if LK1 <> nil then
     begin
-      System.Move(LK[0], LK2[0], System.Length(LK2) * System.SizeOf(Byte));
-      if LK1 <> nil then
-      begin
-        System.Move(LK[System.Length(LK2)], LK1[0],
-          System.Length(LK1) * System.SizeOf(Byte));
-      end;
-    end
-    else
-    begin
-      if LK1 <> nil then
-      begin
-        System.Move(LK[0], LK1[0], System.Length(LK1) * System.SizeOf(Byte));
-      end;
-      System.Move(LK[System.Length(LK1)], LK2[0], System.Length(LK2) *
-        System.SizeOf(Byte));
+      System.Move(LK[System.Length(LK2)], LK1[0],
+        System.Length(LK1) * System.SizeOf(Byte));
     end;
 
     // process the message
     System.SetLength(LM, System.Length(LK1));
-
-    LI := 0;
-
-    while LI <> System.Length(LK1) do
-    begin
-      LM[LI] := Byte(AInEnc[AInOff + System.Length(FV) + LI] xor LK1[LI]);
-      System.Inc(LI);
-    end;
-
+    TByteUtilities.&Xor(System.Length(LK1), AInEnc, AInOff + System.Length(FV),
+      LK1, 0, LM, 0);
   end
   else
   begin
@@ -341,11 +333,11 @@ begin
     FCipher.Init(False, LCp);
 
     System.SetLength(LM, FCipher.GetOutputSize(AInLen - System.Length(FV) -
-      FMac.GetMacSize));
+      LMacSize));
 
     // do initial processing
     LLen := FCipher.ProcessBytes(AInEnc, AInOff + System.Length(FV),
-      AInLen - System.Length(FV) - FMac.GetMacSize, LM, 0);
+      AInLen - System.Length(FV) - LMacSize, LM, 0);
 
   end;
 
@@ -358,14 +350,14 @@ begin
   end;
 
   // Verify the MAC.
-  LEnd := AInOff + AInLen;
-  LT1 := TArrayUtilities.CopyOfRange<Byte>(AInEnc, LEnd - FMac.GetMacSize, LEnd);
+  LT1 := TArrayUtilities.CopyOfRange<Byte>(AInEnc, AInOff + AInLen - LMacSize,
+    AInOff + AInLen);
   System.SetLength(LT2, System.Length(LT1));
 
   FMac.Init((TKeyParameter.Create(LK2) as IKeyParameter) as ICipherParameters);
 
   FMac.BlockUpdate(AInEnc, AInOff + System.Length(FV), AInLen - System.Length(FV)
-    - System.Length(LT2));
+    - LMacSize);
 
   LT2 := SimilarMacCompute(LP2, LL2);
 
@@ -381,6 +373,9 @@ begin
   end
   else
   begin
+    // MAC must be verified above before this DoFinal: it removes padding (e.g. PKCS7), and a
+    // padding failure here is distinguishable from a MAC failure, which would be a CBC padding oracle.
+    // Only authenticated ciphertext reaches this point.
     LLen := LLen + FCipher.DoFinal(LM, LLen);
 
     Result := TArrayUtilities.CopyOfRange<Byte>(LM, 0, LLen);
@@ -392,7 +387,7 @@ function TIesEngine.EncryptBlock(const AIn: TCryptoLibByteArray;
   AInOff, AInLen: Int32): TCryptoLibByteArray;
 var
   LC, LK, LK1, LK2, LP2, LL2, LT: TCryptoLibByteArray;
-  LLen, LI, LLenCount: Int32;
+  LLen, LLenCount: Int32;
 begin
   if (FCipher = nil) then
   begin
@@ -403,34 +398,21 @@ begin
 
     FKdf.GenerateBytes(LK, 0, System.Length(LK));
 
-    if (System.Length(FV) <> 0) then
+    // Derive the MAC key K2 from a fixed prefix of the KDF output and the keystream K1 from
+    // the remainder, regardless of whether an ephemeral V is present. Placing K1 first (the
+    // legacy static-key, V-absent layout) put K2 at a message-length-dependent offset behind
+    // the keystream, so a single known-plaintext leak of K1 also exposed the MAC key of any
+    // shorter message - a cross-message forgery in the deterministic static-key mode. A fixed
+    // K2 offset is never covered by the keystream, closing that.
+    System.Move(LK[0], LK2[0], System.Length(LK2) * System.SizeOf(Byte));
+    if LK1 <> nil then
     begin
-      System.Move(LK[0], LK2[0], System.Length(LK2) * System.SizeOf(Byte));
-      if LK1 <> nil then
-      begin
-        System.Move(LK[System.Length(LK2)], LK1[0],
-          System.Length(LK1) * System.SizeOf(Byte));
-      end;
-    end
-    else
-    begin
-      if LK1 <> nil then
-      begin
-        System.Move(LK[0], LK1[0], System.Length(LK1) * System.SizeOf(Byte));
-      end;
-      System.Move(LK[AInLen], LK2[0], System.Length(LK2) * System.SizeOf(Byte));
+      System.Move(LK[System.Length(LK2)], LK1[0],
+        System.Length(LK1) * System.SizeOf(Byte));
     end;
 
     System.SetLength(LC, AInLen);
-
-    LI := 0;
-
-    while LI <> AInLen do
-    begin
-      LC[LI] := Byte(AIn[AInOff + LI] xor LK1[LI]);
-      System.Inc(LI);
-    end;
-
+    TByteUtilities.&Xor(AInLen, AIn, AInOff, LK1, 0, LC, 0);
     LLen := AInLen;
   end
   else
