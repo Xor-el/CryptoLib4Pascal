@@ -737,9 +737,9 @@ begin
     if TDateTimeParseFlag.AdjustToUniversal in AStyles then
     begin
       if LSign = '+' then
-        Result := IncMinute(Result, -(LOffsetHours * 60 + LOffsetMinutes))
+        Result := IncMinute(Result, -(Int64(LOffsetHours) * 60 + LOffsetMinutes))
       else
-        Result := IncMinute(Result,  (LOffsetHours * 60 + LOffsetMinutes));
+        Result := IncMinute(Result,  (Int64(LOffsetHours) * 60 + LOffsetMinutes));
     end;
   end;
 

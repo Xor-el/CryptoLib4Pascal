@@ -306,7 +306,7 @@ begin
         LA0 := ACoeffs[LJ];
         LA1 := ACoeffs[LJ + LLen];
         ACoeffs[LJ] := LA0 + LA1;
-        ACoeffs[LJ + LLen] := TMlDsaReduce.MontgomeryReduce(Int64(LZeta) * Int64(LA0 - LA1));
+        ACoeffs[LJ + LLen] := TMlDsaReduce.MontgomeryReduce(Int64(LZeta) * (Int64(LA0) - Int64(LA1)));
         System.Inc(LJ);
       end;
       LStart := LJ + LLen;

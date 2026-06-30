@@ -603,7 +603,7 @@ begin
   FState.H4 := FState.H4 + (FState.H3 shr 26);
   FState.H3 := FState.H3 and $3FFFFFF;
 
-  LC := Int64(Int32(FState.H4 shr 26) - 1) * 5;
+  LC := (Int64(Int32(FState.H4 shr 26)) - 1) * 5;
   LC := LC + Int64(FState.K0) + Int64(FState.H0 or (FState.H1 shl 26));
   TPack.UInt32_To_LE(UInt32(LC), AOutput, AOutOff);
   LC := TBitOperations.Asr64(LC, 32);
