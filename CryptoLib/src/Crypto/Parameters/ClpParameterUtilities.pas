@@ -43,7 +43,6 @@ uses
   ClpParametersWithIV,
   ClpSecureRandom,
   ClpAeadParameters,
-  ClpIAeadParameters,
   ClpCmsAsn1Objects,
   ClpICmsAsn1Objects;
 
