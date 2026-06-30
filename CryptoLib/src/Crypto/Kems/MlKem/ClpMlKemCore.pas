@@ -740,7 +740,7 @@ begin
         for LK := 0 to 7 do
         begin
           LC := FVec[LI].Coeffs[8 * LJ + LK];
-          LT8[LK] := SmallInt((((Int64((LC shl 4) + (MlKemQ shr 8)) * 165141429) shr 32) and $7FF));
+          LT8[LK] := SmallInt(((((Int64(LC shl 4) + (MlKemQ shr 8)) * 165141429) shr 32) and $7FF));
         end;
         ABuf[LPos + 0] := Byte(LT8[0] shr 0);
         ABuf[LPos + 1] := Byte((LT8[0] shr 8) or (LT8[1] shl 3));
@@ -766,7 +766,7 @@ begin
         for LK := 0 to 3 do
         begin
           LC := FVec[LI].Coeffs[4 * LJ + LK];
-          LT4[LK] := SmallInt((((Int64((LC shl 3) + (MlKemQ shr 8)) * 165141429) shr 32) and $3FF));
+          LT4[LK] := SmallInt(((((Int64(LC shl 3) + (MlKemQ shr 8)) * 165141429) shr 32) and $3FF));
         end;
         ABuf[LPos + 0] := Byte(LT4[0] shr 0);
         ABuf[LPos + 1] := Byte((LT4[0] shr 8) or (LT4[1] shl 2));
@@ -805,14 +805,14 @@ begin
         LC9 := ABuf[LPos + 9];
         LC10 := ABuf[LPos + 10];
         System.Inc(LPos, 11);
-        LT0 := SmallInt((LC0 shr 0) or (UInt16(LC1) shl 8));
-        LT1 := SmallInt((LC1 shr 3) or (UInt16(LC2) shl 5));
-        LT2 := SmallInt((LC2 shr 6) or (UInt16(LC3) shl 2) or (UInt16(LC4 shl 10)));
-        LT3 := SmallInt((LC4 shr 1) or (UInt16(LC5) shl 7));
-        LT4 := SmallInt((LC5 shr 4) or (UInt16(LC6) shl 4));
-        LT5 := SmallInt((LC6 shr 7) or (UInt16(LC7) shl 1) or (UInt16(LC8 shl 9)));
-        LT6 := SmallInt((LC8 shr 2) or (UInt16(LC9) shl 6));
-        LT7 := SmallInt((LC9 shr 5) or (UInt16(LC10) shl 3));
+        LT0 := SmallInt((UInt32(LC0) shr 0) or (UInt16(LC1) shl 8));
+        LT1 := SmallInt((UInt32(LC1) shr 3) or (UInt16(LC2) shl 5));
+        LT2 := SmallInt((UInt32(LC2) shr 6) or (UInt16(LC3) shl 2) or (UInt16(LC4 shl 10)));
+        LT3 := SmallInt((UInt32(LC4) shr 1) or (UInt16(LC5) shl 7));
+        LT4 := SmallInt((UInt32(LC5) shr 4) or (UInt16(LC6) shl 4));
+        LT5 := SmallInt((UInt32(LC6) shr 7) or (UInt16(LC7) shl 1) or (UInt16(LC8 shl 9)));
+        LT6 := SmallInt((UInt32(LC8) shr 2) or (UInt16(LC9) shl 6));
+        LT7 := SmallInt((UInt32(LC9) shr 5) or (UInt16(LC10) shl 3));
         FVec[LI].Coeffs[LJ + 0] := SmallInt(((LT0 and $7FF) * MlKemQ + 1024) shr 11);
         FVec[LI].Coeffs[LJ + 1] := SmallInt(((LT1 and $7FF) * MlKemQ + 1024) shr 11);
         FVec[LI].Coeffs[LJ + 2] := SmallInt(((LT2 and $7FF) * MlKemQ + 1024) shr 11);
@@ -838,10 +838,10 @@ begin
         LC3 := ABuf[LPos + 3];
         LC4 := ABuf[LPos + 4];
         System.Inc(LPos, 5);
-        LT0 := SmallInt((LC0 shr 0) or (UInt16(LC1) shl 8));
-        LT1 := SmallInt((LC1 shr 2) or (UInt16(LC2) shl 6));
-        LT2 := SmallInt((LC2 shr 4) or (UInt16(LC3) shl 4));
-        LT3 := SmallInt((LC3 shr 6) or (UInt16(LC4) shl 2));
+        LT0 := SmallInt((UInt32(LC0) shr 0) or (UInt16(LC1) shl 8));
+        LT1 := SmallInt((UInt32(LC1) shr 2) or (UInt16(LC2) shl 6));
+        LT2 := SmallInt((UInt32(LC2) shr 4) or (UInt16(LC3) shl 4));
+        LT3 := SmallInt((UInt32(LC3) shr 6) or (UInt16(LC4) shl 2));
         FVec[LI].Coeffs[LJ + 0] := SmallInt(((LT0 and $3FF) * MlKemQ + 512) shr 10);
         FVec[LI].Coeffs[LJ + 1] := SmallInt(((LT1 and $3FF) * MlKemQ + 512) shr 10);
         FVec[LI].Coeffs[LJ + 2] := SmallInt(((LT2 and $3FF) * MlKemQ + 512) shr 10);

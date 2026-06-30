@@ -1070,7 +1070,6 @@ end;
 function TAesEngineX86.ProcessBlock(AInput, AOutput: PByte): Int32;
 var
   LBuf: array [0 .. 15] of Byte;
-  LSrcAddr, LDstAddr: NativeUInt;
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
@@ -1087,10 +1086,8 @@ begin
     Exit;
   end;
 
-  LSrcAddr := NativeUInt(AInput);
-  LDstAddr := NativeUInt(AOutput);
-  if ((LDstAddr >= LSrcAddr) and (LDstAddr < LSrcAddr + 16)) or
-    ((LSrcAddr >= LDstAddr) and (LSrcAddr < LDstAddr + 16)) then
+  if ((AOutput >= AInput) and (AOutput < AInput + 16)) or
+    ((AInput >= AOutput) and (AInput < AOutput + 16)) then
   begin
     System.Move(AInput^, LBuf[0], 16);
     FAesNiCipherOne(@LBuf[0], FKeys);
@@ -1105,7 +1102,6 @@ end;
 function TAesEngineX86.ProcessFourBlocks(AInput, AOutput: PByte): Int32;
 var
   LWork: array [0 .. 63] of Byte;
-  LSrcAddr, LDstAddr: NativeUInt;
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
@@ -1121,10 +1117,8 @@ begin
     Exit;
   end;
 
-  LSrcAddr := NativeUInt(AInput);
-  LDstAddr := NativeUInt(AOutput);
-  if ((LDstAddr >= LSrcAddr) and (LDstAddr < LSrcAddr + 64)) or
-    ((LSrcAddr >= LDstAddr) and (LSrcAddr < LDstAddr + 64)) then
+  if ((AOutput >= AInput) and (AOutput < AInput + 64)) or
+    ((AInput >= AOutput) and (AInput < AOutput + 64)) then
   begin
     System.Move(AInput^, LWork[0], 64);
     FAesNiCipherFour(@LWork[0], FKeys);
@@ -1139,7 +1133,6 @@ end;
 function TAesEngineX86.ProcessEightBlocks(AInput, AOutput: PByte): Int32;
 var
   LWork: array [0 .. 127] of Byte;
-  LSrcAddr, LDstAddr: NativeUInt;
 begin
   if FKeys = nil then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
@@ -1155,10 +1148,8 @@ begin
     Exit;
   end;
 
-  LSrcAddr := NativeUInt(AInput);
-  LDstAddr := NativeUInt(AOutput);
-  if ((LDstAddr >= LSrcAddr) and (LDstAddr < LSrcAddr + 128)) or
-    ((LSrcAddr >= LDstAddr) and (LSrcAddr < LDstAddr + 128)) then
+  if ((AOutput >= AInput) and (AOutput < AInput + 128)) or
+    ((AInput >= AOutput) and (AInput < AOutput + 128)) then
   begin
     System.Move(AInput^, LWork[0], 128);
     FAesNiCipherEight(@LWork[0], FKeys);
