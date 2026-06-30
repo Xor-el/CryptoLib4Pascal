@@ -946,6 +946,7 @@ uses
   CryptoIOStreamTests in '..\src\Crypto\CryptoIOStreamTests.pas',
   CryptoIOSinkTests in '..\src\Crypto\CryptoIOSinkTests.pas',
   ParameterUtilitiesTests in '..\src\Security\ParameterUtilitiesTests.pas',
+  Asn1CipherBuilderWithKeyTests in '..\src\Crypto\Asn1CipherBuilderWithKeyTests.pas',
   OaepTests in '..\src\Crypto\OaepTests.pas',
   EaxTests in '..\src\Crypto\EaxTests.pas',
   CcmTests in '..\src\Crypto\CcmTests.pas',

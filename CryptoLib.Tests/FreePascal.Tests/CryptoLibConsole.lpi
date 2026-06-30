@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="192">
+    <Units Count="193">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -808,6 +808,10 @@
         <Filename Value="..\src\Math\Raw\GF256AesTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit191>
+      <Unit192>
+        <Filename Value="..\src\Crypto\Asn1CipherBuilderWithKeyTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit192>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

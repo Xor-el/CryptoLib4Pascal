@@ -35,7 +35,6 @@ uses
   ClpDigest,
   ClpDigestUtilities,
   ClpAsn1Objects,
-  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpNistObjectIdentifiers,

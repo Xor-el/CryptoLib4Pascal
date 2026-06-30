@@ -192,21 +192,27 @@ begin
   TNistObjectIdentifiers.IdAes128Ecb.ID,
   TNistObjectIdentifiers.IdAes128Ofb.ID,
   TNistObjectIdentifiers.IdAes128Wrap.ID,
-  TNistObjectIdentifiers.IdAes128WrapPad.ID]);
+  TNistObjectIdentifiers.IdAes128WrapPad.ID,
+  TNistObjectIdentifiers.IdAes128Gcm.ID,
+  TNistObjectIdentifiers.IdAes128Ccm.ID]);
   AddKgAlgorithm('AES192',
   [TNistObjectIdentifiers.IdAes192Cbc.ID,
   TNistObjectIdentifiers.IdAes192Cfb.ID,
   TNistObjectIdentifiers.IdAes192Ecb.ID,
   TNistObjectIdentifiers.IdAes192Ofb.ID,
   TNistObjectIdentifiers.IdAes192Wrap.ID,
-  TNistObjectIdentifiers.IdAes192WrapPad.ID]);
+  TNistObjectIdentifiers.IdAes192WrapPad.ID,
+  TNistObjectIdentifiers.IdAes192Gcm.ID,
+  TNistObjectIdentifiers.IdAes192Ccm.ID]);
   AddKgAlgorithm('AES256',
   [TNistObjectIdentifiers.IdAes256Cbc.ID,
   TNistObjectIdentifiers.IdAes256Cfb.ID,
   TNistObjectIdentifiers.IdAes256Ecb.ID,
   TNistObjectIdentifiers.IdAes256Ofb.ID,
   TNistObjectIdentifiers.IdAes256Wrap.ID,
-  TNistObjectIdentifiers.IdAes256WrapPad.ID]);
+  TNistObjectIdentifiers.IdAes256WrapPad.ID,
+  TNistObjectIdentifiers.IdAes256Gcm.ID,
+  TNistObjectIdentifiers.IdAes256Ccm.ID]);
 
   AddKgAlgorithm('BLOWFISH', ['1.3.6.1.4.1.3029.1.2']);
 

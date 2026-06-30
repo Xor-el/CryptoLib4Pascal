@@ -37,7 +37,9 @@ uses
   ClpCipherStream,
   ClpCipherFactory,
   ClpICipherKeyGenerator,
-  ClpCipherKeyGeneratorFactory,
+  ClpGeneratorUtilities,
+  ClpKeyGenerationParameters,
+  ClpIKeyGenerationParameters,
   ClpAlgorithmIdentifierFactory,
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
@@ -106,7 +108,10 @@ begin
 
   LRandom := TCryptoServicesRegistrar.GetSecureRandom(ARandom);
 
-  LKeyGen := TCipherKeyGeneratorFactory.CreateKeyGenerator(AEncryptionOID, LRandom);
+  LKeyGen := TGeneratorUtilities.GetKeyGenerator(AEncryptionOID);
+  if AKeySize < 0 then
+    AKeySize := LKeyGen.DefaultStrength;
+  LKeyGen.Init(TKeyGenerationParameters.Create(LRandom, AKeySize) as IKeyGenerationParameters);
 
   FEncKey := LKeyGen.GenerateKeyParameter();
   FAlgorithmIdentifier := TAlgorithmIdentifierFactory.GenerateEncryptionAlgID(

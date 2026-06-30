@@ -1265,6 +1265,7 @@
         <DCCReference Include="..\src\Crypto\CryptoIOStreamTests.pas"/>
         <DCCReference Include="..\src\Crypto\CryptoIOSinkTests.pas"/>
         <DCCReference Include="..\src\Security\ParameterUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Crypto\Asn1CipherBuilderWithKeyTests.pas"/>
         <DCCReference Include="..\src\Crypto\OaepTests.pas"/>
         <DCCReference Include="..\src\Crypto\EaxTests.pas"/>
         <DCCReference Include="..\src\Crypto\CcmTests.pas"/>
