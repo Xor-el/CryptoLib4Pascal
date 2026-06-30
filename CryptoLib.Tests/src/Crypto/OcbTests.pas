@@ -32,6 +32,7 @@ uses
 {$ENDIF FPC}
   ClpIBlockCipher,
   ClpIAeadBlockCipher,
+  ClpIAeadCipher,
   ClpICipherParameters,
   ClpIAeadParameters,
   ClpAeadParameters,
@@ -255,7 +256,7 @@ begin
 
   if not AreEqual(LTag, AEncCipher.GetMac) then
   begin
-    Fail('getMac() not the same as the appended tag: ' + ATestName);
+    Fail('GetMac() not the same as the appended tag: ' + ATestName);
   end;
 
   SetLength(LStreamTag, Length(AC) - Length(AP));
@@ -285,7 +286,7 @@ begin
 
   if not AreEqual(LTag, ADecCipher.GetMac) then
   begin
-    Fail('getMac() not the same as the appended tag (decrypt): ' + ATestName);
+    Fail('GetMac() not the same as the appended tag (decrypt): ' + ATestName);
   end;
 end;
 
@@ -319,11 +320,19 @@ begin
   CheckTestCase(LEnc, LDec, ATestName, LMacLengthBytes, LP, LC);
   CheckTestCase(LEnc, LDec, ATestName + ' (reused)', LMacLengthBytes, LP, LC);
 
-  // key reuse parameters (reuse key, new nonce)
+  // Key reuse: re-init for encryption with the same key+nonce is rejected.
   LKeyReuseParams := TAeadTestUtilities.ReuseKey(LParams);
-  LEnc.Init(True, LKeyReuseParams as ICipherParameters);
+  try
+    LEnc.Init(True, LKeyReuseParams as ICipherParameters);
+    Fail('OCB nonce reuse not detected on re-init for encryption: ' + ATestName);
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      if E.Message <> 'cannot reuse nonce for OCB encryption' then
+        Fail('wrong OCB nonce-reuse message: ' + E.Message);
+    end;
+  end;
   LDec.Init(False, LKeyReuseParams as ICipherParameters);
-  CheckTestCase(LEnc, LDec, ATestName + ' (key reuse)', LMacLengthBytes, LP, LC);
 end;
 
 function TTestOcb.CreateNonce(AN: UInt32): TBytes;
@@ -684,6 +693,7 @@ procedure TTestOcb.TestExceptions;
 var
   LOcb: IAeadBlockCipher;
   LK: TBytes;
+  LParams: IAeadParameters;
 begin
   LOcb := CreateOcbCipher;
 
@@ -698,6 +708,16 @@ begin
       // expected
     end;
   end;
+
+  SetLength(LK, 16);
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    128, TBytes.Create(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
+  TAeadTestUtilities.TestReset('OCB', CreateOcbCipher as IAeadCipher,
+    CreateOcbCipher as IAeadCipher, LParams as ICipherParameters);
+  TAeadTestUtilities.TestTampering('OCB', CreateOcbCipher as IAeadCipher,
+    LParams as ICipherParameters);
+  TAeadTestUtilities.TestOutputSizes('OCB', CreateOcbCipher, LParams);
+  TAeadTestUtilities.TestBufferSizeChecks('OCB', CreateOcbCipher, LParams);
 end;
 
 initialization

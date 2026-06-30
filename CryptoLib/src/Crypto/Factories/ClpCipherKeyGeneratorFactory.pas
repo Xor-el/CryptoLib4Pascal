@@ -37,6 +37,7 @@ type
   /// <summary>
   /// Factory for creating CipherKeyGenerator instances by OID.
   /// </summary>
+  /// <remarks>Deprecated: use <see cref="TGeneratorUtilities.GetKeyGenerator"/> instead.</remarks>
   TCipherKeyGeneratorFactory = class sealed(TObject)
   strict private
     class function CreateCipherKeyGenerator(const ARandom: ISecureRandom;
@@ -47,7 +48,7 @@ type
     /// </summary>
     class function CreateKeyGenerator(const AAlgorithm: IDerObjectIdentifier;
       const ARandom: ISecureRandom): ICipherKeyGenerator; static;
-  end;
+  end deprecated 'Use TGeneratorUtilities.GetKeyGenerator instead';
 
 implementation
 

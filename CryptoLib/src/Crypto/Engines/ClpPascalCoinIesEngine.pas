@@ -45,7 +45,7 @@ resourcestring
     'Unable to Recover Ephemeral Public Key: "%s"';
   SInvalidCipherTextLength =
     'Length of Input Must be Greater than the MAC and V Combined';
-  SInvalidMAC = 'invalid MAC';
+  SInvalidMAC = 'Invalid MAC.';
   SCipherCannotBeNilInThisMode = 'cipher cannot be nil in this mode';
 
 type

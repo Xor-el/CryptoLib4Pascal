@@ -63,6 +63,7 @@ type
     procedure TestPemLength;
     procedure TestMalformed;
     procedure TestMalformedBase64;
+    procedure TestHeaderLineBreakRejected;
   end;
 
 implementation
@@ -301,6 +302,35 @@ begin
         CheckEquals('ran out of data before consuming PEM type', E.Message, 'Exception message');
       on E: Exception do
         Fail('Expected EIOCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
+    end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TPemReaderTest.TestHeaderLineBreakRejected;
+var
+  LHeaders: TCryptoLibGenericArray<IPemHeader>;
+  LPemObj: IPemObject;
+  LStream: TStringStream;
+  LWriter: IPemWriter;
+begin
+  SetLength(LHeaders, 1);
+  LHeaders[0] := TPemHeader.Create('Proc-Type', '4,ENCRYPTED' + sLineBreak + 'injected')
+    as IPemHeader;
+  LPemObj := TPemObject.Create('CERTIFICATE', LHeaders, TBytes.Create($01))
+    as IPemObject;
+  LStream := TStringStream.Create('', TEncoding.ASCII);
+  try
+    LWriter := TPemWriter.Create(LStream);
+    try
+      LWriter.WriteObject(LPemObj as IPemObjectGenerator);
+      Fail('must reject PEM header containing CR/LF');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckEquals('PEM header must not contain CR/LF', E.Message, 'exception message');
+      on E: Exception do
+        Fail('Expected EArgumentCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
     end;
   finally
     LStream.Free;

@@ -41,13 +41,18 @@ uses
   ClpParametersWithRandom,
   ClpParametersWithContext,
   ClpParametersWithIV,
-  ClpSecureRandom;
+  ClpSecureRandom,
+  ClpAeadParameters,
+  ClpCmsAsn1Objects,
+  ClpICmsAsn1Objects;
 
 resourcestring
   SAlgorithmNil = 'algorithm cannot be nil';
   SAlgorithmNotRecognized = 'algorithm %s not recognized';
   SCouldNotProcessAsn1Parameters = 'could not process ASN.1 parameters: %s';
   SContextLengthOutOfRange = 'Context length must be in range [%d, %d]';
+  SKeyDataMustBeAccessibleForGcm = 'key data must be accessible for GCM operation';
+  SKeyDataMustBeAccessibleForCcm = 'key data must be accessible for CCM operation';
 
 type
   /// <summary>
@@ -325,6 +330,10 @@ end;
 class function TParameterUtilities.GetCipherParameters(const AAlgorithm: String;
   const AKey: ICipherParameters; const AAsn1Params: IAsn1Encodable): ICipherParameters;
 var
+  LAlgOid: IDerObjectIdentifier;
+  LKeyParam: IKeyParameter;
+  LGcmParams: IGcmParameters;
+  LCcmParams: ICcmParameters;
   LCanonical: String;
   LBasicIVSize: Int32;
   LOctet: IAsn1OctetString;
@@ -332,6 +341,36 @@ var
 begin
   if AAlgorithm = '' then
     raise EArgumentNilCryptoLibException.CreateRes(@SAlgorithmNil);
+
+  if TDerObjectIdentifier.TryFromID(AAlgorithm, LAlgOid) then
+  begin
+    if LAlgOid.On(TNistObjectIdentifiers.AES) then
+    begin
+      if TNistObjectIdentifiers.IdAes128Gcm.Equals(LAlgOid)
+        or TNistObjectIdentifiers.IdAes192Gcm.Equals(LAlgOid)
+        or TNistObjectIdentifiers.IdAes256Gcm.Equals(LAlgOid) then
+      begin
+        if not Supports(AKey, IKeyParameter, LKeyParam) then
+          raise EArgumentCryptoLibException.CreateRes(@SKeyDataMustBeAccessibleForGcm);
+        LGcmParams := TGcmParameters.GetInstance(AAsn1Params as IAsn1Convertible);
+        Result := TAeadParameters.Create(LKeyParam, LGcmParams.GetIcvLen * 8,
+          LGcmParams.GetNonce());
+        Exit;
+      end;
+
+      if TNistObjectIdentifiers.IdAes128Ccm.Equals(LAlgOid)
+        or TNistObjectIdentifiers.IdAes192Ccm.Equals(LAlgOid)
+        or TNistObjectIdentifiers.IdAes256Ccm.Equals(LAlgOid) then
+      begin
+        if not Supports(AKey, IKeyParameter, LKeyParam) then
+          raise EArgumentCryptoLibException.CreateRes(@SKeyDataMustBeAccessibleForCcm);
+        LCcmParams := TCcmParameters.GetInstance(AAsn1Params as IAsn1Convertible);
+        Result := TAeadParameters.Create(LKeyParam, LCcmParams.GetIcvLen * 8,
+          LCcmParams.GetNonce());
+        Exit;
+      end;
+    end;
+  end;
 
   LCanonical := GetCanonicalAlgorithmName(AAlgorithm);
   if LCanonical = '' then

@@ -32,6 +32,7 @@ uses
 
 resourcestring
   SWriterCannotBeNil = 'writer cannot be nil';
+  SPemHeaderLineBreak = 'PEM header must not contain CR/LF';
 
 type
   /// <summary>
@@ -51,6 +52,7 @@ type
     procedure WritePostEncapsulationBoundary(const AType: String);
     procedure WriteString(const AStr: String);
     procedure WriteLine();
+    class function HasLineBreak(const S: String): Boolean; static;
 
   public
     constructor Create(const AWriter: TStream);
@@ -101,6 +103,18 @@ end;
 procedure TPemWriter.WriteLine();
 begin
   WriteString(sLineBreak);
+end;
+
+class function TPemWriter.HasLineBreak(const S: String): Boolean;
+var
+  LI: Int32;
+begin
+  for LI := 1 to System.Length(S) do
+  begin
+    if (S[LI] = #13) or (S[LI] = #10) then
+      Exit(True);
+  end;
+  Result := False;
 end;
 
 procedure TPemWriter.WritePreEncapsulationBoundary(const AType: String);
@@ -184,6 +198,10 @@ begin
     for LI := 0 to System.Length(LObj.Headers) - 1 do
     begin
       LHeader := LObj.Headers[LI];
+      // A CR or LF in a header name or value would inject extra header lines, or a blank
+      // line would terminate the header block early -- a PEM header injection. Reject it.
+      if HasLineBreak(LHeader.Name) or HasLineBreak(LHeader.Value) then
+        raise EArgumentCryptoLibException.CreateRes(@SPemHeaderLineBreak);
       WriteString(LHeader.Name);
       WriteString(': ');
       WriteString(LHeader.Value);

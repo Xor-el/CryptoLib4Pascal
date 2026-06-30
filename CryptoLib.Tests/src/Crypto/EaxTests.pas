@@ -46,6 +46,8 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpConverters,
+  ClpIAeadCipher,
+  AeadTestUtilities,
   FusedKernelToggle,
   CryptoLibTestBase;
 
@@ -247,9 +249,19 @@ begin
   RunCheckVectors(ACount, LEncEax, LDecEax, AAdditionalDataType, ASA, AP, AT, AC);
   RunCheckVectors(ACount, LEncEax, LDecEax, AAdditionalDataType, ASA, AP, AT, AC);
 
-  // key reuse test (reuse key via null-key parameters)
+  // Key reuse: re-init for encryption with the same key+nonce is rejected.
   LParams := TAeadParameters.Create(nil, AMacSize, AN, AA);
-  LEncEax.Init(True, LParams as ICipherParameters);
+  try
+    LEncEax.Init(True, LParams as ICipherParameters);
+    Fail(Format('EAX nonce reuse not detected on re-init for encryption in test %d',
+      [ACount]));
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      if E.Message <> 'cannot reuse nonce for EAX encryption' then
+        Fail('wrong EAX nonce-reuse message: ' + E.Message);
+    end;
+  end;
   LDecEax.Init(False, LParams as ICipherParameters);
 
   RunCheckVectors(ACount, LEncEax, LDecEax, AAdditionalDataType, ASA, AP, AT, AC);
@@ -429,6 +441,7 @@ var
   LEax: IEaxBlockCipher;
   LEnc, LBadKey: TBytes;
   LLen: Int32;
+  LParams: IAeadParameters;
 begin
   LEax := CreateEaxCipher;
 
@@ -466,6 +479,17 @@ begin
 
   // Randomised round-trip tests
   RandomTests;
+
+  LParams := TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+    32, FN2, FA2);
+  TAeadTestUtilities.TestReset('EAX', CreateEaxCipher as IAeadCipher,
+    CreateEaxCipher as IAeadCipher, LParams as ICipherParameters);
+  TAeadTestUtilities.TestTampering('EAX', CreateEaxCipher as IAeadCipher,
+    LParams as ICipherParameters);
+  TAeadTestUtilities.TestOutputSizes('EAX', CreateEaxCipher as IAeadBlockCipher,
+    LParams);
+  TAeadTestUtilities.TestBufferSizeChecks('EAX',
+    CreateEaxCipher as IAeadBlockCipher, LParams);
 end;
 
 procedure TTestEax.DoTestInvalidTagLength;

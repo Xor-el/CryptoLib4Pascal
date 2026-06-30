@@ -43,6 +43,7 @@ type
       FIdECDsaWithSha3_512, FIdRsassaPkcs1V15WithSha3_224,
       FIdRsassaPkcs1V15WithSha3_256, FIdRsassaPkcs1V15WithSha3_384,
       FIdRsassaPkcs1V15WithSha3_512, FIdAes128Gcm, FIdAes192Gcm, FIdAes256Gcm,
+      FIdAes128Ccm, FIdAes192Ccm, FIdAes256Ccm,
       FIdAes128Wrap, FIdAes128WrapPad,
       FIdAes192Wrap, FIdAes192WrapPad, FIdAes256Wrap,
       FIdAes256WrapPad,
@@ -101,6 +102,10 @@ type
     class function GetIdAes128Gcm: IDerObjectIdentifier; static; inline;
     class function GetIdAes192Gcm: IDerObjectIdentifier; static; inline;
     class function GetIdAes256Gcm: IDerObjectIdentifier; static; inline;
+
+    class function GetIdAes128Ccm: IDerObjectIdentifier; static; inline;
+    class function GetIdAes192Ccm: IDerObjectIdentifier; static; inline;
+    class function GetIdAes256Ccm: IDerObjectIdentifier; static; inline;
 
     class function GetIdAes128Wrap: IDerObjectIdentifier; static; inline;
     class function GetIdAes128WrapPad: IDerObjectIdentifier; static; inline;
@@ -221,6 +226,10 @@ type
     class property IdAes128Gcm: IDerObjectIdentifier read GetIdAes128Gcm;
     class property IdAes192Gcm: IDerObjectIdentifier read GetIdAes192Gcm;
     class property IdAes256Gcm: IDerObjectIdentifier read GetIdAes256Gcm;
+
+    class property IdAes128Ccm: IDerObjectIdentifier read GetIdAes128Ccm;
+    class property IdAes192Ccm: IDerObjectIdentifier read GetIdAes192Ccm;
+    class property IdAes256Ccm: IDerObjectIdentifier read GetIdAes256Ccm;
 
     class property IdAes128Wrap: IDerObjectIdentifier read GetIdAes128Wrap;
     class property IdAes128WrapPad: IDerObjectIdentifier read GetIdAes128WrapPad;
@@ -424,6 +433,21 @@ end;
 class function TNistObjectIdentifiers.GetIdAes256Gcm: IDerObjectIdentifier;
 begin
   Result := FIdAes256Gcm;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes128Ccm: IDerObjectIdentifier;
+begin
+  Result := FIdAes128Ccm;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes192Ccm: IDerObjectIdentifier;
+begin
+  Result := FIdAes192Ccm;
+end;
+
+class function TNistObjectIdentifiers.GetIdAes256Ccm: IDerObjectIdentifier;
+begin
+  Result := FIdAes256Ccm;
 end;
 
 class function TNistObjectIdentifiers.GetIdAes128Wrap: IDerObjectIdentifier;
@@ -844,6 +868,10 @@ begin
   FIdAes128Gcm := TDerObjectIdentifier.Create(AES.ID + '.6');
   FIdAes192Gcm := TDerObjectIdentifier.Create(AES.ID + '.26');
   FIdAes256Gcm := TDerObjectIdentifier.Create(AES.ID + '.46');
+
+  FIdAes128Ccm := TDerObjectIdentifier.Create(AES.ID + '.7');
+  FIdAes192Ccm := TDerObjectIdentifier.Create(AES.ID + '.27');
+  FIdAes256Ccm := TDerObjectIdentifier.Create(AES.ID + '.47');
 
   FIdAes128Wrap := TDerObjectIdentifier.Create(AES.ID + '.5');
   FIdAes128WrapPad := TDerObjectIdentifier.Create(AES.ID + '.8');

@@ -54,6 +54,8 @@ resourcestring
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in %s failed';
   SOutputBufferTooShort = 'output buffer too short';
+  SInputBufferTooShort = 'input buffer too short';
+  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
   TOcbBlockCipher = class(TInterfacedObject, IOcbBlockCipher,
@@ -104,6 +106,8 @@ type
     FChecksum: TCryptoLibByteArray;
 
     FMacBlock: TCryptoLibByteArray;
+    FLastN: TCryptoLibByteArray;
+    FLastKey: TCryptoLibByteArray;
 
     // 8-wide bulk-cipher fast path: cached bulk-capable view of
     // FMainCipher. When the main cipher exposes IBulkBlockCipher,
@@ -122,6 +126,9 @@ type
     // up to FUSED_BATCH_BLOCKS worth of offsets per dispatch.
     FOcbKernel: IFusedOcbKernel;
     FOcbKernelMinBlocks: Int32;
+
+    procedure CheckNonceReuse(AForEncryption: Boolean;
+      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
     procedure ProcessFusedBulk(const AInput: TCryptoLibByteArray;
@@ -219,6 +226,22 @@ begin
   Result := FMainCipher;
 end;
 
+procedure TOcbBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
+  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+begin
+  if not AForEncryption then
+    Exit;
+
+  if (FLastN = nil) or (not TArrayUtilities.AreEqual(FLastN, ANewNonce)) then
+    Exit;
+
+  if AKeyParam = nil then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['OCB']);
+
+  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['OCB']);
+end;
+
 procedure TOcbBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -233,13 +256,21 @@ begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
   FMacBlock := nil;
-  FL.Clear;
 
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['OCB']);
 
+  if (not LChoice.IsAead) and (LChoice.CipherKey <> nil) and
+    (LChoice.KeyParameter = nil) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['OCB']);
+
   LN := LChoice.Nonce;
+  CheckNonceReuse(FForEncryption, LN, LChoice.KeyParameter);
+  FLastN := System.Copy(LN);
+  if LChoice.KeyParameter <> nil then
+    FLastKey := LChoice.KeyParameter.GetKey();
+
   FInitialAssociatedText := LChoice.AssociatedText;
   LKeyParameter := LChoice.KeyParameter;
 
@@ -317,6 +348,7 @@ begin
 
   FL_Dollar := OCB_double(FL_Asterisk);
 
+  FL.Clear;
   FL.Add(OCB_double(FL_Dollar));
 
   LBottom := ProcessNonce(LN);
@@ -477,6 +509,8 @@ function TOcbBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
 var
   LI, LResultLen, LSteadyPos, LRemaining, LBatchBlocks, LBatchBytes: Int32;
 begin
+  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
+
   LResultLen := 0;
   LI := 0;
 
@@ -889,10 +923,7 @@ begin
   Clear(FChecksum);
 
   if AClearMac then
-  begin
     FMacBlock := nil;
-    FL.Clear;
-  end;
 
   if (FInitialAssociatedText <> nil) then
   begin

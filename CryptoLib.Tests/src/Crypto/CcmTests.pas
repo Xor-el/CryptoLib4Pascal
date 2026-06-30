@@ -47,6 +47,8 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
+  ClpIAeadCipher,
+  AeadTestUtilities,
   FusedKernelToggle,
   CryptoLibTestBase;
 
@@ -62,7 +64,7 @@ type
       FC5, FT5: TBytes;
 
   private
-    procedure CheckVectors(ACount: Int32; const ACcm: ICcmBlockCipher;
+    procedure CheckVectors(ACount: Int32;
       const AK: TBytes; AMacSize: Int32; const AN, AA, AP, AT, AC: TBytes); overload;
 
     procedure CheckVectors(ACount: Int32; const ACcm: ICcmBlockCipher;
@@ -86,6 +88,8 @@ type
     procedure DoTestRandomised;
     procedure DoTestInvalidTagLength;
     procedure DoTestValidTagLength;
+    procedure DoTestBoundaryLimits;
+    procedure DoTestNoUnverifiedPlaintextOnFailure;
 
   published
     procedure TestNistVectorsAndLongData;
@@ -95,6 +99,7 @@ type
     procedure TestExceptions;
     procedure TestInvalidTagLength;
     procedure TestValidTagLength;
+    procedure TestNoUnverifiedPlaintextOnFailure;
 
   end;
 
@@ -107,10 +112,14 @@ begin
   Result := TCcmBlockCipher.Create(TAesUtilities.CreateEngine());
 end;
 
-procedure TTestCcm.CheckVectors(ACount: Int32; const ACcm: ICcmBlockCipher;
+procedure TTestCcm.CheckVectors(ACount: Int32;
   const AK: TBytes; AMacSize: Int32; const AN, AA, AP, AT, AC: TBytes);
 var
   LFirstA, LLastA: TBytes;
+  LReuse: ICcmBlockCipher;
+  LParams: IAeadParameters;
+  LEnc: TBytes;
+  LLen: Int32;
 begin
   SetLength(LFirstA, Length(AA) div 2);
   SetLength(LLastA, Length(AA) - Length(LFirstA));
@@ -123,12 +132,32 @@ begin
     System.Move(AA[Length(LFirstA)], LLastA[0], Length(LLastA));
   end;
 
-  CheckVectors(ACount, ACcm, 'all initial associated data', AK, AMacSize,
+  CheckVectors(ACount, CreateCcmCipher, 'all initial associated data', AK, AMacSize,
     AN, AA, nil, AP, AT, AC);
-  CheckVectors(ACount, ACcm, 'subsequent associated data', AK, AMacSize,
+  CheckVectors(ACount, CreateCcmCipher, 'subsequent associated data', AK, AMacSize,
     AN, nil, AA, AP, AT, AC);
-  CheckVectors(ACount, ACcm, 'split associated data', AK, AMacSize,
+  CheckVectors(ACount, CreateCcmCipher, 'split associated data', AK, AMacSize,
     AN, LFirstA, LLastA, AP, AT, AC);
+
+  LReuse := CreateCcmCipher;
+  LParams := TAeadParameters.Create(TKeyParameter.Create(AK) as IKeyParameter,
+    AMacSize, AN, AA);
+  LReuse.Init(True, LParams as ICipherParameters);
+  SetLength(LEnc, LReuse.GetOutputSize(Length(AP)));
+  LLen := LReuse.ProcessBytes(AP, 0, Length(AP), LEnc, 0);
+  LReuse.DoFinal(LEnc, LLen);
+  try
+    LReuse.Init(True, TAeadParameters.Create(nil, AMacSize, AN, AA)
+      as ICipherParameters);
+    Fail(Format('CCM nonce reuse not detected on re-init for encryption in test %d',
+      [ACount]));
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      if E.Message <> 'cannot reuse nonce for CCM encryption' then
+        Fail('wrong CCM nonce-reuse message: ' + E.Message);
+    end;
+  end;
 end;
 
 procedure TTestCcm.CheckVectors(ACount: Int32; const ACcm: ICcmBlockCipher;
@@ -278,16 +307,12 @@ end;
 
 procedure TTestCcm.DoTestNistVectorsAndLongData;
 var
-  LCcm: ICcmBlockCipher;
   LA4: TBytes;
   LLen: Int32;
 begin
-  LCcm := CreateCcmCipher;
-
-  // K1..K3 short vectors
-  CheckVectors(0, LCcm, FK1, 32, FN1, FA1, FP1, FT1, FC1);
-  CheckVectors(1, LCcm, FK2, 48, FN2, FA2, FP2, FT2, FC2);
-  CheckVectors(2, LCcm, FK3, 64, FN3, FA3, FP3, FT3, FC3);
+  CheckVectors(0, FK1, 32, FN1, FA1, FP1, FT1, FC1);
+  CheckVectors(1, FK2, 48, FN2, FA2, FP2, FT2, FC2);
+  CheckVectors(2, FK3, 64, FN3, FA3, FP3, FT3, FC3);
 
   // reduced A4 replicated to long AAD
   SetLength(LA4, 65536);
@@ -298,10 +323,10 @@ begin
     Inc(LLen, Length(FA4));
   end;
 
-  CheckVectors(3, LCcm, FK4, 112, FN4, LA4, FP4, FT4, FC4);
+  CheckVectors(3, FK4, 112, FN4, LA4, FP4, FT4, FC4);
 
   // long data case: AAD = A4, plaintext = A4, expected C5/T5
-  CheckVectors(4, LCcm, FK4, 112, FN4, FA4, FA4, FT5, FC5);
+  CheckVectors(4, FK4, 112, FN4, FA4, FA4, FT5, FC5);
 end;
 
 procedure TTestCcm.DoTestCcmIvParameters;
@@ -371,6 +396,7 @@ begin
   end;
 
   // encryption with output specified, non-zero offset
+  LCcm := CreateCcmCipher;
   LCcm.Init(True,
     TAeadParameters.Create(TKeyParameter.Create(FK2) as IKeyParameter,
     48, FN2, FA2) as ICipherParameters);
@@ -502,6 +528,7 @@ var
   LCcm: ICcmBlockCipher;
   LBad: TBytes;
   LOutput: TBytes;
+  LParams: IAeadParameters;
 begin
   LCcm := CreateCcmCipher;
 
@@ -547,6 +574,112 @@ begin
       // expected
     end;
   end;
+
+  DoTestBoundaryLimits;
+
+  LParams := TAeadParameters.Create(TKeyParameter.Create(FK1) as IKeyParameter,
+    32, FN2, FA2);
+  TAeadTestUtilities.TestReset('CCM', CreateCcmCipher as IAeadCipher,
+    CreateCcmCipher as IAeadCipher, LParams as ICipherParameters);
+  TAeadTestUtilities.TestTampering('CCM', CreateCcmCipher as IAeadCipher,
+    LParams as ICipherParameters);
+  TAeadTestUtilities.TestOutputSizes('CCM', CreateCcmCipher as IAeadBlockCipher,
+    LParams);
+  TAeadTestUtilities.TestBufferSizeChecks('CCM',
+    CreateCcmCipher as IAeadBlockCipher, LParams);
+end;
+
+procedure TTestCcm.DoTestBoundaryLimits;
+const
+  Offsets: array[0..5] of Int32 = (-10, -2, -1, 0, 1, 10);
+  NonceLens: array[0..1] of Int32 = (13, 12);
+var
+  LI, LJ, LNonceLen, LOffset, LQ, LSize, LLen: Int32;
+  LNonce, LInBuf, LOutBuf, LRecovered: TBytes;
+  LCcm: ICcmBlockCipher;
+begin
+  for LI := 0 to High(NonceLens) do
+  begin
+    LNonceLen := NonceLens[LI];
+    for LJ := 0 to High(Offsets) do
+    begin
+      LOffset := Offsets[LJ];
+      try
+        LCcm := CreateCcmCipher;
+        SetLength(LNonce, LNonceLen);
+        LCcm.Init(True, TAeadParameters.Create(
+          TKeyParameter.Create(FK1) as IKeyParameter, 128, LNonce, nil)
+          as ICipherParameters);
+
+        LQ := 15 - LNonceLen;
+        LSize := 1 shl (8 * LQ);
+        SetLength(LInBuf, LSize + LOffset);
+        SetLength(LOutBuf, LCcm.GetOutputSize(Length(LInBuf)));
+        LLen := LCcm.ProcessPacket(LInBuf, 0, Length(LInBuf), LOutBuf, 0);
+
+        if LOffset >= 0 then
+          Fail(Format('expected to fail to encrypt boundary bytes n=%d size=%d offset=%d',
+            [LNonceLen, LSize, LOffset]));
+
+        LCcm.Init(False, TAeadParameters.Create(
+          TKeyParameter.Create(FK1) as IKeyParameter, 128, LNonce, nil)
+          as ICipherParameters);
+        LRecovered := LCcm.ProcessPacket(LOutBuf, 0, LLen);
+
+        if (Length(LRecovered) <> Length(LInBuf)) or
+          (not AreEqual(LInBuf, LRecovered)) then
+        begin
+          Fail(Format('encryption output incorrect at boundary n=%d offset=%d',
+            [LNonceLen, LOffset]));
+        end;
+      except
+        on E: Exception do
+        begin
+          if LOffset < 0 then
+            Fail(Format('unexpected failure to encrypt boundary bytes n=%d offset=%d msg=%s',
+              [LNonceLen, LOffset, E.Message]));
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TTestCcm.DoTestNoUnverifiedPlaintextOnFailure;
+var
+  LCcm: ICcmBlockCipher;
+  LTampered, LOutput: TBytes;
+  LI: Int32;
+begin
+  LCcm := CreateCcmCipher;
+  LCcm.Init(False, TAeadParameters.Create(TKeyParameter.Create(FK2)
+    as IKeyParameter, 48, FN2, FA2) as ICipherParameters);
+
+  SetLength(LTampered, Length(FC2));
+  System.Move(FC2[0], LTampered[0], Length(FC2));
+  LTampered[High(LTampered)] := LTampered[High(LTampered)] xor $01;
+
+  SetLength(LOutput, LCcm.GetOutputSize(Length(LTampered)));
+  for LI := 0 to High(LOutput) do
+    LOutput[LI] := $55;
+
+  try
+    LCcm.ProcessPacket(LTampered, 0, Length(LTampered), LOutput, 0);
+    Fail('tampered CCM ciphertext must not verify');
+  except
+    on E: EInvalidCipherTextCryptoLibException do
+    begin
+      for LI := 0 to High(LOutput) do
+      begin
+        if LOutput[LI] <> $55 then
+          Fail('CCM left unverified plaintext in the output buffer on tag failure');
+      end;
+    end;
+  end;
+end;
+
+procedure TTestCcm.TestNoUnverifiedPlaintextOnFailure;
+begin
+  RunWithFusedToggle(DoTestNoUnverifiedPlaintextOnFailure);
 end;
 
 procedure TTestCcm.DoTestInvalidTagLength;
