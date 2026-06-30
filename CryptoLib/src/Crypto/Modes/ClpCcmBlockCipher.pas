@@ -38,6 +38,7 @@ uses
   ClpFusedKernelRegistry,
   ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
+  ClpIKeyParameter,
   ClpCbcBlockCipherMac,
   ClpIMac,
   ClpParametersWithIV,
@@ -57,6 +58,7 @@ resourcestring
   STagLengthOctets = 'tag length in octets must be one of {4,6,8,10,12,14,16}';
   SInputBufferTooShort = 'input buffer too short';
   SOutputBufferTooShort = 'output buffer too short';
+  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
   TCcmBlockCipher = class(TInterfacedObject, ICcmBlockCipher,
@@ -74,6 +76,7 @@ type
     FInitialAssociatedText: TCryptoLibByteArray;
     FMacSize: Int32;
     FKeyParam: ICipherParameters;
+    FLastKey: TCryptoLibByteArray;
     FAssociatedText: TMemoryStream;
     FData: TMemoryStream;
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -83,6 +86,8 @@ type
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
+    procedure CheckNonceReuse(AForEncryption: Boolean;
+      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     function GetAssociatedTextLength(): Int32;
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
@@ -174,6 +179,22 @@ begin
   Result := FCipher;
 end;
 
+procedure TCcmBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
+  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+begin
+  if not AForEncryption then
+    Exit;
+
+  if (FNonce = nil) or (not TArrayUtilities.AreEqual(FNonce, ANewNonce)) then
+    Exit;
+
+  if AKeyParam = nil then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['CCM']);
+
+  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['CCM']);
+end;
+
 procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -189,6 +210,12 @@ begin
   then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['CCM']);
 
+  if (not LChoice.IsAead) and (LChoice.CipherKey <> nil) and
+    (LChoice.KeyParameter = nil) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['CCM']);
+
+  CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
+
   FNonce := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
@@ -198,7 +225,11 @@ begin
   FMacSize := GetMacSize(LRequestedMacSizeBits);
 
   if (LChoice.CipherKey <> nil) then
+  begin
     FKeyParam := LChoice.CipherKey;
+    if LChoice.KeyParameter <> nil then
+      FLastKey := LChoice.KeyParameter.GetKey();
+  end;
 
   if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
@@ -335,7 +366,7 @@ function TCcmBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
 var
   LN, LQ, LLimitLen, LInputAdjustment, LOutputLen, LInIndex, LOutIndex, LI,
     LBulkBlocks, LBulkBytes: Int32;
-  LIV, LEncMac, LBlock, LCalculatedMacBlock: TCryptoLibByteArray;
+  LIV, LEncMac, LBlock, LCalculatedMacBlock, LPlain: TCryptoLibByteArray;
   LCtrCipher: ISicBlockCipher;
   // Cached IBulkBlockCipherMode view of LCtrCipher. TSicBlockCipher always
   // implements IBulkBlockCipherMode, so this is non-nil in practice; the
@@ -461,42 +492,52 @@ begin
       FMacBlock[LI] := 0;
     end;
 
-    // Same LBulkBlocks / tail split as encrypt, but over LOutputLen
-    // (ciphertext minus trailing tag) rather than AInLen. The last
-    // (possibly full) 16-byte block is held back for the LBlock scratch
-    // path so behaviour matches the pre-bulk loop byte-for-byte.
-    LBulkBlocks := (LOutputLen - 1) div BlockSize;
-    if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
-    begin
-      LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
-        AOutput, LOutIndex);
-      LInIndex := LInIndex + LBulkBytes;
-      LOutIndex := LOutIndex + LBulkBytes;
-    end
-    else
-    begin
-      while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
+    System.SetLength(LPlain, LOutputLen);
+    try
+      LOutIndex := 0;
+
+      // Same LBulkBlocks / tail split as encrypt, but over LOutputLen
+      // (ciphertext minus trailing tag) rather than AInLen. The last
+      // (possibly full) 16-byte block is held back for the LBlock scratch
+      // path so behaviour matches the pre-bulk loop byte-for-byte.
+      LBulkBlocks := (LOutputLen - 1) div BlockSize;
+      if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
       begin
-        LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-        LOutIndex := LOutIndex + BlockSize;
-        LInIndex := LInIndex + BlockSize;
+        LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
+          LPlain, LOutIndex);
+        LInIndex := LInIndex + LBulkBytes;
+        LOutIndex := LOutIndex + LBulkBytes;
+      end
+      else
+      begin
+        while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
+        begin
+          LCtrCipher.ProcessBlock(AInput, LInIndex, LPlain, LOutIndex);
+          LOutIndex := LOutIndex + BlockSize;
+          LInIndex := LInIndex + BlockSize;
+        end;
       end;
+
+      System.SetLength(LBlock, BlockSize);
+
+      System.Move(AInput[LInIndex], LBlock[0], LOutputLen - (LInIndex - AInOff));
+
+      LCtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
+
+      System.Move(LBlock[0], LPlain[LOutIndex], LOutputLen - (LInIndex - AInOff));
+
+      System.SetLength(LCalculatedMacBlock, BlockSize);
+
+      CalculateMac(LPlain, 0, LOutputLen, LCalculatedMacBlock);
+
+      if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock)) then
+        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
+
+      System.Move(LPlain[0], AOutput[AOutOff], LOutputLen);
+    finally
+      if LPlain <> nil then
+        TArrayUtilities.Fill<Byte>(LPlain, 0, System.Length(LPlain), 0);
     end;
-
-    System.SetLength(LBlock, BlockSize);
-
-    System.Move(AInput[LInIndex], LBlock[0], LOutputLen - (LInIndex - AInOff));
-
-    LCtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
-
-    System.Move(LBlock[0], AOutput[LOutIndex], LOutputLen - (LInIndex - AInOff));
-
-    System.SetLength(LCalculatedMacBlock, BlockSize);
-
-    CalculateMac(AOutput, AOutOff, LOutputLen, LCalculatedMacBlock);
-
-    if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock)) then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
   end;
 
   Result := LOutputLen;
@@ -759,7 +800,7 @@ function TCcmBlockCipher.ProcessPacketDecryptFused(
 var
   LBulkBlocks, LTailLen, LI, LTailStart: Int32;
   LS0, LMacState, LCtrBlock, LTailBlock, LReceivedRawMac,
-    LComputedMac: TCryptoLibByteArray;
+    LComputedMac, LPlain: TCryptoLibByteArray;
 begin
   Result := False;
   if FCcmKernel = nil then
@@ -787,34 +828,41 @@ begin
   System.Move(AIV[0], LCtrBlock[0], BlockSize);
   LCtrBlock[BlockSize - 1] := LCtrBlock[BlockSize - 1] or 1;
 
-  FCcmKernel.ProcessBody(@AInput[AInOff], @AOutput[AOutOff],
-    @LCtrBlock[0], @LMacState[0], LBulkBlocks);
+  System.SetLength(LPlain, AOutputLen);
+  try
+    FCcmKernel.ProcessBody(@AInput[AInOff], @LPlain[0],
+      @LCtrBlock[0], @LMacState[0], LBulkBlocks);
 
-  // Scalar tail: decrypt via keystream XOR, then fold into the MAC.
-  LTailLen := AOutputLen - LBulkBlocks * BlockSize;
-  LTailStart := AInOff + LBulkBlocks * BlockSize;
+    // Scalar tail: decrypt via keystream XOR, then fold into the MAC.
+    LTailLen := AOutputLen - LBulkBlocks * BlockSize;
+    LTailStart := AInOff + LBulkBlocks * BlockSize;
 
-  System.SetLength(LTailBlock, BlockSize);
-  FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
-  for LI := 0 to LTailLen - 1 do
-    AOutput[AOutOff + LBulkBlocks * BlockSize + LI] :=
-      AInput[LTailStart + LI] xor LTailBlock[LI];
+    System.SetLength(LTailBlock, BlockSize);
+    FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
+    for LI := 0 to LTailLen - 1 do
+      LPlain[LBulkBlocks * BlockSize + LI] :=
+        AInput[LTailStart + LI] xor LTailBlock[LI];
 
-  // Zero-pad plaintext tail and fold one last CBC step.
-  System.FillChar(LTailBlock[0], BlockSize, 0);
-  for LI := 0 to LTailLen - 1 do
-    LTailBlock[LI] := AOutput[AOutOff + LBulkBlocks * BlockSize + LI];
-  for LI := 0 to BlockSize - 1 do
-    LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
-  FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
+    // Zero-pad plaintext tail and fold one last CBC step.
+    System.FillChar(LTailBlock[0], BlockSize, 0);
+    for LI := 0 to LTailLen - 1 do
+      LTailBlock[LI] := LPlain[LBulkBlocks * BlockSize + LI];
+    for LI := 0 to BlockSize - 1 do
+      LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
+    FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
 
-  System.SetLength(LComputedMac, BlockSize);
-  System.Move(LMacState[0], LComputedMac[0], FMacSize);
+    System.SetLength(LComputedMac, BlockSize);
+    System.Move(LMacState[0], LComputedMac[0], FMacSize);
 
-  if not TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac) then
-    raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
+    if not TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac) then
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
 
-  Result := True;
+    System.Move(LPlain[0], AOutput[AOutOff], AOutputLen);
+    Result := True;
+  finally
+    if LPlain <> nil then
+      TArrayUtilities.Fill<Byte>(LPlain, 0, System.Length(LPlain), 0);
+  end;
 end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}

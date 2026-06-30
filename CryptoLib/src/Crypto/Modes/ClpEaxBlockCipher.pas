@@ -38,6 +38,7 @@ uses
   ClpFusedKernelRegistry,
   ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
+  ClpIKeyParameter,
   ClpCMac,
   ClpIMac,
   ClpParametersWithIV,
@@ -53,6 +54,8 @@ resourcestring
   SDataTooShort = 'data too short';
   SMacCheckFailed = 'mac check in %s failed';
   SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun';
+  SInputBufferTooShort = 'input buffer too short';
+  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
   TEaxBlockCipher = class(TInterfacedObject, IEaxBlockCipher,
@@ -86,6 +89,8 @@ type
     FBufOff: Int32;
     FCipherInitialized: Boolean;
     FInitialAssociatedText: TCryptoLibByteArray;
+    FLastNonce: TCryptoLibByteArray;
+    FLastKey: TCryptoLibByteArray;
 
     // Cached once per Init; non-nil when the registry resolved a fused
     // EAX kernel for the underlying cipher and encrypt direction. Decrypt
@@ -118,6 +123,8 @@ type
     FOmacP: TCryptoLibByteArray;
     FCtrBlock: TCryptoLibByteArray;
 
+    procedure CheckNonceReuse(AForEncryption: Boolean;
+      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     procedure InitCipher();
     procedure CalculateMac();
     procedure Reset(AClearMac: Boolean); overload;
@@ -235,6 +242,22 @@ begin
   Result := FCipher.GetBlockSize();
 end;
 
+procedure TEaxBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
+  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+begin
+  if not AForEncryption then
+    Exit;
+
+  if (FLastNonce = nil) or (not TArrayUtilities.AreEqual(FLastNonce, ANewNonce)) then
+    Exit;
+
+  if AKeyParam = nil then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['EAX']);
+
+  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['EAX']);
+end;
+
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
@@ -246,6 +269,15 @@ begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['EAX']);
+
+  if (not LChoice.IsAead) and (LChoice.CipherKey <> nil) and
+    (LChoice.KeyParameter = nil) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['EAX']);
+
+  CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
+  FLastNonce := System.Copy(LChoice.Nonce);
+  if LChoice.KeyParameter <> nil then
+    FLastKey := LChoice.KeyParameter.GetKey();
 
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
@@ -586,6 +618,8 @@ var
   LScratch: TCryptoLibByteArray;
 begin
   InitCipher();
+
+  TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
 
   LResultLen := 0;
 
