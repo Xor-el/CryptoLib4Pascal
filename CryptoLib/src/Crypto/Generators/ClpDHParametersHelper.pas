@@ -153,7 +153,7 @@ begin
 
     LPMod3 := LP.&Mod(TBigInteger.Three).Int32ValueExact;
     if LPMod3 <> 2 then
-      LP := LP.Add(TBigInteger.ValueOf((2 - LPMod3) * LInc3));
+      LP := LP.Add(TBigInteger.ValueOf((2 - Int64(LPMod3)) * LInc3));
 
     LCount := 0;
     while LCount < 256 do
