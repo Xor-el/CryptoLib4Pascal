@@ -179,6 +179,7 @@ uses
   ClpIDHBasicAgreement in '..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIDHBasicAgreement.pas',
   ClpIDHGenerators in '..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHGenerators.pas',
   ClpIDHParameters in '..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHParameters.pas',
+  ClpIBackingHashProvider in '..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas',
   ClpIDigest in '..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIDigest.pas',
   ClpIDigestFactory in '..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestFactory.pas',
   ClpIDigestRandomGenerator in '..\..\CryptoLib\src\Interfaces\Rngs\ClpIDigestRandomGenerator.pas',

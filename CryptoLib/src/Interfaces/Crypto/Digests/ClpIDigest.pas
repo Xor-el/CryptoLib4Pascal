@@ -21,7 +21,6 @@ unit ClpIDigest;
 interface
 
 uses
-  HlpIHash,
   ClpCryptoLibTypes;
 
 type
@@ -32,16 +31,9 @@ type
     function GetAlgorithmName: string;
 
     /// <summary>
-    /// Gets the Underlying <b>IHash</b> Instance
-    /// </summary>
-    function GetUnderlyingHasher: IHash;
-
-    /// <summary>
     /// the algorithm name
     /// </summary>
     property AlgorithmName: String read GetAlgorithmName;
-
-    property UnderlyingHasher: IHash read GetUnderlyingHasher;
 
     /// <summary>
     /// the size, in bytes, of the digest produced by this message digest.

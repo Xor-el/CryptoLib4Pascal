@@ -49,9 +49,9 @@ type
     strict protected
     function GetAlgorithmName: String; override;
     /// <summary>
-    /// Gets the Underlying <b>IHash</b> Instance
+    /// Prehash has no backing HashLib IHash; returns nil (IBackingHashProvider).
     /// </summary>
-    function GetUnderlyingHasher: IHash; override;
+    function GetBackingHash: IHash; override;
 
   public
     class function ForDigest(const ADigest: IDigest): IPrehash; static;
@@ -72,7 +72,7 @@ type
     function Clone: IDigest; override;
 
     property AlgorithmName: String read GetAlgorithmName;
-    property UnderlyingHasher: IHash read GetUnderlyingHasher;
+    property BackingHash: IHash read GetBackingHash;
 
   end;
 
@@ -110,9 +110,9 @@ begin
   Result := FAlgorithmName;
 end;
 
-function TPrehash.GetUnderlyingHasher: IHash;
+function TPrehash.GetBackingHash: IHash;
 begin
-  // Prehash doesn't have an underlying IHash
+  // Prehash doesn't have a backing IHash
   Result := nil;
 end;
 

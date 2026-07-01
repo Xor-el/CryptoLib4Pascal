@@ -22,12 +22,14 @@ interface
 
 uses
   SysUtils,
+  HlpIHash,
   HlpIHashInfo,
   HlpHashFactory,
   ClpIMac,
   ClpIHMac,
   ClpMac,
   ClpIDigest,
+  ClpIBackingHashProvider,
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpCryptoLibTypes;
@@ -35,6 +37,8 @@ uses
 resourcestring
   SOutputBufferTooShort = 'output buffer too short';
   SInvalidParameterHMac = 'HMAC requires KeyParameter';
+  SDigestNoBackingHash =
+    'digest does not provide a backing hash (required for HMAC)';
 
 type
   /// <summary>
@@ -103,10 +107,18 @@ begin
 end;
 
 constructor THMac.Create(const ADigest: IDigest);
+var
+  LProvider: IBackingHashProvider;
+  LHash: IHash;
 begin
   Inherited Create();
   FDigest := ADigest;
-  FHMAC := THashFactory.THMac.CreateHMAC(FDigest.UnderlyingHasher);
+  if not Supports(FDigest, IBackingHashProvider, LProvider) then
+    raise EArgumentCryptoLibException.CreateRes(@SDigestNoBackingHash);
+  LHash := LProvider.BackingHash;
+  if LHash = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SDigestNoBackingHash);
+  FHMAC := THashFactory.THMac.CreateHMAC(LHash);
 end;
 
 destructor THMac.Destroy;
