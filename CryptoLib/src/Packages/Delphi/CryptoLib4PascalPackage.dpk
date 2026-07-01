@@ -193,6 +193,7 @@ contains
   ClpIDHBasicAgreement in '..\..\Interfaces\Crypto\Agreements\ClpIDHBasicAgreement.pas',
   ClpIDHGenerators in '..\..\Interfaces\Crypto\Generators\ClpIDHGenerators.pas',
   ClpIDHParameters in '..\..\Interfaces\Crypto\Parameters\ClpIDHParameters.pas',
+  ClpIBackingHashProvider in '..\..\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas',
   ClpIDigest in '..\..\Interfaces\Crypto\Digests\ClpIDigest.pas',
   ClpIDigestFactory in '..\..\Interfaces\Crypto\Operators\ClpIDigestFactory.pas',
   ClpIDigestRandomGenerator in '..\..\Interfaces\Rngs\ClpIDigestRandomGenerator.pas',

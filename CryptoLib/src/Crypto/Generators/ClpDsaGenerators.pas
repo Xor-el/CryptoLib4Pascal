@@ -23,7 +23,6 @@ interface
 uses
   Math,
   SysUtils,
-  HlpSHA1,
   ClpIDigest,
   ClpISecureRandom,
   ClpDsaParameters,
@@ -375,7 +374,7 @@ begin
   LN := (FL - 1) div 160;
   System.SetLength(LW, FL div 8);
 
-  if (not (FDigest.UnderlyingHasher is TSHA1)) then
+  if (FDigest.AlgorithmName <> 'SHA-1') then
   begin
     raise EInvalidParameterCryptoLibException.CreateRes(@SUnsupportedDigest);
   end;

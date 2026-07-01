@@ -522,6 +522,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIDHBasicAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHGenerators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHParameters.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIDigest.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestFactory.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpIDigestRandomGenerator.pas"/>

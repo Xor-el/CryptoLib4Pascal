@@ -25,6 +25,7 @@ uses
   Generics.Collections,
   HlpIHash,
   ClpIDigest,
+  ClpIBackingHashProvider,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -34,7 +35,7 @@ type
   /// <summary>
   /// Hash Wrapper For the Proper Implementation in HashLib4Pascal
   /// </summary>
-  TDigest = class(TInterfacedObject, IDigest)
+  TDigest = class(TInterfacedObject, IDigest, IBackingHashProvider)
 
   strict private
 
@@ -50,9 +51,9 @@ type
 
     function GetAlgorithmName: string; virtual;
     /// <summary>
-    /// Gets the Underlying <b>IHash</b> Instance
+    /// Gets the backing HashLib <b>IHash</b> instance (IBackingHashProvider).
     /// </summary>
-    function GetUnderlyingHasher: IHash; virtual;
+    function GetBackingHash: IHash; virtual;
 
   public
     class constructor Create; overload;
@@ -119,7 +120,7 @@ type
     /// </summary>
     property AlgorithmName: String read GetAlgorithmName;
 
-    property UnderlyingHasher: IHash read GetUnderlyingHasher;
+    property BackingHash: IHash read GetBackingHash;
 
   end;
 
@@ -233,7 +234,7 @@ begin
   Result := FHash.HashSize;
 end;
 
-function TDigest.GetUnderlyingHasher: IHash;
+function TDigest.GetBackingHash: IHash;
 begin
   Result := FHash;
 end;

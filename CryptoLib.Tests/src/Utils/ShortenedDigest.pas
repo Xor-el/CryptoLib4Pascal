@@ -27,6 +27,7 @@ uses
   HlpIHash,
   ClpDigest,
   ClpIDigest,
+  ClpIBackingHashProvider,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -52,7 +53,7 @@ type
 
    strict protected
     function GetAlgorithmName: string; override;
-    function GetUnderlyingHasher: IHash; override;
+    function GetBackingHash: IHash; override;
 
   public
 
@@ -129,9 +130,14 @@ begin
   Result := FLength;
 end;
 
-function TShortenedDigest.GetUnderlyingHasher: IHash;
+function TShortenedDigest.GetBackingHash: IHash;
+var
+  LProvider: IBackingHashProvider;
 begin
-  Result := FBaseDigest.UnderlyingHasher;
+  if Supports(FBaseDigest, IBackingHashProvider, LProvider) then
+    Result := LProvider.BackingHash
+  else
+    Result := nil;
 end;
 
 procedure TShortenedDigest.Update(AInput: Byte);

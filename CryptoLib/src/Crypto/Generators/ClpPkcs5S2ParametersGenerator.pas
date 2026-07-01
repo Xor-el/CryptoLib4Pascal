@@ -21,9 +21,12 @@ unit ClpPkcs5S2ParametersGenerator;
 interface
 
 uses
+  SysUtils,
+  HlpIHash,
   HlpIHashInfo,
   HlpHashFactory,
   ClpIDigest,
+  ClpIBackingHashProvider,
   ClpICipherParameters,
   ClpIPkcs5S2ParametersGenerator,
   ClpKeyParameter,
@@ -33,6 +36,10 @@ uses
   ClpPbeParametersGenerator,
   ClpDigestUtilities,
   ClpCryptoLibTypes;
+
+resourcestring
+  SDigestNoBackingHash =
+    'digest does not provide a backing hash (required for PBKDF2)';
 
 type
   /// <summary>
@@ -194,9 +201,17 @@ end;
 
 procedure TPkcs5S2ParametersGenerator.Init(const APassword, ASalt: TCryptoLibByteArray;
   AIterationCount: Int32);
+var
+  LProvider: IBackingHashProvider;
+  LHash: IHash;
 begin
   inherited Init(APassword, ASalt, AIterationCount);
-  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(FDigest.UnderlyingHasher, FPassword, FSalt, AIterationCount);
+  if not Supports(FDigest, IBackingHashProvider, LProvider) then
+    raise EArgumentCryptoLibException.CreateRes(@SDigestNoBackingHash);
+  LHash := LProvider.BackingHash;
+  if LHash = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SDigestNoBackingHash);
+  FPBKDF2_HMAC := TKDF.TPBKDF2_HMAC.CreatePBKDF2_HMAC(LHash, FPassword, FSalt, AIterationCount);
 end;
 
 end.
