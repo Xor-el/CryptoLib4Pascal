@@ -306,7 +306,9 @@ begin
   // tag-lookahead in FBufBlock: the first FBlockSize bytes of FBufBlock
   // are the block that has just been confirmed as ciphertext (not tag),
   // the last FMacSize bytes remain the trailing tag candidate.
-{$IFDEF CRYPTOLIB_X86_SIMD}
+  // Off-SIMD (or any build with no registered fused factory) TryAcquireEax
+  // leaves FEaxKernel nil, so FUseFusedBody is False and the scalar
+  // TCMac / TSicBlockCipher path runs - no compile-time arch gating needed.
   FEaxKernel := nil;
   if FForEncryption then
     TFusedKernelRegistry.TryAcquireEax(FCipher,
@@ -315,10 +317,6 @@ begin
     TFusedKernelRegistry.TryAcquireEax(FCipher,
       TFusedModeDirection.Decrypt, FEaxKernel);
   FUseFusedBody := FEaxKernel <> nil;
-{$ELSE}
-  FEaxKernel := nil;
-  FUseFusedBody := False;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   if FUseFusedBody then
   begin

@@ -32,9 +32,9 @@ type
   /// interface is the cipher-side companion to IBulkBlockCipherMode: modes
   /// (CTR/SIC, CBC, ECB, the non-fused GCM CTR dispatcher, ...) query for it
   /// via Supports(FCipher, IBulkBlockCipher, FBulkCipher) and let the engine
-  /// own the "best batch size" decision (8-wide / 4-wide / 1-wide ladders on
-  /// AES-NI today; a hypothetical AVX-512 16-wide or ARMv8 engine would just
-  /// plug in here with no mode-side changes).
+  /// own the "best batch size" decision (e.g. 8-wide / 4-wide / 1-wide ladders
+  /// on AES-NI). Any other engine - a wider vector or an ARM Crypto-Extensions
+  /// engine - plugs in here with no mode-side changes.
   /// </summary>
   /// <remarks>
   /// Contract: ProcessBlocks(..., ABlockCount) produces byte-identical output

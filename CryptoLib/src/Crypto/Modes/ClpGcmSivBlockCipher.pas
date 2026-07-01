@@ -37,6 +37,7 @@ uses
   ClpGcmBlockCipher,
   ClpGcmUtilities,
   ClpGcmSivUtilities,
+  ClpGcmSivSimd,
   ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
   ClpFusedKernelRegistry,
@@ -121,7 +122,6 @@ type
     FTheNonce: TCryptoLibByteArray;
     FTheFlags: Int32;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // POLYVAL H-power table (H^8..H^1 as 16-byte limbs in GHASH
     // canonical form, 128 bytes). Populated once per key in DeriveKeys
     // when the fused kernel is available; captured by reference by the
@@ -132,7 +132,6 @@ type
     // matches the mode's 8-block batch contract.
     FGcmSivKernel: IFusedGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
@@ -251,7 +250,6 @@ begin
     FNumActive := 0;
   end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
   // Fused POLYVAL Horner-by-8 fast path for full 128-byte batches.
   if (FParent.FGcmSivKernel <> nil) and
     (LMyRemaining >= FParent.FGcmSivKernelBatchBytes) then
@@ -266,7 +264,6 @@ begin
       LMyRemaining := LMyRemaining - FParent.FGcmSivKernelBatchBytes;
     end;
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   while LMyRemaining >= 16 do
   begin
@@ -882,26 +879,29 @@ begin
   TGcmSivUtilities.MulX(LMyOut);
   FTheMultiplier.Init(LMyOut);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  // Precompute the POLYVAL H-power table and resolve the fused kernel
-  // for this key. LMyOut is already conditioned for GHASH. The H-power
-  // table is captured by reference by the kernel and must outlive it;
-  // it is owned by this cipher instance.
+  // Precompute the POLYVAL H-power table and resolve the fused kernel for
+  // this key when a SIMD POLYVAL backend is available. LMyOut is already
+  // conditioned for GHASH; the H-power table is captured by reference by the
+  // kernel and must outlive it (it is owned by this cipher instance).
+  // TGcmSivSimd.IsSupported is False off-SIMD (or with no fused backend), so the
+  // precompute is skipped and TGcmSivHasher.UpdateHash stays on scalar POLYVAL.
   FGcmSivKernel := nil;
   FGcmSivKernelBatchBytes := 0;
-  if System.Length(FHPow128) < 128 then
-    System.SetLength(FHPow128, 128);
-  TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
-  if TFusedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
-    TFusedModeDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
-    (FGcmSivKernel <> nil) then
+  if TGcmSivSimd.IsSupported then
   begin
-    if FGcmSivKernel.MinimumBlockCount = 8 then
-      FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
-    else
-      FGcmSivKernel := nil;
+    if System.Length(FHPow128) < 128 then
+      System.SetLength(FHPow128, 128);
+    TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
+    if TFusedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+      TFusedModeDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+      (FGcmSivKernel <> nil) then
+    begin
+      if FGcmSivKernel.MinimumBlockCount = 8 then
+        FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
+      else
+        FGcmSivKernel := nil;
+    end;
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   FTheFlags := FTheFlags or INITIAL;
 end;

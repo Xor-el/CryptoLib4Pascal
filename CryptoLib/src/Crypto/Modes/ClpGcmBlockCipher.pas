@@ -34,6 +34,7 @@ uses
   ClpIGcmMultiplier,
   ClpIGcmExponentiator,
   ClpGcmUtilities,
+  ClpGhashSimd,
   ClpBasicGcmExponentiator,
   ClpTables4kGcmMultiplier,
   ClpIBulkBlockCipher,
@@ -46,8 +47,6 @@ uses
   ClpPack,
   ClpCheck,
   ClpBasicGcmMultiplier,
-  ClpCpuFeatures,
-  ClpIntrinsicsVector,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -90,18 +89,14 @@ type
   public
     class function CreateGcmMultiplier(): IGcmMultiplier; static;
     /// <summary>
-    /// True when the fused four-block SIMD path may run: PCLMULQDQ + SSSE3 shuffled GHASH,
-    /// batched counter AES, and a packed 16-byte XMM layout.
+    /// True when the fused four-block SIMD path may run: hardware shuffled GHASH,
+    /// batched counter AES, and a packed 16-byte vector layout.
     /// </summary>
     class function IsFourWaySupported: Boolean; static;
     /// <summary>
     /// True when the fused eight-block SIMD path may run (128-byte CTR batch + wider GHASH).
     /// </summary>
     class function IsEightWaySupported: Boolean; static;
-    /// <summary>
-    /// True when the 128-bit SSE2 XOR fast path may run for one and two-block steps (with packed layout).
-    /// </summary>
-    class function IsSse2PackedVectorXorSupported: Boolean; static;
 
   strict private
 
@@ -111,13 +106,12 @@ type
     // exposes the generic IBulkBlockCipher capability. Drives the
     // non-fused 4/8-block CTR dispatchers (GetNextCtrBlocks4/8).
     FBulkCipher: IBulkBlockCipher;
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Fused CTR+GHASH kernel resolved via TFusedKernelRegistry at Init
     // time. Non-nil only when an accelerator factory accepts the
-    // underlying cipher + direction and the fused gate is open.
+    // underlying cipher + direction and the fused gate is open (always nil
+    // off-SIMD; IFusedGcmKernel is arch-neutral).
     FGcmKernel: IFusedGcmKernel;
     FGcmKernelMinBlocks: Int32;
-{$ENDIF CRYPTOLIB_X86_SIMD}
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
 
@@ -195,29 +189,23 @@ type
     procedure ProcessBlocks8Pipelined(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32; AForEncrypt: Boolean);
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // =====================================================================
-    // Fused AES-NI + 8-way GHASH pipeline (x86-64 and i386).
+    // Fused block-cipher keystream + 8-way GHASH pipeline (provided by the
+    // fused kernel registry; nil kernel -> not used, e.g. off-SIMD).
     // =====================================================================
     // This outer driver is arch-agnostic: pure Pascal batch orchestration
-    // plus one call into an IFusedGcmKernel per 8-block stride. The
-    // underlying assembly kernel has two variants keyed on register
-    // budget:
-    //   * x86-64: Gueron-style single-pass 8-wide interleave that keeps
-    //     15 of 16 XMM registers simultaneously live (8 AES state +
-    //     3 GHASH accumulators + 1 round key + 1 GHASH block +
-    //     1 H-power + 1 PCLMUL scratch + 1 byte-reverse mask).
-    //   * i386: two back-to-back 4-wide halves sharing running Z0/Z1/Z2
-    //     accumulators, sized to fit in xmm0..xmm7. AES rounds 1..4 in
-    //     each half carry the 4 pclmul iters so port-0 / port-5 ILP
-    //     overlap is preserved within the 8-register budget.
-    // Both variants expose the same IFusedGcmKernel surface so this
-    // driver only sees the kernel interface.
-    /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-AES form). Used by the FusedILP pipeline where AES is performed inside the fused assembly kernel.</summary>
+    // plus one call into an IFusedGcmKernel per 8-block stride. The kernel
+    // fuses CTR-mode keystream generation with the GHASH multiply-reduce in a
+    // single pass, interleaving the two at the instruction level so their
+    // independent execution units overlap. How wide that interleave runs and
+    // how it is scheduled against the available vector-register budget is a
+    // backend detail hidden entirely behind the IFusedGcmKernel surface, so
+    // this driver only ever sees the kernel interface.
+    /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-cipher form). Used by the FusedILP pipeline where the block-cipher keystream is produced inside the fused kernel.</summary>
     procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
     /// <summary>
-    /// Pipelined GCM path driven by FGcmKernel (x86-64 and i386). Active
-    /// when a fused CTR+GHASH kernel was acquired at Init; otherwise the
+    /// Pipelined GCM path driven by FGcmKernel (when a fused kernel is
+    /// registered). Active when a fused CTR+GHASH kernel was acquired at Init; otherwise the
     /// caller falls back to ProcessBlocks8Pipelined. AForEncrypt selects
     /// direction: encrypt GHASHes the prior iteration's OUTPUT
     /// ciphertext, decrypt GHASHes the prior iteration's INPUT
@@ -227,7 +215,6 @@ type
     procedure ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArray; var AInOff: Int32;
       var ALen: Int32; const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32;
       ALimit: Int32; AForEncrypt: Boolean);
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     // ---------------------------------------------------------------------
     // Cipher-state setup / per-call initialization.
@@ -249,7 +236,7 @@ type
     procedure CheckNonceReuse(AForEncryption: Boolean;
       const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     /// <summary>Rekey path: initialize the underlying block cipher, compute the hash
-    /// subkey H, cache the AES-NI engine (when available), and (re)allocate the
+    /// subkey H, cache the bulk-capable cipher engine (when available), and (re)allocate the
     /// 8-way SIMD buffers (FHPow / FWorkCtr / FWorkCtrAhead) on capable hardware.
     /// Called only when a new key is supplied.</summary>
     procedure InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
@@ -340,79 +327,31 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-const
-  ReverseBytesMask: packed array[0..15] of Byte = (
-    $0F, $0E, $0D, $0C, $0B, $0A, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00);
-{$ENDIF}
-
 // =======================================================================
-// Class-level CPU feature probes and multiplier factory.
+// Class-level capability probes and multiplier factory. All arch-neutral:
+// the GHASH SIMD facade answers False off-SIMD, so the mode's fast paths
+// simply fall through to their scalar reference code.
 // =======================================================================
 
 class function TGcmBlockCipher.IsFourWaySupported: Boolean;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
-    TIntrinsicsVector.IsPacked;
-{$ELSE}
-  Result := False;
-{$ENDIF}
+  Result := TGhashSimd.IsShuffledGhashSupported;
 end;
 
 class function TGcmBlockCipher.IsEightWaySupported: Boolean;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TGcmBlockCipher.IsFourWaySupported;
-{$ELSE}
-  Result := False;
-{$ENDIF}
+  Result := TGhashSimd.IsShuffledGhashSupported;
 end;
-
-class function TGcmBlockCipher.IsSse2PackedVectorXorSupported: Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasSSE2 and TIntrinsicsVector.IsPacked;
-{$ELSE}
-  Result := False;
-{$ENDIF}
-end;
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_i386.inc}
-{$ENDIF}
-end;
-
-procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
-{$ENDIF}
-end;
-{$ENDIF}
 
 { TGcmBlockCipher }
 
 class function TGcmBlockCipher.CreateGcmMultiplier: IGcmMultiplier;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ then
+  if TGhashSimd.HasCarrylessMultiply then
   begin
     Result := TBasicGcmMultiplier.Create();
     Exit;
   end;
-{$ENDIF}
   Result := TTables4kGcmMultiplier.Create();
 end;
 
@@ -510,10 +449,8 @@ begin
 
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
   FGcmKernel := nil;
   FGcmKernelMinBlocks := 0;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   FH := nil;
   System.SetLength(FH, BlockSize);
@@ -524,7 +461,6 @@ begin
   FHPow := nil;
   FWorkCtr := nil;
   FWorkCtrAhead := nil;
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if TGcmBlockCipher.IsFourWaySupported then
   begin
     System.SetLength(FHPow, 128);
@@ -545,7 +481,6 @@ begin
       end;
     end;
   end;
-{$ENDIF}
 end;
 
 procedure TGcmBlockCipher.ComputeJ0();
@@ -836,7 +771,6 @@ begin
       AOutOff := AOutOff + BlockSize;
     end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     if TGcmBlockCipher.IsEightWaySupported and (ALen >= BlockSize * 8) then
     begin
       EncryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff);
@@ -871,7 +805,6 @@ begin
       end;
     end
     else
-{$ENDIF}
     begin
       while ALen >= BlockSize * 2 do
       begin
@@ -952,7 +885,6 @@ begin
     LThresh4 := LBufLen + (BlockSize * 3);
     LThresh8 := LBufLen + (BlockSize * 7);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     if TGcmBlockCipher.IsEightWaySupported and (ALen >= LThresh8) then
     begin
       DecryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff, LThresh8);
@@ -987,7 +919,6 @@ begin
       end;
     end
     else
-{$ENDIF}
     begin
       while ALen >= LThresh2 do
       begin
@@ -1161,13 +1092,8 @@ class procedure TGcmBlockCipher.GcmReverse16(const ASrc, ADst: PByte);
 var
   LI: Int32;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3 then
-  begin
-    GcmBlockReverse128Ssse3(ADst, ASrc, @ReverseBytesMask[0]);
+  if TGhashSimd.TryBlockReverse128(ADst, ASrc) then
     Exit;
-  end;
-{$ENDIF}
   for LI := 0 to 15 do
     ADst[LI] := ASrc[15 - LI];
 end;
@@ -1181,13 +1107,8 @@ var
   LSRev: array[0..15] of Byte;
   LPCiph: PByte;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsFourWaySupported then
-  begin
-    TGcmUtilities.FusedFourShuffledGhash(@FS[0], PC0, @FHPow[64], @ReverseBytesMask[0]);
+  if TGhashSimd.TryFusedFourShuffledGhash(@FS[0], PC0, @FHPow[64]) then
     Exit;
-  end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
   FillChar(LU0, 16, 0);
   FillChar(LU1, 16, 0);
@@ -1219,15 +1140,15 @@ end;
 // Fused and pipelined batch routines -- GCM performance core.
 // =======================================================================
 // Each routine consumes 64 bytes (4-way) or 128 bytes (8-way) of
-// plaintext / ciphertext per iteration. The "fused" variants run AES
+// plaintext / ciphertext per iteration. The "fused" variants run
 // counter-keystream generation then GHASH back-to-back. The
-// "pipelined" variants overlap current-batch AES with previous-batch
-// GHASH to reclaim port-0 / port-5 ILP. The FusedILP variant (further
-// below, under CRYPTOLIB_X86_SIMD) pushes this further by interleaving
-// both at the instruction level inside a single assembly kernel,
-// selected per arch (Gueron 8-wide on x86-64, 2x4-wide halves on i386).
-// AForEncrypt selects which buffer feeds GHASH: output ciphertext on
-// encrypt, input ciphertext on decrypt.
+// "pipelined" variants overlap current-batch keystream with previous-batch
+// GHASH to reclaim instruction-level parallelism across the two independent
+// execution units. The FusedILP variant (further below) pushes this further
+// by interleaving both at the instruction level inside a single kernel
+// supplied by the fused-kernel registry (nil off-SIMD, so that path is
+// simply skipped there). AForEncrypt selects which buffer feeds GHASH:
+// output ciphertext on encrypt, input ciphertext on decrypt.
 // =======================================================================
 
 // Single-batch fused 4-way GCM step. AForEncrypt=True hashes the output ciphertext;
@@ -1257,13 +1178,8 @@ var
   LSRev: array [0 .. 15] of Byte;
   LPCiph: PByte;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsEightWaySupported then
-  begin
-    TGcmUtilities.FusedEightShuffledGhash(@FS[0], PBase, @FHPow[0], @ReverseBytesMask[0]);
+  if TGhashSimd.TryFusedEightShuffledGhash(@FS[0], PBase, @FHPow[0]) then
     Exit;
-  end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
   GcmReverse16(@FS[0], @LSRev[0]);
   FillChar(LU0, 16, 0);
   FillChar(LU1, 16, 0);
@@ -1301,8 +1217,9 @@ end;
 // Pipeline-by-one fused four-block step. Requires ALen >= ALimit + BlockSize*4*2
 // (i.e. at least two 4-block batches remain after honouring the caller's tail
 // hold-back) so we can overlap each batch's GHASH with the next batch's
-// CTR-keystream generation via CPU OoO scheduling (AES-NI uses port 0 / GHASH
-// PCLMULQDQ uses port 5 on Intel). After this method returns, 0 or 1 full
+// CTR-keystream generation via CPU out-of-order scheduling (the block-cipher
+// keystream and the GHASH multiply-reduce use independent execution units).
+// After this method returns, 0 or 1 full
 // four-block batches remain; the caller's non-pipelined loop handles the tail.
 // AForEncrypt=True does XOR then GHASH(output); AForEncrypt=False does
 // GHASH(input) then XOR (the only per-direction difference).
@@ -1464,14 +1381,13 @@ begin
   System.Move(ACounter[0], ABlocks[112], 16);
 end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
 // =======================================================================
-// Fused AES-NI + 8-way GHASH pipeline (x86-64 and i386).
-// The driver is arch-agnostic: it drives the outer 8-block stride loop
-// and delegates the fused work to whichever IFusedGcmKernel variant the
-// registry resolved (Gueron 8-wide on x86-64, 2x4-wide halves on i386).
-// Register-budget rationale for each variant lives on the matching
-// banner in the class declaration.
+// Fused block-cipher keystream + 8-way GHASH pipeline. The driver is
+// arch-agnostic: it drives the outer 8-block stride loop and delegates the
+// fused work to whichever IFusedGcmKernel the registry resolved (nil
+// off-SIMD, so the callers never invoke this path there). The kernel's
+// internal interleave and register budget are backend details behind the
+// interface, summarised on the matching banner in the class declaration.
 // =======================================================================
 
 procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
@@ -1479,21 +1395,21 @@ begin
   FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
 end;
 
-// Fused AES-NI keystream + 8-way GHASH pipeline (x86-64 and i386). The
-// AES engine is always in encrypt mode (CTR keystream) regardless of GCM
-// direction. AForEncrypt selects the per-direction bookkeeping only:
+// Fused block-cipher keystream + 8-way GHASH pipeline. The cipher engine is
+// always in encrypt mode (CTR keystream) regardless of GCM direction.
+// AForEncrypt selects the per-direction bookkeeping only:
 //   * encrypt: GHASH consumes the prior iteration's OUTPUT ciphertext.
 //   * decrypt: GHASH consumes the prior iteration's INPUT  ciphertext.
-// Dispatches to the AES-128 / AES-192 / AES-256 fused wrapper based on the
-// engine's current round-key schedule length (10 / 12 / 14 rounds). Encrypt
+// Dispatches to the 128 / 192 / 256-bit fused wrapper based on the engine's
+// current round-key schedule length (10 / 12 / 14 rounds). Encrypt
 // callers pass ALimit=0 (threshold collapses to BlockSize*16). Decrypt callers
 // pass the tail hold-back threshold; the loop leaves at least ALimit bytes for
 // the caller to process after the pipelined block.
-// Prime: batch 0 is produced via the regular AES-NI 8-wide kernel + Pascal XOR,
+// Prime: batch 0 is produced via the regular 8-wide keystream path + Pascal XOR,
 // leaving its ciphertext reference at LPrevCipher awaiting GHASH in the next
 // iteration.
-// Body: each loop iteration invokes the interleaved assembly kernel which
-//   (a) AES-encrypts eight fresh counter blocks to keystream,
+// Body: each loop iteration invokes the interleaved fused kernel which
+//   (a) encrypts eight fresh counter blocks to keystream,
 //   (b) XORs the keystream with the current plaintext/ciphertext,
 //   (c) GHASHes the previous iteration's ciphertext into the running state.
 // Tail: the last pending ciphertext is GHASH'd, then the final batch is
@@ -1514,7 +1430,7 @@ begin
   LCurrCtrs := FWorkCtr;
   LNextCtrs := FWorkCtrAhead;
 
-  // Prime batch 0: regular 8-wide AES-NI into LCurrCtrs (now holds keystream),
+  // Prime batch 0: regular 8-wide keystream into LCurrCtrs (now holds keystream),
   // XOR with plaintext/ciphertext at LPOut, defer GHASH of batch 0.
   GetNextCtrBlocks8(LCurrCtrs);
   LPIn := PByte(AInBuf) + AInOff;
@@ -1570,7 +1486,6 @@ begin
   AOutOff := AOutOff + (BlockSize * 8);
   ALen := ALen - (BlockSize * 8);
 end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 // =======================================================================
 // Batch dispatchers: route each N-block call to the fastest available
@@ -1583,7 +1498,6 @@ procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsFourWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
   if FHPow = nil then
@@ -1597,31 +1511,26 @@ begin
     ALen := ALen - (BlockSize * 4);
     AOutOff := AOutOff + (BlockSize * 4);
   end;
-{$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
-{$ENDIF}
 end;
 
 procedure TGcmBlockCipher.EncryptBlocks8(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsEightWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
   if (FHPow = nil) or (System.Length(FHPow) < 128) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= BlockSize * 16 then
   begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-    // FusedILP is worthwhile only when the inner loop actually
-    // iterates: prime batch + >=1 kernel iter + tail batch = 3 strides
-    // of 128 B. Below that the fused asm is bypassed (prime + tail
-    // only) and the driver's entry cost regresses small payloads,
-    // notably on i386 where register pressure amplifies the overhead.
+    // FusedILP is worthwhile only when the inner loop actually iterates:
+    // prime batch + >=1 kernel iter + tail batch = 3 strides of 128 B. Below
+    // that the fused kernel is bypassed (prime + tail only) and the driver's
+    // entry cost regresses small payloads, especially on register-constrained
+    // targets where that overhead is amplified. FGcmKernel is nil off-SIMD, so
+    // this branch is simply skipped there.
     if (FGcmKernel <> nil) and (ALen >= BlockSize * 24) then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
-{$ENDIF}
     if ALen >= BlockSize * 16 then
       ProcessBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
   end;
@@ -1632,9 +1541,6 @@ begin
     ALen := ALen - (BlockSize * 8);
     AOutOff := AOutOff + (BlockSize * 8);
   end;
-{$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
-{$ENDIF}
 end;
 
 procedure TGcmBlockCipher.CipherBlock(const AInBuf: TCryptoLibByteArray;
@@ -1648,25 +1554,23 @@ begin
   LCtrBlock := nil;
   System.SetLength(LCtrBlock, BlockSize);
   GetNextCtrBlock(LCtrBlock);
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
+  if TGhashSimd.IsBlockXorSupported then
   begin
     if AForEncrypt then
     begin
       System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-      GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-      GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
+      TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+      TGhashSimd.BlockXor128(@FS[0], @AOutBuf[AOutOff]);
     end
     else
     begin
       System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-      GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
-      GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
+      TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @LCtrBlock[0]);
+      TGhashSimd.BlockXor128(@FS[0], @AInBuf[AInOff]);
     end;
     FMultiplier.MultiplyH(FS);
     Exit;
   end;
-{$ENDIF}
 
   if AForEncrypt then
   begin
@@ -1715,7 +1619,6 @@ procedure TGcmBlockCipher.DecryptBlocks4(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32; ALimit: Int32);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsFourWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
   if ALimit < BlockSize * 4 then
@@ -1731,16 +1634,12 @@ begin
     ALen := ALen - (BlockSize * 4);
     AOutOff := AOutOff + (BlockSize * 4);
   end;
-{$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
-{$ENDIF}
 end;
 
 procedure TGcmBlockCipher.DecryptBlocks8(const AInBuf: TCryptoLibByteArray;
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32; ALimit: Int32);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if not TGcmBlockCipher.IsEightWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
   if ALimit < BlockSize * 8 then
@@ -1749,12 +1648,11 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= ALimit + (BlockSize * 8) * 2 then
   begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // See EncryptBlocks8: require prime + >=1 kernel iter + tail
     // (3 strides of 128 B above ALimit) before entering FusedILP.
+    // FGcmKernel is nil off-SIMD, so this branch is skipped there.
     if (FGcmKernel <> nil) and (ALen >= ALimit + (BlockSize * 8) * 3) then
       ProcessBlocks8FusedILP(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
-{$ENDIF}
     if ALen >= ALimit + (BlockSize * 8) * 2 then
       ProcessBlocks8Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
   end;
@@ -1765,9 +1663,6 @@ begin
     ALen := ALen - (BlockSize * 8);
     AOutOff := AOutOff + (BlockSize * 8);
   end;
-{$ELSE}
-  raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
-{$ENDIF}
 end;
 
 procedure TGcmBlockCipher.CipherBlocks2(const AInBuf: TCryptoLibByteArray;
@@ -1781,8 +1676,7 @@ begin
   LCtrBlock := nil;
   System.SetLength(LCtrBlock, BlockSize);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TGcmBlockCipher.IsSse2PackedVectorXorSupported then
+  if TGhashSimd.IsBlockXorSupported then
   begin
     for LB := 0 to 1 do
     begin
@@ -1790,14 +1684,14 @@ begin
       if AForEncrypt then
       begin
         System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-        GcmBlockXor128Sse2(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-        GcmBlockXor128Sse2(@FS[0], @AOutBuf[AOutOff]);
+        TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @AInBuf[AInOff]);
+        TGhashSimd.BlockXor128(@FS[0], @AOutBuf[AOutOff]);
       end
       else
       begin
         System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-        GcmBlockXor128Sse2(@AOutBuf[AOutOff], @LCtrBlock[0]);
-        GcmBlockXor128Sse2(@FS[0], @AInBuf[AInOff]);
+        TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @LCtrBlock[0]);
+        TGhashSimd.BlockXor128(@FS[0], @AInBuf[AInOff]);
       end;
       FMultiplier.MultiplyH(FS);
       AInOff := AInOff + BlockSize;
@@ -1805,7 +1699,6 @@ begin
     end;
     Exit;
   end;
-{$ENDIF}
 
   for LB := 0 to 1 do
   begin

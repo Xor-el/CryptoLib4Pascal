@@ -356,6 +356,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpAesSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpArgon2ParametersGenerator.pas"/>
@@ -523,6 +524,17 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIDHGenerators.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIDHParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpChaChaSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpChaChaX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSalsaSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSalsaX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305Simd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305X86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGhashSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGhashX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmSivSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmSivX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIDigest.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Operators\ClpIDigestFactory.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Rngs\ClpIDigestRandomGenerator.pas"/>
@@ -1020,7 +1032,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelRegistry.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesNiAeadResolver.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesFusedAeadSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesFusedAeadX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolySimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiOcbKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas"/>

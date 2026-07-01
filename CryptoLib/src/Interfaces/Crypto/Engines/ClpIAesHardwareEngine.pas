@@ -27,8 +27,8 @@ uses
 type
   /// <summary>
   /// Architecture-neutral capability interface for hardware-accelerated AES
-  /// engines (AES-NI on x86 via <c>TAesEngineX86</c> today; a NEON/Crypto-Ext
-  /// ARMv8 engine could implement the same surface tomorrow). It exposes the
+  /// engines (e.g. AES-NI on x86 via <c>TAesEngineX86</c>; a NEON/Crypto-Ext
+  /// ARMv8 engine could implement the same surface). It exposes the
   /// fixed-width 4-/8-block batch entry points and the raw-pointer single-block
   /// overload that sit beneath the generic <see cref="IBulkBlockCipher" />
   /// ladder. The aliasing contract for every overload here is identical to

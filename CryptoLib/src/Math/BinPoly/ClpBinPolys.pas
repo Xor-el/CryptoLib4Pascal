@@ -31,8 +31,8 @@ uses
   ClpBinPolyMulBaseBinomialReduce,
   ClpBinPolyMulBaseTrinomialReduce,
   ClpBinPolyMulBasePentanomialReduce,
+  ClpBinPolySimd,
   ClpBinPolyScalarBackend,
-  ClpBinPolyX86V128Backend,
   ClpItohTsujiiInv;
 
 type
@@ -41,7 +41,7 @@ type
   /// (<c>Size</c>, <c>Create</c>, <c>Add</c>, <c>AddTo</c>, etc.) sit at the top level;
   /// factories classified by reduction polynomial shape live under the nested
   /// <c>TBinPolysMul</c> class, and inversion factories under <c>TBinPolysInv</c>
-  /// (Itoh-Tsujii today).
+  /// (Itoh-Tsujii).
   /// </summary>
   /// <remarks>
   /// Internal library surface — consumed by the generic F2m field layer and other
@@ -259,10 +259,8 @@ end;
 
 class function TBinPolys.TBinPolysMul.CreateBinPolyMul(AN: Int32; const AReduce: IBinPolyReduce): IBinPolyMul;
 begin
-  {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TBinPolyX86V128Backend.IsEnabled then
-    Exit(TBinPolyX86V128Backend.CreateBinPolyMul(AN, AReduce));
-  {$ENDIF}
+  if TBinPolySimd.TryCreateBinPolyMul(AN, AReduce, Result) then
+    Exit;
   Result := TBinPolyScalarBackend.CreateBinPolyMul(AN, AReduce);
 end;
 

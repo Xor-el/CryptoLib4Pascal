@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="775">
+    <Files Count="789">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -2734,8 +2734,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpFusedKernelRegistry"/>
       </Item675>
       <Item676>
-        <Filename Value="..\..\Crypto\Modes\Fused\Internal\ClpAesNiAeadResolver.pas"/>
-        <UnitName Value="ClpAesNiAeadResolver"/>
+        <Filename Value="..\..\Crypto\Modes\Fused\Internal\ClpAesFusedAeadSimd.pas"/>
+        <UnitName Value="ClpAesFusedAeadSimd"/>
       </Item676>
       <Item677>
         <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiOcbKernel.pas"/>
@@ -3133,6 +3133,62 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas"/>
         <UnitName Value="ClpIBackingHashProvider"/>
       </Item775>
+      <Item776>
+        <Filename Value="..\..\Crypto\Engines\ClpChaChaSimd.pas"/>
+        <UnitName Value="ClpChaChaSimd"/>
+      </Item776>
+      <Item777>
+        <Filename Value="..\..\Crypto\Engines\ClpChaChaX86Backend.pas"/>
+        <UnitName Value="ClpChaChaX86Backend"/>
+      </Item777>
+      <Item778>
+        <Filename Value="..\..\Crypto\Engines\ClpSalsaSimd.pas"/>
+        <UnitName Value="ClpSalsaSimd"/>
+      </Item778>
+      <Item779>
+        <Filename Value="..\..\Crypto\Engines\ClpSalsaX86Backend.pas"/>
+        <UnitName Value="ClpSalsaX86Backend"/>
+      </Item779>
+      <Item780>
+        <Filename Value="..\..\Crypto\Macs\ClpPoly1305State.pas"/>
+        <UnitName Value="ClpPoly1305State"/>
+      </Item780>
+      <Item781>
+        <Filename Value="..\..\Crypto\Macs\ClpPoly1305Simd.pas"/>
+        <UnitName Value="ClpPoly1305Simd"/>
+      </Item781>
+      <Item782>
+        <Filename Value="..\..\Crypto\Macs\ClpPoly1305X86Backend.pas"/>
+        <UnitName Value="ClpPoly1305X86Backend"/>
+      </Item782>
+      <Item783>
+        <Filename Value="..\..\Crypto\Modes\Gcm\ClpGhashSimd.pas"/>
+        <UnitName Value="ClpGhashSimd"/>
+      </Item783>
+      <Item784>
+        <Filename Value="..\..\Crypto\Modes\Gcm\ClpGhashX86Backend.pas"/>
+        <UnitName Value="ClpGhashX86Backend"/>
+      </Item784>
+      <Item785>
+        <Filename Value="..\..\Crypto\Modes\Gcm\ClpGcmSivSimd.pas"/>
+        <UnitName Value="ClpGcmSivSimd"/>
+      </Item785>
+      <Item786>
+        <Filename Value="..\..\Crypto\Modes\Gcm\ClpGcmSivX86Backend.pas"/>
+        <UnitName Value="ClpGcmSivX86Backend"/>
+      </Item786>
+      <Item787>
+        <Filename Value="..\..\Crypto\Modes\Fused\Internal\ClpAesFusedAeadX86Backend.pas"/>
+        <UnitName Value="ClpAesFusedAeadX86Backend"/>
+      </Item787>
+      <Item788>
+        <Filename Value="..\..\Math\BinPoly\ClpBinPolySimd.pas"/>
+        <UnitName Value="ClpBinPolySimd"/>
+      </Item788>
+      <Item789>
+        <Filename Value="..\..\Crypto\ClpAesSimd.pas"/>
+        <UnitName Value="ClpAesSimd"/>
+      </Item789>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

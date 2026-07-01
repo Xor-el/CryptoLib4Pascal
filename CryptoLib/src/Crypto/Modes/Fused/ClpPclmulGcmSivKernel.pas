@@ -26,12 +26,11 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedGcmSivKernel,
   ClpFusedKernelRegistry,
-  ClpCpuFeatures,
-  ClpIntrinsicsVector;
+  ClpGcmSivSimd;
 
 type
   /// <summary>
-  ///   PCLMULQDQ + SSSE3 implementation of IFusedGcmSivKernel. Pure
+  ///   PCLMULQDQ implementation of IFusedGcmSivKernel. Pure
   ///   POLYVAL: the factory ignores ACipher identity and only requires
   ///   a valid pre-computed H-power table from the caller. Ships on
   ///   both x86_64 and i386.
@@ -63,19 +62,6 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
-procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
-{$ENDIF}
-end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
 const
   // PSHUFB full-reverse control used by the POLYVAL Horner batch.
   GcmSivKernelReverseMask: packed array[0..15] of Byte = (
@@ -99,11 +85,9 @@ end;
 procedure TPclmulGcmSivKernel.ProcessPolyvalBatch(AInPtr, AAccumulator: Pointer;
   ABlockCount: Int32);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
   if ABlockCount <> FUSED_POLYVAL_MIN_BLOCKS then
     Exit;
-  GcmSivPolyvalHornerEight(AAccumulator, AInPtr, FHPow128, FMask);
-{$ENDIF CRYPTOLIB_X86_SIMD}
+  TGcmSivSimd.ProcessPolyvalBatch(AAccumulator, AInPtr, FHPow128, FMask);
 end;
 
 { TPclmulGcmSivKernelFactory }
@@ -127,14 +111,11 @@ begin
   try
     if AHPowers = nil then
       Exit;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-    if not (TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
-      TIntrinsicsVector.IsPacked) then
+    if not TGcmSivSimd.IsSupported then
       Exit;
     AKernel := TPclmulGcmSivKernel.Create(AHPowers,
       @GcmSivKernelReverseMask[0]);
     Result := True;
-{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;

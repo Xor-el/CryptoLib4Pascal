@@ -130,11 +130,9 @@ type
     procedure CheckNonceReuse(AForEncryption: Boolean;
       const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     procedure ProcessFusedBulk(const AInput: TCryptoLibByteArray;
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
       ABlockCount: Int32);
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     procedure ProcessEightBlocksBulk(const AInput: TCryptoLibByteArray;
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32);
@@ -526,15 +524,16 @@ begin
 
   while (LI < ALen) do
   begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Fused-kernel fast path: accelerator-provided AEAD kernel
-    // (AES-NI today; ARM / other accelerators pluggable via the
-    // registry). Takes priority over the 8-wide bulk-cipher path
-    // below whenever at least one kernel-stride batch fits the
-    // steady-state window. A single dispatch stages up to
-    // FUSED_BATCH_BLOCKS worth of offsets and lets the kernel loop
-    // internally in MinimumBlockCount strides, amortising per-call
-    // overhead across the whole batch.
+    // (e.g. AES-NI; other accelerators pluggable via the
+    // registry). FOcbKernel is nil when no factory accepted this
+    // cipher / direction (always so off-SIMD), in which case this branch
+    // is skipped and the 8-wide bulk / scalar paths below run unchanged.
+    // Takes priority over the 8-wide bulk-cipher path below whenever at
+    // least one kernel-stride batch fits the steady-state window. A single
+    // dispatch stages up to FUSED_BATCH_BLOCKS worth of offsets and lets
+    // the kernel loop internally in MinimumBlockCount strides, amortising
+    // per-call overhead across the whole batch.
     if (FOcbKernel <> nil) and (FMainBlockPos = LSteadyPos) and
       ((ALen - LI) >= FOcbKernelMinBlocks * BLOCK_SIZE) then
     begin
@@ -552,7 +551,6 @@ begin
       LI := LI + LBatchBytes;
       Continue;
     end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     // 8-wide bulk-cipher fast path. Entered only when no fused kernel
     // accepted this cipher / direction (FOcbKernel = nil) or the
@@ -582,7 +580,6 @@ begin
   Result := LResultLen;
 end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
 procedure TOcbBlockCipher.ProcessFusedBulk(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
   ABlockCount: Int32);
@@ -697,7 +694,6 @@ begin
       FMacSize);
   end;
 end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 procedure TOcbBlockCipher.ProcessEightBlocksBulk(
   const AInput: TCryptoLibByteArray; AInOff: Int32;

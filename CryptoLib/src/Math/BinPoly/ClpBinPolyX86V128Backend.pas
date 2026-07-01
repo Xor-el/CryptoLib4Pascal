@@ -31,7 +31,7 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SX86V128BackendRequiresPclmulqdqSupport = 'X86.V128 backend requires PCLMULQDQ support on this target';
+  SX86V128BackendRequiresCarrylessMultiply = 'X86.V128 backend requires carryless-multiply support on this target';
 
 type
   /// <summary>
@@ -39,7 +39,7 @@ type
   /// </summary>
   TBinPolyX86V128Backend = class sealed
   public
-    class function IsEnabled: Boolean; static;
+    class function IsSupported: Boolean; static;
     class function CreateBinPolyMul(AN: Int32; const AReduce: IBinPolyReduce): IBinPolyMul; static;
   end;
 
@@ -47,7 +47,7 @@ implementation
 
 { TBinPolyX86V128Backend }
 
-class function TBinPolyX86V128Backend.IsEnabled: Boolean;
+class function TBinPolyX86V128Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked;
@@ -60,8 +60,8 @@ class function TBinPolyX86V128Backend.CreateBinPolyMul(AN: Int32; const AReduce:
 var
   LSize: Int32;
 begin
-  if not IsEnabled then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SX86V128BackendRequiresPclmulqdqSupport);
+  if not IsSupported then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SX86V128BackendRequiresCarrylessMultiply);
 
   LSize := (AN + 63) shr 6;
   case LSize of
