@@ -24,8 +24,6 @@ uses
   ClpIBinPolyMul
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpBinPolyX86V128Backend
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  , ClpBinPolyArmV128Backend
 {$IFEND}
   ;
 
@@ -62,12 +60,6 @@ begin
   if TBinPolyX86V128Backend.IsSupported then
   begin
     AMul := TBinPolyX86V128Backend.CreateBinPolyMul(AN, AReduce);
-    Exit(True);
-  end;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  if TBinPolyArmV128Backend.IsSupported then
-  begin
-    AMul := TBinPolyArmV128Backend.CreateBinPolyMul(AN, AReduce);
     Exit(True);
   end;
 {$IFEND}

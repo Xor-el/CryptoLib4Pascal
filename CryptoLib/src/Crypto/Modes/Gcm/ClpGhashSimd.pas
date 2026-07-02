@@ -24,8 +24,6 @@ uses
   ClpCryptoLibTypes
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpGhashX86Backend
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  , ClpGhashArmBackend
 {$IFEND}
   ;
 
@@ -73,8 +71,6 @@ class function TGhashSimd.TryMultiply(PX, PY: Pointer): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryMultiply(PX, PY);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryMultiply(PX, PY);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -84,8 +80,6 @@ class function TGhashSimd.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryMultiplyExt(PX, PY, POut48);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryMultiplyExt(PX, PY, POut48);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -95,8 +89,6 @@ class function TGhashSimd.TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryReduce3(PZ0, PZ1, PZ2, PSVector16);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryReduce3(PZ0, PZ1, PZ2, PSVector16);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -106,8 +98,6 @@ class function TGhashSimd.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte)
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -117,8 +107,6 @@ class function TGhashSimd.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte): B
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -128,8 +116,6 @@ class function TGhashSimd.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte):
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -139,8 +125,6 @@ class function TGhashSimd.IsShuffledGhashSupported: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.IsShuffledGhashSupported;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.IsShuffledGhashSupported;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -150,8 +134,6 @@ class function TGhashSimd.IsBlockXorSupported: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.IsBlockXorSupported;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.IsBlockXorSupported;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -161,8 +143,6 @@ class function TGhashSimd.HasCarrylessMultiply: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.HasCarrylessMultiply;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.HasCarrylessMultiply;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -172,8 +152,6 @@ class procedure TGhashSimd.BlockXor128(PDst, PSrc: PByte);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TGhashX86Backend.BlockXor128(PDst, PSrc);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  TGhashArmBackend.BlockXor128(PDst, PSrc);
 {$IFEND}
 end;
 
@@ -181,8 +159,6 @@ class function TGhashSimd.TryBlockReverse128(PDst, PSrc: PByte): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.TryBlockReverse128(PDst, PSrc);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TGhashArmBackend.TryBlockReverse128(PDst, PSrc);
 {$ELSE}
   Result := False;
 {$IFEND}

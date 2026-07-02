@@ -24,8 +24,6 @@ uses
   ClpIBlockCipher
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpAesEngineX86
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  , ClpAesEngineArm
 {$IFEND}
   ;
 
@@ -59,8 +57,6 @@ class function TAesSimd.IsSupported: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TAesEngineX86.IsSupported;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TAesEngineArm.IsSupported;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -73,12 +69,6 @@ begin
   if TAesEngineX86.IsSupported then
   begin
     AEngine := TAesEngineX86.Create();
-    Exit(True);
-  end;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  if TAesEngineArm.IsSupported then
-  begin
-    AEngine := TAesEngineArm.Create();
     Exit(True);
   end;
 {$IFEND}

@@ -24,8 +24,6 @@ uses
   ClpCryptoLibTypes
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpSalsaX86Backend
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  , ClpSalsaArmBackend
 {$IFEND}
   ;
 
@@ -53,8 +51,6 @@ class function TSalsaSimd.TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolea
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TSalsaX86Backend.TryCore(ARounds, AInput, AOut);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TSalsaArmBackend.TryCore(ARounds, AInput, AOut);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -64,8 +60,6 @@ class function TSalsaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: P
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TSalsaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TSalsaArmBackend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
 {$ELSE}
   Result := False;
 {$IFEND}

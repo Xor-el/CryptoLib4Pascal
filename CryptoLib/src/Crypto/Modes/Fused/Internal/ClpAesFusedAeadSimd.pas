@@ -23,9 +23,6 @@ interface
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
   ClpAesFusedAeadX86Backend;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-uses
-  ClpAesFusedAeadArmBackend;
 {$IFEND}
 
 type
@@ -57,8 +54,6 @@ class function TAesFusedAeadSimd.CpuSupports: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TAesFusedAeadX86Backend.CpuSupports;
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TAesFusedAeadArmBackend.CpuSupports;
 {$ELSE}
   Result := False;
 {$IFEND}

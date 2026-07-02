@@ -25,8 +25,6 @@ uses
   ClpCryptoLibTypes
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpPoly1305X86Backend
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  , ClpPoly1305ArmBackend
 {$IFEND}
   ;
 
@@ -67,8 +65,6 @@ class function TPoly1305Simd.TryInitPowerTable(var APowTable: TCryptoLibByteArra
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TPoly1305X86Backend.TryInitPowerTable(APowTable, AState);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TPoly1305ArmBackend.TryInitPowerTable(APowTable, AState);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -79,8 +75,6 @@ class function TPoly1305Simd.ProcessBulk(var AState: TPoly1305State; APowTable: 
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TPoly1305X86Backend.ProcessBulk(AState, APowTable, ABuf, AOff, ANumBlocks);
-{$ELSEIF DEFINED(CRYPTOLIB_ARM_SIMD)}
-  Result := TPoly1305ArmBackend.ProcessBulk(AState, APowTable, ABuf, AOff, ANumBlocks);
 {$ELSE}
   Result := 0;
 {$IFEND}
