@@ -207,7 +207,7 @@ function TX509CertificateParser.ReadCertificate(const AInStream: TStream): IX509
   var
     LAsn1In: TAsn1InputStream;
   begin
-    LAsn1In := TAsn1InputStream.Create(AStream, Int32.MaxValue, True);
+    LAsn1In := TAsn1InputStream.Create(AStream, True);
     try
       Result := ReadDerCertificate(LAsn1In);
     finally

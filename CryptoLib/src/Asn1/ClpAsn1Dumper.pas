@@ -389,7 +389,7 @@ var
   LAsn1In: TAsn1InputStream;
   LAsn1Object: IAsn1Object;
 begin
-  LAsn1In := TAsn1InputStream.Create(AInput, MaxInt, True);
+  LAsn1In := TAsn1InputStream.Create(AInput, True);
   try
     LAsn1Object := LAsn1In.ReadObject();
     while LAsn1Object <> nil do

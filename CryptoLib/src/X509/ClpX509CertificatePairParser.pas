@@ -81,7 +81,7 @@ var
   LObj: IAsn1Object;
   LPair: ICertificatePair;
 begin
-  LAsn1In := TAsn1InputStream.Create(AInStream, Int32.MaxValue, True);
+  LAsn1In := TAsn1InputStream.Create(AInStream, True);
   try
     LObj := LAsn1In.ReadObject();
     if LObj = nil then
