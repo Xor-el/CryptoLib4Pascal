@@ -220,7 +220,7 @@ function TX509AttrCertParser.ReadAttrCert(const AInStream: TStream): IX509V2Attr
   var
     LAsn1In: TAsn1InputStream;
   begin
-    LAsn1In := TAsn1InputStream.Create(AStream, Int32.MaxValue, True);
+    LAsn1In := TAsn1InputStream.Create(AStream, True);
     try
       Result := ReadDerCertificate(LAsn1In);
     finally
