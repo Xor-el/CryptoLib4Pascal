@@ -14,50 +14,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesUtilities;
+unit ClpGcmSivSimd;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-  ClpIBlockCipher,
-  ClpAesEngine,
-  ClpAesSimd;
+  ClpGcmSivX86Backend;
+{$IFEND}
 
 type
   /// <summary>
-  /// Factory for the default AES block cipher. Selects the per-arch hardware
-  /// engine at compile time and, when it is available at runtime, returns it
-  /// (e.g. AES-NI via <c>TAesEngineX86</c> on x86); otherwise the portable
-  /// scalar <c>TAesEngine</c>.
+  /// Arch-neutral SIMD dispatch facade for the AES-GCM-SIV POLYVAL batch kernel.
+  /// Selects the per-arch backend at compile time; on a
+  /// build with no SIMD backend <c>IsSupported</c> is <c>False</c> (so the fused
+  /// GCM-SIV kernel factory declines) and <c>ProcessPolyvalBatch</c> is a no-op.
+  /// The kernel unit calls only this facade and stays free of any
+  /// <c>TCpuFeatures</c> / <c>CRYPTOLIB_*_ASM</c> knowledge.
   /// </summary>
-  TAesUtilities = class sealed(TObject)
+  TGcmSivSimd = class sealed
   public
-    class function CreateEngine(): IBlockCipher; static;
-    /// <summary>
-    /// True when the build has a per-arch hardware AES engine and it is available
-    /// at runtime (its <c>IsSupported</c> is True). Otherwise False.
-    /// </summary>
-    class function IsHardwareAccelerated(): Boolean; static;
+    /// <summary>True when a POLYVAL batch kernel is usable on this CPU.</summary>
+    class function IsSupported: Boolean; static;
+    /// <summary>Eight-block POLYVAL Horner batch. Precondition: <c>IsSupported</c>.</summary>
+    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer); static;
   end;
 
 implementation
 
-{ TAesUtilities }
+{ TGcmSivSimd }
 
-class function TAesUtilities.CreateEngine(): IBlockCipher;
-var
-  LEngine: IBlockCipher;
+class function TGcmSivSimd.IsSupported: Boolean;
 begin
-  if TAesSimd.TryCreateHardwareEngine(LEngine) then
-    Exit(LEngine);
-  Result := TAesEngine.Create();
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TGcmSivX86Backend.IsSupported;
+{$ELSE}
+  Result := False;
+{$IFEND}
 end;
 
-class function TAesUtilities.IsHardwareAccelerated(): Boolean;
+class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer);
 begin
-  Result := TAesSimd.IsSupported;
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask);
+{$IFEND}
 end;
 
 end.

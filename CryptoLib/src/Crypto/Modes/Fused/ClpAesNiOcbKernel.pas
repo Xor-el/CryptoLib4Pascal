@@ -27,11 +27,12 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedOcbKernel,
   ClpFusedKernelRegistry,
-  ClpAesNiAeadResolver;
+  ClpAesFusedAeadSimd,
+  ClpAesFusedAeadX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + SSSE3 implementation of IFusedOcbKernel.
+  ///   AES-NI implementation of IFusedOcbKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -268,9 +269,9 @@ begin
   AKernel := nil;
   Result := False;
   try
-    if not TAesNiAeadResolver.CpuSupports then
+    if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
+    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if ADirection = TFusedModeDirection.Encrypt then
       LHasSchedule := LEngine.TryGetEncKeysPtr(LKeys, LRounds)

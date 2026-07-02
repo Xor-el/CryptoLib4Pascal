@@ -29,8 +29,7 @@ uses
   ClpChaChaEngine,
   ClpPack,
   ClpCryptoLibTypes,
-  ClpCpuFeatures,
-  ClpSimdLevels,
+  ClpChaChaSimd,
   ClpByteUtilities;
 
 resourcestring
@@ -58,6 +57,11 @@ type
   strict private
     procedure ImplProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
       const AOutBuf: TCryptoLibByteArray; AOutOff: Int32); inline;
+    // Two-block keystream body (SIMD-accelerated when available, else scalar) with
+    // no state validation or 2^38 byte-limit accounting - those belong to the
+    // callers (ProcessBlocks2, ProcessBlocks4), which do them exactly once.
+    procedure ProcessBlocks2Core(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
   public
     constructor Create();
@@ -81,46 +85,6 @@ type
   end;
 
 implementation
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-procedure ChaCha7539RaiseCounter7539;
-begin
-  raise EInvalidOperationCryptoLibException.CreateRes(@SCounterExceeded);
-end;
-
-procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_i386.inc}
-{$ENDIF}
-end;
-
-procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_i386.inc}
-{$ENDIF}
-end;
-
-procedure ChaCha7539ProcessBlocks4Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_i386.inc}
-{$ENDIF}
-end;
-{$ENDIF}
 
 { TChaCha7539Engine }
 
@@ -363,22 +327,17 @@ begin
   begin
     raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2, TX86SimdLevel.SSE2]) of
-    TX86SimdLevel.AVX2:
-    begin
-      ChaCha7539ProcessBlocks2Avx2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
-        PByte(@AOutBytes[AOutOff]));
-      Exit;
-    end;
-    TX86SimdLevel.SSE2:
-    begin
-      ChaCha7539ProcessBlocks2Sse2(FRounds, PByte(@FEngineState[0]), PByte(@AInBytes[AInOff]),
-        PByte(@AOutBytes[AOutOff]));
-      Exit;
-    end;
-  end;
-{$ENDIF}
+
+  ProcessBlocks2Core(AInBytes, AInOff, AOutBytes, AOutOff);
+end;
+
+procedure TChaCha7539Engine.ProcessBlocks2Core(const AInBytes: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+begin
+  if TChaChaSimd.TryProcessBlocks2(FRounds, PByte(@FEngineState[0]),
+    PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff])) then
+    Exit;
+
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
   ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
 end;
@@ -396,22 +355,17 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
       [AlgorithmName]);
   end;
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
-    TX86SimdLevel.AVX2:
-    begin
-      if (LimitExceeded(UInt32(256))) then
-      begin
-        raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-      end;
-      ChaCha7539ProcessBlocks4Avx2(FRounds, PByte(@FEngineState[0]),
-        PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
-      Exit;
-    end;
+  if (LimitExceeded(UInt32(256))) then
+  begin
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
   end;
-{$ENDIF}
-  ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
-  ProcessBlocks2(AInBytes, AInOff + 128, AOutBytes, AOutOff + 128);
+
+  if TChaChaSimd.TryProcessBlocks4(FRounds, PByte(@FEngineState[0]),
+    PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff])) then
+    Exit;
+
+  ProcessBlocks2Core(AInBytes, AInOff, AOutBytes, AOutOff);
+  ProcessBlocks2Core(AInBytes, AInOff + 128, AOutBytes, AOutOff + 128);
 end;
 
 procedure TChaCha7539Engine.ImplProcessBlock(

@@ -14,50 +14,30 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesUtilities;
+unit ClpPoly1305State;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpIBlockCipher,
-  ClpAesEngine,
-  ClpAesSimd;
-
 type
   /// <summary>
-  /// Factory for the default AES block cipher. Selects the per-arch hardware
-  /// engine at compile time and, when it is available at runtime, returns it
-  /// (e.g. AES-NI via <c>TAesEngineX86</c> on x86); otherwise the portable
-  /// scalar <c>TAesEngine</c>.
+  /// Poly1305 algorithm state in radix-2^26 form (72 bytes; same layout on
+  /// every architecture).
+  /// <list type="bullet">
+  /// <item>R0..R4 - clamped 130-bit r split into five 26-bit limbs</item>
+  /// <item>S1..S4 - precomputed 5 * R1..R4 wraparound multipliers</item>
+  /// <item>H0..H4 - 130-bit accumulator in five 26-bit limbs (plus a few carry bits)</item>
+  /// <item>K0..K3 - the Poly1305 "s" key (second half of the 32-byte key)</item>
+  /// </list>
   /// </summary>
-  TAesUtilities = class sealed(TObject)
-  public
-    class function CreateEngine(): IBlockCipher; static;
-    /// <summary>
-    /// True when the build has a per-arch hardware AES engine and it is available
-    /// at runtime (its <c>IsSupported</c> is True). Otherwise False.
-    /// </summary>
-    class function IsHardwareAccelerated(): Boolean; static;
+  TPoly1305State = record
+    R0, R1, R2, R3, R4: UInt32;
+    S1, S2, S3, S4: UInt32;
+    H0, H1, H2, H3, H4: UInt32;
+    K0, K1, K2, K3: UInt32;
   end;
 
 implementation
-
-{ TAesUtilities }
-
-class function TAesUtilities.CreateEngine(): IBlockCipher;
-var
-  LEngine: IBlockCipher;
-begin
-  if TAesSimd.TryCreateHardwareEngine(LEngine) then
-    Exit(LEngine);
-  Result := TAesEngine.Create();
-end;
-
-class function TAesUtilities.IsHardwareAccelerated(): Boolean;
-begin
-  Result := TAesSimd.IsSupported;
-end;
 
 end.

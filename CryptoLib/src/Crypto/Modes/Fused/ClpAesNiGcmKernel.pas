@@ -27,11 +27,12 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
-  ClpAesNiAeadResolver;
+  ClpAesFusedAeadSimd,
+  ClpAesFusedAeadX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + PCLMULQDQ + SSSE3 implementation of IFusedGcmKernel.
+  ///   AES-NI + PCLMULQDQ implementation of IFusedGcmKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -207,9 +208,9 @@ begin
     if AHPowers = nil then
       Exit;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-    if not TAesNiAeadResolver.CpuSupports then
+    if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
+    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if not LEngine.TryGetEncKeysPtr(LKeys, LRounds) then
       Exit;

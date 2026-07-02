@@ -27,11 +27,12 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedEaxKernel,
   ClpFusedKernelRegistry,
-  ClpAesNiAeadResolver;
+  ClpAesFusedAeadSimd,
+  ClpAesFusedAeadX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + SSSE3 implementation of IFusedEaxKernel.
+  ///   AES-NI implementation of IFusedEaxKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -278,9 +279,9 @@ begin
   AKernel := nil;
   Result := False;
   try
-    if not TAesNiAeadResolver.CpuSupports then
+    if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
+    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     // EAX drives CTR and OMAC lanes from the same forward-encrypt
     // schedule for both directions.

@@ -26,14 +26,12 @@ uses
   ClpPack,
   ClpBinaryPrimitives,
   ClpInterleave,
-  ClpCpuFeatures,
+  ClpGhashSimd,
   ClpCryptoLibTypes,
-  ClpIntrinsicsVector,
   ClpByteUtilities;
 
 resourcestring
-  SPclmulqdqMultiplyExtIsNotAvailable = 'PCLMULQDQ multiply-ext is not available on this target';
-  SFusedGhashRequiresSsse3 = 'fused %s-way GHASH requires SSSE3, PCLMULQDQ, and packed XMM layout';
+  SCarrylessMultiplyExtIsNotAvailable = 'Carryless multiply-ext is not available on this target';
 
 type
   TFieldElement = record
@@ -71,15 +69,8 @@ type
     class procedure Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte); static;
     /// <summary>Xor three 16-byte limbs with three 16-byte slices from a 48-byte MultiplyExt output.</summary>
     class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
-{$IFDEF CRYPTOLIB_X86_SIMD}
     /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8). Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
     class procedure InitEightWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow128: TCryptoLibByteArray); static;
-
-    /// <summary>Fused GHASH for four 16-byte ciphertext blocks. PFS 16-byte in/out (canonical); PC0 points to 64 contiguous ciphertext bytes; PHPow64 = H^4..H^1 (64 bytes); PMask = 16-byte SSSE3 PSHUFB control.</summary>
-    class procedure FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte); static;
-    /// <summary>Fused GHASH for eight 16-byte ciphertext blocks. PHPow128 = H^8..H^1 (128 bytes at FHPow[0]).</summary>
-    class procedure FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte); static;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     class procedure &Xor(const AX, AY: TCryptoLibByteArray); overload; static;
     class procedure &Xor(const AX, AY: TCryptoLibByteArray; AYOff: Int32); overload; static;
@@ -92,103 +83,6 @@ type
   end;
 
 implementation
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-type
-  TGcmPartial128 = record
-    T3, T2, T1, T0: UInt64;
-  end;
-
-procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
-{$ENDIF}
-end;
-
-procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
-{$ENDIF}
-end;
-
-procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2, POut: Pointer);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
-{$ENDIF}
-end;
-
-procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
-{$ENDIF}
-end;
-
-procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer);
-{$DEFINE GCM_GHASH_FULL_BLOCKS_4}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
-{$ENDIF}
-{$UNDEF GCM_GHASH_FULL_BLOCKS_4}
-end;
-
-procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
-{$DEFINE GCM_GHASH_FULL_BLOCKS_8}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
-{$ENDIF}
-{$UNDEF GCM_GHASH_FULL_BLOCKS_8}
-end;
-
-procedure GcmPclmulReducePartial(const APartial: TGcmPartial128; var AZ: TFieldElement);
-var
-  LT3, LT2, LT1, LT0: UInt64;
-  LZ0, LZ1, LZ2: UInt64;
-begin
-  LT3 := APartial.T3;
-  LT2 := APartial.T2;
-  LT1 := APartial.T1;
-  LT0 := APartial.T0;
-  LT1 := LT1 xor LT3 xor (LT3 shr 1) xor (LT3 shr 2) xor (LT3 shr 7);
-  LT2 := LT2 xor (LT3 shl 63) xor (LT3 shl 62) xor (LT3 shl 57);
-  LZ0 := (LT0 shl 1) or (LT1 shr 63);
-  LZ1 := (LT1 shl 1) or (LT2 shr 63);
-  LZ2 := LT2 shl 1;
-  LZ0 := LZ0 xor LZ2 xor (LZ2 shr 1) xor (LZ2 shr 2) xor (LZ2 shr 7);
-  LZ1 := LZ1 xor (LT2 shl 63) xor (LT2 shl 58);
-  AZ.N0 := LZ0;
-  AZ.N1 := LZ1;
-end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 { TGcmUtilities }
 
@@ -243,18 +137,10 @@ var
   LX0R, LX1R, LY0R, LY1R: UInt64;
   LZ0, LZ1, LZ2, LZ3: UInt64;
   LH0, LH1, LH2, LH3, LH4, LH5: UInt64;
-  {$IFDEF CRYPTOLIB_X86_SIMD}
-  LPartial: TGcmPartial128;
-  {$ENDIF}
 begin
-  {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ then
-  begin
-    GcmPclmulFieldPartial(@AX, @AY, @LPartial);
-    GcmPclmulReducePartial(LPartial, AX);
+  if TGhashSimd.TryMultiply(@AX, @AY) then
     Exit;
-  end;
-  {$ENDIF}
+
   LX0 := AX.N0;
   LX1 := AX.N1;
   LY0 := AY.N0;
@@ -413,27 +299,18 @@ end;
 
 class procedure TGcmUtilities.MultiplyExt(PX, PY, POut48: PByte);
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ then
-  begin
-    GcmPclmulMultiplyExtBytes(PX, PY, POut48);
+  if TGhashSimd.TryMultiplyExt(PX, PY, POut48) then
     Exit;
-  end;
-{$ENDIF}
-  raise EInvalidOperationCryptoLibException.CreateRes(@SPclmulqdqMultiplyExtIsNotAvailable);
+  raise EInvalidOperationCryptoLibException.CreateRes(@SCarrylessMultiplyExtIsNotAvailable);
 end;
 
 class procedure TGcmUtilities.XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte);
 var
   LK: Int32;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2 then
-  begin
-    GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48);
+  if TGhashSimd.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48) then
     Exit;
-  end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+
   for LK := 0 to 1 do
   begin
     TByteUtilities.XorTo(8, PSrc48 + LK * 8, PA0 + LK * 8);
@@ -449,13 +326,9 @@ var
   LI: Int32;
   LT3, LT2, LT1, LT0, LZ0, LZ1, LZ2: UInt64;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2 then
-  begin
-    GcmReduce3FoldSse2(PZ0, PZ1, PZ2, PSVector16);
+  if TGhashSimd.TryReduce3(PZ0, PZ1, PZ2, PSVector16) then
     Exit;
-  end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+
   System.Move(PZ0^, B0[0], 16);
   System.Move(PZ1^, B1[0], 16);
   System.Move(PZ2^, B2[0], 16);
@@ -480,31 +353,6 @@ begin
   LZ1 := LZ1 xor (LT2 shl 63) xor (LT2 shl 58);
   TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 0, LZ1);
   TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 8, LZ0);
-end;
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
-class procedure TGcmUtilities.FusedFourShuffledGhash(PFS, PC0, PHPow64, PMask: PByte);
-begin
-  if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
-    (not TIntrinsicsVector.IsPacked) then
-    raise EInvalidOperationCryptoLibException.CreateResFmt
-      (@SFusedGhashRequiresSsse3, ['four']);
-
-  // Monolithic kernel: byte-reverse + state fold + 4-way multiply-accumulate +
-  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
-  GcmGhashFourFull(PFS, PC0, PHPow64, PMask);
-end;
-
-class procedure TGcmUtilities.FusedEightShuffledGhash(PFS, PC0, PHPow128, PMask: PByte);
-begin
-  if (not TCpuFeatures.X86.HasSSSE3) or (not TCpuFeatures.X86.HasPCLMULQDQ) or
-    (not TIntrinsicsVector.IsPacked) then
-    raise EInvalidOperationCryptoLibException.CreateResFmt
-      (@SFusedGhashRequiresSsse3, ['eight']);
-
-  // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
-  // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
-  GcmGhashEightFull(PFS, PC0, PHPow128, PMask);
 end;
 
 class procedure TGcmUtilities.InitEightWayHPowFromH(const AH: TCryptoLibByteArray;
@@ -556,7 +404,5 @@ begin
   TPack.UInt64_To_LE(LF1.N1, AHPow128, 112);
   TPack.UInt64_To_LE(LF1.N0, AHPow128, 120);
 end;
-
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 end.

@@ -79,11 +79,9 @@ type
     FLastKey: TCryptoLibByteArray;
     FAssociatedText: TMemoryStream;
     FData: TMemoryStream;
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Cached once per Init; non-nil when the registry resolved a fused
     // CCM kernel for the underlying cipher and current direction.
     FCcmKernel: IFusedCcmKernel;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
     procedure CheckNonceReuse(AForEncryption: Boolean;
@@ -92,7 +90,6 @@ type
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
       const AMacBlock: TCryptoLibByteArray): Int32;
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Runs AES CBC-MAC over the CCM header (B_0 || AAD length-prefix ||
     // AAD || zero-pad) and writes the post-header 16-byte state into
     // AMacState. Matches the scalar CalculateMac contract.
@@ -110,7 +107,6 @@ type
       AInOff, AInLen, AOutputLen: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32;
       const AIV: TCryptoLibByteArray): Boolean;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -200,9 +196,7 @@ procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
 var
   LChoice: TCipherAeadChoice;
   LRequestedMacSizeBits: Int32;
-{$IFDEF CRYPTOLIB_X86_SIMD}
   LDirection: TFusedModeDirection;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
   FForEncryption := AForEncryption;
 
@@ -234,7 +228,6 @@ begin
   if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
   FCcmKernel := nil;
   if FKeyParam <> nil then
   begin
@@ -248,7 +241,6 @@ begin
       LDirection := TFusedModeDirection.Decrypt;
     TFusedKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
   Reset();
 end;
@@ -411,7 +403,6 @@ begin
     LOutputLen := AInLen + FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Fused fast path folds CTR and CBC-MAC into one sweep; the scalar
     // path handles the 1..16-byte tail and the tag encryption.
     if (FCcmKernel <> nil)
@@ -422,7 +413,6 @@ begin
       Result := LOutputLen;
       Exit;
     end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     CalculateMac(AInput, AInOff, AInLen, FMacBlock);
 
@@ -470,7 +460,6 @@ begin
     LOutputLen := AInLen - FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
     // Fused decrypt twin. Scalar tail handles the trailing 1..16-byte
     // block plus the FixedTime tag compare.
     if (FCcmKernel <> nil)
@@ -481,7 +470,6 @@ begin
       Result := LOutputLen;
       Exit;
     end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
     System.Move(AInput[AInOff + LOutputLen], FMacBlock[0], FMacSize);
 
@@ -649,7 +637,6 @@ begin
   Result := GetAssociatedTextLength() > 0;
 end;
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
 
 procedure TCcmBlockCipher.ComputePostHeaderMacState(AInLen: Int32;
   const AMacState: TCryptoLibByteArray);
@@ -865,6 +852,5 @@ begin
   end;
 end;
 
-{$ENDIF CRYPTOLIB_X86_SIMD}
 
 end.

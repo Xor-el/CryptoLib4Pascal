@@ -220,7 +220,7 @@ uses
   ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
   ClpGcmSivUtilities, ClpFusedKernelTypes, ClpIFusedGcmKernel, 
   ClpIFusedOcbKernel, ClpIFusedCcmKernel, ClpIFusedEaxKernel, 
-  ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesNiAeadResolver, 
+  ClpIFusedGcmSivKernel, ClpFusedKernelRegistry, ClpAesFusedAeadSimd, 
   ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
   ClpPclmulGcmSivKernel, ClpFusedKernelDefaults, ClpXChaCha20Engine, 
   ClpIXChaCha20Engine, ClpXChaCha20Poly1305, ClpIXChaCha20Poly1305, 
@@ -252,7 +252,10 @@ uses
   ClpISP800SecureRandomBuilder, ClpSP800SecureRandomBuilder, 
   ClpECDHRawAgreement, ClpECDHCRawAgreement, ClpIECDHRawAgreement, 
   ClpIECDHCRawAgreement, ClpGF256Aes, ClpIAesHardwareEngine, 
-  ClpIBackingHashProvider;
+  ClpIBackingHashProvider, ClpChaChaSimd, ClpChaChaX86Backend, ClpSalsaSimd, 
+  ClpSalsaX86Backend, ClpPoly1305State, ClpPoly1305Simd, 
+  ClpPoly1305X86Backend, ClpGhashSimd, ClpGhashX86Backend, ClpGcmSivSimd, 
+  ClpGcmSivX86Backend, ClpAesFusedAeadX86Backend, ClpBinPolySimd, ClpAesSimd;
 
 implementation
 

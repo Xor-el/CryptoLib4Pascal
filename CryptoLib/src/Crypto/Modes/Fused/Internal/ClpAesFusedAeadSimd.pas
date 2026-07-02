@@ -14,50 +14,49 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesUtilities;
+unit ClpAesFusedAeadSimd;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\..\..\Include\CryptoLib.inc}
 
 interface
 
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-  ClpIBlockCipher,
-  ClpAesEngine,
-  ClpAesSimd;
+  ClpAesFusedAeadX86Backend;
+{$IFEND}
 
 type
   /// <summary>
-  /// Factory for the default AES block cipher. Selects the per-arch hardware
-  /// engine at compile time and, when it is available at runtime, returns it
-  /// (e.g. AES-NI via <c>TAesEngineX86</c> on x86); otherwise the portable
-  /// scalar <c>TAesEngine</c>.
+  /// Arch-neutral capability gate for the fused hardware-AES AEAD pipeline
+  /// (e.g. AES-NI on x86). Selects the per-arch
+  /// backend at compile time and answers only the genuinely arch-neutral question
+  /// - "is a fused hardware-AES path available on this build/CPU?".
   /// </summary>
-  TAesUtilities = class sealed(TObject)
+  /// <remarks>
+  /// Engine resolution deliberately does NOT live here: it hands back an
+  /// instruction-set-specific round-key schedule (see <c>IAesEngineX86</c>), so it
+  /// belongs on the per-arch backend (<c>TAesFusedAeadX86Backend.TryResolveEngine</c>)
+  /// that the matching per-arch kernels call. Not exported via the public
+  /// interface surface and never imported by mode units, which stay
+  /// cipher-agnostic.
+  /// </remarks>
+  TAesFusedAeadSimd = class sealed
   public
-    class function CreateEngine(): IBlockCipher; static;
-    /// <summary>
-    /// True when the build has a per-arch hardware AES engine and it is available
-    /// at runtime (its <c>IsSupported</c> is True). Otherwise False.
-    /// </summary>
-    class function IsHardwareAccelerated(): Boolean; static;
+    /// <summary>CPU + build-time gate for the fused hardware-AES AEAD pipeline on this arch.</summary>
+    class function CpuSupports: Boolean; static;
   end;
 
 implementation
 
-{ TAesUtilities }
+{ TAesFusedAeadSimd }
 
-class function TAesUtilities.CreateEngine(): IBlockCipher;
-var
-  LEngine: IBlockCipher;
+class function TAesFusedAeadSimd.CpuSupports: Boolean;
 begin
-  if TAesSimd.TryCreateHardwareEngine(LEngine) then
-    Exit(LEngine);
-  Result := TAesEngine.Create();
-end;
-
-class function TAesUtilities.IsHardwareAccelerated(): Boolean;
-begin
-  Result := TAesSimd.IsSupported;
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TAesFusedAeadX86Backend.CpuSupports;
+{$ELSE}
+  Result := False;
+{$IFEND}
 end;
 
 end.

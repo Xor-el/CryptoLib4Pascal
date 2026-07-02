@@ -27,11 +27,12 @@ uses
   ClpFusedKernelTypes,
   ClpIFusedCcmKernel,
   ClpFusedKernelRegistry,
-  ClpAesNiAeadResolver;
+  ClpAesFusedAeadSimd,
+  ClpAesFusedAeadX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + SSSE3 implementation of IFusedCcmKernel.
+  ///   AES-NI implementation of IFusedCcmKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -287,9 +288,9 @@ begin
   AKernel := nil;
   Result := False;
   try
-    if not TAesNiAeadResolver.CpuSupports then
+    if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesNiAeadResolver.TryResolveEngine(ACipher, LEngine) then
+    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     // CCM drives CTR and CBC-MAC lanes from the same forward-encrypt
     // schedule for both directions. LKeys is consumed only to probe

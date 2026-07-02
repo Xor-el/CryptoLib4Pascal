@@ -14,50 +14,55 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesUtilities;
+unit ClpSalsaSimd;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIBlockCipher,
-  ClpAesEngine,
-  ClpAesSimd;
+  ClpCryptoLibTypes
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  , ClpSalsaX86Backend
+{$IFEND}
+  ;
 
 type
   /// <summary>
-  /// Factory for the default AES block cipher. Selects the per-arch hardware
-  /// engine at compile time and, when it is available at runtime, returns it
-  /// (e.g. AES-NI via <c>TAesEngineX86</c> on x86); otherwise the portable
-  /// scalar <c>TAesEngine</c>.
+  /// Arch-neutral SIMD dispatch facade for the Salsa20 family. Selects the
+  /// per-arch backend at compile time; on a build with no
+  /// SIMD backend every entry point degrades to "not handled" so callers run
+  /// their scalar reference path. The Salsa20 engine calls only this facade and
+  /// stays free of any <c>TCpuFeatures</c> / <c>CRYPTOLIB_*_ASM</c> knowledge.
   /// </summary>
-  TAesUtilities = class sealed(TObject)
+  TSalsaSimd = class sealed
   public
-    class function CreateEngine(): IBlockCipher; static;
-    /// <summary>
-    /// True when the build has a per-arch hardware AES engine and it is available
-    /// at runtime (its <c>IsSupported</c> is True). Otherwise False.
-    /// </summary>
-    class function IsHardwareAccelerated(): Boolean; static;
+    /// <summary>Single-block Salsa20 core.</summary>
+    class function TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean; static;
+    /// <summary>Two-block Salsa20 keystream (128 bytes).</summary>
+    class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
   end;
 
 implementation
 
-{ TAesUtilities }
+{ TSalsaSimd }
 
-class function TAesUtilities.CreateEngine(): IBlockCipher;
-var
-  LEngine: IBlockCipher;
+class function TSalsaSimd.TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean;
 begin
-  if TAesSimd.TryCreateHardwareEngine(LEngine) then
-    Exit(LEngine);
-  Result := TAesEngine.Create();
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TSalsaX86Backend.TryCore(ARounds, AInput, AOut);
+{$ELSE}
+  Result := False;
+{$IFEND}
 end;
 
-class function TAesUtilities.IsHardwareAccelerated(): Boolean;
+class function TSalsaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
 begin
-  Result := TAesSimd.IsSupported;
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TSalsaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
+{$ELSE}
+  Result := False;
+{$IFEND}
 end;
 
 end.
