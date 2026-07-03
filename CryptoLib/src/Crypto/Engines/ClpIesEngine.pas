@@ -557,7 +557,6 @@ begin
   begin
     if (FKeyParser <> nil) then
     begin
-      // used TBytesStream here for one pass creation and population with byte array :)
       LBIn := TBytesStream.Create(System.Copy(AIn, AInOff, AInLen));
 
       try

@@ -247,7 +247,7 @@ begin
   end
   else if FHasCryptGenRandom then
   begin
-    // Availability: Windows XP / Server 2003 and Above
+    // Availability: Windows XP / Server 2003 and Above (Legacy CryptoAPI, superseded by CNG)
     if not FCryptAcquireContextW(@LProviderHandle, nil, nil, PROV_RSA_FULL,
       CRYPT_VERIFYCONTEXT or CRYPT_SILENT) then
     begin
@@ -267,7 +267,7 @@ begin
   end
   else
   begin
-    // should never happen but who knows :)
+    // should never happen but who knows
     Result := S_FALSE;
     Exit;
   end;
