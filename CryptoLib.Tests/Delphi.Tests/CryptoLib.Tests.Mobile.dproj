@@ -1214,14 +1214,6 @@
         <DCCReference Include="..\src\Crypto\PaddingTests.pas"/>
         <DCCReference Include="..\src\Crypto\DeterministicDsaTests.pas"/>
         <DCCReference Include="..\src\Crypto\HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\MD5HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\SHA1HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\SHA224HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\SHA256HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\SHA384HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\SHA512HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\RIPEMD128HMacTests.pas"/>
-        <DCCReference Include="..\src\Crypto\RIPEMD160HMacTests.pas"/>
         <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
         <DCCReference Include="..\src\Crypto\Salsa20Tests.pas"/>
         <DCCReference Include="..\src\Crypto\ChaChaTests.pas"/>

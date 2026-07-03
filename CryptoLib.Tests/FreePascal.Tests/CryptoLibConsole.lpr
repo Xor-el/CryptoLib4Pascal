@@ -14,8 +14,6 @@ uses
   FusedExternalRegistrationTests, AesHardwareEngineTests, AESSICTests,
   SicBulkParityTests, EcbBulkParityTests, CbcBulkParityTests,
   SpeckBlockCipherTestBase, SpeckLegacyTests, SpeckTests, IESCipherTests,
-  MD5HMacTests, SHA1HMacTests, SHA224HMacTests, SHA256HMacTests,
-  SHA384HMacTests, SHA512HMacTests, RIPEMD128HMacTests, RIPEMD160HMacTests,
   HMacTests, Pkcs5Tests, HkdfGeneratorTests, ECIESTests, PascalCoinECIESTests,
   ECNRTests, PrimesTests, ECEncodingTests, GF256AesTests, PaddingTests,
   DSATests, DeterministicDsaTests, Salsa20Tests, XSalsa20Tests, ChaChaTests,
