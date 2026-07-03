@@ -904,6 +904,10 @@ type
     /// </summary>
     function CheckedCast(const AAsn1Object: IAsn1Object): IAsn1Object;
     /// <summary>
+    /// Cast an ASN.1 object from an explicit encoding context.
+    /// </summary>
+    function FromExplicit(const AAsn1Object: IAsn1Object): IAsn1Object;
+    /// <summary>
     /// Convert from implicit primitive encoding.
     /// </summary>
     function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
