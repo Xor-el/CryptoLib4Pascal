@@ -127,6 +127,7 @@ resourcestring
   SFailedToGetAsn1TagInterface = 'failed to get IAsn1Tag interface';
   SUnexpectedImplicitPrimitiveEncoding = 'unexpected implicit primitive encoding';
   SUnexpectedImplicitConstructedEncoding = 'unexpected implicit constructed encoding';
+  SUnexpectedExplicitEncoding = 'unexpected explicit encoding';
   SImplicitTaggingNotImplementedForTag = 'implicit tagging not implemented for tag %d';
   SUnsupportedUniversalTagNumber = 'unsupported UNIVERSAL tag number: %d';
   SInvalidEncodingValue = 'invalid encoding value: %d';
@@ -193,6 +194,7 @@ type
     FTag: IAsn1Tag;
   protected
     function CheckedCast(const AAsn1Object: IAsn1Object): IAsn1Object; virtual;
+    function FromExplicit(const AAsn1Object: IAsn1Object): IAsn1Object; virtual;
     function FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object; virtual;
     function FromImplicitConstructed(const ASequence: IAsn1Sequence): IAsn1Object; virtual;
   public
@@ -811,6 +813,10 @@ type
     /// Check instance helper.
     /// </summary>
     class function CheckInstance(const ATaggedObject: IAsn1TaggedObject; ADeclaredExplicit: Boolean): IAsn1TaggedObject; overload; static;
+    /// <summary>
+    /// Cast helper for explicit encoding unwrap.
+    /// </summary>
+    class function FromExplicit(const AAsn1Object: IAsn1Object): IAsn1TaggedObject; static;
     /// <summary>
     /// Checked cast helper.
     /// </summary>
@@ -3632,7 +3638,7 @@ begin
   if not IsExplicit() then
     raise EInvalidOperationCryptoLibException.CreateRes(@SObjectImplicitExplicitExpected);
 
-  Result := CheckedCast(FObject.ToAsn1Object());
+  Result := FromExplicit(FObject.ToAsn1Object());
 end;
 
 function TAsn1TaggedObject.GetImplicitBaseTagged(ABaseTagClass, ABaseTagNo: Int32): IAsn1TaggedObject;
@@ -3647,7 +3653,7 @@ begin
       raise EInvalidOperationCryptoLibException.CreateRes(@SObjectExplicitImplicitExpected);
     DeclaredImplicit:
       begin
-        LTagged := CheckedCast(FObject.ToAsn1Object());
+        LTagged := FromExplicit(FObject.ToAsn1Object());
         // Check tag using TAsn1Utilities
         Result := TAsn1Utilities.CheckTag(LTagged, ABaseTagClass, ABaseTagNo);
       end;
@@ -3680,7 +3686,7 @@ begin
     if not IsExplicit() then
       raise EInvalidOperationCryptoLibException.CreateRes(@SObjectImplicitExplicitExpected);
     
-    Result := AUniversalType.CheckedCast(GetBaseObject().ToAsn1Object());
+    Result := AUniversalType.FromExplicit(GetBaseObject().ToAsn1Object());
     Exit;
   end;
   
@@ -3707,7 +3713,7 @@ begin
           raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedObjectTypeInParsedImplicit);
       end;
   else
-    Result := AUniversalType.CheckedCast(LBaseObject);
+    Result := AUniversalType.FromExplicit(LBaseObject);
   end;
 end;
 
@@ -3771,10 +3777,27 @@ begin
   Result := ATaggedObject;
 end;
 
-class function TAsn1TaggedObject.CheckedCast(const AAsn1Object: IAsn1Object): IAsn1TaggedObject;
+class function TAsn1TaggedObject.FromExplicit(const AAsn1Object: IAsn1Object): IAsn1TaggedObject;
 begin
   if not Supports(AAsn1Object, IAsn1TaggedObject, Result) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedObjectType);
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedExplicitEncoding);
+end;
+
+class function TAsn1TaggedObject.CheckedCast(const AAsn1Object: IAsn1Object): IAsn1TaggedObject;
+var
+  LObj: TAsn1Object;
+begin
+  if Supports(AAsn1Object, IAsn1TaggedObject, Result) then
+    Exit;
+
+  if AAsn1Object = nil then
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnexpectedObject, ['nil'])
+  else
+  begin
+    LObj := AAsn1Object as TAsn1Object;
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnexpectedObject,
+      [TPlatformUtilities.GetTypeName(LObj)]);
+  end;
 end;
 
 class function TAsn1TaggedObject.GetInstance(const AObj: TObject): IAsn1TaggedObject;
@@ -12978,17 +13001,28 @@ var
   LObj: TAsn1Object;
 begin
   if AAsn1Object = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnexpectedObject, ['nil']);
 
   LObj := AAsn1Object as TAsn1Object;
-  // Check if the object is an instance of the platform type
   if (FPlatformType <> nil) and LObj.InheritsFrom(FPlatformType) then
     Result := AAsn1Object
   else
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SUnexpectedObject, [TPlatformUtilities.GetTypeName(LObj)]);
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnexpectedObject,
+      [TPlatformUtilities.GetTypeName(LObj)]);
+end;
+
+function TAsn1UniversalType.FromExplicit(const AAsn1Object: IAsn1Object): IAsn1Object;
+var
+  LObj: TAsn1Object;
+begin
+  if AAsn1Object = nil then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedExplicitEncoding);
+
+  LObj := AAsn1Object as TAsn1Object;
+  if (FPlatformType <> nil) and LObj.InheritsFrom(FPlatformType) then
+    Result := AAsn1Object
+  else
+    raise EInvalidOperationCryptoLibException.CreateRes(@SUnexpectedExplicitEncoding);
 end;
 
 function TAsn1UniversalType.FromImplicitPrimitive(const AOctetString: IDerOctetString): IAsn1Object;
