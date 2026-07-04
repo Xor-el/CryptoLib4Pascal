@@ -30,6 +30,7 @@
 //
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   movdqu    xmm8, [r9]
   pxor      xmm0, xmm0
   pxor      xmm1, xmm1
@@ -247,3 +248,4 @@
   // Byte-reverse to canonical form and store to PFS.
   pshufb    xmm0, xmm8
   movdqu    [rcx], xmm0
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

@@ -44,6 +44,7 @@
 // movdqa) are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   // --- Prologue: preserve rbx, reserve 128B aligned stack scratch. ---
   push      rbx                                     // rsp: 8 -> 0 mod 16
   sub       rsp, 128                                // rsp stays 0 mod 16
@@ -616,4 +617,5 @@
 
   add       rsp, 128
   pop       rbx
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
 

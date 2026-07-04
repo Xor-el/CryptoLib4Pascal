@@ -2,6 +2,7 @@
 // 4-lane quarter rounds; UInt16 interleave and pack/unpack via pblendw.
 // Rounds: Salsa20Sse41_TwoColumnRoundsBody.inc.
 // After SimdProc3Begin_x86_64.inc: rcx = ARounds, rdx = AIn (16 UInt32), r8 = AOut (16 UInt32).
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   sub     rsp, 512
   mov     r9, rcx
 { -- expand 4*4 dwords to 4*8 u16 in [rsp+0] }
@@ -179,3 +180,4 @@
   mov     eax, [rsp+316]
   mov     [r8+60], eax
   add     rsp, 512
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

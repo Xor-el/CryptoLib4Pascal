@@ -49,6 +49,7 @@
 // AES-NI instructions and xmm8-touching forms are db-encoded for broad
 // assembler compatibility.
 
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   mov       rax, [rcx +  0]                         // rax = InPtr
   mov       rdx, [rcx +  8]                         // rdx = OutPtr
   mov       r8,  [rcx + 16]                         // r8  = Keys (base)
@@ -754,4 +755,5 @@
   movdqu    [r9], xmm6                              // CtrState <- updated counter
   mov       r9,  [rcx + 32]
   movdqu    [r9], xmm1                              // OmacState <- final OMAC
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
 

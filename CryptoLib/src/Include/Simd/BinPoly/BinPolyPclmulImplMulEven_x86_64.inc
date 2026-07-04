@@ -11,6 +11,7 @@
   push      r13
   push      r14
   push      r15
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
 
   mov       r12, rdx
   mov       r13, r8
@@ -148,6 +149,7 @@
   jmp       @@BinPolyMulEvenZPosLoop
 
 @@BinPolyMulEvenDone:
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
   pop       r15
   pop       r14
   pop       r13
