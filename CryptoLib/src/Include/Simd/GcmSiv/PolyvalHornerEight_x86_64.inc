@@ -19,6 +19,8 @@
 //     the PSHUFB pair inside the delegated body supplies the POLYVAL
 //     ByteReverse on load and the inverse on final store.
 //
+// Nonvolatile xmm6-15 save/restore is inherited from the delegated GcmGhashFull
+// body; this shell adds no asm of its own.
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}
