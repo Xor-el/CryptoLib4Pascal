@@ -31,10 +31,10 @@ uses
 type
   /// <summary>
   /// x86 backend shared by the in-tree AES-NI fused kernel factories (the AEAD
-  /// family and the standalone CTR kernel): owns the CPU/build gates and the
-  /// concrete <c>IAesEngineX86</c> resolution. Compiles on every target - the
-  /// CpuSupports* gates are <c>False</c> off x86 and <c>TryResolveEngine</c>
-  /// then finds no engine.
+  /// family and the standalone CTR kernel): owns the AEAD CPU/build gate and the
+  /// concrete <c>IAesEngineX86</c> resolution (CTR uses only the latter).
+  /// Compiles on every target - <c>CpuSupports</c> is <c>False</c> off x86 and
+  /// <c>TryResolveEngine</c> then finds no engine.
   /// </summary>
   TAesNiFusedX86Backend = class sealed
   public
@@ -43,12 +43,6 @@ type
     /// intrinsics layout is packed (the AEAD kernels pass a packed context
     /// record to asm).</summary>
     class function CpuSupports: Boolean; static;
-
-    /// <summary>CTR gate: True only when the build defines CRYPTOLIB_X86_SIMD
-    /// and the CPU exposes hardware AES + SSE4.1 (the CTR kernel builds counter
-    /// blocks with PINSRQ). Does not require PCLMULQDQ/SSSE3 (no GHASH/OMAC) or
-    /// a packed record (the CTR kernel takes plain pointer arguments).</summary>
-    class function CpuSupportsCtr: Boolean; static;
 
     /// <summary>Probe ACipher for IAesEngineX86, handling both the direct case
     /// (ACipher itself is the engine) and the wrapped case (ACipher is an
@@ -66,15 +60,6 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasPCLMULQDQ and
     TCpuFeatures.X86.HasSSSE3 and TIntrinsicsVector.IsPacked;
-{$ELSE}
-  Result := False;
-{$ENDIF CRYPTOLIB_X86_SIMD}
-end;
-
-class function TAesNiFusedX86Backend.CpuSupportsCtr: Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasSSE41;
 {$ELSE}
   Result := False;
 {$ENDIF CRYPTOLIB_X86_SIMD}

@@ -30,8 +30,8 @@
 // Register/stack notes: rbx is callee-saved (push/pop). xmm6-15 are saved once
 // via the shared core (the reused rounds body + the xmm8 XOR scratch touch the
 // nonvolatile set). xmm8 is the round-key broadcast / plaintext-load scratch.
-// MOVQ (r64->xmm) and PINSRQ are db-encoded for the same broad-assembler /
-// Delphi-inline-asm compatibility reason as the AES-NI ops.
+// MOVQ (r64->xmm) and PINSRQ are db-encoded for broad assembler compatibility,
+// like the AES-NI ops.
   push      rbx
 {$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
 

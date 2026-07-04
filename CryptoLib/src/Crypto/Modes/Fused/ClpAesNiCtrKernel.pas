@@ -35,7 +35,8 @@ type
   ///   keystream + XOR body used by TSicBlockCipher's bulk path. The MAC-free
   ///   base of the fused-kernel family; reuses the plain 8-wide AES round chain
   ///   (AesNiEightRoundsOnly) since CTR has no extra per-block state.
-  ///   Currently x86-64 only (CRYPTOLIB_X86_64_ASM); on i386 / off-x86 the
+  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386 (CRYPTOLIB_I386_ASM);
+  ///   both arms gated collectively by CRYPTOLIB_X86_SIMD. When unavailable the
   ///   factory returns nil and TSicBlockCipher keeps its existing bulk path.
   /// </summary>
   TAesNiCtrKernel = class sealed(TInterfacedObject, IFusedCtrKernel)
@@ -67,33 +68,51 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
 
 // Fused AES-NI CTR keystream + XOR (encrypt-only; CTR keystream is the same for
 // encrypt and decrypt). Each proc processes ABlkCount blocks (a multiple of 8),
 // looping internally, and advances the 16-byte big-endian counter in place.
 procedure AesNiCtrEnc128(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
+{$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
 end;
 
 procedure AesNiCtrEnc192(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
+{$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
 end;
 
 procedure AesNiCtrEnc256(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
+{$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 
 { TAesNiCtrKernel }
 
@@ -114,7 +133,7 @@ end;
 procedure TAesNiCtrKernel.ProcessCtrBlocks(AInPtr, AOutPtr, ACounter: Pointer;
   ABlockCount: NativeInt);
 begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
   case FRounds of
     10:
       AesNiCtrEnc128(PByte(AInPtr), PByte(AOutPtr), PByte(FKeys),
@@ -126,7 +145,7 @@ begin
     AesNiCtrEnc256(PByte(AInPtr), PByte(AOutPtr), PByte(FKeys),
       PByte(ACounter), ABlockCount);
   end;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
 end;
 
 { TAesNiCtrKernelFactory }
@@ -151,9 +170,7 @@ begin
   AKernel := nil;
   Result := False;
   try
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-    if not TAesNiFusedX86Backend.CpuSupportsCtr then
-      Exit;
+{$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if not LEngine.TryGetEncKeysPtr(LKeys, LRounds) then
@@ -162,7 +179,7 @@ begin
       Exit;
     AKernel := TAesNiCtrKernel.Create(LEngine, LKeys, LRounds);
     Result := True;
-{$ENDIF CRYPTOLIB_X86_64_ASM}
+{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;
