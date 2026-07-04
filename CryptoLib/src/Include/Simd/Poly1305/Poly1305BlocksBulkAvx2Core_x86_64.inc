@@ -41,12 +41,7 @@
 //   ymm6       : padbit         (0x1000000 per 64-bit lane low half)
 //   ymm7..ymm15: D0..D4 / M0..M4 / scratch (transient)
 //
-// Win64 note: this kernel uses ymm6..ymm15 without explicit save/restore,
-// matching the codebase's existing AES-NI/PCLMULQDQ kernels. FPC's
-// `assembler; nostackframe` ABI handling is relied upon; Win64 callers
-// of TPoly1305 are expected not to keep live values in xmm6..xmm15
-// across the call.
-
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   // ---- Prologue: build mask26 (ymm5) and padbit (ymm6) constants ----
   db $C5, $D5, $76, $ED                         // vpcmpeqd ymm5, ymm5, ymm5
   db $C5, $D5, $73, $D5, $26                    // vpsrlq ymm5, ymm5, 38     ; mask26 = 0x3FFFFFF per lane
@@ -333,3 +328,5 @@
   db $C5, $F9, $7E, $61, $34                    // vmovd dword ptr [rcx + 52], xmm4
 
   db $C5, $F8, $77                              // vzeroupper
+  // restore caller xmm6..15 (legacy SSE moves are safe after vzeroupper)
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

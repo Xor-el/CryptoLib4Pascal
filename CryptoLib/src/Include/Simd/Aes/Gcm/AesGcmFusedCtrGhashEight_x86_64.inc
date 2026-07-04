@@ -46,6 +46,7 @@
 // compatibility.
 // -------------------------------------------------------------------
 
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   // --- Prologue: load pointers and initial state ---------------------
   mov       rax, [rcx + 16]                    // rax = PCtrCurr
   movdqu    xmm0, [rax]
@@ -535,3 +536,4 @@
   pshufb    xmm0, xmm15                        // byte-reverse -> canonical
   mov       rax, [rcx + 48]                    // PFS
   movdqu    [rax], xmm0
+{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

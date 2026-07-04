@@ -4,6 +4,9 @@
 //   rcx = ALen, rdx = PX, r8 = PY, r9 = PZz
 // ZZ output: V128 lane k at byte offset 16*k in PZz.
 
+  // Each size case reaches @@BinPolySmallXmmDone via `jmp` (not `ret`) so the
+  // restore of the registers saved here always runs.
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   cmp       rcx, 1
   je        @@BinPolySmallSize1
   cmp       rcx, 2
@@ -24,7 +27,7 @@
   je        @@BinPolySmallSize9
   cmp       rcx, 10
   je        @@BinPolySmallSize10
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize1:
   movq      xmm0, qword ptr [rdx + 0]
@@ -33,7 +36,7 @@
   movdqa    xmm1, xmm0
   db $66, $0F, $3A, $44, $C9, $01  // pclmulqdq xmm1, xmm1, 1
   movdqu    [r9 + 0], xmm1
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize2:
   movq      xmm0, qword ptr [rdx + 0]
@@ -68,7 +71,7 @@
   pxor      xmm2, xmm0
   movdqu    [r9 + 0], xmm1
   movdqu    [r9 + 16], xmm2
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize3:
   movq      xmm0, qword ptr [rdx + 0]
@@ -131,7 +134,7 @@
   movdqu    [r9 + 0], xmm7
   movdqu    [r9 + 16], xmm0
   movdqu    [r9 + 32], xmm2
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize4:
   movq      xmm0, qword ptr [rdx + 0]
@@ -236,7 +239,7 @@
   movdqu    [r9 + 16], xmm5
   movdqu    [r9 + 32], xmm4
   movdqu    [r9 + 48], xmm1
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize5:
   sub       rsp, 48
@@ -413,7 +416,7 @@
   movdqu    [r9 + 48], xmm1
   movdqu    [r9 + 64], xmm4
   add       rsp, 48
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize6:
   sub       rsp, 32
@@ -632,7 +635,7 @@
   movdqu    [r9 + 64], xmm2
   movdqu    [r9 + 80], xmm11
   add       rsp, 32
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize7:
   sub       rsp, 16
@@ -933,7 +936,7 @@
   movdqu    [r9 + 80], xmm3
   movdqu    [r9 + 96], xmm0
   add       rsp, 16
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize8:
   sub       rsp, 32
@@ -1284,7 +1287,7 @@
   movdqu    [r9 + 96], xmm1
   movdqu    [r9 + 112], xmm0
   add       rsp, 32
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize9:
   sub       rsp, 192
@@ -1771,7 +1774,7 @@
   movdqu    xmm0, [rsp + 128]
   movdqu    [r9 + 128], xmm0
   add       rsp, 192
-  ret
+  jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallSize10:
   sub       rsp, 288
@@ -2509,5 +2512,8 @@
   pxor      xmm0, xmm4
   movdqu    [r9 + 104], xmm0
   add       rsp, 288
-  ret
+  jmp       @@BinPolySmallXmmDone
+
+@@BinPolySmallXmmDone:
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
 

@@ -16,6 +16,7 @@
 // Variant selection (forwarded to the rounds-only include):
 //   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
   movdqu    xmm0, [rcx]
   movdqu    xmm1, [rcx + 16]
   movdqu    xmm2, [rcx + 32]
@@ -47,3 +48,4 @@
   movdqu    [rcx + 96], xmm6
   movdqu    [rcx + 112], xmm7
 {$ENDIF}
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

@@ -2,6 +2,7 @@
 // Rounds: Salsa20Sse41_TwoColumnRoundsBody.inc.
 // After SimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState, r8=AIn (plain), r9=AOut (cipher).
 // r10 = round counter per block. Advance counter: FEngineState[8]@[rdx+32], FEngineState[9]@[rdx+36].
+{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
 { -------- block 1 (64B) -------- }
   sub     rsp, 512
   mov     r10, rcx
@@ -406,3 +407,4 @@
   jnz     @@s2p2_x64_c2d
   add     dword [rdx+36], 1
 @@s2p2_x64_c2d:
+{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
