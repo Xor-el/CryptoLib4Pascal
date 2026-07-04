@@ -55,7 +55,7 @@ type
     class function IsShuffledGhashSupported: Boolean; static;
     /// <summary>True when the packed 128-bit block-XOR fast path is usable.</summary>
     class function IsBlockXorSupported: Boolean; static;
-    /// <summary>True when a hardware carryless (polynomial) multiply is available (selects the carryless-multiply GCM multiplier over the 4K-table one). Backed by PCLMULQDQ on x86 and PMULL on arm.</summary>
+    /// <summary>True when a hardware carryless (polynomial) multiply is available (selects the carryless-multiply GCM multiplier over the 4K-table one).</summary>
     class function HasCarrylessMultiply: Boolean; static;
     /// <summary>XOR one 128-bit block: <c>PDst := PDst xor PSrc</c>. Precondition: <c>IsBlockXorSupported</c>.</summary>
     class procedure BlockXor128(PDst, PSrc: PByte); static;
