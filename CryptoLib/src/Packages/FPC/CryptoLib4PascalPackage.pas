@@ -255,7 +255,8 @@ uses
   ClpIBackingHashProvider, ClpChaChaSimd, ClpChaChaX86Backend, ClpSalsaSimd, 
   ClpSalsaX86Backend, ClpPoly1305State, ClpPoly1305Simd, 
   ClpPoly1305X86Backend, ClpGhashSimd, ClpGhashX86Backend, ClpGcmSivSimd, 
-  ClpGcmSivX86Backend, ClpAesFusedAeadX86Backend, ClpBinPolySimd, ClpAesSimd;
+  ClpGcmSivX86Backend, ClpAesNiFusedX86Backend, ClpBinPolySimd, ClpAesSimd, 
+  ClpIFusedCtrKernel, ClpAesNiCtrKernel;
 
 implementation
 

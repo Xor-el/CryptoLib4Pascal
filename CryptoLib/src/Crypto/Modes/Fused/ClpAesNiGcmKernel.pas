@@ -28,7 +28,7 @@ uses
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
   ClpAesFusedAeadSimd,
-  ClpAesFusedAeadX86Backend;
+  ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
@@ -210,7 +210,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
+    if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if not LEngine.TryGetEncKeysPtr(LKeys, LRounds) then
       Exit;

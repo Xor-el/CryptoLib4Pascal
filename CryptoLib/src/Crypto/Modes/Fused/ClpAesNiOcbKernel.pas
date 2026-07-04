@@ -28,7 +28,7 @@ uses
   ClpIFusedOcbKernel,
   ClpFusedKernelRegistry,
   ClpAesFusedAeadSimd,
-  ClpAesFusedAeadX86Backend;
+  ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
@@ -271,7 +271,7 @@ begin
   try
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
+    if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if ADirection = TFusedModeDirection.Encrypt then
       LHasSchedule := LEngine.TryGetEncKeysPtr(LKeys, LRounds)

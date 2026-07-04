@@ -34,6 +34,7 @@ uses
   ClpAesNiOcbKernel,
   ClpAesNiCcmKernel,
   ClpAesNiEaxKernel,
+  ClpAesNiCtrKernel,
   ClpPclmulGcmSivKernel;
 
 end.

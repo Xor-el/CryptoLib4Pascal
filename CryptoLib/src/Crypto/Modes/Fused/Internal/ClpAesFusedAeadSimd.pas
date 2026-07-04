@@ -22,7 +22,7 @@ interface
 
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-  ClpAesFusedAeadX86Backend;
+  ClpAesNiFusedX86Backend;
 {$IFEND}
 
 type
@@ -35,7 +35,7 @@ type
   /// <remarks>
   /// Engine resolution deliberately does NOT live here: it hands back an
   /// instruction-set-specific round-key schedule (see <c>IAesEngineX86</c>), so it
-  /// belongs on the per-arch backend (<c>TAesFusedAeadX86Backend.TryResolveEngine</c>)
+  /// belongs on the per-arch backend (<c>TAesNiFusedX86Backend.TryResolveEngine</c>)
   /// that the matching per-arch kernels call. Not exported via the public
   /// interface surface and never imported by mode units, which stay
   /// cipher-agnostic.
@@ -53,7 +53,7 @@ implementation
 class function TAesFusedAeadSimd.CpuSupports: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TAesFusedAeadX86Backend.CpuSupports;
+  Result := TAesNiFusedX86Backend.CpuSupports;
 {$ELSE}
   Result := False;
 {$IFEND}

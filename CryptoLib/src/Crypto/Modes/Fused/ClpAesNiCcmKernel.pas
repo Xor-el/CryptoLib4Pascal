@@ -28,7 +28,7 @@ uses
   ClpIFusedCcmKernel,
   ClpFusedKernelRegistry,
   ClpAesFusedAeadSimd,
-  ClpAesFusedAeadX86Backend;
+  ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
@@ -290,7 +290,7 @@ begin
   try
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
+    if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     // CCM drives CTR and CBC-MAC lanes from the same forward-encrypt
     // schedule for both directions. LKeys is consumed only to probe
