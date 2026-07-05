@@ -871,6 +871,7 @@ uses
   SicBulkParityTests in '..\src\Crypto\SicBulkParityTests.pas',
   EcbBulkParityTests in '..\src\Crypto\EcbBulkParityTests.pas',
   CbcBulkParityTests in '..\src\Crypto\CbcBulkParityTests.pas',
+  GcmSivBulkParityTests in '..\src\Crypto\GcmSivBulkParityTests.pas',
   SpeckBlockCipherTestBase in '..\src\Crypto\SpeckBlockCipherTestBase.pas',
   SpeckLegacyTests in '..\src\Crypto\SpeckLegacyTests.pas',
   SpeckTests in '..\src\Crypto\SpeckTests.pas',

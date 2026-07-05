@@ -1210,6 +1210,7 @@
         <DCCReference Include="..\src\Crypto\SicBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\EcbBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\CbcBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\GcmSivBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckLegacyTests.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckTests.pas"/>

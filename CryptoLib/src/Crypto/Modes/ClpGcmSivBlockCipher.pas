@@ -233,7 +233,8 @@ end;
 procedure TGcmSivBlockCipher.TGcmSivHasher.UpdateHash(const ABuffer: TCryptoLibByteArray;
   AOffset, ALen: Int32);
 var
-  LMySpace, LNumProcessed, LMyRemaining: Int32;
+  LMySpace, LNumProcessed, LMyRemaining, LB, LJ: Int32;
+  LScratch: array [0 .. 127] of Byte;
 begin
   LMySpace := 16 - FNumActive;
   LNumProcessed := 0;
@@ -256,8 +257,16 @@ begin
   begin
     while LMyRemaining >= FParent.FGcmSivKernelBatchBytes do
     begin
+      // Byte-reverse each 16-byte block into the batch scratch, mirroring the
+      // scalar path's FillReverse: POLYVAL feeds ByteReverse(block) to the GHASH
+      // machinery (RFC 8452 Appendix A), and the fused kernel then applies the
+      // same GHASH fold the scalar multiplier does.
+      for LB := 0 to 7 do
+        for LJ := 0 to 15 do
+          LScratch[LB * 16 + LJ] :=
+            ABuffer[AOffset + LNumProcessed + LB * 16 + (15 - LJ)];
       FParent.FGcmSivKernel.ProcessPolyvalBatch(
-        @ABuffer[AOffset + LNumProcessed],
+        @LScratch[0],
         @FParent.FTheGHash[0],
         FParent.FGcmSivKernel.MinimumBlockCount);
       LNumProcessed := LNumProcessed + FParent.FGcmSivKernelBatchBytes;
