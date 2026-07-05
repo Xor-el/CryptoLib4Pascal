@@ -65,21 +65,20 @@ type
   const
     BLOCK_SIZE = 16;
 
-    // Maximum blocks staged per fused-kernel dispatch. LCM(4, 8) = 8,
-    // kept at 96 to match the previous batch cadence (96 is a multiple
-    // of both the i386 4-wide kernel stride and the x86_64 8-wide
-    // stride). The fused kernel now owns the offset ladder, L-table
-    // lookup and checksum fold internally, so this batch only governs
-    // how many pre-computed ntz bytes (and scratch lookahead bytes on
-    // the decrypt path) the mode stages on the stack per dispatch.
+    // Block cap for the ONE fused path that stages a per-batch stack
+    // scratch buffer: truncated-MAC decrypt (FMacSize < BLOCK_SIZE). The
+    // encrypt and full-MAC-decrypt paths need no scratch and are dispatched
+    // as a single whole-span call, so this bound does not apply to them.
+    // Must be a multiple of the fused kernel's MinimumBlockCount; Init
+    // rejects any kernel whose stride does not divide it.
     FUSED_BATCH_BLOCKS = 96;
 
-    // Number of 16-byte L-table entries the mode materialises
-    // contiguously for the kernel per call. An OCB session is bounded
-    // by the security proof to well under 2^48 blocks per nonce, and
-    // OCB_ntz of any Int64 block count is at most 63, so 64 entries
-    // covers every practically reachable max ntz. At BLOCK_SIZE bytes
-    // each the stack footprint is 1 KiB.
+    // Number of 16-byte L-table entries the mode materialises contiguously
+    // for the kernel (FLTableFlat, cached across calls). An OCB session is
+    // bounded by the security proof to well under 2^48 blocks per nonce, and
+    // OCB_ntz of any Int64 block count is at most 63, so 64 entries covers
+    // every practically reachable max ntz. At BLOCK_SIZE bytes each the
+    // footprint is 1 KiB.
     FUSED_LTABLE_ENTRIES = 64;
 
   var
@@ -92,6 +91,14 @@ type
 
     FL: TList<TCryptoLibByteArray>;
     FL_Asterisk, FL_Dollar: TCryptoLibByteArray;
+
+    // Cached contiguous snapshot of FL[0..FLTableFlatCount-1] handed to the
+    // fused kernel. FL is key-stable and only ever grows, so the flat copy is
+    // materialised lazily (EnsureLTableFlat) and reused across every batch and
+    // ProcessBytes call; it is invalidated only on Init, when FL is rebuilt for
+    // a new key.
+    FLTableFlat: TCryptoLibByteArray;
+    FLTableFlatCount: Int32;
 
     FKTopInput: TCryptoLibByteArray;
     FStretch: TCryptoLibByteArray;
@@ -134,12 +141,16 @@ type
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
       ABlockCount: Int32);
 
+    // Grow FL and the cached flat L-table so entries [0..AMaxNtz] are present
+    // in FLTableFlat, extending only the not-yet-materialised tail.
+    procedure EnsureLTableFlat(AMaxNtz: Int32);
+
     procedure ProcessEightBlocksBulk(const AInput: TCryptoLibByteArray;
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32);
 
     class function OCB_double(const ABlock: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class procedure OCB_extend(const ABlock: TCryptoLibByteArray; APos: Int32); static;
-    class function OCB_ntz(AX: Int64): Int32; static;
+    class function OCB_ntz(AX: Int64): Int32; static; inline;
     class function ShiftLeft(const ABlock, AOutput: TCryptoLibByteArray): Int32; static;
 
   strict protected
@@ -206,12 +217,19 @@ begin
   System.SetLength(FOffsetMAIN_0, 16);
   System.SetLength(FOffsetMAIN, 16);
   FL := TList<TCryptoLibByteArray>.Create;
+  System.SetLength(FLTableFlat, FUSED_LTABLE_ENTRIES * BLOCK_SIZE);
+  FLTableFlatCount := 0;
 end;
 
 destructor TOcbBlockCipher.Destroy;
 begin
   FL.Free;
   inherited Destroy;
+end;
+
+class function TOcbBlockCipher.OCB_ntz(AX: Int64): Int32;
+begin
+  Result := TBitOperations.NumberOfTrailingZeros64(UInt64(AX));
 end;
 
 function TOcbBlockCipher.GetAlgorithmName: String;
@@ -348,6 +366,7 @@ begin
 
   FL.Clear;
   FL.Add(OCB_double(FL_Dollar));
+  FLTableFlatCount := 0; // FL rebuilt for the new key; drop the flattened cache
 
   LBottom := ProcessNonce(LN);
 
@@ -524,21 +543,25 @@ begin
 
   while (LI < ALen) do
   begin
-    // Fused-kernel fast path: accelerator-provided AEAD kernel
-    // (e.g. AES-NI; other accelerators pluggable via the
-    // registry). FOcbKernel is nil when no factory accepted this
+    // Fused-kernel fast path: a hardware-accelerated AEAD kernel resolved
+    // from the registry (any accelerator whose factory accepts the cipher /
+    // direction). FOcbKernel is nil when no factory accepted this
     // cipher / direction (always so off-SIMD), in which case this branch
     // is skipped and the 8-wide bulk / scalar paths below run unchanged.
     // Takes priority over the 8-wide bulk-cipher path below whenever at
-    // least one kernel-stride batch fits the steady-state window. A single
-    // dispatch stages up to FUSED_BATCH_BLOCKS worth of offsets and lets
-    // the kernel loop internally in MinimumBlockCount strides, amortising
-    // per-call overhead across the whole batch.
+    // least one kernel-stride batch fits the steady-state window. The kernel
+    // loops internally in MinimumBlockCount strides and owns the offset ladder,
+    // ntz derivation and checksum fold, so encrypt and full-MAC decrypt hand it
+    // the ENTIRE remaining whole-block span in one dispatch (no per-batch
+    // marshalling). Only the truncated-MAC decrypt path stages a sliding
+    // scratch buffer, so it stays bounded by FUSED_BATCH_BLOCKS.
     if (FOcbKernel <> nil) and (FMainBlockPos = LSteadyPos) and
       ((ALen - LI) >= FOcbKernelMinBlocks * BLOCK_SIZE) then
     begin
       LRemaining := (ALen - LI) div BLOCK_SIZE;
-      if LRemaining > FUSED_BATCH_BLOCKS then
+      if FForEncryption or (FMacSize = BLOCK_SIZE) then
+        LBatchBlocks := LRemaining // whole-span dispatch (no scratch needed)
+      else if LRemaining > FUSED_BATCH_BLOCKS then
         LBatchBlocks := FUSED_BATCH_BLOCKS
       else
         LBatchBlocks := LRemaining;
@@ -584,48 +607,32 @@ procedure TOcbBlockCipher.ProcessFusedBulk(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
   ABlockCount: Int32);
 var
-  // One byte per block holding ntz(FMainBlockCount+1..+ABlockCount).
-  // The kernel consumes these directly (movzx + shl 4) to index
-  // LTableFlat for the per-block L-XOR ladder update.
-  LNtz: array [0 .. FUSED_BATCH_BLOCKS - 1] of Byte;
-  // Contiguous snapshot of FL[0..FUSED_LTABLE_ENTRIES-1]. GetLSub grows
-  // FL on demand up through LMaxNtz before the Move loop copies the
-  // live entries in; bytes past LMaxNtz remain undefined but the kernel
-  // never addresses them (ntz value bounds the index by construction).
-  LTableFlat: array [0 .. FUSED_LTABLE_ENTRIES * BLOCK_SIZE - 1] of Byte;
   // Decrypt fallback (FMacSize < BLOCK_SIZE): FMacSize-byte lookahead
-  // followed by fresh AInput bytes. The fast path (FMacSize = BLOCK_SIZE,
-  // the common case) bypasses this buffer entirely and hands the kernel
-  // two pointers -- one at FMainBlock for iter-0 block 0 and one at
-  // AInput - BLOCK_SIZE for the main stream -- saving a full batch
-  // memcpy per decrypt call.
+  // followed by fresh AInput bytes. This path is the ONLY per-batch scratch
+  // user, so ProcessBytes bounds its ABlockCount by FUSED_BATCH_BLOCKS; the
+  // encrypt and full-MAC-decrypt fast paths bypass this buffer entirely (they
+  // hand the kernel raw pointers) and are dispatched as a single whole-span
+  // call.
   LScratch: array [0 .. FUSED_BATCH_BLOCKS * BLOCK_SIZE - 1] of Byte;
-  LI, LBatchBytes, LNtzVal, LMaxNtz: Int32;
+  LBatchBytes, LMaxNtz: Int32;
+  LStartBlockCount: UInt64;
   LInPtr, LBlock0Ptr: Pointer;
 begin
   LBatchBytes := ABlockCount * BLOCK_SIZE;
 
-  // Pre-compute ntz for every block in the batch and track the largest
-  // index so we can grow FL exactly once before materialising LTableFlat.
-  // Moving ntz out of the kernel keeps i386 GPR pressure sane and lets
-  // both kernels share a single byte-indexed lookup path.
-  LMaxNtz := 0;
-  for LI := 0 to ABlockCount - 1 do
-  begin
-    System.Inc(FMainBlockCount);
-    LNtzVal := OCB_ntz(FMainBlockCount);
-    LNtz[LI] := Byte(LNtzVal);
-    if LNtzVal > LMaxNtz then
-      LMaxNtz := LNtzVal;
-  end;
+  // Block count consumed just before the first block of this batch. The kernel
+  // seeds a running counter from it and derives ntz per block itself, so there
+  // is no per-block ntz precompute loop.
+  LStartBlockCount := UInt64(FMainBlockCount);
+  System.Inc(FMainBlockCount, ABlockCount);
+  // Upper bound on ntz over (start+1..start+ABlockCount): floor(log2(endCount))
+  // = index of the most significant set bit. The kernel indexes L up to this; a
+  // slightly loose bound just flattens a few extra entries.
+  LMaxNtz := 63 - TBitOperations.NumberOfLeadingZeros64(UInt64(FMainBlockCount));
 
-  // Grow FL to cover LMaxNtz (side effect of GetLSub) then flatten the
-  // live L entries into a contiguous kernel-friendly buffer. FL entries
-  // are themselves 16-byte arrays; a tight Move loop is cheaper than a
-  // per-block pointer chase from the kernel would be.
-  GetLSub(LMaxNtz);
-  for LI := 0 to LMaxNtz do
-    System.Move(FL[LI][0], LTableFlat[LI * BLOCK_SIZE], BLOCK_SIZE);
+  // Materialise FLTableFlat through LMaxNtz (lazy, cached across calls) so the
+  // kernel can index the L-table with a single contiguous load per block.
+  EnsureLTableFlat(LMaxNtz);
 
   if FForEncryption then
   begin
@@ -637,8 +644,8 @@ begin
     LInPtr := @AInput[AInOff];
     LBlock0Ptr := LInPtr;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
-      LBlock0Ptr, ABlockCount);
+      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      LBlock0Ptr, ABlockCount, LStartBlockCount);
   end
   else if FMacSize = BLOCK_SIZE then
   begin
@@ -655,16 +662,15 @@ begin
     // eliminates the LBatchBytes - BLOCK_SIZE byte memcpy the old
     // LScratch reshape had to do on every fused decrypt batch.
     //
-    // The `InPtr - BLOCK_SIZE` pointer is never dereferenced at
-    // offset 0 by the kernel (verified phase-by-phase in
-    // AesOcbFusedWide_x86_64.inc / AesOcbFusedWide_i386.inc); the address
-    // itself only feeds register arithmetic and the `[InPtr + 16..]`
-    // loads, all of which resolve inside AInput.
+    // The `InPtr - BLOCK_SIZE` pointer is never dereferenced at offset 0 by
+    // the kernel (guaranteed by the IFusedOcbKernel.ProcessBlocks contract for
+    // Block0Ptr); the address itself only feeds register arithmetic and the
+    // `[InPtr + 16..]` loads, all of which resolve inside AInput.
     LBlock0Ptr := @FMainBlock[0];
     LInPtr := PByte(@AInput[AInOff]) - BLOCK_SIZE;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
-      LBlock0Ptr, ABlockCount);
+      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      LBlock0Ptr, ABlockCount, LStartBlockCount);
 
     // Refresh the BLOCK_SIZE lookahead from the tail of the consumed
     // AInput window so subsequent calls (fused, 8-wide, or scalar)
@@ -687,8 +693,8 @@ begin
     LInPtr := @LScratch[0];
     LBlock0Ptr := LInPtr;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @LTableFlat[0], @LNtz[0],
-      LBlock0Ptr, ABlockCount);
+      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      LBlock0Ptr, ABlockCount, LStartBlockCount);
 
     System.Move(AInput[AInOff + LBatchBytes - FMacSize], FMainBlock[0],
       FMacSize);
@@ -864,6 +870,18 @@ begin
   Result := FL[AN];
 end;
 
+procedure TOcbBlockCipher.EnsureLTableFlat(AMaxNtz: Int32);
+var
+  LI: Int32;
+begin
+  if (AMaxNtz < FLTableFlatCount) then
+    Exit; // already materialised through AMaxNtz
+  GetLSub(AMaxNtz); // grow FL to cover AMaxNtz
+  for LI := FLTableFlatCount to AMaxNtz do
+    System.Move(FL[LI][0], FLTableFlat[LI * BLOCK_SIZE], BLOCK_SIZE);
+  FLTableFlatCount := AMaxNtz + 1;
+end;
+
 procedure TOcbBlockCipher.ProcessHashBlock;
 begin
   System.Inc(FHashBlockCount);
@@ -955,11 +973,6 @@ begin
     ABlock[APos] := 0;
     System.Inc(APos);
   end;
-end;
-
-class function TOcbBlockCipher.OCB_ntz(AX: Int64): Int32;
-begin
-  Result := TBitOperations.NumberOfTrailingZeros64(UInt64(AX));
 end;
 
 class function TOcbBlockCipher.ShiftLeft(const ABlock,

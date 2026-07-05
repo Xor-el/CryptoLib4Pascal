@@ -61,14 +61,9 @@ type
     ///
     ///   ALTablePtr points at a read-only contiguous buffer of L-table
     ///   entries L[0], L[1], ..., L[LMax], each 16 bytes. The caller
-    ///   guarantees it covers every ntz value referenced by ANtzPtr.
-    ///
-    ///   ANtzPtr points at a read-only ABlockCount-byte array where
-    ///   ANtzPtr[i] = OCB_ntz(FMainBlockCount + i + 1). The caller
-    ///   pre-computes these so the kernel can index the L-table with a
-    ///   single byte load per block (cheaper and simpler than doing
-    ///   BSF + 64-bit counter bookkeeping inside the kernel, especially
-    ///   on i386).
+    ///   guarantees it covers every ntz value the kernel derives across
+    ///   the span (the kernel computes ntz per block itself via a running
+    ///   block counter seeded from AStartBlockCount).
     ///
     ///   ABlock0Ptr points at the 16-byte source of block 0 of the very
     ///   first kernel iteration. It MAY equal AInPtr (the common case,
@@ -81,8 +76,12 @@ type
     ///   transparently transitions from the prefix source to the main
     ///   stream after iteration 0.
     /// </summary>
+    ///   AStartBlockCount is the OCB block count before this span (= the value
+    ///   consumed as `FMainBlockCount` just before the first block); the
+    ///   kernel seeds its per-block ntz counter from it.
     procedure ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr, AChecksumPtr,
-      ALTablePtr, ANtzPtr, ABlock0Ptr: Pointer; ABlockCount: Int32);
+      ALTablePtr, ABlock0Ptr: Pointer; ABlockCount: Int32;
+      AStartBlockCount: UInt64);
   end;
 
   IFusedOcbKernelFactory = interface

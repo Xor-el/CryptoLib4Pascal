@@ -7,9 +7,10 @@
 // scratch are reserved; memory-form aesenc / aesdec is therefore
 // used throughout against the 16-byte-aligned round-key schedule.
 // The kernel owns all per-block OCB bookkeeping across the batch:
-// on entry it seeds xmm_offset from OffsetPtr and xmm_checksum from
-// ChecksumPtr; the loop walks a pre-computed ntz byte array, XORs
-// the L-table entry into xmm_offset to derive each Delta, runs
+// on entry it seeds xmm_offset from OffsetPtr, xmm_checksum from
+// ChecksumPtr and a running block counter from StartBlockCount; the
+// loop derives ntz per block itself (bsf on the incremented counter),
+// XORs the L-table entry into xmm_offset to derive each Delta, runs
 // P_i XOR delta XOR K_0 through the AES rounds, XORs delta into
 // the post-aesenclast state to produce C_i, and folds plaintext
 // into xmm_checksum; on exit it writes xmm_offset and xmm_checksum
@@ -21,7 +22,7 @@
 //
 // On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
 //
-// Context layout (8 pointers + 1 NativeUInt = 36 bytes, 4-byte aligned).
+// Context layout (7 pointers + NativeUInt + UInt64 = 40 bytes, 4-byte aligned).
 // See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
 //   [ebx +  0]  Keys        : AES schedule (encrypt or inv-MixColumns; 16-byte aligned)
 //   [ebx +  4]  InPtr       : base of the main 16-byte-block stream
@@ -29,9 +30,10 @@
 //   [ebx + 12]  OffsetPtr   : 16-byte live FOffsetMAIN (r/w)
 //   [ebx + 16]  ChecksumPtr : 16-byte live FChecksum (r/w)
 //   [ebx + 20]  LTablePtr   : flat L[0..LMax] * 16 bytes (read-only; cached on stack)
-//   [ebx + 24]  NtzPtr      : BlockCount bytes of pre-computed ntz values
-//   [ebx + 28]  Block0Ptr   : 16-byte source of iteration-0 block 0 (may alias InPtr)
-//   [ebx + 32]  BlockCount  : NativeUInt; multiple of 4
+//   [ebx + 24]  Block0Ptr   : 16-byte source of iteration-0 block 0 (may alias InPtr)
+//   [ebx + 28]  BlockCount  : NativeUInt; multiple of 4
+//   [ebx + 32]  StartBlockCount : UInt64; block count before this span (ntz counter seed).
+//                                 lo at +32, hi at +36.
 //
 // XMM (7/8 used; i386 has only xmm0..xmm7):
 //   xmm0..xmm3 : 4 data lanes
@@ -40,9 +42,15 @@
 //   xmm6       : scratch (L-table loads; stack-offset reloads during whitening)
 //   xmm7       : free
 //
-// Stack scratch (68 bytes, base unaligned - movdqu only):
+// GPR: ebx=PCtx, edi=Keys, edx=InPtr, esi=OutPtr, ecx=BlockCount,
+//   ebp=block counter low dword (bsf source), eax=scratch. The counter
+//   high dword lives on the stack (only touched on a 2^32 low-dword wrap),
+//   so the full 64-bit ntz is exact yet the hot path stays register-only.
+//
+// Stack scratch (72 bytes, base unaligned - movdqu only):
 //   [esp +  0..63]  4 x 16-byte per-block offset stashes
 //   [esp + 64..67]  LTablePtr cache (one dword; GPR budget cannot pin it)
+//   [esp + 68..71]  block counter high dword
 //
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
@@ -53,14 +61,19 @@
   push      edi
   push      esi
   push      ebp
-  sub       esp, 68
+  sub       esp, 72
 
   // --- Load context pointers and seed accumulators. ---
   mov       edi, [ebx +  0]                       // edi = Keys (pinned)
   mov       edx, [ebx +  4]                       // edx = InPtr (advancing)
   mov       esi, [ebx +  8]                       // esi = OutPtr (advancing)
-  mov       ebp, [ebx + 24]                       // ebp = NtzPtr (advancing)
-  mov       ecx, [ebx + 32]                       // ecx = BlockCount (>= 4, multiple of 4)
+  mov       ecx, [ebx + 28]                       // ecx = BlockCount (>= 4, multiple of 4)
+
+  // Seed the running block counter (64-bit) from StartBlockCount: low
+  // dword in ebp (bsf source), high dword in the [esp + 68] stack slot.
+  mov       ebp, [ebx + 32]                       // ebp = StartBlockCount low
+  mov       eax, [ebx + 36]                       // eax = StartBlockCount high
+  mov       [esp + 68], eax
 
   // Stash LTablePtr into the stack slot at [esp + 64]; the inner loop
   // re-adds it to ntz*16 to form each L-table entry address.
@@ -77,7 +90,7 @@
   // of each iteration (before Phase 1 clobbers it), and refreshed to
   // edx at the bottom of every iteration so iter >= 1 transparently
   // reads block 0 from the advancing main stream at offset 0.
-  mov       eax, [ebx + 28]                       // eax = Block0Ptr
+  mov       eax, [ebx + 24]                       // eax = Block0Ptr
 
 @@ocb_i386_loop:
 
@@ -94,38 +107,65 @@
 
   // ------------------------------------------------------------------
   // Phase 1: offset ladder. For each block i in 0..3:
-  //   eax   = ntz[i]          (movzx from [ebp + i])
+  //   advance the 64-bit block counter (ebp low + [esp+68] high) by one
+  //   eax   = ntz(counter)    (bsf ebp; on a low-dword wrap, 32 + bsf hi)
   //   eax   = eax * 16        (shl eax, 4)
   //   eax   = LTablePtr + eax (add from stashed slot)
-  //   xmm6  = L[ntz[i]]       (movdqu from [eax])
+  //   xmm6  = L[ntz]          (movdqu from [eax])
   //   xmm4 ^= xmm6            (pxor)
   //   [esp + 16*i] <- xmm4    (movdqu stash of offset_i)
   // After this phase xmm4 holds offset_3 which is the Delta carried
   // into the next iteration, and [esp + 0..63] holds offsets_0..3.
+  // `add ebp, 1` (not inc) sets CF so the rare high-dword carry
+  // propagates; the bsf-high branch is essentially never taken.
   // ------------------------------------------------------------------
   // Block 0
-  movzx     eax, byte [ebp + 0]
+  add       ebp, 1
+  adc       dword [esp + 68], 0
+  bsf       eax, ebp
+  jnz       @@ocb_i386_ntz0
+  bsf       eax, [esp + 68]
+  add       eax, 32
+@@ocb_i386_ntz0:
   shl       eax, 4
   add       eax, [esp + 64]
   movdqu    xmm6, [eax]
   pxor      xmm4, xmm6
   movdqu    [esp +  0], xmm4
   // Block 1
-  movzx     eax, byte [ebp + 1]
+  add       ebp, 1
+  adc       dword [esp + 68], 0
+  bsf       eax, ebp
+  jnz       @@ocb_i386_ntz1
+  bsf       eax, [esp + 68]
+  add       eax, 32
+@@ocb_i386_ntz1:
   shl       eax, 4
   add       eax, [esp + 64]
   movdqu    xmm6, [eax]
   pxor      xmm4, xmm6
   movdqu    [esp + 16], xmm4
   // Block 2
-  movzx     eax, byte [ebp + 2]
+  add       ebp, 1
+  adc       dword [esp + 68], 0
+  bsf       eax, ebp
+  jnz       @@ocb_i386_ntz2
+  bsf       eax, [esp + 68]
+  add       eax, 32
+@@ocb_i386_ntz2:
   shl       eax, 4
   add       eax, [esp + 64]
   movdqu    xmm6, [eax]
   pxor      xmm4, xmm6
   movdqu    [esp + 32], xmm4
   // Block 3
-  movzx     eax, byte [ebp + 3]
+  add       ebp, 1
+  adc       dword [esp + 68], 0
+  bsf       eax, ebp
+  jnz       @@ocb_i386_ntz3
+  bsf       eax, [esp + 68]
+  add       eax, 32
+@@ocb_i386_ntz3:
   shl       eax, 4
   add       eax, [esp + 64]
   movdqu    xmm6, [eax]
@@ -383,10 +423,10 @@
   movdqu    [esi + 32], xmm2
   movdqu    [esi + 48], xmm3
 
-  // --- Advance pointers and decrement loop counter. ---
+  // --- Advance pointers and decrement loop counter. The block counter
+  //     (ebp + [esp+68]) is advanced per block inside the ladder above. ---
   add       edx, 64
   add       esi, 64
-  add       ebp, 4
   mov       eax, edx                              // next iter's block-0 source
                                                   // tracks the main stream
   sub       ecx, 4
@@ -400,7 +440,7 @@
   mov       eax, [ebx + 16]                       // eax = ChecksumPtr
   movdqu    [eax], xmm5
 
-  add       esp, 68
+  add       esp, 72
   pop       ebp
   pop       esi
   pop       edi

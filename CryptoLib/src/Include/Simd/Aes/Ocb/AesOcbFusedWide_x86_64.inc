@@ -4,8 +4,9 @@
 // Processes ABlockCount consecutive 16-byte OCB body blocks in chunks
 // of 8 blocks (128 bytes) per iteration. The kernel owns all per-block
 // OCB bookkeeping across the batch: on entry it seeds xmm_offset from
-// OffsetPtr and xmm_checksum from ChecksumPtr; the loop walks a
-// pre-computed ntz byte array, XORs the L-table entry into xmm_offset
+// OffsetPtr and xmm_checksum from ChecksumPtr and a running block counter
+// from StartBlockCount; the loop derives ntz per block in-register (bsf on
+// the incremented counter), XORs the L-table entry into xmm_offset
 // to derive each Delta, runs P_i XOR delta XOR K_0 through the AES
 // rounds, XORs delta into the post-aesenclast state to produce C_i,
 // and folds plaintext into xmm_checksum; on exit it writes xmm_offset
@@ -17,17 +18,17 @@
 //
 // On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
-// Context layout (8 pointers + 1 NativeUInt = 72 bytes, 8-byte aligned).
+// Context layout (7 pointers + NativeUInt + UInt64 = 72 bytes, 8-byte aligned).
 // See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
-//   [rcx +  0]  Keys        : AES schedule (encrypt or inv-MixColumns; 16-byte aligned)
-//   [rcx +  8]  InPtr       : base of the main 16-byte-block stream
-//   [rcx + 16]  OutPtr      : base of BlockCount output blocks (may alias InPtr)
-//   [rcx + 24]  OffsetPtr   : 16-byte live FOffsetMAIN (r/w)
-//   [rcx + 32]  ChecksumPtr : 16-byte live FChecksum (r/w)
-//   [rcx + 40]  LTablePtr   : flat L[0..LMax] * 16 bytes (read-only)
-//   [rcx + 48]  NtzPtr      : BlockCount bytes of pre-computed ntz values
-//   [rcx + 56]  Block0Ptr   : 16-byte source of iteration-0 block 0 (may alias InPtr)
-//   [rcx + 64]  BlockCount  : NativeUInt; multiple of 8
+//   [rcx +  0]  Keys            : AES schedule (encrypt or inv-MixColumns; 16-byte aligned)
+//   [rcx +  8]  InPtr           : base of the main 16-byte-block stream
+//   [rcx + 16]  OutPtr          : base of BlockCount output blocks (may alias InPtr)
+//   [rcx + 24]  OffsetPtr       : 16-byte live FOffsetMAIN (r/w)
+//   [rcx + 32]  ChecksumPtr     : 16-byte live FChecksum (r/w)
+//   [rcx + 40]  LTablePtr       : flat L[0..LMax] * 16 bytes (read-only)
+//   [rcx + 48]  Block0Ptr       : 16-byte source of iteration-0 block 0 (may alias InPtr)
+//   [rcx + 56]  BlockCount      : NativeUInt; multiple of 8
+//   [rcx + 64]  StartBlockCount : UInt64; block count before this span (ntz counter seed)
 //
 // XMM (12/16 used):
 //   xmm0..xmm7   : 8 data lanes
@@ -55,8 +56,10 @@
   mov       rbx, [rcx +  8]                         // rbx = InPtr
   mov       r8,  [rcx + 16]                         // r8  = OutPtr
   mov       r9,  [rcx + 40]                         // r9  = LTablePtr
-  mov       r11, [rcx + 48]                         // r11 = NtzPtr
-  mov       r10, [rcx + 64]                         // r10 = BlockCount
+  mov       r11, [rcx + 64]                         // r11 = running block counter
+                                                    // (seeded from StartBlockCount);
+                                                    // ntz derived per block via bsf
+  mov       r10, [rcx + 56]                         // r10 = BlockCount
   shr       r10, 3                                  // r10 /= 8 (>= 1)
 
   // --- Seed the persistent accumulators from memory (one-shot).
@@ -72,7 +75,7 @@
   //     every iteration's bottom refreshes it to rbx (the main
   //     stream advance) so iter >= 1 loads block 0 from the
   //     normal +0 offset transparently. ---
-  mov       rax, [rcx + 56]                         // rax = Block0Ptr
+  mov       rax, [rcx + 48]                         // rax = Block0Ptr
 
 @@ocb_x64_loop:
 
@@ -111,49 +114,57 @@
   //   movdqa [rsp + 16*i], xmm8          ; stash offset_i      (db)
   // ------------------------------------------------------------------
   // Block 0
-  movzx     eax, byte [r11 + 0]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                        // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $00              // movdqa [rsp+0], xmm8
   // Block 1
-  movzx     eax, byte [r11 + 1]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $10              // movdqa [rsp+16], xmm8
   // Block 2
-  movzx     eax, byte [r11 + 2]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $20              // movdqa [rsp+32], xmm8
   // Block 3
-  movzx     eax, byte [r11 + 3]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $30              // movdqa [rsp+48], xmm8
   // Block 4
-  movzx     eax, byte [r11 + 4]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $40              // movdqa [rsp+64], xmm8
   // Block 5
-  movzx     eax, byte [r11 + 5]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $50              // movdqa [rsp+80], xmm8
   // Block 6
-  movzx     eax, byte [r11 + 6]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
   db $66, $44, $0F, $7F, $44, $24, $60              // movdqa [rsp+96], xmm8
   // Block 7
-  movzx     eax, byte [r11 + 7]
+  inc       r11
+  bsf       rax, r11                              // rax = ntz(block counter)
   shl       rax, 4
   movdqu    xmm11, [r9 + rax]
   db $66, $45, $0F, $EF, $C3                       // pxor xmm8, xmm11
@@ -602,7 +613,6 @@
   // --- Advance pointers and decrement loop counter. ---
   add       rbx, 128
   add       r8,  128
-  add       r11, 8
   mov       rax, rbx                                // next iter's block-0 source
                                                     // tracks the main stream
   dec       r10

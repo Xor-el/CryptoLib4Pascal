@@ -62,7 +62,8 @@ type
       ARounds: Int32; ADirection: TFusedModeDirection);
     function MinimumBlockCount: Int32;
     procedure ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr, AChecksumPtr,
-      ALTablePtr, ANtzPtr, ABlock0Ptr: Pointer; ABlockCount: Int32);
+      ALTablePtr, ABlock0Ptr: Pointer; ABlockCount: Int32;
+      AStartBlockCount: UInt64);
   end;
 
   TAesNiOcbKernelFactory = class sealed(TInterfacedObject,
@@ -84,9 +85,10 @@ type
   ///   Context record shared with the assembly body. All live OCB state
   ///   the kernel touches is addressed through this record: seven
   ///   pointers (Keys, In, Out, OffsetState, ChecksumState, LTable,
-  ///   NtzArray, Block0) plus the NativeUInt BlockCount. Field offsets
-  ///   match the kernel's displacement accesses documented in
-  ///   AesOcbFusedWide_x86_64.inc and AesOcbFusedWide_i386.inc.
+  ///   Block0) plus the NativeUInt BlockCount and the UInt64
+  ///   StartBlockCount. Field offsets match the kernel's displacement
+  ///   accesses documented in AesOcbFusedWide_x86_64.inc and
+  ///   AesOcbFusedWide_i386.inc.
   /// </summary>
   TOcbFusedKernelCtx = record
     Keys: Pointer;         // AES expanded schedule (enc / dec+invMC)
@@ -95,11 +97,14 @@ type
     OffsetPtr: Pointer;    // 16-byte live FOffsetMAIN state (r/w)
     ChecksumPtr: Pointer;  // 16-byte live FChecksum state (r/w)
     LTablePtr: Pointer;    // flat L[0..LMax] * 16 bytes (read-only)
-    NtzPtr: Pointer;       // ABlockCount bytes of pre-computed ntz
     Block0Ptr: Pointer;    // 16-byte source of iter-0 block 0 (may
                            // alias InPtr or point at an unrelated
                            // 16-byte buffer such as FMainBlock)
-    BlockCount: NativeUInt; // positive multiple of MinimumBlockCount
+    BlockCount: NativeUInt;   // positive multiple of MinimumBlockCount
+    StartBlockCount: UInt64;  // OCB block count before this span; the kernel
+                              // seeds a running counter here and derives ntz
+                              // per block in-asm (bsf). UInt64 on both arches so
+                              // the count is exact past 2^32 on i386 too.
   end;
 
 procedure OcbFusedEncWide128(PCtx: Pointer);
@@ -206,7 +211,8 @@ begin
 end;
 
 procedure TAesNiOcbKernel.ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr,
-  AChecksumPtr, ALTablePtr, ANtzPtr, ABlock0Ptr: Pointer; ABlockCount: Int32);
+  AChecksumPtr, ALTablePtr, ABlock0Ptr: Pointer; ABlockCount: Int32;
+  AStartBlockCount: UInt64);
 {$IFDEF CRYPTOLIB_X86_SIMD}
 var
   LCtx: TOcbFusedKernelCtx;
@@ -222,9 +228,9 @@ begin
   LCtx.OffsetPtr := AOffsetPtr;
   LCtx.ChecksumPtr := AChecksumPtr;
   LCtx.LTablePtr := ALTablePtr;
-  LCtx.NtzPtr := ANtzPtr;
   LCtx.Block0Ptr := ABlock0Ptr;
   LCtx.BlockCount := NativeUInt(ABlockCount);
+  LCtx.StartBlockCount := AStartBlockCount;
   if FDirection = TFusedModeDirection.Encrypt then
   begin
     case FRounds of
