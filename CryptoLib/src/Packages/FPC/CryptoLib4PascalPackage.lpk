@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="793">
+    <Files Count="795">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3205,6 +3205,14 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\NumberUtilities\ClpByteXorX86Backend.pas"/>
         <UnitName Value="ClpByteXorX86Backend"/>
       </Item793>
+      <Item794>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcEncryptKernel.pas"/>
+        <UnitName Value="ClpIFusedCbcEncryptKernel"/>
+      </Item794>
+      <Item795>
+        <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiCbcEncryptKernel.pas"/>
+        <UnitName Value="ClpAesNiCbcEncryptKernel"/>
+      </Item795>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

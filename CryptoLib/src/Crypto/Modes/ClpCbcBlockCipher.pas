@@ -30,6 +30,9 @@ uses
   ClpICipherParameters,
   ClpIParametersWithIV,
   ClpBlockCipherBulkUtilities,
+  ClpFusedKernelTypes,
+  ClpIFusedCbcEncryptKernel,
+  ClpFusedKernelRegistry,
   ClpArrayUtilities,
   ClpByteUtilities,
   ClpCryptoLibTypes;
@@ -68,6 +71,12 @@ type
     // one interface dispatch per block. Any bulk-capable block cipher
     // lights up both paths automatically by implementing the interface.
     FBulkCipher: IBulkBlockCipher;
+    // Cached on encrypt Init only. Non-nil when a registered accelerator
+    // claims the underlying cipher. Runs the whole serial CBC chain
+    // C[i] = E(P[i] xor C[i-1]) in one call with the chaining value held in a
+    // register, replacing the per-block dispatch loop. nil otherwise --
+    // CbcEncryptBulk keeps its per-block path.
+    FCbcEncryptKernel: IFusedCbcEncryptKernel;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -189,6 +198,18 @@ begin
   // 16-byte CBC encryption: C[i] = ENC(P[i] XOR C[i-1]). Serial chain.
   // We mutate FCbcV in place across the batch; the final value equals the
   // last produced ciphertext block, exactly matching sequential EncryptBlock.
+
+  // Fast path: a registered accelerator runs the whole serial chain in one
+  // call, holding the chaining value in a register (no per-block dispatch,
+  // XOR helper call, or FCbcV store/reload). It updates FCbcV in place, so the
+  // post-state matches the per-block path exactly.
+  if FCbcEncryptKernel <> nil then
+  begin
+    FCbcEncryptKernel.ProcessCbcEncryptBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff],
+      @FCbcV[0], ABlockCount);
+    Exit;
+  end;
+
   // Dispatches via FBulkCipher.ProcessBlock (inherited from IBlockCipher);
   // this is the same vtable entry the engine already services for single-
   // block calls, so no extra probe per iteration.
@@ -321,6 +342,15 @@ begin
   // guard in ProcessBlocks keeps us correct if a future non-16-byte bulk
   // engine ever surfaces.
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
+
+  // CBC encrypt is serial; acquire the in-register-chain accelerator when a
+  // provider claims FCipher. Encrypt-only: CBC decrypt is parallel and already
+  // served by the bulk engine's 8-wide path.
+  if FEncrypting then
+    TFusedKernelRegistry.TryAcquireCbcEncrypt(FCipher, TFusedModeDirection.Encrypt,
+      FCbcEncryptKernel)
+  else
+    FCbcEncryptKernel := nil;
 end;
 
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;

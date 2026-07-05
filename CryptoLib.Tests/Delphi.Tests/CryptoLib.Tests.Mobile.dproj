@@ -1032,6 +1032,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCtrKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcEncryptKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelRegistry.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesFusedAeadSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesNiFusedX86Backend.pas"/>
@@ -1041,6 +1042,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCtrKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCbcEncryptKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpAeadParameters.pas"/>
