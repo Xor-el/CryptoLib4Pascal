@@ -5,14 +5,15 @@
 // Skylake+/Zen+) and the PCLMUL port (p5) operate in parallel, hiding
 // GHASH latency inside the AES critical path.
 //
-// Processes one pipelined batch: AES encrypts eight counter blocks to
-// produce a keystream, XORs it with PXorIn to produce POut, and
-// concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into
-// the running authentication state. AES inside GCM is always CTR
-// keystream construction; the Pascal wrapper picks which buffers
-// become PXorIn / POut / PPrevCipher for encrypt vs decrypt. Rounds
-// 0..8 (with all 8 GHASH iters) are shared across key sizes; only
-// rounds 9..N-1 (extra aesenc) and round N (aesenclast) depend on N.
+// Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
+// counter blocks (generated in-register from Counter32 + PJ0Template) to
+// produce a keystream, XORs it with PXorIn to produce POut, and concurrently
+// GHASHes the PREVIOUS batch's 8 ciphertext blocks into the running
+// authentication state (the pipeline lags by one batch). AES inside GCM is
+// always CTR keystream construction; GhashFromOutput picks which buffer feeds
+// GHASH (output on encrypt, input on decrypt). Rounds 0..8 (with all 8 GHASH
+// iters) are shared across key sizes; only rounds 9..N-1 (extra aesenc) and
+// round N (aesenclast) depend on N. The mode primes batch 0 and drains the last.
 //
 // Variant selection (set EXACTLY ONE):
 //   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (schedule = 11 x 16 bytes).
@@ -21,16 +22,18 @@
 //
 // On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
-// Context layout (8 pointers = 64 bytes, 8-byte aligned). See
-// TGcmFusedBatchCtx in ClpAesNiGcmKernel.pas.
-//   [rcx +  0]  PXorIn      : 128-byte input to XOR with keystream
-//   [rcx +  8]  POut        : 128-byte output buffer (may alias PXorIn)
-//   [rcx + 16]  PCtrCurr    : 8 counter blocks (128 bytes) to encrypt
-//   [rcx + 24]  PPrevCipher : 128 bytes prev-batch ciphertext for GHASH
-//   [rcx + 32]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
-//   [rcx + 40]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
-//   [rcx + 48]  PFS         : 16-byte running GHASH state (in/out, canonical)
-//   [rcx + 56]  PMask       : 16-byte PSHUFB byte-reverse mask
+// Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 8-byte fields).
+//   [rcx +  0]  PXorIn      : 128-byte input to XOR with keystream (advances)
+//   [rcx +  8]  POut        : 128-byte output (advances; may alias PXorIn)
+//   [rcx + 16]  PPrevCipher : prev-batch ciphertext for GHASH (rotated per batch)
+//   [rcx + 24]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
+//   [rcx + 32]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
+//   [rcx + 40]  PFS         : 16-byte running GHASH state (in/out, canonical)
+//   [rcx + 48]  PMask       : 16-byte PSHUFB byte-reverse mask
+//   [rcx + 56]  Counter32   : 32-bit GCM counter, last-used value (advances by 8)
+//   [rcx + 64]  PJ0Template : 16-byte J0 (upper 96 bits reused per counter block)
+//   [rcx + 72]  BatchCount  : number of 8-block batches to process
+//   [rcx + 80]  GhashFromOutput : 1 = GHASH output (encrypt), 0 = input (decrypt)
 //
 // XMM (16/16 used):
 //   xmm0..xmm7  : 8 AES keystream lanes (persistent across rounds)
@@ -47,23 +50,57 @@
 // -------------------------------------------------------------------
 
 {$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
-  // --- Prologue: load pointers and initial state ---------------------
-  mov       rax, [rcx + 16]                    // rax = PCtrCurr
-  movdqu    xmm0, [rax]
-  movdqu    xmm1, [rax + 16]
-  movdqu    xmm2, [rax + 32]
-  movdqu    xmm3, [rax + 48]
-  movdqu    xmm4, [rax + 64]
-  movdqu    xmm5, [rax + 80]
-  movdqu    xmm6, [rax + 96]
-  movdqu    xmm7, [rax + 112]
+  // --- Batch loop. The context (rcx) carries advancing PXorIn/POut/PPrevCipher,
+  //     the 32-bit GCM counter [rcx+64], the J0 template [rcx+72], the batch
+  //     count [rcx+80], and the "GHASH-from-output" flag [rcx+88] (1=encrypt).
+  //     r8d = counter32, r9 = J0 template (persist across the loop; both are
+  //     volatile and untouched by the shared body). ---
+  mov       r8d, [rcx + 56]                    // counter32
+  mov       r9, [rcx + 64]                     // PJ0Template
+@@GcmFusedLoop:
+  // Build 8 counter blocks into xmm0..7: block j = J0[0..11] || BE(counter32+j+1).
+  // GCM's 32-bit counter holds the last-used value, so the batch based at
+  // counter32 spans counter32+1..counter32+8 (matching FillCtr8BlocksRaw); only
+  // bytes 12-15 vary. PINSRD is db-encoded.
+  movdqu    xmm0, [r9]
+  lea       eax, [r8 + 1]
+  bswap     eax
+  db $66, $0F, $3A, $22, $C0, $03              // pinsrd xmm0, eax, 3
+  movdqu    xmm1, [r9]
+  lea       eax, [r8 + 2]
+  bswap     eax
+  db $66, $0F, $3A, $22, $C8, $03              // pinsrd xmm1, eax, 3
+  movdqu    xmm2, [r9]
+  lea       eax, [r8 + 3]
+  bswap     eax
+  db $66, $0F, $3A, $22, $D0, $03              // pinsrd xmm2, eax, 3
+  movdqu    xmm3, [r9]
+  lea       eax, [r8 + 4]
+  bswap     eax
+  db $66, $0F, $3A, $22, $D8, $03              // pinsrd xmm3, eax, 3
+  movdqu    xmm4, [r9]
+  lea       eax, [r8 + 5]
+  bswap     eax
+  db $66, $0F, $3A, $22, $E0, $03              // pinsrd xmm4, eax, 3
+  movdqu    xmm5, [r9]
+  lea       eax, [r8 + 6]
+  bswap     eax
+  db $66, $0F, $3A, $22, $E8, $03              // pinsrd xmm5, eax, 3
+  movdqu    xmm6, [r9]
+  lea       eax, [r8 + 7]
+  bswap     eax
+  db $66, $0F, $3A, $22, $F0, $03              // pinsrd xmm6, eax, 3
+  movdqu    xmm7, [r9]
+  lea       eax, [r8 + 8]
+  bswap     eax
+  db $66, $0F, $3A, $22, $F8, $03              // pinsrd xmm7, eax, 3
 
-  mov       rax, [rcx + 56]                    // rax = PMask
+  mov       rax, [rcx + 48]                    // rax = PMask
   movdqu    xmm15, [rax]                       // xmm15 = byte-reverse mask
 
-  mov       rdx, [rcx + 32]                    // rdx = PRoundKeys
-  mov       r10, [rcx + 24]                    // r10 = PPrevCipher
-  mov       r11, [rcx + 40]                    // r11 = PHPow128
+  mov       rdx, [rcx + 24]                    // rdx = PRoundKeys
+  mov       r10, [rcx + 16]                    // r10 = PPrevCipher
+  mov       r11, [rcx + 32]                    // r11 = PHPow128
 
   // --- Round 0: AddRoundKey + zero Z0/Z1/Z2 ----------------------------
   movdqa    xmm8, [rdx]                        // rk[0]
@@ -85,7 +122,7 @@
   // GHASH iter 0 setup: load block 0, byte-reverse, fold running state
   movdqu    xmm12, [r10]                       // prev cipher block 0
   pshufb    xmm12, xmm15                       // byte-reverse
-  mov       rax, [rcx + 48]                    // rax = PFS
+  mov       rax, [rcx + 40]                    // rax = PFS
   movdqu    xmm14, [rax]                       // load running state
   pshufb    xmm14, xmm15                       // byte-reverse state
   db $66, $45, $0F, $EF, $E6                   // pxor xmm12, xmm14 (fold)
@@ -534,6 +571,21 @@
   pslldq    xmm6, 8
   por       xmm0, xmm6                         // xmm0 = [LZ0 | LZ1]
   pshufb    xmm0, xmm15                        // byte-reverse -> canonical
-  mov       rax, [rcx + 48]                    // PFS
+  mov       rax, [rcx + 40]                    // PFS
   movdqu    [rax], xmm0
+
+  // --- Advance the context for the next batch, then loop. PPrevCipher becomes
+  //     this batch's ciphertext (output on encrypt, input on decrypt). ---
+  mov       rax, [rcx + 8]                     // POut (out[i]); encrypt: prev = output
+  cmp       qword ptr [rcx + 80], 0            // GHASH-from-output flag (1 = encrypt)
+  jne       @@GcmPrevSet
+  mov       rax, [rcx + 0]                     // PXorIn (in[i]); decrypt: prev = input
+@@GcmPrevSet:
+  mov       [rcx + 16], rax                    // PPrevCipher = this batch's ciphertext
+  add       qword ptr [rcx + 0], 128           // PXorIn += 128
+  add       qword ptr [rcx + 8], 128           // POut   += 128
+  add       r8d, 8                             // counter32 += 8
+  dec       qword ptr [rcx + 72]               // batch count
+  jnz       @@GcmFusedLoop
+  mov       [rcx + 56], r8d                    // store advanced counter32
 {$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}

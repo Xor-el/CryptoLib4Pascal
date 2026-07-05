@@ -152,11 +152,10 @@ type
     procedure GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
     procedure GhashEightShuffledBlocks(PBase: PByte);
     /// <summary>
-    /// Shared big-endian counter-word packing used by both `FillNextCtrBlocks8Raw`
-    /// and `GetNextCtrBlocks8`'s SIMD fast path. Advances `ACounter32` by 8 and
-    /// writes the eight 16-byte counter blocks (pre-AES form) into `ABlocks[0..127]`.
-    /// Also mutates `ACounter[12..15]` in place (the block-index tail) as a side
-    /// effect of the byte-packing strategy.
+    /// Big-endian counter-word packing for `GetNextCtrBlocks8`'s SIMD fast path.
+    /// Advances `ACounter32` by 8 and writes the eight 16-byte counter blocks
+    /// (pre-AES form) into `ABlocks[0..127]`. Also mutates `ACounter[12..15]` in
+    /// place (the block-index tail) as a side effect of the byte-packing strategy.
     /// </summary>
     class procedure FillCtr8BlocksRaw(const ACounter: TCryptoLibByteArray;
       var ACounter32: UInt32; const ABlocks: TCryptoLibByteArray); static;
@@ -201,8 +200,6 @@ type
     // how it is scheduled against the available vector-register budget is a
     // backend detail hidden entirely behind the IFusedGcmKernel surface, so
     // this driver only ever sees the kernel interface.
-    /// <summary>Fills ABlocks[0..127] with eight 16-byte counter blocks (pre-cipher form). Used by the FusedILP pipeline where the block-cipher keystream is produced inside the fused kernel.</summary>
-    procedure FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
     /// <summary>
     /// Pipelined GCM path driven by FGcmKernel (when a fused kernel is
     /// registered). Active when a fused CTR+GHASH kernel was acquired at Init; otherwise the
@@ -1390,11 +1387,6 @@ end;
 // interface, summarised on the matching banner in the class declaration.
 // =======================================================================
 
-procedure TGcmBlockCipher.FillNextCtrBlocks8Raw(const ABlocks: TCryptoLibByteArray);
-begin
-  FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
-end;
-
 // Fused block-cipher keystream + 8-way GHASH pipeline. The cipher engine is
 // always in encrypt mode (CTR keystream) regardless of GCM direction.
 // AForEncrypt selects the per-direction bookkeeping only:
@@ -1419,8 +1411,9 @@ procedure TGcmBlockCipher.ProcessBlocks8FusedILP(const AInBuf: TCryptoLibByteArr
   var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
   var AOutOff: Int32; ALimit: Int32; AForEncrypt: Boolean);
 var
-  LCurrCtrs, LNextCtrs: TCryptoLibByteArray;
+  LCurrCtrs: TCryptoLibByteArray;
   LPrevCipher, LPOut, LPIn: PByte;
+  LBatches: Int32;
 begin
   if FGcmKernel = nil then
     Exit;
@@ -1428,7 +1421,6 @@ begin
     Exit;
 
   LCurrCtrs := FWorkCtr;
-  LNextCtrs := FWorkCtrAhead;
 
   // Prime batch 0: regular 8-wide keystream into LCurrCtrs (now holds keystream),
   // XOR with plaintext/ciphertext at LPOut, defer GHASH of batch 0.
@@ -1445,24 +1437,25 @@ begin
   AOutOff := AOutOff + (BlockSize * 8);
   ALen := ALen - (BlockSize * 8);
 
-  while ALen >= ALimit + (BlockSize * 8) * 2 do
+  // Bulk: process all full batches in one kernel call (counters and the
+  // lagging GHASH pipeline run internally), seeded with the prime batch's
+  // ciphertext and leaving the final batch for the drain below.
+  LBatches := 0;
+  if ALen >= ALimit + (BlockSize * 8) * 2 then
+    LBatches := (ALen - ALimit - (BlockSize * 8)) div (BlockSize * 8);
+  if LBatches > 0 then
   begin
-    // Fill raw (pre-AES) counter blocks; the kernel AES-encrypts them in-place.
-    FillNextCtrBlocks8Raw(LNextCtrs);
-
     LPIn := PByte(AInBuf) + AInOff;
     LPOut := PByte(AOutBuf) + AOutOff;
-
-    FGcmKernel.ProcessCtrGhashBatch(LPIn, LPOut, @LNextCtrs[0], LPrevCipher,
-      @FS[0], FGcmKernelMinBlocks);
-
+    FCounter32 := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPrevCipher,
+      @FS[0], @FJ0[0], FCounter32, LBatches, AForEncrypt);
     if AForEncrypt then
-      LPrevCipher := LPOut
+      LPrevCipher := LPOut + (LBatches - 1) * (BlockSize * 8)
     else
-      LPrevCipher := LPIn;
-    AInOff := AInOff + (BlockSize * 8);
-    AOutOff := AOutOff + (BlockSize * 8);
-    ALen := ALen - (BlockSize * 8);
+      LPrevCipher := LPIn + (LBatches - 1) * (BlockSize * 8);
+    AInOff := AInOff + LBatches * (BlockSize * 8);
+    AOutOff := AOutOff + LBatches * (BlockSize * 8);
+    ALen := ALen - LBatches * (BlockSize * 8);
   end;
 
   // Tail: GHASH the last pending ciphertext, then produce and GHASH the final batch.
