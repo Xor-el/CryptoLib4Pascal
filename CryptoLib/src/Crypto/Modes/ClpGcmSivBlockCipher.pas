@@ -233,8 +233,7 @@ end;
 procedure TGcmSivBlockCipher.TGcmSivHasher.UpdateHash(const ABuffer: TCryptoLibByteArray;
   AOffset, ALen: Int32);
 var
-  LMySpace, LNumProcessed, LMyRemaining, LB, LJ: Int32;
-  LScratch: array [0 .. 127] of Byte;
+  LMySpace, LNumProcessed, LMyRemaining: Int32;
 begin
   LMySpace := 16 - FNumActive;
   LNumProcessed := 0;
@@ -251,22 +250,17 @@ begin
     FNumActive := 0;
   end;
 
-  // Fused POLYVAL Horner-by-8 fast path for full 128-byte batches.
+  // Fused POLYVAL Horner-by-8 fast path for full 128-byte batches. The kernel
+  // consumes the blocks in natural memory order and performs the POLYVAL
+  // byte-reversal internally (it skips its input byte-reverse, so the raw block
+  // is the field operand), matching the scalar path's FillReverse + GHASH fold.
   if (FParent.FGcmSivKernel <> nil) and
     (LMyRemaining >= FParent.FGcmSivKernelBatchBytes) then
   begin
     while LMyRemaining >= FParent.FGcmSivKernelBatchBytes do
     begin
-      // Byte-reverse each 16-byte block into the batch scratch, mirroring the
-      // scalar path's FillReverse: POLYVAL feeds ByteReverse(block) to the GHASH
-      // machinery (RFC 8452 Appendix A), and the fused kernel then applies the
-      // same GHASH fold the scalar multiplier does.
-      for LB := 0 to 7 do
-        for LJ := 0 to 15 do
-          LScratch[LB * 16 + LJ] :=
-            ABuffer[AOffset + LNumProcessed + LB * 16 + (15 - LJ)];
       FParent.FGcmSivKernel.ProcessPolyvalBatch(
-        @LScratch[0],
+        @ABuffer[AOffset + LNumProcessed],
         @FParent.FTheGHash[0],
         FParent.FGcmSivKernel.MinimumBlockCount);
       LNumProcessed := LNumProcessed + FParent.FGcmSivKernelBatchBytes;

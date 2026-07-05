@@ -10,13 +10,20 @@
 // registers so the PSHUFB mask cannot stay pinned; it is reloaded
 // from [eax] on every use.
 //
-// Variant selection (set EXACTLY ONE):
+// Variant selection (set EXACTLY ONE of the block counts):
 //   GCM_GHASH_FULL_BLOCKS_4  -> 4-block (64-byte) batch, H^4..H^1.
 //   GCM_GHASH_FULL_BLOCKS_8  -> 8-block (128-byte) batch, H^8..H^1.
+// Optional:
+//   GCM_GHASH_RAW_INPUT      -> the data blocks are already in field form, so
+//                              skip the per-block input byte-reverse. Used by the
+//                              GCM-SIV POLYVAL kernel, which supplies raw blocks;
+//                              the running-state load and the final store are
+//                              still byte-reversed. Unset for GCM (canonical
+//                              input), leaving that path byte-identical.
 //
 // On entry (after SimdProc4Begin_i386.inc):
 //   ebx = PFS    (16-byte running GHASH state, canonical; in/out)
-//   esi = PC0    (64 or 128 bytes ciphertext, canonical form)
+//   esi = PC0    (64 or 128 bytes data; canonical, or field form with RAW_INPUT)
 //   edi = PHPow  (H^N..H^1 as 16-byte limbs, field form)
 //   eax = PMask  (16-byte PSHUFB byte-reverse control)
 //
@@ -37,7 +44,9 @@
   // Block 0: byte-reverse + fold running state
   movdqu    xmm3, [esi]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm5, [ebx]
   pshufb    xmm5, xmm7
   pxor      xmm3, xmm5
@@ -58,7 +67,9 @@
   // Block 1
   movdqu    xmm3, [esi + 16]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 16]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -76,7 +87,9 @@
   // Block 2
   movdqu    xmm3, [esi + 32]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 32]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -94,7 +107,9 @@
   // Block 3
   movdqu    xmm3, [esi + 48]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 48]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -113,7 +128,9 @@
   // Block 4
   movdqu    xmm3, [esi + 64]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 64]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -131,7 +148,9 @@
   // Block 5
   movdqu    xmm3, [esi + 80]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 80]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -149,7 +168,9 @@
   // Block 6
   movdqu    xmm3, [esi + 96]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 96]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0
@@ -167,7 +188,9 @@
   // Block 7
   movdqu    xmm3, [esi + 112]
   movdqu    xmm7, [eax]
+{$IFNDEF GCM_GHASH_RAW_INPUT}
   pshufb    xmm3, xmm7
+{$ENDIF}
   movdqu    xmm4, [edi + 112]
   movdqa    xmm5, xmm3
   db $66, $0F, $3A, $44, $EC, $00              // pclmulqdq xmm5, xmm4, 0

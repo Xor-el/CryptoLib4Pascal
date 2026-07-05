@@ -17,10 +17,16 @@
 //     mulX_GHASH(ByteReverse(H_polyval))).
 //   * PFS (running hash state) is kept in GHASH canonical
 //     (byte-reversed) form across calls.
-//   * PC0 points to 128 bytes of plaintext in natural memory order;
-//     the PSHUFB pair inside the delegated body supplies the POLYVAL
-//     ByteReverse on load and the inverse on final store.
+//   * PC0 points to 128 bytes of data blocks in natural memory order. The kernel
+//     folds them to the same field element the scalar POLYVAL path does: the
+//     scalar path byte-reverses each block (FillReverse) before the GHASH
+//     multiply, and the kernel reaches the identical operand by consuming the
+//     raw block with the per-block input byte-reverse skipped
+//     (GCM_GHASH_RAW_INPUT). The running-state load and final store stay
+//     byte-reversed via the PMask pshufb.
 //
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
+{$DEFINE GCM_GHASH_RAW_INPUT}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$UNDEF GCM_GHASH_RAW_INPUT}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}
