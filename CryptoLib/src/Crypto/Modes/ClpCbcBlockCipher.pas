@@ -31,6 +31,7 @@ uses
   ClpIParametersWithIV,
   ClpBlockCipherBulkUtilities,
   ClpArrayUtilities,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -152,15 +153,14 @@ end;
 function TCbcBlockCipher.DecryptBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LLength, LI: Int32;
+  LLength: Int32;
   LTmp: TCryptoLibByteArray;
 begin
   if ((AInOff + FBlockSize) > System.Length(AInput)) then
     raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
   System.Move(AInput[AInOff], FCbcNextV[0], FBlockSize * System.SizeOf(Byte));
   LLength := FCipher.ProcessBlock(AInput, AInOff, AOutBytes, AOutOff);
-  for LI := 0 to System.Pred(FBlockSize) do
-    AOutBytes[AOutOff + LI] := AOutBytes[AOutOff + LI] xor FCbcV[LI];
+  TByteUtilities.XorTo(FBlockSize, PByte(@FCbcV[0]), PByte(@AOutBytes[AOutOff]));
   LTmp := FCbcV;
   FCbcV := FCbcNextV;
   FCbcNextV := LTmp;
@@ -170,12 +170,11 @@ end;
 function TCbcBlockCipher.EncryptBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LLen: Int32;
+  LLen: Int32;
 begin
   if ((AInOff + FBlockSize) > System.Length(AInput)) then
     raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
-  for LI := 0 to System.Pred(FBlockSize) do
-    FCbcV[LI] := FCbcV[LI] xor AInput[AInOff + LI];
+  TByteUtilities.XorTo(FBlockSize, PByte(@AInput[AInOff]), PByte(@FCbcV[0]));
   LLen := FCipher.ProcessBlock(FCbcV, 0, AOutBytes, AOutOff);
   System.Move(AOutBytes[AOutOff], FCbcV[0], System.Length(FCbcV) * System.SizeOf(Byte));
   Result := LLen;
@@ -186,7 +185,6 @@ procedure TCbcBlockCipher.CbcEncryptBulk(const AInBuf: TCryptoLibByteArray;
   AOutOff: Int32);
 var
   LPCbcV, LPIn, LPOut: PByte;
-  LI: Int32;
 begin
   // 16-byte CBC encryption: C[i] = ENC(P[i] XOR C[i-1]). Serial chain.
   // We mutate FCbcV in place across the batch; the final value equals the
@@ -199,8 +197,7 @@ begin
   begin
     LPIn := @AInBuf[AInOff];
     LPOut := @AOutBuf[AOutOff];
-    for LI := 0 to 15 do
-      LPCbcV[LI] := LPCbcV[LI] xor LPIn[LI];
+    TByteUtilities.XorTo(16, LPIn, LPCbcV);
     FBulkCipher.ProcessBlock(FCbcV, 0, AOutBuf, AOutOff);
     System.Move(LPOut^, LPCbcV^, 16);
     System.Inc(AInOff, 16);
@@ -214,40 +211,44 @@ procedure TCbcBlockCipher.CbcDecryptBulk(const AInBuf: TCryptoLibByteArray;
   AOutOff: Int32);
 var
   LCtStage: array [0 .. 127] of Byte;
-  LPOut, LPStage, LPCbcV: PByte;
-  LI, LJ: Int32;
+  LPIn, LPOut: PByte;
+  LTotal: Int32;
 begin
   // 16-byte CBC decryption: P[i] = DEC(C[i]) XOR C[i-1] (with C[-1] = IV
-  // carried in FCbcV). The inverse calls across i are independent, so we
-  // batch 8 through the engine's bulk path, stage the raw ciphertext up
-  // front (so in-place aliasing cannot corrupt the XOR feed), then apply
-  // the chain XOR. 1..7 block residue goes per-block below -- the
-  // engine's internal 4/1 ladder would kick in if we routed residue
-  // through it too, but per-block is already engine-fast and the residue
-  // is <= 112 bytes per message so the lost 4-wide parallelism is sub-
-  // noise.
+  // carried in FCbcV). DEC(C[i]) are all independent (8-wide parallel), and
+  // every XOR feed C[i-1] is *input* ciphertext -- so there is no serial
+  // dependency; the whole run parallelises.
+  LPIn := @AInBuf[AInOff];
+  LPOut := @AOutBuf[AOutOff];
+  LTotal := ABlockCount * 16;
+
+  // Fast path: input and output regions do not overlap (the usual case -- the
+  // buffered cipher hands us separate buffers). Decrypt the entire run in one
+  // engine call (full 8-wide throughput, = ECB decrypt), then apply the chain
+  // XOR in a single pass reading the still-intact input: out[0] ^= FCbcV,
+  // out[i] ^= C[i-1] (= input block i-1). No per-batch staging.
+  if (NativeUInt(LPIn) + NativeUInt(LTotal) <= NativeUInt(LPOut)) or
+    (NativeUInt(LPOut) + NativeUInt(LTotal) <= NativeUInt(LPIn)) then
+  begin
+    FBulkCipher.ProcessBlocks(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+    TByteUtilities.&Xor(16, LPOut, @FCbcV[0], LPOut);
+    if ABlockCount > 1 then
+      TByteUtilities.&Xor((ABlockCount - 1) * 16, LPOut + 16, LPIn, LPOut + 16);
+    System.Move((LPIn + (ABlockCount - 1) * 16)^, FCbcV[0], 16);
+    Exit;
+  end;
+
+  // Overlapping / in-place path: stage each 8-block batch's ciphertext up front
+  // (so the in-place decrypt cannot corrupt the XOR feed), then chain-XOR.
   while ABlockCount >= 8 do
   begin
-    // Snapshot ciphertext so the engine can safely run in-place; the
-    // chain XOR then has guaranteed access to the original bytes.
     System.Move(AInBuf[AInOff], LCtStage[0], 128);
     FBulkCipher.ProcessBlocks(AInBuf, AInOff, 8, AOutBuf, AOutOff);
 
     LPOut := @AOutBuf[AOutOff];
-    LPCbcV := @FCbcV[0];
-    // First block XORs against the previous-batch chain state (FCbcV = IV
-    // on the very first batch, or the last ciphertext of the prior batch).
-    for LI := 0 to 15 do
-      LPOut[LI] := LPOut[LI] xor LPCbcV[LI];
-    // Blocks 1..7 XOR against the staged ciphertext of the previous block
-    // within this batch.
-    LPStage := @LCtStage[0];
-    for LJ := 1 to 7 do
-      for LI := 0 to 15 do
-        LPOut[LJ * 16 + LI] := LPOut[LJ * 16 + LI] xor
-          LPStage[(LJ - 1) * 16 + LI];
+    TByteUtilities.&Xor(16, LPOut, @FCbcV[0], LPOut);
+    TByteUtilities.&Xor(112, LPOut + 16, @LCtStage[0], LPOut + 16);
 
-    // Chain state -> last ciphertext block of this batch.
     System.Move(LCtStage[7 * 16], FCbcV[0], 16);
     System.Inc(AInOff, 128);
     System.Inc(AOutOff, 128);

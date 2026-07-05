@@ -34,6 +34,7 @@ uses
   ClpIISO7816d4Padding,
   ClpArrayUtilities,
   ClpBitOperations,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -229,7 +230,7 @@ end;
 function TCMac.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LBlockSize, LI: Int32;
+  LBlockSize: Int32;
   LLu: TCryptoLibByteArray;
   LPadding: IISO7816d4Padding;
 begin
@@ -246,8 +247,7 @@ begin
     LLu := FLu2;
   end;
 
-  for LI := 0 to System.Pred(System.Length(FMac)) do
-    FBuf[LI] := FBuf[LI] xor LLu[LI];
+  TByteUtilities.XorTo(System.Length(FMac), PByte(@LLu[0]), PByte(@FBuf[0]));
 
   FCipherMode.ProcessBlock(FBuf, 0, FMac, 0);
   System.Move(FMac[0], AOutput[AOutOff], FMacSize * System.SizeOf(Byte));

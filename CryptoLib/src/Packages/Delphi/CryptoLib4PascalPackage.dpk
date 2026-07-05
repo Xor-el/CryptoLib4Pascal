@@ -729,6 +729,8 @@ contains
   ClpCfbBlockCipherMac in '..\..\Crypto\Macs\ClpCfbBlockCipherMac.pas',
   ClpICfbBlockCipherMac in '..\..\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas',
   ClpByteUtilities in '..\..\NumberUtilities\ClpByteUtilities.pas',
+  ClpByteXorSimd in '..\..\NumberUtilities\ClpByteXorSimd.pas',
+  ClpByteXorX86Backend in '..\..\NumberUtilities\ClpByteXorX86Backend.pas',
   ClpInt16Utilities in '..\..\NumberUtilities\ClpInt16Utilities.pas',
   ClpInt32Utilities in '..\..\NumberUtilities\ClpInt32Utilities.pas',
   ClpInt64Utilities in '..\..\NumberUtilities\ClpInt64Utilities.pas',

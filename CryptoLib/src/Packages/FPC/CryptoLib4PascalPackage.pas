@@ -256,7 +256,7 @@ uses
   ClpSalsaX86Backend, ClpPoly1305State, ClpPoly1305Simd, 
   ClpPoly1305X86Backend, ClpGhashSimd, ClpGhashX86Backend, ClpGcmSivSimd, 
   ClpGcmSivX86Backend, ClpAesNiFusedX86Backend, ClpBinPolySimd, ClpAesSimd, 
-  ClpIFusedCtrKernel, ClpAesNiCtrKernel;
+  ClpIFusedCtrKernel, ClpAesNiCtrKernel, ClpByteXorSimd, ClpByteXorX86Backend;
 
 implementation
 

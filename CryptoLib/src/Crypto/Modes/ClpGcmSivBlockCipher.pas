@@ -803,20 +803,14 @@ begin
 end;
 
 class procedure TGcmSivBlockCipher.XorBlock(const ALeft, ARight: TCryptoLibByteArray);
-var
-  LI: Int32;
 begin
-  for LI := 0 to 15 do
-    ALeft[LI] := ALeft[LI] xor ARight[LI];
+  TByteUtilities.XorTo(16, ARight, ALeft);
 end;
 
 class procedure TGcmSivBlockCipher.XorBlock(const ALeft, ARight: TCryptoLibByteArray;
   AOffset, ALength: Int32);
-var
-  LI: Int32;
 begin
-  for LI := 0 to ALength - 1 do
-    ALeft[LI] := ALeft[LI] xor ARight[LI + AOffset];
+  TByteUtilities.XorTo(ALength, ARight, AOffset, ALeft, 0);
 end;
 
 class procedure TGcmSivBlockCipher.IncrementCounter(const ACounter: TCryptoLibByteArray);

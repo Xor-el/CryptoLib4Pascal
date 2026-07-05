@@ -1070,6 +1070,8 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpCfbBlockCipherMac.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteXorSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteXorX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas"/>

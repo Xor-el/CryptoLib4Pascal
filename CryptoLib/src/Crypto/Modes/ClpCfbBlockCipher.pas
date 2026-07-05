@@ -142,7 +142,7 @@ end;
 function TCfbBlockCipher.DecryptBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LCount: Int32;
+  LCount: Int32;
 begin
   if ((AInOff + FBlockSize) > System.Length(AInput)) then
     raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
@@ -159,8 +159,8 @@ begin
   System.Move(AInput[AInOff], FCfbV[(System.Length(FCfbV) - FBlockSize)],
     FBlockSize * System.SizeOf(Byte));
 
-  for LI := 0 to System.Pred(FBlockSize) do
-    AOutBytes[AOutOff + LI] := Byte(FCfbOutV[LI] xor AInput[AInOff + LI]);
+  TByteUtilities.&Xor(FBlockSize, PByte(@FCfbOutV[0]), PByte(@AInput[AInOff]),
+    PByte(@AOutBytes[AOutOff]));
 
   Result := FBlockSize;
 end;
@@ -168,7 +168,7 @@ end;
 function TCfbBlockCipher.EncryptBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LCount: Int32;
+  LCount: Int32;
 begin
   if ((AInOff + FBlockSize) > System.Length(AInput)) then
     raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
@@ -178,8 +178,8 @@ begin
 
   FCipher.ProcessBlock(FCfbV, 0, FCfbOutV, 0);
 
-  for LI := 0 to System.Pred(FBlockSize) do
-    AOutBytes[AOutOff + LI] := Byte(FCfbOutV[LI] xor AInput[AInOff + LI]);
+  TByteUtilities.&Xor(FBlockSize, PByte(@FCfbOutV[0]), PByte(@AInput[AInOff]),
+    PByte(@AOutBytes[AOutOff]));
 
   LCount := (System.Length(FCfbV) - FBlockSize) * System.SizeOf(Byte);
   if LCount > 0 then
@@ -254,7 +254,7 @@ function TCfbBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
   AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LI, LBS, LTotalBytes, LK: Int32;
+  LI, LBS, LTotalBytes: Int32;
   LScratch: TCryptoLibByteArray;
 begin
   LBS := FBlockSize;
@@ -287,8 +287,7 @@ begin
   // on previously-seen ciphertext, never on the not-yet-produced plaintext,
   // so we can stage them contiguously and let the bulk engine encrypt
   // them all in one SIMD-accelerated call. Plaintext is then
-  // P_k = E_K(FCfbV_k) xor C_k, done via the 128 / 64-byte triple-XOR
-  // primitives in TBlockCipherBulkUtilities.
+  // P_k = E_K(FCfbV_k) xor C_k, applied over the whole run by TByteUtilities.
   System.SetLength(LScratch, LTotalBytes);
   System.Move(FCfbV[0], LScratch[0], LBS);
   if ABlockCount > 1 then
@@ -302,21 +301,8 @@ begin
 
   FBulkCipher.ProcessBlocks(LScratch, 0, ABlockCount, LScratch, 0);
 
-  LK := 0;
-  while LK + 128 <= LTotalBytes do
-  begin
-    TByteUtilities.&Xor(128, PByte(LScratch) + LK, PByte(AInBuf) + AInOff + LK,
-      PByte(AOutBuf) + AOutOff + LK);
-    LK := LK + 128;
-  end;
-  while LK + 64 <= LTotalBytes do
-  begin
-    TByteUtilities.&Xor(64, PByte(LScratch) + LK, PByte(AInBuf) + AInOff + LK,
-      PByte(AOutBuf) + AOutOff + LK);
-    LK := LK + 64;
-  end;
-  for LI := LK to LTotalBytes - 1 do
-    AOutBuf[AOutOff + LI] := LScratch[LI] xor AInBuf[AInOff + LI];
+  TByteUtilities.&Xor(LTotalBytes, PByte(LScratch), PByte(AInBuf) + AInOff,
+    PByte(AOutBuf) + AOutOff);
 
   Result := LTotalBytes;
 end;

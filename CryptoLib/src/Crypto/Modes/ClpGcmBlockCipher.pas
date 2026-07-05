@@ -1541,69 +1541,23 @@ procedure TGcmBlockCipher.CipherBlock(const AInBuf: TCryptoLibByteArray;
   AForEncrypt: Boolean);
 var
   LCtrBlock: TCryptoLibByteArray;
-  LI: Int32;
-  LC0, LC1, LC2, LC3: Byte;
 begin
   LCtrBlock := nil;
   System.SetLength(LCtrBlock, BlockSize);
   GetNextCtrBlock(LCtrBlock);
-  if TGhashSimd.IsBlockXorSupported then
-  begin
-    if AForEncrypt then
-    begin
-      System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-      TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-      TGhashSimd.BlockXor128(@FS[0], @AOutBuf[AOutOff]);
-    end
-    else
-    begin
-      System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-      TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @LCtrBlock[0]);
-      TGhashSimd.BlockXor128(@FS[0], @AInBuf[AInOff]);
-    end;
-    FMultiplier.MultiplyH(FS);
-    Exit;
-  end;
-
+  // Encrypt: C := keystream xor In; FS := FS xor C; Out := C.
+  // Decrypt: FS := FS xor In (= ciphertext); Out := In xor keystream.
   if AForEncrypt then
   begin
-    for LI := 0 to (BlockSize - 1) div 4 do
-    begin
-      LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
-      LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
-      LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
-      LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
-
-      FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-      FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-      FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-      FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-      AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
-      AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
-      AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
-      AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
-    end;
+    System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
+    TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]));
+    TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
   end
   else
   begin
-    for LI := 0 to (BlockSize - 1) div 4 do
-    begin
-      LC0 := AInBuf[AInOff + (LI * 4) + 0];
-      LC1 := AInBuf[AInOff + (LI * 4) + 1];
-      LC2 := AInBuf[AInOff + (LI * 4) + 2];
-      LC3 := AInBuf[AInOff + (LI * 4) + 3];
-
-      FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-      FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-      FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-      FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-      AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
-      AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
-      AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
-      AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
-    end;
+    System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
+    TByteUtilities.XorTo(BlockSize, PByte(@LCtrBlock[0]), PByte(@AOutBuf[AOutOff]));
+    TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
   end;
   FMultiplier.MultiplyH(FS);
 end;
@@ -1663,78 +1617,25 @@ procedure TGcmBlockCipher.CipherBlocks2(const AInBuf: TCryptoLibByteArray;
   AForEncrypt: Boolean);
 var
   LCtrBlock: TCryptoLibByteArray;
-  LI, LB: Int32;
-  LC0, LC1, LC2, LC3: Byte;
+  LB: Int32;
 begin
   LCtrBlock := nil;
   System.SetLength(LCtrBlock, BlockSize);
-
-  if TGhashSimd.IsBlockXorSupported then
-  begin
-    for LB := 0 to 1 do
-    begin
-      GetNextCtrBlock(LCtrBlock);
-      if AForEncrypt then
-      begin
-        System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-        TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @AInBuf[AInOff]);
-        TGhashSimd.BlockXor128(@FS[0], @AOutBuf[AOutOff]);
-      end
-      else
-      begin
-        System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-        TGhashSimd.BlockXor128(@AOutBuf[AOutOff], @LCtrBlock[0]);
-        TGhashSimd.BlockXor128(@FS[0], @AInBuf[AInOff]);
-      end;
-      FMultiplier.MultiplyH(FS);
-      AInOff := AInOff + BlockSize;
-      AOutOff := AOutOff + BlockSize;
-    end;
-    Exit;
-  end;
 
   for LB := 0 to 1 do
   begin
     GetNextCtrBlock(LCtrBlock);
     if AForEncrypt then
     begin
-      for LI := 0 to (BlockSize - 1) div 4 do
-      begin
-        LC0 := Byte(LCtrBlock[(LI * 4) + 0] xor AInBuf[AInOff + (LI * 4) + 0]);
-        LC1 := Byte(LCtrBlock[(LI * 4) + 1] xor AInBuf[AInOff + (LI * 4) + 1]);
-        LC2 := Byte(LCtrBlock[(LI * 4) + 2] xor AInBuf[AInOff + (LI * 4) + 2]);
-        LC3 := Byte(LCtrBlock[(LI * 4) + 3] xor AInBuf[AInOff + (LI * 4) + 3]);
-
-        FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-        FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-        FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-        FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-        AOutBuf[AOutOff + (LI * 4) + 0] := LC0;
-        AOutBuf[AOutOff + (LI * 4) + 1] := LC1;
-        AOutBuf[AOutOff + (LI * 4) + 2] := LC2;
-        AOutBuf[AOutOff + (LI * 4) + 3] := LC3;
-      end;
+      System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
+      TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]));
+      TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
     end
     else
     begin
-      for LI := 0 to (BlockSize - 1) div 4 do
-      begin
-        LC0 := AInBuf[AInOff + (LI * 4) + 0];
-        LC1 := AInBuf[AInOff + (LI * 4) + 1];
-        LC2 := AInBuf[AInOff + (LI * 4) + 2];
-        LC3 := AInBuf[AInOff + (LI * 4) + 3];
-
-        FS[(LI * 4) + 0] := FS[(LI * 4) + 0] xor LC0;
-        FS[(LI * 4) + 1] := FS[(LI * 4) + 1] xor LC1;
-        FS[(LI * 4) + 2] := FS[(LI * 4) + 2] xor LC2;
-        FS[(LI * 4) + 3] := FS[(LI * 4) + 3] xor LC3;
-
-        AOutBuf[AOutOff + (LI * 4) + 0] := Byte(LC0 xor LCtrBlock[(LI * 4) + 0]);
-        AOutBuf[AOutOff + (LI * 4) + 1] := Byte(LC1 xor LCtrBlock[(LI * 4) + 1]);
-        AOutBuf[AOutOff + (LI * 4) + 2] := Byte(LC2 xor LCtrBlock[(LI * 4) + 2]);
-        AOutBuf[AOutOff + (LI * 4) + 3] := Byte(LC3 xor LCtrBlock[(LI * 4) + 3]);
-      end;
+      System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
+      TByteUtilities.XorTo(BlockSize, PByte(@LCtrBlock[0]), PByte(@AOutBuf[AOutOff]));
+      TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
     end;
     FMultiplier.MultiplyH(FS);
     AInOff := AInOff + BlockSize;

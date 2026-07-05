@@ -53,12 +53,8 @@ type
 
     /// <summary>True when the shuffled/fused GHASH path (4-/8-way) is usable on this build/CPU. Gates the batch dispatch and the H-power precompute.</summary>
     class function IsShuffledGhashSupported: Boolean; static;
-    /// <summary>True when the packed 128-bit block-XOR fast path is usable.</summary>
-    class function IsBlockXorSupported: Boolean; static;
     /// <summary>True when a hardware carryless (polynomial) multiply is available (selects the carryless-multiply GCM multiplier over the 4K-table one).</summary>
     class function HasCarrylessMultiply: Boolean; static;
-    /// <summary>XOR one 128-bit block: <c>PDst := PDst xor PSrc</c>. Precondition: <c>IsBlockXorSupported</c>.</summary>
-    class procedure BlockXor128(PDst, PSrc: PByte); static;
     /// <summary>Full byte-reverse of one 128-bit block from PSrc into PDst; False when unavailable.</summary>
     class function TryBlockReverse128(PDst, PSrc: PByte): Boolean; static;
   end;
@@ -130,28 +126,12 @@ begin
 {$IFEND}
 end;
 
-class function TGhashSimd.IsBlockXorSupported: Boolean;
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.IsBlockXorSupported;
-{$ELSE}
-  Result := False;
-{$IFEND}
-end;
-
 class function TGhashSimd.HasCarrylessMultiply: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGhashX86Backend.HasCarrylessMultiply;
 {$ELSE}
   Result := False;
-{$IFEND}
-end;
-
-class procedure TGhashSimd.BlockXor128(PDst, PSrc: PByte);
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TGhashX86Backend.BlockXor128(PDst, PSrc);
 {$IFEND}
 end;
 

@@ -730,6 +730,8 @@ uses
   ClpCfbBlockCipherMac in '..\..\CryptoLib\src\Crypto\Macs\ClpCfbBlockCipherMac.pas',
   ClpICfbBlockCipherMac in '..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas',
   ClpByteUtilities in '..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas',
+  ClpByteXorSimd in '..\..\CryptoLib\src\NumberUtilities\ClpByteXorSimd.pas',
+  ClpByteXorX86Backend in '..\..\CryptoLib\src\NumberUtilities\ClpByteXorX86Backend.pas',
   ClpInt16Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas',
   ClpInt32Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas',
   ClpInt64Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas',

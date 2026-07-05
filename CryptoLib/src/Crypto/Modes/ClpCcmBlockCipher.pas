@@ -44,6 +44,7 @@ uses
   ClpParametersWithIV,
   ClpCheck,
   ClpArrayUtilities,
+  ClpByteUtilities,
   ClpStreamUtilities,
   ClpCryptoLibTypes;
 
@@ -718,8 +719,8 @@ begin
   LOffset := 0;
   while LOffset < LHeaderLen do
   begin
-    for LI := 0 to BlockSize - 1 do
-      LBlock[LI] := AMacState[LI] xor LHeader[LOffset + LI];
+    TByteUtilities.&Xor(BlockSize, PByte(@AMacState[0]), PByte(@LHeader[LOffset]),
+      PByte(@LBlock[0]));
     FCipher.ProcessBlock(LBlock, 0, AMacState, 0);
     System.Inc(LOffset, BlockSize);
   end;
@@ -730,7 +731,7 @@ function TCcmBlockCipher.ProcessPacketEncryptFused(
   const AOutput: TCryptoLibByteArray; AOutOff: Int32;
   const AIV: TCryptoLibByteArray): Boolean;
 var
-  LBulkBlocks, LTailLen, LI, LTailStart: Int32;
+  LBulkBlocks, LTailLen, LTailStart: Int32;
   LS0, LMacState, LCtrBlock, LTailBlock: TCryptoLibByteArray;
 begin
   Result := False;
@@ -763,19 +764,17 @@ begin
 
   System.SetLength(LTailBlock, BlockSize);
   System.Move(AInput[LTailStart], LTailBlock[0], LTailLen);
-  for LI := 0 to BlockSize - 1 do
-    LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
+  TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));
   FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
 
   FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
-  for LI := 0 to LTailLen - 1 do
-    AOutput[AOutOff + LBulkBlocks * BlockSize + LI] :=
-      AInput[LTailStart + LI] xor LTailBlock[LI];
+  TByteUtilities.&Xor(LTailLen, PByte(@AInput[LTailStart]), PByte(@LTailBlock[0]),
+    PByte(@AOutput[AOutOff + LBulkBlocks * BlockSize]));
 
   // FMacBlock holds the raw pre-encryption MAC (GetMac contract).
   System.Move(LMacState[0], FMacBlock[0], BlockSize);
-  for LI := 0 to FMacSize - 1 do
-    AOutput[AOutOff + AInLen + LI] := LMacState[LI] xor LS0[LI];
+  TByteUtilities.&Xor(FMacSize, PByte(@LMacState[0]), PByte(@LS0[0]),
+    PByte(@AOutput[AOutOff + AInLen]));
 
   Result := True;
 end;
@@ -803,8 +802,7 @@ begin
   // Decrypt the received MAC: R = (enc_tag || 0..) XOR S_0 truncated.
   System.SetLength(LReceivedRawMac, BlockSize);
   System.Move(AInput[AInOff + AOutputLen], LReceivedRawMac[0], FMacSize);
-  for LI := 0 to FMacSize - 1 do
-    LReceivedRawMac[LI] := LReceivedRawMac[LI] xor LS0[LI];
+  TByteUtilities.XorTo(FMacSize, PByte(@LS0[0]), PByte(@LReceivedRawMac[0]));
   System.Move(LReceivedRawMac[0], FMacBlock[0], BlockSize);
 
   System.SetLength(LMacState, BlockSize);
@@ -826,16 +824,14 @@ begin
 
     System.SetLength(LTailBlock, BlockSize);
     FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
-    for LI := 0 to LTailLen - 1 do
-      LPlain[LBulkBlocks * BlockSize + LI] :=
-        AInput[LTailStart + LI] xor LTailBlock[LI];
+    TByteUtilities.&Xor(LTailLen, PByte(@AInput[LTailStart]), PByte(@LTailBlock[0]),
+      PByte(@LPlain[LBulkBlocks * BlockSize]));
 
     // Zero-pad plaintext tail and fold one last CBC step.
     System.FillChar(LTailBlock[0], BlockSize, 0);
     for LI := 0 to LTailLen - 1 do
       LTailBlock[LI] := LPlain[LBulkBlocks * BlockSize + LI];
-    for LI := 0 to BlockSize - 1 do
-      LMacState[LI] := LMacState[LI] xor LTailBlock[LI];
+    TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));
     FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
 
     System.SetLength(LComputedMac, BlockSize);
