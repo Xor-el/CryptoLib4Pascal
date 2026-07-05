@@ -7,14 +7,15 @@
 // Replaces the three-pass Pascal path (FillNextCounterBlocks + bulk AES +
 // TByteUtilities.Xor).
 //
-// Entry (after SimdProc5Begin_x86_64.inc):
-//   rcx = input  (advances +128 per 8-block iteration)
-//   rdx = output (advances +128)
-//   r8  = AES encrypt round-key schedule (16-byte aligned; consumed by the
-//         reused AesNiEightRoundsOnly body, which keeps r8 unchanged)
-//   r9  = pointer to the 16-byte big-endian counter (updated in place on exit)
-//   r10 = block count (NativeInt); MUST be a positive multiple of 8 (caller
-//         guarantees it)
+// Entry (after SimdProc1Begin_x86_64.inc): rcx = pointer to TCtrFusedCtx. The
+// kernel unpacks it (InPtr loaded into rcx last) into the working registers:
+//   [rcx +  0]  InPtr      -> rcx : input  (advances +128 per 8-block iteration)
+//   [rcx +  8]  OutPtr     -> rdx : output (advances +128)
+//   [rcx + 16]  KeysPtr    -> r8  : AES round-key schedule (16-byte aligned;
+//                                   consumed by the reused AesNiEightRoundsOnly
+//                                   body, which keeps r8 unchanged)
+//   [rcx + 24]  CounterPtr -> r9  : 16-byte big-endian counter (updated in place)
+//   [rcx + 32]  BlockCount -> r10 : positive multiple of 8 (caller guarantees it)
 //
 // Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 must be defined; the
 // direction is always encrypt (CTR keystream), so CRYPTOLIB_AESNI_DECRYPT must
@@ -34,6 +35,13 @@
 // like the AES-NI ops.
   push      rbx
 {$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+
+  // ---- unpack TCtrFusedCtx (rcx = PCtx); load InPtr into rcx last ----
+  mov       r8, [rcx + 16]                        // KeysPtr
+  mov       r9, [rcx + 24]                        // CounterPtr
+  mov       r10, [rcx + 32]                       // BlockCount
+  mov       rdx, [rcx + 8]                        // OutPtr
+  mov       rcx, [rcx + 0]                        // InPtr (overwrites PCtx)
 
   mov       r11, [r9]                             // high 64 bits (big-endian)
   bswap     r11

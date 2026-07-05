@@ -5,26 +5,37 @@
 // blocks and XORs them with the input in one pass, for TSicBlockCipher's bulk
 // path. Reuses the shared 8-wide round chain AesNiEightRoundsOnly_i386.inc.
 //
-// Entry (after SimdProc5Begin_i386.inc):
-//   ebx = input  (advances +128 per 8-block iteration)
-//   esi = output (advances +128)
-//   edi = AES encrypt round-key schedule (16-byte aligned; consumed by the
-//         reused round chain as [edi + K] memory operands, unchanged on exit)
-//   eax = pointer to the 16-byte big-endian counter (advanced in place)
-//   ecx = block count; MUST be a positive multiple of 8 (caller guarantees it)
+// Entry (after SimdProc1Begin_i386.inc): ebx = pointer to TCtrFusedCtx. The
+// kernel pushes esi/edi and unpacks the record (InPtr loaded into ebx last):
+//   [ebx +  0]  InPtr      -> ebx : input  (advances +128 per 8-block iteration)
+//   [ebx +  4]  OutPtr     -> esi : output (advances +128)
+//   [ebx +  8]  KeysPtr    -> edi : AES round-key schedule (16-byte aligned;
+//                                   consumed by the reused round chain as
+//                                   [edi + K] memory operands, unchanged on exit)
+//   [ebx + 12]  CounterPtr -> eax : 16-byte big-endian counter (advanced in place)
+//   [ebx + 16]  BlockCount -> ecx : positive multiple of 8 (caller guarantees it)
 //
 // Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 must be defined; the
 // direction is always encrypt (CTR keystream), so CRYPTOLIB_AESNI_DECRYPT must
 // NOT be defined when including this file.
 //
 // Constraints that shape this kernel: i386 has only xmm0-7 (all volatile, so no
-// save/restore), and after the 5-arg prologue only edx is a free scratch GP
+// save/restore), and after unpacking the context only edx is a free scratch GP
 // register. So the 8 counter blocks are materialised into a 128-byte stack
 // scratch, the 16-byte counter is bumped in place with a byte-wise big-endian
 // carry (edx = byte
 // index), and the keystream^plaintext XOR spills xmm7 to reuse it as the
 // plaintext-load scratch (no 8th xmm exists). The register-form PXOR below is
 // db-encoded for broad assembler compatibility, like the AES-NI ops.
+  // ---- unpack TCtrFusedCtx (ebx = PCtx); load InPtr into ebx last ----
+  push      esi
+  push      edi
+  mov       esi, [ebx + 4]                        // OutPtr
+  mov       edi, [ebx + 8]                        // KeysPtr
+  mov       eax, [ebx + 12]                       // CounterPtr
+  mov       ecx, [ebx + 16]                       // BlockCount
+  mov       ebx, [ebx + 0]                        // InPtr (overwrites PCtx)
+
   sub       esp, 128                              // 8 x 16-byte counter scratch
 
 @@CtrEightLoopI386:

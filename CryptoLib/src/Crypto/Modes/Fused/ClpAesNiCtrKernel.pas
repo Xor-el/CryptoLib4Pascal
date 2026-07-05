@@ -70,43 +70,57 @@ implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
+type
+  // Context handed to the fused AES-NI CTR keystream + XOR kernel. Field offsets
+  // match the [rcx + N] / [ebx + N] accesses in AesNiCtrEight_x86_64.inc and
+  // AesNiCtrEight_i386.inc (8-byte fields on x86_64, 4-byte on i386). The kernel
+  // loops internally over BlockCount blocks, advancing InPtr/OutPtr and the
+  // 16-byte big-endian counter at CounterPtr in place.
+  TCtrFusedCtx = record
+    InPtr: Pointer;
+    OutPtr: Pointer;
+    KeysPtr: Pointer;
+    CounterPtr: Pointer;
+    BlockCount: NativeUInt;
+  end;
+
 // Fused AES-NI CTR keystream + XOR (encrypt-only; CTR keystream is the same for
-// encrypt and decrypt). Each proc processes ABlkCount blocks (a multiple of 8),
+// encrypt and decrypt). Each proc processes BlockCount blocks (a multiple of 8),
 // looping internally, and advances the 16-byte big-endian counter in place.
-procedure AesNiCtrEnc128(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
+procedure AesNiCtrEnc128(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
 end;
 
-procedure AesNiCtrEnc192(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
+procedure AesNiCtrEnc192(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
 end;
 
-procedure AesNiCtrEnc256(AIn, AOut, AKeys, ACounter: PByte; ABlkCount: NativeInt);
+procedure AesNiCtrEnc256(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
@@ -132,18 +146,22 @@ end;
 
 procedure TAesNiCtrKernel.ProcessCtrBlocks(AInPtr, AOutPtr, ACounter: Pointer;
   ABlockCount: NativeInt);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCtx: TCtrFusedCtx;
+{$ENDIF CRYPTOLIB_X86_SIMD}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
+  LCtx.InPtr := AInPtr;
+  LCtx.OutPtr := AOutPtr;
+  LCtx.KeysPtr := FKeys;
+  LCtx.CounterPtr := ACounter;
+  LCtx.BlockCount := NativeUInt(ABlockCount);
   case FRounds of
-    10:
-      AesNiCtrEnc128(PByte(AInPtr), PByte(AOutPtr), PByte(FKeys),
-        PByte(ACounter), ABlockCount);
-    12:
-      AesNiCtrEnc192(PByte(AInPtr), PByte(AOutPtr), PByte(FKeys),
-        PByte(ACounter), ABlockCount);
+    10: AesNiCtrEnc128(@LCtx);
+    12: AesNiCtrEnc192(@LCtx);
   else
-    AesNiCtrEnc256(PByte(AInPtr), PByte(AOutPtr), PByte(FKeys),
-      PByte(ACounter), ABlockCount);
+    AesNiCtrEnc256(@LCtx);
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 end;
