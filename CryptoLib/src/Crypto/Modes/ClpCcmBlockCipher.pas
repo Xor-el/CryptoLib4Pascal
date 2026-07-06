@@ -897,8 +897,7 @@ begin
     System.Move(FPlainScratch[0], AOutput[AOutOff], ACtx.OutputLen);
     Result := True;
   finally
-    if ACtx.OutputLen > 0 then
-      System.FillChar(FPlainScratch[0], ACtx.OutputLen, 0);
+    TArrayUtilities.Fill(FPlainScratch, 0, ACtx.OutputLen, Byte(0));
   end;
 end;
 

@@ -40,6 +40,11 @@ type
     /// Processes ACount bytes starting at AData.
     /// </summary>
     class function HashCore(AData: PByte; ACount: Int32): Int32; static;
+
+    // Per-element fill shared by Fill<T> and the typed Fill fallbacks.
+    // Callers validate ABuf / range first; the loop assumes AFrom < ATo.
+    class procedure FillCore<T>(ABuf: TCryptoLibGenericArray<T>;
+      AFrom, ATo: Int32; const AFiller: T); static;
   public
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
@@ -109,7 +114,14 @@ type
       : Boolean; overload; static;
 
     class procedure Fill<T>(ABuf: TCryptoLibGenericArray<T>; AFrom, ATo: Int32;
-      const AFiller: T); static;
+      const AFiller: T); overload; static;
+
+    class procedure Fill(const ABuf: TCryptoLibByteArray; AFrom, ATo: Int32;
+      AFiller: Byte); overload; static; inline;
+    class procedure Fill(const ABuf: TCryptoLibUInt32Array; AFrom, ATo: Int32;
+      AFiller: UInt32); overload; static; inline;
+    class procedure Fill(const ABuf: TCryptoLibUInt64Array; AFrom, ATo: Int32;
+      AFiller: UInt64); overload; static; inline;
 
     /// <summary>
     /// Deep-clone an array using ACloneFunc. Returns nil if AData is nil.
@@ -304,15 +316,53 @@ begin
     Result[LI] := AData[AFrom + LI];
 end;
 
+class procedure TArrayUtilities.FillCore<T>(ABuf: TCryptoLibGenericArray<T>;
+  AFrom, ATo: Int32; const AFiller: T);
+begin
+  while AFrom < ATo do
+  begin
+    ABuf[AFrom] := AFiller;
+    Inc(AFrom);
+  end;
+end;
+
 class procedure TArrayUtilities.Fill<T>(ABuf: TCryptoLibGenericArray<T>;
   AFrom, ATo: Int32; const AFiller: T);
-var
-  LI: Int32;
 begin
-  if ABuf = nil then
+  if (ABuf = nil) or (ATo <= AFrom) then
     Exit;
-  for LI := AFrom to ATo - 1 do
-    ABuf[LI] := AFiller;
+  FillCore<T>(ABuf, AFrom, ATo, AFiller);
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibByteArray;
+  AFrom, ATo: Int32; AFiller: Byte);
+begin
+  if (ABuf <> nil) and (ATo > AFrom) then
+    System.FillChar(ABuf[AFrom], ATo - AFrom, AFiller);
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibUInt32Array;
+  AFrom, ATo: Int32; AFiller: UInt32);
+begin
+  if (ABuf = nil) or (ATo <= AFrom) then
+    Exit;
+{$IFDEF FPC}
+  System.FillDWord(ABuf[AFrom], ATo - AFrom, AFiller);
+{$ELSE}
+  FillCore<UInt32>(ABuf, AFrom, ATo, AFiller);
+{$ENDIF FPC}
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibUInt64Array;
+  AFrom, ATo: Int32; AFiller: UInt64);
+begin
+  if (ABuf = nil) or (ATo <= AFrom) then
+    Exit;
+{$IFDEF FPC}
+  System.FillQWord(ABuf[AFrom], ATo - AFrom, AFiller);
+{$ELSE}
+  FillCore<UInt64>(ABuf, AFrom, ATo, AFiller);
+{$ENDIF FPC}
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray): Int32;
