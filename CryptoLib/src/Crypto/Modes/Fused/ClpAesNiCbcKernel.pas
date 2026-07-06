@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesNiCbcEncryptKernel;
+unit ClpAesNiCbcKernel;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -25,13 +25,13 @@ uses
   ClpIBlockCipher,
   ClpIAesEngineX86,
   ClpFusedKernelTypes,
-  ClpIFusedCbcEncryptKernel,
+  ClpIFusedCbcKernel,
   ClpFusedKernelRegistry,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IFusedCbcEncryptKernel: the serial CBC-encrypt chain
+  ///   AES-NI implementation of IFusedCbcKernel: the serial CBC-encrypt chain
   ///   C_i = E_K(P_i xor C_{i-1}) applied over a whole run in one call, with the
   ///   chaining value held in a register between blocks (kernel body in
   ///   Include\Simd\Aes\Cbc). Reuses the shared 1-wide AES round chain
@@ -40,7 +40,7 @@ type
   ///   unavailable the factory returns nil and TCbcBlockCipher keeps its existing
   ///   per-block bulk path.
   /// </summary>
-  TAesNiCbcEncryptKernel = class sealed(TInterfacedObject, IFusedCbcEncryptKernel)
+  TAesNiCbcKernel = class sealed(TInterfacedObject, IFusedCbcKernel)
   strict private
     // FEngine is retained so the round-key buffer FKeys points into stays alive
     // for the kernel's lifetime.
@@ -50,17 +50,17 @@ type
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
       ARounds: Int32);
-    procedure ProcessCbcEncryptBlocks(AInPtr, AOutPtr, AIvPtr: Pointer;
+    procedure ProcessCbcBlocks(AInPtr, AOutPtr, AIvPtr: Pointer;
       ABlockCount: NativeInt);
   end;
 
-  TAesNiCbcEncryptKernelFactory = class sealed(TInterfacedObject, IFusedCbcEncryptKernelFactory)
+  TAesNiCbcKernelFactory = class sealed(TInterfacedObject, IFusedCbcKernelFactory)
   public
     function ProviderName: String;
     function Priority: TFusedKernelPriority;
     function TryCreate(const ACipher: IBlockCipher;
       ADirection: TFusedModeDirection;
-      out AKernel: IFusedCbcEncryptKernel): Boolean;
+      out AKernel: IFusedCbcKernel): Boolean;
   end;
 
 implementation
@@ -125,9 +125,9 @@ end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-{ TAesNiCbcEncryptKernel }
+{ TAesNiCbcKernel }
 
-constructor TAesNiCbcEncryptKernel.Create(const AEngine: IAesEngineX86;
+constructor TAesNiCbcKernel.Create(const AEngine: IAesEngineX86;
   AKeys: Pointer; ARounds: Int32);
 begin
   inherited Create;
@@ -136,7 +136,7 @@ begin
   FRounds := ARounds;
 end;
 
-procedure TAesNiCbcEncryptKernel.ProcessCbcEncryptBlocks(AInPtr, AOutPtr, AIvPtr: Pointer;
+procedure TAesNiCbcKernel.ProcessCbcBlocks(AInPtr, AOutPtr, AIvPtr: Pointer;
   ABlockCount: NativeInt);
 {$IFDEF CRYPTOLIB_X86_SIMD}
 var
@@ -160,20 +160,20 @@ begin
 {$ENDIF CRYPTOLIB_X86_SIMD}
 end;
 
-{ TAesNiCbcEncryptKernelFactory }
+{ TAesNiCbcKernelFactory }
 
-function TAesNiCbcEncryptKernelFactory.ProviderName: String;
+function TAesNiCbcKernelFactory.ProviderName: String;
 begin
   Result := 'AES-NI';
 end;
 
-function TAesNiCbcEncryptKernelFactory.Priority: TFusedKernelPriority;
+function TAesNiCbcKernelFactory.Priority: TFusedKernelPriority;
 begin
   Result := TFusedKernelPriority.Baseline;
 end;
 
-function TAesNiCbcEncryptKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; out AKernel: IFusedCbcEncryptKernel): Boolean;
+function TAesNiCbcKernelFactory.TryCreate(const ACipher: IBlockCipher;
+  ADirection: TFusedModeDirection; out AKernel: IFusedCbcKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -181,6 +181,8 @@ var
 begin
   AKernel := nil;
   Result := False;
+  if ADirection <> TFusedModeDirection.Encrypt then
+    Exit; // only encrypt is implemented; decrypt not yet supported
   try
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
@@ -189,7 +191,7 @@ begin
       Exit;
     if not (LRounds in [10, 12, 14]) then
       Exit;
-    AKernel := TAesNiCbcEncryptKernel.Create(LEngine, LKeys, LRounds);
+    AKernel := TAesNiCbcKernel.Create(LEngine, LKeys, LRounds);
     Result := True;
 {$ENDIF CRYPTOLIB_X86_SIMD}
   except
@@ -199,7 +201,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterCbcEncryptFactory(
-    TAesNiCbcEncryptKernelFactory.Create() as IFusedCbcEncryptKernelFactory);
+  TFusedKernelRegistry.RegisterCbcFactory(
+    TAesNiCbcKernelFactory.Create() as IFusedCbcKernelFactory);
 
 end.

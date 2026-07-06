@@ -257,7 +257,7 @@ uses
   ClpPoly1305X86Backend, ClpGhashSimd, ClpGhashX86Backend, ClpGcmSivSimd, 
   ClpGcmSivX86Backend, ClpAesNiFusedX86Backend, ClpBinPolySimd, ClpAesSimd, 
   ClpIFusedCtrKernel, ClpAesNiCtrKernel, ClpByteXorSimd, ClpByteXorX86Backend, 
-  ClpIFusedCbcEncryptKernel, ClpAesNiCbcEncryptKernel;
+  ClpIFusedCbcKernel, ClpAesNiCbcKernel;
 
 implementation
 

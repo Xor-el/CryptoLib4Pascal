@@ -31,7 +31,7 @@ uses
   ClpIParametersWithIV,
   ClpBlockCipherBulkUtilities,
   ClpFusedKernelTypes,
-  ClpIFusedCbcEncryptKernel,
+  ClpIFusedCbcKernel,
   ClpFusedKernelRegistry,
   ClpArrayUtilities,
   ClpByteUtilities,
@@ -76,7 +76,7 @@ type
     // C[i] = E(P[i] xor C[i-1]) in one call with the chaining value held in a
     // register, replacing the per-block dispatch loop. nil otherwise --
     // CbcEncryptBulk keeps its per-block path.
-    FCbcEncryptKernel: IFusedCbcEncryptKernel;
+    FCbcKernel: IFusedCbcKernel;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -203,9 +203,9 @@ begin
   // call, holding the chaining value in a register (no per-block dispatch,
   // XOR helper call, or FCbcV store/reload). It updates FCbcV in place, so the
   // post-state matches the per-block path exactly.
-  if FCbcEncryptKernel <> nil then
+  if FCbcKernel <> nil then
   begin
-    FCbcEncryptKernel.ProcessCbcEncryptBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff],
+    FCbcKernel.ProcessCbcBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff],
       @FCbcV[0], ABlockCount);
     Exit;
   end;
@@ -347,10 +347,10 @@ begin
   // provider claims FCipher. Encrypt-only: CBC decrypt is parallel and already
   // served by the bulk engine's 8-wide path.
   if FEncrypting then
-    TFusedKernelRegistry.TryAcquireCbcEncrypt(FCipher, TFusedModeDirection.Encrypt,
-      FCbcEncryptKernel)
+    TFusedKernelRegistry.TryAcquireCbc(FCipher, TFusedModeDirection.Encrypt,
+      FCbcKernel)
   else
-    FCbcEncryptKernel := nil;
+    FCbcKernel := nil;
 end;
 
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;

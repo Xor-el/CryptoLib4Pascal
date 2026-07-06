@@ -3206,12 +3206,12 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpByteXorX86Backend"/>
       </Item793>
       <Item794>
-        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcEncryptKernel.pas"/>
-        <UnitName Value="ClpIFusedCbcEncryptKernel"/>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcKernel.pas"/>
+        <UnitName Value="ClpIFusedCbcKernel"/>
       </Item794>
       <Item795>
-        <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiCbcEncryptKernel.pas"/>
-        <UnitName Value="ClpAesNiCbcEncryptKernel"/>
+        <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiCbcKernel.pas"/>
+        <UnitName Value="ClpAesNiCbcKernel"/>
       </Item795>
     </Files>
     <CompatibilityMode Value="True"/>
