@@ -62,6 +62,42 @@ resourcestring
   SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
+  // Per-packet inputs a body decryptor needs. Method pointers (of object) bind
+  // the cipher instance -- so a decryptor reads FCipher/FCcmKernel/FMacBlock/...
+  // directly -- but cannot capture ProcessPacket's locals; those travel here.
+  // Dest/DestOff are filled in by the contract runner (staging scratch for
+  // Contract B, the caller's output for Contract A).
+  TCcmDecryptCtx = record
+    Input: TCryptoLibByteArray;
+    InOff: Int32;
+    OutputLen: Int32;
+    Dest: TCryptoLibByteArray;
+    DestOff: Int32;
+    Iv: TCryptoLibByteArray;
+    CtrCipher: ISicBlockCipher;
+    BulkCtr: IBulkBlockCipherMode;
+  end;
+
+  // Decrypts ACtx into ACtx.Dest@DestOff, computes and compares the tag, and
+  // returns True iff it verifies (it does NOT stage, copy out, or raise -- the
+  // contract runner owns that). Fused and scalar bodies both match this shape.
+  TCcmBodyDecryptor = function(const ACtx: TCcmDecryptCtx): Boolean of object;
+
+  // Per-packet inputs an encrypt body needs. Encrypt has no contract to
+  // enforce (it never fails auth, never stages) so the bodies write straight
+  // to Output and ProcessPacket calls the chosen one directly -- no runner and
+  // no method pointer, unlike decrypt.
+  TCcmEncryptCtx = record
+    Input: TCryptoLibByteArray;
+    InOff: Int32;
+    InLen: Int32;
+    Output: TCryptoLibByteArray;
+    OutOff: Int32;
+    Iv: TCryptoLibByteArray;
+    CtrCipher: ISicBlockCipher;
+    BulkCtr: IBulkBlockCipherMode;
+  end;
+
   TCcmBlockCipher = class(TInterfacedObject, ICcmBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
@@ -79,11 +115,27 @@ type
     FKeyParam: ICipherParameters;
     FLastKey: TCryptoLibByteArray;
     FAssociatedText: TMemoryStream;
-    FData: TMemoryStream;
+    // Accumulated body input (plaintext on encrypt, ciphertext+tag on decrypt).
+    // CCM needs the total length before processing (B_0 encodes it), so input is
+    // buffered here and consumed once in DoFinal. Capacity grows by doubling and
+    // is reused across packets (FDataLen is the used prefix); DoFinal hands this
+    // buffer straight to ProcessPacket, avoiding the readback copy a stream needs.
+    FData: TCryptoLibByteArray;
+    FDataLen: Int32;
+    // Reused decrypt staging buffer. CCM must not release unverified plaintext,
+    // so decrypt lands here first; the tag is verified, and only on success is
+    // the plaintext copied to the caller's output (which stays untouched on
+    // failure). Grown by doubling and reused across packets, and wiped after
+    // every packet (in a finally) so no recovered plaintext lingers.
+    FPlainScratch: TCryptoLibByteArray;
     // Cached once per Init; non-nil when the registry resolved a fused
     // CCM kernel for the underlying cipher and current direction.
     FCcmKernel: IFusedCcmKernel;
 
+    // Ensure ABuf holds at least ANeeded bytes of capacity, growing by doubling
+    // (amortised O(1) append) and never shrinking.
+    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
+      ANeeded: Int32); static;
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
     procedure CheckNonceReuse(AForEncryption: Boolean;
       const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
@@ -96,18 +148,32 @@ type
     // AMacState. Matches the scalar CalculateMac contract.
     procedure ComputePostHeaderMacState(AInLen: Int32;
       const AMacState: TCryptoLibByteArray);
-    // Fused 2-wide CTR + CBC-MAC body path. Returns False if the fused
-    // kernel cannot be invoked. On success, writes the ciphertext,
-    // scalar tail, tag, and FMacBlock (raw pre-encryption MAC).
-    function ProcessPacketEncryptFused(const AInput: TCryptoLibByteArray;
-      AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32; const AIV: TCryptoLibByteArray): Boolean;
-    // Fused decrypt twin. Raises on tag mismatch, matching the scalar
-    // path. On success FMacBlock holds the zero-padded received MAC.
-    function ProcessPacketDecryptFused(const AInput: TCryptoLibByteArray;
-      AInOff, AInLen, AOutputLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32;
-      const AIV: TCryptoLibByteArray): Boolean;
+    // Encrypt bodies. Each CTR-encrypts ACtx into ACtx.Output, computes the
+    // CBC-MAC, and writes the encrypted tag; both set FMacBlock (raw MAC). The
+    // fused body drives the fused CTR+CBC-MAC kernel; scalar uses the SIC cipher
+    // plus a CalculateMac pass. ProcessPacket picks one and calls it directly
+    // (no contract runner -- encrypt never fails auth or stages).
+    procedure EncryptBodyFused(const ACtx: TCcmEncryptCtx);
+    procedure EncryptBodyScalar(const ACtx: TCcmEncryptCtx);
+    // Body decryptors (TCcmBodyDecryptor shape). Each decrypts ACtx into
+    // ACtx.Dest, folds/computes the CBC-MAC, and returns whether the tag
+    // verifies. The fused body drives the fused CTR+CBC-MAC kernel; scalar uses
+    // the SIC cipher plus a CalculateMac pass. Both also set FMacBlock (GetMac).
+    function DecryptBodyFused(const ACtx: TCcmDecryptCtx): Boolean;
+    function DecryptBodyScalar(const ACtx: TCcmDecryptCtx): Boolean;
+
+    // Contract runners: drive a body decryptor and enforce the
+    // no-unverified-plaintext policy. Staged (Contract B) decrypts into a
+    // reused scratch and releases to the caller only on success, leaving the
+    // output untouched on failure; Direct (Contract A, OpenSSL-style, faster)
+    // decrypts into the output and wipes it on any failure. Swap which one
+    // ProcessPacket calls to change the contract for both bodies at once.
+    function RunDecryptStaged(const ADecryptor: TCcmBodyDecryptor;
+      var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Boolean;
+    function RunDecryptDirect(const ADecryptor: TCcmBodyDecryptor;
+      var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
+      AOutOff: Int32): Boolean;
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -153,7 +219,9 @@ begin
   FCipher := ACipher;
   System.SetLength(FMacBlock, BlockSize);
   FAssociatedText := TMemoryStream.Create;
-  FData := TMemoryStream.Create;
+  FData := nil;
+  FDataLen := 0;
+  FPlainScratch := nil;
 
   if (ACipher.GetBlockSize() <> BlockSize) then
     raise EArgumentCryptoLibException.CreateResFmt(@SCipherRequired, [BlockSize]);
@@ -162,7 +230,6 @@ end;
 destructor TCcmBlockCipher.Destroy;
 begin
   FAssociatedText.Free;
-  FData.Free;
   inherited Destroy;
 end;
 
@@ -265,7 +332,9 @@ end;
 function TCcmBlockCipher.ProcessByte(AInput: Byte;
   const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  FData.WriteByte(AInput);
+  EnsureCapacity(FData, FDataLen + 1);
+  FData[FDataLen] := AInput;
+  System.Inc(FDataLen);
   Result := 0;
 end;
 
@@ -273,33 +342,46 @@ function TCcmBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
   TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
-  FData.WriteBuffer(AInput[AInOff], ALen);
+  if ALen > 0 then
+  begin
+    EnsureCapacity(FData, FDataLen + ALen);
+    System.Move(AInput[AInOff], FData[FDataLen], ALen);
+    System.Inc(FDataLen, ALen);
+  end;
   Result := 0;
 end;
 
 function TCcmBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
-var
-  LInput: TCryptoLibByteArray;
-  LInLen: Int32;
 begin
-  LInLen := Int32(FData.Size);
-  System.SetLength(LInput, LInLen);
-  if LInLen > 0 then
-  begin
-    FData.Position := 0;
-    FData.ReadBuffer(LInput[0], LInLen);
-  end;
-
-  Result := ProcessPacket(LInput, 0, LInLen, AOutput, AOutOff);
+  // The accumulator is already a contiguous byte array, so hand its used
+  // prefix straight to ProcessPacket (no readback copy / staging alloc).
+  Result := ProcessPacket(FData, 0, FDataLen, AOutput, AOutOff);
 
   Reset();
+end;
+
+class procedure TCcmBlockCipher.EnsureCapacity(var ABuf: TCryptoLibByteArray;
+  ANeeded: Int32);
+var
+  LCap: Int32;
+begin
+  LCap := System.Length(ABuf);
+  if ANeeded <= LCap then
+    Exit;
+  if LCap = 0 then
+    LCap := 64;
+  while (LCap < ANeeded) and (LCap > 0) do
+    LCap := LCap * 2;
+  if LCap < ANeeded then // Int32 overflow guard for very large packets
+    LCap := ANeeded;
+  System.SetLength(ABuf, LCap);
 end;
 
 procedure TCcmBlockCipher.Reset;
 begin
   FAssociatedText.Size := 0;
-  FData.Size := 0;
+  FDataLen := 0;
 end;
 
 function TCcmBlockCipher.GetMac: TCryptoLibByteArray;
@@ -316,7 +398,7 @@ function TCcmBlockCipher.GetOutputSize(ALen: Int32): Int32;
 var
   LTotalData: Int32;
 begin
-  LTotalData := Int32(FData.Size) + ALen;
+  LTotalData := FDataLen + ALen;
 
   if FForEncryption then
   begin
@@ -357,14 +439,16 @@ function TCcmBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
   AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LN, LQ, LLimitLen, LInputAdjustment, LOutputLen, LInIndex, LOutIndex, LI,
-    LBulkBlocks, LBulkBytes: Int32;
-  LIV, LEncMac, LBlock, LCalculatedMacBlock, LPlain: TCryptoLibByteArray;
+  LN, LQ, LLimitLen, LInputAdjustment, LOutputLen: Int32;
+  LIV: TCryptoLibByteArray;
   LCtrCipher: ISicBlockCipher;
   // Cached IBulkBlockCipherMode view of LCtrCipher. TSicBlockCipher always
   // implements IBulkBlockCipherMode, so this is non-nil in practice; the
   // Supports() guard keeps us robust to a future SIC variant that opts out.
   LBulkCtr: IBulkBlockCipherMode;
+  LEncCtx: TCcmEncryptCtx;
+  LDecCtx: TCcmDecryptCtx;
+  LDecryptor: TCcmBodyDecryptor;
 begin
   TCheck.DataLength(AInput, AInOff, AInLen, SInputBufferTooShort);
 
@@ -396,62 +480,26 @@ begin
   LCtrCipher.Init(FForEncryption, TParametersWithIV.Create(FKeyParam, LIV) as IParametersWithIV);
   TBlockCipherBulkUtilities.TryResolveBulkCipherMode(LCtrCipher, LBulkCtr);
 
-  LInIndex := AInOff;
-  LOutIndex := AOutOff;
-
   if FForEncryption then
   begin
     LOutputLen := AInLen + FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
 
-    // Fused fast path folds CTR and CBC-MAC into one sweep; the scalar
-    // path handles the 1..16-byte tail and the tag encryption.
-    if (FCcmKernel <> nil)
-      and ((AInLen - 1) div BlockSize > 0)
-      and ProcessPacketEncryptFused(AInput, AInOff, AInLen, AOutput,
-        AOutOff, LIV) then
-    begin
-      Result := LOutputLen;
-      Exit;
-    end;
+    LEncCtx.Input := AInput;
+    LEncCtx.InOff := AInOff;
+    LEncCtx.InLen := AInLen;
+    LEncCtx.Output := AOutput;
+    LEncCtx.OutOff := AOutOff;
+    LEncCtx.Iv := LIV;
+    LEncCtx.CtrCipher := LCtrCipher;
+    LEncCtx.BulkCtr := LBulkCtr;
 
-    CalculateMac(AInput, AInOff, AInLen, FMacBlock);
-
-    System.SetLength(LEncMac, BlockSize);
-    LCtrCipher.ProcessBlock(FMacBlock, 0, LEncMac, 0);
-
-    // Number of whole 16-byte blocks that the classic loop would have
-    // consumed. The tail (1..BlockSize bytes) is always handled via the
-    // LBlock scratch path below, so we intentionally hold back the last
-    // (possibly full) block and let the per-block tail finish it. This
-    // preserves byte-identical behaviour with the pre-bulk code.
-    LBulkBlocks := (AInLen - 1) div BlockSize;
-    if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
-    begin
-      LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
-        AOutput, LOutIndex);
-      LInIndex := LInIndex + LBulkBytes;
-      LOutIndex := LOutIndex + LBulkBytes;
-    end
+    // Fused kernel when it can cover at least one stride; scalar otherwise.
+    if (FCcmKernel <> nil) and
+      ((AInLen - 1) div BlockSize >= FCcmKernel.MinimumBlockCount) then
+      EncryptBodyFused(LEncCtx)
     else
-    begin
-      while (LInIndex < (AInOff + AInLen - BlockSize)) do
-      begin
-        LCtrCipher.ProcessBlock(AInput, LInIndex, AOutput, LOutIndex);
-        LOutIndex := LOutIndex + BlockSize;
-        LInIndex := LInIndex + BlockSize;
-      end;
-    end;
-
-    System.SetLength(LBlock, BlockSize);
-
-    System.Move(AInput[LInIndex], LBlock[0], AInLen + AInOff - LInIndex);
-
-    LCtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
-
-    System.Move(LBlock[0], AOutput[LOutIndex], AInLen + AInOff - LInIndex);
-
-    System.Move(LEncMac[0], AOutput[AOutOff + AInLen], FMacSize);
+      EncryptBodyScalar(LEncCtx);
   end
   else
   begin
@@ -461,72 +509,24 @@ begin
     LOutputLen := AInLen - FMacSize;
     TCheck.OutputLength(AOutput, AOutOff, LOutputLen, SOutputBufferTooShort);
 
-    // Fused decrypt twin. Scalar tail handles the trailing 1..16-byte
-    // block plus the FixedTime tag compare.
-    if (FCcmKernel <> nil)
-      and ((LOutputLen - 1) div BlockSize > 0)
-      and ProcessPacketDecryptFused(AInput, AInOff, AInLen, LOutputLen,
-        AOutput, AOutOff, LIV) then
-    begin
-      Result := LOutputLen;
-      Exit;
-    end;
+    LDecCtx.Input := AInput;
+    LDecCtx.InOff := AInOff;
+    LDecCtx.OutputLen := LOutputLen;
+    LDecCtx.Iv := LIV;
+    LDecCtx.CtrCipher := LCtrCipher;
+    LDecCtx.BulkCtr := LBulkCtr;
 
-    System.Move(AInput[AInOff + LOutputLen], FMacBlock[0], FMacSize);
+    // Fused kernel when it can cover at least one stride; scalar otherwise.
+    if (FCcmKernel <> nil) and
+      ((LOutputLen - 1) div BlockSize >= FCcmKernel.MinimumBlockCount) then
+      LDecryptor := DecryptBodyFused
+    else
+      LDecryptor := DecryptBodyScalar;
 
-    LCtrCipher.ProcessBlock(FMacBlock, 0, FMacBlock, 0);
-
-    for LI := FMacSize to System.Pred(System.Length(FMacBlock)) do
-    begin
-      FMacBlock[LI] := 0;
-    end;
-
-    System.SetLength(LPlain, LOutputLen);
-    try
-      LOutIndex := 0;
-
-      // Same LBulkBlocks / tail split as encrypt, but over LOutputLen
-      // (ciphertext minus trailing tag) rather than AInLen. The last
-      // (possibly full) 16-byte block is held back for the LBlock scratch
-      // path so behaviour matches the pre-bulk loop byte-for-byte.
-      LBulkBlocks := (LOutputLen - 1) div BlockSize;
-      if (LBulkCtr <> nil) and (LBulkBlocks > 0) then
-      begin
-        LBulkBytes := LBulkCtr.ProcessBlocks(AInput, LInIndex, LBulkBlocks,
-          LPlain, LOutIndex);
-        LInIndex := LInIndex + LBulkBytes;
-        LOutIndex := LOutIndex + LBulkBytes;
-      end
-      else
-      begin
-        while (LInIndex < (AInOff + LOutputLen - BlockSize)) do
-        begin
-          LCtrCipher.ProcessBlock(AInput, LInIndex, LPlain, LOutIndex);
-          LOutIndex := LOutIndex + BlockSize;
-          LInIndex := LInIndex + BlockSize;
-        end;
-      end;
-
-      System.SetLength(LBlock, BlockSize);
-
-      System.Move(AInput[LInIndex], LBlock[0], LOutputLen - (LInIndex - AInOff));
-
-      LCtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
-
-      System.Move(LBlock[0], LPlain[LOutIndex], LOutputLen - (LInIndex - AInOff));
-
-      System.SetLength(LCalculatedMacBlock, BlockSize);
-
-      CalculateMac(LPlain, 0, LOutputLen, LCalculatedMacBlock);
-
-      if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock)) then
-        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
-
-      System.Move(LPlain[0], AOutput[AOutOff], LOutputLen);
-    finally
-      if LPlain <> nil then
-        TArrayUtilities.Fill<Byte>(LPlain, 0, System.Length(LPlain), 0);
-    end;
+    // Contract B (no unverified plaintext in the output on failure). Swap this
+    // one call to RunDecryptDirect for the faster OpenSSL-style Contract A;
+    // both body decryptors follow automatically.
+    RunDecryptStaged(LDecryptor, LDecCtx, AOutput, AOutOff);
   end;
 
   Result := LOutputLen;
@@ -726,127 +726,235 @@ begin
   end;
 end;
 
-function TCcmBlockCipher.ProcessPacketEncryptFused(
-  const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32;
-  const AIV: TCryptoLibByteArray): Boolean;
+procedure TCcmBlockCipher.EncryptBodyFused(const ACtx: TCcmEncryptCtx);
 var
   LBulkBlocks, LTailLen, LTailStart: Int32;
   LS0, LMacState, LCtrBlock, LTailBlock: TCryptoLibByteArray;
 begin
-  Result := False;
-  if FCcmKernel = nil then
-    Exit;
-
-  LBulkBlocks := (AInLen - 1) div BlockSize;
-  if LBulkBlocks < FCcmKernel.MinimumBlockCount then
-    Exit;
+  LBulkBlocks := (ACtx.InLen - 1) div BlockSize;
 
   // S_0 = E_K(J_0); XOR with the final MAC to emit the tag.
   System.SetLength(LS0, BlockSize);
-  FCipher.ProcessBlock(AIV, 0, LS0, 0);
+  FCipher.ProcessBlock(ACtx.Iv, 0, LS0, 0);
 
   System.SetLength(LMacState, BlockSize);
-  ComputePostHeaderMacState(AInLen, LMacState);
+  ComputePostHeaderMacState(ACtx.InLen, LMacState);
 
   // Body counter block (counter = 1).
   System.SetLength(LCtrBlock, BlockSize);
-  System.Move(AIV[0], LCtrBlock[0], BlockSize);
+  System.Move(ACtx.Iv[0], LCtrBlock[0], BlockSize);
   LCtrBlock[BlockSize - 1] := LCtrBlock[BlockSize - 1] or 1;
 
-  FCcmKernel.ProcessBody(@AInput[AInOff], @AOutput[AOutOff],
+  // Fused CTR + CBC-MAC over the body.
+  FCcmKernel.ProcessBody(@ACtx.Input[ACtx.InOff], @ACtx.Output[ACtx.OutOff],
     @LCtrBlock[0], @LMacState[0], LBulkBlocks);
 
   // Scalar tail: kernel held back the last 1..16 bytes. LCtrBlock now
   // carries counter_{1 + LBulkBlocks}.
-  LTailLen := AInLen - LBulkBlocks * BlockSize;
-  LTailStart := AInOff + LBulkBlocks * BlockSize;
+  LTailLen := ACtx.InLen - LBulkBlocks * BlockSize;
+  LTailStart := ACtx.InOff + LBulkBlocks * BlockSize;
 
   System.SetLength(LTailBlock, BlockSize);
-  System.Move(AInput[LTailStart], LTailBlock[0], LTailLen);
+  System.Move(ACtx.Input[LTailStart], LTailBlock[0], LTailLen);
   TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));
   FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
 
   FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
-  TByteUtilities.&Xor(LTailLen, PByte(@AInput[LTailStart]), PByte(@LTailBlock[0]),
-    PByte(@AOutput[AOutOff + LBulkBlocks * BlockSize]));
+  TByteUtilities.&Xor(LTailLen, PByte(@ACtx.Input[LTailStart]), PByte(@LTailBlock[0]),
+    PByte(@ACtx.Output[ACtx.OutOff + LBulkBlocks * BlockSize]));
 
   // FMacBlock holds the raw pre-encryption MAC (GetMac contract).
   System.Move(LMacState[0], FMacBlock[0], BlockSize);
   TByteUtilities.&Xor(FMacSize, PByte(@LMacState[0]), PByte(@LS0[0]),
-    PByte(@AOutput[AOutOff + AInLen]));
-
-  Result := True;
+    PByte(@ACtx.Output[ACtx.OutOff + ACtx.InLen]));
 end;
 
-function TCcmBlockCipher.ProcessPacketDecryptFused(
-  const AInput: TCryptoLibByteArray; AInOff, AInLen, AOutputLen: Int32;
-  const AOutput: TCryptoLibByteArray; AOutOff: Int32;
-  const AIV: TCryptoLibByteArray): Boolean;
+procedure TCcmBlockCipher.EncryptBodyScalar(const ACtx: TCcmEncryptCtx);
+var
+  LInIndex, LOutIndex, LBulkBlocks, LBulkBytes: Int32;
+  LEncMac, LBlock: TCryptoLibByteArray;
+begin
+  CalculateMac(ACtx.Input, ACtx.InOff, ACtx.InLen, FMacBlock);
+
+  // Encrypt the tag with S_0 (CtrCipher's first block); this advances CtrCipher
+  // to counter 1, which the body CTR below continues from.
+  System.SetLength(LEncMac, BlockSize);
+  ACtx.CtrCipher.ProcessBlock(FMacBlock, 0, LEncMac, 0);
+
+  LInIndex := ACtx.InOff;
+  LOutIndex := ACtx.OutOff;
+
+  // The last (possibly full) 16-byte block is held back for the LBlock scratch
+  // path so behaviour matches the pre-bulk loop byte-for-byte.
+  LBulkBlocks := (ACtx.InLen - 1) div BlockSize;
+  if (ACtx.BulkCtr <> nil) and (LBulkBlocks > 0) then
+  begin
+    LBulkBytes := ACtx.BulkCtr.ProcessBlocks(ACtx.Input, LInIndex, LBulkBlocks,
+      ACtx.Output, LOutIndex);
+    LInIndex := LInIndex + LBulkBytes;
+    LOutIndex := LOutIndex + LBulkBytes;
+  end
+  else
+  begin
+    while (LInIndex < (ACtx.InOff + ACtx.InLen - BlockSize)) do
+    begin
+      ACtx.CtrCipher.ProcessBlock(ACtx.Input, LInIndex, ACtx.Output, LOutIndex);
+      LOutIndex := LOutIndex + BlockSize;
+      LInIndex := LInIndex + BlockSize;
+    end;
+  end;
+
+  System.SetLength(LBlock, BlockSize);
+  System.Move(ACtx.Input[LInIndex], LBlock[0], ACtx.InLen + ACtx.InOff - LInIndex);
+  ACtx.CtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
+  System.Move(LBlock[0], ACtx.Output[LOutIndex], ACtx.InLen + ACtx.InOff - LInIndex);
+
+  System.Move(LEncMac[0], ACtx.Output[ACtx.OutOff + ACtx.InLen], FMacSize);
+end;
+
+function TCcmBlockCipher.DecryptBodyFused(const ACtx: TCcmDecryptCtx): Boolean;
 var
   LBulkBlocks, LTailLen, LI, LTailStart: Int32;
   LS0, LMacState, LCtrBlock, LTailBlock, LReceivedRawMac,
-    LComputedMac, LPlain: TCryptoLibByteArray;
+    LComputedMac: TCryptoLibByteArray;
 begin
-  Result := False;
-  if FCcmKernel = nil then
-    Exit;
-
-  LBulkBlocks := (AOutputLen - 1) div BlockSize;
-  if LBulkBlocks < FCcmKernel.MinimumBlockCount then
-    Exit;
+  LBulkBlocks := (ACtx.OutputLen - 1) div BlockSize;
 
   System.SetLength(LS0, BlockSize);
-  FCipher.ProcessBlock(AIV, 0, LS0, 0);
+  FCipher.ProcessBlock(ACtx.Iv, 0, LS0, 0);
 
   // Decrypt the received MAC: R = (enc_tag || 0..) XOR S_0 truncated.
   System.SetLength(LReceivedRawMac, BlockSize);
-  System.Move(AInput[AInOff + AOutputLen], LReceivedRawMac[0], FMacSize);
+  System.Move(ACtx.Input[ACtx.InOff + ACtx.OutputLen], LReceivedRawMac[0], FMacSize);
   TByteUtilities.XorTo(FMacSize, PByte(@LS0[0]), PByte(@LReceivedRawMac[0]));
   System.Move(LReceivedRawMac[0], FMacBlock[0], BlockSize);
 
   System.SetLength(LMacState, BlockSize);
-  ComputePostHeaderMacState(AOutputLen, LMacState);
+  ComputePostHeaderMacState(ACtx.OutputLen, LMacState);
 
   // Body counter block (counter = 1).
   System.SetLength(LCtrBlock, BlockSize);
-  System.Move(AIV[0], LCtrBlock[0], BlockSize);
+  System.Move(ACtx.Iv[0], LCtrBlock[0], BlockSize);
   LCtrBlock[BlockSize - 1] := LCtrBlock[BlockSize - 1] or 1;
 
-  System.SetLength(LPlain, AOutputLen);
+  // Fused CTR + CBC-MAC over the body, straight into the caller-chosen dest.
+  FCcmKernel.ProcessBody(@ACtx.Input[ACtx.InOff], @ACtx.Dest[ACtx.DestOff],
+    @LCtrBlock[0], @LMacState[0], LBulkBlocks);
+
+  // Scalar tail: decrypt via keystream XOR, then fold into the MAC.
+  LTailLen := ACtx.OutputLen - LBulkBlocks * BlockSize;
+  LTailStart := ACtx.InOff + LBulkBlocks * BlockSize;
+
+  System.SetLength(LTailBlock, BlockSize);
+  FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
+  TByteUtilities.&Xor(LTailLen, PByte(@ACtx.Input[LTailStart]), PByte(@LTailBlock[0]),
+    PByte(@ACtx.Dest[ACtx.DestOff + LBulkBlocks * BlockSize]));
+
+  // Zero-pad plaintext tail and fold one last CBC step.
+  System.FillChar(LTailBlock[0], BlockSize, 0);
+  for LI := 0 to LTailLen - 1 do
+    LTailBlock[LI] := ACtx.Dest[ACtx.DestOff + LBulkBlocks * BlockSize + LI];
+  TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));
+  FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
+
+  System.SetLength(LComputedMac, BlockSize);
+  System.Move(LMacState[0], LComputedMac[0], FMacSize);
+
+  Result := TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac);
+end;
+
+function TCcmBlockCipher.DecryptBodyScalar(const ACtx: TCcmDecryptCtx): Boolean;
+var
+  LInIndex, LOutIndex, LI, LBulkBlocks, LBulkBytes: Int32;
+  LBlock, LCalculatedMacBlock: TCryptoLibByteArray;
+begin
+  // Expected MAC: received tag XOR S_0 keystream (CtrCipher's first block),
+  // then zero-pad. Consuming S_0 here advances CtrCipher to counter 1, which
+  // the body CTR below continues from.
+  System.Move(ACtx.Input[ACtx.InOff + ACtx.OutputLen], FMacBlock[0], FMacSize);
+  ACtx.CtrCipher.ProcessBlock(FMacBlock, 0, FMacBlock, 0);
+  for LI := FMacSize to System.Pred(System.Length(FMacBlock)) do
+    FMacBlock[LI] := 0;
+
+  LInIndex := ACtx.InOff;
+  LOutIndex := ACtx.DestOff;
+
+  // LBulkBlocks / tail split: the last (possibly full) 16-byte block is held
+  // back for the LBlock scratch path so behaviour matches the pre-bulk loop.
+  LBulkBlocks := (ACtx.OutputLen - 1) div BlockSize;
+  if (ACtx.BulkCtr <> nil) and (LBulkBlocks > 0) then
+  begin
+    LBulkBytes := ACtx.BulkCtr.ProcessBlocks(ACtx.Input, LInIndex, LBulkBlocks,
+      ACtx.Dest, LOutIndex);
+    LInIndex := LInIndex + LBulkBytes;
+    LOutIndex := LOutIndex + LBulkBytes;
+  end
+  else
+  begin
+    while (LInIndex < (ACtx.InOff + ACtx.OutputLen - BlockSize)) do
+    begin
+      ACtx.CtrCipher.ProcessBlock(ACtx.Input, LInIndex, ACtx.Dest, LOutIndex);
+      LOutIndex := LOutIndex + BlockSize;
+      LInIndex := LInIndex + BlockSize;
+    end;
+  end;
+
+  System.SetLength(LBlock, BlockSize);
+  System.Move(ACtx.Input[LInIndex], LBlock[0],
+    ACtx.OutputLen - (LInIndex - ACtx.InOff));
+  ACtx.CtrCipher.ProcessBlock(LBlock, 0, LBlock, 0);
+  System.Move(LBlock[0], ACtx.Dest[LOutIndex],
+    ACtx.OutputLen - (LInIndex - ACtx.InOff));
+
+  System.SetLength(LCalculatedMacBlock, BlockSize);
+  CalculateMac(ACtx.Dest, ACtx.DestOff, ACtx.OutputLen, LCalculatedMacBlock);
+
+  Result := TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock);
+end;
+
+function TCcmBlockCipher.RunDecryptStaged(const ADecryptor: TCcmBodyDecryptor;
+  var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Boolean;
+begin
+  // Contract B: decrypt into the reused staging buffer, verify, and release to
+  // the caller only on success (output untouched on failure). The scratch is
+  // wiped in the finally so no recovered plaintext lingers.
+  EnsureCapacity(FPlainScratch, ACtx.OutputLen);
+  ACtx.Dest := FPlainScratch;
+  ACtx.DestOff := 0;
   try
-    FCcmKernel.ProcessBody(@AInput[AInOff], @LPlain[0],
-      @LCtrBlock[0], @LMacState[0], LBulkBlocks);
-
-    // Scalar tail: decrypt via keystream XOR, then fold into the MAC.
-    LTailLen := AOutputLen - LBulkBlocks * BlockSize;
-    LTailStart := AInOff + LBulkBlocks * BlockSize;
-
-    System.SetLength(LTailBlock, BlockSize);
-    FCipher.ProcessBlock(LCtrBlock, 0, LTailBlock, 0);
-    TByteUtilities.&Xor(LTailLen, PByte(@AInput[LTailStart]), PByte(@LTailBlock[0]),
-      PByte(@LPlain[LBulkBlocks * BlockSize]));
-
-    // Zero-pad plaintext tail and fold one last CBC step.
-    System.FillChar(LTailBlock[0], BlockSize, 0);
-    for LI := 0 to LTailLen - 1 do
-      LTailBlock[LI] := LPlain[LBulkBlocks * BlockSize + LI];
-    TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));
-    FCipher.ProcessBlock(LMacState, 0, LMacState, 0);
-
-    System.SetLength(LComputedMac, BlockSize);
-    System.Move(LMacState[0], LComputedMac[0], FMacSize);
-
-    if not TArrayUtilities.FixedTimeEquals(LReceivedRawMac, LComputedMac) then
+    if not ADecryptor(ACtx) then
       raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
-
-    System.Move(LPlain[0], AOutput[AOutOff], AOutputLen);
+    System.Move(FPlainScratch[0], AOutput[AOutOff], ACtx.OutputLen);
     Result := True;
   finally
-    if LPlain <> nil then
-      TArrayUtilities.Fill<Byte>(LPlain, 0, System.Length(LPlain), 0);
+    TArrayUtilities.Fill<Byte>(FPlainScratch, 0, ACtx.OutputLen, Byte(0));
   end;
 end;
 
+function TCcmBlockCipher.RunDecryptDirect(const ADecryptor: TCcmBodyDecryptor;
+  var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Boolean;
+begin
+  // Contract A (OpenSSL-style, faster -- reaches decrypt parity): decrypt
+  // straight into the caller's output and wipe it on ANY failure before the
+  // exception propagates. A successful return never yields unverified data, but
+  // on failure the output is zeroed rather than left untouched -- weaker than
+  // RunDecryptStaged, and fails TestNoUnverifiedPlaintextOnFailure.
+  ACtx.Dest := AOutput;
+  ACtx.DestOff := AOutOff;
+  try
+    if not ADecryptor(ACtx) then
+      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
+    Result := True;
+  except
+    // TODO: FPC 3.2.x fails when compiling TArrayUtilities.Fill<Byte>(...) inside an except
+    // handler (internal error); when upgrading minimum FPC to a version that
+    // compiles it, remove this FillChar and use
+    // TArrayUtilities.Fill<Byte>(AOutput, AOutOff, AOutOff + ACtx.OutputLen, Byte(0)) instead.
+    System.FillChar(AOutput[AOutOff], ACtx.OutputLen, Byte(0));
+    raise;
+  end;
+end;
 
 end.
