@@ -174,7 +174,6 @@ var
   LCtx: TGcmFusedCtx;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 begin
-  Result := ACounter32;
 {$IFDEF CRYPTOLIB_X86_SIMD}
   LCtx.PXorIn := AInPtr;
   LCtx.POut := AOutPtr;
@@ -193,8 +192,9 @@ begin
   else
     GcmFusedAesEnc256GhashEight(@LCtx);
   end;
-  Result := UInt32(LCtx.Counter32);
+  Exit(UInt32(LCtx.Counter32));
 {$ENDIF CRYPTOLIB_X86_SIMD}
+  Result := 0;
 end;
 
 { TAesNiGcmKernelFactory }
