@@ -307,48 +307,10 @@ end;
 class procedure TArrayUtilities.Fill<T>(ABuf: TCryptoLibGenericArray<T>;
   AFrom, ATo: Int32; const AFiller: T);
 var
-  LI, LCount: Int32;
-  LFillerBytes: PByte;
-  LUniform: Boolean;
+  LI: Int32;
 begin
   if ABuf = nil then
     Exit;
-  LCount := ATo - AFrom;
-  if LCount <= 0 then
-    Exit;
-
-  // Fast path uses FillChar (a memset) instead of the per-element loop, gated
-  // on a NON-managed element kind: memset-ing a managed T (string / interface /
-  // dynamic array, or a record/array holding them) would overwrite refcounted
-  // references without releasing them. It applies when AFiller is a uniform
-  // byte pattern (every byte of T equal), which covers the common 0 / Default(T)
-  // wipe, any single-byte fill, and repeated-byte values (e.g. $FF). GetTypeKind
-  // and SizeOf are compile-time constants per specialisation, so e.g. Fill<Byte>
-  // folds to the FillChar path.
-  if (GetTypeKind(TypeInfo(T)) in [tkInteger, tkChar, tkWChar, tkEnumeration,
-    tkFloat, tkSet, tkInt64, tkPointer])
-{$IFDEF FPC}
-    or (GetTypeKind(TypeInfo(T)) in [tkBool, tkQWord])
-{$ENDIF FPC}
-  then
-  begin
-    LFillerBytes := PByte(@AFiller);
-    LUniform := True;
-    for LI := 0 to SizeOf(T) - 1 do
-      if LFillerBytes[LI] <> LFillerBytes[0] then
-      begin
-        LUniform := False;
-        Break;
-      end;
-    if LUniform then
-    begin
-      System.FillChar(ABuf[AFrom], LCount * SizeOf(T), LFillerBytes^);
-      Exit;
-    end;
-    // A non-uniform multi-byte pattern (e.g. UInt32 $DEADBEEF) can't be a
-    // memset; fall through to the per-element loop.
-  end;
-
   for LI := AFrom to ATo - 1 do
     ABuf[LI] := AFiller;
 end;
