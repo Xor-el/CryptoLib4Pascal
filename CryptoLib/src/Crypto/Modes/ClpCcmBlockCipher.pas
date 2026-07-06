@@ -62,11 +62,7 @@ resourcestring
   SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
-  // Per-packet inputs a body decryptor needs. Method pointers (of object) bind
-  // the cipher instance -- so a decryptor reads FCipher/FCcmKernel/FMacBlock/...
-  // directly -- but cannot capture ProcessPacket's locals; those travel here.
-  // Dest/DestOff are filled in by the contract runner (staging scratch for
-  // Contract B, the caller's output for Contract A).
+  // Per-packet inputs a body decryptor needs (Dest/DestOff set by RunDecrypt).
   TCcmDecryptCtx = record
     Input: TCryptoLibByteArray;
     InOff: Int32;
@@ -78,15 +74,7 @@ type
     BulkCtr: IBulkBlockCipherMode;
   end;
 
-  // Decrypts ACtx into ACtx.Dest@DestOff, computes and compares the tag, and
-  // returns True iff it verifies (it does NOT stage, copy out, or raise -- the
-  // contract runner owns that). Fused and scalar bodies both match this shape.
-  TCcmBodyDecryptor = function(const ACtx: TCcmDecryptCtx): Boolean of object;
-
-  // Per-packet inputs an encrypt body needs. Encrypt has no contract to
-  // enforce (it never fails auth, never stages) so the bodies write straight
-  // to Output and ProcessPacket calls the chosen one directly -- no runner and
-  // no method pointer, unlike decrypt.
+  // Per-packet inputs an encrypt body needs.
   TCcmEncryptCtx = record
     Input: TCryptoLibByteArray;
     InOff: Int32;
@@ -148,32 +136,16 @@ type
     // AMacState. Matches the scalar CalculateMac contract.
     procedure ComputePostHeaderMacState(AInLen: Int32;
       const AMacState: TCryptoLibByteArray);
-    // Encrypt bodies. Each CTR-encrypts ACtx into ACtx.Output, computes the
-    // CBC-MAC, and writes the encrypted tag; both set FMacBlock (raw MAC). The
-    // fused body drives the fused CTR+CBC-MAC kernel; scalar uses the SIC cipher
-    // plus a CalculateMac pass. ProcessPacket picks one and calls it directly
-    // (no contract runner -- encrypt never fails auth or stages).
+    // Encrypt bodies (fused kernel / scalar SIC).
     procedure EncryptBodyFused(const ACtx: TCcmEncryptCtx);
     procedure EncryptBodyScalar(const ACtx: TCcmEncryptCtx);
-    // Body decryptors (TCcmBodyDecryptor shape). Each decrypts ACtx into
-    // ACtx.Dest, folds/computes the CBC-MAC, and returns whether the tag
-    // verifies. The fused body drives the fused CTR+CBC-MAC kernel; scalar uses
-    // the SIC cipher plus a CalculateMac pass. Both also set FMacBlock (GetMac).
+    // Decrypt bodies (fused kernel / scalar SIC); return whether the tag verifies.
     function DecryptBodyFused(const ACtx: TCcmDecryptCtx): Boolean;
     function DecryptBodyScalar(const ACtx: TCcmDecryptCtx): Boolean;
 
-    // Contract runners: drive a body decryptor and enforce the
-    // no-unverified-plaintext policy. Staged (Contract B) decrypts into a
-    // reused scratch and releases to the caller only on success, leaving the
-    // output untouched on failure; Direct (Contract A, OpenSSL-style, faster)
-    // decrypts into the output and wipes it on any failure. Swap which one
-    // ProcessPacket calls to change the contract for both bodies at once.
-    function RunDecryptStaged(const ADecryptor: TCcmBodyDecryptor;
-      var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Boolean;
-    function RunDecryptDirect(const ADecryptor: TCcmBodyDecryptor;
-      var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
-      AOutOff: Int32): Boolean;
+    // Decrypts into scratch, verifies, releases to output only on success.
+    function RunDecrypt(AUseFused: Boolean; var ACtx: TCcmDecryptCtx;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Boolean;
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -448,7 +420,7 @@ var
   LBulkCtr: IBulkBlockCipherMode;
   LEncCtx: TCcmEncryptCtx;
   LDecCtx: TCcmDecryptCtx;
-  LDecryptor: TCcmBodyDecryptor;
+  LUseFused: Boolean;
 begin
   TCheck.DataLength(AInput, AInOff, AInLen, SInputBufferTooShort);
 
@@ -517,16 +489,10 @@ begin
     LDecCtx.BulkCtr := LBulkCtr;
 
     // Fused kernel when it can cover at least one stride; scalar otherwise.
-    if (FCcmKernel <> nil) and
-      ((LOutputLen - 1) div BlockSize >= FCcmKernel.MinimumBlockCount) then
-      LDecryptor := DecryptBodyFused
-    else
-      LDecryptor := DecryptBodyScalar;
+    LUseFused := (FCcmKernel <> nil) and
+      ((LOutputLen - 1) div BlockSize >= FCcmKernel.MinimumBlockCount);
 
-    // Contract B (no unverified plaintext in the output on failure). Swap this
-    // one call to RunDecryptDirect for the faster OpenSSL-style Contract A;
-    // both body decryptors follow automatically.
-    RunDecryptStaged(LDecryptor, LDecCtx, AOutput, AOutOff);
+    RunDecrypt(LUseFused, LDecCtx, AOutput, AOutOff);
   end;
 
   Result := LOutputLen;
@@ -912,48 +878,26 @@ begin
   Result := TArrayUtilities.FixedTimeEquals(FMacBlock, LCalculatedMacBlock);
 end;
 
-function TCcmBlockCipher.RunDecryptStaged(const ADecryptor: TCcmBodyDecryptor;
+function TCcmBlockCipher.RunDecrypt(AUseFused: Boolean;
   var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Boolean;
+var
+  LOk: Boolean;
 begin
-  // Contract B: decrypt into the reused staging buffer, verify, and release to
-  // the caller only on success (output untouched on failure). The scratch is
-  // wiped in the finally so no recovered plaintext lingers.
   EnsureCapacity(FPlainScratch, ACtx.OutputLen);
   ACtx.Dest := FPlainScratch;
   ACtx.DestOff := 0;
   try
-    if not ADecryptor(ACtx) then
+    if AUseFused then
+      LOk := DecryptBodyFused(ACtx)
+    else
+      LOk := DecryptBodyScalar(ACtx);
+    if not LOk then
       raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
     System.Move(FPlainScratch[0], AOutput[AOutOff], ACtx.OutputLen);
     Result := True;
   finally
     TArrayUtilities.Fill<Byte>(FPlainScratch, 0, ACtx.OutputLen, Byte(0));
-  end;
-end;
-
-function TCcmBlockCipher.RunDecryptDirect(const ADecryptor: TCcmBodyDecryptor;
-  var ACtx: TCcmDecryptCtx; const AOutput: TCryptoLibByteArray;
-  AOutOff: Int32): Boolean;
-begin
-  // Contract A (OpenSSL-style, faster -- reaches decrypt parity): decrypt
-  // straight into the caller's output and wipe it on ANY failure before the
-  // exception propagates. A successful return never yields unverified data, but
-  // on failure the output is zeroed rather than left untouched -- weaker than
-  // RunDecryptStaged, and fails TestNoUnverifiedPlaintextOnFailure.
-  ACtx.Dest := AOutput;
-  ACtx.DestOff := AOutOff;
-  try
-    if not ADecryptor(ACtx) then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
-    Result := True;
-  except
-    // TODO: FPC 3.2.x fails when compiling TArrayUtilities.Fill<Byte>(...) inside an except
-    // handler (internal error); when upgrading minimum FPC to a version that
-    // compiles it, remove this FillChar and use
-    // TArrayUtilities.Fill<Byte>(AOutput, AOutOff, AOutOff + ACtx.OutputLen, Byte(0)) instead.
-    System.FillChar(AOutput[AOutOff], ACtx.OutputLen, Byte(0));
-    raise;
   end;
 end;
 
