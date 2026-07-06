@@ -73,9 +73,6 @@ type
 
   strict private
   type
-    TGcmSivCache = class(TMemoryStream)
-    end;
-
     TGcmSivHasher = class(TObject)
     strict private
       FBuffer: TCryptoLibByteArray;
@@ -115,8 +112,12 @@ type
     FTheReverse: TCryptoLibByteArray;
     FTheAEADHasher: TGcmSivHasher;
     FTheDataHasher: TGcmSivHasher;
-    FThePlain: TGcmSivCache;
-    FTheEncData: TGcmSivCache;
+    // Reused input accumulators (plaintext on encrypt, ciphertext on decrypt);
+    // FThePlain also stages recovered plaintext on decrypt. Grown by doubling.
+    FThePlain: TCryptoLibByteArray;
+    FThePlainLen: Int32;
+    FTheEncData: TCryptoLibByteArray;
+    FTheEncDataLen: Int32;
     FForEncryption: Boolean;
     FTheInitialAEAD: TCryptoLibByteArray;
     FTheNonce: TCryptoLibByteArray;
@@ -133,6 +134,8 @@ type
     FGcmSivKernel: IFusedGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
 
+    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
+      ANeeded: Int32); static;
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
     procedure DeriveKeys(const AKey: IKeyParameter);
@@ -340,9 +343,24 @@ destructor TGcmSivBlockCipher.Destroy;
 begin
   FTheAEADHasher.Free;
   FTheDataHasher.Free;
-  FThePlain.Free;
-  FTheEncData.Free;
   inherited Destroy;
+end;
+
+class procedure TGcmSivBlockCipher.EnsureCapacity(var ABuf: TCryptoLibByteArray;
+  ANeeded: Int32);
+var
+  LCap: Int32;
+begin
+  LCap := System.Length(ABuf);
+  if ANeeded <= LCap then
+    Exit;
+  if LCap = 0 then
+    LCap := 64;
+  while (LCap < ANeeded) and (LCap > 0) do
+    LCap := LCap * 2;
+  if LCap < ANeeded then // Int32 overflow guard for very large packets
+    LCap := ANeeded;
+  System.SetLength(ABuf, LCap);
 end;
 
 function TGcmSivBlockCipher.GetAlgorithmName: String;
@@ -423,11 +441,11 @@ begin
   end;
 
   LDataLimit := MAX_DATALEN;
-  LCurrBytes := FThePlain.Size;
+  LCurrBytes := FThePlainLen;
   if not FForEncryption then
   begin
     LDataLimit := LDataLimit + BUFLEN;
-    LCurrBytes := FTheEncData.Size;
+    LCurrBytes := FTheEncDataLen;
   end;
 
   if TInt64Utilities.CompareUnsigned(LCurrBytes, LDataLimit - ALen) > 0 then
@@ -455,12 +473,16 @@ begin
 
   if FForEncryption then
   begin
-    FThePlain.WriteByte(AInput);
+    EnsureCapacity(FThePlain, FThePlainLen + 1);
+    FThePlain[FThePlainLen] := AInput;
+    System.Inc(FThePlainLen);
     FTheDataHasher.UpdateHash(AInput);
   end
   else
   begin
-    FTheEncData.WriteByte(AInput);
+    EnsureCapacity(FTheEncData, FTheEncDataLen + 1);
+    FTheEncData[FTheEncDataLen] := AInput;
+    System.Inc(FTheEncDataLen);
   end;
 
   Result := 0;
@@ -474,12 +496,16 @@ begin
 
   if FForEncryption then
   begin
-    FThePlain.Write(AInput[AInOff], ALen);
+    EnsureCapacity(FThePlain, FThePlainLen + ALen);
+    System.Move(AInput[AInOff], FThePlain[FThePlainLen], ALen);
+    System.Inc(FThePlainLen, ALen);
     FTheDataHasher.UpdateHash(AInput, AInOff, ALen);
   end
   else
   begin
-    FTheEncData.Write(AInput[AInOff], ALen);
+    EnsureCapacity(FTheEncData, FTheEncDataLen + ALen);
+    System.Move(AInput[AInOff], FTheEncData[FTheEncDataLen], ALen);
+    System.Inc(FTheEncDataLen, ALen);
   end;
 
   Result := 0;
@@ -500,7 +526,7 @@ begin
 
     LMyDataLen := BUFLEN + EncryptPlain(LMyTag, AOutput, AOutOff);
 
-    System.Move(LMyTag[0], AOutput[AOutOff + FThePlain.Size], BUFLEN);
+    System.Move(LMyTag[0], AOutput[AOutOff + FThePlainLen], BUFLEN);
 
     ResetStreams();
     Result := LMyDataLen;
@@ -509,7 +535,10 @@ begin
   begin
     DecryptPlain();
 
-    LMyDataLen := TStreamUtilities.WriteBufTo(FThePlain, AOutput, AOutOff);
+    // Release the verified plaintext (staged in FThePlain by DecryptPlain).
+    LMyDataLen := FThePlainLen;
+    if LMyDataLen > 0 then
+      System.Move(FThePlain[0], AOutput[AOutOff], LMyDataLen);
 
     ResetStreams();
     Result := LMyDataLen;
@@ -532,11 +561,11 @@ var
 begin
   if FForEncryption then
   begin
-    Result := ALen + Int32(FThePlain.Size) + BUFLEN;
+    Result := ALen + FThePlainLen + BUFLEN;
   end
   else
   begin
-    LMyCurr := ALen + Int32(FTheEncData.Size);
+    LMyCurr := ALen + FTheEncDataLen;
     if LMyCurr > BUFLEN then
       Result := LMyCurr - BUFLEN
     else
@@ -550,28 +579,16 @@ begin
 end;
 
 procedure TGcmSivBlockCipher.ResetStreams;
-var
-  LCount: Int32;
 begin
-  if FThePlain <> nil then
-  begin
-    LCount := Int32(FThePlain.Size);
-    if LCount > 0 then
-      FillChar(PByte(FThePlain.Memory)^, LCount, 0);
-    FThePlain.Size := 0;
-  end;
+  // Wipe held/recovered plaintext (FTheEncData holds only ciphertext); reset
+  // used lengths but keep the reused buffers' capacity.
+  if FThePlainLen > 0 then
+    System.FillChar(FThePlain[0], FThePlainLen, 0);
+  FThePlainLen := 0;
+  FTheEncDataLen := 0;
 
   FTheAEADHasher.Reset();
   FTheDataHasher.Reset();
-
-  FThePlain.Free;
-  FThePlain := TGcmSivCache.Create();
-
-  FTheEncData.Free;
-  if FForEncryption then
-    FTheEncData := nil
-  else
-    FTheEncData := TGcmSivCache.Create();
 
   FTheFlags := FTheFlags and (not AEAD_COMPLETE);
   TArrayUtilities.Fill<Byte>(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
@@ -623,18 +640,14 @@ end;
 function TGcmSivBlockCipher.EncryptPlain(const ACounter: TCryptoLibByteArray;
   const ATarget: TCryptoLibByteArray; AOffset: Int32): Int32;
 var
-  LThePlainBuf: TCryptoLibByteArray;
   LThePlainLen: Int32;
   LMySrc, LMyCounter, LMyMask, LMyCounters: TCryptoLibByteArray;
   LMyRemaining: Int64;
   LMyOff, LMyLen: Int32;
 begin
-  System.SetLength(LThePlainBuf, FThePlain.Size);
-  FThePlain.Position := 0;
-  FThePlain.ReadBuffer(LThePlainBuf[0], System.Length(LThePlainBuf));
-  LThePlainLen := System.Length(LThePlainBuf);
-
-  LMySrc := LThePlainBuf;
+  // Read the buffered plaintext directly from the accumulator (no readback).
+  LThePlainLen := FThePlainLen;
+  LMySrc := FThePlain;
   LMyCounter := System.Copy(ACounter);
   LMyCounter[BUFLEN - 1] := LMyCounter[BUFLEN - 1] or MASK;
   System.SetLength(LMyMask, BUFLEN);
@@ -678,18 +691,17 @@ end;
 
 procedure TGcmSivBlockCipher.DecryptPlain;
 var
-  LTheEncDataBuf: TCryptoLibByteArray;
   LTheEncDataLen: Int32;
   LMySrc, LMyExpected, LMyCounter, LMyMask, LMyTag, LMyCounters,
     LMyScratch128: TCryptoLibByteArray;
   LMyRemaining, LMyOff, LMyLen: Int32;
 begin
-  System.SetLength(LTheEncDataBuf, FTheEncData.Size);
-  FTheEncData.Position := 0;
-  FTheEncData.ReadBuffer(LTheEncDataBuf[0], System.Length(LTheEncDataBuf));
-  LTheEncDataLen := System.Length(LTheEncDataBuf);
+  // Read the buffered ciphertext directly from the accumulator (no readback);
+  // recovered plaintext is appended to FThePlain and released only after the
+  // tag verifies below.
+  LTheEncDataLen := FTheEncDataLen;
+  LMySrc := FTheEncData;
 
-  LMySrc := LTheEncDataBuf;
   LMyRemaining := LTheEncDataLen - BUFLEN;
 
   if LMyRemaining < 0 then
@@ -701,8 +713,8 @@ begin
   System.SetLength(LMyMask, BUFLEN);
   LMyOff := 0;
 
-  // Bulk 8-wide CTR path. In contrast with the scalar loop (which called
-  // FThePlain.Write + FTheDataHasher.UpdateHash eight times per 128-byte
+  // Bulk 8-wide CTR path. In contrast with the scalar loop (which appended to
+  // FThePlain + called FTheDataHasher.UpdateHash eight times per 128-byte
   // batch), the bulk variant materialises the plaintext into a 128-byte
   // scratch and makes ONE UpdateHash call per batch. That collapses the
   // per-batch PolyVal bookkeeping (FNumActive tests, FillReverse inner
@@ -717,7 +729,9 @@ begin
       ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
       TByteUtilities.&Xor(128, PByte(LMyCounters), PByte(LMySrc) + LMyOff,
         PByte(LMyScratch128));
-      FThePlain.Write(LMyScratch128[0], 128);
+      EnsureCapacity(FThePlain, FThePlainLen + 128);
+      System.Move(LMyScratch128[0], FThePlain[FThePlainLen], 128);
+      System.Inc(FThePlainLen, 128);
       FTheDataHasher.UpdateHash(LMyScratch128, 0, 128);
       LMyRemaining := LMyRemaining - 128;
       LMyOff := LMyOff + 128;
@@ -731,7 +745,9 @@ begin
     LMyLen := Math.Min(BUFLEN, LMyRemaining);
     XorBlock(LMyMask, LMySrc, LMyOff, LMyLen);
 
-    FThePlain.Write(LMyMask[0], LMyLen);
+    EnsureCapacity(FThePlain, FThePlainLen + LMyLen);
+    System.Move(LMyMask[0], FThePlain[FThePlainLen], LMyLen);
+    System.Inc(FThePlainLen, LMyLen);
     FTheDataHasher.UpdateHash(LMyMask, 0, LMyLen);
 
     LMyRemaining := LMyRemaining - LMyLen;
