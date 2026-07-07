@@ -45,6 +45,8 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
   ClpPbeUtilities,
+  ClpIAsn1Objects,
+  ClpAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpCryptoLibTypes,
@@ -73,6 +75,8 @@ type
     procedure TestOpensslPbes2AesDefaultKeys;
     procedure TestPbkdf2IterationCountBound;
     procedure TestPkcs5V1PbeIterationCountBound;
+    procedure TestPbeDefaultMaxIterationCount;
+    procedure TestPbes2DefaultMaxIterationCountBound;
 
   end;
 
@@ -271,6 +275,70 @@ begin
     except
       on E: EArgumentCryptoLibException do
         CheckTrue(Pos('greater than 1', E.Message) > 0,
+          'unexpected message: ' + E.Message);
+    end;
+  finally
+    TPbeUtilities.MaxIterationCount := LOldMax;
+  end;
+end;
+
+procedure TTestPkcsEncryptedPrivateKeyInfo.TestPbeDefaultMaxIterationCount;
+var
+  LOldMax: Int32;
+  LCount: Int32;
+begin
+  LOldMax := TPbeUtilities.MaxIterationCount;
+  try
+    TPbeUtilities.MaxIterationCount := -1;
+
+    LCount := TPbeUtilities.CheckPbeIterationCount(TDerInteger.ValueOf(5000000));
+    CheckEquals(5000000, LCount, 'default max iteration count should allow 5_000_000');
+
+    try
+      TPbeUtilities.CheckPbeIterationCount(TDerInteger.ValueOf(5000001));
+      Fail('iteration count above default max accepted');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckTrue(Pos('greater than 5000000', E.Message) > 0,
+          'unexpected message: ' + E.Message);
+    end;
+  finally
+    TPbeUtilities.MaxIterationCount := LOldMax;
+  end;
+end;
+
+procedure TTestPkcsEncryptedPrivateKeyInfo.TestPbes2DefaultMaxIterationCountBound;
+const
+  LExcessiveIterationCount = 5000001;
+var
+  LSalt, LIv: TCryptoLibByteArray;
+  LPassword: TCryptoLibCharArray;
+  LPbkdf2Params: IPbkdf2Params;
+  LKeyDerivFunc: IKeyDerivationFunc;
+  LEncScheme: IEncryptionScheme;
+  LPbeS2Params: IPbeS2Parameters;
+  LOldMax: Int32;
+begin
+  LPassword := StringToCharArray('password');
+  LSalt := DecodeHex('0102030405060708090A0B0C0D0E0F1011121314');
+  LIv := DecodeHex('0102030405060708090A0B0C0D0E0F10');
+
+  LPbkdf2Params := TPbkdf2Params.Create(LSalt, LExcessiveIterationCount);
+  LKeyDerivFunc := TKeyDerivationFunc.Create(TPkcsObjectIdentifiers.IdPbkdf2, LPbkdf2Params);
+  LEncScheme := TEncryptionScheme.Create(TNistObjectIdentifiers.IdAes256Cbc,
+    TDerOctetString.FromContents(LIv));
+  LPbeS2Params := TPbeS2Parameters.Create(LKeyDerivFunc, LEncScheme);
+
+  LOldMax := TPbeUtilities.MaxIterationCount;
+  try
+    TPbeUtilities.MaxIterationCount := -1;
+    try
+      TPbeUtilities.GenerateCipherParameters(TPkcsObjectIdentifiers.IdPbeS2,
+        LPassword, LPbeS2Params);
+      Fail('PBES2 derivation accepted excessive default-max iteration count');
+    except
+      on E: EArgumentCryptoLibException do
+        CheckTrue(Pos('greater than 5000000', E.Message) > 0,
           'unexpected message: ' + E.Message);
     end;
   finally
