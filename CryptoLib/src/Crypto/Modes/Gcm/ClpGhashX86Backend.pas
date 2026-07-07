@@ -52,12 +52,8 @@ type
 
     /// <summary>True when the fused shuffled-GHASH path is usable on this CPU (needs packed vector layout). Gates the 4-/8-way batch dispatch and the H-power precompute.</summary>
     class function IsShuffledGhashSupported: Boolean; static;
-    /// <summary>True when the packed 128-bit block XOR fast path is usable.</summary>
-    class function IsBlockXorSupported: Boolean; static;
     /// <summary>True when the PCLMULQDQ carryless multiply is available (selects the carryless-multiply GCM multiplier over the 4K-table one).</summary>
     class function HasCarrylessMultiply: Boolean; static;
-    /// <summary>SIMD XOR of one 128-bit block: <c>PDst := PDst xor PSrc</c>. Precondition: <c>IsBlockXorSupported</c>.</summary>
-    class procedure BlockXor128(PDst, PSrc: PByte); static;
     /// <summary>Full byte-reverse of one 128-bit block from PSrc into PDst; returns False when unavailable on this CPU.</summary>
     class function TryBlockReverse128(PDst, PSrc: PByte): Boolean; static;
   end;
@@ -155,17 +151,6 @@ const
   // implementation detail.
   ReverseBytesMask: packed array[0..15] of Byte = (
     $0F, $0E, $0D, $0C, $0B, $0A, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00);
-
-procedure GcmBlockXor128Sse2(PDst, PSrc: PByte);
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc2Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmBlockXor128Sse2_i386.inc}
-{$ENDIF}
-end;
 
 procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
@@ -295,28 +280,12 @@ begin
 {$ENDIF}
 end;
 
-class function TGhashX86Backend.IsBlockXorSupported: Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasSSE2 and TIntrinsicsVector.IsPacked;
-{$ELSE}
-  Result := False;
-{$ENDIF}
-end;
-
 class function TGhashX86Backend.HasCarrylessMultiply: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.X86.HasPCLMULQDQ;
 {$ELSE}
   Result := False;
-{$ENDIF}
-end;
-
-class procedure TGhashX86Backend.BlockXor128(PDst, PSrc: PByte);
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  GcmBlockXor128Sse2(PDst, PSrc);
 {$ENDIF}
 end;
 

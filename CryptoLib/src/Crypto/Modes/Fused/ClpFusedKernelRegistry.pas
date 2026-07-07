@@ -31,7 +31,9 @@ uses
   ClpIFusedOcbKernel,
   ClpIFusedCcmKernel,
   ClpIFusedEaxKernel,
-  ClpIFusedGcmSivKernel;
+  ClpIFusedGcmSivKernel,
+  ClpIFusedCtrKernel,
+  ClpIFusedCbcKernel;
 
 type
   /// <summary>
@@ -69,12 +71,16 @@ type
     class var FCcmFactories: TList<IFusedCcmKernelFactory>;
     class var FEaxFactories: TList<IFusedEaxKernelFactory>;
     class var FGcmSivFactories: TList<IFusedGcmSivKernelFactory>;
+    class var FCtrFactories: TList<IFusedCtrKernelFactory>;
+    class var FCbcFactories: TList<IFusedCbcKernelFactory>;
 
     class function SnapshotGcmFactories: TCryptoLibGenericArray<IFusedGcmKernelFactory>; static;
     class function SnapshotOcbFactories: TCryptoLibGenericArray<IFusedOcbKernelFactory>; static;
     class function SnapshotCcmFactories: TCryptoLibGenericArray<IFusedCcmKernelFactory>; static;
     class function SnapshotEaxFactories: TCryptoLibGenericArray<IFusedEaxKernelFactory>; static;
     class function SnapshotGcmSivFactories: TCryptoLibGenericArray<IFusedGcmSivKernelFactory>; static;
+    class function SnapshotCtrFactories: TCryptoLibGenericArray<IFusedCtrKernelFactory>; static;
+    class function SnapshotCbcFactories: TCryptoLibGenericArray<IFusedCbcKernelFactory>; static;
 
     class constructor Create;
     class destructor Destroy;
@@ -88,6 +94,8 @@ type
     class procedure RegisterCcmFactory(const AFactory: IFusedCcmKernelFactory); static;
     class procedure RegisterEaxFactory(const AFactory: IFusedEaxKernelFactory); static;
     class procedure RegisterGcmSivFactory(const AFactory: IFusedGcmSivKernelFactory); static;
+    class procedure RegisterCtrFactory(const AFactory: IFusedCtrKernelFactory); static;
+    class procedure RegisterCbcFactory(const AFactory: IFusedCbcKernelFactory); static;
 
     /// <summary>Remove AFactory. No-op if not registered.</summary>
     class procedure UnregisterGcmFactory(const AFactory: IFusedGcmKernelFactory); static;
@@ -95,6 +103,8 @@ type
     class procedure UnregisterCcmFactory(const AFactory: IFusedCcmKernelFactory); static;
     class procedure UnregisterEaxFactory(const AFactory: IFusedEaxKernelFactory); static;
     class procedure UnregisterGcmSivFactory(const AFactory: IFusedGcmSivKernelFactory); static;
+    class procedure UnregisterCtrFactory(const AFactory: IFusedCtrKernelFactory); static;
+    class procedure UnregisterCbcFactory(const AFactory: IFusedCbcKernelFactory); static;
 
     /// <summary>Walk the factory list (highest priority first) and
     /// return the first kernel whose TryCreate succeeds. Returns False
@@ -121,6 +131,18 @@ type
       ADirection: TFusedModeDirection;
       AHPowers: Pointer;
       out AKernel: IFusedGcmSivKernel): Boolean; static;
+    /// <summary>CTR variant: no auxiliary state (MAC-free). Returns False (and
+    /// AKernel nil) when the gate is ForceDisabled, no factory is registered,
+    /// or every TryCreate returns False.</summary>
+    class function TryAcquireCtr(const ACipher: IBlockCipher;
+      ADirection: TFusedModeDirection;
+      out AKernel: IFusedCtrKernel): Boolean; static;
+    /// <summary>CBC-encrypt variant: no auxiliary state. Returns False (and
+    /// AKernel nil) when the gate is ForceDisabled, no factory is registered,
+    /// or every TryCreate returns False.</summary>
+    class function TryAcquireCbc(const ACipher: IBlockCipher;
+      ADirection: TFusedModeDirection;
+      out AKernel: IFusedCbcKernel): Boolean; static;
 
     /// <summary>Snapshot of ProviderName strings in current priority
     /// order. Used for diagnostics and test assertions.</summary>
@@ -129,6 +151,8 @@ type
     class function GetRegisteredCcmProviders: TCryptoLibStringArray; static;
     class function GetRegisteredEaxProviders: TCryptoLibStringArray; static;
     class function GetRegisteredGcmSivProviders: TCryptoLibStringArray; static;
+    class function GetRegisteredCtrProviders: TCryptoLibStringArray; static;
+    class function GetRegisteredCbcProviders: TCryptoLibStringArray; static;
   end;
 
 implementation
@@ -143,10 +167,14 @@ begin
   FCcmFactories := TList<IFusedCcmKernelFactory>.Create;
   FEaxFactories := TList<IFusedEaxKernelFactory>.Create;
   FGcmSivFactories := TList<IFusedGcmSivKernelFactory>.Create;
+  FCtrFactories := TList<IFusedCtrKernelFactory>.Create;
+  FCbcFactories := TList<IFusedCbcKernelFactory>.Create;
 end;
 
 class destructor TFusedKernelRegistry.Destroy;
 begin
+  FCbcFactories.Free;
+  FCtrFactories.Free;
   FGcmSivFactories.Free;
   FEaxFactories.Free;
   FCcmFactories.Free;
@@ -302,6 +330,64 @@ begin
   end;
 end;
 
+class procedure TFusedKernelRegistry.RegisterCtrFactory(
+  const AFactory: IFusedCtrKernelFactory);
+var
+  LI: Int32;
+  LInserted: Boolean;
+  LPriority: Int32;
+begin
+  if AFactory = nil then Exit;
+  FLock.Enter;
+  try
+    if FCtrFactories.IndexOf(AFactory) >= 0 then Exit;
+    LPriority := Ord(AFactory.Priority);
+    LInserted := False;
+    for LI := 0 to FCtrFactories.Count - 1 do
+    begin
+      if LPriority > Ord(FCtrFactories[LI].Priority) then
+      begin
+        FCtrFactories.Insert(LI, AFactory);
+        LInserted := True;
+        Break;
+      end;
+    end;
+    if not LInserted then
+      FCtrFactories.Add(AFactory);
+  finally
+    FLock.Leave;
+  end;
+end;
+
+class procedure TFusedKernelRegistry.RegisterCbcFactory(
+  const AFactory: IFusedCbcKernelFactory);
+var
+  LI: Int32;
+  LInserted: Boolean;
+  LPriority: Int32;
+begin
+  if AFactory = nil then Exit;
+  FLock.Enter;
+  try
+    if FCbcFactories.IndexOf(AFactory) >= 0 then Exit;
+    LPriority := Ord(AFactory.Priority);
+    LInserted := False;
+    for LI := 0 to FCbcFactories.Count - 1 do
+    begin
+      if LPriority > Ord(FCbcFactories[LI].Priority) then
+      begin
+        FCbcFactories.Insert(LI, AFactory);
+        LInserted := True;
+        Break;
+      end;
+    end;
+    if not LInserted then
+      FCbcFactories.Add(AFactory);
+  finally
+    FLock.Leave;
+  end;
+end;
+
 { ---- Unregister ------------------------------------------------------------- }
 
 class procedure TFusedKernelRegistry.UnregisterGcmFactory(
@@ -384,6 +470,38 @@ begin
   end;
 end;
 
+class procedure TFusedKernelRegistry.UnregisterCtrFactory(
+  const AFactory: IFusedCtrKernelFactory);
+var
+  LIdx: Int32;
+begin
+  if AFactory = nil then Exit;
+  FLock.Enter;
+  try
+    LIdx := FCtrFactories.IndexOf(AFactory);
+    if LIdx >= 0 then
+      FCtrFactories.Delete(LIdx);
+  finally
+    FLock.Leave;
+  end;
+end;
+
+class procedure TFusedKernelRegistry.UnregisterCbcFactory(
+  const AFactory: IFusedCbcKernelFactory);
+var
+  LIdx: Int32;
+begin
+  if AFactory = nil then Exit;
+  FLock.Enter;
+  try
+    LIdx := FCbcFactories.IndexOf(AFactory);
+    if LIdx >= 0 then
+      FCbcFactories.Delete(LIdx);
+  finally
+    FLock.Leave;
+  end;
+end;
+
 { ---- Snapshots -------------------------------------------------------------- }
 
 class function TFusedKernelRegistry.SnapshotGcmFactories: TCryptoLibGenericArray<IFusedGcmKernelFactory>;
@@ -456,6 +574,36 @@ begin
     System.SetLength(Result, LCount);
     for LI := 0 to LCount - 1 do
       Result[LI] := FGcmSivFactories[LI];
+  finally
+    FLock.Leave;
+  end;
+end;
+
+class function TFusedKernelRegistry.SnapshotCtrFactories: TCryptoLibGenericArray<IFusedCtrKernelFactory>;
+var
+  LI, LCount: Int32;
+begin
+  FLock.Enter;
+  try
+    LCount := FCtrFactories.Count;
+    System.SetLength(Result, LCount);
+    for LI := 0 to LCount - 1 do
+      Result[LI] := FCtrFactories[LI];
+  finally
+    FLock.Leave;
+  end;
+end;
+
+class function TFusedKernelRegistry.SnapshotCbcFactories: TCryptoLibGenericArray<IFusedCbcKernelFactory>;
+var
+  LI, LCount: Int32;
+begin
+  FLock.Enter;
+  try
+    LCount := FCbcFactories.Count;
+    System.SetLength(Result, LCount);
+    for LI := 0 to LCount - 1 do
+      Result[LI] := FCbcFactories[LI];
   finally
     FLock.Leave;
   end;
@@ -576,6 +724,50 @@ begin
   AKernel := nil;
 end;
 
+class function TFusedKernelRegistry.TryAcquireCtr(const ACipher: IBlockCipher;
+  ADirection: TFusedModeDirection; out AKernel: IFusedCtrKernel): Boolean;
+var
+  LSnapshot: TCryptoLibGenericArray<IFusedCtrKernelFactory>;
+  LI: Int32;
+begin
+  AKernel := nil;
+  Result := False;
+  if TFusedKernelGate.ForceDisabled then Exit;
+  if ACipher = nil then Exit;
+  LSnapshot := SnapshotCtrFactories;
+  for LI := 0 to System.Length(LSnapshot) - 1 do
+  begin
+    if LSnapshot[LI].TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  AKernel := nil;
+end;
+
+class function TFusedKernelRegistry.TryAcquireCbc(const ACipher: IBlockCipher;
+  ADirection: TFusedModeDirection; out AKernel: IFusedCbcKernel): Boolean;
+var
+  LSnapshot: TCryptoLibGenericArray<IFusedCbcKernelFactory>;
+  LI: Int32;
+begin
+  AKernel := nil;
+  Result := False;
+  if TFusedKernelGate.ForceDisabled then Exit;
+  if ACipher = nil then Exit;
+  LSnapshot := SnapshotCbcFactories;
+  for LI := 0 to System.Length(LSnapshot) - 1 do
+  begin
+    if LSnapshot[LI].TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
+    begin
+      Result := True;
+      Exit;
+    end;
+  end;
+  AKernel := nil;
+end;
+
 { ---- Provider queries ------------------------------------------------------- }
 
 class function TFusedKernelRegistry.GetRegisteredGcmProviders: TCryptoLibStringArray;
@@ -628,6 +820,28 @@ var
   LI: Int32;
 begin
   LSnapshot := SnapshotGcmSivFactories;
+  System.SetLength(Result, System.Length(LSnapshot));
+  for LI := 0 to System.Length(LSnapshot) - 1 do
+    Result[LI] := LSnapshot[LI].ProviderName;
+end;
+
+class function TFusedKernelRegistry.GetRegisteredCtrProviders: TCryptoLibStringArray;
+var
+  LSnapshot: TCryptoLibGenericArray<IFusedCtrKernelFactory>;
+  LI: Int32;
+begin
+  LSnapshot := SnapshotCtrFactories;
+  System.SetLength(Result, System.Length(LSnapshot));
+  for LI := 0 to System.Length(LSnapshot) - 1 do
+    Result[LI] := LSnapshot[LI].ProviderName;
+end;
+
+class function TFusedKernelRegistry.GetRegisteredCbcProviders: TCryptoLibStringArray;
+var
+  LSnapshot: TCryptoLibGenericArray<IFusedCbcKernelFactory>;
+  LI: Int32;
+begin
+  LSnapshot := SnapshotCbcFactories;
   System.SetLength(Result, System.Length(LSnapshot));
   for LI := 0 to System.Length(LSnapshot) - 1 do
     Result[LI] := LSnapshot[LI].ProviderName;

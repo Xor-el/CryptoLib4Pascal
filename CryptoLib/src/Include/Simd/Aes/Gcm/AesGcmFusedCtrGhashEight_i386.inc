@@ -5,17 +5,19 @@
 // Skylake+/Zen+) and the PCLMUL port (p5) operate in parallel, hiding
 // GHASH latency inside the AES critical path.
 //
-// Processes one pipelined batch: AES encrypts eight counter blocks to
-// produce a keystream, XORs it with PXorIn to produce POut, and
-// concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into
-// the running authentication state. AES inside GCM is always CTR
-// keystream construction; the Pascal wrapper picks which buffers
-// become PXorIn / POut / PPrevCipher for encrypt vs decrypt. The 8-xmm
-// budget does not fit a single-pass 8-wide layout, so the kernel
-// processes the batch as two back-to-back 4-block halves sharing the
-// same running Z0/Z1/Z2 accumulators; each half packs 4 GHASH iters
-// into AES rounds 1..4 to keep both ports busy, rounds 5..N-1 are
-// AES-only, and the 3-limb reduction runs once after half 2.
+// Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
+// counter blocks to produce a keystream, XORs it with PXorIn to produce POut,
+// and concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into the
+// running authentication state (the pipeline lags by one batch). AES inside GCM
+// is always CTR keystream construction; GhashFromOutput picks which buffer feeds
+// GHASH (output on encrypt, input on decrypt). The 8-xmm budget does not fit a
+// single-pass 8-wide layout, so the body processes the batch as two back-to-back
+// 4-block halves sharing the same running Z0/Z1/Z2 accumulators; each half packs
+// 4 GHASH iters into AES rounds 1..4 to keep both ports busy, rounds 5..N-1 are
+// AES-only, and the 3-limb reduction runs once after half 2. Only 4 counter
+// blocks are live per half, so each half builds its four in-register (eax/edx
+// are free there) - no counter scratch buffer is needed. The mode primes batch 0
+// and drains the last.
 //
 // Variant selection (set EXACTLY ONE):
 //   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (schedule = 11 x 16 bytes).
@@ -24,16 +26,18 @@
 //
 // On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
 //
-// Context layout (8 pointers = 32 bytes, 4-byte aligned). See
-// TGcmFusedBatchCtx in ClpAesNiGcmKernel.pas.
-//   [ebx +  0]  PXorIn      : 128-byte input to XOR with keystream
-//   [ebx +  4]  POut        : 128-byte output buffer (may alias PXorIn)
-//   [ebx +  8]  PCtrCurr    : 8 counter blocks (128 bytes) to encrypt
-//   [ebx + 12]  PPrevCipher : 128 bytes prev-batch ciphertext for GHASH
-//   [ebx + 16]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
-//   [ebx + 20]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
-//   [ebx + 24]  PFS         : 16-byte running GHASH state (in/out, canonical)
-//   [ebx + 28]  PMask       : 16-byte PSHUFB byte-reverse mask
+// Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 4-byte fields).
+//   [ebx +  0]  PXorIn      : 128-byte input to XOR with keystream (advances)
+//   [ebx +  4]  POut        : 128-byte output (advances; may alias PXorIn)
+//   [ebx +  8]  PPrevCipher : prev-batch ciphertext for GHASH (rotated per batch)
+//   [ebx + 12]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
+//   [ebx + 16]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
+//   [ebx + 20]  PFS         : 16-byte running GHASH state (in/out, canonical)
+//   [ebx + 24]  PMask       : 16-byte PSHUFB byte-reverse mask
+//   [ebx + 28]  Counter32   : 32-bit GCM counter, last-used value (advances by 8)
+//   [ebx + 32]  PJ0Template : 16-byte J0 (upper 96 bits reused per counter block)
+//   [ebx + 36]  BatchCount  : number of 8-block batches to process
+//   [ebx + 40]  GhashFromOutput : 1 = GHASH output (encrypt), 0 = input (decrypt)
 //
 // XMM (8/8 used; i386 has only xmm0..xmm7):
 //   xmm0..xmm3 : 4 AES keystream lanes (per half; reloaded between halves)
@@ -48,8 +52,8 @@
 //   [esp + 32..47]  Z2 accumulator  (updated 8x per batch)
 //   [esp + 48..63]  byte-reversed PFS (computed once, folded into iter 0)
 //
-// AES-NI (aesenc / aesenclast) and PCLMULQDQ instructions are db-encoded
-// for broad assembler compatibility.
+// AES-NI (aesenc / aesenclast), PCLMULQDQ, and PINSRD (counter build)
+// instructions are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
   // --- Callee-save prologue. SimdProc1Begin_i386.inc already pushed ebx
@@ -60,11 +64,20 @@
   push      ebp
   sub       esp, 64
 
+  // --- Batch loop: process BatchCount batches, generating GCM counters and
+  //     rotating the GHASH pipeline in-asm. i386 has no spare GP registers, so
+  //     the loop state lives in the context: the 32-bit counter [ebx+28], the
+  //     J0 template [ebx+32], the batch count [ebx+36], and the
+  //     "GHASH-from-output" flag [ebx+40] (1=encrypt). Each batch's 8 counter
+  //     blocks are built in-register, 4 per half, right before that half runs
+  //     (see the per-half counter builds below). ---
+@@GcmFusedLoop:
+
   // --- Load context pointers. ---
-  mov       edi, [ebx + 16]                   // edi = PRoundKeys (pinned)
-  mov       esi, [ebx + 12]                   // esi = PPrevCipher (pinned base)
-  mov       ebp, [ebx + 20]                   // ebp = PHPow128 (pinned base)
-  mov       ecx, [ebx + 28]                   // ecx = PMask (pinned)
+  mov       edi, [ebx + 12]                   // edi = PRoundKeys (pinned)
+  mov       esi, [ebx + 8]                    // esi = PPrevCipher (pinned base)
+  mov       ebp, [ebx + 16]                   // ebp = PHPow128 (pinned base)
+  mov       ecx, [ebx + 24]                   // ecx = PMask (pinned)
 
   // --- Zero Z0 / Z1 / Z2 accumulator slots. ---
   pxor      xmm0, xmm0
@@ -73,18 +86,35 @@
   movdqu    [esp + 32], xmm0                  // Z2 = 0
 
   // --- Compute byte-reversed running state once, stash for iter-0 fold. ---
-  mov       eax, [ebx + 24]                   // eax = PFS
+  mov       eax, [ebx + 20]                   // eax = PFS
   movdqu    xmm0, [eax]                       // load canonical PFS
   movdqu    xmm7, [ecx]                       // mask
   pshufb    xmm0, xmm7                        // byte-reverse
   movdqu    [esp + 48], xmm0                  // stash byte-reversed PFS
 
-  // --- Load 4 counter blocks for HALF 1 (blocks 0..3). ---
-  mov       eax, [ebx + 8]                    // eax = PCtrCurr
-  movdqu    xmm0, [eax +  0]
-  movdqu    xmm1, [eax + 16]
-  movdqu    xmm2, [eax + 32]
-  movdqu    xmm3, [eax + 48]
+  // --- Build 4 counter blocks for HALF 1 (blocks 0..3): J0[0..11] ||
+  //     BE(counter32+1..+4). GCM's counter is the last-used value, so the batch
+  //     based at counter32 spans counter32+1..counter32+8 (matching the scalar
+  //     GetNextCtrBlocks8). Load J0 into each lane, then PINSRD (db-encoded) the
+  //     big-endian counter word into dword 3; eax/edx are free here. ---
+  mov       eax, [ebx + 32]                   // PJ0Template
+  movdqu    xmm0, [eax]
+  movdqu    xmm1, [eax]
+  movdqu    xmm2, [eax]
+  movdqu    xmm3, [eax]
+  mov       eax, [ebx + 28]                   // counter32
+  lea       edx, [eax + 1]
+  bswap     edx
+  db $66, $0F, $3A, $22, $C2, $03              // pinsrd xmm0, edx, 3
+  lea       edx, [eax + 2]
+  bswap     edx
+  db $66, $0F, $3A, $22, $CA, $03              // pinsrd xmm1, edx, 3
+  lea       edx, [eax + 3]
+  bswap     edx
+  db $66, $0F, $3A, $22, $D2, $03              // pinsrd xmm2, edx, 3
+  lea       edx, [eax + 4]
+  bswap     edx
+  db $66, $0F, $3A, $22, $DA, $03              // pinsrd xmm3, edx, 3
 
   // ======================================================================
   // HALF 1: blocks 0..3, GHASH iters 0..3 (prev_cipher[0..3], H^8..H^5)
@@ -340,12 +370,26 @@
   //         no state fold (already consumed by iter 0 of half 1).
   // ======================================================================
 
-  // --- Load 4 counter blocks for half 2 (blocks 4..7). ---
-  mov       eax, [ebx + 8]                    // eax = PCtrCurr
-  movdqu    xmm0, [eax + 64]
-  movdqu    xmm1, [eax + 80]
-  movdqu    xmm2, [eax + 96]
-  movdqu    xmm3, [eax + 112]
+  // --- Build 4 counter blocks for half 2 (blocks 4..7): counter32+5..+8. The
+  //     pinned regs (edi/esi/ebp/ecx) are untouched; eax/edx are free here. ---
+  mov       eax, [ebx + 32]                   // PJ0Template
+  movdqu    xmm0, [eax]
+  movdqu    xmm1, [eax]
+  movdqu    xmm2, [eax]
+  movdqu    xmm3, [eax]
+  mov       eax, [ebx + 28]                   // counter32
+  lea       edx, [eax + 5]
+  bswap     edx
+  db $66, $0F, $3A, $22, $C2, $03              // pinsrd xmm0, edx, 3
+  lea       edx, [eax + 6]
+  bswap     edx
+  db $66, $0F, $3A, $22, $CA, $03              // pinsrd xmm1, edx, 3
+  lea       edx, [eax + 7]
+  bswap     edx
+  db $66, $0F, $3A, $22, $D2, $03              // pinsrd xmm2, edx, 3
+  lea       edx, [eax + 8]
+  bswap     edx
+  db $66, $0F, $3A, $22, $DA, $03              // pinsrd xmm3, edx, 3
 
   // --- Round 0: AddRoundKey. ---
   pxor      xmm0, [edi + 0]
@@ -663,8 +707,23 @@
   por       xmm0, xmm6
   movdqu    xmm7, [ecx]                        // mask reload
   pshufb    xmm0, xmm7                         // byte-reverse -> canonical
-  mov       eax, [ebx + 24]                    // PFS
+  mov       eax, [ebx + 20]                    // PFS
   movdqu    [eax], xmm0
+
+  // --- Advance the context for the next batch, then loop. PPrevCipher becomes
+  //     this batch's ciphertext (output on encrypt, input on decrypt); the
+  //     counter advances by 8 in place so the caller reads the final value. ---
+  mov       eax, [ebx + 4]                    // POut (encrypt: prev = output)
+  cmp       dword ptr [ebx + 40], 0           // GHASH-from-output flag (1=encrypt)
+  jne       @@GcmPrevSet
+  mov       eax, [ebx + 0]                    // PXorIn (decrypt: prev = input)
+@@GcmPrevSet:
+  mov       [ebx + 8], eax                    // PPrevCipher = this batch's ciphertext
+  add       dword ptr [ebx + 0], 128          // PXorIn += 128
+  add       dword ptr [ebx + 4], 128          // POut   += 128
+  add       dword ptr [ebx + 28], 8           // counter32 += 8
+  dec       dword ptr [ebx + 36]              // batch count
+  jnz       @@GcmFusedLoop
 
   // --- Epilogue: unwind stack scratch and pop callee-saved GPRs. ebx
   //     is popped last because SimdProc1Begin_i386.inc pushed it first. ---

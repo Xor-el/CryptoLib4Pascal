@@ -23,6 +23,7 @@ interface
 uses
   ClpNat,
   ClpBinaryPrimitives,
+  ClpByteXorSimd,
   ClpCryptoLibTypes;
 
 type
@@ -67,6 +68,9 @@ begin
   if ALen <= 0 then
     Exit;
 
+  if (ALen >= 128) and TByteXorSimd.TryXor(ALen, AX, AY, AZ) then
+    Exit;
+
   PSrcA := AX;
   PSrcB := AY;
   PDst := AZ;
@@ -105,29 +109,9 @@ begin
 end;
 
 class procedure TByteUtilities.XorTo(ALen: Int32; AX, AZ: PByte);
-var
-  LI, LQwords: Int32;
-  PSrc, PDst: PByte;
 begin
-  if ALen <= 0 then
-    Exit;
-
-  PSrc := AX;
-  PDst := AZ;
-
-  if (ALen >= 8) and
-    ((NativeUInt(PSrc) or NativeUInt(PDst) or NativeUInt(ALen)) and 7 = 0) then
-  begin
-    LQwords := ALen shr 3;
-    for LI := 0 to LQwords - 1 do
-      TBinaryPrimitives.StoreUInt64(PUInt64(PDst + (LI * 8)),
-        TBinaryPrimitives.LoadUInt64(PUInt64(PDst + (LI * 8))) xor
-        TBinaryPrimitives.LoadUInt64(PUInt64(PSrc + (LI * 8))));
-    Exit;
-  end;
-
-  for LI := 0 to ALen - 1 do
-    PDst[LI] := PDst[LI] xor PSrc[LI];
+  // In-place AZ := AZ xor AX is the special case of &Xor with AY = AZ.
+  &Xor(ALen, AZ, AX, AZ);
 end;
 
 class procedure TByteUtilities.XorTo(ALen: Int32; AX, AZ: PByte; AXOff, AZOff: Integer);

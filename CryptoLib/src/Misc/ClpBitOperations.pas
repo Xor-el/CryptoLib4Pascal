@@ -169,37 +169,37 @@ type
     /// Counts leading zero bits from the MSB down to the highest set bit.
     /// Returns 32 when AValue is zero.
     /// </summary>
-    class function NumberOfLeadingZeros32(AValue: UInt32): Int32; static;
+    class function NumberOfLeadingZeros32(AValue: UInt32): Int32; static; inline;
 
     /// <summary>
     /// Counts leading zero bits from the MSB down to the highest set bit.
     /// Returns 64 when AValue is zero.
     /// </summary>
-    class function NumberOfLeadingZeros64(AValue: UInt64): Int32; static;
+    class function NumberOfLeadingZeros64(AValue: UInt64): Int32; static; inline;
 
     /// <summary>
     /// Counts trailing zero bits from the LSB up to the lowest set bit.
     /// Returns 32 when AValue is zero.
     /// </summary>
-    class function NumberOfTrailingZeros32(AValue: UInt32): Int32; static;
+    class function NumberOfTrailingZeros32(AValue: UInt32): Int32; static; inline;
 
     /// <summary>
     /// Counts trailing zero bits from the LSB up to the lowest set bit.
     /// Returns 64 when AValue is zero.
     /// </summary>
-    class function NumberOfTrailingZeros64(AValue: UInt64): Int32; static;
+    class function NumberOfTrailingZeros64(AValue: UInt64): Int32; static; inline;
 
     /// <summary>
     /// Population count (Hamming weight) of a 32-bit value.
     /// Returns the number of bits set to 1.
     /// </summary>
-    class function PopCount32(AValue: UInt32): Int32; static;
+    class function PopCount32(AValue: UInt32): Int32; static; inline;
 
     /// <summary>
     /// Population count (Hamming weight) of a 64-bit value.
     /// Returns the number of bits set to 1.
     /// </summary>
-    class function PopCount64(AValue: UInt64): Int32; static;
+    class function PopCount64(AValue: UInt64): Int32; static; inline;
   end;
 
 implementation

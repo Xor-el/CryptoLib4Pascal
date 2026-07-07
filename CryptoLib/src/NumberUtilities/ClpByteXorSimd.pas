@@ -14,28 +14,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpFusedKernelDefaults;
+unit ClpByteXorSimd;
 
-{$I ..\..\..\Include\CryptoLib.inc}
-
-// Aggregator for CryptoLib's in-tree fused AEAD kernel factories.
-// Listed factory units self-gate on their own CPU/arch defines, so
-// this file is a plain, platform-agnostic list: adding a new in-tree
-// accelerator is one `uses` line here, mode units are never touched.
-// External / third-party factories live in the consumer's own unit
-// tree and register via the same mechanism -- no edit to this file.
+{$I ..\Include\CryptoLib.inc}
 
 interface
 
+uses
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  ClpByteXorX86Backend,
+{$ENDIF}
+  ClpCryptoLibTypes;
+
+type
+  /// <summary>
+  /// Arch-agnostic SIMD facade for the byte-array XOR primitives behind
+  /// <c>TByteUtilities</c>. Selects the per-arch backend at compile time; on a
+  /// build with no SIMD backend (or when the active SIMD level is too low) every
+  /// entry point returns <c>False</c>, leaving the caller on its scalar
+  /// qword/byte path.
+  /// </summary>
+  TByteXorSimd = class sealed
+  public
+    /// <summary>AZ[i] := AX[i] xor AY[i] over ALen bytes; AZ may alias AX/AY
+    /// (so the in-place XorTo case is TryXor with AY = AZ). False if unavailable.</summary>
+    class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
+  end;
+
 implementation
 
-uses
-  ClpAesNiGcmKernel,
-  ClpAesNiOcbKernel,
-  ClpAesNiCcmKernel,
-  ClpAesNiEaxKernel,
-  ClpAesNiCtrKernel,
-  ClpAesNiCbcKernel,
-  ClpPclmulGcmSivKernel;
+class function TByteXorSimd.TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  Result := TByteXorX86Backend.TryXor(ALen, AX, AY, AZ);
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
 
 end.

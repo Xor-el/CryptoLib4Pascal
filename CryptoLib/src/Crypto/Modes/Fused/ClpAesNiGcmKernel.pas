@@ -28,7 +28,7 @@ uses
   ClpIFusedGcmKernel,
   ClpFusedKernelRegistry,
   ClpAesFusedAeadSimd,
-  ClpAesFusedAeadX86Backend;
+  ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
@@ -37,10 +37,12 @@ type
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
   ///   Direction-independent: the fused AES-CTR keystream is identical
-  ///   for GCM encrypt and decrypt; the Pascal wrapper supplies the
-  ///   correct PXorIn / POut / PPrevCipher triple per call.
-  ///   The kernel processes exactly one stride (8 blocks = 128 bytes)
-  ///   per call; the mode layer drives the outer loop.
+  ///   for GCM encrypt and decrypt; ProcessCtrGhashBatches supplies the
+  ///   direction via AForEncrypt (which buffer feeds GHASH).
+  ///   The kernel loops over a whole run of 8-block (128-byte) batches in
+  ///   one call, generating the GCM counters and rotating the GHASH
+  ///   pipeline internally; the mode primes the first batch and drains the
+  ///   last.
   /// </summary>
   TAesNiGcmKernel = class sealed(TInterfacedObject, IFusedGcmKernel)
   strict private
@@ -56,8 +58,9 @@ type
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
       ARounds: Int32; AHPow128, AMask: Pointer);
     function MinimumBlockCount: Int32;
-    procedure ProcessCtrGhashBatch(AInPtr, AOutPtr, ARawCtrs, APrevCipher,
-      AGhashState: Pointer; ABlockCount: Int32);
+    function ProcessCtrGhashBatches(AInPtr, AOutPtr, APrevInit, AGhashState,
+      AJ0Template: Pointer; ACounter32: UInt32; ABatchCount: NativeInt;
+      AForEncrypt: Boolean): UInt32;
   end;
 
   TAesNiGcmKernelFactory = class sealed(TInterfacedObject,
@@ -75,19 +78,27 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
 type
-  // Context handed to the fused AES-NI keystream + 8-way GHASH kernel.
-  // Natural pointer-sized alignment, no padding: matches the
-  // [rcx / ebx + offset] accesses in AesGcmFusedCtrGhashEight_x86_64.inc and
-  // AesGcmFusedCtrGhashEight_i386.inc.
-  TGcmFusedBatchCtx = record
+  // Context handed to the fused AES-NI CTR keystream + 8-way GHASH loop kernel.
+  // Natural pointer-sized alignment, no padding: the field offsets match the
+  // [rcx + N] / [ebx + N] accesses in AesGcmFusedCtrGhashEight_x86_64.inc and
+  // AesGcmFusedCtrGhashEight_i386.inc (they differ with pointer / NativeUInt
+  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel advances
+  // PXorIn/POut/PPrevCipher and Counter32 in place across the batch run and
+  // builds each batch's counter blocks in-register from Counter32 + PJ0Template
+  // (both arches); the GHASH-from-output flag is 1 for encrypt (fold the output
+  // ciphertext) and 0 for decrypt (fold the input).
+  TGcmFusedCtx = record
     PXorIn: Pointer;
     POut: Pointer;
-    PCtrCurr: Pointer;
     PPrevCipher: Pointer;
     PRoundKeys: Pointer;
     PHPow128: Pointer;
     PFS: Pointer;
     PMask: Pointer;
+    Counter32: NativeUInt;
+    PJ0Template: Pointer;
+    BatchCount: NativeUInt;
+    GhashFromOutput: NativeUInt;
   end;
 
 procedure GcmFusedAesEnc128GhashEight(PCtx: Pointer);
@@ -155,31 +166,35 @@ begin
   Result := FUSED_GCM_MIN_BLOCKS;
 end;
 
-procedure TAesNiGcmKernel.ProcessCtrGhashBatch(AInPtr, AOutPtr, ARawCtrs,
-  APrevCipher, AGhashState: Pointer; ABlockCount: Int32);
+function TAesNiGcmKernel.ProcessCtrGhashBatches(AInPtr, AOutPtr, APrevInit,
+  AGhashState, AJ0Template: Pointer; ACounter32: UInt32; ABatchCount: NativeInt;
+  AForEncrypt: Boolean): UInt32;
 {$IFDEF CRYPTOLIB_X86_SIMD}
 var
-  LCtx: TGcmFusedBatchCtx;
+  LCtx: TGcmFusedCtx;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if ABlockCount <> FUSED_GCM_MIN_BLOCKS then
-    Exit;
   LCtx.PXorIn := AInPtr;
   LCtx.POut := AOutPtr;
-  LCtx.PCtrCurr := ARawCtrs;
-  LCtx.PPrevCipher := APrevCipher;
+  LCtx.PPrevCipher := APrevInit;
   LCtx.PRoundKeys := FKeys;
   LCtx.PHPow128 := FHPow128;
   LCtx.PFS := AGhashState;
   LCtx.PMask := FMask;
+  LCtx.Counter32 := ACounter32;
+  LCtx.PJ0Template := AJ0Template;
+  LCtx.BatchCount := NativeUInt(ABatchCount);
+  LCtx.GhashFromOutput := NativeUInt(Ord(AForEncrypt));
   case FRounds of
     10: GcmFusedAesEnc128GhashEight(@LCtx);
     12: GcmFusedAesEnc192GhashEight(@LCtx);
   else
     GcmFusedAesEnc256GhashEight(@LCtx);
   end;
+  Exit(UInt32(LCtx.Counter32));
 {$ENDIF CRYPTOLIB_X86_SIMD}
+  Result := 0;
 end;
 
 { TAesNiGcmKernelFactory }
@@ -210,7 +225,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesFusedAeadX86Backend.TryResolveEngine(ACipher, LEngine) then
+    if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     if not LEngine.TryGetEncKeysPtr(LKeys, LRounds) then
       Exit;

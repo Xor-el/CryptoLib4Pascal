@@ -1031,14 +1031,18 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedGcmSivKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCtrKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelRegistry.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesFusedAeadSimd.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesFusedAeadX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\Internal\ClpAesNiFusedX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\BinPoly\ClpBinPolySimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiOcbKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiGcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCtrKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpAesNiCbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpPclmulGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Fused\ClpFusedKernelDefaults.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpAeadParameters.pas"/>
@@ -1068,6 +1072,8 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpCfbBlockCipherMac.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Macs\ClpICfbBlockCipherMac.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteXorSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteXorX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas"/>
@@ -1204,6 +1210,7 @@
         <DCCReference Include="..\src\Crypto\SicBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\EcbBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\CbcBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\GcmSivBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckBlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckLegacyTests.pas"/>
         <DCCReference Include="..\src\Crypto\SpeckTests.pas"/>

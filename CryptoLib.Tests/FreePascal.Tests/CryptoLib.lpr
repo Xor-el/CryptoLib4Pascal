@@ -11,7 +11,7 @@ uses
   NamedCurveTests, SignerUtilitiesTests, SecureRandomTests,
   DigestRandomNumberTests, FixedPointTests, AESTests, AesLightTests,
   FusedExternalRegistrationTests, AesHardwareEngineTests, AESSICTests,
-  SicBulkParityTests, EcbBulkParityTests, CbcBulkParityTests,
+  SicBulkParityTests, EcbBulkParityTests, CbcBulkParityTests, GcmSivBulkParityTests,
   SpeckBlockCipherTestBase, SpeckLegacyTests, SpeckTests, IESCipherTests,
   HMacTests, Pkcs5Tests, HkdfGeneratorTests, ECIESTests, PascalCoinECIESTests,
   ECNRTests, PrimesTests, ECEncodingTests, GF256AesTests, PaddingTests,

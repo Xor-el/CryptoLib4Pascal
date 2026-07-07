@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesFusedAeadX86Backend;
+unit ClpAesNiFusedX86Backend;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -30,15 +30,18 @@ uses
 
 type
   /// <summary>
-  /// x86 backend for the fused AES-NI AEAD pipeline: owns the CPU/build gate and
-  /// the concrete <c>IAesEngineX86</c> resolution used by the in-tree AES-NI AEAD
-  /// kernel factories. Compiles on every target - <c>CpuSupports</c> is
-  /// <c>False</c> off x86 and <c>TryResolveEngine</c> then finds no engine.
+  /// x86 backend shared by the in-tree AES-NI fused kernel factories (the AEAD
+  /// family and the standalone CTR kernel): owns the AEAD CPU/build gate and the
+  /// concrete <c>IAesEngineX86</c> resolution (CTR uses only the latter).
+  /// Compiles on every target - <c>CpuSupports</c> is <c>False</c> off x86 and
+  /// <c>TryResolveEngine</c> then finds no engine.
   /// </summary>
-  TAesFusedAeadX86Backend = class sealed
+  TAesNiFusedX86Backend = class sealed
   public
-    /// <summary>True only when the build defines CRYPTOLIB_X86_SIMD, the CPU
-    /// exposes hardware AES + carryless multiply, and the SIMD intrinsics layout is packed.</summary>
+    /// <summary>AEAD gate: True only when the build defines CRYPTOLIB_X86_SIMD,
+    /// the CPU exposes hardware AES + carryless multiply + SSSE3, and the SIMD
+    /// intrinsics layout is packed (the AEAD kernels pass a packed context
+    /// record to asm).</summary>
     class function CpuSupports: Boolean; static;
 
     /// <summary>Probe ACipher for IAesEngineX86, handling both the direct case
@@ -50,9 +53,9 @@ type
 
 implementation
 
-{ TAesFusedAeadX86Backend }
+{ TAesNiFusedX86Backend }
 
-class function TAesFusedAeadX86Backend.CpuSupports: Boolean;
+class function TAesNiFusedX86Backend.CpuSupports: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasPCLMULQDQ and
@@ -62,7 +65,7 @@ begin
 {$ENDIF CRYPTOLIB_X86_SIMD}
 end;
 
-class function TAesFusedAeadX86Backend.TryResolveEngine(const ACipher: IBlockCipher;
+class function TAesNiFusedX86Backend.TryResolveEngine(const ACipher: IBlockCipher;
   out AEngine: IAesEngineX86): Boolean;
 var
   LMode: IBlockCipherMode;

@@ -26,6 +26,9 @@ uses
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
+  ClpIFusedCtrKernel,
+  ClpFusedKernelTypes,
+  ClpFusedKernelRegistry,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
@@ -67,6 +70,11 @@ type
     // bulk-capable engine plugs in unchanged by implementing the
     // interface -- the mode does not care which cipher is underneath.
     FBulkCipher: IBulkBlockCipher;
+    // Acquired on Init from the fused-kernel registry when an accelerated
+    // counter-mode kernel is available for FCipher: a single AES-NI pass that
+    // fuses counter generation, encryption and XOR. Preferred over FBulkCipher
+    // for the batch-aligned bulk; nil (with FBulkCipher fallback) otherwise.
+    FCtrKernel: IFusedCtrKernel;
 
     /// <summary>
     /// Snapshot FCounter into APlainCounters and advance FCounter by ABlockCount
@@ -206,6 +214,11 @@ begin
   // interface the batched path dispatches straight through FBulkCipher;
   // otherwise we stay on the per-block path.
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
+  // Acquire the fused counter-mode kernel if an accelerator is registered for
+  // FCipher (sets FCtrKernel nil on miss). Direction is irrelevant for CTR
+  // keystream (always AES-encrypt of the counter), so request Encrypt.
+  TFusedKernelRegistry.TryAcquireCtr(FCipher, TFusedModeDirection.Encrypt,
+    FCtrKernel);
 
   Reset();
 end;
@@ -242,7 +255,7 @@ function TSicBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
   AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LTotalBytes: Int32;
+  LTotalBytes, LDone: Int32;
 begin
   if ABlockCount <= 0 then
   begin
@@ -257,6 +270,24 @@ begin
 
   if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
     raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
+
+  // Preferred fast path: the fused CTR kernel does counter generation + AES-NI
+  // + XOR in a single pass over the batch-aligned bulk, advancing FCounter in
+  // place. It consumes a whole multiple of its batch granularity; the residue
+  // drops to the per-block tail below. When no CTR kernel was acquired
+  // (FCtrKernel = nil), nothing is consumed here and the generic FBulkCipher
+  // path runs instead.
+  if (FCtrKernel <> nil) and (FBlockSize = 16) and
+    (ABlockCount >= FCtrKernel.BatchBlockCount) then
+  begin
+    LDone := (ABlockCount div FCtrKernel.BatchBlockCount) *
+      FCtrKernel.BatchBlockCount;
+    FCtrKernel.ProcessCtrBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff],
+      @FCounter[0], LDone);
+    System.Inc(AInOff, LDone * FBlockSize);
+    System.Inc(AOutOff, LDone * FBlockSize);
+    System.Dec(ABlockCount, LDone);
+  end;
 
   // Fast path: 128-byte (8-block) batches through the bulk engine.
   // FBulkCipher is only assigned in Init when the underlying cipher

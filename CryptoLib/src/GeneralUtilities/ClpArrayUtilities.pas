@@ -40,6 +40,11 @@ type
     /// Processes ACount bytes starting at AData.
     /// </summary>
     class function HashCore(AData: PByte; ACount: Int32): Int32; static;
+
+    // Per-element fill shared by Fill<T> and the typed Fill fallbacks.
+    // Callers validate ABuf / range first; the loop assumes AFrom < ATo.
+    class procedure FillCore<T>(ABuf: TCryptoLibGenericArray<T>;
+      AFrom, ATo: Int32; const AFiller: T); static;
   public
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
@@ -109,7 +114,29 @@ type
       : Boolean; overload; static;
 
     class procedure Fill<T>(ABuf: TCryptoLibGenericArray<T>; AFrom, ATo: Int32;
-      const AFiller: T); static;
+      const AFiller: T); overload; static;
+
+    class procedure Fill(const ABuf: TCryptoLibByteArray; AFrom, ATo: Int32;
+      AFiller: Byte); overload; static; inline;
+    class procedure Fill(const ABuf: TCryptoLibUInt32Array; AFrom, ATo: Int32;
+      AFiller: UInt32); overload; static; inline;
+    class procedure Fill(const ABuf: TCryptoLibUInt64Array; AFrom, ATo: Int32;
+      AFiller: UInt64); overload; static; inline;
+
+    /// <summary>
+    /// Grow ABuf's capacity to at least ANeeded by doubling; never shrinks.
+    /// </summary>
+    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
+      ANeeded: Int32); static;
+
+    /// <summary>
+    /// Grow ABuf if needed, write at index ALen, and advance ALen by the number
+    /// of bytes written.
+    /// </summary>
+    class procedure AppendTo(var ABuf: TCryptoLibByteArray; var ALen: Int32;
+      AValue: Byte); overload; static;
+    class procedure AppendTo(var ABuf: TCryptoLibByteArray; var ALen: Int32;
+      const ASrc: TCryptoLibByteArray; AOff, ACount: Int32); overload; static;
 
     /// <summary>
     /// Deep-clone an array using ACloneFunc. Returns nil if AData is nil.
@@ -304,15 +331,88 @@ begin
     Result[LI] := AData[AFrom + LI];
 end;
 
+class procedure TArrayUtilities.FillCore<T>(ABuf: TCryptoLibGenericArray<T>;
+  AFrom, ATo: Int32; const AFiller: T);
+begin
+  while AFrom < ATo do
+  begin
+    ABuf[AFrom] := AFiller;
+    Inc(AFrom);
+  end;
+end;
+
 class procedure TArrayUtilities.Fill<T>(ABuf: TCryptoLibGenericArray<T>;
   AFrom, ATo: Int32; const AFiller: T);
-var
-  LI: Int32;
 begin
-  if ABuf = nil then
+  if (ABuf = nil) or (ATo <= AFrom) then
     Exit;
-  for LI := AFrom to ATo - 1 do
-    ABuf[LI] := AFiller;
+  FillCore<T>(ABuf, AFrom, ATo, AFiller);
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibByteArray;
+  AFrom, ATo: Int32; AFiller: Byte);
+begin
+  if (ABuf <> nil) and (ATo > AFrom) then
+    System.FillChar(ABuf[AFrom], ATo - AFrom, AFiller);
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibUInt32Array;
+  AFrom, ATo: Int32; AFiller: UInt32);
+begin
+  if (ABuf = nil) or (ATo <= AFrom) then
+    Exit;
+{$IFDEF FPC}
+  System.FillDWord(ABuf[AFrom], ATo - AFrom, AFiller);
+{$ELSE}
+  FillCore<UInt32>(ABuf, AFrom, ATo, AFiller);
+{$ENDIF FPC}
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibUInt64Array;
+  AFrom, ATo: Int32; AFiller: UInt64);
+begin
+  if (ABuf = nil) or (ATo <= AFrom) then
+    Exit;
+{$IFDEF FPC}
+  System.FillQWord(ABuf[AFrom], ATo - AFrom, AFiller);
+{$ELSE}
+  FillCore<UInt64>(ABuf, AFrom, ATo, AFiller);
+{$ENDIF FPC}
+end;
+
+class procedure TArrayUtilities.EnsureCapacity(var ABuf: TCryptoLibByteArray;
+  ANeeded: Int32);
+var
+  LCap: Int32;
+begin
+  LCap := System.Length(ABuf);
+  if ANeeded <= LCap then
+    Exit;
+  if LCap = 0 then
+    LCap := 64;
+  while (LCap < ANeeded) and (LCap > 0) do
+    LCap := LCap * 2;
+  if LCap < ANeeded then // Int32 overflow guard for very large packets
+    LCap := ANeeded;
+  System.SetLength(ABuf, LCap);
+end;
+
+class procedure TArrayUtilities.AppendTo(var ABuf: TCryptoLibByteArray;
+  var ALen: Int32; AValue: Byte);
+begin
+  EnsureCapacity(ABuf, ALen + 1);
+  ABuf[ALen] := AValue;
+  System.Inc(ALen);
+end;
+
+class procedure TArrayUtilities.AppendTo(var ABuf: TCryptoLibByteArray;
+  var ALen: Int32; const ASrc: TCryptoLibByteArray; AOff, ACount: Int32);
+begin
+  if ACount <= 0 then
+    Exit;
+  EnsureCapacity(ABuf, ALen + ACount);
+  System.Move(ASrc[AOff], ABuf[ALen], ACount);
+  System.Inc(ALen, ACount);
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray): Int32;

@@ -36,29 +36,24 @@ type
   IFusedGcmKernel = interface
     ['{D4D7F5F0-3C56-44E0-8BDD-944AC05E4D2E}']
 
-    /// <summary>Number of 16-byte blocks consumed per
-    /// ProcessCtrGhashBatch invocation.</summary>
+    /// <summary>Number of 16-byte blocks per batch consumed by
+    /// ProcessCtrGhashBatches.</summary>
     function MinimumBlockCount: Int32;
 
     /// <summary>
-    ///   Process exactly MinimumBlockCount blocks of the GCM body.
-    ///   Per-call buffers:
-    ///     AInPtr       MinimumBlockCount * 16 bytes of input.
-    ///     AOutPtr      MinimumBlockCount * 16 bytes of output; may
-    ///                  alias AInPtr.
-    ///     ARawCtrs     MinimumBlockCount * 16 bytes of pre-populated
-    ///                  raw counter blocks (encrypted in place by the
-    ///                  kernel to produce keystream).
-    ///     APrevCipher  MinimumBlockCount * 16 bytes of the previous
-    ///                  batch's ciphertext, folded into GHASH by this
-    ///                  call. The mode seeds this from the prime batch
-    ///                  and rotates it between iterations.
-    ///     AGhashState  16-byte running GHASH accumulator, updated in
-    ///                  place.
-    ///   ABlockCount MUST equal MinimumBlockCount.
+    ///   Process ABatchCount consecutive 8-block batches in one call: generate
+    ///   the GCM keystream (32-bit counter starting at ACounter32, J0 upper 96
+    ///   bits from AJ0Template), XOR AInPtr into AOutPtr, and fold each batch's
+    ///   ciphertext into the running GHASH state (AGhashState). APrevInit is the
+    ///   ciphertext of the batch immediately before this run (the prime batch);
+    ///   the pipeline GHASHes it first and lags by one, leaving the final batch
+    ///   for the caller's drain. AForEncrypt selects whether the GHASHed
+    ///   ciphertext is the output (encrypt) or the input (decrypt). Returns the
+    ///   advanced 32-bit counter (ACounter32 + 8*ABatchCount).
     /// </summary>
-    procedure ProcessCtrGhashBatch(AInPtr, AOutPtr, ARawCtrs, APrevCipher,
-      AGhashState: Pointer; ABlockCount: Int32);
+    function ProcessCtrGhashBatches(AInPtr, AOutPtr, APrevInit, AGhashState,
+      AJ0Template: Pointer; ACounter32: UInt32; ABatchCount: NativeInt;
+      AForEncrypt: Boolean): UInt32;
   end;
 
   /// <summary>

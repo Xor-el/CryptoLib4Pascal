@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="789">
+    <Files Count="795">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3178,8 +3178,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpGcmSivX86Backend"/>
       </Item786>
       <Item787>
-        <Filename Value="..\..\Crypto\Modes\Fused\Internal\ClpAesFusedAeadX86Backend.pas"/>
-        <UnitName Value="ClpAesFusedAeadX86Backend"/>
+        <Filename Value="..\..\Crypto\Modes\Fused\Internal\ClpAesNiFusedX86Backend.pas"/>
+        <UnitName Value="ClpAesNiFusedX86Backend"/>
       </Item787>
       <Item788>
         <Filename Value="..\..\Math\BinPoly\ClpBinPolySimd.pas"/>
@@ -3189,6 +3189,30 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\ClpAesSimd.pas"/>
         <UnitName Value="ClpAesSimd"/>
       </Item789>
+      <Item790>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCtrKernel.pas"/>
+        <UnitName Value="ClpIFusedCtrKernel"/>
+      </Item790>
+      <Item791>
+        <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiCtrKernel.pas"/>
+        <UnitName Value="ClpAesNiCtrKernel"/>
+      </Item791>
+      <Item792>
+        <Filename Value="..\..\NumberUtilities\ClpByteXorSimd.pas"/>
+        <UnitName Value="ClpByteXorSimd"/>
+      </Item792>
+      <Item793>
+        <Filename Value="..\..\NumberUtilities\ClpByteXorX86Backend.pas"/>
+        <UnitName Value="ClpByteXorX86Backend"/>
+      </Item793>
+      <Item794>
+        <Filename Value="..\..\Interfaces\Crypto\Modes\Fused\ClpIFusedCbcKernel.pas"/>
+        <UnitName Value="ClpIFusedCbcKernel"/>
+      </Item794>
+      <Item795>
+        <Filename Value="..\..\Crypto\Modes\Fused\ClpAesNiCbcKernel.pas"/>
+        <UnitName Value="ClpAesNiCbcKernel"/>
+      </Item795>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
