@@ -207,17 +207,21 @@ type
 
   strict private
   var
-    FLimit: Int64;
+    FCurrentLimit: Int64;
+    FLeaveOpen: Boolean;
     FStream: TStream;
 
   public
-    constructor Create(const AStream: TStream; ALimit: Int64);
+    constructor Create(ALimit: Int64; const AStream: TStream;
+      ALeaveOpen: Boolean = False);
+
+    destructor Destroy; override;
 
     function Read(var ABuffer; ACount: LongInt): LongInt; override;
 
     function ReadByte(): Int32; override;
 
-    property CurrentLimit: Int64 read FLimit;
+    property CurrentLimit: Int64 read FCurrentLimit;
 
   end;
 
@@ -649,11 +653,20 @@ end;
 
 { TLimitedInputStream }
 
-constructor TLimitedInputStream.Create(const AStream: TStream; ALimit: Int64);
+constructor TLimitedInputStream.Create(ALimit: Int64; const AStream: TStream;
+  ALeaveOpen: Boolean);
 begin
   inherited Create();
   FStream := AStream;
-  FLimit := ALimit;
+  FCurrentLimit := ALimit;
+  FLeaveOpen := ALeaveOpen;
+end;
+
+destructor TLimitedInputStream.Destroy;
+begin
+  if not FLeaveOpen then
+    FStream.Free;
+  inherited Destroy;
 end;
 
 function TLimitedInputStream.Read(var ABuffer; ACount: LongInt): LongInt;
@@ -663,8 +676,8 @@ begin
   LNumRead := FStream.Read(ABuffer, ACount);
   if LNumRead > 0 then
   begin
-    FLimit := FLimit - LNumRead;
-    if FLimit < 0 then
+    FCurrentLimit := FCurrentLimit - LNumRead;
+    if FCurrentLimit < 0 then
       raise EStreamOverflowCryptoLibException.CreateRes(@SDataOverflow);
   end;
   Result := LNumRead;
@@ -677,8 +690,8 @@ begin
   LB := FStream.ReadByte();
   if LB >= 0 then
   begin
-    System.Dec(FLimit);
-    if FLimit < 0 then
+    System.Dec(FCurrentLimit);
+    if FCurrentLimit < 0 then
       raise EStreamOverflowCryptoLibException.CreateRes(@SDataOverflow);
   end;
   Result := LB;

@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="186">
+    <Units Count="189">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -784,6 +784,18 @@
         <Filename Value="..\src\Crypto\GcmSivBulkParityTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit185>
+      <Unit186>
+        <Filename Value="..\src\Asn1\DefiniteLengthAllocationTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit186>
+      <Unit187>
+        <Filename Value="..\src\Asn1\X509\KeyPurposeIDTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit187>
+      <Unit188>
+        <Filename Value="..\src\Asn1\Asn1StreamReadTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit188>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

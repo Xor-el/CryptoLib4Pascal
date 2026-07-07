@@ -160,7 +160,7 @@ class function TStreamUtilities.PipeAllLimited(const AInStr: TStream;
 var
   LLimited: TLimitedInputStream;
 begin
-  LLimited := TLimitedInputStream.Create(AInStr, ALimit);
+  LLimited := TLimitedInputStream.Create(ALimit, AInStr, True);
   try
     CopyTo(LLimited, AOutStr, ABufferSize);
     Result := ALimit - LLimited.CurrentLimit;

@@ -84,7 +84,7 @@ type
     Pkcs5S2 = 'Pkcs5S2';
     Pkcs12 = 'Pkcs12';
     OpenSsl = 'OpenSsl';
-    DefaultMaxIterationCount = 10000000;
+    DefaultMaxIterationCount = 5000000;
   class var
     FAlgorithms: TDictionary<String, String>;
     FAlgorithmType: TDictionary<String, String>;
@@ -94,7 +94,6 @@ type
   class destructor Destroy;
   strict private
     class function GetEffectiveMaxIterationCount: Int32; static;
-    class function CheckPbeIterationCount(const AIterationCountObject: IDerInteger): Int32; static;
     class function MakePbeGenerator(const AType: String; const ADigest: IDigest;
       const AKey: TCryptoLibByteArray; const ASalt: TCryptoLibByteArray;
       AIterationCount: Int32): IPbeParametersGenerator; static;
@@ -173,6 +172,12 @@ type
     class function GenerateCipherParameters(const AAlgorithm: String;
       const APassword: TCryptoLibCharArray; AWrongPkcs12Zero: Boolean;
       const APbeParameters: IAsn1Encodable): ICipherParameters; overload; static;
+
+    /// <summary>
+    /// Validates a supplied PBE/PBKDF2 iteration count against
+    /// <see cref="MaxIterationCount"/> (or <see cref="DefaultMaxIterationCount"/> when unset).
+    /// </summary>
+    class function CheckPbeIterationCount(const AIterationCountObject: IDerInteger): Int32; static;
 
     /// <summary>
     /// Maximum allowed PBE iteration count when decrypting PKCS#8 / PEM keys.
