@@ -124,6 +124,21 @@ type
       AFiller: UInt64); overload; static; inline;
 
     /// <summary>
+    /// Grow ABuf's capacity to at least ANeeded by doubling; never shrinks.
+    /// </summary>
+    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
+      ANeeded: Int32); static;
+
+    /// <summary>
+    /// Grow ABuf if needed, write at index ALen, and advance ALen by the number
+    /// of bytes written.
+    /// </summary>
+    class procedure AppendTo(var ABuf: TCryptoLibByteArray; var ALen: Int32;
+      AValue: Byte); overload; static;
+    class procedure AppendTo(var ABuf: TCryptoLibByteArray; var ALen: Int32;
+      const ASrc: TCryptoLibByteArray; AOff, ACount: Int32); overload; static;
+
+    /// <summary>
     /// Deep-clone an array using ACloneFunc. Returns nil if AData is nil.
     /// If ACloneFunc raises mid-way, already-cloned objects are freed to prevent leaks.
     /// </summary>
@@ -363,6 +378,41 @@ begin
 {$ELSE}
   FillCore<UInt64>(ABuf, AFrom, ATo, AFiller);
 {$ENDIF FPC}
+end;
+
+class procedure TArrayUtilities.EnsureCapacity(var ABuf: TCryptoLibByteArray;
+  ANeeded: Int32);
+var
+  LCap: Int32;
+begin
+  LCap := System.Length(ABuf);
+  if ANeeded <= LCap then
+    Exit;
+  if LCap = 0 then
+    LCap := 64;
+  while (LCap < ANeeded) and (LCap > 0) do
+    LCap := LCap * 2;
+  if LCap < ANeeded then // Int32 overflow guard for very large packets
+    LCap := ANeeded;
+  System.SetLength(ABuf, LCap);
+end;
+
+class procedure TArrayUtilities.AppendTo(var ABuf: TCryptoLibByteArray;
+  var ALen: Int32; AValue: Byte);
+begin
+  EnsureCapacity(ABuf, ALen + 1);
+  ABuf[ALen] := AValue;
+  System.Inc(ALen);
+end;
+
+class procedure TArrayUtilities.AppendTo(var ABuf: TCryptoLibByteArray;
+  var ALen: Int32; const ASrc: TCryptoLibByteArray; AOff, ACount: Int32);
+begin
+  if ACount <= 0 then
+    Exit;
+  EnsureCapacity(ABuf, ALen + ACount);
+  System.Move(ASrc[AOff], ABuf[ALen], ACount);
+  System.Inc(ALen, ACount);
 end;
 
 class function TArrayUtilities.GetArrayHashCode(const AData: TCryptoLibByteArray): Int32;

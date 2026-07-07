@@ -120,10 +120,6 @@ type
     // CCM kernel for the underlying cipher and current direction.
     FCcmKernel: IFusedCcmKernel;
 
-    // Ensure ABuf holds at least ANeeded bytes of capacity, growing by doubling
-    // (amortised O(1) append) and never shrinking.
-    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
-      ANeeded: Int32); static;
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
     procedure CheckNonceReuse(AForEncryption: Boolean;
       const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
@@ -304,9 +300,7 @@ end;
 function TCcmBlockCipher.ProcessByte(AInput: Byte;
   const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  EnsureCapacity(FData, FDataLen + 1);
-  FData[FDataLen] := AInput;
-  System.Inc(FDataLen);
+  TArrayUtilities.AppendTo(FData, FDataLen, AInput);
   Result := 0;
 end;
 
@@ -314,12 +308,7 @@ function TCcmBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
   TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
-  if ALen > 0 then
-  begin
-    EnsureCapacity(FData, FDataLen + ALen);
-    System.Move(AInput[AInOff], FData[FDataLen], ALen);
-    System.Inc(FDataLen, ALen);
-  end;
+  TArrayUtilities.AppendTo(FData, FDataLen, AInput, AInOff, ALen);
   Result := 0;
 end;
 
@@ -331,23 +320,6 @@ begin
   Result := ProcessPacket(FData, 0, FDataLen, AOutput, AOutOff);
 
   Reset();
-end;
-
-class procedure TCcmBlockCipher.EnsureCapacity(var ABuf: TCryptoLibByteArray;
-  ANeeded: Int32);
-var
-  LCap: Int32;
-begin
-  LCap := System.Length(ABuf);
-  if ANeeded <= LCap then
-    Exit;
-  if LCap = 0 then
-    LCap := 64;
-  while (LCap < ANeeded) and (LCap > 0) do
-    LCap := LCap * 2;
-  if LCap < ANeeded then // Int32 overflow guard for very large packets
-    LCap := ANeeded;
-  System.SetLength(ABuf, LCap);
 end;
 
 procedure TCcmBlockCipher.Reset;
@@ -884,7 +856,7 @@ function TCcmBlockCipher.RunDecrypt(AUseFused: Boolean;
 var
   LOk: Boolean;
 begin
-  EnsureCapacity(FPlainScratch, ACtx.OutputLen);
+  TArrayUtilities.EnsureCapacity(FPlainScratch, ACtx.OutputLen);
   ACtx.Dest := FPlainScratch;
   ACtx.DestOff := 0;
   try

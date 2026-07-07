@@ -134,8 +134,6 @@ type
     FGcmSivKernel: IFusedGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
 
-    class procedure EnsureCapacity(var ABuf: TCryptoLibByteArray;
-      ANeeded: Int32); static;
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
     procedure DeriveKeys(const AKey: IKeyParameter);
@@ -346,23 +344,6 @@ begin
   inherited Destroy;
 end;
 
-class procedure TGcmSivBlockCipher.EnsureCapacity(var ABuf: TCryptoLibByteArray;
-  ANeeded: Int32);
-var
-  LCap: Int32;
-begin
-  LCap := System.Length(ABuf);
-  if ANeeded <= LCap then
-    Exit;
-  if LCap = 0 then
-    LCap := 64;
-  while (LCap < ANeeded) and (LCap > 0) do
-    LCap := LCap * 2;
-  if LCap < ANeeded then // Int32 overflow guard for very large packets
-    LCap := ANeeded;
-  System.SetLength(ABuf, LCap);
-end;
-
 function TGcmSivBlockCipher.GetAlgorithmName: String;
 begin
   Result := FTheCipher.AlgorithmName + '-GCM-SIV';
@@ -473,17 +454,11 @@ begin
 
   if FForEncryption then
   begin
-    EnsureCapacity(FThePlain, FThePlainLen + 1);
-    FThePlain[FThePlainLen] := AInput;
-    System.Inc(FThePlainLen);
+    TArrayUtilities.AppendTo(FThePlain, FThePlainLen, AInput);
     FTheDataHasher.UpdateHash(AInput);
   end
   else
-  begin
-    EnsureCapacity(FTheEncData, FTheEncDataLen + 1);
-    FTheEncData[FTheEncDataLen] := AInput;
-    System.Inc(FTheEncDataLen);
-  end;
+    TArrayUtilities.AppendTo(FTheEncData, FTheEncDataLen, AInput);
 
   Result := 0;
 end;
@@ -496,17 +471,11 @@ begin
 
   if FForEncryption then
   begin
-    EnsureCapacity(FThePlain, FThePlainLen + ALen);
-    System.Move(AInput[AInOff], FThePlain[FThePlainLen], ALen);
-    System.Inc(FThePlainLen, ALen);
+    TArrayUtilities.AppendTo(FThePlain, FThePlainLen, AInput, AInOff, ALen);
     FTheDataHasher.UpdateHash(AInput, AInOff, ALen);
   end
   else
-  begin
-    EnsureCapacity(FTheEncData, FTheEncDataLen + ALen);
-    System.Move(AInput[AInOff], FTheEncData[FTheEncDataLen], ALen);
-    System.Inc(FTheEncDataLen, ALen);
-  end;
+    TArrayUtilities.AppendTo(FTheEncData, FTheEncDataLen, AInput, AInOff, ALen);
 
   Result := 0;
 end;
@@ -729,9 +698,7 @@ begin
       ProcessEightBlocksSivCtr(LMyCounter, LMyCounters);
       TByteUtilities.&Xor(128, PByte(LMyCounters), PByte(LMySrc) + LMyOff,
         PByte(LMyScratch128));
-      EnsureCapacity(FThePlain, FThePlainLen + 128);
-      System.Move(LMyScratch128[0], FThePlain[FThePlainLen], 128);
-      System.Inc(FThePlainLen, 128);
+      TArrayUtilities.AppendTo(FThePlain, FThePlainLen, LMyScratch128, 0, 128);
       FTheDataHasher.UpdateHash(LMyScratch128, 0, 128);
       LMyRemaining := LMyRemaining - 128;
       LMyOff := LMyOff + 128;
@@ -745,9 +712,7 @@ begin
     LMyLen := Math.Min(BUFLEN, LMyRemaining);
     XorBlock(LMyMask, LMySrc, LMyOff, LMyLen);
 
-    EnsureCapacity(FThePlain, FThePlainLen + LMyLen);
-    System.Move(LMyMask[0], FThePlain[FThePlainLen], LMyLen);
-    System.Inc(FThePlainLen, LMyLen);
+    TArrayUtilities.AppendTo(FThePlain, FThePlainLen, LMyMask, 0, LMyLen);
     FTheDataHasher.UpdateHash(LMyMask, 0, LMyLen);
 
     LMyRemaining := LMyRemaining - LMyLen;
