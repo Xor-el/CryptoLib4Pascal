@@ -45,7 +45,6 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
   ClpPbeUtilities,
-  ClpIAsn1Objects,
   ClpAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
