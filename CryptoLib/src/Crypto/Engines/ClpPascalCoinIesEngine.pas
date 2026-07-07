@@ -311,7 +311,7 @@ begin
     end;
 
   finally
-    TArrayUtilities.Fill<Byte>(LBigZ, 0, System.Length(LBigZ), Byte(0));
+    TArrayUtilities.Fill(LBigZ, 0, System.Length(LBigZ), Byte(0));
   end;
 end;
 

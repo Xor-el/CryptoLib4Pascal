@@ -529,7 +529,7 @@ begin
   L3k := AK.ShiftLeft(1).Add(AK);
   LDigits := L3k.BitLength - 1;
   System.SetLength(Result, LDigits);
-  TArrayUtilities.Fill<Byte>(Result, 0, LDigits, Byte(0));
+  TArrayUtilities.Fill(Result, 0, LDigits, Byte(0));
   LDiff := L3k.&Xor(AK);
   LI := 1;
   while LI < LDigits do
@@ -570,7 +570,7 @@ begin
   end;
   LResultLength := AK.BitLength + 1;
   System.SetLength(Result, LResultLength);
-  TArrayUtilities.Fill<Byte>(Result, 0, LResultLength, Byte(0));
+  TArrayUtilities.Fill(Result, 0, LResultLength, Byte(0));
   LPow2 := 1 shl AWidth;
   LMask := LPow2 - 1;
   LSign := TBitOperations.Asr32(LPow2, 1);
@@ -612,7 +612,7 @@ var
 begin
   LDigits := Math.Max(AG.BitLength, AH.BitLength) + 1;
   System.SetLength(LJsf, LDigits);
-  TArrayUtilities.Fill<Byte>(LJsf, 0, LDigits, Byte(0));
+  TArrayUtilities.Fill(LJsf, 0, LDigits, Byte(0));
   LK0 := AG;
   LK1 := AH;
   LJ := 0;
@@ -700,7 +700,7 @@ begin
   LBits := L3k.BitLength;
   LResultLength := TBitOperations.Asr32(LBits, 1);
   System.SetLength(Result, LResultLength);
-  TArrayUtilities.Fill<Int32>(Result, 0, LResultLength, Int32(0));
+  TArrayUtilities.Fill(Result, 0, LResultLength, Int32(0));
   LDiff := L3k.&Xor(AK);
   LHighBit := LBits - 1;
   LLength := 0;
@@ -752,7 +752,7 @@ begin
   end;
   LResultLength := AK.BitLength div AWidth + 1;
   System.SetLength(Result, LResultLength);
-  TArrayUtilities.Fill<Int32>(Result, 0, LResultLength, Int32(0));
+  TArrayUtilities.Fill(Result, 0, LResultLength, Int32(0));
   LPow2 := 1 shl AWidth;
   LMask := LPow2 - 1;
   LSign := TBitOperations.Asr32(LPow2, 1);

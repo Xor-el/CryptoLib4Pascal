@@ -194,13 +194,13 @@ begin
   if (LU > 1) then
   begin
     System.SetLength(LZeroIV, 12);
-    TArrayUtilities.Fill<Byte>(LZeroIV, 0, 12, Byte(0));
+    TArrayUtilities.Fill(LZeroIV, 0, 12, Byte(0));
     LKeyParam := TKeyParameter.Create(LSeed);
     LParams := TParametersWithIV.Create(LKeyParam, LZeroIV);
     LCipher := TCipherUtilities.GetCipher('CHACHA7539');
     LCipher.Init(True, LParams);
     System.SetLength(LZeros, 32);
-    TArrayUtilities.Fill<Byte>(LZeros, 0, 32, Byte(0));
+    TArrayUtilities.Fill(LZeros, 0, 32, Byte(0));
     System.SetLength(LBlock, 32);
     LJ := 0;
     while LJ < (LU - 1) do

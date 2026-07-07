@@ -1939,22 +1939,22 @@ end;
 
 class procedure TNat256.Zero(AZ: TCryptoLibUInt32Array);
 begin
-  TArrayUtilities.Fill<UInt32>(AZ, 0, 8, UInt32(0));
+  TArrayUtilities.Fill(AZ, 0, 8, UInt32(0));
 end;
 
 class procedure TNat256.Zero(AZ: TCryptoLibUInt32Array; AZOff: Int32);
 begin
-  TArrayUtilities.Fill<UInt32>(AZ, AZOff, AZOff + 8, UInt32(0));
+  TArrayUtilities.Fill(AZ, AZOff, AZOff + 8, UInt32(0));
 end;
 
 class procedure TNat256.Zero64(AZ: TCryptoLibUInt64Array);
 begin
-  TArrayUtilities.Fill<UInt64>(AZ, 0, 4, UInt64(0));
+  TArrayUtilities.Fill(AZ, 0, 4, UInt64(0));
 end;
 
 class procedure TNat256.Zero64(AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
-  TArrayUtilities.Fill<UInt64>(AZ, AZOff, AZOff + 4, UInt64(0));
+  TArrayUtilities.Fill(AZ, AZOff, AZOff + 4, UInt64(0));
 end;
 
 end.

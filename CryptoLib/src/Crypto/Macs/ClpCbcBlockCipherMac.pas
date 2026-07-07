@@ -197,7 +197,7 @@ end;
 
 procedure TCbcBlockCipherMac.Reset();
 begin
-  TArrayUtilities.Fill<Byte>(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
   FBufOff := 0;
   FCipherMode.Reset();
 end;

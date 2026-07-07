@@ -652,7 +652,7 @@ begin
     end;
   end;
 
-  System.FillChar(AMacState[0], BlockSize, 0);
+  TArrayUtilities.Fill(AMacState, 0, BlockSize, Byte(0));
   System.SetLength(LBlock, BlockSize);
   LOffset := 0;
   while LOffset < LHeaderLen do
@@ -789,7 +789,7 @@ begin
     PByte(@ACtx.Dest[ACtx.DestOff + LBulkBlocks * BlockSize]));
 
   // Zero-pad plaintext tail and fold one last CBC step.
-  System.FillChar(LTailBlock[0], BlockSize, 0);
+  TArrayUtilities.Fill(LTailBlock, 0, BlockSize, Byte(0));
   for LI := 0 to LTailLen - 1 do
     LTailBlock[LI] := ACtx.Dest[ACtx.DestOff + LBulkBlocks * BlockSize + LI];
   TByteUtilities.XorTo(BlockSize, PByte(@LTailBlock[0]), PByte(@LMacState[0]));

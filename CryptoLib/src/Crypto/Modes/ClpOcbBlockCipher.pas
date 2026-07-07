@@ -301,16 +301,16 @@ begin
     FMacSize := 16;
 
   System.SetLength(FHashBlock, 16);
-  TArrayUtilities.Fill<Byte>(FHashBlock, 0, 16, Byte(0));
+  TArrayUtilities.Fill(FHashBlock, 0, 16, Byte(0));
   if FForEncryption then
   begin
     System.SetLength(FMainBlock, BLOCK_SIZE);
-    TArrayUtilities.Fill<Byte>(FMainBlock, 0, BLOCK_SIZE, Byte(0));
+    TArrayUtilities.Fill(FMainBlock, 0, BLOCK_SIZE, Byte(0));
   end
   else
   begin
     System.SetLength(FMainBlock, BLOCK_SIZE + FMacSize);
-    TArrayUtilities.Fill<Byte>(FMainBlock, 0, BLOCK_SIZE + FMacSize, Byte(0));
+    TArrayUtilities.Fill(FMainBlock, 0, BLOCK_SIZE + FMacSize, Byte(0));
   end;
 
   if (System.Length(LN) > 15) then
@@ -359,7 +359,7 @@ begin
   end;
 
   System.SetLength(FL_Asterisk, 16);
-  TArrayUtilities.Fill<Byte>(FL_Asterisk, 0, 16, Byte(0));
+  TArrayUtilities.Fill(FL_Asterisk, 0, 16, Byte(0));
   FHashCipher.ProcessBlock(FL_Asterisk, 0, FL_Asterisk, 0);
 
   FL_Dollar := OCB_double(FL_Asterisk);
@@ -394,12 +394,12 @@ begin
   FMainBlockCount := 0;
 
   System.SetLength(FOffsetHASH, 16);
-  TArrayUtilities.Fill<Byte>(FOffsetHASH, 0, 16, Byte(0));
+  TArrayUtilities.Fill(FOffsetHASH, 0, 16, Byte(0));
   System.SetLength(FSum, 16);
-  TArrayUtilities.Fill<Byte>(FSum, 0, 16, Byte(0));
+  TArrayUtilities.Fill(FSum, 0, 16, Byte(0));
   System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
   System.SetLength(FChecksum, 16);
-  TArrayUtilities.Fill<Byte>(FChecksum, 0, 16, Byte(0));
+  TArrayUtilities.Fill(FChecksum, 0, 16, Byte(0));
 
   if (FInitialAssociatedText <> nil) then
   begin
@@ -857,7 +857,7 @@ procedure TOcbBlockCipher.Clear(const ABs: TCryptoLibByteArray);
 begin
   if (ABs <> nil) then
   begin
-    TArrayUtilities.Fill<Byte>(ABs, 0, System.Length(ABs), Byte(0));
+    TArrayUtilities.Fill(ABs, 0, System.Length(ABs), Byte(0));
   end;
 end;
 

@@ -3201,7 +3201,7 @@ begin
   end;
   if LI < ALen then
   begin
-    TArrayUtilities.Fill<UInt32>(AZ, LI, ALen, UInt32(0));
+    TArrayUtilities.Fill(AZ, LI, ALen, UInt32(0));
   end;
 end;
 
@@ -3222,7 +3222,7 @@ begin
   end;
   if LI < ALen then
   begin
-    TArrayUtilities.Fill<UInt32>(AZ, AZOff + LI, AZOff + ALen, UInt32(0));
+    TArrayUtilities.Fill(AZ, AZOff + LI, AZOff + ALen, UInt32(0));
   end;
 end;
 
@@ -3243,7 +3243,7 @@ begin
   end;
   if LI < ALen then
   begin
-    TArrayUtilities.Fill<UInt64>(AZ, LI, ALen, UInt64(0));
+    TArrayUtilities.Fill(AZ, LI, ALen, UInt64(0));
   end;
 end;
 
@@ -3264,7 +3264,7 @@ begin
   end;
   if LI < ALen then
   begin
-    TArrayUtilities.Fill<UInt64>(AZ, AZOff + LI, AZOff + ALen, UInt64(0));
+    TArrayUtilities.Fill(AZ, AZOff + LI, AZOff + ALen, UInt64(0));
   end;
 end;
 

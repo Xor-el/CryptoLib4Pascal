@@ -284,7 +284,7 @@ end;
 procedure TSlhDsaAdrs.SetTypeAndClear(AAdrsType: UInt32);
 begin
   SetType(AAdrsType);
-  FillChar(FValue[SlhDsaAdrsOffsetType + 4], 32 - (SlhDsaAdrsOffsetType + 4), 0);
+  TArrayUtilities.Fill(FValue, SlhDsaAdrsOffsetType + 4, 32, Byte(0));
 end;
 
 { TSlhDsaIndexGenerator }

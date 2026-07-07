@@ -166,7 +166,7 @@ begin
     if LIvLen < System.Length(FIV) then
     begin
       LOffset := System.Length(FIV) - LIvLen;
-      TArrayUtilities.Fill<Byte>(FIV, 0, LOffset, Byte(0));
+      TArrayUtilities.Fill(FIV, 0, LOffset, Byte(0));
       System.Move(LIv[0], FIV[LOffset], LIvLen * System.SizeOf(Byte));
     end
     else
@@ -352,7 +352,7 @@ end;
 
 procedure TCfbBlockCipherMac.Reset;
 begin
-  TArrayUtilities.Fill<Byte>(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
   FBufOff := 0;
   FCipher.Reset();
 end;

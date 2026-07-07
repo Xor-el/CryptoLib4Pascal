@@ -210,19 +210,19 @@ end;
 
 class procedure TBinPolys.Zero(ASize: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
-  TArrayUtilities.Fill<UInt64>(AZ, AZOff, AZOff + ASize, 0);
+  TArrayUtilities.Fill(AZ, AZOff, AZOff + ASize, 0);
 end;
 
 class procedure TBinPolys.Clear(ASize: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
-  TArrayUtilities.Fill<UInt64>(AZ, AZOff, AZOff + ASize, 0);
+  TArrayUtilities.Fill(AZ, AZOff, AZOff + ASize, 0);
 end;
 
 class procedure TBinPolys.One(ASize: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   AZ[AZOff] := 1;
   if ASize > 1 then
-    TArrayUtilities.Fill<UInt64>(AZ, AZOff + 1, AZOff + ASize, 0);
+    TArrayUtilities.Fill(AZ, AZOff + 1, AZOff + ASize, 0);
 end;
 
 class function TBinPolys.EqualTo(ASize: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;

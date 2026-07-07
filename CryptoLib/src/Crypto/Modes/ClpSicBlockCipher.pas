@@ -155,7 +155,7 @@ end;
 
 procedure TSicBlockCipher.Reset;
 begin
-  TArrayUtilities.Fill<Byte>(FCounter, 0, System.Length(FCounter), Byte(0));
+  TArrayUtilities.Fill(FCounter, 0, System.Length(FCounter), Byte(0));
   System.Move(FIV[0], FCounter[0], System.Length(FIV) * System.SizeOf(Byte));
 end;
 

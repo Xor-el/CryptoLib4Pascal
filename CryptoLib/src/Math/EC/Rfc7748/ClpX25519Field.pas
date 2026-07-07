@@ -786,7 +786,7 @@ end;
 class procedure TX25519Field.One(AZ: TCryptoLibInt32Array);
 begin
   AZ[0] := 1;
-  TArrayUtilities.Fill<Int32>(AZ, 1, Size, 0);
+  TArrayUtilities.Fill(AZ, 1, Size, 0);
 end;
 
 class procedure TX25519Field.PowPm5d8(const AX: TCryptoLibInt32Array; const ARx2: TCryptoLibInt32Array;
@@ -1004,7 +1004,7 @@ end;
 
 class procedure TX25519Field.Zero(AZ: TCryptoLibInt32Array);
 begin
-  TArrayUtilities.Fill<Int32>(AZ, 0, Size, 0);
+  TArrayUtilities.Fill(AZ, 0, Size, 0);
 end;
 
 end.

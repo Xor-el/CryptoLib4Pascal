@@ -557,11 +557,11 @@ begin
   FMac.Reset();
 
   FBufOff := 0;
-  TArrayUtilities.Fill<Byte>(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
+  TArrayUtilities.Fill(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
 
   if AClearMac then
   begin
-    TArrayUtilities.Fill<Byte>(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
+    TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   end;
 
   System.SetLength(LTag, FBlockSize);
@@ -573,8 +573,8 @@ begin
   if FUseFusedBody then
   begin
     System.Move(FNonceMac[0], FCtrBlock[0], FBlockSize);
-    TArrayUtilities.Fill<Byte>(FOmacState, 0, FBlockSize, Byte(0));
-    TArrayUtilities.Fill<Byte>(FOmacLookahead, 0, FBlockSize, Byte(0));
+    TArrayUtilities.Fill(FOmacState, 0, FBlockSize, Byte(0));
+    TArrayUtilities.Fill(FOmacLookahead, 0, FBlockSize, Byte(0));
     FHasOmacLookahead := False;
   end;
 

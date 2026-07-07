@@ -178,7 +178,7 @@ begin
 
   LT := TBigInteger.Create(1, FCipher.ProcessBlock(FBlock, 0,
     System.Length(FBlock)));
-  TArrayUtilities.Fill<Byte>(FBlock, 0, System.Length(FBlock), Byte($00));
+  TArrayUtilities.Fill(FBlock, 0, System.Length(FBlock), Byte($00));
 
   LT := LT.Min(FKParam.Modulus.Subtract(LT));
 
@@ -226,8 +226,8 @@ begin
 
   LRv := TArrayUtilities.FixedTimeEquals(FBlock, LFBlock);
 
-  TArrayUtilities.Fill<Byte>(FBlock, 0, System.Length(FBlock), Byte($00));
-  TArrayUtilities.Fill<Byte>(LFBlock, 0, System.Length(LFBlock), Byte($00));
+  TArrayUtilities.Fill(FBlock, 0, System.Length(FBlock), Byte($00));
+  TArrayUtilities.Fill(LFBlock, 0, System.Length(LFBlock), Byte($00));
 
   Result := LRv;
 end;

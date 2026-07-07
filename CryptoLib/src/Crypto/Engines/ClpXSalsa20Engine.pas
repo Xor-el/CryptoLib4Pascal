@@ -79,8 +79,8 @@ begin
 
   if (System.Length(AKeyBytes) <> 32) then
   begin
-    TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-    TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
+    TArrayUtilities.Fill(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+    TArrayUtilities.Fill(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
       [AlgorithmName]);
   end;
@@ -109,8 +109,8 @@ begin
   // Last 64 bits of input IV
   TPack.LE_To_UInt32(AIvBytes, 16, FEngineState, 6, 2);
 
-  TArrayUtilities.Fill<Byte>(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
-  TArrayUtilities.Fill<Byte>(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
+  TArrayUtilities.Fill(AKeyBytes, 0, System.Length(AKeyBytes), Byte(0));
+  TArrayUtilities.Fill(AIvBytes, 0, System.Length(AIvBytes), Byte(0));
 end;
 
 end.

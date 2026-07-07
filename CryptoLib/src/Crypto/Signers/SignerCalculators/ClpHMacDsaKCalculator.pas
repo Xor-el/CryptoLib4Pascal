@@ -120,8 +120,8 @@ var
   LSize: Int32;
 begin
   FN := AN;
-  TArrayUtilities.Fill<Byte>(FV, 0, System.Length(FV), Byte($01));
-  TArrayUtilities.Fill<Byte>(FK, 0, System.Length(FK), Byte(0));
+  TArrayUtilities.Fill(FV, 0, System.Length(FV), Byte($01));
+  TArrayUtilities.Fill(FK, 0, System.Length(FK), Byte(0));
 
   LSize := TBigIntegerUtilities.GetUnsignedByteLength(AN);
   System.SetLength(LX, LSize);

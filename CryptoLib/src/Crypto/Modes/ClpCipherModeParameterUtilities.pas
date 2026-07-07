@@ -124,7 +124,7 @@ begin
       LPrefix := System.Length(AIvTarget) - System.Length(LIv);
       System.Move(LIv[0], AIvTarget[LPrefix],
         System.Length(LIv) * System.SizeOf(Byte));
-      TArrayUtilities.Fill<Byte>(AIvTarget, 0, LPrefix, Byte(0));
+      TArrayUtilities.Fill(AIvTarget, 0, LPrefix, Byte(0));
     end
     else
     begin

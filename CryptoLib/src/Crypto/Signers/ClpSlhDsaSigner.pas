@@ -32,6 +32,7 @@ uses
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
   ClpSecureRandom,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -114,8 +115,7 @@ end;
 
 procedure TSlhDsaSignerBuffer.TruncateAndClear(ANewLength: Int32);
 begin
-  if ANewLength < FCount then
-    FillChar(FBuffer[ANewLength], FCount - ANewLength, 0);
+  TArrayUtilities.Fill(FBuffer, ANewLength, FCount, Byte(0));
   FCount := ANewLength;
 end;
 

@@ -232,7 +232,7 @@ procedure TBufferedAsymmetricBlockCipher.Reset;
 begin
   if FBuffer <> nil then
   begin
-    TArrayUtilities.Fill<Byte>(FBuffer, 0, System.Length(FBuffer), Byte(0));
+    TArrayUtilities.Fill(FBuffer, 0, System.Length(FBuffer), Byte(0));
     FBufOff := 0;
   end;
 end;

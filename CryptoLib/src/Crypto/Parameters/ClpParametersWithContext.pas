@@ -88,7 +88,7 @@ end;
 
 destructor TParametersWithContext.Destroy;
 begin
-  TArrayUtilities.Fill<Byte>(FContext, 0, System.Length(FContext), Byte(0));
+  TArrayUtilities.Fill(FContext, 0, System.Length(FContext), Byte(0));
   inherited;
 end;
 

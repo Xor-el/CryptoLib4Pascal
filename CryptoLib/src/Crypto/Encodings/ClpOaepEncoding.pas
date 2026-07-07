@@ -242,7 +242,7 @@ begin
     LCopyLen := System.Length(LBlock);
 
   System.Move(LData[0], LBlock[System.Length(LBlock) - LCopyLen], LCopyLen);
-  TArrayUtilities.Fill<Byte>(LData, 0, System.Length(LData), Byte(0));
+  TArrayUtilities.Fill(LData, 0, System.Length(LData), Byte(0));
 
   FMgf1Hash.Reset();
 
@@ -271,7 +271,7 @@ begin
 
   if LWrongMask <> 0 then
   begin
-    TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
+    TArrayUtilities.Fill(LBlock, 0, System.Length(LBlock), Byte(0));
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataWrong);
   end;
 
@@ -279,7 +279,7 @@ begin
 
   SetLength(Result, System.Length(LBlock) - LStart);
   System.Move(LBlock[LStart], Result[0], System.Length(Result));
-  TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
+  TArrayUtilities.Fill(LBlock, 0, System.Length(LBlock), Byte(0));
 end;
 
 procedure TOaepEncoding.MaskGeneratorFunction(

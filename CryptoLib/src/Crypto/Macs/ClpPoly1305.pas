@@ -432,7 +432,7 @@ end;
 procedure TPoly1305.Reset();
 begin
   FCurrentBlockOffset := 0;
-  TArrayUtilities.Fill<Byte>(FCurrentBlock, 0, System.Length(FCurrentBlock), Byte(0));
+  TArrayUtilities.Fill(FCurrentBlock, 0, System.Length(FCurrentBlock), Byte(0));
   Poly1305StateReset(FState);
 end;
 

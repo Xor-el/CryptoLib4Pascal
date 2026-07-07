@@ -232,7 +232,7 @@ begin
     LIv := LIvParam.GetIV();
     LDiff := System.Length(FIV) - System.Length(LIv);
     System.Move(LIv[0], FIV[LDiff], System.Length(LIv) * System.SizeOf(Byte));
-    TArrayUtilities.Fill<Byte>(FIV, 0, LDiff, Byte(0));
+    TArrayUtilities.Fill(FIV, 0, LDiff, Byte(0));
     LParameters := LIvParam.Parameters;
   end;
 

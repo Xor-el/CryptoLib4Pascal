@@ -122,7 +122,7 @@ begin
     TBinPolyX86V128Kernels.ImplMulSmall(ASmallLen, AX, AXOff, AY, AYOff, Ltt, 0);
     AReduce.Reduce(Ltt, 0, AZ, AZOff);
   finally
-    TArrayUtilities.Fill<UInt64>(Ltt, 0, ASizeExt, 0);
+    TArrayUtilities.Fill(Ltt, 0, ASizeExt, 0);
   end;
 end;
 

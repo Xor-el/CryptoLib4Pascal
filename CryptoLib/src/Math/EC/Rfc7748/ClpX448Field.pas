@@ -1127,7 +1127,7 @@ end;
 
 class procedure TX448Field.Zero(AZ: TCryptoLibUInt32Array);
 begin
-  TArrayUtilities.Fill<UInt32>(AZ, 0, Size, 0);
+  TArrayUtilities.Fill(AZ, 0, Size, 0);
 end;
 
 end.

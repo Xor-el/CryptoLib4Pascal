@@ -387,7 +387,7 @@ begin
   end;
 
   // Clear sensitive data
-  TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
+  TArrayUtilities.Fill(LBlock, 0, System.Length(LBlock), Byte(0));
 end;
 
 function TPkcs1Encoding.DecodeBlock(const AInput: TCryptoLibByteArray;
@@ -435,8 +435,8 @@ begin
     System.Move(LData[System.Length(LData) - LPlaintextLength], Result[0], LPlaintextLength);
   finally
     // Clear sensitive data
-    TArrayUtilities.Fill<Byte>(LBlock, 0, System.Length(LBlock), Byte(0));
-    TArrayUtilities.Fill<Byte>(FBlockBuffer, 0, Math.Max(0, System.Length(FBlockBuffer) - System.Length(LBlock)), Byte(0));
+    TArrayUtilities.Fill(LBlock, 0, System.Length(LBlock), Byte(0));
+    TArrayUtilities.Fill(FBlockBuffer, 0, Math.Max(0, System.Length(FBlockBuffer) - System.Length(LBlock)), Byte(0));
   end;
 end;
 

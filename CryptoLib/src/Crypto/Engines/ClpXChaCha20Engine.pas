@@ -99,18 +99,18 @@ begin
   try
     TChaChaEngine.HChaCha20(AKeyBytes, LNoncePrefix, LSubKey, 0);
   finally
-    TArrayUtilities.Fill<Byte>(LNoncePrefix, 0, System.Length(LNoncePrefix), Byte(0));
+    TArrayUtilities.Fill(LNoncePrefix, 0, System.Length(LNoncePrefix), Byte(0));
   end;
 
   System.SetLength(LInnerIv, 12);
-  TArrayUtilities.Fill<Byte>(LInnerIv, 0, 4, Byte(0));
+  TArrayUtilities.Fill(LInnerIv, 0, 4, Byte(0));
   System.Move(AIvBytes[16], LInnerIv[4], 8);
 
   try
     inherited SetKey(LSubKey, LInnerIv);
   finally
-    TArrayUtilities.Fill<Byte>(LSubKey, 0, 32, Byte(0));
-    TArrayUtilities.Fill<Byte>(LInnerIv, 0, 12, Byte(0));
+    TArrayUtilities.Fill(LSubKey, 0, 32, Byte(0));
+    TArrayUtilities.Fill(LInnerIv, 0, 12, Byte(0));
   end;
 end;
 

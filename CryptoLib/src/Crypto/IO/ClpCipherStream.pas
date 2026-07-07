@@ -202,7 +202,7 @@ begin
       try
         FStream.Write(LOutput[0], LLength);
       finally
-        TArrayUtilities.Fill<Byte>(LOutput, 0, System.Length(LOutput), Byte(0));
+        TArrayUtilities.Fill(LOutput, 0, System.Length(LOutput), Byte(0));
       end;
     end;
   end;
@@ -226,7 +226,7 @@ begin
     try
       FStream.Write(LOutput[0], System.Length(LOutput));
     finally
-      TArrayUtilities.Fill<Byte>(LOutput, 0, System.Length(LOutput), Byte(0));
+      TArrayUtilities.Fill(LOutput, 0, System.Length(LOutput), Byte(0));
     end;
   end;
 end;
@@ -258,7 +258,7 @@ begin
     LLen := FWriteCipher.DoFinal(LOutput, 0);
     if LLen > 0 then
       FStream.Write(LOutput[0], LLen);
-    TArrayUtilities.Fill<Byte>(LOutput, 0, System.Length(LOutput), Byte(0));
+    TArrayUtilities.Fill(LOutput, 0, System.Length(LOutput), Byte(0));
   end;
   if not FLeaveOpen then
     FStream.Free;

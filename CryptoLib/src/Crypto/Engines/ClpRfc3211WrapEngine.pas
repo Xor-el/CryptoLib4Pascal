@@ -224,7 +224,7 @@ begin
     LNonEqual := LNonEqual or (LCheck xor LCekBlock[4 + LI]);
   end;
 
-  TArrayUtilities.Fill<Byte>(LCekBlock, 0, System.Length(LCekBlock), Byte(0));
+  TArrayUtilities.Fill(LCekBlock, 0, System.Length(LCekBlock), Byte(0));
 
   if (LNonEqual <> 0) or LInvalidLength then
     raise EInvalidCipherTextCryptoLibException.CreateRes(@SWrappedKeyCorrupted);
