@@ -577,6 +577,49 @@ uses
   ClpAsn1Parsers,
   ClpAsn1Core;
 
+type
+  TLimitedCapacityMemoryStream = class(TMemoryStream)
+  strict private
+    FLimitedCapacity: Int32;
+  strict protected
+{$IFDEF FPC}
+    function Realloc(var NewCapacity: PtrInt): Pointer; override;
+{$ELSE}
+    procedure SetCapacity(NewCapacity: NativeInt); override;
+{$ENDIF}
+  public
+    constructor Create(ALimitedCapacity: Int32);
+    function GetBuffer: TCryptoLibByteArray;
+  end;
+
+{ TLimitedCapacityMemoryStream }
+
+constructor TLimitedCapacityMemoryStream.Create(ALimitedCapacity: Int32);
+begin
+  inherited Create;
+  FLimitedCapacity := ALimitedCapacity;
+end;
+
+{$IFDEF FPC}
+function TLimitedCapacityMemoryStream.Realloc(var NewCapacity: PtrInt): Pointer;
+begin
+  NewCapacity := Min(NewCapacity * 2, FLimitedCapacity);
+  Result := inherited Realloc(NewCapacity);
+end;
+{$ELSE}
+procedure TLimitedCapacityMemoryStream.SetCapacity(NewCapacity: NativeInt);
+begin
+  inherited SetCapacity(Min(NewCapacity * 2, FLimitedCapacity));
+end;
+{$ENDIF}
+
+function TLimitedCapacityMemoryStream.GetBuffer: TCryptoLibByteArray;
+begin
+  System.SetLength(Result, Size);
+  if Size > 0 then
+    Move(Memory^, Result[0], Size);
+end;
+
 { TAsn1InputStream }
 
 class constructor TAsn1InputStream.Create;
@@ -632,49 +675,6 @@ begin
     LIndefiniteLengthInputStream := FIn as TAsn1IndefiniteLengthInputStream;
     LIndefiniteLengthInputStream.SetEofOn00(True);
   end;
-end;
-
-type
-  TLimitedCapacityMemoryStream = class(TMemoryStream)
-  strict private
-    FLimitedCapacity: Int32;
-  strict protected
-{$IFDEF FPC}
-    function Realloc(var NewCapacity: PtrInt): Pointer; override;
-{$ELSE}
-    procedure SetCapacity(NewCapacity: NativeInt); override;
-{$ENDIF}
-  public
-    constructor Create(ALimitedCapacity: Int32);
-    function GetBuffer: TCryptoLibByteArray;
-  end;
-
-{ TLimitedCapacityMemoryStream }
-
-constructor TLimitedCapacityMemoryStream.Create(ALimitedCapacity: Int32);
-begin
-  inherited Create;
-  FLimitedCapacity := ALimitedCapacity;
-end;
-
-{$IFDEF FPC}
-function TLimitedCapacityMemoryStream.Realloc(var NewCapacity: PtrInt): Pointer;
-begin
-  NewCapacity := Min(NewCapacity * 2, FLimitedCapacity);
-  Result := inherited Realloc(NewCapacity);
-end;
-{$ELSE}
-procedure TLimitedCapacityMemoryStream.SetCapacity(NewCapacity: NativeInt);
-begin
-  inherited SetCapacity(Min(NewCapacity * 2, FLimitedCapacity));
-end;
-{$ENDIF}
-
-function TLimitedCapacityMemoryStream.GetBuffer: TCryptoLibByteArray;
-begin
-  System.SetLength(Result, Size);
-  if Size > 0 then
-    Move(Memory^, Result[0], Size);
 end;
 
 { TAsn1DefiniteLengthInputStream }
