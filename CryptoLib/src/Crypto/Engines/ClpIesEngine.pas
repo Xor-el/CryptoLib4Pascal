@@ -597,7 +597,7 @@ begin
   if (System.Length(FV) <> 0) then
   begin
     VZ := TArrayUtilities.Concatenate<Byte>([FV, BigZ]);
-    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
+    TArrayUtilities.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
     BigZ := VZ;
   end;
 
@@ -618,7 +618,7 @@ begin
     end;
 
   finally
-    TArrayUtilities.Fill<Byte>(BigZ, 0, System.Length(BigZ), Byte(0));
+    TArrayUtilities.Fill(BigZ, 0, System.Length(BigZ), Byte(0));
   end;
 end;
 

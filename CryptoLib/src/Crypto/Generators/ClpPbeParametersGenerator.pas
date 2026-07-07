@@ -184,12 +184,12 @@ procedure TPbeParametersGenerator.Clear;
 begin
   if FPassword <> nil then
   begin
-    TArrayUtilities.Fill<Byte>(FPassword, 0, System.Length(FPassword), Byte(0));
+    TArrayUtilities.Fill(FPassword, 0, System.Length(FPassword), Byte(0));
     FPassword := nil;
   end;
   if FSalt <> nil then
   begin
-    TArrayUtilities.Fill<Byte>(FSalt, 0, System.Length(FSalt), Byte(0));
+    TArrayUtilities.Fill(FSalt, 0, System.Length(FSalt), Byte(0));
     FSalt := nil;
   end;
   FIterationCount := 0;
@@ -238,7 +238,7 @@ begin
     if AWrongPkcs12Zero then
     begin
       System.SetLength(Result, 2);
-      TArrayUtilities.Fill<Byte>(Result, 0, System.Length(Result), Byte(0));
+      TArrayUtilities.Fill(Result, 0, System.Length(Result), Byte(0));
     end
     else
       Result := nil;

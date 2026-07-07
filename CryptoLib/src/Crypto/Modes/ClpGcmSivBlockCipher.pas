@@ -291,7 +291,7 @@ procedure TGcmSivBlockCipher.TGcmSivHasher.CompleteHash;
 begin
   if FNumActive > 0 then
   begin
-    TArrayUtilities.Fill<Byte>(FParent.FTheReverse, 0, System.Length(FParent.FTheReverse), Byte(0));
+    TArrayUtilities.Fill(FParent.FTheReverse, 0, System.Length(FParent.FTheReverse), Byte(0));
     TGcmSivBlockCipher.FillReverse(FBuffer, 0, FNumActive, FParent.FTheReverse);
 
     FParent.GHASH(FParent.FTheReverse);
@@ -551,8 +551,7 @@ procedure TGcmSivBlockCipher.ResetStreams;
 begin
   // Wipe held/recovered plaintext (FTheEncData holds only ciphertext); reset
   // used lengths but keep the reused buffers' capacity.
-  if FThePlainLen > 0 then
-    System.FillChar(FThePlain[0], FThePlainLen, 0);
+  TArrayUtilities.Fill(FThePlain, 0, FThePlainLen, Byte(0));
   FThePlainLen := 0;
   FTheEncDataLen := 0;
 
@@ -560,7 +559,7 @@ begin
   FTheDataHasher.Reset();
 
   FTheFlags := FTheFlags and (not AEAD_COMPLETE);
-  TArrayUtilities.Fill<Byte>(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
+  TArrayUtilities.Fill(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
 
   if FTheInitialAEAD <> nil then
     FTheAEADHasher.UpdateHash(FTheInitialAEAD, 0, System.Length(FTheInitialAEAD));

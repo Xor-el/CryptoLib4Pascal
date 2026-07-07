@@ -508,7 +508,7 @@ begin
   LKeyLen := System.Length(AKey);
   if ((LKeyLen < 16) or (LKeyLen > 32) or ((LKeyLen and 7) <> 0)) then
   begin
-    TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+    TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -684,7 +684,7 @@ begin
       end
   else
     begin
-      TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+      TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
       raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperation);
     end;
   end;
@@ -703,7 +703,7 @@ begin
 
   Result := LBigW;
 
-  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+  TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
 function TAesEngine.GetAlgorithmName: String;

@@ -86,8 +86,8 @@ begin
     ImplKaratsuba(FSize, AX, AXOff, AY, AYOff, Ltt, 0, LScratch, 0);
     FReduce.Reduce(Ltt, 0, AZ, AZOff);
   finally
-    TArrayUtilities.Fill<UInt64>(LScratch, 0, LScratchSize, 0);
-    TArrayUtilities.Fill<UInt64>(Ltt, 0, FSizeExt, 0);
+    TArrayUtilities.Fill(LScratch, 0, LScratchSize, 0);
+    TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
   end;
 end;
 

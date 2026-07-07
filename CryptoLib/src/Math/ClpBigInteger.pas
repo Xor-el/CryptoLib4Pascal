@@ -831,7 +831,7 @@ begin
     System.SetLength(LNewMag, LMagLen + LNInts);
     if LMagLen > 0 then
       Move(AMag[0], LNewMag[0], LMagLen * SizeOf(UInt32));
-    TArrayUtilities.Fill<UInt32>(LNewMag, LMagLen, System.Length(LNewMag), UInt32(0));
+    TArrayUtilities.Fill(LNewMag, LMagLen, System.Length(LNewMag), UInt32(0));
   end
   else
   begin
@@ -998,7 +998,7 @@ begin
     begin
       AMag[LI] := AMag[LI - LDelta];
     end;
-    TArrayUtilities.Fill<UInt32>(AMag, AStart, LNInts, UInt32(0));
+    TArrayUtilities.Fill(AMag, AStart, LNInts, UInt32(0));
   end;
   if LNBits <> 0 then
   begin
@@ -1129,7 +1129,7 @@ begin
   if LXYCmp = 0 then
   begin
     LCount := AddMagnitudes(LCount, FOne.FMagnitude);
-    TArrayUtilities.Fill<UInt32>(AX, LXStart, System.Length(AX), UInt32(0));
+    TArrayUtilities.Fill(AX, LXStart, System.Length(AX), UInt32(0));
   end;
   Result := LCount;
 end;
@@ -1234,7 +1234,7 @@ begin
   end;
   if LXYCmp = 0 then
   begin
-    TArrayUtilities.Fill<UInt32>(AX, LXStart, System.Length(AX), UInt32(0));
+    TArrayUtilities.Fill(AX, LXStart, System.Length(AX), UInt32(0));
   end;
   Result := AX;
 end;
@@ -1911,7 +1911,7 @@ begin
   end;
   LResLength := System.Length(FMagnitude) + System.Length(AValue.FMagnitude);
   System.SetLength(LRes, LResLength);
-  TArrayUtilities.Fill<UInt32>(LRes, 0, System.Length(LRes), UInt32(0));
+  TArrayUtilities.Fill(LRes, 0, System.Length(LRes), UInt32(0));
   Multiply(LRes, FMagnitude, AValue.FMagnitude);
   LResSign := FSign xor AValue.FSign xor 1;
   Result := TBigInteger.Create(LResSign, LRes, True);

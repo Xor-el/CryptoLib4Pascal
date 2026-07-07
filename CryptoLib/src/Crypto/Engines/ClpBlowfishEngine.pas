@@ -322,7 +322,7 @@ begin
   if ((LKeyLength < 4) or (LKeyLength > 56) or (((LKeyLength * 8) and 7) <> 0))
   then
   begin
-    TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+    TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -408,7 +408,7 @@ begin
   ProcessTable(FS1[SBOX_SK - 2], FS1[SBOX_SK - 1], FS2);
   ProcessTable(FS2[SBOX_SK - 2], FS2[SBOX_SK - 1], FS3);
 
-  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+  TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
 procedure TBlowfishEngine.EncryptBlock(const ASrc: TCryptoLibByteArray;

@@ -79,7 +79,7 @@ end;
 
 procedure TParametersWithIV.Clear;
 begin
-  TArrayUtilities.Fill<Byte>(FIv, 0, System.Length(FIv), Byte(0));
+  TArrayUtilities.Fill(FIv, 0, System.Length(FIv), Byte(0));
 end;
 
 constructor TParametersWithIV.Create(const AParameters: ICipherParameters;

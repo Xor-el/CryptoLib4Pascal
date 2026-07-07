@@ -195,8 +195,8 @@ begin
     FCipher.Init(True, TKeyParameter.Create(LNewKey) as IKeyParameter);
     FBytesSinceSeed := 0;
   finally
-    TArrayUtilities.Fill<Byte>(LMix, 0, System.Length(LMix), Byte(0));
-    TArrayUtilities.Fill<Byte>(LNewKey, 0, System.Length(LNewKey), Byte(0));
+    TArrayUtilities.Fill(LMix, 0, System.Length(LMix), Byte(0));
+    TArrayUtilities.Fill(LNewKey, 0, System.Length(LNewKey), Byte(0));
   end;
 end;
 
@@ -223,7 +223,7 @@ begin
   FCipher.Init(True, TKeyParameter.Create(LAesRngSeed) as IKeyParameter);
   FBytesSinceSeed := 0;
 
-  TArrayUtilities.Fill<Byte>(LAesRngSeed, 0, System.Length(LAesRngSeed), Byte(0));
+  TArrayUtilities.Fill(LAesRngSeed, 0, System.Length(LAesRngSeed), Byte(0));
 end;
 
 constructor TAesRandomProvider.Create(AAesRngSeedLength,
@@ -236,7 +236,7 @@ begin
     GetRawEntropy(LSeed); // pure entropy from OS
     Create(LSeed, AReseedAfterBytes);
   finally
-    TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0));
+    TArrayUtilities.Fill(LSeed, 0, System.Length(LSeed), Byte(0));
   end;
 end;
 
@@ -268,7 +268,7 @@ begin
         GetRawEntropy(LSeed);
         DoSeedLocked(LSeed);
       finally
-        TArrayUtilities.Fill<Byte>(LSeed, 0, System.Length(LSeed), Byte(0));
+        TArrayUtilities.Fill(LSeed, 0, System.Length(LSeed), Byte(0));
       end;
     end;
 
@@ -294,10 +294,10 @@ begin
         System.Inc(FBytesSinceSeed, LDataLength);
         // Zero the bytes we did NOT consume so they cannot be read from the
         // heap after LResult is released.
-        TArrayUtilities.Fill<Byte>(LResult, LDataLength,
+        TArrayUtilities.Fill(LResult, LDataLength,
           System.Length(LResult) - LDataLength, Byte(0));
       finally
-        TArrayUtilities.Fill<Byte>(LResult, 0,
+        TArrayUtilities.Fill(LResult, 0,
           System.Length(LResult), Byte(0));
       end;
     end;

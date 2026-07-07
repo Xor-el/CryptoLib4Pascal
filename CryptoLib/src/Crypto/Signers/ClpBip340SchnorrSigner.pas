@@ -201,7 +201,7 @@ begin
     if (LProvidedRandom <> nil) then
       LProvidedRandom.NextBytes(LAuxRand)
     else
-      TArrayUtilities.Fill<Byte>(LAuxRand, 0, System.Length(LAuxRand), Byte(0));
+      TArrayUtilities.Fill(LAuxRand, 0, System.Length(LAuxRand), Byte(0));
 
     LD := TBigInteger.Create(1, APrivateKey.GetEncoded()).&Mod(LN);
     if (LD.SignValue = 0) then

@@ -1106,7 +1106,7 @@ end;
 
 class procedure TNat128.Zero(const AZ: TCryptoLibUInt32Array);
 begin
-  TArrayUtilities.Fill<UInt32>(AZ, 0, 4, UInt32(0));
+  TArrayUtilities.Fill(AZ, 0, 4, UInt32(0));
 end;
 
 end.

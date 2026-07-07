@@ -317,7 +317,7 @@ begin
       Exit;
     end;
   System.SetLength(Result, TBip327MuSig2Utilities.BIP327_PLAIN_PUBKEY_SIZE);
-  TArrayUtilities.Fill<Byte>(Result, 0, System.Length(Result), Byte(0));
+  TArrayUtilities.Fill(Result, 0, System.Length(Result), Byte(0));
 end;
 
 class function TBip327MuSig2KeyAggregation.KeyAggCoeffInternal(const APubKeys: TCryptoLibGenericArray<TCryptoLibByteArray>;

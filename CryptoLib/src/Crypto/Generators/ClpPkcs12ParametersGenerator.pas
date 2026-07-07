@@ -119,7 +119,7 @@ var
   LSaltEmpty, LPasswordEmpty: Boolean;
 begin
   System.SetLength(LD, FV);
-  TArrayUtilities.Fill<Byte>(LD, 0, System.Length(LD), Byte(AIdByte));
+  TArrayUtilities.Fill(LD, 0, System.Length(LD), Byte(AIdByte));
 
   LSaltEmpty := (FSalt = nil) or (System.Length(FSalt) = 0);
   LS := nil;

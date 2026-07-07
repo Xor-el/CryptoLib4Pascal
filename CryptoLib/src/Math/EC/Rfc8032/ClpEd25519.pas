@@ -1894,7 +1894,7 @@ begin
     FOwner.GeneratePrivateKey(ARandom, LSk);
     ExpandPrivateKey(LSk, 0, AXk, AXkOff);
   finally
-    TArrayUtilities.Fill<Byte>(LSk, 0, System.Length(LSk), 0);
+    TArrayUtilities.Fill(LSk, 0, System.Length(LSk), 0);
   end;
 end;
 

@@ -545,7 +545,7 @@ begin
 
   CheckData();
 
-  TArrayUtilities.Fill<Byte>(FMac, 0, MacSize, Byte(0));
+  TArrayUtilities.Fill(FMac, 0, MacSize, Byte(0));
 
   case FState of
     TState.DecData:
@@ -676,7 +676,7 @@ begin
     FChaCha20.ProcessBytes(LFirstBlock, 0, 64, LFirstBlock, 0);
     FPoly1305.Init(TKeyParameter.Create(LFirstBlock, 0, 32) as IKeyParameter);
   finally
-    TArrayUtilities.Fill<Byte>(LFirstBlock, 0, 64, Byte(0));
+    TArrayUtilities.Fill(LFirstBlock, 0, 64, Byte(0));
   end;
 end;
 
@@ -733,11 +733,11 @@ end;
 
 procedure TChaCha20Poly1305.Reset(AClearMac, AResetCipher: Boolean);
 begin
-  TArrayUtilities.Fill<Byte>(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
 
   if AClearMac then
   begin
-    TArrayUtilities.Fill<Byte>(FMac, 0, System.Length(FMac), Byte(0));
+    TArrayUtilities.Fill(FMac, 0, System.Length(FMac), Byte(0));
   end;
 
   FAadCount := UInt64(0);

@@ -410,7 +410,7 @@ begin
   LK2Orig := TBigInteger.Create(1, System.Copy(ASecNonce, 32, 32));
   LK1 := LK1Orig;
   LK2 := LK2Orig;
-  TArrayUtilities.Fill<Byte>(ASecNonce, 0, 64, Byte(0));
+  TArrayUtilities.Fill(ASecNonce, 0, 64, Byte(0));
   if (LK1.SignValue <= 0) or (LK1.CompareTo(LN) >= 0) then
     Exit;
   if (LK2.SignValue <= 0) or (LK2.CompareTo(LN) >= 0) then

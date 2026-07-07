@@ -229,7 +229,7 @@ begin
   if not FEd25519.Verify(ASignedMsg, ASignedMsgOff, APk, APkOff,
     ASignedMsg, ASignedMsgOff + SignBytes, LMlen) then
   begin
-    TArrayUtilities.Fill<Byte>(AM, AMOff, AMOff + ASignedMsgLen, 0);
+    TArrayUtilities.Fill(AM, AMOff, AMOff + ASignedMsgLen, 0);
     AMlen := -1;
     Exit(False);
   end;

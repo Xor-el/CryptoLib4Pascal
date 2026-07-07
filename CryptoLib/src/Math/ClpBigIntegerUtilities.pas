@@ -274,7 +274,7 @@ begin
 
   LPadLen := ALength - LBytesLength;
   System.SetLength(Result, ALength);
-  TArrayUtilities.Fill<Byte>(Result, 0, LPadLen, Byte(0));
+  TArrayUtilities.Fill(Result, 0, LPadLen, Byte(0));
   System.Move(LBytes[0], Result[LPadLen], LBytesLength * System.SizeOf(Byte));
 end;
 
@@ -291,7 +291,7 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SStandardLengthExceeded);
 
   LPadLen := ALen - LBytesLength;
-  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPadLen, Byte(0));
+  TArrayUtilities.Fill(ABuf, AOff, AOff + LPadLen, Byte(0));
   System.Move(LBytes[0], ABuf[AOff + LPadLen], LBytesLength * System.SizeOf(Byte));
 end;
 

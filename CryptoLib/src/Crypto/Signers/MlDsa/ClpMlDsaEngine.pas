@@ -32,6 +32,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpBitOperations,
+  ClpArrayUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -401,7 +402,7 @@ begin
   if FRandom <> nil then
     LRnd := TSecureRandom.GetNextBytes(FRandom, RndBytes)
   else
-    FillChar(LRnd[0], RndBytes, 0);
+    TArrayUtilities.Fill(LRnd, 0, RndBytes, Byte(0));
   MsgRepEndSignCore(ADigest, ASig, ASigLen, ARho, AK, AT0Enc, AS1Enc, AS2Enc, LRnd);
 end;
 

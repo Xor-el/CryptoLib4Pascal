@@ -865,7 +865,7 @@ begin
   LKeyLen := System.Length(AKey);
   if ((LKeyLen < 16) or (LKeyLen > 32) or ((LKeyLen and 7) <> 0)) then
   begin
-    TArrayUtilities.Fill<Byte>(AKey, 0, LKeyLen, Byte(0));
+    TArrayUtilities.Fill(AKey, 0, LKeyLen, Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -888,7 +888,7 @@ begin
         AesNiExpandRoundKeys256(@AKey[0], LK);
       end;
   else
-    TArrayUtilities.Fill<Byte>(AKey, 0, LKeyLen, Byte(0));
+    TArrayUtilities.Fill(AKey, 0, LKeyLen, Byte(0));
     raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
   end;
 
@@ -1014,7 +1014,7 @@ begin
     CreateRoundKeys(AForEncryption, LKeyCopy);
     BindCipherPointers;
   finally
-    TArrayUtilities.Fill<Byte>(LKeyCopy, 0, System.Length(LKeyCopy), Byte(0));
+    TArrayUtilities.Fill(LKeyCopy, 0, System.Length(LKeyCopy), Byte(0));
   end;
 end;
 

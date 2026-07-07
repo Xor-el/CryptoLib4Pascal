@@ -108,7 +108,7 @@ begin
   LBsOff := Max(0, System.Length(LBs) - ALength);
   LBsLen := System.Length(LBs) - LBsOff;
   LPos := ALength - LBsLen;
-  TArrayUtilities.Fill<Byte>(ABuf, AOff, AOff + LPos, Byte(0));
+  TArrayUtilities.Fill(ABuf, AOff, AOff + LPos, Byte(0));
   System.Move(LBs[LBsOff], ABuf[AOff + LPos], LBsLen * System.SizeOf(Byte));
 end;
 

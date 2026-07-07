@@ -722,7 +722,7 @@ begin
     LParameters := LGenerator.GenerateDerivedMacParameters(LBitLen);
   end;
 
-  TArrayUtilities.Fill<Byte>(LKeyBytes, 0, System.Length(LKeyBytes), Byte(0));
+  TArrayUtilities.Fill(LKeyBytes, 0, System.Length(LKeyBytes), Byte(0));
   Result := LParameters;
 end;
 

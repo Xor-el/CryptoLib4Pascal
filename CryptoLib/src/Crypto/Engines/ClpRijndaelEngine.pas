@@ -543,7 +543,7 @@ begin
       LKc := 8
   else
     begin
-      TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+      TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
       raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
     end;
   end;
@@ -653,7 +653,7 @@ begin
   end;
   Result := LW;
 
-  TArrayUtilities.Fill<Byte>(AKey, 0, System.Length(AKey), Byte(0));
+  TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
 procedure TRijndaelEngine.PackBlock(const ABytes: TCryptoLibByteArray;

@@ -122,6 +122,8 @@ type
       AFiller: UInt32); overload; static; inline;
     class procedure Fill(const ABuf: TCryptoLibUInt64Array; AFrom, ATo: Int32;
       AFiller: UInt64); overload; static; inline;
+    class procedure Fill(const ABuf: TCryptoLibInt32Array; AFrom, ATo: Int32;
+      AFiller: Int32); overload; static; inline;
 
     /// <summary>
     /// Grow ABuf's capacity to at least ANeeded by doubling; never shrinks.
@@ -377,6 +379,18 @@ begin
   System.FillQWord(ABuf[AFrom], ATo - AFrom, AFiller);
 {$ELSE}
   FillCore<UInt64>(ABuf, AFrom, ATo, AFiller);
+{$ENDIF FPC}
+end;
+
+class procedure TArrayUtilities.Fill(const ABuf: TCryptoLibInt32Array;
+  AFrom, ATo: Int32; AFiller: Int32);
+begin
+  if (ABuf = nil) or (ATo <= AFrom) then
+    Exit;
+{$IFDEF FPC}
+  System.FillDWord(ABuf[AFrom], ATo - AFrom, UInt32(AFiller));
+{$ELSE}
+  FillCore<Int32>(ABuf, AFrom, ATo, AFiller);
 {$ENDIF FPC}
 end;
 

@@ -463,9 +463,9 @@ begin
     System.SetLength(FHPow, 128);
     TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
     System.SetLength(FWorkCtr, 128);
-    TArrayUtilities.Fill<Byte>(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
+    TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
     System.SetLength(FWorkCtrAhead, 128);
-    TArrayUtilities.Fill<Byte>(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
+    TArrayUtilities.Fill(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
 
     if TFusedKernelRegistry.TryAcquireGcm(FCipher, TFusedModeDirection.Encrypt,
       @FHPow[0], FGcmKernel) and (FGcmKernel <> nil) then
@@ -1049,10 +1049,10 @@ end;
 
 procedure TGcmBlockCipher.DoReset(AClearMac: Boolean);
 begin
-  TArrayUtilities.Fill<Byte>(FS, 0, System.Length(FS), Byte(0));
-  TArrayUtilities.Fill<Byte>(FS_at, 0, System.Length(FS_at), Byte(0));
-  TArrayUtilities.Fill<Byte>(FS_atPre, 0, System.Length(FS_atPre), Byte(0));
-  TArrayUtilities.Fill<Byte>(FAtBlock, 0, System.Length(FAtBlock), Byte(0));
+  TArrayUtilities.Fill(FS, 0, System.Length(FS), Byte(0));
+  TArrayUtilities.Fill(FS_at, 0, System.Length(FS_at), Byte(0));
+  TArrayUtilities.Fill(FS_atPre, 0, System.Length(FS_atPre), Byte(0));
+  TArrayUtilities.Fill(FAtBlock, 0, System.Length(FAtBlock), Byte(0));
   FAtBlockPos := 0;
   FAtLength := 0;
   FAtLengthPre := 0;
@@ -1063,7 +1063,7 @@ begin
   FTotalLength := 0;
 
   if FBufBlock <> nil then
-    TArrayUtilities.Fill<Byte>(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
+    TArrayUtilities.Fill(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
 
   if AClearMac then
     FMacBlock := nil;
