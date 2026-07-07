@@ -123,6 +123,7 @@ type
     /// <summary>
     /// Reads bytes from the stream into a buffer.
     /// </summary>
+    function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Read(ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt)
       : LongInt; override;
 
@@ -165,6 +166,7 @@ type
     /// <summary>
     /// Reads bytes from the stream into a buffer.
     /// </summary>
+    function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Read(ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt)
       : LongInt; override;
 
@@ -386,6 +388,7 @@ type
     /// <summary>
     /// Read bytes from the stream.
     /// </summary>
+    function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Read(ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt)
       : LongInt; override;
 
@@ -425,6 +428,7 @@ type
     /// <summary>
     /// Read bytes from the stream.
     /// </summary>
+    function Read(var ABuffer; ACount: LongInt): LongInt; override;
     function Read(ABuffer: TCryptoLibByteArray; AOffset, ACount: LongInt)
       : LongInt; override;
 
@@ -630,6 +634,49 @@ begin
   end;
 end;
 
+type
+  TLimitedCapacityMemoryStream = class(TMemoryStream)
+  strict private
+    FLimitedCapacity: Int32;
+  strict protected
+{$IFDEF FPC}
+    function Realloc(var NewCapacity: PtrInt): Pointer; override;
+{$ELSE}
+    procedure SetCapacity(NewCapacity: NativeInt); override;
+{$ENDIF}
+  public
+    constructor Create(ALimitedCapacity: Int32);
+    function GetBuffer: TCryptoLibByteArray;
+  end;
+
+{ TLimitedCapacityMemoryStream }
+
+constructor TLimitedCapacityMemoryStream.Create(ALimitedCapacity: Int32);
+begin
+  inherited Create;
+  FLimitedCapacity := ALimitedCapacity;
+end;
+
+{$IFDEF FPC}
+function TLimitedCapacityMemoryStream.Realloc(var NewCapacity: PtrInt): Pointer;
+begin
+  NewCapacity := Min(NewCapacity * 2, FLimitedCapacity);
+  Result := inherited Realloc(NewCapacity);
+end;
+{$ELSE}
+procedure TLimitedCapacityMemoryStream.SetCapacity(NewCapacity: NativeInt);
+begin
+  inherited SetCapacity(Min(NewCapacity * 2, FLimitedCapacity));
+end;
+{$ENDIF}
+
+function TLimitedCapacityMemoryStream.GetBuffer: TCryptoLibByteArray;
+begin
+  System.SetLength(Result, Size);
+  if Size > 0 then
+    Move(Memory^, Result[0], Size);
+end;
+
 { TAsn1DefiniteLengthInputStream }
 
 constructor TAsn1DefiniteLengthInputStream.Create(const AInStream: TStream;
@@ -678,8 +725,7 @@ begin
   end;
 end;
 
-function TAsn1DefiniteLengthInputStream.Read(ABuffer: TCryptoLibByteArray;
-  AOffset, ACount: LongInt): LongInt;
+function TAsn1DefiniteLengthInputStream.Read(var ABuffer; ACount: LongInt): LongInt;
 var
   LToRead, LNumRead: Int32;
 begin
@@ -690,7 +736,7 @@ begin
   end;
 
   LToRead := Min(ACount, FRemaining);
-  LNumRead := FIn.Read(ABuffer[AOffset], LToRead);
+  LNumRead := FIn.Read(ABuffer, LToRead);
 
   if LNumRead < 1 then
     raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
@@ -702,6 +748,13 @@ begin
   end;
 
   Result := LNumRead;
+end;
+
+function TAsn1DefiniteLengthInputStream.Read(ABuffer: TCryptoLibByteArray;
+  AOffset, ACount: LongInt): LongInt;
+begin
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  Result := Read(ABuffer[AOffset], ACount);
 end;
 
 procedure TAsn1DefiniteLengthInputStream.ReadAllIntoByteArray
@@ -727,6 +780,9 @@ begin
 end;
 
 function TAsn1DefiniteLengthInputStream.ToArray: TCryptoLibByteArray;
+var
+  LBuf: TLimitedCapacityMemoryStream;
+  LThreshold: Int32;
 begin
   Result := nil;
   if FRemaining = 0 then
@@ -735,6 +791,19 @@ begin
   end;
 
   TAsn1InputStream.CheckLength(FRemaining, Limit);
+
+  LThreshold := TStreamUtilities.DefaultBufferSize * 8;
+  if FRemaining > LThreshold then
+  begin
+    LBuf := TLimitedCapacityMemoryStream.Create(FRemaining);
+    try
+      TStreamUtilities.CopyTo(Self, LBuf);
+      Result := LBuf.GetBuffer();
+    finally
+      LBuf.Free;
+    end;
+    Exit;
+  end;
 
   System.SetLength(Result, FRemaining);
   FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, Result, 0,
@@ -796,15 +865,13 @@ begin
   FLookAhead := RequireByte();
 end;
 
-function TAsn1IndefiniteLengthInputStream.Read(ABuffer: TCryptoLibByteArray;
-  AOffset, ACount: LongInt): LongInt;
+function TAsn1IndefiniteLengthInputStream.Read(var ABuffer; ACount: LongInt): LongInt;
 var
   LNumRead: Int32;
 begin
-  // Only use this optimisation if we aren't checking for 00
   if FEofOn00 or (ACount <= 1) then
   begin
-    Result := inherited Read(ABuffer, AOffset, ACount);
+    Result := inherited Read(ABuffer, ACount);
     Exit;
   end;
 
@@ -814,14 +881,21 @@ begin
     Exit;
   end;
 
-  LNumRead := FIn.Read(ABuffer[AOffset + 1], ACount - 1);
+  LNumRead := FIn.Read(PByte(@ABuffer)[1], ACount - 1);
   if LNumRead <= 0 then
     raise EEndOfStreamCryptoLibException.CreateRes(@SUnexpectedEndOfStream);
 
-  ABuffer[AOffset] := Byte(FLookAhead);
+  PByte(@ABuffer)[0] := Byte(FLookAhead);
   FLookAhead := RequireByte();
 
   Result := LNumRead + 1;
+end;
+
+function TAsn1IndefiniteLengthInputStream.Read(ABuffer: TCryptoLibByteArray;
+  AOffset, ACount: LongInt): LongInt;
+begin
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  Result := Read(ABuffer[AOffset], ACount);
 end;
 
 function TAsn1IndefiniteLengthInputStream.RequireByte: Int32;
@@ -1275,13 +1349,10 @@ begin
   end;
 end;
 
-function TAsn1ConstructedBitStream.Read(ABuffer: TCryptoLibByteArray;
-  AOffset, ACount: LongInt): LongInt;
+function TAsn1ConstructedBitStream.Read(var ABuffer; ACount: LongInt): LongInt;
 var
   LTotalRead, LNumRead: Int32;
 begin
-  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
-
   if ACount < 1 then
   begin
     Result := 0;
@@ -1311,7 +1382,7 @@ begin
 
   while True do
   begin
-    LNumRead := FCurrentStream.Read(ABuffer[AOffset + LTotalRead], ACount - LTotalRead);
+    LNumRead := FCurrentStream.Read(PByte(@ABuffer)[LTotalRead], ACount - LTotalRead);
 
     if LNumRead > 0 then
     begin
@@ -1338,6 +1409,13 @@ begin
       FCurrentStream := FCurrentParser.GetBitStream();
     end;
   end;
+end;
+
+function TAsn1ConstructedBitStream.Read(ABuffer: TCryptoLibByteArray;
+  AOffset, ACount: LongInt): LongInt;
+begin
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  Result := Read(ABuffer[AOffset], ACount);
 end;
 
 function TAsn1ConstructedBitStream.ReadByte: Int32;
@@ -1427,13 +1505,10 @@ begin
   end;
 end;
 
-function TAsn1ConstructedOctetStream.Read(ABuffer: TCryptoLibByteArray;
-  AOffset, ACount: LongInt): LongInt;
+function TAsn1ConstructedOctetStream.Read(var ABuffer; ACount: LongInt): LongInt;
 var
   LTotalRead, LNumRead: Int32;
 begin
-  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
-
   if ACount < 1 then
   begin
     Result := 0;
@@ -1463,7 +1538,7 @@ begin
 
   while True do
   begin
-    LNumRead := FCurrentStream.Read(ABuffer[AOffset + LTotalRead], ACount - LTotalRead);
+    LNumRead := FCurrentStream.Read(PByte(@ABuffer)[LTotalRead], ACount - LTotalRead);
 
     if LNumRead > 0 then
     begin
@@ -1489,6 +1564,13 @@ begin
       FCurrentStream := FCurrentParser.GetOctetStream();
     end;
   end;
+end;
+
+function TAsn1ConstructedOctetStream.Read(ABuffer: TCryptoLibByteArray;
+  AOffset, ACount: LongInt): LongInt;
+begin
+  TStreamUtilities.ValidateBufferArguments(ABuffer, AOffset, ACount);
+  Result := Read(ABuffer[AOffset], ACount);
 end;
 
 function TAsn1ConstructedOctetStream.ReadByte: Int32;

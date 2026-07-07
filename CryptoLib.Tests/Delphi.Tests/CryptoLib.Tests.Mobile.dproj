@@ -1170,6 +1170,8 @@
         <DCCReference Include="..\src\Asn1\ExternalTests.pas"/>
         <DCCReference Include="..\src\Asn1\GeneralizedTimeTests.pas"/>
         <DCCReference Include="..\src\Asn1\InputStreamTests.pas"/>
+        <DCCReference Include="..\src\Asn1\DefiniteLengthAllocationTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1StreamReadTests.pas"/>
         <DCCReference Include="..\src\Asn1\OctetStringTests.pas"/>
         <DCCReference Include="..\src\Asn1\OIDTests.pas"/>
         <DCCReference Include="..\src\Asn1\ParseTests.pas"/>
@@ -1258,6 +1260,7 @@
         <DCCReference Include="..\src\Asn1\X500\IetfUtilitiesTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\GeneralNameTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\KeyUsageTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\KeyPurposeIDTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\SubjectKeyIdentifierTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\X509AltTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\X509ExtensionsTests.pas"/>
