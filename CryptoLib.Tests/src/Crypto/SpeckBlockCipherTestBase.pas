@@ -38,35 +38,22 @@ uses
   ClpSicBlockCipher,
   ClpISicBlockCipher,
   ClpSpeckEngine,
-  ClpISpeckEngine,
-  ClpISpeckLegacyEngine,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
+  BlockCipherTestBase,
   SymmetricBlockVectors;
 
 type
 
-  TSpeckBlockCipherTestBase = class abstract(TCryptoLibAlgorithmTestCase)
+  TSpeckBlockCipherTestBase = class abstract(TBlockCipherTestBase)
   strict private
-    procedure DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-      const AParam: ICipherParameters; const AInput, AOutput: String;
-      const APreface: String = '');
-
     procedure DoSPECKTest(const ACipher: IBufferedCipher;
       const AParam: ICipherParameters; const AInput, AOutput: String;
       AWithPadding: Boolean = False);
 
   strict protected
-    procedure RunSpeckBlockCipherVectorTests(const ACreateEngine
-      : TCryptoLibFunc<ISpeckEngine>; const AEngineLabel: String;
-      const AKeys, AInputs, AOutputs: TCryptoLibStringArray);
-
-    procedure RunSpeckLegacyBlockCipherVectorTests(const ACreateEngine
-      : TCryptoLibFunc<ISpeckLegacyEngine>; const AEngineLabel: String;
-      const AKeys, AInputs, AOutputs: TCryptoLibStringArray);
-
     procedure RunCryptoPPSpeckModeTests(const AMode: string; AWithIV: Boolean;
-      ACreateEngine: TCryptoLibFunc<ISpeckEngine>);
+      ACreateEngine: TBlockCipherFactory);
 
     procedure RunCryptoPPSpeck64EcbTests;
     procedure RunCryptoPPSpeck128EcbTests;
@@ -78,65 +65,17 @@ type
 
 implementation
 
-function CreateSpeck64EngineForCryptoPP: ISpeckEngine;
+function CreateSpeck64EngineForCryptoPP: IBlockCipher;
 begin
   Result := TSpeck64Engine.Create();
 end;
 
-function CreateSpeck128EngineForCryptoPP: ISpeckEngine;
+function CreateSpeck128EngineForCryptoPP: IBlockCipher;
 begin
   Result := TSpeck128Engine.Create();
 end;
 
 { TSpeckBlockCipherTestBase }
-
-procedure TSpeckBlockCipherTestBase.DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-  const AParam: ICipherParameters; const AInput, AOutput: String;
-  const APreface: String);
-var
-  LCipher: IBufferedBlockCipher;
-  LLen1, LLen2: Int32;
-  LInput, LOutput, LOutBytes: TBytes;
-  LPrefix: String;
-begin
-  LInput := DecodeHex(AInput);
-  LOutput := DecodeHex(AOutput);
-
-  if APreface <> '' then
-    LPrefix := '[' + APreface + '] '
-  else
-    LPrefix := '';
-
-  LCipher := TBufferedBlockCipher.Create(AEngine);
-
-  LCipher.Init(True, AParam);
-
-  System.SetLength(LOutBytes, System.Length(LInput));
-
-  LLen1 := LCipher.ProcessBytes(LInput, 0, System.Length(LInput),
-    LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen1);
-
-  if (not AreEqual(LOutBytes, LOutput)) then
-  begin
-    Fail(LPrefix + Format('Encryption Failed - Expected %s but got %s',
-      [EncodeHex(LOutput), EncodeHex(LOutBytes)]));
-  end;
-
-  LCipher.Init(False, AParam);
-
-  LLen2 := LCipher.ProcessBytes(LOutput, 0, System.Length(LOutput),
-    LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen2);
-
-  if (not AreEqual(LInput, LOutBytes)) then
-  begin
-    Fail(LPrefix + Format('Decryption Failed - Expected %s but got %s',
-      [EncodeHex(LInput), EncodeHex(LOutBytes)]));
-  end;
-end;
 
 procedure TSpeckBlockCipherTestBase.DoSPECKTest(const ACipher: IBufferedCipher;
   const AParam: ICipherParameters; const AInput, AOutput: String;
@@ -171,40 +110,8 @@ begin
   end;
 end;
 
-procedure TSpeckBlockCipherTestBase.RunSpeckBlockCipherVectorTests(const ACreateEngine
-  : TCryptoLibFunc<ISpeckEngine>; const AEngineLabel: String;
-  const AKeys, AInputs, AOutputs: TCryptoLibStringArray);
-var
-  LI: Int32;
-  LPreface: String;
-begin
-  for LI := System.Low(AKeys) to System.High(AKeys) do
-  begin
-    LPreface := Format('%s block vector index %d', [AEngineLabel, LI]);
-    DoBlockCipherVectorTest(ACreateEngine(),
-      TKeyParameter.Create(DecodeHex(AKeys[LI])) as IKeyParameter,
-      AInputs[LI], AOutputs[LI], LPreface);
-  end;
-end;
-
-procedure TSpeckBlockCipherTestBase.RunSpeckLegacyBlockCipherVectorTests(const ACreateEngine
-  : TCryptoLibFunc<ISpeckLegacyEngine>; const AEngineLabel: String;
-  const AKeys, AInputs, AOutputs: TCryptoLibStringArray);
-var
-  LI: Int32;
-  LPreface: String;
-begin
-  for LI := System.Low(AKeys) to System.High(AKeys) do
-  begin
-    LPreface := Format('%s block vector index %d', [AEngineLabel, LI]);
-    DoBlockCipherVectorTest(ACreateEngine(),
-      TKeyParameter.Create(DecodeHex(AKeys[LI])) as IKeyParameter,
-      AInputs[LI], AOutputs[LI], LPreface);
-  end;
-end;
-
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeckModeTests(const AMode: string;
-  AWithIV: Boolean; ACreateEngine: TCryptoLibFunc<ISpeckEngine>);
+  AWithIV: Boolean; ACreateEngine: TBlockCipherFactory);
 var
   LRows: TCryptoLibGenericArray<TSpeckVectorRow>;
   LKeyParametersWithIV: IParametersWithIV;
@@ -212,7 +119,7 @@ var
   LKeyBytes, LIVBytes: TBytes;
   LCipher: IBufferedCipher;
   LI: Int32;
-  LEngine: ISpeckEngine;
+  LEngine: IBlockCipher;
   LBlockCipher: IBlockCipher;
   LCbcBlockCipher: ICbcBlockCipher;
   LSicBlockCipher: ISicBlockCipher;

@@ -884,6 +884,7 @@ uses
   DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas',
   FixedPointTests in '..\src\Math\EC\FixedPointTests.pas',
   AESTests in '..\src\Crypto\AESTests.pas',
+  BlockCipherTestBase in '..\src\Crypto\BlockCipherTestBase.pas',
   AesBlockCipherTestBase in '..\src\Crypto\AesBlockCipherTestBase.pas',
   AesLightTests in '..\src\Crypto\AesLightTests.pas',
   FusedExternalRegistrationTests in '..\src\Crypto\FusedExternalRegistrationTests.pas',

@@ -30,7 +30,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpSpeckLegacyEngine,
-  ClpISpeckLegacyEngine,
+  ClpIBlockCipher,
   ClpCryptoLibTypes,
   SpeckBlockCipherTestBase;
 
@@ -74,27 +74,27 @@ type
 
 implementation
 
-function CreateSpeck32LegacyEngine: ISpeckLegacyEngine;
+function CreateSpeck32LegacyEngine: IBlockCipher;
 begin
   Result := TSpeck32LegacyEngine.Create();
 end;
 
-function CreateSpeck48LegacyEngine: ISpeckLegacyEngine;
+function CreateSpeck48LegacyEngine: IBlockCipher;
 begin
   Result := TSpeck48LegacyEngine.Create();
 end;
 
-function CreateSpeck64LegacyEngine: ISpeckLegacyEngine;
+function CreateSpeck64LegacyEngine: IBlockCipher;
 begin
   Result := TSpeck64LegacyEngine.Create();
 end;
 
-function CreateSpeck96LegacyEngine: ISpeckLegacyEngine;
+function CreateSpeck96LegacyEngine: IBlockCipher;
 begin
   Result := TSpeck96LegacyEngine.Create();
 end;
 
-function CreateSpeck128LegacyEngine: ISpeckLegacyEngine;
+function CreateSpeck128LegacyEngine: IBlockCipher;
 begin
   Result := TSpeck128LegacyEngine.Create();
 end;
@@ -165,7 +165,7 @@ end;
 
 procedure TTestSpeckLegacy.TestBlockCipherVectorSpeck32;
 begin
-  RunSpeckLegacyBlockCipherVectorTests(@CreateSpeck32LegacyEngine,
+  RunBlockCipherVectorTests(@CreateSpeck32LegacyEngine,
     'TSpeck32LegacyEngine', FSpeck32LegacyBlockCipherVectorKeys,
     FSpeck32LegacyBlockCipherVectorInputs,
     FSpeck32LegacyBlockCipherVectorOutputs);
@@ -173,7 +173,7 @@ end;
 
 procedure TTestSpeckLegacy.TestBlockCipherVectorSpeck48;
 begin
-  RunSpeckLegacyBlockCipherVectorTests(@CreateSpeck48LegacyEngine,
+  RunBlockCipherVectorTests(@CreateSpeck48LegacyEngine,
     'TSpeck48LegacyEngine', FSpeck48LegacyBlockCipherVectorKeys,
     FSpeck48LegacyBlockCipherVectorInputs,
     FSpeck48LegacyBlockCipherVectorOutputs);
@@ -181,7 +181,7 @@ end;
 
 procedure TTestSpeckLegacy.TestBlockCipherVectorSpeck64;
 begin
-  RunSpeckLegacyBlockCipherVectorTests(@CreateSpeck64LegacyEngine,
+  RunBlockCipherVectorTests(@CreateSpeck64LegacyEngine,
     'TSpeck64LegacyEngine', FSpeck64LegacyBlockCipherVectorKeys,
     FSpeck64LegacyBlockCipherVectorInputs,
     FSpeck64LegacyBlockCipherVectorOutputs);
@@ -189,7 +189,7 @@ end;
 
 procedure TTestSpeckLegacy.TestBlockCipherVectorSpeck96;
 begin
-  RunSpeckLegacyBlockCipherVectorTests(@CreateSpeck96LegacyEngine,
+  RunBlockCipherVectorTests(@CreateSpeck96LegacyEngine,
     'TSpeck96LegacyEngine', FSpeck96LegacyBlockCipherVectorKeys,
     FSpeck96LegacyBlockCipherVectorInputs,
     FSpeck96LegacyBlockCipherVectorOutputs);
@@ -197,7 +197,7 @@ end;
 
 procedure TTestSpeckLegacy.TestBlockCipherVectorSpeck128;
 begin
-  RunSpeckLegacyBlockCipherVectorTests(@CreateSpeck128LegacyEngine,
+  RunBlockCipherVectorTests(@CreateSpeck128LegacyEngine,
     'TSpeck128LegacyEngine', FSpeck128LegacyBlockCipherVectorKeys,
     FSpeck128LegacyBlockCipherVectorInputs,
     FSpeck128LegacyBlockCipherVectorOutputs);

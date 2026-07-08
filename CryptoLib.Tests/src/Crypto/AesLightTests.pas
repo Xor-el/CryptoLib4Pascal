@@ -31,15 +31,15 @@ uses
 {$ENDIF FPC}
   ClpAesLightEngine,
   ClpIBlockCipher,
+  BlockCipherTestBase,
   AesBlockCipherTestBase;
 
 type
 
   TTestAesLight = class(TAesBlockCipherTestBase)
-  published
-    procedure TestBlockCipherVector;
-    procedure TestMonteCarloAES;
-    procedure TestBadParameters;
+  strict protected
+    function GetEngineFactory: TBlockCipherFactory; override;
+    function EngineLabel: String; override;
   end;
 
 implementation
@@ -51,19 +51,14 @@ end;
 
 { TTestAesLight }
 
-procedure TTestAesLight.TestBlockCipherVector;
+function TTestAesLight.GetEngineFactory: TBlockCipherFactory;
 begin
-  RunBlockCipherVectorTests(@CreateAesLightEngine, 'TAesLightEngine');
+  Result := @CreateAesLightEngine;
 end;
 
-procedure TTestAesLight.TestMonteCarloAES;
+function TTestAesLight.EngineLabel: String;
 begin
-  RunBlockCipherMonteCarloTests(@CreateAesLightEngine, 'TAesLightEngine');
-end;
-
-procedure TTestAesLight.TestBadParameters;
-begin
-  AssertEngineRejectsBadParameters(@CreateAesLightEngine, 'TAesLightEngine');
+  Result := 'TAesLightEngine';
 end;
 
 initialization

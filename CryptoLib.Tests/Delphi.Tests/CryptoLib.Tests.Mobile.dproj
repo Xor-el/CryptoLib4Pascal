@@ -1204,6 +1204,7 @@
         <DCCReference Include="..\src\Rngs\Drbg\HMacDrbgTests.pas"/>
         <DCCReference Include="..\src\Rngs\Drbg\CtrDrbgTests.pas"/>
         <DCCReference Include="..\src\Crypto\AESTests.pas"/>
+        <DCCReference Include="..\src\Crypto\BlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesBlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesLightTests.pas"/>
         <DCCReference Include="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
