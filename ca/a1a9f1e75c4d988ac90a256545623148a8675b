@@ -1,0 +1,30 @@
+CryptoLib/src/Include/Simd/Salsa/Salsa20ProcessBlocks2Sse2_x86_64.inc
+  s_4e396cb15e16b1::t_86b412ed36ccbe 1-2,4-46,48-153,155-222
+  s_4e396cb15e16b1::t_f5280ebf79695b 3,47,154
+CryptoLib/src/Include/Simd/Salsa/Salsa20ProcessBlocks2Sse2_i386.inc
+  s_4e396cb15e16b1::t_f5280ebf79695b 1-263
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_i386.inc
+  s_4e396cb15e16b1::t_f5280ebf79695b 3,43
+  s_4e396cb15e16b1::t_1f25d23d9b87a1 1-2,4-42,44-94
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_x86_64.inc
+  s_4e396cb15e16b1::t_f5280ebf79695b 6,50
+  s_4e396cb15e16b1::t_ef3da8c69c7761 1-5,7-49,51-100
+CryptoLib/src/Crypto/Engines/ClpSalsaX86Backend.pas
+  s_4e396cb15e16b1::t_b8ee512a85b9ed 47,50,54,58,61,65,75-76,78,89-90,92
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "caa1a9f1e75c4d988ac90a256545623148a8675b",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
