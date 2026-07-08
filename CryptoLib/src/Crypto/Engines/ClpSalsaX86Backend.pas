@@ -46,22 +46,22 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure Salsa20BlockSse41(ARounds: Int32; AInput, AOut: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_i386.inc}
 {$ENDIF}
 end;
 
 procedure Salsa20ProcessBlocks2Sse41(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse41_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse41_i386.inc}
 {$ENDIF}
 end;

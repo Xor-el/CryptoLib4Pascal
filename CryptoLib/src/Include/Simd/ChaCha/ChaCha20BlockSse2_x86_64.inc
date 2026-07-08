@@ -1,6 +1,6 @@
 // ChaCha20 one 64B block, SSE2, x86-64. Little-endian state in, 64B keystream out to AOut (keystream-only path, not ChaCha7539 fused I/O xor).
 // Rounds: ChaChaSse2_DoubleRoundBody.inc. 64B stack copy of state; add initial state; store block to AOut.
-// After SimdProc3Begin_x86_64.inc: rcx=ARounds, rdx=AIn (16 UInt32 state), r8=AOut (64B output).
+// After ClpSimdProc3Begin_x86_64.inc: rcx=ARounds, rdx=AIn (16 UInt32 state), r8=AOut (64B output).
   sub     rsp, 64
   movdqu  xmm0, [rdx+0]
   movdqu  xmm1, [rdx+16]

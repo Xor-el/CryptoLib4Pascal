@@ -8,7 +8,7 @@
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects the
 //   schedule (see ClpAesEngineX86 for the allocation site).
 //
-// Entry (after SimdProc2Begin_x86_64.inc): rcx = user key
+// Entry (after ClpSimdProc2Begin_x86_64.inc): rcx = user key
 // (16 / 24 / 32 bytes), rdx = KeysOut (16 * (N_R + 1) bytes).
 // Saves r12 and rbx; uses 48 / 96 / 80 bytes of stack scratch (KEY128
 // / 192 / 256). Uses xmm0..xmm2 as scratch. AES-NI instructions are

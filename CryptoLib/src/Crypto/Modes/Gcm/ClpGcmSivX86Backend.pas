@@ -45,11 +45,11 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
 {$ENDIF}
 end;

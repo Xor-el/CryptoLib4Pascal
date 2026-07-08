@@ -8,7 +8,7 @@
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects the
 //   schedule (see ClpAesEngineX86 for the allocation site).
 //
-// Entry (after SimdProc2Begin_i386.inc): ebx = user key (16 / 24 / 32 bytes),
+// Entry (after ClpSimdProc2Begin_i386.inc): ebx = user key (16 / 24 / 32 bytes),
 //                                     esi = KeysOut (16 * (N_R + 1) bytes).
 // Saves edi (and uses ebx as scratch, restoring on exit). Stack scratch:
 // 48 / 96 / 80 bytes (KEY128 / 192 / 256). Uses xmm0..xmm2 as scratch.

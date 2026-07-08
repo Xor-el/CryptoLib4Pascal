@@ -10,7 +10,7 @@
 // batch - the scalar counter build overlaps the aesenc throughput instead of
 // serialising ahead of it.
 //
-// Entry (after SimdProc1Begin_i386.inc): ebx = pointer to TCtrFusedCtx. The
+// Entry (after ClpSimdProc1Begin_i386.inc): ebx = pointer to TCtrFusedCtx. The
 // kernel pushes esi/edi and unpacks the record (InPtr loaded into ebx last):
 //   [ebx +  0]  InPtr      -> ebx : input  (advances +128 per 8-block iteration)
 //   [ebx +  4]  OutPtr     -> esi : output (advances +128)

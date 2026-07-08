@@ -171,18 +171,18 @@ end;
 
 // Asm wrapper around the architecture-specific 4-way bulk kernel. The .inc
 // files contain pure assembly (db-encoded VEX with mnemonic comments); the
-// Pascal layer below is just the procedure header + the SimdProc5Begin ABI
+// Pascal layer below is just the procedure header + the ClpSimdProc5Begin ABI
 // glue + the kernel body include. ACtx points at the 72-byte R/S/H/K
 // portion of TPoly1305State; APowTable points at the separate 320-byte
 // power table buffer; the kernel never reads the K limbs.
 procedure Poly1305BlocksBulkAvx2Core(ACtx, APowTable, AInp: PByte;
   ALen: NativeUInt; APad: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Poly1305\Poly1305BlocksBulkAvx2Core_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\Include\Simd\Poly1305\Poly1305BlocksBulkAvx2Core_i386.inc}
 {$ENDIF}
 end;

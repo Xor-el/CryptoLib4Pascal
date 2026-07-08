@@ -1,6 +1,6 @@
 // ChaCha7539 (IETF) 128B, SSE2. Two 64B blocks; little-endian state in [rdx]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
 // Fused I/O xor: read plaintext at AIn (r8), xor with ChaCha output, write to AOut (r9) — no 64B LK/keystream temp in Pascal.
-// After SimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState (R/W, 16 UInt32), r8=AIn, r9=AOut.
+// After ClpSimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState (R/W, 16 UInt32), r8=AIn, r9=AOut.
 // Word 12 at [rdx+48] is advanced by 2 (once per 64B block). On 32-bit counter wrap to 0, calls ChaCha7539RaiseCounter7539.
   mov     r11, rcx
   // --- block 1 (counter C in memory) ---

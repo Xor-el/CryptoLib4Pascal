@@ -17,7 +17,7 @@
 //   CRYPTOLIB_CCM_DECRYPT  -> decrypt variant (MAC lags CTR by 1).
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
+// On entry (after ClpSimdProc1Begin_i386.inc): ebx = PCtx.
 //
 // Context layout (7 pointers + 1 NativeUInt = 32 bytes, 4-byte aligned).
 // See TCcmFusedTwoCtx in ClpAesNiCcmKernel.pas.

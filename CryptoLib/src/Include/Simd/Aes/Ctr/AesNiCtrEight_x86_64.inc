@@ -12,7 +12,7 @@
 // throughput (vector port) instead of serialising ahead of it. The XOR with
 // plaintext reuses xmm8 (the round-key scratch) after the final round.
 //
-// Entry (after SimdProc1Begin_x86_64.inc): rcx = pointer to TCtrFusedCtx. The
+// Entry (after ClpSimdProc1Begin_x86_64.inc): rcx = pointer to TCtrFusedCtx. The
 // kernel unpacks it (InPtr loaded into rcx last) into the working registers:
 //   [rcx +  0]  InPtr      -> rcx : input  (advances +128 per 8-block iteration)
 //   [rcx +  8]  OutPtr     -> rdx : output (advances +128)
@@ -37,7 +37,7 @@
 // AES-NI instructions and pxor forms touching xmm8 are db-encoded for broad
 // assembler compatibility.
   push      rbx
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   sub       rsp, 128                              // next-batch counter scratch: [rsp+0..127]
 
   // ---- unpack TCtrFusedCtx (rcx = PCtx); load InPtr into rcx last ----
@@ -408,5 +408,5 @@
   mov       [r9 + 8], rax
 
   add       rsp, 128
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
   pop       rbx

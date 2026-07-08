@@ -1,6 +1,6 @@
 // ChaCha7539 (IETF) 256B, AVX2, i386. Two 128B blocks: same fused I/O xor as ProcessBlocks2 (AIn=edi, AOut=eax).
 // One vzeroupper; add edi/eax,+128 between blocks. LoadState .inc reloads IETF state at [esi] (word 12 already advanced after block 1).
-// After SimdProc4Begin_i386.inc: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
+// After ClpSimdProc4Begin_i386.inc: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
   mov     edx, ebx
   // --- first 128B ---
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_LoadState_i386.inc}

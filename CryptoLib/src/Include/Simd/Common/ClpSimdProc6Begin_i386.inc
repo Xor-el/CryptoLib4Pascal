@@ -7,7 +7,7 @@
 // Callee-saved EBX, ESI, EDI - epilogue must pop EDI, ESI, EBX; SIMD bodies may adjust ESP for locals.
 // Usage:
 //   procedure MyProc(P1, P2, P3: Pointer; P4: Int32; P5: UInt64; P6: UInt32);
-//     {$I ..\..\Include\Simd\Common\SimdProc6Begin_i386.inc}
+//     {$I ..\..\Include\Simd\Common\ClpSimdProc6Begin_i386.inc}
 //     // ... SIMD instructions using ebx, esi, edi, eax, ecx, edx (load param6 from stack if needed) ...
 //   end;
 {$IFDEF FPC}

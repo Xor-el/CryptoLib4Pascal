@@ -17,7 +17,7 @@
 // include shares the same algorithm but uses a different register mapping
 // (ebx/esi/edi/eax instead of rcx/rdx/r8/r9) and stays inside ymm0..ymm7.
 //
-// On entry (after SimdProc5Begin_x86_64.inc):
+// On entry (after ClpSimdProc5Begin_x86_64.inc):
 //   rcx = ACtx       (PTPoly1305State; 72-byte R/S/H/K record)
 //   rdx = APowTable  (PByte; 320-byte 10x8 power table; layout below)
 //   r8  = AInp       (PByte; 16-byte aligned-or-not)
@@ -41,7 +41,7 @@
 //   ymm6       : padbit         (0x1000000 per 64-bit lane low half)
 //   ymm7..ymm15: D0..D4 / M0..M4 / scratch (transient)
 //
-{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   // ---- Prologue: build mask26 (ymm5) and padbit (ymm6) constants ----
   db $C5, $D5, $76, $ED                         // vpcmpeqd ymm5, ymm5, ymm5
   db $C5, $D5, $73, $D5, $26                    // vpsrlq ymm5, ymm5, 38     ; mask26 = 0x3FFFFFF per lane
@@ -329,4 +329,4 @@
 
   db $C5, $F8, $77                              // vzeroupper
   // restore caller xmm6..15 (legacy SSE moves are safe after vzeroupper)
-{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}

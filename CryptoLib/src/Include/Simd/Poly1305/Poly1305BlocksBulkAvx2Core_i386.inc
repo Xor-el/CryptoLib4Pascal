@@ -15,7 +15,7 @@
 // sibling - only the base register names change to match the i386
 // argument map.
 //
-// On entry (after SimdProc5Begin_i386.inc):
+// On entry (after ClpSimdProc5Begin_i386.inc):
 //   ebx = ACtx       (PTPoly1305State; 72-byte R/S/H/K record)
 //   esi = APowTable  (PByte; 320-byte 10x8 power table; layout below)
 //   edi = AInp       (PByte)

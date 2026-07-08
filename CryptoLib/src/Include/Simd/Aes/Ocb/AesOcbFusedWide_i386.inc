@@ -20,7 +20,7 @@
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
+// On entry (after ClpSimdProc1Begin_i386.inc): ebx = PCtx.
 //
 // Context layout (7 pointers + NativeUInt + UInt64 = 40 bytes, 4-byte aligned).
 // See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
@@ -55,7 +55,7 @@
 // AES-NI instructions are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
-  // --- Callee-save prologue. SimdProc1Begin_i386.inc already pushed ebx
+  // --- Callee-save prologue. ClpSimdProc1Begin_i386.inc already pushed ebx
   //     and moved PCtx into ebx, so this block only pushes the other
   //     three callee-saved GPRs and reserves stack scratch. ---
   push      edi
@@ -434,7 +434,7 @@
 
   // --- Epilogue: flush accumulators back to memory, then unwind the
   //     stack scratch and pop the callee-saved GPRs. ebx is popped
-  //     last because SimdProc1Begin_i386.inc pushed it first. ---
+  //     last because ClpSimdProc1Begin_i386.inc pushed it first. ---
   mov       eax, [ebx + 12]                       // eax = OffsetPtr
   movdqu    [eax], xmm4
   mov       eax, [ebx + 16]                       // eax = ChecksumPtr

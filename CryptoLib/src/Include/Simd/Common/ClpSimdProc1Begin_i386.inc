@@ -4,7 +4,7 @@
 // Bodies must end with: pop ebx before the Pascal 'end' (which emits ret).
 // Usage:
 //   procedure MyProc(P1: Pointer);
-//     {$I ..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+//     {$I ..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 //     // ... SIMD instructions using ebx ...
 //   end;
 {$IFDEF FPC}

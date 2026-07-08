@@ -3,7 +3,7 @@
 // When CRYPTOLIB_SYSV_X64_ABI is defined, remaps rdi, rsi -> rcx, rdx.
 // Usage:
 //   procedure MyProc(P1, P2: Pointer);
-//     {$I ..\..\Include\Simd\Common\SimdProc2Begin_x86_64.inc}
+//     {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
 //     // ... instructions using rcx, rdx ...
 //   end;
 {$IFDEF FPC}

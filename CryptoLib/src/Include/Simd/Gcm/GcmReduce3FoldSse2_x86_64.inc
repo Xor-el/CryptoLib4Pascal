@@ -3,9 +3,9 @@
 // polynomial x^128 + x^7 + x^2 + x + 1, writing the resulting 16-byte field
 // element to POut. Z0/Z1/Z2 are the three 128-bit limbs carried across a batch
 // of Karatsuba-style PCLMULQDQ GHASH products.
-// After SimdProc4Begin_x86_64.inc: rcx = PZ0, rdx = PZ1, r8 = PZ2, r9 = POut.
+// After ClpSimdProc4Begin_x86_64.inc: rcx = PZ0, rdx = PZ1, r8 = PZ2, r9 = POut.
 //
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   movdqu    xmm0, [rcx]
   movdqu    xmm2, [r8]
   movdqu    xmm1, [rdx]
@@ -74,4 +74,4 @@
   pxor      xmm7, xmm2
   movq      qword ptr [r9], xmm7
   movq      qword ptr [r9 + 8], xmm6
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}

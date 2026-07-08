@@ -104,11 +104,11 @@ type
 procedure GcmFusedAesEnc128GhashEight(PCtx: Pointer);
 {$DEFINE GCM_FUSED_AES_ROUNDS_10}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_FUSED_AES_ROUNDS_10}
@@ -117,11 +117,11 @@ end;
 procedure GcmFusedAesEnc192GhashEight(PCtx: Pointer);
 {$DEFINE GCM_FUSED_AES_ROUNDS_12}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_FUSED_AES_ROUNDS_12}
@@ -130,11 +130,11 @@ end;
 procedure GcmFusedAesEnc256GhashEight(PCtx: Pointer);
 {$DEFINE GCM_FUSED_AES_ROUNDS_14}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Gcm\AesGcmFusedCtrGhashEight_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_FUSED_AES_ROUNDS_14}

@@ -1,4 +1,4 @@
-// Salsa20 128B, SSE4.1 i386. After SimdProc4Begin: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
+// Salsa20 128B, SSE4.1 i386. After ClpSimdProc4Begin: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
 // Rounds: Salsa20Sse41_TwoColumnRoundsBody.inc.
 // edx: saved ARounds. push eax/ pop eax: expand clobbers eax; xor needs AOut in eax.
   mov     edx, ebx

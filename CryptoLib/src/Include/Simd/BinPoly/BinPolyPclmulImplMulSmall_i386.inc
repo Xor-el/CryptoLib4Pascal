@@ -1,6 +1,6 @@
 // x86/V128 BinPoly fixed-size carryless multiply kernels for limb counts 1..10.
 // PCLMULQDQ instruction is db-encoded for broad assembler compatibility.
-// Included inside BinPolyPclmulImplMulSmall after SimdProc4Begin_i386.inc:
+// Included inside BinPolyPclmulImplMulSmall after ClpSimdProc4Begin_i386.inc:
 //   ebx = ALen, esi = PX, edi = PY, eax = PZz
 // ZZ output: V128 lane k at byte offset 16*k in PZz.
 

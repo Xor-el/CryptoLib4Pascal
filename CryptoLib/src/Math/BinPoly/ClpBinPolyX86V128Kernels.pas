@@ -47,33 +47,33 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure BinPolyPclmulImplMulSmall(ALen: Int32; PX, PY, PZz: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulSmall_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulSmall_i386.inc}
 {$ENDIF}
 end;
 
 procedure BinPolyPclmulImplMulEven(ALen: Int32; PX, PY, PZz: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulEven_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulEven_i386.inc}
 {$ENDIF}
 end;
 
 procedure BinPolyPclmulImplMulOdd(ALen: Int32; PX, PY, PZz: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulOdd_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulOdd_i386.inc}
 {$ENDIF}
 end;

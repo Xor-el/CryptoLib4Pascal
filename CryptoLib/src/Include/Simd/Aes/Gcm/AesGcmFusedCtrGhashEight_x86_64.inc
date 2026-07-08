@@ -20,7 +20,7 @@
 //   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (schedule = 13 x 16 bytes).
 //   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (schedule = 15 x 16 bytes).
 //
-// On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
+// On entry (after ClpSimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
 // Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 8-byte fields).
 //   [rcx +  0]  PXorIn      : 128-byte input to XOR with keystream (advances)
@@ -49,7 +49,7 @@
 // compatibility.
 // -------------------------------------------------------------------
 
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   // --- Batch loop. The context (rcx) carries advancing PXorIn/POut/PPrevCipher,
   //     the 32-bit GCM counter [rcx+64], the J0 template [rcx+72], the batch
   //     count [rcx+80], and the "GHASH-from-output" flag [rcx+88] (1=encrypt).
@@ -588,4 +588,4 @@
   dec       qword ptr [rcx + 72]               // batch count
   jnz       @@GcmFusedLoop
   mov       [rcx + 56], r8d                    // store advanced counter32
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}

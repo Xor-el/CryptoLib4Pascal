@@ -22,7 +22,7 @@
 //                              still byte-reversed. Unset for GCM (canonical
 //                              input), leaving that path byte-identical.
 //
-// On entry (after SimdProc4Begin_x86_64.inc):
+// On entry (after ClpSimdProc4Begin_x86_64.inc):
 //   rcx = PFS    (16-byte running GHASH state, canonical; in/out)
 //   rdx = PC0    (64 or 128 bytes data; canonical, or field form with RAW_INPUT)
 //   r8  = PHPow  (H^N..H^1 as 16-byte limbs, field form)
@@ -37,7 +37,7 @@
 //
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   movdqu    xmm8, [r9]
   pxor      xmm0, xmm0
   pxor      xmm1, xmm1
@@ -271,4 +271,4 @@
   // Byte-reverse to canonical form and store to PFS.
   pshufb    xmm0, xmm8
   movdqu    [rcx], xmm0
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}

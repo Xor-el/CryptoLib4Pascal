@@ -37,11 +37,6 @@ type
     class procedure &Xor(ALen: Int32; const AX: TCryptoLibByteArray; AXOff: Int32;
       const AY: TCryptoLibByteArray; AYOff: Int32;
       const AZ: TCryptoLibByteArray; AZOff: Int32); overload; static;
-    /// <summary>
-    ///   Triple-XOR: AZ := AX xor AY. Intentionally NOT inline: FPC 3.2 for
-    ///   i386 miscompiles the equivalent loop when inlined inside pipelined
-    ///   GCM steps at -O3, so the CALL boundary is load-bearing.
-    /// </summary>
     class procedure &Xor(ALen: Int32; AX, AY, AZ: PByte); overload; static;
     class procedure &Xor(ALen: Int32; AX, AY, AZ: PByte; AXOff, AYOff, AZOff: Integer); overload; static;
 

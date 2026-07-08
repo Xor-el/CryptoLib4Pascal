@@ -1,5 +1,5 @@
 // V128 BinPoly medium multiply, even limb count (x86-64).
-// Entry (after SimdProc4Begin_x86_64.inc):
+// Entry (after ClpSimdProc4Begin_x86_64.inc):
 //   rcx = ALen (UInt64 limb count, even), rdx = PX, r8 = PY, r9 = PZz.
 // ZZ is addressed as packed V128 slots (16-byte stride).
 
@@ -11,7 +11,7 @@
   push      r13
   push      r14
   push      r15
-{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
 
   mov       r12, rdx
   mov       r13, r8
@@ -149,7 +149,7 @@
   jmp       @@BinPolyMulEvenZPosLoop
 
 @@BinPolyMulEvenDone:
-{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
   pop       r15
   pop       r14
   pop       r13

@@ -52,11 +52,11 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure ChaCha20BlockSse2(ARounds: Int32; AInput, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha20BlockSse2_i386.inc}
 {$ENDIF}
 end;
@@ -68,33 +68,33 @@ end;
 
 procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_i386.inc}
 {$ENDIF}
 end;
 
 procedure ChaCha7539ProcessBlocks2Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Avx2_i386.inc}
 {$ENDIF}
 end;
 
 procedure ChaCha7539ProcessBlocks4Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\SimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks4Avx2_i386.inc}
 {$ENDIF}
 end;

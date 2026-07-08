@@ -7,8 +7,8 @@
 // Mode selection:
 //   CRYPTOLIB_AESNI_INOUT defined  -> out-of-place (read RIn, write ROut).
 //   undefined                      -> in-place (read/write state).
-// In-place (SimdProc2Begin): ebx = state, esi = keys.
-// Out-of-place (SimdProc3Begin, CRYPTOLIB_AESNI_INOUT): ebx = RIn, esi = ROut, edi = keys.
+// In-place (ClpSimdProc2Begin): ebx = state, esi = keys.
+// Out-of-place (ClpSimdProc3Begin, CRYPTOLIB_AESNI_INOUT): ebx = RIn, esi = ROut, edi = keys.
 //
 // In-place must move the keys pointer into the canonical rounds-only
 // register (edi); the 2-param prologue did not push edi, so it is

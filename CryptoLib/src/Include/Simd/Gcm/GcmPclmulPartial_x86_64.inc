@@ -1,7 +1,7 @@
 // SSE2 + PCLMULQDQ GHASH field multiply, partial carryless product (x86-64).
 // Produces the 256-bit Karatsuba partial product (Z0, Z1, Z2) for two GHASH
 // field elements before degree reduction.
-// After SimdProc3Begin_x86_64.inc: rcx = @X (TFieldElement), rdx = @Y,
+// After ClpSimdProc3Begin_x86_64.inc: rcx = @X (TFieldElement), rdx = @Y,
 // r8 = @TGcmPartial128 output.
 // X.N0, X.N1 and Y.N0, Y.N1 are UInt64 GHASH field limbs (TFieldElement).
 // Pack each limb into xmm as high qword then low (movq + punpcklqdq);

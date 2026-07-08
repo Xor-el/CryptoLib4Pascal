@@ -19,7 +19,7 @@
 //                              Pass 1 cold start + Pass 3 trailing MAC).
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
+// On entry (after ClpSimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
 // Context layout (7 pointers + 1 NativeUInt = 64 bytes, 8-byte aligned).
 // See TCcmFusedTwoCtx in ClpAesNiCcmKernel.pas.
@@ -46,7 +46,7 @@
 // AES-NI instructions and xmm8-touching forms are db-encoded for broad
 // assembler compatibility.
 
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   mov       rax, [rcx +  0]                         // rax = InPtr
   mov       rdx, [rcx +  8]                         // rdx = OutPtr
   mov       r8,  [rcx + 16]                         // r8  = Keys (base)
@@ -754,5 +754,5 @@
   movdqu    [r9], xmm6                              // CtrState <- updated counter
   mov       r9,  [rcx + 32]
   movdqu    [r9], xmm1                              // MacState <- final MAC
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
 
