@@ -90,11 +90,11 @@ type
 procedure AesNiCtrEnc128(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
@@ -103,11 +103,11 @@ end;
 procedure AesNiCtrEnc192(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
@@ -116,11 +116,11 @@ end;
 procedure AesNiCtrEnc256(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Ctr\AesNiCtrEight_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}

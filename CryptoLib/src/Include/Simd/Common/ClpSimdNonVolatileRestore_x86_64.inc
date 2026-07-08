@@ -1,7 +1,7 @@
-// Shared nonvolatile-XMM restore (x86-64). Mirror of SimdNonVolatileSave_x86_64.inc:
+// Shared nonvolatile-XMM restore (x86-64). Mirror of ClpSimdNonVolatileSave_x86_64.inc:
 // restores xmm6..xmm15 and frees the 160-byte save frame. Include it at the
 // kernel's restore point (after the last use of xmm6..15, before returning), in
-// any procedure that included SimdNonVolatileSave_x86_64.inc. No-op on SysV x86-64.
+// any procedure that included ClpSimdNonVolatileSave_x86_64.inc. No-op on SysV x86-64.
 {$IFNDEF CRYPTOLIB_SYSV_X64_ABI}
   movups    xmm6, [rsp]
   movups    xmm7, [rsp + 16]

@@ -1,12 +1,12 @@
 // x86/V128 BinPoly fixed-size carryless multiply kernels for limb counts 1..10.
 // PCLMULQDQ instruction is db-encoded for broad assembler compatibility.
-// Included inside BinPolyPclmulImplMulSmall after SimdProc4Begin_x86_64.inc:
+// Included inside BinPolyPclmulImplMulSmall after ClpSimdProc4Begin_x86_64.inc:
 //   rcx = ALen, rdx = PX, r8 = PY, r9 = PZz
 // ZZ output: V128 lane k at byte offset 16*k in PZz.
 
   // Each size case reaches @@BinPolySmallXmmDone via `jmp` (not `ret`) so the
   // restore of the registers saved here always runs.
-{$I ..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   cmp       rcx, 1
   je        @@BinPolySmallSize1
   cmp       rcx, 2
@@ -2515,5 +2515,5 @@
   jmp       @@BinPolySmallXmmDone
 
 @@BinPolySmallXmmDone:
-{$I ..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
 

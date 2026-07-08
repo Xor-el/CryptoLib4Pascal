@@ -12,7 +12,7 @@
 // Every working register (rcx,rdx,r8,r9,r10,r11,xmm0,xmm1) is volatile on the
 // MS x64 ABI, so this stays a true leaf: no xmm6-15 save, no callee-saved push.
 //
-// Entry (after SimdProc1Begin_x86_64.inc): rcx = pointer to TCbcEncryptFusedCtx.
+// Entry (after ClpSimdProc1Begin_x86_64.inc): rcx = pointer to TCbcEncryptFusedCtx.
 // The kernel unpacks it (InPtr loaded into r11):
 //   [rcx +  0]  InPtr      -> r11 : input  (advances +16 per block)
 //   [rcx +  8]  OutPtr     -> rdx : output (advances +16)

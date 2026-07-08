@@ -1,5 +1,5 @@
 // SSE2 variable-length XOR utility (x86-64).
-// After SimdProc4Begin_x86_64.inc: rcx = ALen, rdx = PX, r8 = PY, r9 = PZ.
+// After ClpSimdProc4Begin_x86_64.inc: rcx = ALen, rdx = PX, r8 = PY, r9 = PZ.
 // Computes PZ[i] := PX[i] xor PY[i] for i in [0, ALen). PZ may alias PX or PY.
 // 16-byte movdqu/pxor chunks, then a byte tail. Uses xmm0, xmm1, al - all
 // volatile on both ABIs, so no register save is needed (leaf, nostackframe).

@@ -21,7 +21,7 @@
 //                              still byte-reversed. Unset for GCM (canonical
 //                              input), leaving that path byte-identical.
 //
-// On entry (after SimdProc4Begin_i386.inc):
+// On entry (after ClpSimdProc4Begin_i386.inc):
 //   ebx = PFS    (16-byte running GHASH state, canonical; in/out)
 //   esi = PC0    (64 or 128 bytes data; canonical, or field form with RAW_INPUT)
 //   edi = PHPow  (H^N..H^1 as 16-byte limbs, field form)

@@ -100,11 +100,11 @@ type
 procedure EaxFusedCtrOmacEnc128(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
@@ -113,11 +113,11 @@ end;
 procedure EaxFusedCtrOmacEnc192(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
@@ -126,11 +126,11 @@ end;
 procedure EaxFusedCtrOmacEnc256(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
@@ -140,11 +140,11 @@ procedure EaxFusedCtrOmacDec128(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$DEFINE CRYPTOLIB_EAX_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_EAX_DECRYPT}
@@ -155,11 +155,11 @@ procedure EaxFusedCtrOmacDec192(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$DEFINE CRYPTOLIB_EAX_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_EAX_DECRYPT}
@@ -170,11 +170,11 @@ procedure EaxFusedCtrOmacDec256(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$DEFINE CRYPTOLIB_EAX_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\SimdProc1Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Eax\AesEaxFusedCtrOmacTwo_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_EAX_DECRYPT}

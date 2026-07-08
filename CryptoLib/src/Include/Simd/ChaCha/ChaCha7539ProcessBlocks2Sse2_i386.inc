@@ -1,6 +1,6 @@
 // ChaCha7539 (IETF) 128B, SSE2, i386. Two 64B blocks; little-endian state in [esi]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
 // Fused I/O xor: read plaintext at AIn (edi), xor with ChaCha output, write to AOut (eax) — no 64B LK/keystream temp in Pascal.
-// After SimdProc4Begin_i386.inc: ebx=ARounds, esi=AState (R/W), edi=AIn, eax=AOut.
+// After ClpSimdProc4Begin_i386.inc: ebx=ARounds, esi=AState (R/W), edi=AIn, eax=AOut.
 // ecx: 16B stack realign before each 64B round scratch. edx: copy of ARounds between blocks. Word 12 at [esi+48] +2 per 64B block; wrap 0 -> ChaCha7539RaiseCounter7539.
   mov     edx, ebx
   // --- block 1 (counter C in memory) ---

@@ -24,7 +24,7 @@
 //   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (schedule = 13 x 16 bytes).
 //   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (schedule = 15 x 16 bytes).
 //
-// On entry (after SimdProc1Begin_i386.inc): ebx = PCtx.
+// On entry (after ClpSimdProc1Begin_i386.inc): ebx = PCtx.
 //
 // Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 4-byte fields).
 //   [ebx +  0]  PXorIn      : 128-byte input to XOR with keystream (advances)
@@ -56,7 +56,7 @@
 // instructions are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
-  // --- Callee-save prologue. SimdProc1Begin_i386.inc already pushed ebx
+  // --- Callee-save prologue. ClpSimdProc1Begin_i386.inc already pushed ebx
   //     and moved PCtx into ebx, so this block only pushes the other
   //     three callee-saved GPRs and reserves the Z / br(PFS) scratch. ---
   push      edi
@@ -726,7 +726,7 @@
   jnz       @@GcmFusedLoop
 
   // --- Epilogue: unwind stack scratch and pop callee-saved GPRs. ebx
-  //     is popped last because SimdProc1Begin_i386.inc pushed it first. ---
+  //     is popped last because ClpSimdProc1Begin_i386.inc pushed it first. ---
   add       esp, 64
   pop       ebp
   pop       esi

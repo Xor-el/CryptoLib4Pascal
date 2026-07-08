@@ -12,7 +12,7 @@
 // i386 has only xmm0..7 (all volatile); the chain uses xmm1. ebx (pushed by the
 // prologue), esi and edi are callee-saved and restored before return.
 //
-// Entry (after SimdProc1Begin_i386.inc): ebx = pointer to TCbcEncryptFusedCtx. The
+// Entry (after ClpSimdProc1Begin_i386.inc): ebx = pointer to TCbcEncryptFusedCtx. The
 // kernel pushes esi/edi and unpacks the record:
 //   [ebx +  0]  InPtr      -> esi : input  (advances +16 per block)
 //   [ebx +  4]  OutPtr     -> edx : output (advances +16)

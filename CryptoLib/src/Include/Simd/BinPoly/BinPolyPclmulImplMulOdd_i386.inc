@@ -1,5 +1,5 @@
 // V128 BinPoly medium multiply, odd limb count (i386).
-// Entry (after SimdProc4Begin_i386.inc):
+// Entry (after ClpSimdProc4Begin_i386.inc):
 //   ebx = ALen (UInt32 limb count, odd), esi = PX, edi = PY, eax = PZz.
 // ZZ is addressed as packed V128 slots (16-byte stride).
 //

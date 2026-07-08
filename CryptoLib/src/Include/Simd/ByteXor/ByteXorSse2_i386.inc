@@ -1,8 +1,8 @@
 // SSE2 variable-length XOR utility (i386).
-// After SimdProc4Begin_i386.inc: ebx = ALen, esi = PX, edi = PY, eax = PZ.
+// After ClpSimdProc4Begin_i386.inc: ebx = ALen, esi = PX, edi = PY, eax = PZ.
 // Computes PZ[i] := PX[i] xor PY[i] for i in [0, ALen). PZ may alias PX or PY.
 // 16-byte movdqu/pxor chunks, then a byte tail (dl scratch). Callee-saved
-// EBX/ESI/EDI are popped in the epilogue below (pushed by SimdProc4Begin_i386).
+// EBX/ESI/EDI are popped in the epilogue below (pushed by ClpSimdProc4Begin_i386).
 //
 @@ByteXorLoop16:
   cmp       ebx, 16

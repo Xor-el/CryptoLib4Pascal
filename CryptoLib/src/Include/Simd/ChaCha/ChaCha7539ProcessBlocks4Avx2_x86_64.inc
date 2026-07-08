@@ -1,6 +1,6 @@
 // ChaCha7539 (IETF) 256B, AVX2. Two 128B blocks: same fused I/O xor as ProcessBlocks2 (AIn=r8, AOut=r9; no large keystream temp in Pascal).
 // One vzeroupper; add r8/r9,+128 between blocks. LoadState .inc reloads IETF state at [rdx] (word 12 already advanced after block 1).
-// After SimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState, r8=AIn, r9=AOut.
+// After ClpSimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState, r8=AIn, r9=AOut.
   mov     r10, rcx
   // --- first 128B ---
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539_Avx2_128B_LoadState_x86_64.inc}

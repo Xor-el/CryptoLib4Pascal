@@ -1,4 +1,4 @@
-// Salsa20 block, SSE4.1 (pblendw). After SimdProc3Begin_i386.inc: ebx = ARounds, esi = AIn, edi = AOut.
+// Salsa20 block, SSE4.1 (pblendw). After ClpSimdProc3Begin_i386.inc: ebx = ARounds, esi = AIn, edi = AOut.
 // Rounds: Salsa20Sse41_TwoColumnRoundsBody.inc.
 // End with: add esp, 512; pop edi; pop esi; pop ebx
   sub     esp, 512

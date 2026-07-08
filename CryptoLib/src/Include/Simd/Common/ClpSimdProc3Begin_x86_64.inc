@@ -4,7 +4,7 @@
 // Move order avoids register clobbering: save rdx before overwriting.
 // Usage:
 //   procedure MyProc(P1, P2, P3: Pointer);
-//     {$I ..\..\Include\Simd\Common\SimdProc3Begin_x86_64.inc}
+//     {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 //     // ... instructions using rcx, rdx, r8 ...
 //   end;
 {$IFDEF FPC}

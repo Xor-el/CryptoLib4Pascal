@@ -16,7 +16,7 @@
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
 //
-// On entry (after SimdProc1Begin_x86_64.inc): rcx = PCtx.
+// On entry (after ClpSimdProc1Begin_x86_64.inc): rcx = PCtx.
 //
 // Context layout (7 pointers + NativeUInt + UInt64 = 72 bytes, 8-byte aligned).
 // See TOcbFusedKernelCtx in ClpAesNiOcbKernel.pas.
@@ -45,7 +45,7 @@
 // movdqa) are db-encoded for broad assembler compatibility.
 // -------------------------------------------------------------------
 
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileSave_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   // --- Prologue: preserve rbx, reserve 128B aligned stack scratch. ---
   push      rbx                                     // rsp: 8 -> 0 mod 16
   sub       rsp, 128                                // rsp stays 0 mod 16
@@ -627,5 +627,5 @@
 
   add       rsp, 128
   pop       rbx
-{$I ..\..\..\Include\Simd\Common\SimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
 
