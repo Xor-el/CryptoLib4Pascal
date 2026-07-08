@@ -36,6 +36,10 @@ resourcestring
   SExpectedTagButFound = 'expected %s tag but found %s';
   SFailedToConstructFromByte = 'failed to construct %s from byte array: %s';
   SInvalidObject = 'invalid object: %s';
+  SSequenceNil = 'sequence cannot be nil';
+  SBadSequenceSize = 'bad sequence size: %d';
+  SPrematureEndOfSequence = 'premature end of sequence';
+  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
 
 type
   /// <summary>
@@ -80,6 +84,15 @@ type
       ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; overload; static;
     class function GetTaggedChoice<TChoice>(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; static;
+
+    // Cursor callback: [n] EXPLICIT base object
+    class function GetTaggedExplicitBaseObject(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1Encodable; static;
+    // Cursor callback: the tagged object itself
+    class function GetTaggedObjectIdentity(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1TaggedObject; static;
+    // Cursor callback: the element itself (optional ANY reads)
+    class function GetEncodableIdentity(const AElement: IAsn1Encodable): IAsn1Encodable; static;
 
     // Explicit base object methods
     class function GetExplicitBaseObject(const ATaggedObject: IAsn1TaggedObject;
@@ -201,28 +214,35 @@ type
     class function TryParseExplicitContextBaseObject(const ATaggedObjectParser: IAsn1TaggedObjectParser;
       ATagNo: Int32; out ABaseObject: IAsn1Convertible): Boolean; overload; static;
 
-    // Sequence cursor methods
-    class function ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
+    // Sequence cursor methods (sequence + position)
+    class procedure CheckSequenceSize(const ASequence: IAsn1Sequence;
+      AMinCount, AMaxCount: Int32); static;
+    class procedure RequireEndOfSequence(const ASequence: IAsn1Sequence;
+      ASequencePosition: Int32); static;
+    class function ReadEncodable(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32): IAsn1Encodable; static;
+    class function Read<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
+      const AConstructor: TCryptoLibConstFunc<IAsn1Convertible, TResult>): TResult; static;
+    class function ReadOptional<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
+      const AConstructor: TCryptoLibConstFunc<IAsn1Encodable, TResult>): TResult; static;
     class function ReadTagged<TState, TResult>(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function ReadOptional<TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32;
-      const AConstructor: TCryptoLibFunc<IAsn1Encodable, TResult>): TResult; static;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
+    class function ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
     class function ReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
     class function ReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
     class function TryReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32; ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
     class function TryReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
+      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
   end;
 
 implementation
@@ -487,6 +507,23 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@STaggedObjectNil);
 
   Result := AConstructor(ATaggedObject.GetExplicitBaseObject());
+end;
+
+class function TAsn1Utilities.GetTaggedExplicitBaseObject(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1Encodable;
+begin
+  Result := ATaggedObject.GetExplicitBaseObject();
+end;
+
+class function TAsn1Utilities.GetTaggedObjectIdentity(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1TaggedObject;
+begin
+  Result := ATaggedObject;
+end;
+
+class function TAsn1Utilities.GetEncodableIdentity(const AElement: IAsn1Encodable): IAsn1Encodable;
+begin
+  Result := AElement;
 end;
 
 // Explicit base object methods
@@ -865,46 +902,48 @@ end;
 
 // Sequence cursor methods
 
-class function TAsn1Utilities.ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class procedure TAsn1Utilities.CheckSequenceSize(const ASequence: IAsn1Sequence;
+  AMinCount, AMaxCount: Int32);
 begin
-  Result := ReadTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo, AState, AConstructor);
+  if ASequence = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SSequenceNil);
+  if (ASequence.Count < AMinCount) or (ASequence.Count > AMaxCount) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASequence.Count]);
 end;
 
-class function TAsn1Utilities.ReadTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
-var
-  LTagged: IAsn1TaggedObject;
-  LElement: IAsn1Encodable;
-  LObj: IAsn1Object;
+class procedure TAsn1Utilities.RequireEndOfSequence(const ASequence: IAsn1Sequence;
+  ASequencePosition: Int32);
 begin
-  // TODO: We might want to check the position and throw a better exception, but current ASN.1 types aren't
-  // doing that, so leave it until it can be consistent.
-  LElement := ASequence.Items[ASequencePosition];
+  if ASequencePosition <> ASequence.Count then
+    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+end;
+
+class function TAsn1Utilities.ReadEncodable(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32): IAsn1Encodable;
+begin
+  if ASequencePosition < 0 then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SPrematureEndOfSequence);
+  if ASequencePosition >= ASequence.Count then
+    raise EArgumentCryptoLibException.CreateRes(@SPrematureEndOfSequence);
+  Result := ASequence.Items[ASequencePosition];
   System.Inc(ASequencePosition);
-  if LElement = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementNil);
-  LObj := LElement.ToAsn1Object();
-  LTagged := TAsn1TaggedObject.GetInstance(LObj, ATagClass, ATagNo);
-  Result := AConstructor(LTagged, AState);
 end;
 
-class function TAsn1Utilities.ReadOptional<TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32;
-  const AConstructor: TCryptoLibFunc<IAsn1Encodable, TResult>): TResult;
+class function TAsn1Utilities.Read<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
+  const AConstructor: TCryptoLibConstFunc<IAsn1Convertible, TResult>): TResult;
+begin
+  Result := AConstructor(ReadEncodable(ASequence, ASequencePosition));
+end;
+
+class function TAsn1Utilities.ReadOptional<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
+  const AConstructor: TCryptoLibConstFunc<IAsn1Encodable, TResult>): TResult;
 var
   LResult: TResult;
-  LResultPtr: Pointer;
 begin
   if ASequencePosition < ASequence.Count then
   begin
     LResult := AConstructor(ASequence.Items[ASequencePosition]);
-    // Check if result is not nil (for reference types)
-    // Since we know TResult will always be a reference type, we check the pointer value
-    LResultPtr := PPointer(@LResult)^;
-    if LResultPtr <> nil then
+    if PPointer(@LResult)^ <> nil then
     begin
       System.Inc(ASequencePosition);
       Result := LResult;
@@ -914,49 +953,72 @@ begin
   Result := Default(TResult);
 end;
 
-class function TAsn1Utilities.ReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
-begin
-  Result := ReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo, AState, AConstructor);
-end;
-
-class function TAsn1Utilities.ReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+class function TAsn1Utilities.ReadTagged<TState, TResult>(const ASequence: IAsn1Sequence;
   var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
 var
-  LResult: TResult;
+  LTagged: IAsn1TaggedObject;
 begin
-  if (ASequencePosition < ASequence.Count) and
-    (TryGetOptionalTagged<TState, TResult>(ASequence.Items[ASequencePosition], ATagClass, ATagNo, AState, LResult, AConstructor)) then
-  begin
-    System.Inc(ASequencePosition);
-    Result := LResult;
-    Exit;
-  end;
-  Result := Default(TResult);
+  LTagged := TAsn1TaggedObject.GetInstance(ReadEncodable(ASequence, ASequencePosition).ToAsn1Object(),
+    ATagClass, ATagNo);
+  Result := AConstructor(LTagged, AState);
 end;
 
-class function TAsn1Utilities.TryReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+class function TAsn1Utilities.ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
 begin
-  Result := TryReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo, AState, AResult, AConstructor);
+  Result := ReadTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo,
+    AState, AConstructor);
 end;
 
 class function TAsn1Utilities.TryReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
   var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+var
+  LTagged: IAsn1TaggedObject;
 begin
-  if (ASequencePosition < ASequence.Count) and
-    (TryGetOptionalTagged<TState, TResult>(ASequence.Items[ASequencePosition], ATagClass, ATagNo, AState, AResult, AConstructor)) then
+  if ASequencePosition < ASequence.Count then
   begin
-    System.Inc(ASequencePosition);
-    Result := True;
-    Exit;
+    LTagged := TAsn1TaggedObject.GetOptional(ASequence.Items[ASequencePosition], ATagClass, ATagNo);
+    if LTagged <> nil then
+    begin
+      AResult := AConstructor(LTagged, AState);
+      System.Inc(ASequencePosition);
+      Result := True;
+      Exit;
+    end;
   end;
   AResult := Default(TResult);
   Result := False;
+end;
+
+class function TAsn1Utilities.TryReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState; out AResult: TResult;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+begin
+  Result := TryReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
+    ATagNo, AState, AResult, AConstructor);
+end;
+
+class function TAsn1Utilities.ReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+var
+  LFound: Boolean;
+begin
+  LFound := TryReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, ATagClass, ATagNo, AState,
+    Result, AConstructor);
+  if not LFound then
+    Result := Default(TResult);
+end;
+
+class function TAsn1Utilities.ReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
+  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+begin
+  Result := ReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
+    ATagNo, AState, AConstructor);
 end;
 
 end.

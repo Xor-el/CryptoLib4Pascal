@@ -230,16 +230,14 @@ end;
 
 constructor TAttributeTypeAndValue.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FAttrType := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  FValue := ASeq[1];
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAttrType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FValue := TAsn1Utilities.ReadEncodable(ASeq, LPos);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TAttributeTypeAndValue.Create(const AAttrType: IDerObjectIdentifier;

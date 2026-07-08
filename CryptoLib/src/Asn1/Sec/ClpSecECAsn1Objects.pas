@@ -33,10 +33,8 @@ uses
   ClpAsn1Utilities;
 
 resourcestring
-  SBadSequenceSize = 'bad sequence size: %d';
   SKeyNil = 'key cannot be nil';
   SOrderBitLengthTooSmall = 'order must be at least the key bit length';
-  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SPrivateKeyNil = 'private key cannot be nil';
 
 
@@ -52,9 +50,6 @@ type
     FPrivateKey: IAsn1OctetString;
     FParameters: IAsn1Encodable;
     FPublicKey: IDerBitString;
-
-    class function GetTaggedExplicitBaseObject(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable; static;
-    class function GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString; static;
 
   strict protected
     function GetVersion: IDerInteger;
@@ -146,41 +141,20 @@ begin
   Result := TECPrivateKeyStructure.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TECPrivateKeyStructure.GetTaggedExplicitBaseObject(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable;
-begin
-  Result := ATagged.GetExplicitBaseObject();
-end;
-
-class function TECPrivateKeyStructure.GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString;
-begin
-  Result := TDerBitString.GetTagged(ATagged, AState);
-end;
-
 constructor TECPrivateKeyStructure.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  
-  if (LCount < 2) or (LCount > 4) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FVersion := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  
-  FPrivateKey := TAsn1OctetString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 4);
+  FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FPrivateKey := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
   FParameters := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
-    GetTaggedExplicitBaseObject);
-  
+    TAsn1Utilities.GetTaggedExplicitBaseObject);
   FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, True,
-    GetTaggedDerBitString);
-  
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+    TDerBitString.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TECPrivateKeyStructure.Create(AOrderBitLength: Int32; const AKey: TBigInteger);

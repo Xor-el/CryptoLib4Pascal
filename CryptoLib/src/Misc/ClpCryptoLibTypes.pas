@@ -40,6 +40,10 @@ type
 
   TCryptoLibPredicate<T> = function(Arg1: T): Boolean;
 
+  // const-first-argument function pointers, so `static` methods with a `const` first parameter.
+  TCryptoLibConstFunc<T1, TResult> = function(const Arg1: T1): TResult;
+  TCryptoLibConstFunc<T1, T2, TResult> = function(const Arg1: T1; Arg2: T2): TResult;
+
   // Method-of-object procedure overloads
   TCryptoLibMethodProc = procedure of object;
   TCryptoLibMethodProc<T1> = procedure(Arg1: T1) of object;

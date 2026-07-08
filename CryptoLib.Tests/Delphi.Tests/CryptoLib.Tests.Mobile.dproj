@@ -1162,6 +1162,7 @@
         <DCCReference Include="..\src\Asn1\Asn1IntegerTests.pas"/>
         <DCCReference Include="..\src\Asn1\Asn1GeneratorTests.pas"/>
         <DCCReference Include="..\src\Asn1\Asn1SequenceParserTests.pas"/>
+        <DCCReference Include="..\src\Asn1\Asn1SequenceCursorTests.pas"/>
         <DCCReference Include="..\src\Asn1\Asn1TimeFormatTests.pas"/>
         <DCCReference Include="..\src\Asn1\BitStringTests.pas"/>
         <DCCReference Include="..\src\Asn1\DerUtf8StringTests.pas"/>

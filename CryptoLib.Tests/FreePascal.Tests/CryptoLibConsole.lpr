@@ -5,6 +5,7 @@ program CryptoLibConsole;
 uses
   {$IFDEF UNIX}cwstring,{$ENDIF}
   consoletestrunner, Asn1GeneratorTests, Asn1SequenceParserTests,
+  Asn1SequenceCursorTests,
   Asn1TimeFormatTests, EqualsAndHashCodeTests, OIDTests, EnumeratedTests,
   ExternalTests, ParsingTests, ParseTests, StringTests, TagTests,
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, BinPolyTests,

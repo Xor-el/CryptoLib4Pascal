@@ -37,8 +37,6 @@ uses
   ClpCryptoLibTypes;
 
 resourcestring
-  SCmsBadSequenceSize = 'bad sequence size: %d';
-  SCmsUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SCmsContentTypeNil = 'CMS content type cannot be nil';
   SCmsAsn1ElementNil = 'ASN.1 encodable element cannot be nil';
   SCmsIssuerNil = 'CMS issuer name cannot be nil';
@@ -118,6 +116,7 @@ type
     class function GetInstance(const AEncoded: TCryptoLibByteArray): ICmsContentInfo; overload; static;
     class function GetInstance(const AObj: IAsn1TaggedObject;
       AExplicitly: Boolean): ICmsContentInfo; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): ICmsContentInfo; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ICmsContentInfo; static;
 
@@ -144,7 +143,6 @@ type
     FNonce: IAsn1OctetString;
     FIcvLen: Int32;
 
-    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
     class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
 
   strict protected
@@ -181,7 +179,6 @@ type
     FNonce: IAsn1OctetString;
     FIcvLen: Int32;
 
-    class function ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger; static;
     class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
 
   strict protected
@@ -285,8 +282,6 @@ type
     FSignature: IAsn1OctetString;
     FUnsignedAttrs: IAsn1Set;
 
-    class function GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set; static;
-
   strict protected
     function GetVersion: IDerInteger;
     function GetSignerID: ICmsSignerIdentifier;
@@ -339,8 +334,8 @@ type
     FSigsBer: Boolean;
 
   strict private
-    class function ReadOptionalTaggedSet(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagNo: Int32; out AIsBer: Boolean): IAsn1Set; static;
+    class procedure ReadOptionalTaggedSet(const ASeq: IAsn1Sequence; var APos: Int32;
+      ATagNo: Int32; out ASet: IAsn1Set; out AIsBer: Boolean); static;
     class function CalculateVersionField(const AContentOid: IDerObjectIdentifier;
       const ACerts, ACrls, ASignerInfs: IAsn1Set): IDerInteger; static;
     class function HasV3SignerInfos(const ASignerInfs: IAsn1Set): Boolean; static;
@@ -565,26 +560,34 @@ begin
   Result := IsDLOctetString(LObj) or IsDLSequenceObj(LObj);
 end;
 
+class function TCmsContentInfo.GetOptional(const AElement: IAsn1Encodable): ICmsContentInfo;
+var
+  LSeq: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCmsAsn1ElementNil);
+  if Supports(AElement, ICmsContentInfo, Result) then
+    Exit;
+  LSeq := TAsn1Sequence.GetOptional(AElement);
+  if LSeq <> nil then
+  begin
+    Result := TCmsContentInfo.Create(LSeq);
+    Exit;
+  end;
+  Result := nil;
+end;
+
 constructor TCmsContentInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
-  LTagged: IAsn1TaggedObject;
+  LPos: Int32;
 begin
   Inherited Create();
-  LCount := ASeq.Count;
-  if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
-
-  FContentType := TDerObjectIdentifier.GetInstance(ASeq[0]);
-
-  if ASeq.Count > 1 then
-  begin
-    LTagged := TAsn1TaggedObject.GetContextInstance(ASeq[1], 0);
-    FContent := LTagged.GetExplicitBaseObject();
-  end
-  else
-    FContent := nil;
-
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
+  FContentType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FContent := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+    TAsn1Utilities.GetTaggedExplicitBaseObject);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FIsDefiniteLength := IsDLSequence(ASeq);
 end;
 
@@ -689,14 +692,14 @@ end;
 
 constructor TCmsIssuerAndSerialNumber.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   Inherited Create();
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
-  FIssuer := TX509Name.GetInstance(ASeq[0]);
-  FSerialNumber := TDerInteger.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FIssuer := TAsn1Utilities.Read<IX509Name>(ASeq, LPos, TX509Name.GetInstance);
+  FSerialNumber := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TCmsIssuerAndSerialNumber.Create(const AIssuer: IX509Name; const ASerialNumber: IDerInteger);
@@ -873,34 +876,19 @@ end;
 
 constructor TCmsSignerInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   Inherited Create();
-  LCount := ASeq.Count;
-  if (LCount < 5) or (LCount > 7) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
   LPos := 0;
-  FVersion := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSignerID := TCmsSignerIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FDigestAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
-    GetTaggedAsn1Set);
-  FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSignature := TAsn1OctetString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False,
-    GetTaggedAsn1Set);
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
-end;
-
-class function TCmsSignerInfo.GetTaggedAsn1Set(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Set;
-begin
-  Result := TAsn1Set.GetTagged(ATagged, AState);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 5, 7);
+  FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FSignerID := TAsn1Utilities.Read<ICmsSignerIdentifier>(ASeq, LPos, TCmsSignerIdentifier.GetInstance);
+  FDigestAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False, TAsn1Set.GetTagged);
+  FSignatureAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSignature := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False, TAsn1Set.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TCmsSignerInfo.Create(const ASignerID: ICmsSignerIdentifier;
@@ -979,24 +967,24 @@ end;
 
 { TCmsSignedData }
 
-class function TCmsSignedData.ReadOptionalTaggedSet(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; out AIsBer: Boolean): IAsn1Set;
+class procedure TCmsSignedData.ReadOptionalTaggedSet(const ASeq: IAsn1Sequence; var APos: Int32;
+  ATagNo: Int32; out ASet: IAsn1Set; out AIsBer: Boolean);
 var
-  LElement: IAsn1Encodable;
   LTagged: IAsn1TaggedObject;
+  LFound: Boolean;
 begin
-  Result := nil;
-  AIsBer := False;
-  if ASequencePosition >= ASequence.Count then
-    Exit;
-  LElement := ASequence.Items[ASequencePosition];
-  if not Supports(LElement, IAsn1TaggedObject, LTagged) then
-    Exit;
-  if not LTagged.HasContextTag(ATagNo) then
-    Exit;
-  Result := TAsn1Set.GetTagged(LTagged, False);
-  AIsBer := Supports(LElement, IBerTaggedObject);
-  System.Inc(ASequencePosition);
+  LFound := TAsn1Utilities.TryReadOptionalContextTagged<Boolean, IAsn1TaggedObject>(ASeq, APos, ATagNo, False,
+    LTagged, TAsn1Utilities.GetTaggedObjectIdentity);
+  if LFound then
+  begin
+    ASet := TAsn1Set.GetTagged(LTagged, False);
+    AIsBer := Supports(LTagged, IBerTaggedObject);
+  end
+  else
+  begin
+    ASet := nil;
+    AIsBer := False;
+  end;
 end;
 
 class function TCmsSignedData.CalculateVersionField(const AContentOid: IDerObjectIdentifier;
@@ -1162,27 +1150,18 @@ end;
 
 constructor TCmsSignedData.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   Inherited Create();
-  LCount := ASeq.Count;
-  if (LCount < 4) or (LCount > 6) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
-
   LPos := 0;
-  FVersion := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FDigestAlgorithms := TAsn1Set.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FEncapContentInfo := TCmsContentInfo.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FCertificates := ReadOptionalTaggedSet(ASeq, LPos, 0, FCertsBer);
-  FCrls := ReadOptionalTaggedSet(ASeq, LPos, 1, FCrlsBer);
-  FSignerInfos := TAsn1Set.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 4, 6);
+  FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FDigestAlgorithms := TAsn1Utilities.Read<IAsn1Set>(ASeq, LPos, TAsn1Set.GetInstance);
+  FEncapContentInfo := TAsn1Utilities.Read<ICmsContentInfo>(ASeq, LPos, TCmsContentInfo.GetInstance);
+  ReadOptionalTaggedSet(ASeq, LPos, 0, FCertificates, FCertsBer);
+  ReadOptionalTaggedSet(ASeq, LPos, 1, FCrls, FCrlsBer);
+  FSignerInfos := TAsn1Utilities.Read<IAsn1Set>(ASeq, LPos, TAsn1Set.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   FDigsBer := Supports(FDigestAlgorithms, IBerSet);
   FSigsBer := Supports(FSignerInfos, IBerSet);
@@ -1276,11 +1255,6 @@ end;
 
 { TCcmParameters }
 
-class function TCcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AEnc);
-end;
-
 class function TCcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
 begin
   if (AIcvLen < 4) or (AIcvLen > 16) or ((AIcvLen and 1) <> 0) then
@@ -1326,20 +1300,15 @@ end;
 
 constructor TCcmParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LIcvLen: IDerInteger;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
-
-  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
+  FNonce := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   if LIcvLen = nil then
     FIcvLen := ValidateIcvLen(DefaultIcvLen)
@@ -1374,11 +1343,6 @@ begin
 end;
 
 { TGcmParameters }
-
-class function TGcmParameters.ReadOptionalDerInteger(AEnc: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AEnc);
-end;
 
 class function TGcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
 begin
@@ -1425,20 +1389,15 @@ end;
 
 constructor TGcmParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LIcvLen: IDerInteger;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCmsBadSequenceSize, [LCount]);
-
-  FNonce := TAsn1OctetString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SCmsUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
+  FNonce := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   if LIcvLen = nil then
     FIcvLen := ValidateIcvLen(DefaultIcvLen)

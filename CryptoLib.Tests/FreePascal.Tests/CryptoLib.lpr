@@ -4,6 +4,7 @@ program CryptoLib.Tests;
 
 uses
   Interfaces, Forms, GuiTestRunner, Asn1GeneratorTests, Asn1SequenceParserTests,
+  Asn1SequenceCursorTests,
   Asn1TimeFormatTests, EqualsAndHashCodeTests, OIDTests, EnumeratedTests,
   ExternalTests, ParsingTests, ParseTests, StringTests, TagTests,
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, BinPolyTests,

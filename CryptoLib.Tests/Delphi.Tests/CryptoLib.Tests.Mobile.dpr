@@ -819,6 +819,7 @@ uses
   Asn1IntegerTests in '..\src\Asn1\Asn1IntegerTests.pas',
   Asn1GeneratorTests in '..\src\Asn1\Asn1GeneratorTests.pas',
   Asn1SequenceParserTests in '..\src\Asn1\Asn1SequenceParserTests.pas',
+  Asn1SequenceCursorTests in '..\src\Asn1\Asn1SequenceCursorTests.pas',
   Asn1TimeFormatTests in '..\src\Asn1\Asn1TimeFormatTests.pas',
   BitStringTests in '..\src\Asn1\BitStringTests.pas',
   DerUtf8StringTests in '..\src\Asn1\DerUtf8StringTests.pas',

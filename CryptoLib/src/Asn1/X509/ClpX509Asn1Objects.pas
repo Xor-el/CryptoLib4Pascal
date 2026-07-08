@@ -257,10 +257,6 @@ type
 
   strict private
     procedure ImplCreate(const ASeq: IAsn1Sequence);
-    class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
-    class function GetTaggedX509Name(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Name; static;
-    class function GetTaggedValidity(ATagged: IAsn1TaggedObject; AState: Boolean): IValidity; static;
-    class function GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions; static;
 
   strict protected
     function GetSerialNumber: IDerInteger;
@@ -462,9 +458,6 @@ type
     FAuthorityCertSerialNumber: IDerInteger;
 
     class procedure CheckIssuerAndSerial(const ACertIssuer: IGeneralNames; const ACertSerial: IDerInteger); static;
-    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString; static;
-    class function GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames; static;
-    class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
 
   strict protected
     function GetKeyIdentifier: IAsn1OctetString;
@@ -1193,7 +1186,6 @@ type
     FRevocationDate: ITime;
     FCrlEntryExtensions: IX509Extensions;
 
-    class function ReadOptionalX509Extensions(AElement: IAsn1Encodable): IX509Extensions; static;
 
   strict protected
     function GetUserCertificate: IDerInteger;
@@ -1330,8 +1322,6 @@ type
     FCA: IDerBoolean;
     FPathLenConstraint: IDerInteger;
 
-    class function ReadOptionalDerBoolean(AElement: IAsn1Encodable): IDerBoolean; static;
-    class function ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger; static;
 
   strict protected
     function IsCA: Boolean;
@@ -1463,9 +1453,6 @@ type
     FExtensions: IX509Extensions;
     FSeq: IAsn1Sequence;
 
-    class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
-    class function GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString; static;
-    class function GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions; static;
 
   strict protected
     function GetVersion: Int32;
@@ -1602,7 +1589,6 @@ type
     FReverse: IX509CertificateStructure;
 
     procedure Validate;
-    class function GetTaggedX509CertificateStructure(ATagged: IAsn1TaggedObject; AState: Boolean): IX509CertificateStructure; static;
 
   strict protected
     function GetForward: IX509CertificateStructure;
@@ -1752,7 +1738,6 @@ type
     FSerial: IDerInteger;
     FIssuerUid: IDerBitString;
 
-    class function ReadOptionalDerBitString(AElement: IAsn1Encodable): IDerBitString; static;
 
   strict protected
     function GetIssuer: IGeneralNames;
@@ -1797,9 +1782,6 @@ type
     FBaseCertificateID: IIssuerSerial;
     FObjectDigestInfo: IObjectDigestInfo;
 
-    class function ReadOptionalGeneralNames(AElement: IAsn1Encodable): IGeneralNames; static;
-    class function GetTaggedIssuerSerial(ATagged: IAsn1TaggedObject; AState: Boolean): IIssuerSerial; static;
-    class function GetTaggedObjectDigestInfo(ATagged: IAsn1TaggedObject; AState: Boolean): IObjectDigestInfo; static;
 
   strict protected
     function GetIssuerName: IGeneralNames;
@@ -1846,7 +1828,6 @@ type
     FDigestAlgorithm: IAlgorithmIdentifier;
     FObjectDigest: IDerBitString;
 
-    class function ReadOptionalDerObjectIdentifier(AElement: IAsn1Encodable): IDerObjectIdentifier; static;
 
   public
     const
@@ -2028,10 +2009,6 @@ type
     FRevokedCertificates: IAsn1Sequence;
     FCrlExtensions: IX509Extensions;
 
-    class function ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger; static;
-    class function ReadOptionalTime(AElement: IAsn1Encodable): ITime; static;
-    class function ReadOptionalAsn1Sequence(AElement: IAsn1Encodable): IAsn1Sequence; static;
-    class function GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions; static;
     class function ElementToCrlEntry(AElement: IAsn1Encodable): ICrlEntry; static;
 
   strict protected
@@ -2078,9 +2055,7 @@ type
     FReasons: IReasonFlags;
     FCrlIssuer: IGeneralNames;
 
-    class function GetTaggedDistributionPointName(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName; static;
-    class function GetTaggedReasonFlags(ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags; static;
-    class function GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames; static;
+    class function GetTaggedReasonFlags(const ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags; static;
 
   strict protected
     function GetDistributionPointName: IDistributionPointName;
@@ -2137,9 +2112,7 @@ type
     FOnlyContainsAttributeCerts: IDerBoolean;
     FSeq: IAsn1Sequence;
 
-    class function GetTaggedDistributionPointName(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName; static;
-    class function GetTaggedDerBoolean(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean; static;
-    class function GetTaggedReasonFlags(ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags; static;
+    class function GetTaggedReasonFlags(const ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags; static;
 
   strict protected
     function GetDistributionPoint: IDistributionPointName;
@@ -2302,9 +2275,6 @@ type
     FObjectDigestInfo: IObjectDigestInfo;
     FVersion: Int32;
 
-    class function GetTaggedIssuerSerial(ATagged: IAsn1TaggedObject; AState: Boolean): IIssuerSerial; static;
-    class function GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames; static;
-    class function GetTaggedObjectDigestInfo(ATagged: IAsn1TaggedObject; AState: Boolean): IObjectDigestInfo; static;
 
   strict protected
     function GetVersion: Int32;
@@ -2399,9 +2369,6 @@ type
     FIssuerUniqueID: IDerBitString;
     FExtensions: IX509Extensions;
 
-    class function ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger; static;
-    class function ReadOptionalDerBitString(AElement: IAsn1Encodable): IDerBitString; static;
-    class function ReadOptionalX509Extensions(AElement: IAsn1Encodable): IX509Extensions; static;
 
   strict protected
     function GetVersion: IDerInteger;
@@ -2546,21 +2513,14 @@ end;
 
 constructor TAlgorithmIdentifier.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if (LCount < 1) or (LCount > 2) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FAlgorithm := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  if LCount < 2 then
-    FParameters := nil
-  else
-    FParameters := ASeq[1];
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
+  FAlgorithm := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FParameters := TAsn1Utilities.ReadOptional<IAsn1Encodable>(ASeq, LPos, TAsn1Utilities.GetEncodableIdentity);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TAlgorithmIdentifier.Create(const AAlgorithm: IDerObjectIdentifier);
@@ -2655,18 +2615,14 @@ end;
 
 constructor TDigestInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FDigestAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[0]);
-  FDigest := TAsn1OctetString.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FDigestAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FDigest := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDigestInfo.Create(const AAlgId: IAlgorithmIdentifier;
@@ -2724,62 +2680,26 @@ end;
 
 { TDeltaCertificateDescriptor }
 
-class function TDeltaCertificateDescriptor.GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier;
-begin
-  Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-end;
-
-class function TDeltaCertificateDescriptor.GetTaggedX509Name(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Name;
-begin
-  Result := TX509Name.GetTagged(ATagged, AState);
-end;
-
-class function TDeltaCertificateDescriptor.GetTaggedValidity(ATagged: IAsn1TaggedObject; AState: Boolean): IValidity;
-begin
-  Result := TValidity.GetTagged(ATagged, AState);
-end;
-
-class function TDeltaCertificateDescriptor.GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions;
-begin
-  Result := TX509Extensions.GetTagged(ATagged, AState);
-end;
-
 procedure TDeltaCertificateDescriptor.ImplCreate(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 3) or (LCount > 8) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FSerialNumber := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FSignature := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(
-    ASeq, LPos, 0, True,
-    GetTaggedAlgorithmIdentifier);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 8);
+  FSerialNumber := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FSignature := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+    TAlgorithmIdentifier.GetTagged);
   FIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 1, True,
-    GetTaggedX509Name);
-
+    TX509Name.GetTagged);
   FValidity := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IValidity>(ASeq, LPos, 2, True,
-    GetTaggedValidity);
-
+    TValidity.GetTagged);
   FSubject := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 3, True,
-    GetTaggedX509Name);
-
-  FSubjectPublicKeyInfo := TSubjectPublicKeyInfo.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
+    TX509Name.GetTagged);
+  FSubjectPublicKeyInfo := TAsn1Utilities.Read<ISubjectPublicKeyInfo>(ASeq, LPos, TSubjectPublicKeyInfo.GetInstance);
   FExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 4, True,
-    GetTaggedX509Extensions);
-
-  FSignatureValue := TDerBitString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+    TX509Extensions.GetTagged);
+  FSignatureValue := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDeltaCertificateDescriptor.Create(const ASeq: IAsn1Sequence);
@@ -3170,18 +3090,14 @@ end;
 
 constructor TValidity.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FNotBefore := TTime.GetInstance(ASeq[0]);
-  FNotAfter := TTime.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FNotBefore := TAsn1Utilities.Read<ITime>(ASeq, LPos, TTime.GetInstance);
+  FNotAfter := TAsn1Utilities.Read<ITime>(ASeq, LPos, TTime.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TValidity.Create(const ANotBefore, ANotAfter: ITime);
@@ -3270,32 +3186,17 @@ begin
   Result := TCrlEntry.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TCrlEntry.ReadOptionalX509Extensions(AElement: IAsn1Encodable): IX509Extensions;
-begin
-  Result := TX509Extensions.GetOptional(AElement);
-end;
-
 constructor TCrlEntry.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FUserCertificate := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FRevocationDate := TTime.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FCrlEntryExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos,
-    ReadOptionalX509Extensions);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FUserCertificate := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FRevocationDate := TAsn1Utilities.Read<ITime>(ASeq, LPos, TTime.GetInstance);
+  FCrlEntryExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos, TX509Extensions.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FSeq := ASeq;
 end;
 
@@ -3631,39 +3532,18 @@ begin
   Result := TBasicConstraints.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TBasicConstraints.ReadOptionalDerBoolean(AElement: IAsn1Encodable): IDerBoolean;
-begin
-  Result := TDerBoolean.GetOptional(AElement);
-end;
-
-class function TBasicConstraints.ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AElement);
-end;
-
 constructor TBasicConstraints.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 2) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FCA := TAsn1Utilities.ReadOptional<IDerBoolean>(ASeq, LPos, ReadOptionalDerBoolean);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 2);
+  FCA := TAsn1Utilities.ReadOptional<IDerBoolean>(ASeq, LPos, TDerBoolean.GetOptional);
   if FCA = nil then
     FCA := TDerBoolean.False;
-
-  FPathLenConstraint := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
-
-  if LPos <> LCount then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-  end;
+  FPathLenConstraint := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TBasicConstraints.Create(ACA: Boolean);
@@ -3789,18 +3669,14 @@ end;
 
 constructor TSubjectPublicKeyInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[0]);
-  FPublicKey := TDerBitString.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FPublicKey := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TSubjectPublicKeyInfo.Create(const AAlgID: IAlgorithmIdentifier;
@@ -3904,18 +3780,14 @@ end;
 
 constructor TSubjectAltPublicKeyInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  FAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[0]);
-  FSubjectAltPublicKey := TDerBitString.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSubjectAltPublicKey := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TSubjectAltPublicKeyInfo.Create(const AAlgorithm: IAlgorithmIdentifier;
@@ -4005,88 +3877,48 @@ begin
   Result := TTbsCertificateStructure.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TTbsCertificateStructure.GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger;
-begin
-  Result := TDerInteger.GetTagged(ATagged, AState);
-end;
-
-class function TTbsCertificateStructure.GetTaggedDerBitString(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBitString;
-begin
-  Result := TDerBitString.GetTagged(ATagged, AState);
-end;
-
-class function TTbsCertificateStructure.GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions;
-begin
-  Result := TX509Extensions.GetTagged(ATagged, AState);
-end;
-
 constructor TTbsCertificateStructure.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LIsV1, LIsV2: Boolean;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 6) or (LCount > 10) then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 6, 10);
 
   FVersion := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 0, True,
-    GetTaggedDerInteger);
+    TDerInteger.GetTagged);
   if FVersion = nil then
     FVersion := TDerInteger.Zero;
 
   LIsV1 := False;
   LIsV2 := False;
   if FVersion.HasValue(0) then
-  begin
-    LIsV1 := True;
-  end
+    LIsV1 := True
   else if FVersion.HasValue(1) then
-  begin
-    LIsV2 := True;
-  end
+    LIsV2 := True
   else if not FVersion.HasValue(2) then
-  begin
     raise EArgumentCryptoLibException.CreateRes(@SVersionNumberNotRecognized);
-  end;
 
-  FSerialNumber := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSignature := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FIssuer := TX509Name.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FValidity := TValidity.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSubject := TX509Name.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSubjectPublicKeyInfo := TSubjectPublicKeyInfo.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
+  FSerialNumber := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FSignature := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FIssuer := TAsn1Utilities.Read<IX509Name>(ASeq, LPos, TX509Name.GetInstance);
+  FValidity := TAsn1Utilities.Read<IValidity>(ASeq, LPos, TValidity.GetInstance);
+  FSubject := TAsn1Utilities.Read<IX509Name>(ASeq, LPos, TX509Name.GetInstance);
+  FSubjectPublicKeyInfo := TAsn1Utilities.Read<ISubjectPublicKeyInfo>(ASeq, LPos, TSubjectPublicKeyInfo.GetInstance);
 
   if not LIsV1 then
   begin
     FIssuerUniqueID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, False,
-      GetTaggedDerBitString);
-
+      TDerBitString.GetTagged);
     FSubjectUniqueID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 2, False,
-      GetTaggedDerBitString);
-
+      TDerBitString.GetTagged);
     if not LIsV2 then
-    begin
       FExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 3, True,
-        GetTaggedX509Extensions);
-    end;
+        TX509Extensions.GetTagged);
   end;
 
-  if LPos <> LCount then
-  begin
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-  end;
-
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FSeq := ASeq;
 end;
 
@@ -4308,20 +4140,16 @@ end;
 
 constructor TX509CertificateStructure.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 3 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 3);
   // correct x509 certificate
-  FTbsCertificate := TTbsCertificateStructure.GetInstance(ASeq[0]);
-  FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[1]);
-  FSignature := TDerBitString.GetInstance(ASeq[2]);
+  FTbsCertificate := TAsn1Utilities.Read<ITbsCertificateStructure>(ASeq, LPos, TTbsCertificateStructure.GetInstance);
+  FSignatureAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSignature := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TX509CertificateStructure.Create(const ATbsCert: ITbsCertificateStructure;
@@ -4474,33 +4302,18 @@ begin
   Result := TCertificatePair.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TCertificatePair.GetTaggedX509CertificateStructure(ATagged: IAsn1TaggedObject; AState: Boolean): IX509CertificateStructure;
-begin
-  Result := TX509CertificateStructure.GetTagged(ATagged, AState);
-end;
-
 constructor TCertificatePair.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FForward := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(
-    ASeq, LPos, 0, True,
-    GetTaggedX509CertificateStructure);
-
-  FReverse := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(
-    ASeq, LPos, 1, True,
-    GetTaggedX509CertificateStructure);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 2);
+  FForward := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(ASeq, LPos, 0, True,
+    TX509CertificateStructure.GetTagged);
+  FReverse := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(ASeq, LPos, 1, True,
+    TX509CertificateStructure.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   Validate();
 end;
 
@@ -5308,48 +5121,26 @@ end;
 
 constructor TAuthorityKeyIdentifier.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LKeyIdentifier: IAsn1OctetString;
   LAuthorityCertIssuer: IGeneralNames;
   LAuthorityCertSerialNumber: IDerInteger;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
   LKeyIdentifier := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, False,
-    GetTaggedAsn1OctetString);
-
+    TAsn1OctetString.GetTagged);
   LAuthorityCertIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
-    GetTaggedGeneralNames);
-
+    TGeneralNames.GetTagged);
   LAuthorityCertSerialNumber := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, False,
-    GetTaggedDerInteger);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+    TDerInteger.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   CheckIssuerAndSerial(LAuthorityCertIssuer, LAuthorityCertSerialNumber);
   FKeyIdentifier := LKeyIdentifier;
   FAuthorityCertIssuer := LAuthorityCertIssuer;
   FAuthorityCertSerialNumber := LAuthorityCertSerialNumber;
-end;
-
-class function TAuthorityKeyIdentifier.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString;
-begin
-  Result := TAsn1OctetString.GetTagged(ATagged, AState);
-end;
-
-class function TAuthorityKeyIdentifier.GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames;
-begin
-  Result := TGeneralNames.GetTagged(ATagged, AState);
-end;
-
-class function TAuthorityKeyIdentifier.GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger;
-begin
-  Result := TDerInteger.GetTagged(ATagged, AState);
 end;
 
 constructor TAuthorityKeyIdentifier.Create(const AKeyIdentifier: TCryptoLibByteArray);
@@ -5635,26 +5426,18 @@ end;
 
 constructor TExtension.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FExtnID := TDerObjectIdentifier.GetInstance(ASeq[0]);
-
-  if LCount = 3 then
-  begin
-    FCritical := TDerBoolean.GetInstance(ASeq[1]);
-    FExtnValue := TAsn1OctetString.GetInstance(ASeq[2]);
-  end
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FExtnID := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  if ASeq.Count = 3 then
+    FCritical := TAsn1Utilities.Read<IDerBoolean>(ASeq, LPos, TDerBoolean.GetInstance)
   else
-  begin
     FCritical := TDerBoolean.False;
-    FExtnValue := TAsn1OctetString.GetInstance(ASeq[1]);
-  end;
+  FExtnValue := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TExtension.Create(const AExtnID: IDerObjectIdentifier; const ACritical: IDerBoolean;
@@ -7831,15 +7614,14 @@ end;
 
 constructor TAttributeX509.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FAttrType := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  FAttrValues := TAsn1Set.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAttrType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FAttrValues := TAsn1Utilities.Read<IAsn1Set>(ASeq, LPos, TAsn1Set.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TAttributeX509.Create(const AAttrType: IDerObjectIdentifier; const AAttrValues: IAsn1Set);
@@ -7922,15 +7704,14 @@ end;
 
 constructor TAttCertValidityPeriod.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FNotBeforeTime := TAsn1GeneralizedTime.GetInstance(ASeq[0]);
-  FNotAfterTime := TAsn1GeneralizedTime.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FNotBeforeTime := TAsn1Utilities.Read<IAsn1GeneralizedTime>(ASeq, LPos, TAsn1GeneralizedTime.GetInstance);
+  FNotAfterTime := TAsn1Utilities.Read<IAsn1GeneralizedTime>(ASeq, LPos, TAsn1GeneralizedTime.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TAttCertValidityPeriod.Create(const ANotBeforeTime, ANotAfterTime: IAsn1GeneralizedTime);
@@ -8008,18 +7789,14 @@ end;
 
 constructor TPolicyInformation.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if (LCount < 1) or (LCount > 2) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FPolicyIdentifier := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  if LCount < 2 then
-    FPolicyQualifiers := nil
-  else
-    FPolicyQualifiers := TAsn1Sequence.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
+  FPolicyIdentifier := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FPolicyQualifiers := TAsn1Utilities.ReadOptional<IAsn1Sequence>(ASeq, LPos, TAsn1Sequence.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TPolicyInformation.Create(const APolicyIdentifier: IDerObjectIdentifier);
@@ -8124,27 +7901,15 @@ end;
 
 constructor TIssuerSerial.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FIssuer := TGeneralNames.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSerial := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FIssuerUid := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, ReadOptionalDerBitString);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-end;
-
-class function TIssuerSerial.ReadOptionalDerBitString(AElement: IAsn1Encodable): IDerBitString;
-begin
-  Result := TDerBitString.GetOptional(AElement);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FIssuer := TAsn1Utilities.Read<IGeneralNames>(ASeq, LPos, TGeneralNames.GetInstance);
+  FSerial := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FIssuerUid := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, TDerBitString.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TIssuerSerial.Create(const AIssuer: IX509Name; const ASerial: IDerInteger);
@@ -8262,37 +8027,17 @@ end;
 
 constructor TV2Form.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FIssuerName := TAsn1Utilities.ReadOptional<IGeneralNames>(ASeq, LPos, ReadOptionalGeneralNames);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
+  FIssuerName := TAsn1Utilities.ReadOptional<IGeneralNames>(ASeq, LPos, TGeneralNames.GetOptional);
   FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
-    GetTaggedIssuerSerial);
+    TIssuerSerial.GetTagged);
   FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IObjectDigestInfo>(ASeq, LPos, 1, False,
-    GetTaggedObjectDigestInfo);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-end;
-
-class function TV2Form.ReadOptionalGeneralNames(AElement: IAsn1Encodable): IGeneralNames;
-begin
-  Result := TGeneralNames.GetOptional(AElement);
-end;
-
-class function TV2Form.GetTaggedIssuerSerial(ATagged: IAsn1TaggedObject; AState: Boolean): IIssuerSerial;
-begin
-  Result := TIssuerSerial.GetTagged(ATagged, AState);
-end;
-
-class function TV2Form.GetTaggedObjectDigestInfo(ATagged: IAsn1TaggedObject; AState: Boolean): IObjectDigestInfo;
-begin
-  Result := TObjectDigestInfo.GetTagged(ATagged, AState);
+    TObjectDigestInfo.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TV2Form.Create(const AIssuerName: IGeneralNames);
@@ -8394,29 +8139,16 @@ end;
 
 constructor TObjectDigestInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 3) or (LCount > 4) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FDigestedObjectType := TDerEnumerated.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FOtherObjectTypeID := TAsn1Utilities.ReadOptional<IDerObjectIdentifier>(ASeq, LPos, ReadOptionalDerObjectIdentifier);
-  FDigestAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FObjectDigest := TDerBitString.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-end;
-
-class function TObjectDigestInfo.ReadOptionalDerObjectIdentifier(AElement: IAsn1Encodable): IDerObjectIdentifier;
-begin
-  Result := TDerObjectIdentifier.GetOptional(AElement);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 4);
+  FDigestedObjectType := TAsn1Utilities.Read<IDerEnumerated>(ASeq, LPos, TDerEnumerated.GetInstance);
+  FOtherObjectTypeID := TAsn1Utilities.ReadOptional<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetOptional);
+  FDigestAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FObjectDigest := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TObjectDigestInfo.Create(ADigestedObjectType: Int32; const AOtherObjectTypeID: String;
@@ -8511,38 +8243,23 @@ end;
 
 constructor TDistributionPoint.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
   FDistributionPointName := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
-    GetTaggedDistributionPointName);
+    TDistributionPointName.GetTagged);
   FReasons := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IReasonFlags>(ASeq, LPos, 1, False,
     GetTaggedReasonFlags);
   FCrlIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 2, False,
-    GetTaggedGeneralNames);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+    TGeneralNames.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
-class function TDistributionPoint.GetTaggedDistributionPointName(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName;
-begin
-  Result := TDistributionPointName.GetTagged(ATagged, AState);
-end;
-
-class function TDistributionPoint.GetTaggedReasonFlags(ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags;
+class function TDistributionPoint.GetTaggedReasonFlags(const ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags;
 begin
   Result := TReasonFlags.Create(TDerBitString.GetTagged(ATagged, AState));
-end;
-
-class function TDistributionPoint.GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames;
-begin
-  Result := TGeneralNames.GetTagged(ATagged, AState);
 end;
 
 constructor TDistributionPoint.Create(const ADistributionPointName: IDistributionPointName;
@@ -8712,21 +8429,18 @@ end;
 
 constructor TIssuingDistributionPoint.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LOnlyContainsUserCerts, LOnlyContainsCACerts, LIndirectCRL, LOnlyContainsAttributeCerts: IDerBoolean;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 6) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 6);
 
   FDistributionPoint := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
-    GetTaggedDistributionPointName);
+    TDistributionPointName.GetTagged);
 
   LOnlyContainsUserCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 1, False,
-    GetTaggedDerBoolean);
+    TDerBoolean.GetTagged);
 
   if LOnlyContainsUserCerts <> nil then
     FOnlyContainsUserCerts := LOnlyContainsUserCerts
@@ -8734,7 +8448,7 @@ begin
     FOnlyContainsUserCerts := TDerBoolean.False;
 
   LOnlyContainsCACerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 2, False,
-    GetTaggedDerBoolean);
+    TDerBoolean.GetTagged);
 
   if LOnlyContainsCACerts <> nil then
     FOnlyContainsCACerts := LOnlyContainsCACerts
@@ -8745,7 +8459,7 @@ begin
     GetTaggedReasonFlags);
 
   LIndirectCRL := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 4, False,
-    GetTaggedDerBoolean);
+    TDerBoolean.GetTagged);
 
   if LIndirectCRL <> nil then
     FIndirectCRL := LIndirectCRL
@@ -8753,30 +8467,18 @@ begin
     FIndirectCRL := TDerBoolean.False;
 
   LOnlyContainsAttributeCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 5, False,
-    GetTaggedDerBoolean);
+    TDerBoolean.GetTagged);
 
   if LOnlyContainsAttributeCerts <> nil then
     FOnlyContainsAttributeCerts := LOnlyContainsAttributeCerts
   else
     FOnlyContainsAttributeCerts := TDerBoolean.False;
 
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FSeq := ASeq;
 end;
 
-class function TIssuingDistributionPoint.GetTaggedDistributionPointName(ATagged: IAsn1TaggedObject; AState: Boolean): IDistributionPointName;
-begin
-  Result := TDistributionPointName.GetTagged(ATagged, AState);
-end;
-
-class function TIssuingDistributionPoint.GetTaggedDerBoolean(ATagged: IAsn1TaggedObject; AState: Boolean): IDerBoolean;
-begin
-  Result := TDerBoolean.GetTagged(ATagged, AState);
-end;
-
-class function TIssuingDistributionPoint.GetTaggedReasonFlags(ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags;
+class function TIssuingDistributionPoint.GetTaggedReasonFlags(const ATagged: IAsn1TaggedObject; AState: Boolean): IReasonFlags;
 begin
   Result := TReasonFlags.Create(TDerBitString.GetTagged(ATagged, AState));
 end;
@@ -8922,17 +8624,15 @@ end;
 
 constructor TCertificateList.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 3 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FTbsCertList := TTbsCertificateList.GetInstance(ASeq[0]);
-  FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[1]);
-  FSignatureValue := TDerBitString.GetInstance(ASeq[2]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 3);
+  FTbsCertList := TAsn1Utilities.Read<ITbsCertificateList>(ASeq, LPos, TTbsCertificateList.GetInstance);
+  FSignatureAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSignatureValue := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 function TCertificateList.GetTbsCertList: ITbsCertificateList;
@@ -9236,36 +8936,27 @@ end;
 
 constructor TTbsCertificateList.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LVersion: IDerInteger;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 3) or (LCount > 7) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  LVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 7);
+  LVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
   if LVersion <> nil then
     FVersion := LVersion
   else
     FVersion := TDerInteger.Zero;
 
-  FSignature := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FIssuer := TX509Name.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FThisUpdate := TTime.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FNextUpdate := TAsn1Utilities.ReadOptional<ITime>(ASeq, LPos, ReadOptionalTime);
-  FRevokedCertificates := TAsn1Utilities.ReadOptional<IAsn1Sequence>(ASeq, LPos, ReadOptionalAsn1Sequence);
+  FSignature := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FIssuer := TAsn1Utilities.Read<IX509Name>(ASeq, LPos, TX509Name.GetInstance);
+  FThisUpdate := TAsn1Utilities.Read<ITime>(ASeq, LPos, TTime.GetInstance);
+  FNextUpdate := TAsn1Utilities.ReadOptional<ITime>(ASeq, LPos, TTime.GetOptional);
+  FRevokedCertificates := TAsn1Utilities.ReadOptional<IAsn1Sequence>(ASeq, LPos, TAsn1Sequence.GetOptional);
   FCrlExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 0, True,
-    GetTaggedX509Extensions);
+    TX509Extensions.GetTagged);
 
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FSeq := ASeq;
 end;
 
@@ -9310,26 +9001,6 @@ begin
   end;
   LElements := FRevokedCertificates.GetElements();
   Result := TArrayUtilities.Map<IAsn1Encodable, ICrlEntry>(LElements, ElementToCrlEntry);
-end;
-
-class function TTbsCertificateList.ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AElement);
-end;
-
-class function TTbsCertificateList.ReadOptionalTime(AElement: IAsn1Encodable): ITime;
-begin
-  Result := TTime.GetOptional(AElement);
-end;
-
-class function TTbsCertificateList.ReadOptionalAsn1Sequence(AElement: IAsn1Encodable): IAsn1Sequence;
-begin
-  Result := TAsn1Sequence.GetOptional(AElement);
-end;
-
-class function TTbsCertificateList.GetTaggedX509Extensions(ATagged: IAsn1TaggedObject; AState: Boolean): IX509Extensions;
-begin
-  Result := TX509Extensions.GetTagged(ATagged, AState);
 end;
 
 class function TTbsCertificateList.ElementToCrlEntry(AElement: IAsn1Encodable): ICrlEntry;
@@ -9524,40 +9195,19 @@ end;
 
 constructor THolder.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
   FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
-    GetTaggedIssuerSerial);
+    TIssuerSerial.GetTagged);
   FEntityName := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
-    GetTaggedGeneralNames);
+    TGeneralNames.GetTagged);
   FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IObjectDigestInfo>(ASeq, LPos, 2, False,
-    GetTaggedObjectDigestInfo);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-
+    TObjectDigestInfo.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FVersion := 1;
-end;
-
-class function THolder.GetTaggedIssuerSerial(ATagged: IAsn1TaggedObject; AState: Boolean): IIssuerSerial;
-begin
-  Result := TIssuerSerial.GetTagged(ATagged, AState);
-end;
-
-class function THolder.GetTaggedGeneralNames(ATagged: IAsn1TaggedObject; AState: Boolean): IGeneralNames;
-begin
-  Result := TGeneralNames.GetTagged(ATagged, AState);
-end;
-
-class function THolder.GetTaggedObjectDigestInfo(ATagged: IAsn1TaggedObject; AState: Boolean): IObjectDigestInfo;
-begin
-  Result := TObjectDigestInfo.GetTagged(ATagged, AState);
 end;
 
 constructor THolder.Create(const ABaseCertificateID: IIssuerSerial);
@@ -9681,16 +9331,15 @@ end;
 
 constructor TAttributeCertificate.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if LCount <> 3 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FACInfo := TAttributeCertificateInfo.GetInstance(ASeq[0]);
-  FSignatureAlgorithm := TAlgorithmIdentifier.GetInstance(ASeq[1]);
-  FSignatureValue := TDerBitString.GetInstance(ASeq[2]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 3);
+  FACInfo := TAsn1Utilities.Read<IAttributeCertificateInfo>(ASeq, LPos, TAttributeCertificateInfo.GetInstance);
+  FSignatureAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSignatureValue := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TAttributeCertificate.Create(const AACInfo: IAttributeCertificateInfo;
@@ -9782,49 +9431,23 @@ end;
 
 constructor TAttributeCertificateInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 6) or (LCount > 9) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalDerInteger);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 6, 9);
+  FVersion := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
   if FVersion = nil then
     FVersion := TDerInteger.Zero;
-  FHolder := THolder.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FIssuer := TAttCertIssuer.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSignature := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FSerialNumber := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FAttrCertValidityPeriod := TAttCertValidityPeriod.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FAttributes := TAsn1Sequence.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FIssuerUniqueID := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, ReadOptionalDerBitString);
-  FExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos, ReadOptionalX509Extensions);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
-end;
-
-class function TAttributeCertificateInfo.ReadOptionalDerInteger(AElement: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AElement);
-end;
-
-class function TAttributeCertificateInfo.ReadOptionalDerBitString(AElement: IAsn1Encodable): IDerBitString;
-begin
-  Result := TDerBitString.GetOptional(AElement);
-end;
-
-class function TAttributeCertificateInfo.ReadOptionalX509Extensions(AElement: IAsn1Encodable): IX509Extensions;
-begin
-  Result := TX509Extensions.GetOptional(AElement);
+  FHolder := TAsn1Utilities.Read<IHolder>(ASeq, LPos, THolder.GetInstance);
+  FIssuer := TAsn1Utilities.Read<IAttCertIssuer>(ASeq, LPos, TAttCertIssuer.GetInstance);
+  FSignature := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
+  FSerialNumber := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FAttrCertValidityPeriod := TAsn1Utilities.Read<IAttCertValidityPeriod>(ASeq, LPos, TAttCertValidityPeriod.GetInstance);
+  FAttributes := TAsn1Utilities.Read<IAsn1Sequence>(ASeq, LPos, TAsn1Sequence.GetInstance);
+  FIssuerUniqueID := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, TDerBitString.GetOptional);
+  FExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos, TX509Extensions.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 function TAttributeCertificateInfo.GetVersion: IDerInteger;

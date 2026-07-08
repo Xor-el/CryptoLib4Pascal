@@ -50,7 +50,6 @@ type
     FEntityUInfo: IAsn1OctetString;
     FSuppPubInfo: IAsn1OctetString;
 
-    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString; static;
 
   strict protected
     function GetKeyInfo: IAlgorithmIdentifier;
@@ -129,32 +128,19 @@ begin
   Result := TEccCmsSharedInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TEccCmsSharedInfo.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString;
-begin
-  Result := TAsn1OctetString.GetTagged(ATagged, AState);
-end;
-
 constructor TEccCmsSharedInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SEccCmsBadSequenceSize, [LCount]);
-
-  FKeyInfo := TAlgorithmIdentifier.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FKeyInfo := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
   FEntityUInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, True,
-    GetTaggedAsn1OctetString);
-
+    TAsn1OctetString.GetTagged);
   FSuppPubInfo := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 2, True,
-    GetTaggedAsn1OctetString);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SEccCmsUnexpectedElementsInSequence);
+    TAsn1OctetString.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TEccCmsSharedInfo.Create(const AKeyInfo: IAlgorithmIdentifier; const ASuppPubInfo: IAsn1OctetString);

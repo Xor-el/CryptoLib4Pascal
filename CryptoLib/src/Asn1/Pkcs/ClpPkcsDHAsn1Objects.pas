@@ -28,7 +28,8 @@ uses
   ClpIAsn1Core,
   ClpIPkcsDHAsn1Objects,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpAsn1Utilities;
 
 resourcestring
   SBadSequenceSize = 'bad sequence size: %d';
@@ -73,18 +74,15 @@ implementation
 
 constructor TDHParameter.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  FP := TDerInteger.GetInstance(ASeq[0]);
-  FG := TDerInteger.GetInstance(ASeq[1]);
-  if LCount > 2 then
-    FL := TDerInteger.GetInstance(ASeq[2])
-  else
-    FL := nil;
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FP := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FG := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FL := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDHParameter.Create(const AP, AG: TBigInteger; AL: Int32);
