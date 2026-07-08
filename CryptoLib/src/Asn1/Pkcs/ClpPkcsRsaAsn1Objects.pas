@@ -454,22 +454,22 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 4);
-  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 0, True,
     TAlgorithmIdentifier.GetTagged);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
-  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 1, True,
     TAlgorithmIdentifier.GetTagged);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
-  FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, True,
+  FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 2, True,
     TDerInteger.GetTagged);
   if FSaltLength = nil then
     FSaltLength := DefaultSaltLength;
 
-  FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 3, True,
+  FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 3, True,
     TDerInteger.GetTagged);
   if FTrailerField = nil then
     FTrailerField := DefaultTrailerField;
@@ -627,17 +627,17 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
-  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 0, True,
     TAlgorithmIdentifier.GetTagged);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
-  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 1, True,
     TAlgorithmIdentifier.GetTagged);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
-  FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 2, True,
+  FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 2, True,
     TAlgorithmIdentifier.GetTagged);
   if FPSourceAlgorithm = nil then
     FPSourceAlgorithm := DefaultPSourceAlgorithm;

@@ -1049,9 +1049,9 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
   FKeyInfo := TAsn1Utilities.Read<IKeySpecificInfo>(ASeq, LPos, TKeySpecificInfo.GetInstance);
-  FPartyAInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, True,
+  FPartyAInfo := TAsn1Utilities.ReadOptionalContextTagged<IAsn1OctetString>(ASeq, LPos, 0, True,
     TAsn1OctetString.GetTagged);
-  FSuppPubInfo := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 2, True,
+  FSuppPubInfo := TAsn1Utilities.ReadContextTagged<IAsn1OctetString>(ASeq, LPos, 2, True,
     TAsn1OctetString.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;

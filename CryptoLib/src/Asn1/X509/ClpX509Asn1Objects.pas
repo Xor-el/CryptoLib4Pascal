@@ -2687,16 +2687,16 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 3, 8);
   FSerialNumber := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
-  FSignature := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+  FSignature := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 0, True,
     TAlgorithmIdentifier.GetTagged);
-  FIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 1, True,
+  FIssuer := TAsn1Utilities.ReadOptionalContextTagged<IX509Name>(ASeq, LPos, 1, True,
     TX509Name.GetTagged);
-  FValidity := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IValidity>(ASeq, LPos, 2, True,
+  FValidity := TAsn1Utilities.ReadOptionalContextTagged<IValidity>(ASeq, LPos, 2, True,
     TValidity.GetTagged);
-  FSubject := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Name>(ASeq, LPos, 3, True,
+  FSubject := TAsn1Utilities.ReadOptionalContextTagged<IX509Name>(ASeq, LPos, 3, True,
     TX509Name.GetTagged);
   FSubjectPublicKeyInfo := TAsn1Utilities.Read<ISubjectPublicKeyInfo>(ASeq, LPos, TSubjectPublicKeyInfo.GetInstance);
-  FExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 4, True,
+  FExtensions := TAsn1Utilities.ReadOptionalContextTagged<IX509Extensions>(ASeq, LPos, 4, True,
     TX509Extensions.GetTagged);
   FSignatureValue := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
@@ -3886,7 +3886,7 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 6, 10);
 
-  FVersion := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 0, True,
+  FVersion := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 0, True,
     TDerInteger.GetTagged);
   if FVersion = nil then
     FVersion := TDerInteger.Zero;
@@ -3909,12 +3909,12 @@ begin
 
   if not LIsV1 then
   begin
-    FIssuerUniqueID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, False,
+    FIssuerUniqueID := TAsn1Utilities.ReadOptionalContextTagged<IDerBitString>(ASeq, LPos, 1, False,
       TDerBitString.GetTagged);
-    FSubjectUniqueID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 2, False,
+    FSubjectUniqueID := TAsn1Utilities.ReadOptionalContextTagged<IDerBitString>(ASeq, LPos, 2, False,
       TDerBitString.GetTagged);
     if not LIsV2 then
-      FExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 3, True,
+      FExtensions := TAsn1Utilities.ReadOptionalContextTagged<IX509Extensions>(ASeq, LPos, 3, True,
         TX509Extensions.GetTagged);
   end;
 
@@ -4309,9 +4309,9 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 2);
-  FForward := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(ASeq, LPos, 0, True,
+  FForward := TAsn1Utilities.ReadOptionalContextTagged<IX509CertificateStructure>(ASeq, LPos, 0, True,
     TX509CertificateStructure.GetTagged);
-  FReverse := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509CertificateStructure>(ASeq, LPos, 1, True,
+  FReverse := TAsn1Utilities.ReadOptionalContextTagged<IX509CertificateStructure>(ASeq, LPos, 1, True,
     TX509CertificateStructure.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   Validate();
@@ -5129,11 +5129,11 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
-  LKeyIdentifier := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, False,
+  LKeyIdentifier := TAsn1Utilities.ReadOptionalContextTagged<IAsn1OctetString>(ASeq, LPos, 0, False,
     TAsn1OctetString.GetTagged);
-  LAuthorityCertIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
+  LAuthorityCertIssuer := TAsn1Utilities.ReadOptionalContextTagged<IGeneralNames>(ASeq, LPos, 1, False,
     TGeneralNames.GetTagged);
-  LAuthorityCertSerialNumber := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, False,
+  LAuthorityCertSerialNumber := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 2, False,
     TDerInteger.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
@@ -8033,9 +8033,9 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
   FIssuerName := TAsn1Utilities.ReadOptional<IGeneralNames>(ASeq, LPos, TGeneralNames.GetOptional);
-  FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
+  FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<IIssuerSerial>(ASeq, LPos, 0, False,
     TIssuerSerial.GetTagged);
-  FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IObjectDigestInfo>(ASeq, LPos, 1, False,
+  FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<IObjectDigestInfo>(ASeq, LPos, 1, False,
     TObjectDigestInfo.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
@@ -8248,11 +8248,11 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
-  FDistributionPointName := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
+  FDistributionPointName := TAsn1Utilities.ReadOptionalContextTagged<IDistributionPointName>(ASeq, LPos, 0, True,
     TDistributionPointName.GetTagged);
-  FReasons := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IReasonFlags>(ASeq, LPos, 1, False,
+  FReasons := TAsn1Utilities.ReadOptionalContextTagged<IReasonFlags>(ASeq, LPos, 1, False,
     GetTaggedReasonFlags);
-  FCrlIssuer := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 2, False,
+  FCrlIssuer := TAsn1Utilities.ReadOptionalContextTagged<IGeneralNames>(ASeq, LPos, 2, False,
     TGeneralNames.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
@@ -8436,10 +8436,10 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 6);
 
-  FDistributionPoint := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDistributionPointName>(ASeq, LPos, 0, True,
+  FDistributionPoint := TAsn1Utilities.ReadOptionalContextTagged<IDistributionPointName>(ASeq, LPos, 0, True,
     TDistributionPointName.GetTagged);
 
-  LOnlyContainsUserCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 1, False,
+  LOnlyContainsUserCerts := TAsn1Utilities.ReadOptionalContextTagged<IDerBoolean>(ASeq, LPos, 1, False,
     TDerBoolean.GetTagged);
 
   if LOnlyContainsUserCerts <> nil then
@@ -8447,7 +8447,7 @@ begin
   else
     FOnlyContainsUserCerts := TDerBoolean.False;
 
-  LOnlyContainsCACerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 2, False,
+  LOnlyContainsCACerts := TAsn1Utilities.ReadOptionalContextTagged<IDerBoolean>(ASeq, LPos, 2, False,
     TDerBoolean.GetTagged);
 
   if LOnlyContainsCACerts <> nil then
@@ -8455,10 +8455,10 @@ begin
   else
     FOnlyContainsCACerts := TDerBoolean.False;
 
-  FOnlySomeReasons := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IReasonFlags>(ASeq, LPos, 3, False,
+  FOnlySomeReasons := TAsn1Utilities.ReadOptionalContextTagged<IReasonFlags>(ASeq, LPos, 3, False,
     GetTaggedReasonFlags);
 
-  LIndirectCRL := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 4, False,
+  LIndirectCRL := TAsn1Utilities.ReadOptionalContextTagged<IDerBoolean>(ASeq, LPos, 4, False,
     TDerBoolean.GetTagged);
 
   if LIndirectCRL <> nil then
@@ -8466,7 +8466,7 @@ begin
   else
     FIndirectCRL := TDerBoolean.False;
 
-  LOnlyContainsAttributeCerts := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBoolean>(ASeq, LPos, 5, False,
+  LOnlyContainsAttributeCerts := TAsn1Utilities.ReadOptionalContextTagged<IDerBoolean>(ASeq, LPos, 5, False,
     TDerBoolean.GetTagged);
 
   if LOnlyContainsAttributeCerts <> nil then
@@ -8953,7 +8953,7 @@ begin
   FThisUpdate := TAsn1Utilities.Read<ITime>(ASeq, LPos, TTime.GetInstance);
   FNextUpdate := TAsn1Utilities.ReadOptional<ITime>(ASeq, LPos, TTime.GetOptional);
   FRevokedCertificates := TAsn1Utilities.ReadOptional<IAsn1Sequence>(ASeq, LPos, TAsn1Sequence.GetOptional);
-  FCrlExtensions := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IX509Extensions>(ASeq, LPos, 0, True,
+  FCrlExtensions := TAsn1Utilities.ReadOptionalContextTagged<IX509Extensions>(ASeq, LPos, 0, True,
     TX509Extensions.GetTagged);
 
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
@@ -9200,11 +9200,11 @@ begin
   inherited Create();
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
-  FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IIssuerSerial>(ASeq, LPos, 0, False,
+  FBaseCertificateID := TAsn1Utilities.ReadOptionalContextTagged<IIssuerSerial>(ASeq, LPos, 0, False,
     TIssuerSerial.GetTagged);
-  FEntityName := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IGeneralNames>(ASeq, LPos, 1, False,
+  FEntityName := TAsn1Utilities.ReadOptionalContextTagged<IGeneralNames>(ASeq, LPos, 1, False,
     TGeneralNames.GetTagged);
-  FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IObjectDigestInfo>(ASeq, LPos, 2, False,
+  FObjectDigestInfo := TAsn1Utilities.ReadOptionalContextTagged<IObjectDigestInfo>(ASeq, LPos, 2, False,
     TObjectDigestInfo.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FVersion := 1;

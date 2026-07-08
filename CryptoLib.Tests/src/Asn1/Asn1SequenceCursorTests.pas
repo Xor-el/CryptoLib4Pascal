@@ -212,7 +212,7 @@ var
 begin
   LSeq := TDerSequence.FromElement(TDerTaggedObject.Create(True, 0, TDerInteger.ValueOf(5)) as IDerTaggedObject);
   LPos := 0;
-  LValue := TAsn1Utilities.ReadContextTagged<Boolean, IDerInteger>(LSeq, LPos, 0, True, TDerInteger.GetTagged);
+  LValue := TAsn1Utilities.ReadContextTagged<IDerInteger>(LSeq, LPos, 0, True, TDerInteger.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(LSeq, LPos);
   CheckNotNull(LValue, 'context-tagged value');
   CheckTrue(LValue.HasValue(5), 'context-tagged value content');

@@ -585,7 +585,7 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
   FContentType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
-  FContent := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+  FContent := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
     TAsn1Utilities.GetTaggedExplicitBaseObject);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   FIsDefiniteLength := IsDLSequence(ASeq);
@@ -884,10 +884,10 @@ begin
   FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
   FSignerID := TAsn1Utilities.Read<ICmsSignerIdentifier>(ASeq, LPos, TCmsSignerIdentifier.GetInstance);
   FDigestAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
-  FSignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False, TAsn1Set.GetTagged);
+  FSignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 0, False, TAsn1Set.GetTagged);
   FSignatureAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
   FSignature := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
-  FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False, TAsn1Set.GetTagged);
+  FUnsignedAttrs := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 1, False, TAsn1Set.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
@@ -973,7 +973,7 @@ var
   LTagged: IAsn1TaggedObject;
   LFound: Boolean;
 begin
-  LFound := TAsn1Utilities.TryReadOptionalContextTagged<Boolean, IAsn1TaggedObject>(ASeq, APos, ATagNo, False,
+  LFound := TAsn1Utilities.TryReadOptionalContextTagged<IAsn1TaggedObject>(ASeq, APos, ATagNo, False,
     LTagged, TAsn1Utilities.GetTaggedObjectIdentity);
   if LFound then
   begin

@@ -915,7 +915,7 @@ begin
   FSubject := TAsn1Utilities.Read<IX509Name>(ASeq, LPos, TX509Name.GetInstance);
   FSubjectPKInfo := TAsn1Utilities.Read<ISubjectPublicKeyInfo>(ASeq, LPos, TSubjectPublicKeyInfo.GetInstance);
   // NOTE: some CertificationRequestInfo objects seem to treat this field as optional.
-  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
+  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 0, False,
     TAsn1Set.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
   ValidateAttributes(FAttributes);
@@ -1183,9 +1183,9 @@ begin
   FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
   FPrivateKeyAlgorithm := TAsn1Utilities.Read<IAlgorithmIdentifier>(ASeq, LPos, TAlgorithmIdentifier.GetInstance);
   FPrivateKey := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
-  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
+  FAttributes := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 0, False,
     TAsn1Set.GetTagged);
-  FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, False,
+  FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<IDerBitString>(ASeq, LPos, 1, False,
     TDerBitString.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
@@ -1988,7 +1988,7 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 1, 2);
   FContentType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
-  FContent := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+  FContent := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
     TAsn1Utilities.GetTaggedExplicitBaseObject);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
@@ -2089,9 +2089,9 @@ begin
   FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
   FDigestAlgorithms := TAsn1Utilities.Read<IAsn1Set>(ASeq, LPos, TAsn1Set.GetInstance);
   FContentInfo := TAsn1Utilities.Read<IPkcsContentInfo>(ASeq, LPos, TPkcsContentInfo.GetInstance);
-  FCertificates := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 0, False,
+  FCertificates := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 0, False,
     TAsn1Set.GetTagged);
-  FCrls := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Set>(ASeq, LPos, 1, False,
+  FCrls := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Set>(ASeq, LPos, 1, False,
     TAsn1Set.GetTagged);
   FSignerInfos := TAsn1Utilities.Read<IAsn1Set>(ASeq, LPos, TAsn1Set.GetInstance);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
@@ -2469,7 +2469,7 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
   FBagID := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
-  FBagValue := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+  FBagValue := TAsn1Utilities.ReadContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
     TAsn1Utilities.GetTaggedExplicitBaseObject);
   FBagAttributes := TAsn1Utilities.ReadOptional<IAsn1Set>(ASeq, LPos, TAsn1Set.GetOptional);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
@@ -2589,7 +2589,7 @@ begin
   LPos := 0;
   TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
   FCertID := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
-  FCertValue := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+  FCertValue := TAsn1Utilities.ReadContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
     TAsn1Utilities.GetTaggedExplicitBaseObject);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;

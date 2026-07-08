@@ -150,9 +150,9 @@ begin
   TAsn1Utilities.CheckSequenceSize(ASeq, 2, 4);
   FVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
   FPrivateKey := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
-  FParameters := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1Encodable>(ASeq, LPos, 0, True,
+  FParameters := TAsn1Utilities.ReadOptionalContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
     TAsn1Utilities.GetTaggedExplicitBaseObject);
-  FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerBitString>(ASeq, LPos, 1, True,
+  FPublicKey := TAsn1Utilities.ReadOptionalContextTagged<IDerBitString>(ASeq, LPos, 1, True,
     TDerBitString.GetTagged);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;

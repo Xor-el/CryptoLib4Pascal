@@ -42,6 +42,11 @@ resourcestring
   SUnexpectedElementsInSequence = 'unexpected elements in sequence';
 
 type
+  // sequence-cursor constructor callbacks
+  TAsn1Constructor<TInput, TResult> = function(const AElement: TInput): TResult;
+  TAsn1TaggedConstructor<TResult> = function(const ATagged: IAsn1TaggedObject;
+    ADeclaredExplicit: Boolean): TResult;
+
   /// <summary>
   /// Utility class for ASN.1 operations.
   /// </summary>
@@ -222,27 +227,27 @@ type
     class function ReadEncodable(const ASequence: IAsn1Sequence;
       var ASequencePosition: Int32): IAsn1Encodable; static;
     class function Read<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
-      const AConstructor: TCryptoLibConstFunc<IAsn1Convertible, TResult>): TResult; static;
+      const AConstructor: TAsn1Constructor<IAsn1Convertible, TResult>): TResult; static;
     class function ReadOptional<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
-      const AConstructor: TCryptoLibConstFunc<IAsn1Encodable, TResult>): TResult; static;
-    class function ReadTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function ReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function ReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function TryReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
-    class function TryReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
+      const AConstructor: TAsn1Constructor<IAsn1Encodable, TResult>): TResult; static;
+    class function ReadTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function ReadContextTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function ReadOptionalContextTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function ReadOptionalTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function TryReadOptionalContextTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean; static;
+    class function TryReadOptionalTagged<TResult>(const ASequence: IAsn1Sequence;
+      var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean; static;
   end;
 
 implementation
@@ -930,13 +935,13 @@ begin
 end;
 
 class function TAsn1Utilities.Read<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
-  const AConstructor: TCryptoLibConstFunc<IAsn1Convertible, TResult>): TResult;
+  const AConstructor: TAsn1Constructor<IAsn1Convertible, TResult>): TResult;
 begin
   Result := AConstructor(ReadEncodable(ASequence, ASequencePosition));
 end;
 
 class function TAsn1Utilities.ReadOptional<TResult>(const ASequence: IAsn1Sequence; var ASequencePosition: Int32;
-  const AConstructor: TCryptoLibConstFunc<IAsn1Encodable, TResult>): TResult;
+  const AConstructor: TAsn1Constructor<IAsn1Encodable, TResult>): TResult;
 var
   LResult: TResult;
 begin
@@ -953,28 +958,28 @@ begin
   Result := Default(TResult);
 end;
 
-class function TAsn1Utilities.ReadTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.ReadTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 var
   LTagged: IAsn1TaggedObject;
 begin
   LTagged := TAsn1TaggedObject.GetInstance(ReadEncodable(ASequence, ASequencePosition).ToAsn1Object(),
     ATagClass, ATagNo);
-  Result := AConstructor(LTagged, AState);
+  Result := AConstructor(LTagged, ADeclaredExplicit);
 end;
 
-class function TAsn1Utilities.ReadContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.ReadContextTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 begin
-  Result := ReadTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo,
-    AState, AConstructor);
+  Result := ReadTagged<TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific, ATagNo,
+    ADeclaredExplicit, AConstructor);
 end;
 
-class function TAsn1Utilities.TryReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+class function TAsn1Utilities.TryReadOptionalTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean;
 var
   LTagged: IAsn1TaggedObject;
 begin
@@ -983,7 +988,7 @@ begin
     LTagged := TAsn1TaggedObject.GetOptional(ASequence.Items[ASequencePosition], ATagClass, ATagNo);
     if LTagged <> nil then
     begin
-      AResult := AConstructor(LTagged, AState);
+      AResult := AConstructor(LTagged, ADeclaredExplicit);
       System.Inc(ASequencePosition);
       Result := True;
       Exit;
@@ -993,32 +998,32 @@ begin
   Result := False;
 end;
 
-class function TAsn1Utilities.TryReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+class function TAsn1Utilities.TryReadOptionalContextTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean;
 begin
-  Result := TryReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
-    ATagNo, AState, AResult, AConstructor);
+  Result := TryReadOptionalTagged<TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
+    ATagNo, ADeclaredExplicit, AResult, AConstructor);
 end;
 
-class function TAsn1Utilities.ReadOptionalTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.ReadOptionalTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 var
   LFound: Boolean;
 begin
-  LFound := TryReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, ATagClass, ATagNo, AState,
+  LFound := TryReadOptionalTagged<TResult>(ASequence, ASequencePosition, ATagClass, ATagNo, ADeclaredExplicit,
     Result, AConstructor);
   if not LFound then
     Result := Default(TResult);
 end;
 
-class function TAsn1Utilities.ReadOptionalContextTagged<TState, TResult>(const ASequence: IAsn1Sequence;
-  var ASequencePosition: Int32; ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibConstFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.ReadOptionalContextTagged<TResult>(const ASequence: IAsn1Sequence;
+  var ASequencePosition: Int32; ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 begin
-  Result := ReadOptionalTagged<TState, TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
-    ATagNo, AState, AConstructor);
+  Result := ReadOptionalTagged<TResult>(ASequence, ASequencePosition, TAsn1Tags.ContextSpecific,
+    ATagNo, ADeclaredExplicit, AConstructor);
 end;
 
 end.
