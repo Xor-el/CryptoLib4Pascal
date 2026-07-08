@@ -37,10 +37,10 @@ uses
 {$IFDEF CRYPTOLIB_X86_SIMD}
   ClpAesEngineX86,
 {$ENDIF CRYPTOLIB_X86_SIMD}
+  BlockCipherTestBase,
   AesBlockCipherTestBase;
 
 type
-  TEngineFactory = function: IBlockCipher;
   /// <summary>
   /// Engine-agnostic test suite for hardware-accelerated AES engines. All the
   /// vector / Monte-Carlo / engine-check coverage plus the SIMD batch (4-/8-wide)
@@ -53,10 +53,9 @@ type
   TAesHardwareEngineTestBase = class abstract(TAesBlockCipherTestBase)
   strict protected
     // ---- architecture hooks (implemented by the concrete per-arch suite) ----
+    // GetEngineFactory / EngineLabel / EngineSupported are inherited from
+    // TAesBlockCipherTestBase; only CreateHwEngine is hardware-specific.
     function CreateHwEngine: IAesHardwareEngine; virtual; abstract;
-    function EngineSupported: Boolean; virtual; abstract;
-    function EngineLabel: String; virtual; abstract;
-    function GetEngineFactory: TEngineFactory; virtual; abstract;
 
     // ---- shared SIMD test logic ----
     procedure ImplTestFourBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
@@ -66,8 +65,8 @@ type
     procedure ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
     procedure ImplTestProcessEightBlocksMemoryLayouts(AKeySizeBytes: Int32);
   published
-    procedure TestBlockCipherVectors;
-    procedure TestMonteCarloAES;
+    // TestBlockCipherVector / TestMonteCarloAES / TestBadParameters are
+    // inherited from TAesBlockCipherTestBase (guarded by EngineSupported).
     procedure TestEngineChecks128;
     procedure TestEngineChecks192;
     procedure TestEngineChecks256;
@@ -108,7 +107,7 @@ type
     function CreateHwEngine: IAesHardwareEngine; override;
     function EngineSupported: Boolean; override;
     function EngineLabel: String; override;
-    function GetEngineFactory: TEngineFactory; override;
+    function GetEngineFactory: TBlockCipherFactory; override;
   end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -540,20 +539,6 @@ begin
   end;
 end;
 
-procedure TAesHardwareEngineTestBase.TestBlockCipherVectors;
-begin
-  if not EngineSupported then
-    Exit;
-  RunBlockCipherVectorTests(GetEngineFactory(), EngineLabel);
-end;
-
-procedure TAesHardwareEngineTestBase.TestMonteCarloAES;
-begin
-  if not EngineSupported then
-    Exit;
-  RunBlockCipherMonteCarloTests(GetEngineFactory(), EngineLabel);
-end;
-
 procedure TAesHardwareEngineTestBase.TestEngineChecks128;
 var
   LKey: TBytes;
@@ -788,7 +773,7 @@ begin
   Result := 'TAesEngineX86';
 end;
 
-function TTestAesX86.GetEngineFactory: TEngineFactory;
+function TTestAesX86.GetEngineFactory: TBlockCipherFactory;
 begin
   Result := @CreateAesX86Engine;
 end;

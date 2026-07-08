@@ -28,7 +28,8 @@ uses
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpIX509RsaAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpAsn1Utilities;
 
 resourcestring
   SBadSequenceSize = 'bad sequence size: %d';
@@ -125,19 +126,15 @@ end;
 
 constructor TRsaPublicKeyStructure.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
   // Note: we are accepting technically incorrect (i.e. negative) values here
-  FModulus := TDerInteger.GetInstance(ASeq[0]).PositiveValue;
-  FPublicExponent := TDerInteger.GetInstance(ASeq[1]).PositiveValue;
+  FModulus := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).PositiveValue;
+  FPublicExponent := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).PositiveValue;
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TRsaPublicKeyStructure.Create(const AModulus, APublicExponent: TBigInteger);

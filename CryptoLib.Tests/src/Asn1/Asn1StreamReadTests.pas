@@ -282,7 +282,7 @@ end;
 
 procedure TAsn1StreamReadTest.TestConstructedOctetReadAllRoundTrip;
 var
-  LPayload, LEncoding, LActual: TCryptoLibByteArray;
+  LPayload, LEncoding: TCryptoLibByteArray;
   LParser: IAsn1StreamParser;
   LOctets: IBerOctetString;
   LI: Int32;

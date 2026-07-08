@@ -29,6 +29,7 @@ uses
   ClpIAsn1Core,
   ClpIX9ECAsn1Objects,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpECAlgorithms,
@@ -41,11 +42,8 @@ uses
   ClpECCurve;
 
 resourcestring
-  SBadSequenceSize = 'bad sequence size: %d';
-  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SBadVersion = 'bad version in X9ECParameters';
   SFieldIDNil = 'field ID cannot be nil';
-  SSeqNil = 'sequence cannot be nil';
   SCurveNil = 'curve cannot be nil';
   SFieldElementNil = 'field element cannot be nil';
   SCurveNotImplemented = 'this type of ECCurve is not implemented';
@@ -281,7 +279,7 @@ type
     FN: TBigInteger;
     FH: TBigInteger;
 
-    class function ReadOptionalCofactor(AElement: IAsn1Encodable): TBigInteger; static;
+    class function ReadOptionalCofactor(const AElement: IAsn1Encodable): TBigInteger; static;
 
   strict protected
     function GetCurve: IECCurve;
@@ -411,15 +409,14 @@ end;
 
 constructor TX9FieldID.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
-  if LCount <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FFieldType := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  FParameters := ASeq[1].ToAsn1Object();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FFieldType := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FParameters := TAsn1Utilities.ReadEncodable(ASeq, LPos).ToAsn1Object();
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TX9FieldID.Create(const APrimeP: TBigInteger);
@@ -543,6 +540,7 @@ end;
 constructor TX9Curve.Create(const AFieldID: IX9FieldID; const AOrder, ACofactor: TBigInteger;
   const ASeq: IAsn1Sequence);
 var
+  LPos: Int32;
   LP: TBigInteger;
   LA, LB: TBigInteger;
   LParameters: IAsn1Sequence;
@@ -554,16 +552,16 @@ begin
   inherited Create();
   if AFieldID = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SFieldIDNil);
-  if ASeq = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SSeqNil);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
 
   FFieldType := AFieldID.FieldType;
 
   if TX9ObjectIdentifiers.PrimeField.Equals(FFieldType) then
   begin
     LP := TDerInteger.GetInstance(AFieldID.Parameters).Value;
-    LA := TBigInteger.Create(1, TAsn1OctetString.GetInstance(ASeq[0]).GetOctets());
-    LB := TBigInteger.Create(1, TAsn1OctetString.GetInstance(ASeq[1]).GetOctets());
+    LA := TBigIntegerUtilities.FromUnsignedByteArray(TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance).GetOctets());
+    LB := TBigIntegerUtilities.FromUnsignedByteArray(TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance).GetOctets());
     FCurve := TFpCurve.Create(LP, LA, LB, AOrder, ACofactor);
   end
   else if TX9ObjectIdentifiers.CharacteristicTwoField.Equals(FFieldType) then
@@ -593,8 +591,8 @@ begin
       raise EArgumentCryptoLibException.CreateRes(@SCharacteristicTwoFieldNotImplemented);
     end;
 
-    LA := TBigInteger.Create(1, TAsn1OctetString.GetInstance(ASeq[0]).GetOctets());
-    LB := TBigInteger.Create(1, TAsn1OctetString.GetInstance(ASeq[1]).GetOctets());
+    LA := TBigIntegerUtilities.FromUnsignedByteArray(TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance).GetOctets());
+    LB := TBigIntegerUtilities.FromUnsignedByteArray(TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance).GetOctets());
     FCurve := TF2mCurve.Create(LM, LK1, LK2, LK3, LA, LB, AOrder, ACofactor);
   end
   else
@@ -602,10 +600,8 @@ begin
     raise EArgumentCryptoLibException.CreateRes(@SCurveNotImplemented);
   end;
 
-  if ASeq.Count = 3 then
-  begin
-    FSeed := TDerBitString.GetInstance(ASeq[2]);
-  end;
+  FSeed := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, TDerBitString.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 function TX9Curve.GetCurve: IECCurve;
@@ -775,7 +771,7 @@ begin
   Result := FromSequence(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TX9ECParameters.ReadOptionalCofactor(AElement: IAsn1Encodable): TBigInteger;
+class function TX9ECParameters.ReadOptionalCofactor(const AElement: IAsn1Encodable): TBigInteger;
 var
   LDerInt: IDerInteger;
 begin
@@ -793,32 +789,22 @@ end;
 
 constructor TX9ECParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
   LVersion: IDerInteger;
   LX9CurveSequence: IAsn1Sequence;
   LP: IAsn1Encodable;
   LX9ECPoint: IX9ECPoint;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 5) or (LCount > 6) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  LVersion := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  FFieldID := TX9FieldID.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  LX9CurveSequence := TAsn1Sequence.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-  LP := ASeq[LPos];
-  System.Inc(LPos);
-  FN := (TDerInteger.GetInstance(ASeq[LPos]) as IDerInteger).Value;
-  System.Inc(LPos);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 5, 6);
+  LVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FFieldID := TAsn1Utilities.Read<IX9FieldID>(ASeq, LPos, TX9FieldID.GetInstance);
+  LX9CurveSequence := TAsn1Utilities.Read<IAsn1Sequence>(ASeq, LPos, TAsn1Sequence.GetInstance);
+  LP := TAsn1Utilities.ReadEncodable(ASeq, LPos);
+  FN := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
   FH := TAsn1Utilities.ReadOptional<TBigInteger>(ASeq, LPos, ReadOptionalCofactor);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   if not LVersion.HasValue(1) then
     raise EArgumentCryptoLibException.CreateRes(@SBadVersion);

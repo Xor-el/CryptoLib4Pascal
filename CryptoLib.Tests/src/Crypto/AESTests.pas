@@ -57,6 +57,7 @@ uses
   FixedSecureRandom,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
+  BlockCipherTestBase,
   AesBlockCipherTestBase,
   SymmetricBlockVectors;
 
@@ -107,11 +108,10 @@ type
   protected
     procedure SetUp; override;
     procedure TearDown; override;
+    function GetEngineFactory: TBlockCipherFactory; override;
+    function EngineLabel: String; override;
   published
 
-    procedure TestBlockCipherVector;
-    procedure TestMonteCarloAES;
-    procedure TestBadParameters;
     procedure TestOids;
     procedure TestCiphers;
     procedure TestAES_CBC_PKCS7PADDING_WITH_IV;
@@ -449,19 +449,14 @@ begin
   inherited;
 end;
 
-procedure TTestAES.TestBlockCipherVector;
+function TTestAES.GetEngineFactory: TBlockCipherFactory;
 begin
-  RunBlockCipherVectorTests(@CreateAesEngine, 'TAesEngine');
+  Result := @CreateAesEngine;
 end;
 
-procedure TTestAES.TestMonteCarloAES;
+function TTestAES.EngineLabel: String;
 begin
-  RunBlockCipherMonteCarloTests(@CreateAesEngine, 'TAesEngine');
-end;
-
-procedure TTestAES.TestBadParameters;
-begin
-  AssertEngineRejectsBadParameters(@CreateAesEngine, 'TAesEngine');
+  Result := 'TAesEngine';
 end;
 
 procedure TTestAES.TestCiphers;

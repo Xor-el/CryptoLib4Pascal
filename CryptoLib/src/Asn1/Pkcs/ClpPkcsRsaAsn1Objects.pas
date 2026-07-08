@@ -121,8 +121,6 @@ type
       FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm: IAlgorithmIdentifier;
       FDefaultSaltLength, FDefaultTrailerField: IDerInteger;
     class constructor Create;
-    class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
-    class function GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger; static;
 
   var
     FHashAlgorithm: IAlgorithmIdentifier;
@@ -181,7 +179,6 @@ type
       FDefaultHashAlgorithm, FDefaultMaskGenAlgorithm,
         FDefaultPSourceAlgorithm: IAlgorithmIdentifier;
     class constructor Create;
-    class function GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier; static;
 
   var
     FHashAlgorithm: IAlgorithmIdentifier;
@@ -278,26 +275,22 @@ end;
 
 constructor TRsaPrivateKeyStructure.Create(const ASeq: IAsn1Sequence);
 var
-  LCount: Int32;
+  LPos: Int32;
   LVersion: IDerInteger;
 begin
   inherited Create();
-
-  LCount := ASeq.Count;
-  if LCount <> 9 then
-  begin
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-  end;
-
-  LVersion := TDerInteger.GetInstance(ASeq[0]);
-  FModulus := TDerInteger.GetInstance(ASeq[1]).Value;
-  FPublicExponent := TDerInteger.GetInstance(ASeq[2]).Value;
-  FPrivateExponent := TDerInteger.GetInstance(ASeq[3]).Value;
-  FPrime1 := TDerInteger.GetInstance(ASeq[4]).Value;
-  FPrime2 := TDerInteger.GetInstance(ASeq[5]).Value;
-  FExponent1 := TDerInteger.GetInstance(ASeq[6]).Value;
-  FExponent2 := TDerInteger.GetInstance(ASeq[7]).Value;
-  FCoefficient := TDerInteger.GetInstance(ASeq[8]).Value;
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 9, 9);
+  LVersion := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FModulus := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FPublicExponent := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FPrivateExponent := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FPrime1 := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FPrime2 := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FExponent1 := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FExponent2 := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  FCoefficient := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance).Value;
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   if not LVersion.HasValue(0) then
     raise EArgumentCryptoLibException.CreateRes(@SWrongVersionForRsaPrivateKey);
@@ -454,48 +447,34 @@ begin
   Result := TRsassaPssParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TRsassaPssParameters.GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier;
-begin
-  Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-end;
-
-class function TRsassaPssParameters.GetTaggedDerInteger(ATagged: IAsn1TaggedObject; AState: Boolean): IDerInteger;
-begin
-  Result := TDerInteger.GetTagged(ATagged, AState);
-end;
-
 constructor TRsassaPssParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 4) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
-    GetTaggedAlgorithmIdentifier);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 4);
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+    TAlgorithmIdentifier.GetTagged);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
-  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
-    GetTaggedAlgorithmIdentifier);
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+    TAlgorithmIdentifier.GetTagged);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
-  FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 2, True,
-    GetTaggedDerInteger);
+  FSaltLength := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 2, True,
+    TDerInteger.GetTagged);
   if FSaltLength = nil then
     FSaltLength := DefaultSaltLength;
 
-  FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IDerInteger>(ASeq, LPos, 3, True,
-    GetTaggedDerInteger);
+  FTrailerField := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 3, True,
+    TDerInteger.GetTagged);
   if FTrailerField = nil then
     FTrailerField := DefaultTrailerField;
 
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TRsassaPssParameters.Create;
@@ -641,38 +620,29 @@ begin
   Result := TRsaesOaepParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TRsaesOaepParameters.GetTaggedAlgorithmIdentifier(ATagged: IAsn1TaggedObject; AState: Boolean): IAlgorithmIdentifier;
-begin
-  Result := TAlgorithmIdentifier.GetTagged(ATagged, AState);
-end;
-
 constructor TRsaesOaepParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 0) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 0, True,
-    GetTaggedAlgorithmIdentifier);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 3);
+  FHashAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 0, True,
+    TAlgorithmIdentifier.GetTagged);
   if FHashAlgorithm = nil then
     FHashAlgorithm := DefaultHashAlgorithm;
 
-  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 1, True,
-    GetTaggedAlgorithmIdentifier);
+  FMaskGenAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 1, True,
+    TAlgorithmIdentifier.GetTagged);
   if FMaskGenAlgorithm = nil then
     FMaskGenAlgorithm := DefaultMaskGenAlgorithm;
 
-  FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAlgorithmIdentifier>(ASeq, LPos, 2, True,
-    GetTaggedAlgorithmIdentifier);
+  FPSourceAlgorithm := TAsn1Utilities.ReadOptionalContextTagged<IAlgorithmIdentifier>(ASeq, LPos, 2, True,
+    TAlgorithmIdentifier.GetTagged);
   if FPSourceAlgorithm = nil then
     FPSourceAlgorithm := DefaultPSourceAlgorithm;
 
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TRsaesOaepParameters.Create;

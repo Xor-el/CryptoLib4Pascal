@@ -43,7 +43,8 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  BlockCipherTestBase;
 
 type
   /// <summary>
@@ -57,10 +58,7 @@ type
   /// </summary>
   TTestEcbBulkParity = class(TCryptoLibAlgorithmTestCase)
   strict private
-  type
-    TEngineFactory = function: IBlockCipher;
-
-    procedure RunParityForEngine(AEngineFactory: TEngineFactory;
+    procedure RunParityForEngine(AEngineFactory: TBlockCipherFactory;
       AKeyLen, ABlockSize: Int32; const ALabel: String);
   published
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -91,7 +89,7 @@ end;
 
 { TTestEcbBulkParity }
 
-procedure TTestEcbBulkParity.RunParityForEngine(AEngineFactory: TEngineFactory;
+procedure TTestEcbBulkParity.RunParityForEngine(AEngineFactory: TBlockCipherFactory;
   AKeyLen, ABlockSize: Int32; const ALabel: String);
 const
   BlockCounts: array [0 .. 15] of Int32 = (1, 2, 3, 4, 5, 7, 8, 9, 11, 12, 15,

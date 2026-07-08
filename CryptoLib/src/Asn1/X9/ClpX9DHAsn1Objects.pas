@@ -32,8 +32,6 @@ uses
 
 resourcestring
   SInvalidParameters = 'invalid parameters';
-  SBadSequenceSize = 'bad sequence size: %d';
-  SUnexpectedElementsInSequence = 'unexpected elements in sequence';
   SSeedNil = 'seed cannot be nil';
   SPGenCounterNil = 'PGenCounter cannot be nil';
   SInvalidDHValidationParms = 'invalid DHValidationParms: %s';
@@ -127,8 +125,6 @@ type
     FP, FG, FQ, FJ: IDerInteger;
     FValidationParams: IValidationParams;
 
-    class function ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger; static;
-    class function ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams; static;
 
   strict protected
     function GetP: IDerInteger;
@@ -226,8 +222,6 @@ type
     FP, FG, FQ, FJ: IDerInteger;
     FValidationParams: IValidationParams;
 
-    class function ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger; static;
-    class function ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams; static;
 
   strict protected
     function GetP: IDerInteger;
@@ -325,7 +319,6 @@ type
     FPartyAInfo: IAsn1OctetString;
     FSuppPubInfo: IAsn1OctetString;
 
-    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString; static;
 
   strict protected
     function GetKeyInfo: IKeySpecificInfo;
@@ -486,13 +479,15 @@ begin
 end;
 
 constructor TValidationParams.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
 begin
   inherited Create();
-  if ASeq.Count <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASeq.Count]);
-
-  FSeed := TDerBitString.GetInstance(ASeq[0]);
-  FPgenCounter := TDerInteger.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FSeed := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  FPgenCounter := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TValidationParams.Create(const ASeed: IDerBitString;
@@ -589,42 +584,19 @@ begin
   Result := TDomainParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TDomainParameters.ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AElement);
-end;
-
-class function TDomainParameters.ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams;
-begin
-  Result := TValidationParams.GetOptional(AElement);
-end;
-
 constructor TDomainParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 3) or (LCount > 5) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FP := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FG := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FQ := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalSubgroupFactor);
-
-  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos,
-    ReadOptionalValidationParams);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 5);
+  FP := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FG := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FQ := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos, TValidationParams.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDomainParameters.Create(const AP, AG, AQ, AJ: IDerInteger;
@@ -750,13 +722,15 @@ begin
 end;
 
 constructor TDHValidationParms.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
 begin
   inherited Create();
-  if ASeq.Count <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASeq.Count]);
-
-  FSeed := TDerBitString.GetInstance(ASeq[0]);
-  FPGenCounter := TDerInteger.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FSeed := TAsn1Utilities.Read<IDerBitString>(ASeq, LPos, TDerBitString.GetInstance);
+  FPGenCounter := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDHValidationParms.Create(const ASeed: IDerBitString;
@@ -836,42 +810,19 @@ begin
   Result := TDHDomainParameters.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TDHDomainParameters.ReadOptionalSubgroupFactor(AElement: IAsn1Encodable): IDerInteger;
-begin
-  Result := TDerInteger.GetOptional(AElement);
-end;
-
-class function TDHDomainParameters.ReadOptionalValidationParams(AElement: IAsn1Encodable): IValidationParams;
-begin
-  Result := TValidationParams.GetOptional(AElement);
-end;
-
 constructor TDHDomainParameters.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 3) or (LCount > 5) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FP := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FG := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FQ := TDerInteger.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, ReadOptionalSubgroupFactor);
-
-  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos,
-    ReadOptionalValidationParams);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 3, 5);
+  FP := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FG := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FQ := TAsn1Utilities.Read<IDerInteger>(ASeq, LPos, TDerInteger.GetInstance);
+  FJ := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
+  FValidationParams := TAsn1Utilities.ReadOptional<IValidationParams>(ASeq, LPos, TValidationParams.GetOptional);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TDHDomainParameters.Create(const AP, AG, AQ, AJ: IDerInteger;
@@ -1002,13 +953,15 @@ begin
 end;
 
 constructor TKeySpecificInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
 begin
   inherited Create();
-  if ASeq.Count <> 2 then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [ASeq.Count]);
-
-  FAlgorithm := TDerObjectIdentifier.GetInstance(ASeq[0]);
-  FCounter := TAsn1OctetString.GetInstance(ASeq[1]);
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAlgorithm := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FCounter := TAsn1Utilities.Read<IAsn1OctetString>(ASeq, LPos, TAsn1OctetString.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TKeySpecificInfo.Create(const AAlgorithm: IDerObjectIdentifier;
@@ -1088,32 +1041,19 @@ begin
   Result := TOtherInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
 end;
 
-class function TOtherInfo.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1OctetString;
-begin
-  Result := TAsn1OctetString.GetTagged(ATagged, AState);
-end;
-
 constructor TOtherInfo.Create(const ASeq: IAsn1Sequence);
 var
-  LCount, LPos: Int32;
+  LPos: Int32;
 begin
   inherited Create();
-  LCount := ASeq.Count;
   LPos := 0;
-  if (LCount < 2) or (LCount > 3) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SBadSequenceSize, [LCount]);
-
-  FKeyInfo := TKeySpecificInfo.GetInstance(ASeq[LPos]);
-  System.Inc(LPos);
-
-  FPartyAInfo := TAsn1Utilities.ReadOptionalContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 0, True,
-    GetTaggedAsn1OctetString);
-
-  FSuppPubInfo := TAsn1Utilities.ReadContextTagged<Boolean, IAsn1OctetString>(ASeq, LPos, 2, True,
-    GetTaggedAsn1OctetString);
-
-  if LPos <> LCount then
-    raise EArgumentCryptoLibException.CreateRes(@SUnexpectedElementsInSequence);
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 3);
+  FKeyInfo := TAsn1Utilities.Read<IKeySpecificInfo>(ASeq, LPos, TKeySpecificInfo.GetInstance);
+  FPartyAInfo := TAsn1Utilities.ReadOptionalContextTagged<IAsn1OctetString>(ASeq, LPos, 0, True,
+    TAsn1OctetString.GetTagged);
+  FSuppPubInfo := TAsn1Utilities.ReadContextTagged<IAsn1OctetString>(ASeq, LPos, 2, True,
+    TAsn1OctetString.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 end;
 
 constructor TOtherInfo.Create(const AKeyInfo: IKeySpecificInfo;

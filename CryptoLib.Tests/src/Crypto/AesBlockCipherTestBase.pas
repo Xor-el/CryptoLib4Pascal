@@ -34,16 +34,14 @@ uses
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpICipherParameters,
-  ClpIParametersWithIV,
-  ClpParametersWithIV,
   ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  BlockCipherTestBase;
 
 type
-
-  TAesBlockCipherTestBase = class abstract(TCryptoLibAlgorithmTestCase)
+  TAesBlockCipherTestBase = class abstract(TBlockCipherTestBase)
   strict private
   class var
     FBlockCipherVectorKeys, FBlockCipherVectorInputs,
@@ -53,26 +51,23 @@ type
 
     class constructor CreateBlockCipherTestData;
 
-    procedure DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-      const AParam: ICipherParameters; const AInput, AOutput: String;
-      const APreface: String = '');
-
     procedure DoBlockCipherMonteCarloTest(const AIteration: String;
       const AEngine: IBlockCipher; const AParam: ICipherParameters;
       const AInput, AOutput: String; const APreface: String = '');
 
   strict protected
-    procedure RunBlockCipherVectorTests(const ACreateEngine
-      : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
+    // engine hooks supplied by the concrete suite
+    function GetEngineFactory: TBlockCipherFactory; virtual; abstract;
+    function EngineLabel: String; virtual; abstract;
+    // default: always run; hardware suites override with a real capability check
+    function EngineSupported: Boolean; virtual;
 
     procedure RunBlockCipherMonteCarloTests(const ACreateEngine
-      : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
-
-    procedure AssertEngineRejectsBadParameters(const ACreateEngine
-      : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
-
-    procedure RunCipherEngineChecks(const AEngine: IBlockCipher;
-      const AValidKey: IKeyParameter; const AContext: String);
+      : TBlockCipherFactory; const AEngineLabel: String);
+  published
+    procedure TestBlockCipherVector;
+    procedure TestMonteCarloAES;
+    procedure TestBadParameters;
   end;
 
 implementation
@@ -147,53 +142,6 @@ begin
     'E58B82BFBA53C0040DC610C642121168');
 end;
 
-procedure TAesBlockCipherTestBase.DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-  const AParam: ICipherParameters; const AInput, AOutput: String;
-  const APreface: String);
-var
-  LCipher: IBufferedBlockCipher;
-  LLen1, LLen2: Int32;
-  LInput, LOutput, LOutBytes: TBytes;
-  LPrefix: String;
-begin
-  LInput := DecodeHex(AInput);
-  LOutput := DecodeHex(AOutput);
-
-  if APreface <> '' then
-    LPrefix := '[' + APreface + '] '
-  else
-    LPrefix := '';
-
-  LCipher := TBufferedBlockCipher.Create(AEngine);
-
-  LCipher.Init(True, AParam);
-
-  System.SetLength(LOutBytes, System.Length(LInput));
-
-  LLen1 := LCipher.ProcessBytes(LInput, 0, System.Length(LInput), LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen1);
-
-  if (not AreEqual(LOutBytes, LOutput)) then
-  begin
-    Fail(LPrefix + Format('Encryption Failed - Expected %s but got %s',
-      [EncodeHex(LOutput), EncodeHex(LOutBytes)]));
-  end;
-
-  LCipher.Init(False, AParam);
-
-  LLen2 := LCipher.ProcessBytes(LOutput, 0, System.Length(LOutput),
-    LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen2);
-
-  if (not AreEqual(LInput, LOutBytes)) then
-  begin
-    Fail(LPrefix + Format('Decryption Failed - Expected %s but got %s',
-      [EncodeHex(LInput), EncodeHex(LOutBytes)]));
-  end;
-end;
-
 procedure TAesBlockCipherTestBase.DoBlockCipherMonteCarloTest(const AIteration: String;
   const AEngine: IBlockCipher; const AParam: ICipherParameters;
   const AInput, AOutput: String; const APreface: String);
@@ -256,25 +204,35 @@ begin
   end;
 end;
 
-procedure TAesBlockCipherTestBase.RunBlockCipherVectorTests(const ACreateEngine
-  : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
-var
-  LI: Int32;
-  LPreface: String;
+function TAesBlockCipherTestBase.EngineSupported: Boolean;
 begin
-  for LI := System.Low(FBlockCipherVectorKeys)
-    to System.High(FBlockCipherVectorKeys) do
-  begin
-    LPreface := Format('%s block vector index %d', [AEngineLabel, LI]);
-    DoBlockCipherVectorTest(ACreateEngine(),
-      TKeyParameter.Create(DecodeHex(FBlockCipherVectorKeys[LI]))
-      as IKeyParameter, FBlockCipherVectorInputs[LI],
-      FBlockCipherVectorOutputs[LI], LPreface);
-  end;
+  Result := True;
+end;
+
+procedure TAesBlockCipherTestBase.TestBlockCipherVector;
+begin
+  if not EngineSupported then
+    Exit;
+  RunBlockCipherVectorTests(GetEngineFactory(), EngineLabel,
+    FBlockCipherVectorKeys, FBlockCipherVectorInputs, FBlockCipherVectorOutputs);
+end;
+
+procedure TAesBlockCipherTestBase.TestMonteCarloAES;
+begin
+  if not EngineSupported then
+    Exit;
+  RunBlockCipherMonteCarloTests(GetEngineFactory(), EngineLabel);
+end;
+
+procedure TAesBlockCipherTestBase.TestBadParameters;
+begin
+  if not EngineSupported then
+    Exit;
+  AssertEngineRejectsBadParameters(GetEngineFactory(), EngineLabel);
 end;
 
 procedure TAesBlockCipherTestBase.RunBlockCipherMonteCarloTests(const ACreateEngine
-  : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
+  : TBlockCipherFactory; const AEngineLabel: String);
 var
   LI: Int32;
   LPreface: String;
@@ -288,104 +246,6 @@ begin
       TKeyParameter.Create(DecodeHex(FBlockCipherMonteCarloKeys[LI]))
       as IKeyParameter, FBlockCipherMonteCarloInputs[LI],
       FBlockCipherMonteCarloOutputs[LI], LPreface);
-  end;
-end;
-
-procedure TAesBlockCipherTestBase.AssertEngineRejectsBadParameters(const ACreateEngine
-  : TCryptoLibFunc<IBlockCipher>; const AEngineLabel: String);
-var
-  LDudKey, LIV: TBytes;
-  LEngine: IBlockCipher;
-begin
-  LEngine := ACreateEngine();
-
-  try
-    System.SetLength(LDudKey, 6);
-    LEngine.Init(True, TKeyParameter.Create(LDudKey) as IKeyParameter);
-    Fail(Format('[%s] failed key length check', [AEngineLabel]));
-  except
-    on e: EArgumentCryptoLibException do
-    begin
-      // expected
-    end;
-  end;
-
-  LEngine := ACreateEngine();
-
-  try
-    System.SetLength(LIV, 16);
-    LEngine.Init(True, TParametersWithIV.Create(nil, LIV) as IParametersWithIV);
-    Fail(Format('[%s] failed parameter check', [AEngineLabel]));
-  except
-    on e: EArgumentCryptoLibException do
-    begin
-      // expected
-    end;
-  end;
-end;
-
-procedure TAesBlockCipherTestBase.RunCipherEngineChecks(const AEngine: IBlockCipher;
-  const AValidKey: IKeyParameter; const AContext: String);
-var
-  LCorrectBuf, LShortBuf: TBytes;
-  LBlockSize: Int32;
-begin
-  LBlockSize := AEngine.GetBlockSize();
-  System.SetLength(LCorrectBuf, LBlockSize);
-  System.SetLength(LShortBuf, LBlockSize div 2);
-
-  try
-    AEngine.ProcessBlock(LCorrectBuf, 0, LCorrectBuf, 0);
-    Fail(Format('[%s] failed initialisation check', [AContext]));
-  except
-    on E: EInvalidOperationCryptoLibException do
-    begin
-      // expected
-    end;
-  end;
-
-  AEngine.Init(True, AValidKey as ICipherParameters);
-
-  try
-    AEngine.ProcessBlock(LShortBuf, 0, LCorrectBuf, 0);
-    Fail(Format('[%s] failed short input check (encrypt)', [AContext]));
-  except
-    on E: EDataLengthCryptoLibException do
-    begin
-      // expected (includes EOutputLengthCryptoLibException)
-    end;
-  end;
-
-  try
-    AEngine.ProcessBlock(LCorrectBuf, 0, LShortBuf, 0);
-    Fail(Format('[%s] failed short output check (encrypt)', [AContext]));
-  except
-    on E: EDataLengthCryptoLibException do
-    begin
-      // expected
-    end;
-  end;
-
-  AEngine.Init(False, AValidKey as ICipherParameters);
-
-  try
-    AEngine.ProcessBlock(LShortBuf, 0, LCorrectBuf, 0);
-    Fail(Format('[%s] failed short input check (decrypt)', [AContext]));
-  except
-    on E: EDataLengthCryptoLibException do
-    begin
-      // expected
-    end;
-  end;
-
-  try
-    AEngine.ProcessBlock(LCorrectBuf, 0, LShortBuf, 0);
-    Fail(Format('[%s] failed short output check (decrypt)', [AContext]));
-  except
-    on E: EDataLengthCryptoLibException do
-    begin
-      // expected
-    end;
   end;
 end;
 

@@ -44,7 +44,8 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  BlockCipherTestBase;
 
 type
   /// <summary>
@@ -59,10 +60,7 @@ type
   /// </summary>
   TTestSicBulkParity = class(TCryptoLibAlgorithmTestCase)
   strict private
-  type
-    TEngineFactory = function: IBlockCipher;
-
-    procedure RunParityForEngine(AEngineFactory: TEngineFactory;
+    procedure RunParityForEngine(AEngineFactory: TBlockCipherFactory;
       AKeyLen, AIvLen, ABlockSize: Int32; const ALabel: String);
   published
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -97,7 +95,7 @@ end;
 
 { TTestSicBulkParity }
 
-procedure TTestSicBulkParity.RunParityForEngine(AEngineFactory: TEngineFactory;
+procedure TTestSicBulkParity.RunParityForEngine(AEngineFactory: TBlockCipherFactory;
   AKeyLen, AIvLen, ABlockSize: Int32; const ALabel: String);
 const
   // Chosen to stress every branch of the bulk dispatch:

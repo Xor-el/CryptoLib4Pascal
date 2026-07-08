@@ -5,6 +5,7 @@ program CryptoLibConsole;
 uses
   {$IFDEF UNIX}cwstring,{$ENDIF}
   consoletestrunner, Asn1GeneratorTests, Asn1SequenceParserTests,
+  Asn1SequenceCursorTests,
   Asn1TimeFormatTests, EqualsAndHashCodeTests, OIDTests, EnumeratedTests,
   ExternalTests, ParsingTests, ParseTests, StringTests, TagTests,
   BigIntegerTests, ECAlgorithmsTests, ECPointTests, BinPolyTests,
@@ -13,7 +14,8 @@ uses
   DigestRandomNumberTests, FixedPointTests, AESTests, AesLightTests,
   FusedExternalRegistrationTests, AesHardwareEngineTests, AESSICTests,
   SicBulkParityTests, EcbBulkParityTests, CbcBulkParityTests,
-  GcmSivBulkParityTests, SpeckBlockCipherTestBase, SpeckLegacyTests, SpeckTests,
+  GcmSivBulkParityTests, BlockCipherTestBase, SpeckBlockCipherTestBase,
+  SpeckLegacyTests, SpeckTests,
   IESCipherTests, HMacTests, Pkcs5Tests, HkdfGeneratorTests, ECIESTests,
   PascalCoinECIESTests, ECNRTests, PrimesTests, ECEncodingTests, GF256AesTests,
   PaddingTests, DSATests, DeterministicDsaTests, Salsa20Tests, XSalsa20Tests,
