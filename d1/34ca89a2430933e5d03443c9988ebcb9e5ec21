@@ -1,0 +1,25 @@
+CryptoLib/src/Crypto/Engines/ClpChaChaEngine.pas
+  s_4e396cb15e16b1::t_ccb513a0153f0f 233,235-239
+  s_4e396cb15e16b1::t_0e02a2e9f1463a 150
+  s_4e396cb15e16b1::t_a8c2bbed3152e8 168-172
+CryptoLib/src/Crypto/Engines/ClpSalsa20Engine.pas
+  s_4e396cb15e16b1::t_7a6abc8a87df3c 453,455-459
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_4e396cb15e16b1::t_e6e1cb9b4241e0 137-140,404,462-463,467,471-480,482-489,519-520,523,527-535,537-542,725-726,728,730,732
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "d134ca89a2430933e5d03443c9988ebcb9e5ec21",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
