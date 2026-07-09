@@ -32,12 +32,14 @@ uses
 {$ENDIF FPC}
   ClpChaChaEngine,
   ClpIChaChaEngine,
+  ClpIStreamCipher,
   ClpICipherParameters,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpCryptoLibTypes,
+  StreamCipherTestBase,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;
 
@@ -52,7 +54,12 @@ type
   /// estreambench-20080905.
   /// </para>
   /// </summary>
-  TTestChaCha = class(TCryptoLibAlgorithmTestCase)
+  TTestChaCha = class(TStreamCipherTestBase)
+  strict protected
+    function GetEngineFactory: TStreamCipherFactory; override;
+    function EngineLabel: String; override;
+    function KeySizeInBytes: Int32; override;
+    function NonceSizeInBytes: Int32; override;
   private
   var
     FZeroes: TBytes;
@@ -79,7 +86,32 @@ type
 
 implementation
 
+function CreateChaChaEngine: IStreamCipher;
+begin
+  Result := TChaChaEngine.Create() as IStreamCipher;
+end;
+
 { TTestChaCha }
+
+function TTestChaCha.GetEngineFactory: TStreamCipherFactory;
+begin
+  Result := CreateChaChaEngine;
+end;
+
+function TTestChaCha.EngineLabel: String;
+begin
+  Result := 'ChaCha20';
+end;
+
+function TTestChaCha.KeySizeInBytes: Int32;
+begin
+  Result := 32;
+end;
+
+function TTestChaCha.NonceSizeInBytes: Int32;
+begin
+  Result := 8;
+end;
 
 function TTestChaCha.GetCheckpointHex(const ASet: TChaChaKeystreamSet;
   AByteOffset: Integer): string;

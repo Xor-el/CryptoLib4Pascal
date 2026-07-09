@@ -32,17 +32,24 @@ uses
 {$ENDIF FPC}
   ClpXSalsa20Engine,
   ClpIXSalsa20Engine,
+  ClpIStreamCipher,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpCryptoLibTypes,
+  StreamCipherTestBase,
   CryptoLibTestBase;
 
 type
 
-  TTestXSalsa20 = class(TCryptoLibAlgorithmTestCase)
+  TTestXSalsa20 = class(TStreamCipherTestBase)
 
+  strict protected
+    function GetEngineFactory: TStreamCipherFactory; override;
+    function EngineLabel: String; override;
+    function KeySizeInBytes: Int32; override;
+    function NonceSizeInBytes: Int32; override;
   private
   var
     FTestVectors: TCryptoLibGenericArray<TCryptoLibStringArray>;
@@ -61,7 +68,32 @@ type
 
 implementation
 
+function CreateXSalsa20Engine: IStreamCipher;
+begin
+  Result := TXSalsa20Engine.Create() as IStreamCipher;
+end;
+
 { TTestXSalsa20 }
+
+function TTestXSalsa20.GetEngineFactory: TStreamCipherFactory;
+begin
+  Result := CreateXSalsa20Engine;
+end;
+
+function TTestXSalsa20.EngineLabel: String;
+begin
+  Result := 'XSalsa20';
+end;
+
+function TTestXSalsa20.KeySizeInBytes: Int32;
+begin
+  Result := 32;
+end;
+
+function TTestXSalsa20.NonceSizeInBytes: Int32;
+begin
+  Result := 24;
+end;
 
 procedure TTestXSalsa20.DoXSalsa20Test(number: Int32;
   const ATestVectorParams: TCryptoLibStringArray);

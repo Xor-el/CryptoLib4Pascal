@@ -28,6 +28,7 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCipherModeParameterUtilities,
+  ClpIBulkStreamCipher,
   ClpIChaCha7539Engine,
   ClpChaCha7539Engine,
   ClpPoly1305,
@@ -107,6 +108,9 @@ type
 
   var
     FChaCha20: IChaCha7539Engine;
+    // The cipher engine's bulk stream interface when it exposes one (resolved once);
+    // enables the 512B/8-way tier. nil => the narrower per-tier path is used.
+    FBulkChaCha: IBulkStreamCipher;
     FNonceBytes: Int32;
     FPoly1305: IMac;
 
@@ -133,6 +137,10 @@ type
     procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+    // 8-block (512B) tier via the engine's bulk stream interface; keeps the same
+    // running data-count bookkeeping as the narrower tiers.
+    procedure ProcessBlocks8(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessData(const AInBytes: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
@@ -202,6 +210,8 @@ begin
 
   FPoly1305 := APoly1305;
   FChaCha20 := AEngine;
+  if not Supports(FChaCha20, IBulkStreamCipher, FBulkChaCha) then
+    FBulkChaCha := nil;
   FNonceBytes := ANonceBytes;
 
   System.SetLength(FKey, KeySize);
@@ -451,6 +461,17 @@ begin
       AInOff := AInOff + LAvailable;
       LResultLen := LResultLen + BufSize;
 
+      if (FBulkChaCha <> nil) then
+      begin
+        while (AInOff <= LInLimit2 - (BufSize * 6)) do
+        begin
+          FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 8);
+          ProcessBlocks8(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + BufSize * 8;
+          LResultLen := LResultLen + BufSize * 8;
+        end;
+      end;
+
       while (AInOff <= LInLimit2 - (BufSize * 2)) do
       begin
         FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 4);
@@ -498,6 +519,16 @@ begin
         ProcessBlock(FBuf, 0, AOutput, AOutOff);
         AInOff := AInOff + LAvailable;
         LResultLen := BufSize;
+      end;
+
+      if (FBulkChaCha <> nil) then
+      begin
+        while (AInOff <= LInLimit2 - (BufSize * 6)) do
+        begin
+          ProcessBlocks8(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + BufSize * 8;
+          LResultLen := LResultLen + BufSize * 8;
+        end;
       end;
 
       while (AInOff <= LInLimit2 - (BufSize * 2)) do
@@ -719,6 +750,16 @@ begin
   FChaCha20.ProcessBlocks4(AInBytes, AInOff, AOutBytes, AOutOff);
 
   FDataCount := IncrementCount(FDataCount, 256, DataLimit);
+end;
+
+procedure TChaCha20Poly1305.ProcessBlocks8(const AInBytes: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+begin
+  TCheck.OutputLength(AOutBytes, AOutOff, 512, SOutputBufferTooShort);
+
+  FBulkChaCha.ProcessBlocks(AInBytes, AInOff, 8, AOutBytes, AOutOff);
+
+  FDataCount := IncrementCount(FDataCount, 512, DataLimit);
 end;
 
 procedure TChaCha20Poly1305.ProcessData(const AInBytes: TCryptoLibByteArray;

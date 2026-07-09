@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="191">
+    <Units Count="192">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -618,7 +618,7 @@
         <IsPartOfProject Value="True"/>
       </Unit133>
       <Unit134>
-        <Filename Value="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
+        <Filename Value="..\src\Crypto\ChaCha7539Tests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit134>
       <Unit135>
@@ -845,6 +845,10 @@
         <Filename Value="..\src\Crypto\BlockCipherTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit190>
+      <Unit191>
+        <Filename Value="..\src\Crypto\StreamCipherTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit191>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

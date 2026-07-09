@@ -45,11 +45,17 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
+  StreamCipherTestBase,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;
 
 type
-  TTestXChaCha20 = class(TCryptoLibAlgorithmTestCase)
+  TTestXChaCha20 = class(TStreamCipherTestBase)
+  strict protected
+    function GetEngineFactory: TStreamCipherFactory; override;
+    function EngineLabel: String; override;
+    function KeySizeInBytes: Int32; override;
+    function NonceSizeInBytes: Int32; override;
   published
     procedure TestAppendixA2_1KeystreamFirst288;
     procedure TestAppendixA3_2_1KeystreamFull304;
@@ -61,7 +67,6 @@ type
     procedure TestHChaCha20Indirect;
     procedure TestDraftStreamVector;
     procedure TestRandomRoundTrip;
-    procedure TestChunkedProcessing;
     procedure TestRejectShortNonce64Bits;
     procedure TestRejectShortNonce96Bits;
     procedure TestRejectShortNonce23Bytes;
@@ -70,7 +75,32 @@ type
 
 implementation
 
+function CreateXChaCha20Engine: IStreamCipher;
+begin
+  Result := TXChaCha20Engine.Create() as IStreamCipher;
+end;
+
 { TTestXChaCha20 }
+
+function TTestXChaCha20.GetEngineFactory: TStreamCipherFactory;
+begin
+  Result := CreateXChaCha20Engine;
+end;
+
+function TTestXChaCha20.EngineLabel: String;
+begin
+  Result := 'XChaCha20';
+end;
+
+function TTestXChaCha20.KeySizeInBytes: Int32;
+begin
+  Result := 32;
+end;
+
+function TTestXChaCha20.NonceSizeInBytes: Int32;
+begin
+  Result := 24;
+end;
 
 procedure TTestXChaCha20.TestAppendixA2_1KeystreamFirst288;
 var
@@ -408,52 +438,6 @@ begin
 
     if not AreEqual(LPlain, LBack) then
       Fail(Format('XChaCha20 randomized round-trip failed at length %d', [LLen]));
-  end;
-end;
-
-procedure TTestXChaCha20.TestChunkedProcessing;
-const
-  ChunkSizes: array[0..8] of Int32 = (1, 7, 32, 63, 64, 65, 127, 128, 129);
-var
-  LKey, LNonce, LPlain, LWhole, LPiecewise: TCryptoLibByteArray;
-  LEng: IXChaCha20Engine;
-  LParams: IParametersWithIV;
-  LRandom: ISecureRandom;
-  LI, LChunk, LOff, LN: Int32;
-begin
-  LKey := THexEncoder.Decode(
-    '808182838485868788898a8b8c8d8e8f' +
-    '909192939495969798999a9b9c9d9e9f');
-  LNonce := THexEncoder.Decode(
-    '404142434445464748494a4b4c4d4e4f5051525354555657');
-  System.SetLength(LPlain, 1024);
-  LRandom := TSecureRandom.Create;
-  LRandom.NextBytes(LPlain);
-
-  System.SetLength(LWhole, System.Length(LPlain));
-  LEng := TXChaCha20Engine.Create;
-  LParams := TParametersWithIV.Create(TKeyParameter.Create(LKey) as IKeyParameter,
-    LNonce);
-  LEng.Init(True, LParams);
-  LEng.ProcessBytes(LPlain, 0, System.Length(LPlain), LWhole, 0);
-
-  for LI := Low(ChunkSizes) to High(ChunkSizes) do
-  begin
-    LChunk := ChunkSizes[LI];
-    System.SetLength(LPiecewise, System.Length(LPlain));
-    LEng := TXChaCha20Engine.Create;
-    LEng.Init(True, LParams);
-    LOff := 0;
-    while LOff < System.Length(LPlain) do
-    begin
-      LN := LChunk;
-      if LN > System.Length(LPlain) - LOff then
-        LN := System.Length(LPlain) - LOff;
-      LEng.ProcessBytes(LPlain, LOff, LN, LPiecewise, LOff);
-      System.Inc(LOff, LN);
-    end;
-    if not AreEqual(LWhole, LPiecewise) then
-      Fail(Format('chunked processing differs from bulk at chunk size %d', [LChunk]));
   end;
 end;
 

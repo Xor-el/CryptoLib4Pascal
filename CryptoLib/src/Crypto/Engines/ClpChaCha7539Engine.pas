@@ -21,29 +21,21 @@ unit ClpChaCha7539Engine;
 interface
 
 uses
-  SysUtils,
-  ClpCheck,
   ClpIStreamCipher,
   ClpIChaCha7539Engine,
-  ClpSalsa20Engine,
   ClpChaChaEngine,
   ClpPack,
-  ClpCryptoLibTypes,
-  ClpChaChaSimd,
-  ClpByteUtilities;
+  ClpCryptoLibTypes;
 
 resourcestring
   SInvalidKeySizeTwoFiftySix = '%s requires 256 bit key';
   SCounterExceeded = 'attempt to increase counter past 2^32';
-  SNotInitialised = '%s not initialized';
-  SNotBlockAligned = '%s not in block-aligned state';
-  SMaxByteExceeded =
-    '2^38 byte limit per IV would be exceeded; change IV';
-  SInputBufferTooShort = 'input buffer too short';
-  SOutputBufferTooShort = 'output buffer too short';
 
 type
-  TChaCha7539Engine = class(TSalsa20Engine, IChaCha7539Engine, IStreamCipher)
+  /// <summary>
+  /// ChaCha20 per RFC 7539 (IETF): 96-bit nonce, 32-bit block counter (word 12).
+  /// </summary>
+  TChaCha7539Engine = class(TChaChaBaseEngine, IChaCha7539Engine, IStreamCipher)
 
   strict protected
     function GetAlgorithmName: String; override;
@@ -52,35 +44,9 @@ type
     procedure AdvanceCounter(); override;
     procedure ResetCounter(); override;
     procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
-    procedure GenerateKeyStream(const AOutput: TCryptoLibByteArray); override;
-
-  strict private
-    procedure ImplProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32); inline;
-    // Two-block keystream body (SIMD-accelerated when available, else scalar) with
-    // no state validation or 2^38 byte-limit accounting - those belong to the
-    // callers (ProcessBlocks2, ProcessBlocks4), which do them exactly once.
-    procedure ProcessBlocks2Core(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
   public
     constructor Create();
-
-    procedure DoFinal(const AInBuf: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-
-    procedure ProcessBytes(const AInBytes: TCryptoLibByteArray;
-      AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray;
-      AOutOff: Int32); override;
-
-    procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); override;
-
-    procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
   end;
 
@@ -136,251 +102,6 @@ begin
 
   // IV
   TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 13, 3);
-end;
-
-procedure TChaCha7539Engine.GenerateKeyStream(
-  const AOutput: TCryptoLibByteArray);
-begin
-  TChaChaEngine.ChaChaCore(FRounds, FEngineState, AOutput);
-end;
-
-procedure TChaCha7539Engine.DoFinal(const AInBuf: TCryptoLibByteArray;
-  AInOff, AInLen: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LIdx, LQ: Int32;
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-
-  TCheck.DataLength(AInBuf, AInOff, AInLen, SInputBufferTooShort);
-  TCheck.OutputLength(AOutBuf, AOutOff, AInLen, SOutputBufferTooShort);
-
-  while (AInLen >= 256) do
-  begin
-    ProcessBlocks4(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 256;
-    AInLen := AInLen - 256;
-    AOutOff := AOutOff + 256;
-  end;
-
-  while (AInLen >= 128) do
-  begin
-    ProcessBlocks2(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 128;
-    AInLen := AInLen - 128;
-    AOutOff := AOutOff + 128;
-  end;
-
-  if (AInLen >= 64) then
-  begin
-    ImplProcessBlock(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 64;
-    AInLen := AInLen - 64;
-    AOutOff := AOutOff + 64;
-  end;
-
-  if (AInLen > 0) then
-  begin
-    GenerateKeyStream(FKeyStream);
-    AdvanceCounter();
-
-    LQ := AInLen shr 3;
-    if LQ > 0 then
-      TByteUtilities.&Xor(LQ * 8, AInBuf, AInOff, FKeyStream, 0, AOutBuf, AOutOff);
-    for LIdx := (LQ * 8) to System.Pred(AInLen) do
-    begin
-      AOutBuf[AOutOff + LIdx] := Byte(
-        AInBuf[AInOff + LIdx] xor FKeyStream[LIdx]);
-    end;
-  end;
-
-  FEngineState[12] := 0;
-end;
-
-procedure TChaCha7539Engine.ProcessBytes(const AInBytes: TCryptoLibByteArray;
-  AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LIdx, LTake, LQ: Int32;
-  LInP, LOutP, LKeyP: PByte;
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt
-      (@SNotInitialised, [AlgorithmName]);
-  end;
-
-  TCheck.DataLength(AInBytes, AInOff, ALen, SInputBufferTooShort);
-  TCheck.OutputLength(AOutBytes, AOutOff, ALen, SOutputBufferTooShort);
-
-  if (LimitExceeded(UInt32(ALen))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  while ALen > 0 do
-  begin
-    if (FIndex <> 0) then
-    begin
-      LTake := ALen;
-      if LTake > (64 - FIndex) then
-      begin
-        LTake := 64 - FIndex;
-      end;
-      for LIdx := 0 to System.Pred(LTake) do
-      begin
-        AOutBytes[AOutOff + LIdx] := Byte(
-          FKeyStream[FIndex + LIdx] xor AInBytes[AInOff + LIdx]);
-      end;
-      FIndex := (FIndex + LTake) and 63;
-      AInOff := AInOff + LTake;
-      AOutOff := AOutOff + LTake;
-      System.Dec(ALen, LTake);
-      continue;
-    end;
-    if (ALen >= 256) then
-    begin
-      ProcessBlocks4(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 256;
-      AOutOff := AOutOff + 256;
-      System.Dec(ALen, 256);
-    end
-    else if (ALen >= 128) then
-    begin
-      ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 128;
-      AOutOff := AOutOff + 128;
-      System.Dec(ALen, 128);
-    end
-    else if (ALen >= 64) then
-    begin
-      ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 64;
-      AOutOff := AOutOff + 64;
-      System.Dec(ALen, 64);
-    end
-    else
-    begin
-      GenerateKeyStream(FKeyStream);
-      AdvanceCounter();
-      LTake := ALen;
-      LInP := PByte(AInBytes) + AInOff;
-      LOutP := PByte(AOutBytes) + AOutOff;
-      LKeyP := PByte(FKeyStream);
-      LQ := LTake shr 3;
-      if LQ > 0 then
-        TByteUtilities.&Xor(LQ * 8, LInP, LKeyP, LOutP);
-      for LIdx := (LQ * 8) to System.Pred(LTake) do
-      begin
-        LOutP[LIdx] := LInP[LIdx] xor LKeyP[LIdx];
-      end;
-      FIndex := (FIndex + LTake) and 63;
-      AInOff := AInOff + LTake;
-      AOutOff := AOutOff + LTake;
-      System.Dec(ALen, LTake);
-    end;
-  end;
-end;
-
-procedure TChaCha7539Engine.ProcessBlock(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(64))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-end;
-
-procedure TChaCha7539Engine.ProcessBlocks2(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(128))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  ProcessBlocks2Core(AInBytes, AInOff, AOutBytes, AOutOff);
-end;
-
-procedure TChaCha7539Engine.ProcessBlocks2Core(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if TChaChaSimd.TryProcessBlocks2(FRounds, PByte(@FEngineState[0]),
-    PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff])) then
-    Exit;
-
-  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-  ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
-end;
-
-procedure TChaCha7539Engine.ProcessBlocks4(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(256))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  if TChaChaSimd.TryProcessBlocks4(FRounds, PByte(@FEngineState[0]),
-    PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff])) then
-    Exit;
-
-  ProcessBlocks2Core(AInBytes, AInOff, AOutBytes, AOutOff);
-  ProcessBlocks2Core(AInBytes, AInOff + 128, AOutBytes, AOutOff + 128);
-end;
-
-procedure TChaCha7539Engine.ImplProcessBlock(
-  const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-  const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LInP, LOutP, LKeyP: PByte;
-begin
-  TChaChaEngine.ChaChaCore(FRounds, FEngineState, FKeyStream);
-  AdvanceCounter();
-
-  LInP := PByte(AInBuf) + AInOff;
-  LKeyP := PByte(FKeyStream);
-  LOutP := PByte(AOutBuf) + AOutOff;
-  TByteUtilities.&Xor(64, LInP, LKeyP, LOutP);
 end;
 
 end.

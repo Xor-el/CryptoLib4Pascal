@@ -25,6 +25,7 @@ uses
   ClpBitOperations,
   ClpCheck,
   ClpIStreamCipher,
+  ClpIBulkStreamCipher,
   ClpISalsa20Engine,
   ClpIKeyParameter,
   ClpICipherParameters,
@@ -56,7 +57,8 @@ type
   /// <summary>
   /// Implementation of Daniel J. Bernstein's Salsa20 stream cipher, Snuffle 2005
   /// </summary>
-  TSalsa20Engine = class(TInterfacedObject, ISalsa20Engine, IStreamCipher)
+  TSalsa20Engine = class(TInterfacedObject, ISalsa20Engine, IStreamCipher,
+    IBulkStreamCipher)
 
   strict private
   const
@@ -71,6 +73,10 @@ type
     FCW0, FCW1, FCW2: UInt32;
 
     class procedure QuarterRound(var A, B, C, D: UInt32); static; inline;
+
+    // Pointer-form, unvalidated inner helpers (1 / 2 blocks).
+    procedure ProcessBlockFast(AIn, AOut: PByte);
+    procedure ProcessBlocks2Fast(AIn, AOut: PByte);
 
   strict protected
   var
@@ -96,6 +102,9 @@ type
     procedure AssertInitialisedAndBlockAligned; inline;
     procedure ImplProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); inline;
+
+    // 2 -> 1 bulk ladder; the ChaCha engine overrides with 8 -> 4 -> 2 -> 1.
+    function DoProcessBlocks(AIn, AOut: PByte; ABlockCount: Int32): Int32; virtual;
 
     /// <summary>
     /// Rotate left
@@ -132,6 +141,12 @@ type
 
     procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); virtual;
+
+    // IBulkStreamCipher: bulk keystream over whole 64B blocks; engine owns the ladder.
+    function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+      AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; overload;
+    function ProcessBlocks(AInput, AOutput: PByte; ABlockCount: Int32): Int32; overload;
 
     procedure ProcessBytes(const AInBytes: TCryptoLibByteArray;
       AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray;
@@ -319,13 +334,80 @@ procedure TSalsa20Engine.ProcessBlocks2(
   const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 begin
   AssertInitialisedAndBlockAligned;
+  ProcessBlocks2Fast(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
+end;
 
+procedure TSalsa20Engine.ProcessBlockFast(AIn, AOut: PByte);
+begin
+  GenerateKeyStream(FKeyStream);
+  AdvanceCounter();
+  TByteUtilities.&Xor(64, AIn, PByte(FKeyStream), AOut);
+end;
+
+procedure TSalsa20Engine.ProcessBlocks2Fast(AIn, AOut: PByte);
+begin
   if TSalsaSimd.TryProcessBlocks2(FRounds, PByte(@FEngineState[0]),
-    PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff])) then
+    AIn, AOut) then
     Exit;
 
-  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-  ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
+  ProcessBlockFast(AIn, AOut);
+  ProcessBlockFast(AIn + 64, AOut + 64);
+end;
+
+function TSalsa20Engine.DoProcessBlocks(AIn, AOut: PByte;
+  ABlockCount: Int32): Int32;
+begin
+  Result := ABlockCount * 64;
+  while ABlockCount >= 2 do
+  begin
+    ProcessBlocks2Fast(AIn, AOut);
+    AIn := AIn + 128;
+    AOut := AOut + 128;
+    System.Dec(ABlockCount, 2);
+  end;
+  while ABlockCount >= 1 do
+  begin
+    ProcessBlockFast(AIn, AOut);
+    AIn := AIn + 64;
+    AOut := AOut + 64;
+    System.Dec(ABlockCount);
+  end;
+end;
+
+function TSalsa20Engine.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+  AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+begin
+  AssertInitialisedAndBlockAligned;
+  if (ABlockCount <= 0) then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  if (LimitExceeded(UInt32(ABlockCount) * 64)) then
+  begin
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
+  end;
+
+  Result := DoProcessBlocks(PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]),
+    ABlockCount);
+end;
+
+function TSalsa20Engine.ProcessBlocks(AInput, AOutput: PByte;
+  ABlockCount: Int32): Int32;
+begin
+  AssertInitialisedAndBlockAligned;
+  if (ABlockCount <= 0) then
+  begin
+    Result := 0;
+    Exit;
+  end;
+  if (LimitExceeded(UInt32(ABlockCount) * 64)) then
+  begin
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
+  end;
+
+  Result := DoProcessBlocks(AInput, AOutput, ABlockCount);
 end;
 
 class procedure TSalsa20Engine.PackTauOrSigma(AKeyLength: Int32;

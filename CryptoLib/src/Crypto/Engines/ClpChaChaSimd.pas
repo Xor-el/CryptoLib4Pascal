@@ -39,10 +39,13 @@ type
   public
     /// <summary>Single-block ChaCha core (ChaCha20 keystream block).</summary>
     class function TryCore(ARounds: Int32; AInput, AOut: PByte): Boolean; static;
-    /// <summary>Two-block ChaCha7539 keystream (128 bytes).</summary>
-    class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
-    /// <summary>Four-block ChaCha7539 keystream (256 bytes).</summary>
-    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
+    /// <summary>Two-block ChaCha keystream (128 bytes). ACtr64 = DJB 64-bit
+    /// counter (no SIMD 2-block body; returns False).</summary>
+    class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
+    /// <summary>Four-block ChaCha keystream (256 bytes). ACtr64 = DJB variant.</summary>
+    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
+    /// <summary>Eight-block ChaCha keystream (512 bytes). ACtr64 = DJB variant.</summary>
+    class function TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
   end;
 
 implementation
@@ -58,19 +61,28 @@ begin
 {$IFEND}
 end;
 
-class function TChaChaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
+class function TChaChaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TChaChaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
+  Result := TChaChaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut, ACtr64);
 {$ELSE}
   Result := False;
 {$IFEND}
 end;
 
-class function TChaChaSimd.TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
+class function TChaChaSimd.TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TChaChaX86Backend.TryProcessBlocks4(ARounds, AState, AIn, AOut);
+  Result := TChaChaX86Backend.TryProcessBlocks4(ARounds, AState, AIn, AOut, ACtr64);
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TChaChaSimd.TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TChaChaX86Backend.TryProcessBlocks8(ARounds, AState, AIn, AOut, ACtr64);
 {$ELSE}
   Result := False;
 {$IFEND}
