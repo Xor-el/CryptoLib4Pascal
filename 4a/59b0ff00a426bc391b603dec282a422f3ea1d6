@@ -1,0 +1,19 @@
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks8Avx2_x86_64.inc
+  s_4e396cb15e16b1::t_f5d289d723b898 91-95,132-136,173-177,214-218
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "4a59b0ff00a426bc391b603dec282a422f3ea1d6",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
