@@ -169,12 +169,56 @@ begin
     LTbl^[9, LIdx] := 0;
 end;
 
-// Asm wrapper around the architecture-specific 4-way bulk kernel. The .inc
-// files contain pure assembly (db-encoded VEX with mnemonic comments); the
-// Pascal layer below is just the procedure header + the ClpSimdProc5Begin ABI
-// glue + the kernel body include. ACtx points at the 72-byte R/S/H/K
-// portion of TPoly1305State; APowTable points at the separate 320-byte
-// power table buffer; the kernel never reads the K limbs.
+// (Re)allocate APowTable and pack r^1, r^2 for the 2-way SSE2 bulk kernel.
+// 160 bytes = 10 rows x 4 dwords. Rows 0..4 hold limbs of [r^2, r^2, r^2, r^1]
+// (so a broadcast load gives r^2 in both 64-bit lanes and a +4 shifted load
+// gives [r^2, r^1]); rows 5..8 hold the 5x wraparound multipliers; row 9 is
+// padding for the +4 over-read of the last shifted load.
+procedure Poly1305Sse2InitPowerTable(var APowTable: TCryptoLibByteArray;
+  const AState: TPoly1305State);
+const
+  TableSize = Int32(160);
+type
+  TPowTableLayout = array[0..9, 0..3] of UInt32;
+  PPowTableLayout = ^TPowTableLayout;
+var
+  LTbl: PPowTableLayout;
+  Lr1, Lr2: array[0..4] of UInt32;
+  LIdx, LRow, LJ: Int32;
+begin
+  System.SetLength(APowTable, TableSize);
+  LTbl := PPowTableLayout(APowTable);
+
+  Lr1[0] := AState.R0;
+  Lr1[1] := AState.R1;
+  Lr1[2] := AState.R2;
+  Lr1[3] := AState.R3;
+  Lr1[4] := AState.R4;
+
+  Poly1305MulLimbs(Lr2, Lr1, Lr1);
+
+  for LIdx := 0 to 4 do
+  begin
+    LTbl^[LIdx, 0] := Lr2[LIdx];
+    LTbl^[LIdx, 1] := Lr2[LIdx];
+    LTbl^[LIdx, 2] := Lr2[LIdx];
+    LTbl^[LIdx, 3] := Lr1[LIdx];
+  end;
+
+  for LRow := 5 to 8 do
+  begin
+    LJ := LRow - 4; // 1..4
+    LTbl^[LRow, 0] := Lr2[LJ] * 5;
+    LTbl^[LRow, 1] := Lr2[LJ] * 5;
+    LTbl^[LRow, 2] := Lr2[LJ] * 5;
+    LTbl^[LRow, 3] := Lr1[LJ] * 5;
+  end;
+
+  for LIdx := 0 to 3 do
+    LTbl^[9, LIdx] := 0;
+end;
+
+// AVX2 4-way bulk kernel (r^1..r^4 power table, 64-byte stride).
 procedure Poly1305BlocksBulkAvx2Core(ACtx, APowTable, AInp: PByte;
   ALen: NativeUInt; APad: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
@@ -187,6 +231,19 @@ procedure Poly1305BlocksBulkAvx2Core(ACtx, APowTable, AInp: PByte;
 {$ENDIF}
 end;
 
+// SSE2 2-way bulk kernel (r/r^2 power table, 32-byte stride).
+procedure Poly1305BlocksBulkSse2Core(ACtx, APowTable, AInp: PByte;
+  ALen: NativeUInt; APad: Int32);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Poly1305\Poly1305BlocksBulkSse2Core_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Poly1305\Poly1305BlocksBulkSse2Core_i386.inc}
+{$ENDIF}
+end;
+
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
 { TPoly1305X86Backend }
@@ -195,10 +252,15 @@ class function TPoly1305X86Backend.TryInitPowerTable(var APowTable: TCryptoLibBy
   const AState: TPoly1305State): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2, TX86SimdLevel.SSE2]) of
     TX86SimdLevel.AVX2:
     begin
       Poly1305Avx2InitPowerTable(APowTable, AState);
+      Exit(True);
+    end;
+    TX86SimdLevel.SSE2:
+    begin
+      Poly1305Sse2InitPowerTable(APowTable, AState);
       Exit(True);
     end;
   end;
@@ -209,26 +271,35 @@ end;
 class function TPoly1305X86Backend.ProcessBulk(var AState: TPoly1305State; APowTable: PByte;
   const ABuf: TCryptoLibByteArray; AOff, ANumBlocks: Int32): Int32;
 {$IFDEF CRYPTOLIB_X86_SIMD}
-const
-  // Minimum number of 16-byte blocks before the AVX2 4-way kernel pays off
-  // over the scalar block step; smaller batches go straight to the caller's
-  // scalar tail.
-  LMinBlocks = Int32(4);
-  // Number of 16-byte blocks consumed per AVX2 kernel iteration (one block
-  // per 64-bit lane of a 256-bit ymm); used to round the dispatch count
-  // down to a multiple supported by the kernel.
-  LLaneCount = Int32(4);
 var
   LSimdBlocks: Int32;
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if (APowTable <> nil) and (ANumBlocks >= LMinBlocks) then
-  begin
-    LSimdBlocks := ANumBlocks and not (LLaneCount - 1);
-    Poly1305BlocksBulkAvx2Core(@AState, APowTable, @ABuf[AOff],
-      NativeUInt(LSimdBlocks) * 16, 1);
-    Exit(LSimdBlocks);
+  if (APowTable = nil) then
+    Exit(0);
+  // The tier is re-selected here; SelectSlot is deterministic, so it matches the
+  // one TryInitPowerTable built the power table for. AVX2 consumes 4 blocks per
+  // iteration, SSE2 2; both need at least one lane's worth to pay off.
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2, TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.AVX2:
+    begin
+      if ANumBlocks < 4 then
+        Exit(0);
+      LSimdBlocks := ANumBlocks and not 3;
+      Poly1305BlocksBulkAvx2Core(@AState, APowTable, @ABuf[AOff],
+        NativeUInt(LSimdBlocks) * 16, 1);
+      Exit(LSimdBlocks);
+    end;
+    TX86SimdLevel.SSE2:
+    begin
+      if ANumBlocks < 2 then
+        Exit(0);
+      LSimdBlocks := ANumBlocks and not 1;
+      Poly1305BlocksBulkSse2Core(@AState, APowTable, @ABuf[AOff],
+        NativeUInt(LSimdBlocks) * 16, 1);
+      Exit(LSimdBlocks);
+    end;
   end;
 {$ENDIF}
   Result := 0;
