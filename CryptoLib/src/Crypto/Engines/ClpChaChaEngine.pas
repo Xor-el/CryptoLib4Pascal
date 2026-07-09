@@ -86,15 +86,6 @@ type
     procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); override;
-
-    procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-
-    procedure ProcessBlocks8(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-
     class procedure ChaChaCore(ARounds: Int32;
       const AInput: TCryptoLibUInt32Array;
       const AOutput: TCryptoLibByteArray); static;
@@ -156,7 +147,7 @@ end;
 procedure TChaChaBaseEngine.DoFinal(const AInBuf: TCryptoLibByteArray;
   AInOff, AInLen: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 var
-  LIdx, LQ: Int32;
+  LIdx, LQ, LWholeBytes: Int32;
 begin
   if (not FInitialised) then
   begin
@@ -172,36 +163,13 @@ begin
   TCheck.DataLength(AInBuf, AInOff, AInLen, SInputBufferTooShort);
   TCheck.OutputLength(AOutBuf, AOutOff, AInLen, SOutputBufferTooShort);
 
-  while (AInLen >= 512) do
-  begin
-    ProcessBlocks8(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 512;
-    AInLen := AInLen - 512;
-    AOutOff := AOutOff + 512;
-  end;
-
-  while (AInLen >= 256) do
-  begin
-    ProcessBlocks4(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 256;
-    AInLen := AInLen - 256;
-    AOutOff := AOutOff + 256;
-  end;
-
-  while (AInLen >= 128) do
-  begin
-    ProcessBlocks2(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 128;
-    AInLen := AInLen - 128;
-    AOutOff := AOutOff + 128;
-  end;
-
   if (AInLen >= 64) then
   begin
-    ImplProcessBlock(AInBuf, AInOff, AOutBuf, AOutOff);
-    AInOff := AInOff + 64;
-    AInLen := AInLen - 64;
-    AOutOff := AOutOff + 64;
+    LWholeBytes := (AInLen shr 6) shl 6; // whole 64B blocks, engine ladders 8/4/2/1
+    DoProcessBlocks(PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]), AInLen shr 6);
+    AInOff := AInOff + LWholeBytes;
+    AInLen := AInLen - LWholeBytes;
+    AOutOff := AOutOff + LWholeBytes;
   end;
 
   if (AInLen > 0) then
@@ -262,33 +230,13 @@ begin
       System.Dec(ALen, LTake);
       continue;
     end;
-    if (ALen >= 512) then
+    if (ALen >= 64) then
     begin
-      ProcessBlocks8(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 512;
-      AOutOff := AOutOff + 512;
-      System.Dec(ALen, 512);
-    end
-    else if (ALen >= 256) then
-    begin
-      ProcessBlocks4(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 256;
-      AOutOff := AOutOff + 256;
-      System.Dec(ALen, 256);
-    end
-    else if (ALen >= 128) then
-    begin
-      ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 128;
-      AOutOff := AOutOff + 128;
-      System.Dec(ALen, 128);
-    end
-    else if (ALen >= 64) then
-    begin
-      ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 64;
-      AOutOff := AOutOff + 64;
-      System.Dec(ALen, 64);
+      LTake := (ALen shr 6) shl 6; // whole 64B blocks; engine ladders 8/4/2/1
+      DoProcessBlocks(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]), ALen shr 6);
+      AInOff := AInOff + LTake;
+      AOutOff := AOutOff + LTake;
+      System.Dec(ALen, LTake);
     end
     else
     begin
@@ -332,27 +280,6 @@ begin
   end;
 
   ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-end;
-
-procedure TChaChaBaseEngine.ProcessBlocks2(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(128))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  ProcessBlocks2Fast(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
 end;
 
 procedure TChaChaBaseEngine.ProcessBlockFast(AIn, AOut: PByte);
@@ -426,48 +353,6 @@ begin
     AOut := AOut + 64;
     System.Dec(ABlockCount);
   end;
-end;
-
-procedure TChaChaBaseEngine.ProcessBlocks4(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(256))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  ProcessBlocks4Fast(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
-end;
-
-procedure TChaChaBaseEngine.ProcessBlocks8(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  if (not FInitialised) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
-      [AlgorithmName]);
-  end;
-  if (FIndex <> 0) then
-  begin
-    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
-      [AlgorithmName]);
-  end;
-  if (LimitExceeded(UInt32(512))) then
-  begin
-    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
-  end;
-
-  ProcessBlocks8Fast(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
 end;
 
 class procedure TChaChaBaseEngine.ChaChaCore(ARounds: Int32;

@@ -134,14 +134,10 @@ type
     procedure PadMac(ACount: UInt64);
     procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-    procedure ProcessBlocks4(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-    // 8-block (512B) tier via the engine's bulk stream interface; keeps the same
-    // running data-count bookkeeping as the narrower tiers.
-    procedure ProcessBlocks8(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+    // Bulk tier via the engine's IBulkStreamCipher (ACount whole 64B blocks); keeps
+    // the same running data-count bookkeeping as the single-block ProcessBlock.
+    procedure ProcessBlocksBulk(const AInBytes: TCryptoLibByteArray;
+      AInOff, ACount: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessData(const AInBytes: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure Reset(AClearMac, AResetCipher: Boolean); overload;
@@ -405,7 +401,7 @@ end;
 function TChaCha20Poly1305.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LResultLen, LAvailable, LInLimit1, LInLimit2: Int32;
+  LResultLen, LAvailable, LInLimit1, LInLimit2, LRemBlocks: Int32;
 begin
   if (AInput = nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
@@ -463,37 +459,34 @@ begin
 
       if (FBulkChaCha <> nil) then
       begin
+        // Bulk: MAC + decrypt in 512B (8-way) strides, then the remaining whole
+        // blocks (< 8) in a single engine-laddered call.
         while (AInOff <= LInLimit2 - (BufSize * 6)) do
         begin
           FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 8);
-          ProcessBlocks8(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          ProcessBlocksBulk(AInput, AInOff, 8, AOutput, AOutOff + LResultLen);
           AInOff := AInOff + BufSize * 8;
           LResultLen := LResultLen + BufSize * 8;
         end;
-      end;
-
-      while (AInOff <= LInLimit2 - (BufSize * 2)) do
+        if (AInOff <= LInLimit1) then
+        begin
+          LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;
+          FPoly1305.BlockUpdate(AInput, AInOff, LRemBlocks * BufSize);
+          ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + LRemBlocks * BufSize;
+          LResultLen := LResultLen + LRemBlocks * BufSize;
+        end;
+      end
+      else
       begin
-        FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 4);
-        ProcessBlocks4(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize * 4;
-        LResultLen := LResultLen + BufSize * 4;
-      end;
-
-      while (AInOff <= LInLimit2) do
-      begin
-        FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 2);
-        ProcessBlocks2(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize * 2;
-        LResultLen := LResultLen + BufSize * 2;
-      end;
-
-      if (AInOff <= LInLimit1) then
-      begin
-        FPoly1305.BlockUpdate(AInput, AInOff, BufSize);
-        ProcessBlock(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize;
-        LResultLen := LResultLen + BufSize;
+        // No bulk engine: single-block MAC-then-decrypt.
+        while (AInOff <= LInLimit1) do
+        begin
+          FPoly1305.BlockUpdate(AInput, AInOff, BufSize);
+          ProcessBlock(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + BufSize;
+          LResultLen := LResultLen + BufSize;
+        end;
       end;
 
       FBufPos := System.Length(FBuf) + LInLimit1 - AInOff;
@@ -523,33 +516,30 @@ begin
 
       if (FBulkChaCha <> nil) then
       begin
+        // Bulk: encrypt in 512B (8-way) strides, then the remaining whole blocks
+        // (< 8) in a single engine-laddered call; MAC over the ciphertext below.
         while (AInOff <= LInLimit2 - (BufSize * 6)) do
         begin
-          ProcessBlocks8(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          ProcessBlocksBulk(AInput, AInOff, 8, AOutput, AOutOff + LResultLen);
           AInOff := AInOff + BufSize * 8;
           LResultLen := LResultLen + BufSize * 8;
         end;
-      end;
-
-      while (AInOff <= LInLimit2 - (BufSize * 2)) do
+        if (AInOff <= LInLimit1) then
+        begin
+          LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;
+          ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + LRemBlocks * BufSize;
+          LResultLen := LResultLen + LRemBlocks * BufSize;
+        end;
+      end
+      else
       begin
-        ProcessBlocks4(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize * 4;
-        LResultLen := LResultLen + BufSize * 4;
-      end;
-
-      while (AInOff <= LInLimit2) do
-      begin
-        ProcessBlocks2(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize * 2;
-        LResultLen := LResultLen + BufSize * 2;
-      end;
-
-      if (AInOff <= LInLimit1) then
-      begin
-        ProcessBlock(AInput, AInOff, AOutput, AOutOff + LResultLen);
-        AInOff := AInOff + BufSize;
-        LResultLen := LResultLen + BufSize;
+        while (AInOff <= LInLimit1) do
+        begin
+          ProcessBlock(AInput, AInOff, AOutput, AOutOff + LResultLen);
+          AInOff := AInOff + BufSize;
+          LResultLen := LResultLen + BufSize;
+        end;
       end;
 
       FPoly1305.BlockUpdate(AOutput, AOutOff, LResultLen);
@@ -732,34 +722,14 @@ begin
   FDataCount := IncrementCount(FDataCount, 64, DataLimit);
 end;
 
-procedure TChaCha20Poly1305.ProcessBlocks2(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+procedure TChaCha20Poly1305.ProcessBlocksBulk(const AInBytes: TCryptoLibByteArray;
+  AInOff, ACount: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 begin
-  TCheck.OutputLength(AOutBytes, AOutOff, 128, SOutputBufferTooShort);
+  TCheck.OutputLength(AOutBytes, AOutOff, ACount * BufSize, SOutputBufferTooShort);
 
-  FChaCha20.ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
+  FBulkChaCha.ProcessBlocks(AInBytes, AInOff, ACount, AOutBytes, AOutOff);
 
-  FDataCount := IncrementCount(FDataCount, 128, DataLimit);
-end;
-
-procedure TChaCha20Poly1305.ProcessBlocks4(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  TCheck.OutputLength(AOutBytes, AOutOff, 256, SOutputBufferTooShort);
-
-  FChaCha20.ProcessBlocks4(AInBytes, AInOff, AOutBytes, AOutOff);
-
-  FDataCount := IncrementCount(FDataCount, 256, DataLimit);
-end;
-
-procedure TChaCha20Poly1305.ProcessBlocks8(const AInBytes: TCryptoLibByteArray;
-  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  TCheck.OutputLength(AOutBytes, AOutOff, 512, SOutputBufferTooShort);
-
-  FBulkChaCha.ProcessBlocks(AInBytes, AInOff, 8, AOutBytes, AOutOff);
-
-  FDataCount := IncrementCount(FDataCount, 512, DataLimit);
+  FDataCount := IncrementCount(FDataCount, ACount * BufSize, DataLimit);
 end;
 
 procedure TChaCha20Poly1305.ProcessData(const AInBytes: TCryptoLibByteArray;

@@ -139,9 +139,6 @@ type
       const AParameters: ICipherParameters); virtual;
     function ReturnByte(AInput: Byte): Byte; virtual;
 
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); virtual;
-
     // IBulkStreamCipher: bulk keystream over whole 64B blocks; engine owns the ladder.
     function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
@@ -329,14 +326,6 @@ begin
   TByteUtilities.&Xor(64, LInP, LKeyP, LOutP);
 end;
 
-procedure TSalsa20Engine.ProcessBlocks2(
-  const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-  const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-begin
-  AssertInitialisedAndBlockAligned;
-  ProcessBlocks2Fast(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]));
-end;
-
 procedure TSalsa20Engine.ProcessBlockFast(AIn, AOut: PByte);
 begin
   GenerateKeyStream(FKeyStream);
@@ -461,20 +450,13 @@ begin
       continue;
     end;
 
-    if (ALen >= 128) then
+    if (ALen >= 64) then
     begin
-      ProcessBlocks2(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 128;
-      AOutOff := AOutOff + 128;
-      System.Dec(ALen, 128);
-      continue;
-    end
-    else if (ALen >= 64) then
-    begin
-      ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-      AInOff := AInOff + 64;
-      AOutOff := AOutOff + 64;
-      System.Dec(ALen, 64);
+      LTake := (ALen shr 6) shl 6; // whole 64B blocks; engine ladders 2/1
+      DoProcessBlocks(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]), ALen shr 6);
+      AInOff := AInOff + LTake;
+      AOutOff := AOutOff + LTake;
+      System.Dec(ALen, LTake);
       continue;
     end
     else
