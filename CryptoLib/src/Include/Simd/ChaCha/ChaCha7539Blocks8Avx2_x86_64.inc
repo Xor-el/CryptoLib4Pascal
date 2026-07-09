@@ -88,10 +88,11 @@
   db $C5, $15, $EF, $E9                                     // vpxor ymm13, ymm13, ymm1
   db $C5, $0D, $EF, $F2                                     // vpxor ymm14, ymm14, ymm2
   db $C5, $05, $EF, $FB                                     // vpxor ymm15, ymm15, ymm3
-  db $C4, $62, $1D, $00, $A4, $24, $A0, $02, $00, $00       // vpshufb ymm12, ymm12, [rsp + 672]
-  db $C4, $62, $15, $00, $AC, $24, $A0, $02, $00, $00       // vpshufb ymm13, ymm13, [rsp + 672]
-  db $C4, $62, $0D, $00, $B4, $24, $A0, $02, $00, $00       // vpshufb ymm14, ymm14, [rsp + 672]
-  db $C4, $62, $05, $00, $BC, $24, $A0, $02, $00, $00       // vpshufb ymm15, ymm15, [rsp + 672]
+  db $C5, $7E, $6F, $84, $24, $A0, $02, $00, $00            // vmovdqu ymm8, [rsp + 672]
+  db $C4, $42, $1D, $00, $E0                                // vpshufb ymm12, ymm12, ymm8
+  db $C4, $42, $15, $00, $E8                                // vpshufb ymm13, ymm13, ymm8
+  db $C4, $42, $0D, $00, $F0                                // vpshufb ymm14, ymm14, ymm8
+  db $C4, $42, $05, $00, $F8                                // vpshufb ymm15, ymm15, ymm8
   db $C5, $7E, $6F, $04, $24                                // vmovdqu ymm8, [rsp]
   db $C5, $7E, $6F, $4C, $24, $20                           // vmovdqu ymm9, [rsp + 32]
   db $C5, $7E, $6F, $54, $24, $40                           // vmovdqu ymm10, [rsp + 64]
@@ -128,10 +129,11 @@
   db $C5, $15, $EF, $E9                                     // vpxor ymm13, ymm13, ymm1
   db $C5, $0D, $EF, $F2                                     // vpxor ymm14, ymm14, ymm2
   db $C5, $05, $EF, $FB                                     // vpxor ymm15, ymm15, ymm3
-  db $C4, $62, $1D, $00, $A4, $24, $C0, $02, $00, $00       // vpshufb ymm12, ymm12, [rsp + 704]
-  db $C4, $62, $15, $00, $AC, $24, $C0, $02, $00, $00       // vpshufb ymm13, ymm13, [rsp + 704]
-  db $C4, $62, $0D, $00, $B4, $24, $C0, $02, $00, $00       // vpshufb ymm14, ymm14, [rsp + 704]
-  db $C4, $62, $05, $00, $BC, $24, $C0, $02, $00, $00       // vpshufb ymm15, ymm15, [rsp + 704]
+  db $C5, $7E, $6F, $84, $24, $C0, $02, $00, $00            // vmovdqu ymm8, [rsp + 704]
+  db $C4, $42, $1D, $00, $E0                                // vpshufb ymm12, ymm12, ymm8
+  db $C4, $42, $15, $00, $E8                                // vpshufb ymm13, ymm13, ymm8
+  db $C4, $42, $0D, $00, $F0                                // vpshufb ymm14, ymm14, ymm8
+  db $C4, $42, $05, $00, $F8                                // vpshufb ymm15, ymm15, ymm8
   db $C5, $7E, $6F, $04, $24                                // vmovdqu ymm8, [rsp]
   db $C5, $7E, $6F, $4C, $24, $20                           // vmovdqu ymm9, [rsp + 32]
   db $C5, $7E, $6F, $54, $24, $40                           // vmovdqu ymm10, [rsp + 64]
@@ -168,10 +170,11 @@
   db $C5, $1D, $EF, $E1                                     // vpxor ymm12, ymm12, ymm1
   db $C5, $15, $EF, $EA                                     // vpxor ymm13, ymm13, ymm2
   db $C5, $0D, $EF, $F3                                     // vpxor ymm14, ymm14, ymm3
-  db $C4, $62, $05, $00, $BC, $24, $A0, $02, $00, $00       // vpshufb ymm15, ymm15, [rsp + 672]
-  db $C4, $62, $1D, $00, $A4, $24, $A0, $02, $00, $00       // vpshufb ymm12, ymm12, [rsp + 672]
-  db $C4, $62, $15, $00, $AC, $24, $A0, $02, $00, $00       // vpshufb ymm13, ymm13, [rsp + 672]
-  db $C4, $62, $0D, $00, $B4, $24, $A0, $02, $00, $00       // vpshufb ymm14, ymm14, [rsp + 672]
+  db $C5, $7E, $6F, $84, $24, $A0, $02, $00, $00            // vmovdqu ymm8, [rsp + 672]
+  db $C4, $42, $05, $00, $F8                                // vpshufb ymm15, ymm15, ymm8
+  db $C4, $42, $1D, $00, $E0                                // vpshufb ymm12, ymm12, ymm8
+  db $C4, $42, $15, $00, $E8                                // vpshufb ymm13, ymm13, ymm8
+  db $C4, $42, $0D, $00, $F0                                // vpshufb ymm14, ymm14, ymm8
   db $C5, $7E, $6F, $44, $24, $40                           // vmovdqu ymm8, [rsp + 64]
   db $C5, $7E, $6F, $4C, $24, $60                           // vmovdqu ymm9, [rsp + 96]
   db $C5, $7E, $6F, $14, $24                                // vmovdqu ymm10, [rsp]
@@ -208,10 +211,11 @@
   db $C5, $1D, $EF, $E1                                     // vpxor ymm12, ymm12, ymm1
   db $C5, $15, $EF, $EA                                     // vpxor ymm13, ymm13, ymm2
   db $C5, $0D, $EF, $F3                                     // vpxor ymm14, ymm14, ymm3
-  db $C4, $62, $05, $00, $BC, $24, $C0, $02, $00, $00       // vpshufb ymm15, ymm15, [rsp + 704]
-  db $C4, $62, $1D, $00, $A4, $24, $C0, $02, $00, $00       // vpshufb ymm12, ymm12, [rsp + 704]
-  db $C4, $62, $15, $00, $AC, $24, $C0, $02, $00, $00       // vpshufb ymm13, ymm13, [rsp + 704]
-  db $C4, $62, $0D, $00, $B4, $24, $C0, $02, $00, $00       // vpshufb ymm14, ymm14, [rsp + 704]
+  db $C5, $7E, $6F, $84, $24, $C0, $02, $00, $00            // vmovdqu ymm8, [rsp + 704]
+  db $C4, $42, $05, $00, $F8                                // vpshufb ymm15, ymm15, ymm8
+  db $C4, $42, $1D, $00, $E0                                // vpshufb ymm12, ymm12, ymm8
+  db $C4, $42, $15, $00, $E8                                // vpshufb ymm13, ymm13, ymm8
+  db $C4, $42, $0D, $00, $F0                                // vpshufb ymm14, ymm14, ymm8
   db $C5, $7E, $6F, $44, $24, $40                           // vmovdqu ymm8, [rsp + 64]
   db $C5, $7E, $6F, $4C, $24, $60                           // vmovdqu ymm9, [rsp + 96]
   db $C5, $7E, $6F, $14, $24                                // vmovdqu ymm10, [rsp]
