@@ -76,28 +76,16 @@ type
     function GetAlgorithmName: String;
 
     // ===== Internal fast-path helpers (engine's own ProcessBlocks ladder) =====
-    // Bypass the nil-pointer / overlap safety checks and the stack-buffer
-    // staging used by the public ProcessBlock / ProcessFourBlocks /
-    // ProcessEightBlocks variants. Only ProcessBlocks (PByte overload) drives
-    // these: it has already honoured the IBulkBlockCipher aliasing contract
-    // (identical-or-fully-disjoint) for the whole batch, so each 4/8-wide
-    // slice inherits that same contract for free. Hidden behind strict private
-    // so no external caller can reach them and accidentally skip safety.
-    /// <summary>
-    /// Four consecutive 16-byte blocks (64 bytes) via pointers. Skips
-    /// nil/overlap safety checks and the stack-buffer copy used by
-    /// <see cref="ProcessFourBlocks"/>. Callers MUST pass valid 64-byte
-    /// buffers that are either identical (in-place) or fully disjoint.
-    /// </summary>
+    // The 4/8-wide inner steps of the IBulkBlockCipher ProcessBlocks ladder.
+    // Only ProcessBlocks (PByte overload) drives these: it has already honoured
+    // the IBulkBlockCipher aliasing contract (identical-or-fully-disjoint) for
+    // the whole batch, so each slice inherits it. Strict private so no external
+    // caller can reach them and skip that check.
+    /// <summary>Four consecutive 16-byte blocks (64 bytes) via pointers.
+    /// Identical-or-fully-disjoint buffers only.</summary>
     function ProcessFourBlocksFast(AInput, AOutput: PByte): Int32; inline;
-    /// <summary>
-    /// Eight consecutive 16-byte blocks (128 bytes) via pointers. Skips the
-    /// nil/overlap safety checks and stack-buffer copy used by the safe
-    /// <see cref="ProcessBlock"/> / <see cref="ProcessFourBlocks"/> /
-    /// <see cref="ProcessEightBlocks"/> variants. Callers MUST pass valid
-    /// 128-byte buffers that are either identical (in-place) or fully
-    /// disjoint.
-    /// </summary>
+    /// <summary>Eight consecutive 16-byte blocks (128 bytes) via pointers.
+    /// Identical-or-fully-disjoint buffers only.</summary>
     function ProcessEightBlocksFast(AInput, AOutput: PByte): Int32; inline;
   public
     class function IsSupported: Boolean; static;
@@ -107,18 +95,7 @@ type
     function GetBlockSize(): Int32;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-    function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-    /// <summary>
-    /// Eight consecutive 16-byte blocks (128 bytes). In-place, disjoint, and
-    /// overlapping ranges are handled safely; overlapping ranges are staged
-    /// through a 128-byte stack buffer. Returns BlockSize * 8.
-    /// </summary>
-    function ProcessEightBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
     function ProcessBlock(AInput, AOutput: PByte): Int32; overload;
-    function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
-    function ProcessEightBlocks(AInput, AOutput: PByte): Int32; overload;
 
     // ===== IBulkBlockCipher =====
     // Generic multi-block fast path exposed as a cipher-agnostic capability
@@ -1035,36 +1012,10 @@ begin
   Result := ProcessBlock(@AInput[AInOff], @AOutput[AOutOff]);
 end;
 
-function TAesEngineX86.ProcessFourBlocks(const AInput: TCryptoLibByteArray;
-  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-begin
-  if FKeys = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-
-  TCheck.DataLength(AInput, AInOff, 64, SInputBufferTooShort);
-  TCheck.OutputLength(AOutput, AOutOff, 64, SOutputBufferTooShort);
-
-  Result := ProcessFourBlocks(@AInput[AInOff], @AOutput[AOutOff]);
-end;
-
-function TAesEngineX86.ProcessEightBlocks(const AInput: TCryptoLibByteArray;
-  AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-begin
-  if FKeys = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-
-  TCheck.DataLength(AInput, AInOff, 128, SInputBufferTooShort);
-  TCheck.OutputLength(AOutput, AOutOff, 128, SOutputBufferTooShort);
-
-  Result := ProcessEightBlocks(@AInput[AInOff], @AOutput[AOutOff]);
-end;
-
 // =====================================================================
-// Pointer-overload block processing - defense-in-depth version that
-// guards against overlapping in/out ranges by staging through a stack
-// buffer. Same validation as the array overloads plus nil-pointer and
-// binding checks. Used by higher-level modes (CTR, GCM) that already
-// know the buffer shape.
+// Pointer-overload single-block processing - defense-in-depth version
+// that guards against overlapping in/out ranges by staging through a
+// stack buffer, plus nil-pointer and binding checks.
 // =====================================================================
 
 function TAesEngineX86.ProcessBlock(AInput, AOutput: PByte): Int32;
@@ -1097,68 +1048,6 @@ begin
   else
     FAesNiCipherOneInOut(AInput, AOutput, FKeys);
   Result := 16;
-end;
-
-function TAesEngineX86.ProcessFourBlocks(AInput, AOutput: PByte): Int32;
-var
-  LWork: array [0 .. 63] of Byte;
-begin
-  if FKeys = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  if not Assigned(FAesNiCipherFour) or not Assigned(FAesNiCipherFourInOut) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  if (AInput = nil) or (AOutput = nil) then
-    raise EArgumentCryptoLibException.CreateRes(@SNilPointerBuffer);
-
-  if AInput = AOutput then
-  begin
-    FAesNiCipherFour(AOutput, FKeys);
-    Result := 64;
-    Exit;
-  end;
-
-  if ((AOutput >= AInput) and (AOutput < AInput + 64)) or
-    ((AInput >= AOutput) and (AInput < AOutput + 64)) then
-  begin
-    System.Move(AInput^, LWork[0], 64);
-    FAesNiCipherFour(@LWork[0], FKeys);
-    System.Move(LWork[0], AOutput^, 64);
-    FillChar(LWork, SizeOf(LWork), 0);
-  end
-  else
-    FAesNiCipherFourInOut(AInput, AOutput, FKeys);
-  Result := 64;
-end;
-
-function TAesEngineX86.ProcessEightBlocks(AInput, AOutput: PByte): Int32;
-var
-  LWork: array [0 .. 127] of Byte;
-begin
-  if FKeys = nil then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  if not Assigned(FAesNiCipherEight) or not Assigned(FAesNiCipherEightInOut) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
-  if (AInput = nil) or (AOutput = nil) then
-    raise EArgumentCryptoLibException.CreateRes(@SNilPointerBuffer);
-
-  if AInput = AOutput then
-  begin
-    FAesNiCipherEight(AOutput, FKeys);
-    Result := 128;
-    Exit;
-  end;
-
-  if ((AOutput >= AInput) and (AOutput < AInput + 128)) or
-    ((AInput >= AOutput) and (AInput < AOutput + 128)) then
-  begin
-    System.Move(AInput^, LWork[0], 128);
-    FAesNiCipherEight(@LWork[0], FKeys);
-    System.Move(LWork[0], AOutput^, 128);
-    FillChar(LWork, SizeOf(LWork), 0);
-  end
-  else
-    FAesNiCipherEightInOut(AInput, AOutput, FKeys);
-  Result := 128;
 end;
 
 // =====================================================================

@@ -28,12 +28,12 @@ type
   /// <summary>
   /// Architecture-neutral capability interface for hardware-accelerated AES
   /// engines (e.g. AES-NI on x86 via <c>TAesEngineX86</c>; a NEON/Crypto-Ext
-  /// ARMv8 engine could implement the same surface). It exposes the
-  /// fixed-width 4-/8-block batch entry points and the raw-pointer single-block
-  /// overload that sit beneath the generic <see cref="IBulkBlockCipher" />
-  /// ladder. The aliasing contract for every overload here is identical to
-  /// IBulkBlockCipher: AInput / AOutput MUST be either identical pointers
-  /// (in-place) or reference fully disjoint ranges of the stated size.
+  /// ARMv8 engine could implement the same surface). Bulk work goes through the
+  /// width-agnostic <see cref="IBulkBlockCipher" /> ladder, which each engine
+  /// drives at its own internal batch widths; this interface adds only a
+  /// raw-pointer single-block overload. Aliasing for the pointer overload is
+  /// identical to IBulkBlockCipher: AInput / AOutput MUST be identical pointers
+  /// (in-place) or reference fully disjoint ranges.
   /// </summary>
   /// <remarks>
   /// This interface is the shared surface that engine-agnostic test suites and
@@ -49,30 +49,6 @@ type
     /// behind each pointer and the standard identical-or-disjoint aliasing.
     /// </summary>
     function ProcessBlock(AInput, AOutput: PByte): Int32; overload;
-
-    /// <summary>
-    /// Four consecutive 16-byte blocks (64 bytes) from AInput[AInOff] into
-    /// AOutput[AOutOff].
-    /// </summary>
-    function ProcessFourBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-
-    /// <summary>
-    /// Four consecutive 16-byte blocks (64 bytes) via raw pointers.
-    /// </summary>
-    function ProcessFourBlocks(AInput, AOutput: PByte): Int32; overload;
-
-    /// <summary>
-    /// Eight consecutive 16-byte blocks (128 bytes) from AInput[AInOff] into
-    /// AOutput[AOutOff].
-    /// </summary>
-    function ProcessEightBlocks(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload;
-
-    /// <summary>
-    /// Eight consecutive 16-byte blocks (128 bytes) via raw pointers.
-    /// </summary>
-    function ProcessEightBlocks(AInput, AOutput: PByte): Int32; overload;
   end;
 
 implementation
