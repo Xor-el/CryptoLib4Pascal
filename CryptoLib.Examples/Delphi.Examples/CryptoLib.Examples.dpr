@@ -674,6 +674,7 @@ uses
   ClpIBlockCipherMode in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas',
   ClpIBulkBlockCipherMode in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas',
   ClpIBulkBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkBlockCipher.pas',
+  ClpIBulkStreamCipher in '..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkStreamCipher.pas',
   ClpIEcbBlockCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIEcbBlockCipher.pas',
   ClpEcbBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpEcbBlockCipher.pas',
   ClpGnuObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas',

@@ -22,11 +22,13 @@ interface
 
 uses
   SysUtils,
+  ClpCheck,
   ClpIStreamCipher,
   ClpIChaChaEngine,
   ClpSalsa20Engine,
   ClpPack,
   ClpChaChaSimd,
+  ClpByteUtilities,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -39,35 +41,50 @@ resourcestring
   SHChaChaNonce128 = 'HChaCha20 nonce must be 128 bits';
   SHChaChaOutNil = 'HChaCha20 output buffer cannot be nil';
   SHChaChaOutSpace = 'HChaCha20 output buffer too short';
+  SNotInitialised = '%s not initialized';
+  SNotBlockAligned = '%s not in block-aligned state';
+  SMaxByteExceeded =
+    '2^38 byte limit per IV would be exceeded; change IV';
+  SInputBufferTooShort = 'input buffer too short';
+  SOutputBufferTooShort = 'output buffer too short';
 
 type
 
   /// <summary>
-  /// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
+  /// Shared ChaCha core (block function + SIMD bulk ladder) for the IETF and DJB
+  /// engines; they differ only in counter width (CounterIs64Bit) and key/nonce layout.
   /// </summary>
-  TChaChaEngine = class(TSalsa20Engine, IChaChaEngine, IStreamCipher)
+  TChaChaBaseEngine = class(TSalsa20Engine)
+
+  strict private
+    // Pointer-form, unvalidated inner helpers (1 / 2 / 4 / 8 blocks).
+    procedure ProcessBlockFast(AIn, AOut: PByte);
+    procedure ProcessBlocks2Fast(AIn, AOut: PByte);
+    procedure ProcessBlocks4Fast(AIn, AOut: PByte);
+    procedure ProcessBlocks8Fast(AIn, AOut: PByte);
 
   strict protected
-    function GetAlgorithmName: String; override;
+    // 8 -> 4 -> 2 -> 1 bulk ladder (widest kernel first).
+    function DoProcessBlocks(AIn, AOut: PByte; ABlockCount: Int32): Int32; override;
 
-    procedure AdvanceCounter(); override;
-    procedure ResetCounter(); override;
-    procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
+    // True for the DJB 64-bit counter (words 12-13); False (IETF).
+    function CounterIs64Bit: Boolean; virtual;
+    // Wide kernels broadcast word 13; for the 64-bit counter that holds only while
+    // word 12 does not wrap over the N-block span (else the caller degrades a tier).
+    function WideBlocksSafe(ABlocks: Int32): Boolean; inline;
+
     procedure GenerateKeyStream(const AOutput: TCryptoLibByteArray); override;
 
   public
-    /// <summary>
-    /// Creates a 20 rounds ChaCha engine.
-    /// </summary>
-    constructor Create(); overload;
-    /// <summary>
-    /// Creates a ChaCha engine with a specific number of rounds.
-    /// </summary>
-    /// <param name="ARounds">the number of rounds (must be an even number).</param>
-    constructor Create(ARounds: Int32); overload;
+    procedure DoFinal(const AInBuf: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 
-    procedure ProcessBlocks2(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); override;
+    procedure ProcessBytes(const AInBytes: TCryptoLibByteArray;
+      AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray;
+      AOutOff: Int32); override;
+
+    procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
     class procedure ChaChaCore(ARounds: Int32;
       const AInput: TCryptoLibUInt32Array;
@@ -81,29 +98,264 @@ type
 
   end;
 
+  /// <summary>
+  /// Implementation of Daniel J. Bernstein's ChaCha stream cipher.
+  /// </summary>
+  TChaChaEngine = class(TChaChaBaseEngine, IChaChaEngine, IStreamCipher)
+
+  strict protected
+    function GetAlgorithmName: String; override;
+    function CounterIs64Bit: Boolean; override;
+
+    procedure AdvanceCounter(); override;
+    procedure ResetCounter(); override;
+    procedure SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray); override;
+
+  public
+    /// <summary>
+    /// Creates a 20 rounds ChaCha engine.
+    /// </summary>
+    constructor Create(); overload;
+    /// <summary>
+    /// Creates a ChaCha engine with a specific number of rounds.
+    /// </summary>
+    /// <param name="ARounds">the number of rounds (must be an even number).</param>
+    constructor Create(ARounds: Int32); overload;
+
+  end;
+
 implementation
 
-{ TChaChaEngine }
+{ TChaChaBaseEngine }
 
-procedure TChaChaEngine.ProcessBlocks2(
-  const AInBytes: TCryptoLibByteArray; AInOff: Int32;
-  const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+function TChaChaBaseEngine.CounterIs64Bit: Boolean;
 begin
-  AssertInitialisedAndBlockAligned;
-  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
-  ImplProcessBlock(AInBytes, AInOff + 64, AOutBytes, AOutOff + 64);
+  Result := False;
 end;
 
-procedure TChaChaEngine.AdvanceCounter;
+function TChaChaBaseEngine.WideBlocksSafe(ABlocks: Int32): Boolean;
 begin
-  System.Inc(FEngineState[12]);
-  if (FEngineState[12] = 0) then
+  Result := (not CounterIs64Bit) or
+    (FEngineState[12] <= (UInt32($FFFFFFFF) - UInt32(ABlocks - 1)));
+end;
+
+procedure TChaChaBaseEngine.GenerateKeyStream(const AOutput: TCryptoLibByteArray);
+begin
+  ChaChaCore(FRounds, FEngineState, AOutput);
+end;
+
+procedure TChaChaBaseEngine.DoFinal(const AInBuf: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LIdx, LQ, LWholeBytes: Int32;
+begin
+  if (not FInitialised) then
   begin
-    System.Inc(FEngineState[13]);
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
+      [AlgorithmName]);
+  end;
+  if (FIndex <> 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
+      [AlgorithmName]);
+  end;
+
+  TCheck.DataLength(AInBuf, AInOff, AInLen, SInputBufferTooShort);
+  TCheck.OutputLength(AOutBuf, AOutOff, AInLen, SOutputBufferTooShort);
+
+  if (AInLen >= 64) then
+  begin
+    LWholeBytes := (AInLen shr 6) shl 6; // whole 64B blocks, engine ladders 8/4/2/1
+    DoProcessBlocks(PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]), AInLen shr 6);
+    AInOff := AInOff + LWholeBytes;
+    AInLen := AInLen - LWholeBytes;
+    AOutOff := AOutOff + LWholeBytes;
+  end;
+
+  if (AInLen > 0) then
+  begin
+    GenerateKeyStream(FKeyStream);
+    AdvanceCounter();
+
+    LQ := AInLen shr 3;
+    if LQ > 0 then
+      TByteUtilities.&Xor(LQ * 8, AInBuf, AInOff, FKeyStream, 0, AOutBuf, AOutOff);
+    for LIdx := (LQ * 8) to System.Pred(AInLen) do
+    begin
+      AOutBuf[AOutOff + LIdx] := Byte(
+        AInBuf[AInOff + LIdx] xor FKeyStream[LIdx]);
+    end;
+  end;
+
+  ResetCounter();
+end;
+
+procedure TChaChaBaseEngine.ProcessBytes(const AInBytes: TCryptoLibByteArray;
+  AInOff, ALen: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+var
+  LIdx, LTake, LQ: Int32;
+  LInP, LOutP, LKeyP: PByte;
+begin
+  if (not FInitialised) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt
+      (@SNotInitialised, [AlgorithmName]);
+  end;
+
+  TCheck.DataLength(AInBytes, AInOff, ALen, SInputBufferTooShort);
+  TCheck.OutputLength(AOutBytes, AOutOff, ALen, SOutputBufferTooShort);
+
+  if (LimitExceeded(UInt32(ALen))) then
+  begin
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
+  end;
+
+  while ALen > 0 do
+  begin
+    if (FIndex <> 0) then
+    begin
+      LTake := ALen;
+      if LTake > (64 - FIndex) then
+      begin
+        LTake := 64 - FIndex;
+      end;
+      for LIdx := 0 to System.Pred(LTake) do
+      begin
+        AOutBytes[AOutOff + LIdx] := Byte(
+          FKeyStream[FIndex + LIdx] xor AInBytes[AInOff + LIdx]);
+      end;
+      FIndex := (FIndex + LTake) and 63;
+      AInOff := AInOff + LTake;
+      AOutOff := AOutOff + LTake;
+      System.Dec(ALen, LTake);
+      continue;
+    end;
+    if (ALen >= 64) then
+    begin
+      LTake := (ALen shr 6) shl 6; // whole 64B blocks; engine ladders 8/4/2/1
+      DoProcessBlocks(PByte(@AInBytes[AInOff]), PByte(@AOutBytes[AOutOff]), ALen shr 6);
+      AInOff := AInOff + LTake;
+      AOutOff := AOutOff + LTake;
+      System.Dec(ALen, LTake);
+    end
+    else
+    begin
+      GenerateKeyStream(FKeyStream);
+      AdvanceCounter();
+      LTake := ALen;
+      LInP := PByte(AInBytes) + AInOff;
+      LOutP := PByte(AOutBytes) + AOutOff;
+      LKeyP := PByte(FKeyStream);
+      LQ := LTake shr 3;
+      if LQ > 0 then
+        TByteUtilities.&Xor(LQ * 8, LInP, LKeyP, LOutP);
+      for LIdx := (LQ * 8) to System.Pred(LTake) do
+      begin
+        LOutP[LIdx] := LInP[LIdx] xor LKeyP[LIdx];
+      end;
+      FIndex := (FIndex + LTake) and 63;
+      AInOff := AInOff + LTake;
+      AOutOff := AOutOff + LTake;
+      System.Dec(ALen, LTake);
+    end;
   end;
 end;
 
-class procedure TChaChaEngine.ChaChaCore(ARounds: Int32;
+procedure TChaChaBaseEngine.ProcessBlock(const AInBytes: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
+begin
+  if (not FInitialised) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialised,
+      [AlgorithmName]);
+  end;
+  if (FIndex <> 0) then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotBlockAligned,
+      [AlgorithmName]);
+  end;
+  if (LimitExceeded(UInt32(64))) then
+  begin
+    raise EMaxBytesExceededCryptoLibException.CreateRes(@SMaxByteExceeded);
+  end;
+
+  ImplProcessBlock(AInBytes, AInOff, AOutBytes, AOutOff);
+end;
+
+procedure TChaChaBaseEngine.ProcessBlockFast(AIn, AOut: PByte);
+begin
+  ChaChaCore(FRounds, FEngineState, FKeyStream);
+  AdvanceCounter();
+  TByteUtilities.&Xor(64, AIn, PByte(FKeyStream), AOut);
+end;
+
+procedure TChaChaBaseEngine.ProcessBlocks2Fast(AIn, AOut: PByte);
+begin
+  if TChaChaSimd.TryProcessBlocks2(FRounds, PByte(@FEngineState[0]),
+    AIn, AOut, CounterIs64Bit) then
+    Exit;
+
+  ProcessBlockFast(AIn, AOut);
+  ProcessBlockFast(AIn + 64, AOut + 64);
+end;
+
+procedure TChaChaBaseEngine.ProcessBlocks4Fast(AIn, AOut: PByte);
+begin
+  if WideBlocksSafe(4) then
+    if TChaChaSimd.TryProcessBlocks4(FRounds, PByte(@FEngineState[0]),
+      AIn, AOut, CounterIs64Bit) then
+      Exit;
+
+  ProcessBlocks2Fast(AIn, AOut);
+  ProcessBlocks2Fast(AIn + 128, AOut + 128);
+end;
+
+procedure TChaChaBaseEngine.ProcessBlocks8Fast(AIn, AOut: PByte);
+begin
+  if WideBlocksSafe(8) then
+    if TChaChaSimd.TryProcessBlocks8(FRounds, PByte(@FEngineState[0]),
+      AIn, AOut, CounterIs64Bit) then
+      Exit;
+
+  ProcessBlocks4Fast(AIn, AOut);
+  ProcessBlocks4Fast(AIn + 256, AOut + 256);
+end;
+
+function TChaChaBaseEngine.DoProcessBlocks(AIn, AOut: PByte;
+  ABlockCount: Int32): Int32;
+begin
+  Result := ABlockCount * 64;
+  while ABlockCount >= 8 do
+  begin
+    ProcessBlocks8Fast(AIn, AOut);
+    AIn := AIn + 512;
+    AOut := AOut + 512;
+    System.Dec(ABlockCount, 8);
+  end;
+  if ABlockCount >= 4 then
+  begin
+    ProcessBlocks4Fast(AIn, AOut);
+    AIn := AIn + 256;
+    AOut := AOut + 256;
+    System.Dec(ABlockCount, 4);
+  end;
+  if ABlockCount >= 2 then
+  begin
+    ProcessBlocks2Fast(AIn, AOut);
+    AIn := AIn + 128;
+    AOut := AOut + 128;
+    System.Dec(ABlockCount, 2);
+  end;
+  while ABlockCount >= 1 do
+  begin
+    ProcessBlockFast(AIn, AOut);
+    AIn := AIn + 64;
+    AOut := AOut + 64;
+    System.Dec(ABlockCount);
+  end;
+end;
+
+class procedure TChaChaBaseEngine.ChaChaCore(ARounds: Int32;
   const AInput: TCryptoLibUInt32Array; const AOutput: TCryptoLibByteArray);
 var
   LX00, LX01, LX02, LX03, LX04, LX05, LX06, LX07, LX08, LX09, LX10, LX11, LX12, LX13, LX14,
@@ -239,54 +491,7 @@ begin
 
 end;
 
-constructor TChaChaEngine.Create;
-begin
-  Inherited Create();
-end;
-
-constructor TChaChaEngine.Create(ARounds: Int32);
-begin
-  Inherited Create(ARounds);
-end;
-
-procedure TChaChaEngine.GenerateKeyStream(const AOutput: TCryptoLibByteArray);
-begin
-  ChaChaCore(FRounds, FEngineState, AOutput);
-end;
-
-function TChaChaEngine.GetAlgorithmName: String;
-begin
-  Result := Format('ChaCha%d', [FRounds]);
-end;
-
-procedure TChaChaEngine.ResetCounter;
-begin
-  FEngineState[12] := 0;
-  FEngineState[13] := 0;
-end;
-
-procedure TChaChaEngine.SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray);
-begin
-  if (AKeyBytes <> nil) then
-  begin
-    if not(System.Length(AKeyBytes) in [16, 32]) then
-    begin
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
-        [AlgorithmName]);
-    end;
-
-    PackTauOrSigma(System.Length(AKeyBytes), FEngineState);
-
-    // Key
-    TPack.LE_To_UInt32(AKeyBytes, 0, FEngineState, 4, 4);
-    TPack.LE_To_UInt32(AKeyBytes, System.Length(AKeyBytes) - 16, FEngineState, 8, 4);
-  end;
-
-  // IV
-  TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 14, 2);
-end;
-
-class procedure TChaChaEngine.HChaCha20(const AKey256, ANonce128: TCryptoLibByteArray;
+class procedure TChaChaBaseEngine.HChaCha20(const AKey256, ANonce128: TCryptoLibByteArray;
   const ASubKeyOut: TCryptoLibByteArray; ASubKeyOutOff: Int32);
 var
   LState: TCryptoLibUInt32Array;
@@ -333,6 +538,64 @@ begin
   TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 52) - LState[13], ASubKeyOut, ASubKeyOutOff + 20);
   TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 56) - LState[14], ASubKeyOut, ASubKeyOutOff + 24);
   TPack.UInt32_To_LE(TPack.LE_To_UInt32(LOut, 60) - LState[15], ASubKeyOut, ASubKeyOutOff + 28);
+end;
+
+{ TChaChaEngine }
+
+constructor TChaChaEngine.Create;
+begin
+  Inherited Create();
+end;
+
+constructor TChaChaEngine.Create(ARounds: Int32);
+begin
+  Inherited Create(ARounds);
+end;
+
+function TChaChaEngine.CounterIs64Bit: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TChaChaEngine.AdvanceCounter;
+begin
+  System.Inc(FEngineState[12]);
+  if (FEngineState[12] = 0) then
+  begin
+    System.Inc(FEngineState[13]);
+  end;
+end;
+
+function TChaChaEngine.GetAlgorithmName: String;
+begin
+  Result := Format('ChaCha%d', [FRounds]);
+end;
+
+procedure TChaChaEngine.ResetCounter;
+begin
+  FEngineState[12] := 0;
+  FEngineState[13] := 0;
+end;
+
+procedure TChaChaEngine.SetKey(const AKeyBytes, AIvBytes: TCryptoLibByteArray);
+begin
+  if (AKeyBytes <> nil) then
+  begin
+    if not(System.Length(AKeyBytes) in [16, 32]) then
+    begin
+      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidKeySize,
+        [AlgorithmName]);
+    end;
+
+    PackTauOrSigma(System.Length(AKeyBytes), FEngineState);
+
+    // Key
+    TPack.LE_To_UInt32(AKeyBytes, 0, FEngineState, 4, 4);
+    TPack.LE_To_UInt32(AKeyBytes, System.Length(AKeyBytes) - 16, FEngineState, 8, 4);
+  end;
+
+  // IV
+  TPack.LE_To_UInt32(AIvBytes, 0, FEngineState, 14, 2);
 end;
 
 end.

@@ -32,17 +32,24 @@ uses
 {$ENDIF FPC}
   ClpSalsa20Engine,
   ClpISalsa20Engine,
+  ClpIStreamCipher,
   ClpICipherParameters,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpCryptoLibTypes,
+  StreamCipherTestBase,
   CryptoLibTestBase;
 
 type
 
-  TTestSalsa20 = class(TCryptoLibAlgorithmTestCase)
+  TTestSalsa20 = class(TStreamCipherTestBase)
+  strict protected
+    function GetEngineFactory: TStreamCipherFactory; override;
+    function EngineLabel: String; override;
+    function KeySizeInBytes: Int32; override;
+    function NonceSizeInBytes: Int32; override;
   private
   var
     FZeroes: TBytes;
@@ -68,13 +75,37 @@ type
     procedure TestSalsa20Test1;
     procedure TestSalsa20Test2;
     procedure TestReInitBug;
-    procedure TestProcessBytesVsReturnByte;
 
   end;
 
 implementation
 
+function CreateSalsa20Engine: IStreamCipher;
+begin
+  Result := TSalsa20Engine.Create() as IStreamCipher;
+end;
+
 { TTestSalsa20 }
+
+function TTestSalsa20.GetEngineFactory: TStreamCipherFactory;
+begin
+  Result := CreateSalsa20Engine;
+end;
+
+function TTestSalsa20.EngineLabel: String;
+begin
+  Result := 'Salsa20';
+end;
+
+function TTestSalsa20.KeySizeInBytes: Int32;
+begin
+  Result := 32;
+end;
+
+function TTestSalsa20.NonceSizeInBytes: Int32;
+begin
+  Result := 8;
+end;
 
 procedure TTestSalsa20.SetUp;
 begin
@@ -351,42 +382,6 @@ begin
       // expected
     end;
 
-  end;
-end;
-
-procedure TTestSalsa20.TestProcessBytesVsReturnByte;
-const
-  CLen = 400;
-var
-  LKey, LNonce, LIn, LOutA, LOutB: TBytes;
-  LParams: IParametersWithIV;
-  LA, LB: ISalsa20Engine;
-  LIdx: Int32;
-begin
-  LKey := DecodeHex('000102030405060708090A0B0C0D0E0F' +
-    '101112131415161718191A1B1C1D1E1F');
-  LNonce := DecodeHex('0000000000000000');
-  LParams := TParametersWithIV.Create(
-    TKeyParameter.Create(LKey) as IKeyParameter, LNonce);
-  SetLength(LIn, CLen);
-  for LIdx := 0 to CLen - 1 do
-  begin
-    LIn[LIdx] := Byte(LIdx * 5 + 11);
-  end;
-  SetLength(LOutA, CLen);
-  SetLength(LOutB, CLen);
-  LA := TSalsa20Engine.Create();
-  LA.Init(True, LParams);
-  LA.ProcessBytes(LIn, 0, CLen, LOutA, 0);
-  LB := TSalsa20Engine.Create();
-  LB.Init(True, LParams);
-  for LIdx := 0 to CLen - 1 do
-  begin
-    LOutB[LIdx] := Byte(LB.ReturnByte(LIn[LIdx]));
-  end;
-  if not AreEqual(LOutA, LOutB) then
-  begin
-    Fail('Salsa20 ProcessBytes vs ReturnByte stream mismatch');
   end;
 end;
 

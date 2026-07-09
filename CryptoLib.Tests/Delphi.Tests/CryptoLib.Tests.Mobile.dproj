@@ -998,6 +998,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkStreamCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIEcbBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpEcbBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Gnu\ClpGnuObjectIdentifiers.pas"/>
@@ -1228,7 +1229,8 @@
         <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
         <DCCReference Include="..\src\Crypto\Salsa20Tests.pas"/>
         <DCCReference Include="..\src\Crypto\ChaChaTests.pas"/>
-        <DCCReference Include="..\src\Crypto\ChaCha7539ProcessBlocks2Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\ChaCha7539Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\StreamCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\HChaCha20Tests.pas"/>
         <DCCReference Include="..\src\Crypto\XChaCha20Tests.pas"/>
         <DCCReference Include="..\src\Crypto\XChaCha20Poly1305Tests.pas"/>

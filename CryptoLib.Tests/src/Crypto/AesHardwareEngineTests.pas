@@ -43,9 +43,10 @@ uses
 type
   /// <summary>
   /// Engine-agnostic test suite for hardware-accelerated AES engines. All the
-  /// vector / Monte-Carlo / engine-check coverage plus the SIMD batch (4-/8-wide)
-  /// parity and memory-layout coverage lives here, written against
-  /// <see cref="IAesHardwareEngine" />. A concrete per-architecture suite only
+  /// vector / Monte-Carlo / engine-check coverage plus the bulk batch parity
+  /// (ProcessBlocks 4-/8-wide vs single-block) and single-block memory-layout
+  /// coverage lives here, written against <see cref="IAesHardwareEngine" /> (bulk
+  /// via its inherited IBulkBlockCipher). A concrete per-architecture suite only
   /// has to supply four hooks (CreateHwEngine / EngineSupported / EngineLabel /
   /// GetEngineFactory) and register itself under its architecture guard; the
   /// published tests are inherited and discovered automatically.
@@ -62,8 +63,6 @@ type
     procedure ImplTestEightBlocks(AForEncryption: Boolean; AKeySizeBytes: Int32);
     procedure ImplTestPByteOverloadParity(AKeySizeBytes: Int32);
     procedure ImplTestProcessBlockMemoryLayouts(AKeySizeBytes: Int32);
-    procedure ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
-    procedure ImplTestProcessEightBlocksMemoryLayouts(AKeySizeBytes: Int32);
   published
     // TestBlockCipherVector / TestMonteCarloAES / TestBadParameters are
     // inherited from TAesBlockCipherTestBase (guarded by EngineSupported).
@@ -88,12 +87,6 @@ type
     procedure TestProcessBlockMemoryLayouts128;
     procedure TestProcessBlockMemoryLayouts192;
     procedure TestProcessBlockMemoryLayouts256;
-    procedure TestProcessFourBlocksMemoryLayouts128;
-    procedure TestProcessFourBlocksMemoryLayouts192;
-    procedure TestProcessFourBlocksMemoryLayouts256;
-    procedure TestProcessEightBlocksMemoryLayouts128;
-    procedure TestProcessEightBlocksMemoryLayouts192;
-    procedure TestProcessEightBlocksMemoryLayouts256;
   end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -143,13 +136,13 @@ begin
     LRnd.NextBytes(LKey);
     LEngine := CreateHwEngine;
     LEngine.Init(AForEncryption, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessFourBlocks(LData, 0, LFourOut, 0);
+    LEngine.ProcessBlocks(LData, 0, 4, LFourOut, 0);
     for LJ := 0 to 3 do
       LEngine.ProcessBlock(LData, LJ * 16, LSingleOut, LJ * 16);
     if not AreEqual(LFourOut, LSingleOut) then
     begin
       Fail(Format(
-        'ProcessFourBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
+        'ProcessBlocks(4) vs ProcessBlock mismatch (key %d bytes, iteration %d)',
         [AKeySizeBytes, LI]));
     end;
   end;
@@ -175,13 +168,13 @@ begin
     LRnd.NextBytes(LKey);
     LEngine := CreateHwEngine;
     LEngine.Init(AForEncryption, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessEightBlocks(LData, 0, LEightOut, 0);
+    LEngine.ProcessBlocks(LData, 0, 8, LEightOut, 0);
     for LJ := 0 to 7 do
       LEngine.ProcessBlock(LData, LJ * 16, LSingleOut, LJ * 16);
     if not AreEqual(LEightOut, LSingleOut) then
     begin
       Fail(Format(
-        'ProcessEightBlocks vs ProcessBlock mismatch (key %d bytes, iteration %d)',
+        'ProcessBlocks(8) vs ProcessBlock mismatch (key %d bytes, iteration %d)',
         [AKeySizeBytes, LI]));
     end;
   end;
@@ -231,31 +224,31 @@ begin
     LRnd.NextBytes(LIn64);
     LFourArr := System.Copy(LIn64);
     LFourPtr := System.Copy(LIn64);
-    LEngine.ProcessFourBlocks(LIn64, 0, LFourArr, 0);
-    LEngine.ProcessFourBlocks(@LIn64[0], @LFourPtr[0]);
+    LEngine.ProcessBlocks(LIn64, 0, 4, LFourArr, 0);
+    LEngine.ProcessBlocks(@LIn64[0], @LFourPtr[0], 4);
     if not AreEqual(LFourArr, LFourPtr) then
-      Fail(Format('ProcessFourBlocks PByte disjoint mismatch (key %d, iter %d)',
+      Fail(Format('ProcessBlocks(4) PByte disjoint mismatch (key %d, iter %d)',
         [AKeySizeBytes, LI]));
 
     LFourPtr := System.Copy(LIn64);
-    LEngine.ProcessFourBlocks(@LFourPtr[0], @LFourPtr[0]);
+    LEngine.ProcessBlocks(@LFourPtr[0], @LFourPtr[0], 4);
     if not AreEqual(LFourArr, LFourPtr) then
-      Fail(Format('ProcessFourBlocks PByte in-place mismatch (key %d, iter %d)',
+      Fail(Format('ProcessBlocks(4) PByte in-place mismatch (key %d, iter %d)',
         [AKeySizeBytes, LI]));
 
     LRnd.NextBytes(LIn128);
     LEightArr := System.Copy(LIn128);
     LEightPtr := System.Copy(LIn128);
-    LEngine.ProcessEightBlocks(LIn128, 0, LEightArr, 0);
-    LEngine.ProcessEightBlocks(@LIn128[0], @LEightPtr[0]);
+    LEngine.ProcessBlocks(LIn128, 0, 8, LEightArr, 0);
+    LEngine.ProcessBlocks(@LIn128[0], @LEightPtr[0], 8);
     if not AreEqual(LEightArr, LEightPtr) then
-      Fail(Format('ProcessEightBlocks PByte disjoint mismatch (key %d, iter %d)',
+      Fail(Format('ProcessBlocks(8) PByte disjoint mismatch (key %d, iter %d)',
         [AKeySizeBytes, LI]));
 
     LEightPtr := System.Copy(LIn128);
-    LEngine.ProcessEightBlocks(@LEightPtr[0], @LEightPtr[0]);
+    LEngine.ProcessBlocks(@LEightPtr[0], @LEightPtr[0], 8);
     if not AreEqual(LEightArr, LEightPtr) then
-      Fail(Format('ProcessEightBlocks PByte in-place mismatch (key %d, iter %d)',
+      Fail(Format('ProcessBlocks(8) PByte in-place mismatch (key %d, iter %d)',
         [AKeySizeBytes, LI]));
   end;
 end;
@@ -361,180 +354,6 @@ begin
     LEngine.ProcessBlock(@LScratch[0], @LScratch[15]);
     if not MemEq(LPlain, 0, LScratch, 15, 16) then
       Fail(Format('ProcessBlock dec overlap dst=src+15 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-  end;
-end;
-
-procedure TAesHardwareEngineTestBase.ImplTestProcessFourBlocksMemoryLayouts(AKeySizeBytes: Int32);
-var
-  LRnd: ISecureRandom;
-  LKey, LPlain, LCipher, LScratch: TBytes;
-  LI: Int32;
-  LEngine: IAesHardwareEngine;
-
-  function MemEq(const A: TBytes; AOff: Int32; const B: TBytes; BOff, ALen: Int32): Boolean;
-  begin
-    Result := CompareMem(@A[AOff], @B[BOff], ALen);
-  end;
-
-begin
-  LRnd := TSecureRandom.Create();
-  System.SetLength(LKey, AKeySizeBytes);
-  System.SetLength(LPlain, 64);
-  System.SetLength(LCipher, 64);
-
-  for LI := 0 to 24 do
-  begin
-    LRnd.NextBytes(LKey);
-    LRnd.NextBytes(LPlain);
-    LEngine := CreateHwEngine;
-    LEngine.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessFourBlocks(LPlain, 0, LCipher, 0);
-
-    LScratch := System.Copy(LPlain);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[0]);
-    if not AreEqual(LCipher, LScratch) then
-      Fail(Format('ProcessFourBlocks enc in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 192);
-    System.Move(LPlain[0], LScratch[0], 64);
-    System.FillChar(LScratch[64], 128, $5A);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[64]);
-    if not MemEq(LCipher, 0, LScratch, 64, 64) then
-      Fail(Format('ProcessFourBlocks enc disjoint same allocation (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 128);
-    System.Move(LPlain[0], LScratch[0], 64);
-    System.FillChar(LScratch[64], 64, 0);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[32]);
-    if not MemEq(LCipher, 0, LScratch, 32, 64) then
-      Fail(Format('ProcessFourBlocks enc overlap dst=src+32 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.FillChar(LScratch[0], 128, 0);
-    System.Move(LPlain[0], LScratch[32], 64);
-    LEngine.ProcessFourBlocks(@LScratch[32], @LScratch[0]);
-    if not MemEq(LCipher, 0, LScratch, 0, 64) then
-      Fail(Format('ProcessFourBlocks enc overlap dst=src-32 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    LEngine.Init(False, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessFourBlocks(LCipher, 0, LPlain, 0);
-
-    LScratch := System.Copy(LCipher);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[0]);
-    if not AreEqual(LPlain, LScratch) then
-      Fail(Format('ProcessFourBlocks dec in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 192);
-    System.Move(LCipher[0], LScratch[0], 64);
-    System.FillChar(LScratch[64], 128, $4B);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[64]);
-    if not MemEq(LPlain, 0, LScratch, 64, 64) then
-      Fail(Format('ProcessFourBlocks dec disjoint same allocation (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 128);
-    System.Move(LCipher[0], LScratch[0], 64);
-    System.FillChar(LScratch[64], 64, $33);
-    LEngine.ProcessFourBlocks(@LScratch[0], @LScratch[32]);
-    if not MemEq(LPlain, 0, LScratch, 32, 64) then
-      Fail(Format('ProcessFourBlocks dec overlap dst=src+32 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.FillChar(LScratch[0], 128, $44);
-    System.Move(LCipher[0], LScratch[32], 64);
-    LEngine.ProcessFourBlocks(@LScratch[32], @LScratch[0]);
-    if not MemEq(LPlain, 0, LScratch, 0, 64) then
-      Fail(Format('ProcessFourBlocks dec overlap dst=src-32 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-  end;
-end;
-
-procedure TAesHardwareEngineTestBase.ImplTestProcessEightBlocksMemoryLayouts(AKeySizeBytes: Int32);
-var
-  LRnd: ISecureRandom;
-  LKey, LPlain, LCipher, LScratch: TBytes;
-  LI: Int32;
-  LEngine: IAesHardwareEngine;
-
-  function MemEq(const A: TBytes; AOff: Int32; const B: TBytes; BOff, ALen: Int32): Boolean;
-  begin
-    Result := CompareMem(@A[AOff], @B[BOff], ALen);
-  end;
-
-begin
-  LRnd := TSecureRandom.Create();
-  System.SetLength(LKey, AKeySizeBytes);
-  System.SetLength(LPlain, 128);
-  System.SetLength(LCipher, 128);
-
-  for LI := 0 to 14 do
-  begin
-    LRnd.NextBytes(LKey);
-    LRnd.NextBytes(LPlain);
-    LEngine := CreateHwEngine;
-    LEngine.Init(True, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessEightBlocks(LPlain, 0, LCipher, 0);
-
-    LScratch := System.Copy(LPlain);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[0]);
-    if not AreEqual(LCipher, LScratch) then
-      Fail(Format('ProcessEightBlocks enc in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 384);
-    System.Move(LPlain[0], LScratch[0], 128);
-    System.FillChar(LScratch[128], 256, $5A);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[128]);
-    if not MemEq(LCipher, 0, LScratch, 128, 128) then
-      Fail(Format('ProcessEightBlocks enc disjoint same allocation (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 256);
-    System.Move(LPlain[0], LScratch[0], 128);
-    System.FillChar(LScratch[128], 128, 0);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[64]);
-    if not MemEq(LCipher, 0, LScratch, 64, 128) then
-      Fail(Format('ProcessEightBlocks enc overlap dst=src+64 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.FillChar(LScratch[0], 256, 0);
-    System.Move(LPlain[0], LScratch[64], 128);
-    LEngine.ProcessEightBlocks(@LScratch[64], @LScratch[0]);
-    if not MemEq(LCipher, 0, LScratch, 0, 128) then
-      Fail(Format('ProcessEightBlocks enc overlap dst=src-64 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    LEngine.Init(False, TKeyParameter.Create(LKey) as IKeyParameter);
-    LEngine.ProcessEightBlocks(LCipher, 0, LPlain, 0);
-
-    LScratch := System.Copy(LCipher);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[0]);
-    if not AreEqual(LPlain, LScratch) then
-      Fail(Format('ProcessEightBlocks dec in-place (key %d, iter %d)', [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 384);
-    System.Move(LCipher[0], LScratch[0], 128);
-    System.FillChar(LScratch[128], 256, $4B);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[128]);
-    if not MemEq(LPlain, 0, LScratch, 128, 128) then
-      Fail(Format('ProcessEightBlocks dec disjoint same allocation (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.SetLength(LScratch, 256);
-    System.Move(LCipher[0], LScratch[0], 128);
-    System.FillChar(LScratch[128], 128, $33);
-    LEngine.ProcessEightBlocks(@LScratch[0], @LScratch[64]);
-    if not MemEq(LPlain, 0, LScratch, 64, 128) then
-      Fail(Format('ProcessEightBlocks dec overlap dst=src+64 (key %d, iter %d)',
-        [AKeySizeBytes, LI]));
-
-    System.FillChar(LScratch[0], 256, $44);
-    System.Move(LCipher[0], LScratch[64], 128);
-    LEngine.ProcessEightBlocks(@LScratch[64], @LScratch[0]);
-    if not MemEq(LPlain, 0, LScratch, 0, 128) then
-      Fail(Format('ProcessEightBlocks dec overlap dst=src-64 (key %d, iter %d)',
         [AKeySizeBytes, LI]));
   end;
 end;
@@ -705,48 +524,6 @@ begin
   if not EngineSupported then
     Exit;
   ImplTestProcessBlockMemoryLayouts(32);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessFourBlocksMemoryLayouts128;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessFourBlocksMemoryLayouts(16);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessFourBlocksMemoryLayouts192;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessFourBlocksMemoryLayouts(24);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessFourBlocksMemoryLayouts256;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessFourBlocksMemoryLayouts(32);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessEightBlocksMemoryLayouts128;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessEightBlocksMemoryLayouts(16);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessEightBlocksMemoryLayouts192;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessEightBlocksMemoryLayouts(24);
-end;
-
-procedure TAesHardwareEngineTestBase.TestProcessEightBlocksMemoryLayouts256;
-begin
-  if not EngineSupported then
-    Exit;
-  ImplTestProcessEightBlocksMemoryLayouts(32);
 end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
