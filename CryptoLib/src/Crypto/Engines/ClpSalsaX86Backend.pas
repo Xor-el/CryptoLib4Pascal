@@ -44,25 +44,25 @@ type
 implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-procedure Salsa20BlockSse41(ARounds: Int32; AInput, AOut: Pointer);
+procedure Salsa20BlockSse2(ARounds: Int32; AInput, AOut: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_x86_64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse41_i386.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20BlockSse2_i386.inc}
 {$ENDIF}
 end;
 
-procedure Salsa20ProcessBlocks2Sse41(ARounds: Int32; AState, AIn, AOut: PByte);
+procedure Salsa20ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse41_x86_64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse41_i386.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20ProcessBlocks2Sse2_i386.inc}
 {$ENDIF}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -72,10 +72,10 @@ end;
 class function TSalsaX86Backend.TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE41]) of
-    TX86SimdLevel.SSE41:
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.SSE2:
     begin
-      Salsa20BlockSse41(ARounds, AInput, AOut);
+      Salsa20BlockSse2(ARounds, AInput, AOut);
       Exit(True);
     end;
   end;
@@ -86,10 +86,10 @@ end;
 class function TSalsaX86Backend.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE41]) of
-    TX86SimdLevel.SSE41:
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.SSE2:
     begin
-      Salsa20ProcessBlocks2Sse41(ARounds, AState, AIn, AOut);
+      Salsa20ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
       Exit(True);
     end;
   end;
