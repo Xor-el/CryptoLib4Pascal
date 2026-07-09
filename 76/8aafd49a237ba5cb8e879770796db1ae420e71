@@ -1,0 +1,24 @@
+CryptoLib/src/Include/Simd/Poly1305/Poly1305BlocksBulkAvx2Core_x86_64.inc
+  s_4e396cb15e16b1::t_3c4349c3196aae 3-9,12-13,15-17,19-26,32,35-36,38-56,61-131,134-135,137-155,160-205,207-229,231-233,235-237,239-241,243-245,247-269,275
+  s_4e396cb15e16b1::t_7c347121571c6c 27-31,33-34,132-133,230,234,238,242,246,270-274
+CryptoLib/src/Include/Simd/Poly1305/Poly1305BlocksBulkAvx2Core_i386.inc
+  s_4e396cb15e16b1::t_b06d63e2eb1eab 157-165
+  s_4e396cb15e16b1::t_f9fb5a811e02f8 7-11,139
+  s_4e396cb15e16b1::t_411db320272b81 3-6,14-15,17-19,22-65,68-138,140-156,166-197,200-270,272-351
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "768aafd49a237ba5cb8e879770796db1ae420e71",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
