@@ -1,0 +1,23 @@
+CryptoLib.Tests/src/Crypto/AesHardwareEngineTests.pas
+  s_4e396cb15e16b1::t_ba7f104b765273 46-49,139,145,171,177,227-228,230,234,236,242-243,245,249,251
+CryptoLib/src/Crypto/Engines/ClpAesEngineX86.pas
+  s_4e396cb15e16b1::t_48c603ec6d72f9 79-85,87-88,1016-1018
+CryptoLib/src/Interfaces/Crypto/Engines/ClpIAesHardwareEngine.pas
+  s_4e396cb15e16b1::t_c76d58b736935f 31-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "142c6281d35aac2f164704e4178449d95fcbda8a",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
