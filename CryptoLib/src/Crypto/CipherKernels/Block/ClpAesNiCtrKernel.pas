@@ -24,15 +24,15 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedCtrKernel,
-  ClpAcceleratedKernelFactoryBase,
-  ClpAcceleratedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpICtrKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IAcceleratedCtrKernel: the fused counter-mode
+  ///   AES-NI implementation of ICtrKernel: the fused counter-mode
   ///   keystream + XOR body used by TSicBlockCipher's bulk path. The MAC-free
   ///   base of the fused-kernel family; reuses the plain 8-wide AES round chain
   ///   (AesNiEightRoundsOnly) since CTR has no extra per-block state.
@@ -40,7 +40,7 @@ type
   ///   both arms gated collectively by CRYPTOLIB_X86_SIMD. When unavailable the
   ///   factory returns nil and TSicBlockCipher keeps its existing bulk path.
   /// </summary>
-  TAesNiCtrKernel = class sealed(TInterfacedObject, IAcceleratedCtrKernel)
+  TAesNiCtrKernel = class sealed(TInterfacedObject, ICtrKernel)
   strict private
   const
     FUSED_CTR_BATCH_BLOCKS = 8;
@@ -58,12 +58,12 @@ type
       ABlockCount: NativeInt);
   end;
 
-  TAesNiCtrKernelFactory = class sealed(TAcceleratedKernelFactoryBase, IAcceleratedCtrKernelFactory)
+  TAesNiCtrKernelFactory = class sealed(TCipherKernelFactoryBase, ICtrKernelFactory)
   public
     function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedCtrKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: ICtrKernel): Boolean;
   end;
 
 implementation
@@ -174,7 +174,7 @@ begin
 end;
 
 function TAesNiCtrKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCtrKernel): Boolean;
+  ADirection: TCipherKernelDirection; out AKernel: ICtrKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -200,7 +200,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.Register(
-    TAesNiCtrKernelFactory.Create() as IAcceleratedCtrKernelFactory);
+  TCipherKernelRegistry.Register(
+    TAesNiCtrKernelFactory.Create() as ICtrKernelFactory);
 
 end.

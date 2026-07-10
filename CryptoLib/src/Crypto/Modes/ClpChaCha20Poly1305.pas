@@ -31,9 +31,9 @@ uses
   ClpIBulkStreamCipher,
   ClpIChaCha7539Engine,
   ClpChaCha7539Engine,
-  ClpAcceleratedKernelTypes,
-  ClpAcceleratedKernelRegistry,
-  ClpIAcceleratedChaCha20Poly1305Kernel,
+  ClpCipherKernelTypes,
+  ClpCipherKernelRegistry,
+  ClpIChaCha20Poly1305Kernel,
   ClpPoly1305,
   ClpIMac,
   ClpKeyParameter,
@@ -116,7 +116,7 @@ type
     FBulkChaCha: IBulkStreamCipher;
     // A registered ChaCha20-Poly1305 kernel, resolved once at Init.
     // the two-pass cipher-then-MAC path runs.
-    FChaChaKernel: IAcceleratedChaCha20Poly1305Kernel;
+    FChaChaKernel: IChaCha20Poly1305Kernel;
     FNonceBytes: Int32;
     FPoly1305: IMac;
 
@@ -290,11 +290,11 @@ begin
   FChaCha20.Init(True, LChaCha20Params);
 
   if AForEncryption then
-    TAcceleratedKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-      TAcceleratedKernelDirection.Encrypt, FChaChaKernel)
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+      TCipherKernelDirection.Encrypt, FChaChaKernel)
   else
-    TAcceleratedKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-      TAcceleratedKernelDirection.Decrypt, FChaChaKernel);
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+      TCipherKernelDirection.Decrypt, FChaChaKernel);
 
   if AForEncryption then
     FState := TState.EncInit

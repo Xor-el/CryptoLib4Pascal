@@ -24,16 +24,16 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedEaxKernel,
-  ClpAcceleratedKernelFactoryBase,
-  ClpAcceleratedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpIEaxKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpAesFusedAeadSimd,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IAcceleratedEaxKernel.
+  ///   AES-NI implementation of IEaxKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -47,7 +47,7 @@ type
   ///   ships a fused EAX kernel (OpenSSL, BoringSSL, AWS-LC, Botan all
   ///   scalar).
   /// </summary>
-  TAesNiEaxKernel = class sealed(TInterfacedObject, IAcceleratedEaxKernel)
+  TAesNiEaxKernel = class sealed(TInterfacedObject, IEaxKernel)
   strict private
   const
     FUSED_EAX_MIN_BLOCKS = 2;
@@ -55,24 +55,24 @@ type
     FEngine: IAesEngineX86;
     FKeys: Pointer;
     FRounds: Int32;
-    FDirection: TAcceleratedKernelDirection;
+    FDirection: TCipherKernelDirection;
     FMask: Pointer;
     FIncrement: Pointer;
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
-      ARounds: Int32; ADirection: TAcceleratedKernelDirection; AMask, AIncrement: Pointer);
+      ARounds: Int32; ADirection: TCipherKernelDirection; AMask, AIncrement: Pointer);
     function MinimumBlockCount: Int32;
     procedure ProcessBody(AInPtr, AOutPtr, ACtrState, AOmacState: Pointer;
       ABlockCount: Int32);
   end;
 
-  TAesNiEaxKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
-    IAcceleratedEaxKernelFactory)
+  TAesNiEaxKernelFactory = class sealed(TCipherKernelFactoryBase,
+    IEaxKernelFactory)
   public
     function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedEaxKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: IEaxKernel): Boolean;
   end;
 
 implementation
@@ -201,7 +201,7 @@ const
 { TAesNiEaxKernel }
 
 constructor TAesNiEaxKernel.Create(const AEngine: IAesEngineX86;
-  AKeys: Pointer; ARounds: Int32; ADirection: TAcceleratedKernelDirection;
+  AKeys: Pointer; ARounds: Int32; ADirection: TCipherKernelDirection;
   AMask, AIncrement: Pointer);
 begin
   inherited Create;
@@ -236,7 +236,7 @@ begin
   LCtx.PMask := FMask;
   LCtx.PIncrement := FIncrement;
   LCtx.BlockCount := NativeUInt(ABlockCount);
-  if FDirection = TAcceleratedKernelDirection.Encrypt then
+  if FDirection = TCipherKernelDirection.Encrypt then
   begin
     case FRounds of
       10: EaxFusedCtrOmacEnc128(@LCtx);
@@ -265,7 +265,7 @@ begin
 end;
 
 function TAesNiEaxKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedEaxKernel): Boolean;
+  ADirection: TCipherKernelDirection; out AKernel: IEaxKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -294,7 +294,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.Register(
-    TAesNiEaxKernelFactory.Create() as IAcceleratedEaxKernelFactory);
+  TCipherKernelRegistry.Register(
+    TAesNiEaxKernelFactory.Create() as IEaxKernelFactory);
 
 end.

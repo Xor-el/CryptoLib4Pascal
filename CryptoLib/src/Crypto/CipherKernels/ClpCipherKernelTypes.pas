@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAcceleratedKernelTypes;
+unit ClpCipherKernelTypes;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -22,14 +22,14 @@ interface
 
 type
   /// <summary>
-  ///   Direction an accelerated kernel is being constructed for. Modes
+  ///   Direction a cipher kernel is being constructed for. Modes
   ///   whose hot path is direction-agnostic may pass Encrypt for both
   ///   cases.
   /// </summary>
-  TAcceleratedKernelDirection = (Encrypt, Decrypt);
+  TCipherKernelDirection = (Encrypt, Decrypt);
 
   /// <summary>
-  ///   Priority class used to order factories in the accelerated kernel
+  ///   Priority class used to order factories in the cipher kernel
   ///   registry. Higher ordinal wins; equal priorities retain registration
   ///   order (first registered wins), which is why UserOverride sits above
   ///   Preferred - it keeps the consumer's explicit choice the final word
@@ -44,7 +44,7 @@ type
   ///     UserOverride - last-resort explicit override wired in by the
   ///                    consumer (application or test harness); beats all.
   /// </summary>
-  TAcceleratedKernelPriority = (Fallback, Baseline, Preferred, UserOverride);
+  TCipherKernelPriority = (Fallback, Baseline, Preferred, UserOverride);
 
 implementation
 

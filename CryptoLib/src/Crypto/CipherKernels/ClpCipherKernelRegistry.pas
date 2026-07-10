@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAcceleratedKernelRegistry;
+unit ClpCipherKernelRegistry;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -26,26 +26,26 @@ uses
   Generics.Collections,
   ClpIBlockCipher,
   ClpCryptoLibTypes,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory,
-  ClpIAcceleratedGcmKernel,
-  ClpIAcceleratedOcbKernel,
-  ClpIAcceleratedCcmKernel,
-  ClpIAcceleratedEaxKernel,
-  ClpIAcceleratedGcmSivKernel,
-  ClpIAcceleratedCtrKernel,
-  ClpIAcceleratedCbcKernel,
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory,
+  ClpIGcmKernel,
+  ClpIOcbKernel,
+  ClpICcmKernel,
+  ClpIEaxKernel,
+  ClpIGcmSivKernel,
+  ClpICtrKernel,
+  ClpICbcKernel,
   ClpIStreamCipher,
-  ClpIAcceleratedChaCha20Poly1305Kernel;
+  ClpIChaCha20Poly1305Kernel;
 
 type
   /// <summary>
-  ///   Process-wide kill switch for every registered accelerated kernel. When
+  ///   Process-wide kill switch for every registered cipher kernel. When
   ///   ForceDisabled is True, every TryAcquireX returns False without walking
   ///   the factory list, so modes route through their scalar fallbacks. Used by
   ///   the dual-path test harness to prove both paths agree byte-for-byte.
   /// </summary>
-  TAcceleratedKernelGate = class sealed(TObject)
+  TCipherKernelGate = class sealed(TObject)
   strict private
     class var FForceDisabled: Boolean;
   public
@@ -53,24 +53,24 @@ type
   end;
 
   /// <summary>
-  ///   Open, priority-ordered resolver for the whole accelerated-kernel family. Every
+  ///   Open, priority-ordered resolver for the whole cipher-kernel family. Every
   ///   factory - block-cipher AEAD or stream-cipher AEAD alike - is registered
-  ///   through the family-agnostic IAcceleratedKernelFactory into a single
+  ///   through the family-agnostic ICipherKernelFactory into a single
   ///   priority-sorted list (highest Priority first; equal priorities keep
   ///   registration order). A per-mode TryAcquireX re-discovers the concrete
   ///   family with Supports() and calls its typed TryCreate. An external
-  ///   consumer registers its own IAccelerated&lt;X&gt;KernelFactory and resolves it
+  ///   consumer registers its own I&lt;X&gt;KernelFactory and resolves it
   ///   through the public GetSnapshot + a Supports walk - no framework edit and
   ///   no central enum. Thread-safe: one TCriticalSection guards mutation and
   ///   snapshotting; TryAcquireX snapshots under the lock then releases it before
   ///   invoking factory TryCreate, so factory work never serialises other call
   ///   sites.
   /// </summary>
-  TAcceleratedKernelRegistry = class sealed(TObject)
+  TCipherKernelRegistry = class sealed(TObject)
   strict private
     class var FLock: TCriticalSection;
-    class var FFactories: TList<IAcceleratedKernelFactory>;
-    class function Snapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>; static;
+    class var FFactories: TList<ICipherKernelFactory>;
+    class function Snapshot: TCryptoLibGenericArray<ICipherKernelFactory>; static;
     class constructor Create;
     class destructor Destroy;
   public
@@ -78,56 +78,56 @@ type
     /// list sorted by Ord(Priority) descending; equal priorities retain
     /// registration order. Duplicate registrations (same interface identity)
     /// are silently ignored.</summary>
-    class procedure Register(const AFactory: IAcceleratedKernelFactory); static;
+    class procedure Register(const AFactory: ICipherKernelFactory); static;
     /// <summary>Remove AFactory. No-op if not registered.</summary>
-    class procedure Unregister(const AFactory: IAcceleratedKernelFactory); static;
+    class procedure Unregister(const AFactory: ICipherKernelFactory); static;
     /// <summary>Priority-ordered snapshot of every registered factory. External
     /// consumers filter it with Supports() to their own factory interface to
-    /// resolve an accelerated kernel the framework never enumerated.</summary>
-    class function GetSnapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>; static;
+    /// resolve a cipher kernel the framework never enumerated.</summary>
+    class function GetSnapshot: TCryptoLibGenericArray<ICipherKernelFactory>; static;
 
     class function TryAcquireGcm(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmKernel): Boolean; static;
     class function TryAcquireOcb(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedOcbKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: IOcbKernel): Boolean; static;
     class function TryAcquireCcm(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCcmKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: ICcmKernel): Boolean; static;
     class function TryAcquireEax(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedEaxKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: IEaxKernel): Boolean; static;
     class function TryAcquireGcmSiv(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmSivKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmSivKernel): Boolean; static;
     class function TryAcquireCtr(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCtrKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: ICtrKernel): Boolean; static;
     class function TryAcquireCbc(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCbcKernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: ICbcKernel): Boolean; static;
     class function TryAcquireChaCha20Poly1305(const ACipher: IStreamCipher;
-      ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedChaCha20Poly1305Kernel): Boolean; static;
+      ADirection: TCipherKernelDirection; out AKernel: IChaCha20Poly1305Kernel): Boolean; static;
 
     /// <summary>Provider-name list (priority order) of every registered factory
     /// supporting AFactoryIID. Pass a per-mode factory interface, e.g.
-    /// GetRegisteredProviders(IAcceleratedGcmKernelFactory). Diagnostics/tests.</summary>
+    /// GetRegisteredProviders(IGcmKernelFactory). Diagnostics/tests.</summary>
     class function GetRegisteredProviders(const AFactoryIID: TGUID): TCryptoLibStringArray; static;
   end;
 
 implementation
 
-{ TAcceleratedKernelRegistry }
+{ TCipherKernelRegistry }
 
-class constructor TAcceleratedKernelRegistry.Create;
+class constructor TCipherKernelRegistry.Create;
 begin
   FLock := TCriticalSection.Create;
-  FFactories := TList<IAcceleratedKernelFactory>.Create;
+  FFactories := TList<ICipherKernelFactory>.Create;
 end;
 
-class destructor TAcceleratedKernelRegistry.Destroy;
+class destructor TCipherKernelRegistry.Destroy;
 begin
   FFactories.Free;
   FLock.Free;
 end;
 
-class procedure TAcceleratedKernelRegistry.Register(const AFactory: IAcceleratedKernelFactory);
+class procedure TCipherKernelRegistry.Register(const AFactory: ICipherKernelFactory);
 var
   LI, LPriority: Int32;
   LInserted: Boolean;
@@ -154,7 +154,7 @@ begin
   end;
 end;
 
-class procedure TAcceleratedKernelRegistry.Unregister(const AFactory: IAcceleratedKernelFactory);
+class procedure TCipherKernelRegistry.Unregister(const AFactory: ICipherKernelFactory);
 var
   LIdx: Int32;
 begin
@@ -169,7 +169,7 @@ begin
   end;
 end;
 
-class function TAcceleratedKernelRegistry.Snapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+class function TCipherKernelRegistry.Snapshot: TCryptoLibGenericArray<ICipherKernelFactory>;
 var
   LI, LCount: Int32;
 begin
@@ -184,30 +184,30 @@ begin
   end;
 end;
 
-class function TAcceleratedKernelRegistry.GetSnapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+class function TCipherKernelRegistry.GetSnapshot: TCryptoLibGenericArray<ICipherKernelFactory>;
 begin
   Result := Snapshot;
 end;
 
 { ---- TryAcquire ------------------------------------------------------------- }
 
-class function TAcceleratedKernelRegistry.TryAcquireGcm(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-  out AKernel: IAcceleratedGcmKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireGcm(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; AHPowers: Pointer;
+  out AKernel: IGcmKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedGcmKernelFactory;
+  LFac: IGcmKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   if AHPowers = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedGcmKernelFactory, LFac) and
+    if Supports(LSnap[LI], IGcmKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AHPowers, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -217,21 +217,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireOcb(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedOcbKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireOcb(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; out AKernel: IOcbKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedOcbKernelFactory;
+  LFac: IOcbKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedOcbKernelFactory, LFac) and
+    if Supports(LSnap[LI], IOcbKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -241,21 +241,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireCcm(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCcmKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireCcm(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; out AKernel: ICcmKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedCcmKernelFactory;
+  LFac: ICcmKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedCcmKernelFactory, LFac) and
+    if Supports(LSnap[LI], ICcmKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -265,21 +265,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireEax(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedEaxKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireEax(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; out AKernel: IEaxKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedEaxKernelFactory;
+  LFac: IEaxKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedEaxKernelFactory, LFac) and
+    if Supports(LSnap[LI], IEaxKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -289,22 +289,22 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireGcmSiv(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-  out AKernel: IAcceleratedGcmSivKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireGcmSiv(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; AHPowers: Pointer;
+  out AKernel: IGcmSivKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedGcmSivKernelFactory;
+  LFac: IGcmSivKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if AHPowers = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedGcmSivKernelFactory, LFac) and
+    if Supports(LSnap[LI], IGcmSivKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AHPowers, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -314,21 +314,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireCtr(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCtrKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireCtr(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; out AKernel: ICtrKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedCtrKernelFactory;
+  LFac: ICtrKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedCtrKernelFactory, LFac) and
+    if Supports(LSnap[LI], ICtrKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -338,21 +338,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireCbc(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCbcKernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireCbc(const ACipher: IBlockCipher;
+  ADirection: TCipherKernelDirection; out AKernel: ICbcKernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedCbcKernelFactory;
+  LFac: ICbcKernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedCbcKernelFactory, LFac) and
+    if Supports(LSnap[LI], ICbcKernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -362,21 +362,21 @@ begin
   AKernel := nil;
 end;
 
-class function TAcceleratedKernelRegistry.TryAcquireChaCha20Poly1305(const ACipher: IStreamCipher;
-  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedChaCha20Poly1305Kernel): Boolean;
+class function TCipherKernelRegistry.TryAcquireChaCha20Poly1305(const ACipher: IStreamCipher;
+  ADirection: TCipherKernelDirection; out AKernel: IChaCha20Poly1305Kernel): Boolean;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI: Int32;
-  LFac: IAcceleratedChaCha20Poly1305KernelFactory;
+  LFac: IChaCha20Poly1305KernelFactory;
 begin
   AKernel := nil;
   Result := False;
-  if TAcceleratedKernelGate.ForceDisabled then Exit;
+  if TCipherKernelGate.ForceDisabled then Exit;
   if ACipher = nil then Exit;
   LSnap := Snapshot;
   for LI := 0 to System.Length(LSnap) - 1 do
   begin
-    if Supports(LSnap[LI], IAcceleratedChaCha20Poly1305KernelFactory, LFac) and
+    if Supports(LSnap[LI], IChaCha20Poly1305KernelFactory, LFac) and
       LFac.TryCreate(ACipher, ADirection, AKernel) and (AKernel <> nil) then
     begin
       Result := True;
@@ -386,12 +386,10 @@ begin
   AKernel := nil;
 end;
 
-{ ---- Provider queries ------------------------------------------------------- }
-
-class function TAcceleratedKernelRegistry.GetRegisteredProviders(
+class function TCipherKernelRegistry.GetRegisteredProviders(
   const AFactoryIID: TGUID): TCryptoLibStringArray;
 var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
+  LSnap: TCryptoLibGenericArray<ICipherKernelFactory>;
   LI, LN: Int32;
 begin
   LSnap := Snapshot;

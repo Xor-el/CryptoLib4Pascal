@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedGcmSivKernel;
+unit ClpIGcmSivKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,8 +22,8 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
@@ -34,7 +34,7 @@ type
   ///   factory registry for uniformity with the other accelerated AEAD
   ///   kernels.
   /// </summary>
-  IAcceleratedGcmSivKernel = interface
+  IGcmSivKernel = interface
     ['{5FA774F0-42CC-407C-9410-1D5D66421F66}']
 
     /// <summary>Number of 16-byte blocks absorbed per
@@ -59,13 +59,13 @@ type
   ///   kernel. ADirection is accepted for registry uniformity but
   ///   POLYVAL is direction-agnostic and it is typically ignored.
   /// </summary>
-  IAcceleratedGcmSivKernelFactory = interface(IAcceleratedKernelFactory)
+  IGcmSivKernelFactory = interface(ICipherKernelFactory)
     ['{5EA5178B-93BD-4E96-B19E-C09B04B32655}']
 
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
+      ADirection: TCipherKernelDirection;
       AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmSivKernel): Boolean;
+      out AKernel: IGcmSivKernel): Boolean;
   end;
 
 implementation

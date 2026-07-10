@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedGcmKernel;
+unit ClpIGcmKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,8 +22,8 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
@@ -34,7 +34,7 @@ type
   ///   static constants) lives inside the implementation; the mode
   ///   sees only this interface.
   /// </summary>
-  IAcceleratedGcmKernel = interface
+  IGcmKernel = interface
     ['{D4D7F5F0-3C56-44E0-8BDD-944AC05E4D2E}']
 
     /// <summary>Number of 16-byte blocks per batch consumed by
@@ -59,14 +59,14 @@ type
 
   /// <summary>
   ///   Factory contract for GCM kernel providers. Registered with
-  ///   TAcceleratedKernelRegistry; the registry walks the per-mode factory
+  ///   TCipherKernelRegistry; the registry walks the per-mode factory
   ///   list (highest-priority first) and returns the first kernel
   ///   whose TryCreate succeeds. Factories self-probe (CPU features,
   ///   cipher identity, direction support) and wrap construction in
   ///   try/except; TryCreate MUST return False on failure rather than
   ///   propagating.
   /// </summary>
-  IAcceleratedGcmKernelFactory = interface(IAcceleratedKernelFactory)
+  IGcmKernelFactory = interface(ICipherKernelFactory)
     ['{6F25C598-3089-40DA-8A81-9C898A5FCBE1}']
 
     /// <summary>
@@ -76,8 +76,8 @@ type
     ///   pointer MUST outlive the returned kernel.
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmKernel): Boolean;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmKernel): Boolean;
   end;
 
 implementation

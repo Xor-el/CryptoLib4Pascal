@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedCbcKernel;
+unit ClpICbcKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -23,8 +23,8 @@ interface
 uses
   ClpIBlockCipher,
   ClpCryptoLibTypes,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
@@ -36,7 +36,7 @@ type
   ///   C_{i-1}) parallelises and is not yet implemented. Cipher state lives
   ///   inside the implementation; the mode sees only this interface.
   /// </summary>
-  IAcceleratedCbcKernel = interface
+  ICbcKernel = interface
     ['{898E71F2-B3C8-4B44-A3AB-2A493B4AE126}']
 
     /// <summary>
@@ -53,13 +53,13 @@ type
 
   /// <summary>
   ///   Factory contract for CBC-encrypt kernel providers. Registered with
-  ///   TAcceleratedKernelRegistry; the registry walks the factory list (highest
+  ///   TCipherKernelRegistry; the registry walks the factory list (highest
   ///   priority first) and returns the first kernel whose TryCreate succeeds.
   ///   Factories self-probe (CPU features, cipher identity) and wrap construction
   ///   in try/except; TryCreate MUST return False on failure rather than
   ///   propagating.
   /// </summary>
-  IAcceleratedCbcKernelFactory = interface(IAcceleratedKernelFactory)
+  ICbcKernelFactory = interface(ICipherKernelFactory)
     ['{A4FBAB88-8E80-45A0-86E1-B95B6AFBA9A2}']
 
     /// <summary>
@@ -69,8 +69,8 @@ type
     ///   failure; never raises.
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedCbcKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: ICbcKernel): Boolean;
   end;
 
 implementation

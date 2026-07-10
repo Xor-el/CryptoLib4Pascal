@@ -48,7 +48,7 @@ uses
   ClpConverters,
   ClpIAeadCipher,
   AeadTestUtilities,
-  AcceleratedKernelToggle,
+  CipherKernelToggle,
   CryptoLibTestBase;
 
 type
@@ -91,7 +91,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
 
-    // Workers run twice via RunWithAcceleratedToggle (accelerated on / off).
+    // Workers run twice via RunWithCipherKernelToggle (cipher kernel on / off).
     procedure DoTestVectors;
     procedure DoTestIvParameters;
     procedure DoTestExceptionsAndRandomised;
@@ -566,27 +566,27 @@ end;
 
 procedure TTestEax.TestVectors;
 begin
-  RunWithAcceleratedToggle(DoTestVectors);
+  RunWithCipherKernelToggle(DoTestVectors);
 end;
 
 procedure TTestEax.TestIvParameters;
 begin
-  RunWithAcceleratedToggle(DoTestIvParameters);
+  RunWithCipherKernelToggle(DoTestIvParameters);
 end;
 
 procedure TTestEax.TestExceptionsAndRandomised;
 begin
-  RunWithAcceleratedToggle(DoTestExceptionsAndRandomised);
+  RunWithCipherKernelToggle(DoTestExceptionsAndRandomised);
 end;
 
 procedure TTestEax.TestInvalidTagLength;
 begin
-  RunWithAcceleratedToggle(DoTestInvalidTagLength);
+  RunWithCipherKernelToggle(DoTestInvalidTagLength);
 end;
 
 procedure TTestEax.TestValidTagLength;
 begin
-  RunWithAcceleratedToggle(DoTestValidTagLength);
+  RunWithCipherKernelToggle(DoTestValidTagLength);
 end;
 
 initialization

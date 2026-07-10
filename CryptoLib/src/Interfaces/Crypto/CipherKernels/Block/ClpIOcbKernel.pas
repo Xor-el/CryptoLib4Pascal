@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedOcbKernel;
+unit ClpIOcbKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,8 +22,8 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
@@ -31,7 +31,7 @@ type
   ///   state lives inside the implementation; the mode sees only this
   ///   interface.
   /// </summary>
-  IAcceleratedOcbKernel = interface
+  IOcbKernel = interface
     ['{ADAF5C2A-FD31-42EF-A266-EB4B0F9AC06D}']
 
     /// <summary>The minimum (and alignment) batch width the kernel
@@ -85,7 +85,7 @@ type
       AStartBlockCount: UInt64);
   end;
 
-  IAcceleratedOcbKernelFactory = interface(IAcceleratedKernelFactory)
+  IOcbKernelFactory = interface(ICipherKernelFactory)
     ['{A430371B-1B11-46C2-AFC8-EF9B07DE4CFA}']
 
     /// <summary>
@@ -95,8 +95,8 @@ type
     ///   construction exception); never raises.
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedOcbKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: IOcbKernel): Boolean;
   end;
 
 implementation

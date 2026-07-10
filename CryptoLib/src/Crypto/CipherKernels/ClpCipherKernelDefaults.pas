@@ -14,47 +14,28 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit AcceleratedKernelToggle;
+unit ClpCipherKernelDefaults;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+// Aggregator for CryptoLib's in-tree cipher kernel factories.
+// Listed factory units self-gate on their own CPU/arch defines, so
+// this file is a plain, platform-agnostic list: adding a new in-tree
+// accelerator is one `uses` line here, mode units are never touched.
+// External / third-party factories live in the consumer's own unit
+// tree and register via the same mechanism -- no edit to this file.
 
 interface
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF FPC}
-
-uses
-  SysUtils,
-  ClpAcceleratedKernelRegistry;
-
-type
-  TAcceleratedToggleTestProc = procedure of object;
-
-/// <summary>
-///   Runs AProc twice: once with accelerated kernels enabled (production
-///   default) and once with them forcibly disabled so the scalar /
-///   generic-bulk fallbacks are exercised. Both passes must produce
-///   byte-identical outputs. The previous kill-switch state is saved
-///   and restored on return (including on exceptions).
-/// </summary>
-procedure RunWithAcceleratedToggle(AProc: TAcceleratedToggleTestProc);
-
 implementation
 
-procedure RunWithAcceleratedToggle(AProc: TAcceleratedToggleTestProc);
-var
-  LSaved: Boolean;
-begin
-  if not Assigned(AProc) then
-    Exit;
-  LSaved := TAcceleratedKernelGate.ForceDisabled;
-  try
-    TAcceleratedKernelGate.ForceDisabled := False;
-    AProc();
-    TAcceleratedKernelGate.ForceDisabled := True;
-    AProc();
-  finally
-    TAcceleratedKernelGate.ForceDisabled := LSaved;
-  end;
-end;
+uses
+  ClpAesNiGcmKernel,
+  ClpAesNiOcbKernel,
+  ClpAesNiCcmKernel,
+  ClpAesNiEaxKernel,
+  ClpAesNiCtrKernel,
+  ClpAesNiCbcKernel,
+  ClpPclmulGcmSivKernel;
 
 end.

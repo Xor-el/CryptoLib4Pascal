@@ -218,11 +218,11 @@ uses
   ClpArmSimdFeatures, ClpSimdLevels, ClpX86SimdFeatures, ClpArmHwCapProvider, 
   ClpDarwinSysCtl, ClpIBulkBlockCipherMode, ClpIBulkBlockCipher, 
   ClpBlockCipherBulkUtilities, ClpCipherModeParameterUtilities, 
-  ClpGcmSivUtilities, ClpAcceleratedKernelTypes, ClpIAcceleratedGcmKernel, 
-  ClpIAcceleratedOcbKernel, ClpIAcceleratedCcmKernel, ClpIAcceleratedEaxKernel, 
-  ClpIAcceleratedGcmSivKernel, ClpAcceleratedKernelRegistry, ClpAesFusedAeadSimd, 
+  ClpGcmSivUtilities, ClpCipherKernelTypes, ClpIGcmKernel, 
+  ClpIOcbKernel, ClpICcmKernel, ClpIEaxKernel, 
+  ClpIGcmSivKernel, ClpCipherKernelRegistry, ClpAesFusedAeadSimd, 
   ClpAesNiOcbKernel, ClpAesNiCcmKernel, ClpAesNiEaxKernel, ClpAesNiGcmKernel, 
-  ClpPclmulGcmSivKernel, ClpAcceleratedKernelDefaults, ClpXChaCha20Engine, 
+  ClpPclmulGcmSivKernel, ClpCipherKernelDefaults, ClpXChaCha20Engine, 
   ClpIXChaCha20Engine, ClpXChaCha20Poly1305, ClpIXChaCha20Poly1305, 
   ClpDigestStream, ClpMacSink, ClpMacStream, ClpSignerStream, 
   ClpDefaultMacCalculator, ClpDefaultMacResult, ClpIMacAlgorithmFinder, 
@@ -256,10 +256,10 @@ uses
   ClpSalsaX86Backend, ClpPoly1305State, ClpPoly1305Simd, 
   ClpPoly1305X86Backend, ClpGhashSimd, ClpGhashX86Backend, ClpGcmSivSimd, 
   ClpGcmSivX86Backend, ClpAesNiFusedX86Backend, ClpBinPolySimd, ClpAesSimd, 
-  ClpIAcceleratedCtrKernel, ClpAesNiCtrKernel, ClpByteXorSimd, ClpByteXorX86Backend, 
-  ClpIAcceleratedCbcKernel, ClpAesNiCbcKernel, ClpIBulkStreamCipher, 
-  ClpIAcceleratedKernelFactory, ClpIAcceleratedChaCha20Poly1305Kernel, 
-  ClpAcceleratedKernelFactoryBase;
+  ClpICtrKernel, ClpAesNiCtrKernel, ClpByteXorSimd, ClpByteXorX86Backend, 
+  ClpICbcKernel, ClpAesNiCbcKernel, ClpIBulkStreamCipher, 
+  ClpICipherKernelFactory, ClpIChaCha20Poly1305Kernel, 
+  ClpCipherKernelFactoryBase;
 
 implementation
 

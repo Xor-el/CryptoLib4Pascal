@@ -24,16 +24,16 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedGcmKernel,
-  ClpAcceleratedKernelFactoryBase,
-  ClpAcceleratedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpIGcmKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpAesFusedAeadSimd,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + PCLMULQDQ implementation of IAcceleratedGcmKernel.
+  ///   AES-NI + PCLMULQDQ implementation of IGcmKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -45,7 +45,7 @@ type
   ///   pipeline internally; the mode primes the first batch and drains the
   ///   last.
   /// </summary>
-  TAesNiGcmKernel = class sealed(TInterfacedObject, IAcceleratedGcmKernel)
+  TAesNiGcmKernel = class sealed(TInterfacedObject, IGcmKernel)
   strict private
   const
     FUSED_GCM_MIN_BLOCKS = 8;
@@ -64,13 +64,13 @@ type
       AForEncrypt: Boolean): UInt32;
   end;
 
-  TAesNiGcmKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
-    IAcceleratedGcmKernelFactory)
+  TAesNiGcmKernelFactory = class sealed(TCipherKernelFactoryBase,
+    IGcmKernelFactory)
   public
     function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmKernel): Boolean;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmKernel): Boolean;
   end;
 
 implementation
@@ -205,8 +205,8 @@ begin
 end;
 
 function TAesNiGcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-  out AKernel: IAcceleratedGcmKernel): Boolean;
+  ADirection: TCipherKernelDirection; AHPowers: Pointer;
+  out AKernel: IGcmKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -237,7 +237,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.Register(
-    TAesNiGcmKernelFactory.Create() as IAcceleratedGcmKernelFactory);
+  TCipherKernelRegistry.Register(
+    TAesNiGcmKernelFactory.Create() as IGcmKernelFactory);
 
 end.

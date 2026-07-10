@@ -23,21 +23,21 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedGcmSivKernel,
-  ClpAcceleratedKernelFactoryBase,
-  ClpAcceleratedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpIGcmSivKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpGcmSivSimd;
 
 type
   /// <summary>
-  ///   PCLMULQDQ implementation of IAcceleratedGcmSivKernel. Pure
+  ///   PCLMULQDQ implementation of IGcmSivKernel. Pure
   ///   POLYVAL: the factory ignores ACipher identity and only requires
   ///   a valid pre-computed H-power table from the caller. Ships on
   ///   both x86_64 and i386.
   /// </summary>
   TPclmulGcmSivKernel = class sealed(TInterfacedObject,
-    IAcceleratedGcmSivKernel)
+    IGcmSivKernel)
   strict private
   const
     FUSED_POLYVAL_MIN_BLOCKS = 8;
@@ -51,13 +51,13 @@ type
       ABlockCount: Int32);
   end;
 
-  TPclmulGcmSivKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
-    IAcceleratedGcmSivKernelFactory)
+  TPclmulGcmSivKernelFactory = class sealed(TCipherKernelFactoryBase,
+    IGcmSivKernelFactory)
   public
     function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-      out AKernel: IAcceleratedGcmSivKernel): Boolean;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmSivKernel): Boolean;
   end;
 
 implementation
@@ -98,8 +98,8 @@ begin
 end;
 
 function TPclmulGcmSivKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
-  out AKernel: IAcceleratedGcmSivKernel): Boolean;
+  ADirection: TCipherKernelDirection; AHPowers: Pointer;
+  out AKernel: IGcmSivKernel): Boolean;
 begin
   AKernel := nil;
   Result := False;
@@ -118,7 +118,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.Register(
-    TPclmulGcmSivKernelFactory.Create() as IAcceleratedGcmSivKernelFactory);
+  TCipherKernelRegistry.Register(
+    TPclmulGcmSivKernelFactory.Create() as IGcmSivKernelFactory);
 
 end.

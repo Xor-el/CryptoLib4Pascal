@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedCtrKernel;
+unit ClpICtrKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -23,20 +23,20 @@ interface
 uses
   ClpIBlockCipher,
   ClpCryptoLibTypes,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
   ///   Mode-specific contract for an accelerated counter (CTR / SIC) body kernel:
   ///   generate AES-CTR keystream and XOR it into the payload in a single pass,
   ///   advancing the counter. It is the non-authenticated, MAC-free member of
-  ///   the accelerated-kernel family - the shared core the AEAD kernels are built on
+  ///   the cipher-kernel family - the shared core the AEAD kernels are built on
   ///   (GCM = CTR + GHASH, CCM = CTR + CBC-MAC, EAX = CTR + OMAC). All cipher
   ///   state (the key schedule) lives inside the implementation; the mode sees
   ///   only this interface.
   /// </summary>
-  IAcceleratedCtrKernel = interface
+  ICtrKernel = interface
     ['{2A9F4C71-6E38-4B0D-9C57-1F3B8E26D4A5}']
 
     /// <summary>The batch granularity: ProcessCtrBlocks requires ABlockCount to
@@ -59,13 +59,13 @@ type
 
   /// <summary>
   ///   Factory contract for CTR kernel providers. Registered with
-  ///   TAcceleratedKernelRegistry; the registry walks the per-mode factory list
+  ///   TCipherKernelRegistry; the registry walks the per-mode factory list
   ///   (highest-priority first) and returns the first kernel whose TryCreate
   ///   succeeds. Factories self-probe (CPU features, cipher identity) and wrap
   ///   construction in try/except; TryCreate MUST return False on failure
   ///   rather than propagating.
   /// </summary>
-  IAcceleratedCtrKernelFactory = interface(IAcceleratedKernelFactory)
+  ICtrKernelFactory = interface(ICipherKernelFactory)
     ['{7D1E6B02-4A9C-4F58-8B3D-2C57F1E96A4D}']
 
     /// <summary>
@@ -75,8 +75,8 @@ type
     ///   the same E_K(counter) stream).
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedCtrKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: ICtrKernel): Boolean;
   end;
 
 implementation

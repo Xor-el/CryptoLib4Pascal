@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIAcceleratedChaCha20Poly1305Kernel;
+unit ClpIChaCha20Poly1305Kernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,8 +22,8 @@ interface
 
 uses
   ClpIStreamCipher,
-  ClpAcceleratedKernelTypes,
-  ClpIAcceleratedKernelFactory;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
@@ -36,7 +36,7 @@ type
   ///   analogue of the block-cipher accelerated kernels (GCM = CTR + GHASH); the
   ///   engine key schedule and Poly1305 r/s clamp live inside the implementation.
   /// </summary>
-  IAcceleratedChaCha20Poly1305Kernel = interface
+  IChaCha20Poly1305Kernel = interface
     ['{87051735-EA07-4800-A6D9-A8922BFDF6A2}']
 
     /// <summary>Stride granularity in bytes (512 = 8 x 64-byte ChaCha blocks).
@@ -58,24 +58,24 @@ type
 
   /// <summary>
   ///   Factory contract for accelerated ChaCha20-Poly1305 kernel providers. Registered
-  ///   with TAcceleratedKernelRegistry through the family-agnostic IAcceleratedKernelFactory
+  ///   with TCipherKernelRegistry through the family-agnostic ICipherKernelFactory
   ///   base; the registry re-discovers it via Supports(). Factories self-probe
   ///   (CPU features, Supports(ACipher, IChaCha7539Engine)) and wrap construction
   ///   in try/except; TryCreate MUST return False on failure rather than
   ///   propagating.
   /// </summary>
-  IAcceleratedChaCha20Poly1305KernelFactory = interface(IAcceleratedKernelFactory)
+  IChaCha20Poly1305KernelFactory = interface(ICipherKernelFactory)
     ['{A633B415-7A54-44D7-B983-18BBECC2B32F}']
 
     /// <summary>
-    ///   Attempt to construct an accelerated kernel bound to ACipher (a stream cipher;
+    ///   Attempt to construct a cipher kernel bound to ACipher (a stream cipher;
     ///   the factory probes Supports(ACipher, IChaCha7539Engine) for the concrete
     ///   engine). ADirection is accepted for symmetry with the AEAD factories;
     ///   the kernel handles both directions via ProcessStrides' AForEncrypt.
     /// </summary>
     function TryCreate(const ACipher: IStreamCipher;
-      ADirection: TAcceleratedKernelDirection;
-      out AKernel: IAcceleratedChaCha20Poly1305Kernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: IChaCha20Poly1305Kernel): Boolean;
   end;
 
 implementation
