@@ -610,11 +610,11 @@
         <IsPartOfProject Value="True"/>
       </Unit131>
       <Unit132>
-        <Filename Value="..\src\Utils\FusedKernelToggle.pas"/>
+        <Filename Value="..\src\Utils\AcceleratedKernelToggle.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit132>
       <Unit133>
-        <Filename Value="..\src\Crypto\FusedExternalRegistrationTests.pas"/>
+        <Filename Value="..\src\Crypto\AcceleratedExternalRegistrationTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit133>
       <Unit134>

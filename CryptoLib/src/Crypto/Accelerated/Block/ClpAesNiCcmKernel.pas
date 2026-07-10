@@ -24,15 +24,16 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedKernelTypes,
-  ClpIFusedCcmKernel,
-  ClpFusedKernelRegistry,
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedCcmKernel,
+  ClpAcceleratedKernelFactoryBase,
+  ClpAcceleratedKernelRegistry,
   ClpAesFusedAeadSimd,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IFusedCcmKernel.
+  ///   AES-NI implementation of IAcceleratedCcmKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -42,7 +43,7 @@ type
   ///   The kernel loops internally over ABlockCount body blocks; the
   ///   mode invokes ProcessBody once per Init cycle.
   /// </summary>
-  TAesNiCcmKernel = class sealed(TInterfacedObject, IFusedCcmKernel)
+  TAesNiCcmKernel = class sealed(TInterfacedObject, IAcceleratedCcmKernel)
   strict private
   const
     FUSED_CCM_MIN_BLOCKS = 1;
@@ -57,25 +58,24 @@ type
     // multi-block SIMD loop.
     FEngine: IAesEngineX86;
     FRounds: Int32;
-    FDirection: TFusedModeDirection;
+    FDirection: TAcceleratedKernelDirection;
     FMask: Pointer;
     FIncrement: Pointer;
   public
     constructor Create(const AEngine: IAesEngineX86; ARounds: Int32;
-      ADirection: TFusedModeDirection; AMask, AIncrement: Pointer);
+      ADirection: TAcceleratedKernelDirection; AMask, AIncrement: Pointer);
     function MinimumBlockCount: Int32;
     procedure ProcessBody(AInPtr, AOutPtr, ACtrState, ACbcMacState: Pointer;
       ABlockCount: Int32);
   end;
 
-  TAesNiCcmKernelFactory = class sealed(TInterfacedObject,
-    IFusedCcmKernelFactory)
+  TAesNiCcmKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
+    IAcceleratedCcmKernelFactory)
   public
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedCcmKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection;
+      out AKernel: IAcceleratedCcmKernel): Boolean;
   end;
 
 implementation
@@ -200,7 +200,7 @@ const
 { TAesNiCcmKernel }
 
 constructor TAesNiCcmKernel.Create(const AEngine: IAesEngineX86;
-  ARounds: Int32; ADirection: TFusedModeDirection;
+  ARounds: Int32; ADirection: TAcceleratedKernelDirection;
   AMask, AIncrement: Pointer);
 begin
   inherited Create;
@@ -245,7 +245,7 @@ begin
   LCtx.PMask := FMask;
   LCtx.PIncrement := FIncrement;
   LCtx.BlockCount := NativeUInt(ABlockCount);
-  if FDirection = TFusedModeDirection.Encrypt then
+  if FDirection = TAcceleratedKernelDirection.Encrypt then
   begin
     case FRounds of
       10: CcmFusedCtrCbcMacEnc128(@LCtx);
@@ -273,13 +273,8 @@ begin
   Result := 'AES-NI';
 end;
 
-function TAesNiCcmKernelFactory.Priority: TFusedKernelPriority;
-begin
-  Result := TFusedKernelPriority.Baseline;
-end;
-
 function TAesNiCcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; out AKernel: IFusedCcmKernel): Boolean;
+  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedCcmKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -312,7 +307,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterCcmFactory(
-    TAesNiCcmKernelFactory.Create() as IFusedCcmKernelFactory);
+  TAcceleratedKernelRegistry.RegisterCcmFactory(
+    TAesNiCcmKernelFactory.Create() as IAcceleratedCcmKernelFactory);
 
 end.

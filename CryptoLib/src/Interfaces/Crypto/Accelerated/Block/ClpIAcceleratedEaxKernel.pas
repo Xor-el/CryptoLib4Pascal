@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedEaxKernel;
+unit ClpIAcceleratedEaxKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,11 +22,12 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedKernelTypes;
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused EAX body kernel running the
+  ///   Mode-specific contract for an accelerated EAX body kernel running the
   ///   CTR keystream and OMAC lanes together per iteration. Direction-
   ///   bound at construction: encrypt and decrypt take different paths
   ///   through the inner MAC dependency chain. The kernel owns the
@@ -35,7 +36,7 @@ type
   ///   CBC-MAC running thereafter) and handles nonce-OMAC, header-OMAC,
   ///   and the final-block OMAC subkey XOR.
   /// </summary>
-  IFusedEaxKernel = interface
+  IAcceleratedEaxKernel = interface
     ['{3D87A0D4-7375-453F-BF72-CA3CA191CDCB}']
 
     /// <summary>Minimum number of 16-byte body blocks the kernel can
@@ -57,15 +58,12 @@ type
       AOmacState: Pointer; ABlockCount: Int32);
   end;
 
-  IFusedEaxKernelFactory = interface
+  IAcceleratedEaxKernelFactory = interface(IAcceleratedKernelFactory)
     ['{E3DDE544-91EF-4E41-B707-7ACD366FDB0A}']
 
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
-
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedEaxKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection;
+      out AKernel: IAcceleratedEaxKernel): Boolean;
   end;
 
 implementation

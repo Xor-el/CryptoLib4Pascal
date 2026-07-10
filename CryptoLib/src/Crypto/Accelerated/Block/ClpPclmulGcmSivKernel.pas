@@ -23,20 +23,21 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpFusedKernelTypes,
-  ClpIFusedGcmSivKernel,
-  ClpFusedKernelRegistry,
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedGcmSivKernel,
+  ClpAcceleratedKernelFactoryBase,
+  ClpAcceleratedKernelRegistry,
   ClpGcmSivSimd;
 
 type
   /// <summary>
-  ///   PCLMULQDQ implementation of IFusedGcmSivKernel. Pure
+  ///   PCLMULQDQ implementation of IAcceleratedGcmSivKernel. Pure
   ///   POLYVAL: the factory ignores ACipher identity and only requires
   ///   a valid pre-computed H-power table from the caller. Ships on
   ///   both x86_64 and i386.
   /// </summary>
   TPclmulGcmSivKernel = class sealed(TInterfacedObject,
-    IFusedGcmSivKernel)
+    IAcceleratedGcmSivKernel)
   strict private
   const
     FUSED_POLYVAL_MIN_BLOCKS = 8;
@@ -50,14 +51,13 @@ type
       ABlockCount: Int32);
   end;
 
-  TPclmulGcmSivKernelFactory = class sealed(TInterfacedObject,
-    IFusedGcmSivKernelFactory)
+  TPclmulGcmSivKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
+    IAcceleratedGcmSivKernelFactory)
   public
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection; AHPowers: Pointer;
-      out AKernel: IFusedGcmSivKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
+      out AKernel: IAcceleratedGcmSivKernel): Boolean;
   end;
 
 implementation
@@ -97,14 +97,9 @@ begin
   Result := 'PCLMULQDQ';
 end;
 
-function TPclmulGcmSivKernelFactory.Priority: TFusedKernelPriority;
-begin
-  Result := TFusedKernelPriority.Baseline;
-end;
-
 function TPclmulGcmSivKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; AHPowers: Pointer;
-  out AKernel: IFusedGcmSivKernel): Boolean;
+  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
+  out AKernel: IAcceleratedGcmSivKernel): Boolean;
 begin
   AKernel := nil;
   Result := False;
@@ -123,7 +118,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterGcmSivFactory(
-    TPclmulGcmSivKernelFactory.Create() as IFusedGcmSivKernelFactory);
+  TAcceleratedKernelRegistry.RegisterGcmSivFactory(
+    TPclmulGcmSivKernelFactory.Create() as IAcceleratedGcmSivKernelFactory);
 
 end.

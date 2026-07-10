@@ -14,28 +14,38 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpFusedKernelDefaults;
+unit ClpAcceleratedKernelFactoryBase;
 
-{$I ..\..\..\Include\CryptoLib.inc}
-
-// Aggregator for CryptoLib's in-tree fused AEAD kernel factories.
-// Listed factory units self-gate on their own CPU/arch defines, so
-// this file is a plain, platform-agnostic list: adding a new in-tree
-// accelerator is one `uses` line here, mode units are never touched.
-// External / third-party factories live in the consumer's own unit
-// tree and register via the same mechanism -- no edit to this file.
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
+uses
+  ClpAcceleratedKernelTypes;
+
+type
+  /// <summary>
+  ///   Shared base for accelerated-kernel factory classes. ProviderName is
+  ///   abstract - each concrete factory must declare its own provider identity
+  ///   (there is no generic default). Priority defaults to Baseline, a neutral
+  ///   value a factory overrides only when it should out- or under-rank peers.
+  ///   The base intentionally declares no interface - each concrete factory
+  ///   lists its own IAccelerated&lt;Mode&gt;KernelFactory, and these members
+  ///   satisfy the base slice of that contract.
+  /// </summary>
+  TAcceleratedKernelFactoryBase = class abstract(TInterfacedObject)
+  public
+    function ProviderName: String; virtual; abstract;
+    function Priority: TAcceleratedKernelPriority; virtual;
+  end;
+
 implementation
 
-uses
-  ClpAesNiGcmKernel,
-  ClpAesNiOcbKernel,
-  ClpAesNiCcmKernel,
-  ClpAesNiEaxKernel,
-  ClpAesNiCtrKernel,
-  ClpAesNiCbcKernel,
-  ClpPclmulGcmSivKernel;
+{ TAcceleratedKernelFactoryBase }
+
+function TAcceleratedKernelFactoryBase.Priority: TAcceleratedKernelPriority;
+begin
+  Result := TAcceleratedKernelPriority.Baseline;
+end;
 
 end.

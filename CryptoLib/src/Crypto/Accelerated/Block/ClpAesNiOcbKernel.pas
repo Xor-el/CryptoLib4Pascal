@@ -24,15 +24,16 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedKernelTypes,
-  ClpIFusedOcbKernel,
-  ClpFusedKernelRegistry,
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedOcbKernel,
+  ClpAcceleratedKernelFactoryBase,
+  ClpAcceleratedKernelRegistry,
   ClpAesFusedAeadSimd,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IFusedOcbKernel.
+  ///   AES-NI implementation of IAcceleratedOcbKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -44,7 +45,7 @@ type
   ///   4 blocks on i386) so the mode layer can amortise call-site
   ///   overhead across large batches.
   /// </summary>
-  TAesNiOcbKernel = class sealed(TInterfacedObject, IFusedOcbKernel)
+  TAesNiOcbKernel = class sealed(TInterfacedObject, IAcceleratedOcbKernel)
   strict private
   const
 {$IFDEF CRYPTOLIB_X86_64_ASM}
@@ -56,24 +57,23 @@ type
     FEngine: IAesEngineX86;
     FKeys: Pointer;
     FRounds: Int32;
-    FDirection: TFusedModeDirection;
+    FDirection: TAcceleratedKernelDirection;
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
-      ARounds: Int32; ADirection: TFusedModeDirection);
+      ARounds: Int32; ADirection: TAcceleratedKernelDirection);
     function MinimumBlockCount: Int32;
     procedure ProcessBlocks(AInPtr, AOutPtr, AOffsetPtr, AChecksumPtr,
       ALTablePtr, ABlock0Ptr: Pointer; ABlockCount: Int32;
       AStartBlockCount: UInt64);
   end;
 
-  TAesNiOcbKernelFactory = class sealed(TInterfacedObject,
-    IFusedOcbKernelFactory)
+  TAesNiOcbKernelFactory = class sealed(TAcceleratedKernelFactoryBase,
+    IAcceleratedOcbKernelFactory)
   public
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedOcbKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection;
+      out AKernel: IAcceleratedOcbKernel): Boolean;
   end;
 
 implementation
@@ -196,7 +196,7 @@ end;
 { TAesNiOcbKernel }
 
 constructor TAesNiOcbKernel.Create(const AEngine: IAesEngineX86;
-  AKeys: Pointer; ARounds: Int32; ADirection: TFusedModeDirection);
+  AKeys: Pointer; ARounds: Int32; ADirection: TAcceleratedKernelDirection);
 begin
   inherited Create;
   FEngine := AEngine;
@@ -231,7 +231,7 @@ begin
   LCtx.Block0Ptr := ABlock0Ptr;
   LCtx.BlockCount := NativeUInt(ABlockCount);
   LCtx.StartBlockCount := AStartBlockCount;
-  if FDirection = TFusedModeDirection.Encrypt then
+  if FDirection = TAcceleratedKernelDirection.Encrypt then
   begin
     case FRounds of
       10: OcbFusedEncWide128(@LCtx);
@@ -259,13 +259,8 @@ begin
   Result := 'AES-NI';
 end;
 
-function TAesNiOcbKernelFactory.Priority: TFusedKernelPriority;
-begin
-  Result := TFusedKernelPriority.Baseline;
-end;
-
 function TAesNiOcbKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; out AKernel: IFusedOcbKernel): Boolean;
+  ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedOcbKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -279,7 +274,7 @@ begin
       Exit;
     if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
       Exit;
-    if ADirection = TFusedModeDirection.Encrypt then
+    if ADirection = TAcceleratedKernelDirection.Encrypt then
       LHasSchedule := LEngine.TryGetEncKeysPtr(LKeys, LRounds)
     else
       LHasSchedule := LEngine.TryGetDecKeysPtr(LKeys, LRounds);
@@ -296,7 +291,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterOcbFactory(
-    TAesNiOcbKernelFactory.Create() as IFusedOcbKernelFactory);
+  TAcceleratedKernelRegistry.RegisterOcbFactory(
+    TAesNiOcbKernelFactory.Create() as IAcceleratedOcbKernelFactory);
 
 end.

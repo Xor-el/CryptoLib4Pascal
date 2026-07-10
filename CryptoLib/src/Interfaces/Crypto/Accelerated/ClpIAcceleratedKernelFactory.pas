@@ -14,47 +14,38 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit FusedKernelToggle;
+unit ClpIAcceleratedKernelFactory;
+
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IFDEF FPC}
-{$MODE DELPHI}
-{$ENDIF FPC}
-
 uses
-  SysUtils,
-  ClpFusedKernelRegistry;
+  ClpAcceleratedKernelTypes;
 
 type
-  TFusedToggleTestProc = procedure of object;
+  /// <summary>
+  ///   Family-agnostic base contract shared by every accelerated kernel factory
+  ///   (block-cipher AEAD modes and stream-cipher AEADs alike). It carries only
+  ///   the identity and ordering a factory needs to live in the registry; the
+  ///   actual TryCreate lives on each derived factory interface with its own
+  ///   strongly-typed cipher parameter. The registry stores factories through
+  ///   this base and rediscovers a concrete family with Supports(); an external
+  ///   consumer can therefore register an accelerated kernel for an algorithm the
+  ///   framework never enumerated, with no framework edit.
+  /// </summary>
+  IAcceleratedKernelFactory = interface
+    ['{006B1103-17E9-43C6-9A7A-EB515B120325}']
 
-/// <summary>
-///   Runs AProc twice: once with fused kernels enabled (production
-///   default) and once with them forcibly disabled so the scalar /
-///   generic-bulk fallbacks are exercised. Both passes must produce
-///   byte-identical outputs. The previous kill-switch state is saved
-///   and restored on return (including on exceptions).
-/// </summary>
-procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
+    /// <summary>Stable human-readable provider label (diagnostics / tests).</summary>
+    function ProviderName: String;
+
+    /// <summary>Priority class controlling factory order inside the registry;
+    /// see TAcceleratedKernelPriority. Higher wins; equal priorities keep
+    /// registration order.</summary>
+    function Priority: TAcceleratedKernelPriority;
+  end;
 
 implementation
-
-procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
-var
-  LSaved: Boolean;
-begin
-  if not Assigned(AProc) then
-    Exit;
-  LSaved := TFusedKernelGate.ForceDisabled;
-  try
-    TFusedKernelGate.ForceDisabled := False;
-    AProc();
-    TFusedKernelGate.ForceDisabled := True;
-    AProc();
-  finally
-    TFusedKernelGate.ForceDisabled := LSaved;
-  end;
-end;
 
 end.

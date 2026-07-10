@@ -33,10 +33,10 @@ uses
   ClpISicBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
-  ClpFusedKernelTypes,
-  ClpIFusedEaxKernel,
-  ClpFusedKernelRegistry,
-  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedEaxKernel,
+  ClpAcceleratedKernelRegistry,
+  ClpAcceleratedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
   ClpIKeyParameter,
   ClpCMac,
@@ -96,7 +96,7 @@ type
     // EAX kernel for the underlying cipher and encrypt direction. Decrypt
     // and non-AES ciphers stay on the TCMac / TSicBlockCipher scalar
     // path; set via FUseFusedBody below.
-    FEaxKernel: IFusedEaxKernel;
+    FEaxKernel: IAcceleratedEaxKernel;
 
     // True iff a fused body kernel is live for this Init cycle. Gates
     // the mode-owned OMAC substrate (FOmac* + FCtrBlock) against the
@@ -311,11 +311,11 @@ begin
   // TCMac / TSicBlockCipher path runs - no compile-time arch gating needed.
   FEaxKernel := nil;
   if FForEncryption then
-    TFusedKernelRegistry.TryAcquireEax(FCipher,
-      TFusedModeDirection.Encrypt, FEaxKernel)
+    TAcceleratedKernelRegistry.TryAcquireEax(FCipher,
+      TAcceleratedKernelDirection.Encrypt, FEaxKernel)
   else
-    TFusedKernelRegistry.TryAcquireEax(FCipher,
-      TFusedModeDirection.Decrypt, FEaxKernel);
+    TAcceleratedKernelRegistry.TryAcquireEax(FCipher,
+      TAcceleratedKernelDirection.Decrypt, FEaxKernel);
   FUseFusedBody := FEaxKernel <> nil;
 
   if FUseFusedBody then

@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit FusedExternalRegistrationTests;
+unit AcceleratedExternalRegistrationTests;
 
 interface
 
@@ -31,9 +31,9 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIBlockCipher,
-  ClpFusedKernelTypes,
-  ClpIFusedGcmKernel,
-  ClpFusedKernelRegistry,
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedGcmKernel,
+  ClpAcceleratedKernelRegistry,
   ClpCryptoLibTypes;
 
 type
@@ -41,17 +41,17 @@ type
   ///   No-op third-party GCM kernel factory used by the external
   ///   registration pin tests. TryCreate always returns False so no
   ///   code path (production or test) actually acquires this factory
-  ///   as a fused kernel; its only observable effect is its presence
+  ///   as an accelerated kernel; its only observable effect is its presence
   ///   in the registry's public diagnostic lists.
   /// </summary>
   TMockExternalGcmKernelFactory = class sealed(TInterfacedObject,
-    IFusedGcmKernelFactory)
+    IAcceleratedGcmKernelFactory)
   public
     function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function Priority: TAcceleratedKernelPriority;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection; AHPowers: Pointer;
-      out AKernel: IFusedGcmKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
+      out AKernel: IAcceleratedGcmKernel): Boolean;
   end;
 
   /// <summary>
@@ -69,7 +69,7 @@ type
   ///   Any future change that silently regresses this external
   ///   registration contract will trip a red test here.
   /// </summary>
-  TTestFusedExternalRegistration = class(TTestCase)
+  TTestAcceleratedExternalRegistration = class(TTestCase)
   strict private
     class function ProvidersContain(const AList: TCryptoLibStringArray;
       const AName: String): Boolean; static;
@@ -112,26 +112,26 @@ begin
   Result := CMockExternalProviderName;
 end;
 
-function TMockExternalGcmKernelFactory.Priority: TFusedKernelPriority;
+function TMockExternalGcmKernelFactory.Priority: TAcceleratedKernelPriority;
 begin
   // Fallback is the lowest rank so this mock never intercepts real
   // GCM acquires on any platform where a genuine in-tree factory is
   // also registered. The mock's entire purpose is to appear in the
   // diagnostic list, not to be picked up by TryAcquireGcm.
-  Result := TFusedKernelPriority.Fallback;
+  Result := TAcceleratedKernelPriority.Fallback;
 end;
 
 function TMockExternalGcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; AHPowers: Pointer;
-  out AKernel: IFusedGcmKernel): Boolean;
+  ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
+  out AKernel: IAcceleratedGcmKernel): Boolean;
 begin
   AKernel := nil;
   Result := False;
 end;
 
-{ TTestFusedExternalRegistration }
+{ TTestAcceleratedExternalRegistration }
 
-class function TTestFusedExternalRegistration.ProvidersContain(
+class function TTestAcceleratedExternalRegistration.ProvidersContain(
   const AList: TCryptoLibStringArray; const AName: String): Boolean;
 var
   LIndex: Int32;
@@ -145,33 +145,33 @@ begin
     end;
 end;
 
-procedure TTestFusedExternalRegistration.TestExternalRegistrationAddsProvider;
+procedure TTestAcceleratedExternalRegistration.TestExternalRegistrationAddsProvider;
 var
-  LFactory: IFusedGcmKernelFactory;
+  LFactory: IAcceleratedGcmKernelFactory;
   LProviders: TCryptoLibStringArray;
 begin
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TFusedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
   try
-    LProviders := TFusedKernelRegistry.GetRegisteredGcmProviders;
+    LProviders := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
     CheckTrue(ProvidersContain(LProviders, CMockExternalProviderName),
       SMockMustBePresent);
   finally
-    TFusedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
   end;
 end;
 
-procedure TTestFusedExternalRegistration.TestExternalRegistrationIsStrictlyAdditive;
+procedure TTestAcceleratedExternalRegistration.TestExternalRegistrationIsStrictlyAdditive;
 var
-  LFactory: IFusedGcmKernelFactory;
+  LFactory: IAcceleratedGcmKernelFactory;
   LBaseline, LAfter: TCryptoLibStringArray;
   LIndex: Int32;
 begin
-  LBaseline := TFusedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TFusedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
   try
-    LAfter := TFusedKernelRegistry.GetRegisteredGcmProviders;
+    LAfter := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
     CheckEquals(System.Length(LBaseline) + 1, System.Length(LAfter),
       SCountMustGrowByOne);
     // Every baseline name must survive the registration.
@@ -179,22 +179,22 @@ begin
       CheckTrue(ProvidersContain(LAfter, LBaseline[LIndex]),
         SDefaultsMustSurvive);
   finally
-    TFusedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
   end;
 end;
 
-procedure TTestFusedExternalRegistration.TestExternalUnregistrationRestoresPriorList;
+procedure TTestAcceleratedExternalRegistration.TestExternalUnregistrationRestoresPriorList;
 var
-  LFactory: IFusedGcmKernelFactory;
+  LFactory: IAcceleratedGcmKernelFactory;
   LBaseline, LAfterUnregister: TCryptoLibStringArray;
   LIndex: Int32;
 begin
-  LBaseline := TFusedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TFusedKernelRegistry.RegisterGcmFactory(LFactory);
-  TFusedKernelRegistry.UnregisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
 
-  LAfterUnregister := TFusedKernelRegistry.GetRegisteredGcmProviders;
+  LAfterUnregister := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
   CheckEquals(System.Length(LBaseline), System.Length(LAfterUnregister),
     SCountMustRestoreBaseline);
   CheckFalse(ProvidersContain(LAfterUnregister, CMockExternalProviderName),
@@ -204,30 +204,30 @@ begin
       SDefaultsMustSurvive);
 end;
 
-procedure TTestFusedExternalRegistration.TestDuplicateExternalRegistrationIsIgnored;
+procedure TTestAcceleratedExternalRegistration.TestDuplicateExternalRegistrationIsIgnored;
 var
-  LFactory: IFusedGcmKernelFactory;
+  LFactory: IAcceleratedGcmKernelFactory;
   LBaseline, LAfter: TCryptoLibStringArray;
 begin
-  LBaseline := TFusedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TFusedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
   try
-    TFusedKernelRegistry.RegisterGcmFactory(LFactory);
-    LAfter := TFusedKernelRegistry.GetRegisteredGcmProviders;
+    TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
+    LAfter := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
     CheckEquals(System.Length(LBaseline) + 1, System.Length(LAfter),
       SDuplicateMustBeIgnored);
   finally
-    TFusedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
   end;
 end;
 
 initialization
 
 {$IFDEF FPC}
-  RegisterTest(TTestFusedExternalRegistration);
+  RegisterTest(TTestAcceleratedExternalRegistration);
 {$ELSE}
-  RegisterTest(TTestFusedExternalRegistration.Suite);
+  RegisterTest(TTestAcceleratedExternalRegistration.Suite);
 {$ENDIF FPC}
 
 end.

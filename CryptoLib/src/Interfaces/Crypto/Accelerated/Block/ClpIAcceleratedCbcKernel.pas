@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedCbcKernel;
+unit ClpIAcceleratedCbcKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -23,11 +23,12 @@ interface
 uses
   ClpIBlockCipher,
   ClpCryptoLibTypes,
-  ClpFusedKernelTypes;
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused CBC body kernel, direction-bound at
+  ///   Mode-specific contract for an accelerated CBC body kernel, direction-bound at
   ///   construction (like the OCB / CCM kernels). Applies the CBC chain over a
   ///   whole run in one call, keeping the chaining value in a register between
   ///   blocks. Encrypt is inherently serial (C_i = E_K(P_i xor C_{i-1})), so its
@@ -35,7 +36,7 @@ type
   ///   C_{i-1}) parallelises and is not yet implemented. Cipher state lives
   ///   inside the implementation; the mode sees only this interface.
   /// </summary>
-  IFusedCbcKernel = interface
+  IAcceleratedCbcKernel = interface
     ['{898E71F2-B3C8-4B44-A3AB-2A493B4AE126}']
 
     /// <summary>
@@ -52,21 +53,14 @@ type
 
   /// <summary>
   ///   Factory contract for CBC-encrypt kernel providers. Registered with
-  ///   TFusedKernelRegistry; the registry walks the factory list (highest
+  ///   TAcceleratedKernelRegistry; the registry walks the factory list (highest
   ///   priority first) and returns the first kernel whose TryCreate succeeds.
   ///   Factories self-probe (CPU features, cipher identity) and wrap construction
   ///   in try/except; TryCreate MUST return False on failure rather than
   ///   propagating.
   /// </summary>
-  IFusedCbcKernelFactory = interface
+  IAcceleratedCbcKernelFactory = interface(IAcceleratedKernelFactory)
     ['{A4FBAB88-8E80-45A0-86E1-B95B6AFBA9A2}']
-
-    /// <summary>Stable human-readable provider label (diagnostics / tests).</summary>
-    function ProviderName: String;
-
-    /// <summary>Priority class controlling factory order inside the registry;
-    /// see TFusedKernelPriority.</summary>
-    function Priority: TFusedKernelPriority;
 
     /// <summary>
     ///   Attempt to construct a CBC kernel bound to ACipher for ADirection.
@@ -75,8 +69,8 @@ type
     ///   failure; never raises.
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedCbcKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection;
+      out AKernel: IAcceleratedCbcKernel): Boolean;
   end;
 
 implementation

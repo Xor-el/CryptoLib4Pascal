@@ -51,7 +51,7 @@ uses
   ClpDateTimeUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
-  FusedKernelToggle,
+  AcceleratedKernelToggle,
   AeadTestUtilities,
   CryptoLibTestBase,
   SymmetricBlockVectors;
@@ -81,7 +81,7 @@ type
     procedure DoTestExceptions;
     function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
 
-    // Workers run twice via RunWithFusedToggle (fused on / off).
+    // Workers run twice via RunWithAcceleratedToggle (accelerated on / off).
     procedure DoTestRfcVectors;
     procedure DoTestRandomised;
     procedure DoTestOutputSizes;
@@ -577,32 +577,32 @@ end;
 
 procedure TTestGcm.TestRfcVectors;
 begin
-  RunWithFusedToggle(DoTestRfcVectors);
+  RunWithAcceleratedToggle(DoTestRfcVectors);
 end;
 
 procedure TTestGcm.TestRandomised;
 begin
-  RunWithFusedToggle(DoTestRandomised);
+  RunWithAcceleratedToggle(DoTestRandomised);
 end;
 
 procedure TTestGcm.TestOutputSizes;
 begin
-  RunWithFusedToggle(DoTestOutputSizes);
+  RunWithAcceleratedToggle(DoTestOutputSizes);
 end;
 
 procedure TTestGcm.TestExceptions;
 begin
-  RunWithFusedToggle(DoTestExceptionsWrapper);
+  RunWithAcceleratedToggle(DoTestExceptionsWrapper);
 end;
 
 procedure TTestGcm.TestFourBlockFusedGcmPath;
 begin
-  RunWithFusedToggle(DoTestFourBlockFusedGcmPath);
+  RunWithAcceleratedToggle(DoTestFourBlockFusedGcmPath);
 end;
 
 procedure TTestGcm.TestEightBlockFusedGcmPath;
 begin
-  RunWithFusedToggle(DoTestEightBlockFusedGcmPath);
+  RunWithAcceleratedToggle(DoTestEightBlockFusedGcmPath);
 end;
 
 procedure TTestGcm.DoTestRfcVectors;

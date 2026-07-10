@@ -40,10 +40,10 @@ uses
   ClpIBulkBlockCipher,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
-  ClpFusedKernelTypes,
-  ClpIFusedGcmKernel,
-  ClpFusedKernelRegistry,
-  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedGcmKernel,
+  ClpAcceleratedKernelRegistry,
+  ClpAcceleratedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpPack,
   ClpCheck,
   ClpBasicGcmMultiplier,
@@ -106,11 +106,11 @@ type
     // exposes the generic IBulkBlockCipher capability. Drives the
     // non-fused 4/8-block CTR dispatchers (GetNextCtrBlocks4/8).
     FBulkCipher: IBulkBlockCipher;
-    // Fused CTR+GHASH kernel resolved via TFusedKernelRegistry at Init
+    // Fused CTR+GHASH kernel resolved via TAcceleratedKernelRegistry at Init
     // time. Non-nil only when an accelerator factory accepts the
-    // underlying cipher + direction and the fused gate is open (always nil
-    // off-SIMD; IFusedGcmKernel is arch-neutral).
-    FGcmKernel: IFusedGcmKernel;
+    // underlying cipher + direction and the accelerated-kernel gate is open (always nil
+    // off-SIMD; IAcceleratedGcmKernel is arch-neutral).
+    FGcmKernel: IAcceleratedGcmKernel;
     FGcmKernelMinBlocks: Int32;
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
@@ -190,15 +190,15 @@ type
       ALimit: Int32; AForEncrypt: Boolean);
     // =====================================================================
     // Fused block-cipher keystream + 8-way GHASH pipeline (provided by the
-    // fused kernel registry; nil kernel -> not used, e.g. off-SIMD).
+    // accelerated-kernel registry; nil kernel -> not used, e.g. off-SIMD).
     // =====================================================================
     // This outer driver is arch-agnostic: pure Pascal batch orchestration
-    // plus one call into an IFusedGcmKernel per 8-block stride. The kernel
+    // plus one call into an IAcceleratedGcmKernel per 8-block stride. The kernel
     // fuses CTR-mode keystream generation with the GHASH multiply-reduce in a
     // single pass, interleaving the two at the instruction level so their
     // independent execution units overlap. How wide that interleave runs and
     // how it is scheduled against the available vector-register budget is a
-    // backend detail hidden entirely behind the IFusedGcmKernel surface, so
+    // backend detail hidden entirely behind the IAcceleratedGcmKernel surface, so
     // this driver only ever sees the kernel interface.
     /// <summary>
     /// Pipelined GCM path driven by FGcmKernel (when a fused kernel is
@@ -467,7 +467,7 @@ begin
     System.SetLength(FWorkCtrAhead, 128);
     TArrayUtilities.Fill(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
 
-    if TFusedKernelRegistry.TryAcquireGcm(FCipher, TFusedModeDirection.Encrypt,
+    if TAcceleratedKernelRegistry.TryAcquireGcm(FCipher, TAcceleratedKernelDirection.Encrypt,
       @FHPow[0], FGcmKernel) and (FGcmKernel <> nil) then
     begin
       FGcmKernelMinBlocks := FGcmKernel.MinimumBlockCount;
@@ -1143,7 +1143,7 @@ end;
 // GHASH to reclaim instruction-level parallelism across the two independent
 // execution units. The FusedILP variant (further below) pushes this further
 // by interleaving both at the instruction level inside a single kernel
-// supplied by the fused-kernel registry (nil off-SIMD, so that path is
+// supplied by the accelerated-kernel registry (nil off-SIMD, so that path is
 // simply skipped there). AForEncrypt selects which buffer feeds GHASH:
 // output ciphertext on encrypt, input ciphertext on decrypt.
 // =======================================================================
@@ -1381,7 +1381,7 @@ end;
 // =======================================================================
 // Fused block-cipher keystream + 8-way GHASH pipeline. The driver is
 // arch-agnostic: it drives the outer 8-block stride loop and delegates the
-// fused work to whichever IFusedGcmKernel the registry resolved (nil
+// fused work to whichever IAcceleratedGcmKernel the registry resolved (nil
 // off-SIMD, so the callers never invoke this path there). The kernel's
 // internal interleave and register budget are backend details behind the
 // interface, summarised on the matching banner in the class declaration.

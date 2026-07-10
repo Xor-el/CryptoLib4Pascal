@@ -38,10 +38,10 @@ uses
   ClpGcmUtilities,
   ClpGcmSivUtilities,
   ClpGcmSivSimd,
-  ClpFusedKernelTypes,
-  ClpIFusedGcmSivKernel,
-  ClpFusedKernelRegistry,
-  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedGcmSivKernel,
+  ClpAcceleratedKernelRegistry,
+  ClpAcceleratedKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpKeyParameter,
   ClpAesUtilities,
   ClpInt64Utilities,
@@ -128,10 +128,10 @@ type
     // when the fused kernel is available; captured by reference by the
     // kernel and consumed read-only by TGcmSivHasher.UpdateHash.
     FHPow128: TCryptoLibByteArray;
-    // Fused POLYVAL kernel resolved via TFusedKernelRegistry. Non-nil
+    // Fused POLYVAL kernel resolved via TAcceleratedKernelRegistry. Non-nil
     // only when the registry produced a kernel whose MinimumBlockCount
     // matches the mode's 8-block batch contract.
-    FGcmSivKernel: IFusedGcmSivKernel;
+    FGcmSivKernel: IAcceleratedGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
 
     procedure CheckAeadStatus(ALen: Int32);
@@ -869,8 +869,8 @@ begin
     if System.Length(FHPow128) < 128 then
       System.SetLength(FHPow128, 128);
     TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
-    if TFusedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
-      TFusedModeDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+    if TAcceleratedKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+      TAcceleratedKernelDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
       (FGcmSivKernel <> nil) then
     begin
       if FGcmSivKernel.MinimumBlockCount = 8 then

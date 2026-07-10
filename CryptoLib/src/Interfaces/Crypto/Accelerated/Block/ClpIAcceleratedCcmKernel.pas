@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedCcmKernel;
+unit ClpIAcceleratedCcmKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,11 +22,12 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedKernelTypes;
+  ClpAcceleratedKernelTypes,
+  ClpIAcceleratedKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused CCM body kernel running the
+  ///   Mode-specific contract for an accelerated CCM body kernel running the
   ///   CTR keystream and CBC-MAC lanes together per iteration.
   ///   Direction-bound at construction: encrypt and decrypt take
   ///   different paths through the inner MAC dependency chain. The
@@ -34,7 +35,7 @@ type
   ///   ProcessBody once per Init / Reset cycle covering the full bulk
   ///   body.
   /// </summary>
-  IFusedCcmKernel = interface
+  IAcceleratedCcmKernel = interface
     ['{BEAAEA01-DF32-441F-96AB-77D07C19578D}']
 
     /// <summary>Minimum number of 16-byte body blocks the kernel can
@@ -58,15 +59,12 @@ type
       ACbcMacState: Pointer; ABlockCount: Int32);
   end;
 
-  IFusedCcmKernelFactory = interface
+  IAcceleratedCcmKernelFactory = interface(IAcceleratedKernelFactory)
     ['{F30B4F47-0546-4212-A00D-850F2AF4FF5F}']
 
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
-
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedCcmKernel): Boolean;
+      ADirection: TAcceleratedKernelDirection;
+      out AKernel: IAcceleratedCcmKernel): Boolean;
   end;
 
 implementation

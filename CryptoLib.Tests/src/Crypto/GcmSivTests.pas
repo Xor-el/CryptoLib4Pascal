@@ -41,7 +41,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
-  FusedKernelToggle,
+  AcceleratedKernelToggle,
   CryptoLibTestBase,
   SymmetricBlockVectors;
 
@@ -295,42 +295,42 @@ end;
 
 procedure TTestGcmSiv.TestAesGcmSiv128Set1;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv128Set1);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv128Set1);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv128Set2;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv128Set2);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv128Set2);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv128Set3;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv128Set3);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv128Set3);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set1;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv256Set1);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv256Set1);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set2;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv256Set2);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv256Set2);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set3;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv256Set3);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv256Set3);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set4;
 begin
-  RunWithFusedToggle(DoTestAesGcmSiv256Set4);
+  RunWithAcceleratedToggle(DoTestAesGcmSiv256Set4);
 end;
 
 procedure TTestGcmSiv.TestRandomised;
 begin
-  RunWithFusedToggle(DoTestRandomised);
+  RunWithAcceleratedToggle(DoTestRandomised);
 end;
 
 initialization
