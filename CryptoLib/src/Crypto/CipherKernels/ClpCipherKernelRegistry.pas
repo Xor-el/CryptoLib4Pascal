@@ -189,8 +189,6 @@ begin
   Result := Snapshot;
 end;
 
-{ ---- TryAcquire ------------------------------------------------------------- }
-
 class function TCipherKernelRegistry.TryAcquireGcm(const ACipher: IBlockCipher;
   ADirection: TCipherKernelDirection; AHPowers: Pointer;
   out AKernel: IGcmKernel): Boolean;
