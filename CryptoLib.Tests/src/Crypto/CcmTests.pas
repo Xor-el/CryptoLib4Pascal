@@ -49,7 +49,7 @@ uses
   ClpCryptoLibTypes,
   ClpIAeadCipher,
   AeadTestUtilities,
-  FusedKernelToggle,
+  CipherKernelToggle,
   CryptoLibTestBase;
 
 type
@@ -81,7 +81,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
 
-    // Workers run twice via RunWithFusedToggle (fused on / off).
+    // Workers run twice via RunWithCipherKernelToggle (cipher kernel on / off).
     procedure DoTestNistVectorsAndLongData;
     procedure DoTestCcmIvParameters;
     procedure DoTestOffsets;
@@ -505,22 +505,22 @@ end;
 
 procedure TTestCcm.TestNistVectorsAndLongData;
 begin
-  RunWithFusedToggle(DoTestNistVectorsAndLongData);
+  RunWithCipherKernelToggle(DoTestNistVectorsAndLongData);
 end;
 
 procedure TTestCcm.TestCcmIvParameters;
 begin
-  RunWithFusedToggle(DoTestCcmIvParameters);
+  RunWithCipherKernelToggle(DoTestCcmIvParameters);
 end;
 
 procedure TTestCcm.TestOffsets;
 begin
-  RunWithFusedToggle(DoTestOffsets);
+  RunWithCipherKernelToggle(DoTestOffsets);
 end;
 
 procedure TTestCcm.TestRandomised;
 begin
-  RunWithFusedToggle(DoTestRandomised);
+  RunWithCipherKernelToggle(DoTestRandomised);
 end;
 
 procedure TTestCcm.TestExceptions;
@@ -679,7 +679,7 @@ end;
 
 procedure TTestCcm.TestNoUnverifiedPlaintextOnFailure;
 begin
-  RunWithFusedToggle(DoTestNoUnverifiedPlaintextOnFailure);
+  RunWithCipherKernelToggle(DoTestNoUnverifiedPlaintextOnFailure);
 end;
 
 procedure TTestCcm.DoTestInvalidTagLength;
@@ -751,12 +751,12 @@ end;
 
 procedure TTestCcm.TestInvalidTagLength;
 begin
-  RunWithFusedToggle(DoTestInvalidTagLength);
+  RunWithCipherKernelToggle(DoTestInvalidTagLength);
 end;
 
 procedure TTestCcm.TestValidTagLength;
 begin
-  RunWithFusedToggle(DoTestValidTagLength);
+  RunWithCipherKernelToggle(DoTestValidTagLength);
 end;
 
 initialization

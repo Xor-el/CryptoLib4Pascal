@@ -30,9 +30,9 @@ uses
   ClpICipherParameters,
   ClpIParametersWithIV,
   ClpBlockCipherBulkUtilities,
-  ClpFusedKernelTypes,
-  ClpIFusedCbcKernel,
-  ClpFusedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpICbcKernel,
+  ClpCipherKernelRegistry,
   ClpArrayUtilities,
   ClpByteUtilities,
   ClpCryptoLibTypes;
@@ -76,7 +76,7 @@ type
     // C[i] = E(P[i] xor C[i-1]) in one call with the chaining value held in a
     // register, replacing the per-block dispatch loop. nil otherwise --
     // CbcEncryptBulk keeps its per-block path.
-    FCbcKernel: IFusedCbcKernel;
+    FCbcKernel: ICbcKernel;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -347,7 +347,7 @@ begin
   // provider claims FCipher. Encrypt-only: CBC decrypt is parallel and already
   // served by the bulk engine's 8-wide path.
   if FEncrypting then
-    TFusedKernelRegistry.TryAcquireCbc(FCipher, TFusedModeDirection.Encrypt,
+    TCipherKernelRegistry.TryAcquireCbc(FCipher, TCipherKernelDirection.Encrypt,
       FCbcKernel)
   else
     FCbcKernel := nil;

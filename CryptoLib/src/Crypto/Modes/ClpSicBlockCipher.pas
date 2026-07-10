@@ -26,9 +26,9 @@ uses
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
-  ClpIFusedCtrKernel,
-  ClpFusedKernelTypes,
-  ClpFusedKernelRegistry,
+  ClpICtrKernel,
+  ClpCipherKernelTypes,
+  ClpCipherKernelRegistry,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
@@ -70,11 +70,11 @@ type
     // bulk-capable engine plugs in unchanged by implementing the
     // interface -- the mode does not care which cipher is underneath.
     FBulkCipher: IBulkBlockCipher;
-    // Acquired on Init from the fused-kernel registry when an accelerated
+    // Acquired on Init from the cipher-kernel registry when an accelerated
     // counter-mode kernel is available for FCipher: a single AES-NI pass that
     // fuses counter generation, encryption and XOR. Preferred over FBulkCipher
     // for the batch-aligned bulk; nil (with FBulkCipher fallback) otherwise.
-    FCtrKernel: IFusedCtrKernel;
+    FCtrKernel: ICtrKernel;
 
     /// <summary>
     /// Snapshot FCounter into APlainCounters and advance FCounter by ABlockCount
@@ -217,7 +217,7 @@ begin
   // Acquire the fused counter-mode kernel if an accelerator is registered for
   // FCipher (sets FCtrKernel nil on miss). Direction is irrelevant for CTR
   // keystream (always AES-encrypt of the counter), so request Encrypt.
-  TFusedKernelRegistry.TryAcquireCtr(FCipher, TFusedModeDirection.Encrypt,
+  TCipherKernelRegistry.TryAcquireCtr(FCipher, TCipherKernelDirection.Encrypt,
     FCtrKernel);
 
   Reset();

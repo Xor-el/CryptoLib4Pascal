@@ -24,15 +24,16 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedKernelTypes,
-  ClpIFusedGcmKernel,
-  ClpFusedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpIGcmKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpAesFusedAeadSimd,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI + PCLMULQDQ implementation of IFusedGcmKernel.
+  ///   AES-NI + PCLMULQDQ implementation of IGcmKernel.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
   ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
   ///   CRYPTOLIB_X86_SIMD.
@@ -44,7 +45,7 @@ type
   ///   pipeline internally; the mode primes the first batch and drains the
   ///   last.
   /// </summary>
-  TAesNiGcmKernel = class sealed(TInterfacedObject, IFusedGcmKernel)
+  TAesNiGcmKernel = class sealed(TInterfacedObject, IGcmKernel)
   strict private
   const
     FUSED_GCM_MIN_BLOCKS = 8;
@@ -63,14 +64,13 @@ type
       AForEncrypt: Boolean): UInt32;
   end;
 
-  TAesNiGcmKernelFactory = class sealed(TInterfacedObject,
-    IFusedGcmKernelFactory)
+  TAesNiGcmKernelFactory = class sealed(TCipherKernelFactoryBase,
+    IGcmKernelFactory)
   public
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection; AHPowers: Pointer;
-      out AKernel: IFusedGcmKernel): Boolean;
+      ADirection: TCipherKernelDirection; AHPowers: Pointer;
+      out AKernel: IGcmKernel): Boolean;
   end;
 
 implementation
@@ -204,14 +204,9 @@ begin
   Result := 'AES-NI';
 end;
 
-function TAesNiGcmKernelFactory.Priority: TFusedKernelPriority;
-begin
-  Result := TFusedKernelPriority.Baseline;
-end;
-
 function TAesNiGcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; AHPowers: Pointer;
-  out AKernel: IFusedGcmKernel): Boolean;
+  ADirection: TCipherKernelDirection; AHPowers: Pointer;
+  out AKernel: IGcmKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -242,7 +237,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterGcmFactory(
-    TAesNiGcmKernelFactory.Create() as IFusedGcmKernelFactory);
+  TCipherKernelRegistry.Register(
+    TAesNiGcmKernelFactory.Create() as IGcmKernelFactory);
 
 end.

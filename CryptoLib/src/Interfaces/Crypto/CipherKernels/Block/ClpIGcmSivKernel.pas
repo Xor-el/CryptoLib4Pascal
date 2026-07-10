@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedGcmSivKernel;
+unit ClpIGcmSivKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,18 +22,19 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedKernelTypes;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused GCM-SIV POLYVAL batch kernel.
-  ///   GCM-SIV's fused path is authentication-only and does not touch
+  ///   Mode-specific contract for an accelerated GCM-SIV POLYVAL batch kernel.
+  ///   GCM-SIV's accelerated path is authentication-only and does not touch
   ///   the cipher's key schedule; the kernel is therefore intrinsically
   ///   cipher-agnostic, but is still registered through the shared
-  ///   factory registry for uniformity with the other fused AEAD
+  ///   factory registry for uniformity with the other accelerated AEAD
   ///   kernels.
   /// </summary>
-  IFusedGcmSivKernel = interface
+  IGcmSivKernel = interface
     ['{5FA774F0-42CC-407C-9410-1D5D66421F66}']
 
     /// <summary>Number of 16-byte blocks absorbed per
@@ -58,16 +59,13 @@ type
   ///   kernel. ADirection is accepted for registry uniformity but
   ///   POLYVAL is direction-agnostic and it is typically ignored.
   /// </summary>
-  IFusedGcmSivKernelFactory = interface
+  IGcmSivKernelFactory = interface(ICipherKernelFactory)
     ['{5EA5178B-93BD-4E96-B19E-C09B04B32655}']
 
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
-
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
+      ADirection: TCipherKernelDirection;
       AHPowers: Pointer;
-      out AKernel: IFusedGcmSivKernel): Boolean;
+      out AKernel: IGcmSivKernel): Boolean;
   end;
 
 implementation

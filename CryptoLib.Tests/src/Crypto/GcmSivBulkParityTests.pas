@@ -34,7 +34,7 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpFusedKernelRegistry,
+  ClpCipherKernelRegistry,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpConverters,
@@ -72,10 +72,10 @@ var
   LSaved: Boolean;
   LLen: Int32;
 begin
-  LSaved := TFusedKernelGate.ForceDisabled;
+  LSaved := TCipherKernelGate.ForceDisabled;
   // The fused POLYVAL kernel is resolved during Init (DeriveKeys); the gate must
   // therefore be set BEFORE Init to select the fused or scalar path.
-  TFusedKernelGate.ForceDisabled := not AUseFused;
+  TCipherKernelGate.ForceDisabled := not AUseFused;
   try
     LCipher := TGcmSivBlockCipher.Create() as IGcmSivBlockCipher;
     LCipher.Init(True, TAeadParameters.Create(TKeyParameter.Create(AKey)
@@ -86,7 +86,7 @@ begin
     if LLen <> System.Length(Result) then
       System.SetLength(Result, LLen);
   finally
-    TFusedKernelGate.ForceDisabled := LSaved;
+    TCipherKernelGate.ForceDisabled := LSaved;
   end;
 end;
 
@@ -97,8 +97,8 @@ var
   LSaved: Boolean;
   LLen: Int32;
 begin
-  LSaved := TFusedKernelGate.ForceDisabled;
-  TFusedKernelGate.ForceDisabled := not AUseFused;
+  LSaved := TCipherKernelGate.ForceDisabled;
+  TCipherKernelGate.ForceDisabled := not AUseFused;
   try
     LCipher := TGcmSivBlockCipher.Create() as IGcmSivBlockCipher;
     LCipher.Init(False, TAeadParameters.Create(TKeyParameter.Create(AKey)
@@ -109,7 +109,7 @@ begin
     if LLen <> System.Length(Result) then
       System.SetLength(Result, LLen);
   finally
-    TFusedKernelGate.ForceDisabled := LSaved;
+    TCipherKernelGate.ForceDisabled := LSaved;
   end;
 end;
 

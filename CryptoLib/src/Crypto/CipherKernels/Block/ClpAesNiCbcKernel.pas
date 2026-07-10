@@ -24,14 +24,15 @@ uses
   SysUtils,
   ClpIBlockCipher,
   ClpIAesEngineX86,
-  ClpFusedKernelTypes,
-  ClpIFusedCbcKernel,
-  ClpFusedKernelRegistry,
+  ClpCipherKernelTypes,
+  ClpICbcKernel,
+  ClpCipherKernelFactoryBase,
+  ClpCipherKernelRegistry,
   ClpAesNiFusedX86Backend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of IFusedCbcKernel: the serial CBC-encrypt chain
+  ///   AES-NI implementation of ICbcKernel: the serial CBC-encrypt chain
   ///   C_i = E_K(P_i xor C_{i-1}) applied over a whole run in one call, with the
   ///   chaining value held in a register between blocks (kernel body in
   ///   Include\Simd\Aes\Cbc). Reuses the shared 1-wide AES round chain
@@ -40,7 +41,7 @@ type
   ///   unavailable the factory returns nil and TCbcBlockCipher keeps its existing
   ///   per-block bulk path.
   /// </summary>
-  TAesNiCbcKernel = class sealed(TInterfacedObject, IFusedCbcKernel)
+  TAesNiCbcKernel = class sealed(TInterfacedObject, ICbcKernel)
   strict private
     // FEngine is retained so the round-key buffer FKeys points into stays alive
     // for the kernel's lifetime.
@@ -54,13 +55,12 @@ type
       ABlockCount: NativeInt);
   end;
 
-  TAesNiCbcKernelFactory = class sealed(TInterfacedObject, IFusedCbcKernelFactory)
+  TAesNiCbcKernelFactory = class sealed(TCipherKernelFactoryBase, ICbcKernelFactory)
   public
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+    function ProviderName: String; override;
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedCbcKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: ICbcKernel): Boolean;
   end;
 
 implementation
@@ -167,13 +167,8 @@ begin
   Result := 'AES-NI';
 end;
 
-function TAesNiCbcKernelFactory.Priority: TFusedKernelPriority;
-begin
-  Result := TFusedKernelPriority.Baseline;
-end;
-
 function TAesNiCbcKernelFactory.TryCreate(const ACipher: IBlockCipher;
-  ADirection: TFusedModeDirection; out AKernel: IFusedCbcKernel): Boolean;
+  ADirection: TCipherKernelDirection; out AKernel: ICbcKernel): Boolean;
 var
   LEngine: IAesEngineX86;
   LKeys: PByte;
@@ -181,7 +176,7 @@ var
 begin
   AKernel := nil;
   Result := False;
-  if ADirection <> TFusedModeDirection.Encrypt then
+  if ADirection <> TCipherKernelDirection.Encrypt then
     Exit; // only encrypt is implemented; decrypt not yet supported
   try
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -201,7 +196,7 @@ begin
 end;
 
 initialization
-  TFusedKernelRegistry.RegisterCbcFactory(
-    TAesNiCbcKernelFactory.Create() as IFusedCbcKernelFactory);
+  TCipherKernelRegistry.Register(
+    TAesNiCbcKernelFactory.Create() as ICbcKernelFactory);
 
 end.

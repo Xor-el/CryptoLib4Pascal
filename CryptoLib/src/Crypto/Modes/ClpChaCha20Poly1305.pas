@@ -31,6 +31,9 @@ uses
   ClpIBulkStreamCipher,
   ClpIChaCha7539Engine,
   ClpChaCha7539Engine,
+  ClpCipherKernelTypes,
+  ClpCipherKernelRegistry,
+  ClpIChaCha20Poly1305Kernel,
   ClpPoly1305,
   ClpIMac,
   ClpKeyParameter,
@@ -111,6 +114,9 @@ type
     // The cipher engine's bulk stream interface when it exposes one (resolved once);
     // enables the 512B/8-way tier. nil => the narrower per-tier path is used.
     FBulkChaCha: IBulkStreamCipher;
+    // A registered ChaCha20-Poly1305 kernel, resolved once at Init.
+    // the two-pass cipher-then-MAC path runs.
+    FChaChaKernel: IChaCha20Poly1305Kernel;
     FNonceBytes: Int32;
     FPoly1305: IMac;
 
@@ -282,6 +288,13 @@ begin
   System.Move(LInitNonce[0], FNonce[0], FNonceBytes);
 
   FChaCha20.Init(True, LChaCha20Params);
+
+  if AForEncryption then
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+      TCipherKernelDirection.Encrypt, FChaChaKernel)
+  else
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+      TCipherKernelDirection.Decrypt, FChaChaKernel);
 
   if AForEncryption then
     FState := TState.EncInit

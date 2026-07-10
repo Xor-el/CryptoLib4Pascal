@@ -14,34 +14,38 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpFusedKernelTypes;
+unit ClpCipherKernelFactoryBase;
 
-{$I ..\..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
+uses
+  ClpCipherKernelTypes;
+
 type
   /// <summary>
-  ///   Direction a fused AEAD kernel is being constructed for. Modes
-  ///   whose hot path is direction-agnostic may pass Encrypt for both
-  ///   cases.
+  ///   Shared base for cipher-kernel factory classes. ProviderName is
+  ///   abstract - each concrete factory must declare its own provider identity
+  ///   (there is no generic default). Priority defaults to Baseline, a neutral
+  ///   value a factory overrides only when it should out- or under-rank peers.
+  ///   The base intentionally declares no interface - each concrete factory
+  ///   lists its own I&lt;Mode&gt;KernelFactory, and these members
+  ///   satisfy the base slice of that contract.
   /// </summary>
-  TFusedModeDirection = (Encrypt, Decrypt);
-
-  /// <summary>
-  ///   Priority class used to order factories in the fused AEAD kernel
-  ///   registry. Higher ordinal wins; equal priorities retain
-  ///   registration order.
-  ///     Fallback     - opt-in experimental / diagnostic kernel; loses
-  ///                    to anything else.
-  ///     Baseline     - in-tree built-in accelerators.
-  ///     Accelerated  - external plug-in targeting a newer ISA
-  ///                    extension than the in-tree baseline.
-  ///     UserOverride - last-resort explicit override wired in by the
-  ///                    consumer (application or test harness).
-  /// </summary>
-  TFusedKernelPriority = (Fallback, Baseline, Accelerated, UserOverride);
+  TCipherKernelFactoryBase = class abstract(TInterfacedObject)
+  public
+    function ProviderName: String; virtual; abstract;
+    function Priority: TCipherKernelPriority; virtual;
+  end;
 
 implementation
+
+{ TCipherKernelFactoryBase }
+
+function TCipherKernelFactoryBase.Priority: TCipherKernelPriority;
+begin
+  Result := TCipherKernelPriority.Baseline;
+end;
 
 end.

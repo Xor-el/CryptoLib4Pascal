@@ -25,10 +25,10 @@ uses
   Generics.Collections,
   ClpIBlockCipher,
   ClpIBulkBlockCipher,
-  ClpFusedKernelTypes,
-  ClpIFusedOcbKernel,
-  ClpFusedKernelRegistry,
-  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
+  ClpCipherKernelTypes,
+  ClpIOcbKernel,
+  ClpCipherKernelRegistry,
+  ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpIOcbBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
@@ -124,14 +124,14 @@ type
     FMainBulk: IBulkBlockCipher;
 
     // Fused-kernel fast path: cipher-agnostic fused OCB kernel
-    // resolved via TFusedKernelRegistry on every Init. Nil when no
+    // resolved via TCipherKernelRegistry on every Init. Nil when no
     // registered factory accepts the cipher / direction pair or the
     // registry-wide kill switch is on; ProcessBytes then falls through
     // to the 8-wide bulk / scalar paths unchanged.
     // FOcbKernelMinBlocks is also the batch alignment: the kernel
     // loops internally in MinimumBlockCount chunks so the mode stages
     // up to FUSED_BATCH_BLOCKS worth of offsets per dispatch.
-    FOcbKernel: IFusedOcbKernel;
+    FOcbKernel: IOcbKernel;
     FOcbKernelMinBlocks: Int32;
 
     procedure CheckNonceReuse(AForEncryption: Boolean;
@@ -267,7 +267,7 @@ var
   LN: TCryptoLibByteArray;
   LMacSizeBits, LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
-  LFusedDirection: TFusedModeDirection;
+  LFusedDirection: TCipherKernelDirection;
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
@@ -340,10 +340,10 @@ begin
   FOcbKernel := nil;
   FOcbKernelMinBlocks := 0;
   if FForEncryption then
-    LFusedDirection := TFusedModeDirection.Encrypt
+    LFusedDirection := TCipherKernelDirection.Encrypt
   else
-    LFusedDirection := TFusedModeDirection.Decrypt;
-  if TFusedKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
+    LFusedDirection := TCipherKernelDirection.Decrypt;
+  if TCipherKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
     FOcbKernel) and (FOcbKernel <> nil) then
   begin
     FOcbKernelMinBlocks := FOcbKernel.MinimumBlockCount;
@@ -663,7 +663,7 @@ begin
     // LScratch reshape had to do on every fused decrypt batch.
     //
     // The `InPtr - BLOCK_SIZE` pointer is never dereferenced at offset 0 by
-    // the kernel (guaranteed by the IFusedOcbKernel.ProcessBlocks contract for
+    // the kernel (guaranteed by the IOcbKernel.ProcessBlocks contract for
     // Block0Ptr); the address itself only feeds register arithmetic and the
     // `[InPtr + 16..]` loads, all of which resolve inside AInput.
     LBlock0Ptr := @FMainBlock[0];

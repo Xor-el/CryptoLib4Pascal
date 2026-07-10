@@ -44,7 +44,7 @@ uses
   ClpCryptoLibTypes,
   ClpAesUtilities,
   ClpOcbBlockCipher,
-  FusedKernelToggle,
+  CipherKernelToggle,
   CryptoLibTestBase,
   AeadTestUtilities;
 
@@ -92,7 +92,7 @@ type
     procedure SetUp; override;
     procedure TearDown; override;
 
-    // Workers run twice via RunWithFusedToggle (fused on / off) so any
+    // Workers run twice via RunWithCipherKernelToggle (cipher kernel on / off) so any
     // drift between the two code paths surfaces as a test failure.
     procedure DoTestRfcVectors128;
     procedure DoTestRfcVectors96;
@@ -581,22 +581,22 @@ end;
 
 procedure TTestOcb.TestRfcVectors128;
 begin
-  RunWithFusedToggle(DoTestRfcVectors128);
+  RunWithCipherKernelToggle(DoTestRfcVectors128);
 end;
 
 procedure TTestOcb.TestRfcVectors96;
 begin
-  RunWithFusedToggle(DoTestRfcVectors96);
+  RunWithCipherKernelToggle(DoTestRfcVectors96);
 end;
 
 procedure TTestOcb.TestOcbLongForm;
 begin
-  RunWithFusedToggle(DoTestOcbLongForm);
+  RunWithCipherKernelToggle(DoTestOcbLongForm);
 end;
 
 procedure TTestOcb.TestRandomised;
 begin
-  RunWithFusedToggle(DoTestRandomised);
+  RunWithCipherKernelToggle(DoTestRandomised);
 end;
 
 procedure TTestOcb.DoTestRfcVectors128;

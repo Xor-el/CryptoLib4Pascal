@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedCcmKernel;
+unit ClpIEaxKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,20 +22,22 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedKernelTypes;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused CCM body kernel running the
-  ///   CTR keystream and CBC-MAC lanes together per iteration.
-  ///   Direction-bound at construction: encrypt and decrypt take
-  ///   different paths through the inner MAC dependency chain. The
-  ///   kernel owns the inner loop over ABlockCount; the mode calls
-  ///   ProcessBody once per Init / Reset cycle covering the full bulk
-  ///   body.
+  ///   Mode-specific contract for an accelerated EAX body kernel running the
+  ///   CTR keystream and OMAC lanes together per iteration. Direction-
+  ///   bound at construction: encrypt and decrypt take different paths
+  ///   through the inner MAC dependency chain. The kernel owns the
+  ///   inner loop over ABlockCount; the mode seeds AOmacState to the
+  ///   running OMAC pre-body state (OMAC of TagC only on first call,
+  ///   CBC-MAC running thereafter) and handles nonce-OMAC, header-OMAC,
+  ///   and the final-block OMAC subkey XOR.
   /// </summary>
-  IFusedCcmKernel = interface
-    ['{BEAAEA01-DF32-441F-96AB-77D07C19578D}']
+  IEaxKernel = interface
+    ['{3D87A0D4-7375-453F-BF72-CA3CA191CDCB}']
 
     /// <summary>Minimum number of 16-byte body blocks the kernel can
     /// usefully process. If the mode has fewer than MinimumBlockCount
@@ -44,29 +46,24 @@ type
 
     /// <summary>
     ///   Process ABlockCount (>= MinimumBlockCount) body blocks in a
-    ///   single call. The mode has already folded B_0 + AAD + padding
-    ///   into ACbcMacState during the scalar header pass and advanced
-    ///   ACtrState past the keystream block reserved for the
-    ///   authentication tag. On return ACtrState has advanced by
-    ///   exactly ABlockCount keystream blocks and ACbcMacState has
-    ///   absorbed the corresponding plaintext (always plaintext, even
-    ///   when decrypting - the decrypt kernel recovers plaintext
-    ///   internally and folds it). AOutPtr may alias AInPtr; both must
-    ///   cover ABlockCount * 16 contiguous bytes.
+    ///   single call. ACtrState holds the pre-body counter; AOmacState
+    ///   holds the running OMAC / CBC-MAC state. On return ACtrState
+    ///   has advanced by ABlockCount keystream blocks and AOmacState
+    ///   has absorbed the corresponding ciphertext (always ciphertext,
+    ///   the MAC substrate under EAX, regardless of direction). AOutPtr
+    ///   may alias AInPtr; both must cover ABlockCount * 16 contiguous
+    ///   bytes.
     /// </summary>
     procedure ProcessBody(AInPtr, AOutPtr, ACtrState,
-      ACbcMacState: Pointer; ABlockCount: Int32);
+      AOmacState: Pointer; ABlockCount: Int32);
   end;
 
-  IFusedCcmKernelFactory = interface
-    ['{F30B4F47-0546-4212-A00D-850F2AF4FF5F}']
-
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
+  IEaxKernelFactory = interface(ICipherKernelFactory)
+    ['{E3DDE544-91EF-4E41-B707-7ACD366FDB0A}']
 
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedCcmKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: IEaxKernel): Boolean;
   end;
 
 implementation

@@ -33,10 +33,10 @@ uses
   ClpISicBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
-  ClpFusedKernelTypes,
-  ClpIFusedCcmKernel,
-  ClpFusedKernelRegistry,
-  ClpFusedKernelDefaults, // registers in-tree fused AEAD kernel factories
+  ClpCipherKernelTypes,
+  ClpICcmKernel,
+  ClpCipherKernelRegistry,
+  ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
   ClpIKeyParameter,
   ClpCbcBlockCipherMac,
@@ -118,7 +118,7 @@ type
     FPlainScratch: TCryptoLibByteArray;
     // Cached once per Init; non-nil when the registry resolved a fused
     // CCM kernel for the underlying cipher and current direction.
-    FCcmKernel: IFusedCcmKernel;
+    FCcmKernel: ICcmKernel;
 
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
     procedure CheckNonceReuse(AForEncryption: Boolean;
@@ -232,7 +232,7 @@ procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
 var
   LChoice: TCipherAeadChoice;
   LRequestedMacSizeBits: Int32;
-  LDirection: TFusedModeDirection;
+  LDirection: TCipherKernelDirection;
 begin
   FForEncryption := AForEncryption;
 
@@ -272,10 +272,10 @@ begin
     // schedule contents are identical across those re-keys.
     FCipher.Init(True, FKeyParam);
     if AForEncryption then
-      LDirection := TFusedModeDirection.Encrypt
+      LDirection := TCipherKernelDirection.Encrypt
     else
-      LDirection := TFusedModeDirection.Decrypt;
-    TFusedKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
+      LDirection := TCipherKernelDirection.Decrypt;
+    TCipherKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
   end;
 
   Reset();

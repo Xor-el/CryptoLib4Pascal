@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit FusedKernelToggle;
+unit CipherKernelToggle;
 
 interface
 
@@ -24,36 +24,36 @@ interface
 
 uses
   SysUtils,
-  ClpFusedKernelRegistry;
+  ClpCipherKernelRegistry;
 
 type
-  TFusedToggleTestProc = procedure of object;
+  TCipherKernelToggleProc = procedure of object;
 
 /// <summary>
-///   Runs AProc twice: once with fused kernels enabled (production
+///   Runs AProc twice: once with cipher kernels enabled (production
 ///   default) and once with them forcibly disabled so the scalar /
 ///   generic-bulk fallbacks are exercised. Both passes must produce
 ///   byte-identical outputs. The previous kill-switch state is saved
 ///   and restored on return (including on exceptions).
 /// </summary>
-procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
+procedure RunWithCipherKernelToggle(AProc: TCipherKernelToggleProc);
 
 implementation
 
-procedure RunWithFusedToggle(AProc: TFusedToggleTestProc);
+procedure RunWithCipherKernelToggle(AProc: TCipherKernelToggleProc);
 var
   LSaved: Boolean;
 begin
   if not Assigned(AProc) then
     Exit;
-  LSaved := TFusedKernelGate.ForceDisabled;
+  LSaved := TCipherKernelGate.ForceDisabled;
   try
-    TFusedKernelGate.ForceDisabled := False;
+    TCipherKernelGate.ForceDisabled := False;
     AProc();
-    TFusedKernelGate.ForceDisabled := True;
+    TCipherKernelGate.ForceDisabled := True;
     AProc();
   finally
-    TFusedKernelGate.ForceDisabled := LSaved;
+    TCipherKernelGate.ForceDisabled := LSaved;
   end;
 end;
 

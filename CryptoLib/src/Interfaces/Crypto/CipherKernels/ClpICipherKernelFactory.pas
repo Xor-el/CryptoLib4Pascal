@@ -14,28 +14,38 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpFusedKernelDefaults;
+unit ClpICipherKernelFactory;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
-// Aggregator for CryptoLib's in-tree fused AEAD kernel factories.
-// Listed factory units self-gate on their own CPU/arch defines, so
-// this file is a plain, platform-agnostic list: adding a new in-tree
-// accelerator is one `uses` line here, mode units are never touched.
-// External / third-party factories live in the consumer's own unit
-// tree and register via the same mechanism -- no edit to this file.
-
 interface
 
-implementation
-
 uses
-  ClpAesNiGcmKernel,
-  ClpAesNiOcbKernel,
-  ClpAesNiCcmKernel,
-  ClpAesNiEaxKernel,
-  ClpAesNiCtrKernel,
-  ClpAesNiCbcKernel,
-  ClpPclmulGcmSivKernel;
+  ClpCipherKernelTypes;
+
+type
+  /// <summary>
+  ///   Family-agnostic base contract shared by every cipher kernel factory
+  ///   (block-cipher AEAD modes and stream-cipher AEADs alike). It carries only
+  ///   the identity and ordering a factory needs to live in the registry; the
+  ///   actual TryCreate lives on each derived factory interface with its own
+  ///   strongly-typed cipher parameter. The registry stores factories through
+  ///   this base and rediscovers a concrete family with Supports(); an external
+  ///   consumer can therefore register a cipher kernel for an algorithm the
+  ///   framework never enumerated, with no framework edit.
+  /// </summary>
+  ICipherKernelFactory = interface
+    ['{006B1103-17E9-43C6-9A7A-EB515B120325}']
+
+    /// <summary>Stable human-readable provider label (diagnostics / tests).</summary>
+    function ProviderName: String;
+
+    /// <summary>Priority class controlling factory order inside the registry;
+    /// see TCipherKernelPriority. Higher wins; equal priorities keep
+    /// registration order.</summary>
+    function Priority: TCipherKernelPriority;
+  end;
+
+implementation
 
 end.

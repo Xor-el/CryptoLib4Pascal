@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFusedOcbKernel;
+unit ClpIOcbKernel;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -22,15 +22,16 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpFusedKernelTypes;
+  ClpCipherKernelTypes,
+  ClpICipherKernelFactory;
 
 type
   /// <summary>
-  ///   Mode-specific contract for a fused OCB body kernel. All cipher
+  ///   Mode-specific contract for an accelerated OCB body kernel. All cipher
   ///   state lives inside the implementation; the mode sees only this
   ///   interface.
   /// </summary>
-  IFusedOcbKernel = interface
+  IOcbKernel = interface
     ['{ADAF5C2A-FD31-42EF-A266-EB4B0F9AC06D}']
 
     /// <summary>The minimum (and alignment) batch width the kernel
@@ -40,7 +41,7 @@ type
 
     /// <summary>
     ///   Process ABlockCount blocks of OCB body in a single call with
-    ///   the offset ladder, L-table lookup and checksum fold all fused
+    ///   the offset ladder, L-table lookup and checksum fold all combined
     ///   inside the kernel.
     ///   ABlockCount MUST be a positive multiple of MinimumBlockCount;
     ///   the kernel iterates internally in MinimumBlockCount-sized
@@ -84,11 +85,8 @@ type
       AStartBlockCount: UInt64);
   end;
 
-  IFusedOcbKernelFactory = interface
+  IOcbKernelFactory = interface(ICipherKernelFactory)
     ['{A430371B-1B11-46C2-AFC8-EF9B07DE4CFA}']
-
-    function ProviderName: String;
-    function Priority: TFusedKernelPriority;
 
     /// <summary>
     ///   Attempt to construct an OCB kernel bound to ACipher for the
@@ -97,8 +95,8 @@ type
     ///   construction exception); never raises.
     /// </summary>
     function TryCreate(const ACipher: IBlockCipher;
-      ADirection: TFusedModeDirection;
-      out AKernel: IFusedOcbKernel): Boolean;
+      ADirection: TCipherKernelDirection;
+      out AKernel: IOcbKernel): Boolean;
   end;
 
 implementation
