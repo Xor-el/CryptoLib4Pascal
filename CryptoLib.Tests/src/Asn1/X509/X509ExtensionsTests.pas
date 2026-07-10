@@ -62,6 +62,8 @@ type
     procedure TestExtensionRoundTrip;
     procedure TestExtensionsBridge;
     procedure TestExtensionsGeneratorIExtension;
+    procedure TestCrlDistPointRejectsEmptySequence;
+    procedure TestExtendedKeyUsageRejectsEmptySequence;
 
   end;
 
@@ -319,6 +321,40 @@ begin
   LExtGen.AddExtensions(TExtensions.Create(LExtension) as IExtensions);
   LExts := LExtGen.Generate();
   CheckNotNull(LExts.GetExtension(FOid1), 'added via IExtensions');
+end;
+
+procedure TX509ExtensionsTest.TestCrlDistPointRejectsEmptySequence;
+var
+  LEmpty: IAsn1Sequence;
+  LResult: ICrlDistPoint;
+  LRaised: Boolean;
+begin
+  LEmpty := TDerSequence.Empty;
+  LRaised := False;
+  try
+    LResult := TCrlDistPoint.Create(LEmpty);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'CrlDistPoint must reject an empty sequence');
+end;
+
+procedure TX509ExtensionsTest.TestExtendedKeyUsageRejectsEmptySequence;
+var
+  LEmpty: IAsn1Sequence;
+  LResult: IExtendedKeyUsage;
+  LRaised: Boolean;
+begin
+  LEmpty := TDerSequence.Empty;
+  LRaised := False;
+  try
+    LResult := TExtendedKeyUsage.Create(LEmpty);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'ExtendedKeyUsage must reject an empty sequence');
 end;
 
 initialization

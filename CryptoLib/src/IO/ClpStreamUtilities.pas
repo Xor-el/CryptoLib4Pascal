@@ -78,6 +78,10 @@ type
     class function WriteBufTo(const ABuf: TMemoryStream;
       const AOutput: TCryptoLibByteArray; AOffset: Int32): Int32; static;
 
+    // best-effort: bytes remaining in a seekable stream (Size - Position)
+    class function TryGetAvailable(const AStream: TStream;
+      out AAvailable: Int64): Boolean; static;
+
   end;
 
 type
@@ -253,6 +257,29 @@ begin
 
   // Copy directly from stream buffer into the byte array
   Move(PByte(ABuf.Memory)^, AOutput[AOffset], Result);
+end;
+
+class function TStreamUtilities.TryGetAvailable(const AStream: TStream;
+  out AAvailable: Int64): Boolean;
+var
+  LRemaining: Int64;
+begin
+  AAvailable := 0;
+  Result := False;
+  try
+    if AStream.CanSeek then
+    begin
+      LRemaining := AStream.Size - AStream.Position;
+      if LRemaining < 0 then
+        LRemaining := 0;
+      AAvailable := LRemaining;
+      Result := True;
+    end;
+  except
+    // ignore; this method is best-effort only
+    AAvailable := 0;
+    Result := False;
+  end;
 end;
 
 { TStreamHelper }
