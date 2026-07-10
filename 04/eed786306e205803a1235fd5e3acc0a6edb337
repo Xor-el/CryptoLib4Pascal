@@ -1,0 +1,40 @@
+CryptoLib.Tests/src/Crypto/AcceleratedExternalRegistrationTests.pas
+  s_4e396cb15e16b1::t_a80f42b9cf575e 62,67,91,94,96,99,105,154,156,160,170,172,174,182,192,194-195,197,212,214,216-217,221
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiCbcKernel.pas
+  s_4e396cb15e16b1::t_a716157eb3b5e0 199
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiCcmKernel.pas
+  s_4e396cb15e16b1::t_915dd6169b2231 310
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiCtrKernel.pas
+  s_4e396cb15e16b1::t_f67f5e0f206a3d 203
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiEaxKernel.pas
+  s_4e396cb15e16b1::t_e0b111f5bf954e 297
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiGcmKernel.pas
+  s_4e396cb15e16b1::t_7514812649dc56 240
+CryptoLib/src/Crypto/Accelerated/Block/ClpAesNiOcbKernel.pas
+  s_4e396cb15e16b1::t_e2ad8320b04e2e 294
+CryptoLib/src/Crypto/Accelerated/Block/ClpPclmulGcmSivKernel.pas
+  s_4e396cb15e16b1::t_31ad6731e37c45 121
+CryptoLib/src/Crypto/Accelerated/ClpAcceleratedKernelRegistry.pas
+  s_4e396cb15e16b1::t_bb5e95c94c1211 108-111,391-392,398,401,404
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "04eed786306e205803a1235fd5e3acc0a6edb337",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
