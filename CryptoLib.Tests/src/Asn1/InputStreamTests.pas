@@ -84,7 +84,6 @@ end;
 
 function TDummyStreamWithoutKnownLimit.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
 begin
-  Result := 0; // unreachable; the raise below never returns
   // CanSeek is already False, so callers should not reach here; a genuine
   // non-seekable stream raises if seeked anyway.
   raise ENotSupportedCryptoLibException.Create('stream is not seekable');
