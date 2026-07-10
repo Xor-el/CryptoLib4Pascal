@@ -1,0 +1,33 @@
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCbcKernel.pas
+  s_4e396cb15e16b1::t_480c43565a2e03 75-81
+  s_4e396cb15e16b1::t_1e8552893fe1c3 35-42,44-45,54,57
+  s_4e396cb15e16b1::t_82c6ef53676f48 131-179,185,191,198,209-217,219-225,250-258,262
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_i386.inc
+  s_4e396cb15e16b1::t_545a6bfc78c9d7 20,32
+  s_4e396cb15e16b1::t_f68c7c16d2f6df 1-19,21-31,33-94
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_x86_64.inc
+  s_4e396cb15e16b1::t_5f61740248b579 1-18,20-36,38-110
+  s_4e396cb15e16b1::t_545a6bfc78c9d7 19,37
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_i386.inc
+  s_4e396cb15e16b1::t_4d9e32c4510f29 15,28
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_x86_64.inc
+  s_4e396cb15e16b1::t_c4e09e6f1859ed 15,28
+CryptoLib/src/Crypto/Modes/ClpCbcBlockCipher.pas
+  s_4e396cb15e16b1::t_ed9701540ee46c 74-79,243-254,359-362,367-368
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "1016211fc99082c2395e401106c0947406678b10",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
