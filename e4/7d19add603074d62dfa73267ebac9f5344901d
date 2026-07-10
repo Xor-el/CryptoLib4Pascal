@@ -1,0 +1,27 @@
+CryptoLib.Tests/src/Asn1/InputStreamTests.pas
+  s_863773189f1f4f::t_3f2a144c000d9a 38,46-48,50,52,80,82,87-90,252,257,259,261
+CryptoLib.Tests/src/Asn1/X509/X509ExtensionsTests.pas
+  s_863773189f1f4f::t_982e897af08469 65-66,326-359
+CryptoLib/src/Asn1/ClpAsn1Streams.pas
+  s_863773189f1f4f::t_3915854d127f8f 1674,1690,1692-1695
+CryptoLib/src/Asn1/X509/ClpX509Asn1Objects.pas
+  s_863773189f1f4f::t_f5de71347b752b 5285,5314,5337-5338,9571,9587
+CryptoLib/src/IO/ClpStreamUtilities.pas
+  s_863773189f1f4f::t_1ac1a4bdb472b6 81-84,262-284
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "e47d19add603074d62dfa73267ebac9f5344901d",
+  "prompts": {},
+  "sessions": {
+    "s_863773189f1f4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "49a3ae31-64c9-49ac-b131-686b774b3cd3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
