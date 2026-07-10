@@ -59,12 +59,12 @@ type
   ///   CryptoLib" contract. A mock third-party factory is registered
   ///   from test code exactly the way a consumer's own unit would
   ///   register from its initialization block. The tests assert that:
-  ///     * after RegisterGcmFactory, GetRegisteredGcmProviders
+  ///     * after Register, GetRegisteredProviders(IAcceleratedGcmKernelFactory)
   ///       reflects the mock;
   ///     * registration is strictly additive -- every provider that
   ///       was already present is still present afterwards (defaults
   ///       coexist);
-  ///     * UnregisterGcmFactory returns the provider list to its
+  ///     * Unregister returns the provider list to its
   ///       prior state.
   ///   Any future change that silently regresses this external
   ///   registration contract will trip a red test here.
@@ -88,21 +88,21 @@ implementation
 resourcestring
   SMockMustBePresent =
     'Mock external GCM factory must appear in ' +
-    'GetRegisteredGcmProviders after RegisterGcmFactory.';
+    'GetRegisteredProviders(IAcceleratedGcmKernelFactory) after Register.';
   SMockMustBeAbsent =
     'Mock external GCM factory must be absent from ' +
-    'GetRegisteredGcmProviders after UnregisterGcmFactory.';
+    'GetRegisteredProviders(IAcceleratedGcmKernelFactory) after Unregister.';
   SCountMustGrowByOne =
-    'External RegisterGcmFactory must grow the provider count by ' +
+    'External Register must grow the provider count by ' +
     'exactly one (non-duplicate factory).';
   SCountMustRestoreBaseline =
-    'External UnregisterGcmFactory must restore the provider count ' +
+    'External Unregister must restore the provider count ' +
     'to its pre-registration baseline.';
   SDefaultsMustSurvive =
     'Every provider present before external registration must still ' +
     'be reported afterwards (registration is strictly additive).';
   SDuplicateMustBeIgnored =
-    'RegisterGcmFactory MUST silently ignore duplicate registrations ' +
+    'Register MUST silently ignore duplicate registrations ' +
     '(same interface identity).';
 
 { TMockExternalGcmKernelFactory }
@@ -151,13 +151,13 @@ var
   LProviders: TCryptoLibStringArray;
 begin
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.Register(LFactory);
   try
-    LProviders := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+    LProviders := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
     CheckTrue(ProvidersContain(LProviders, CMockExternalProviderName),
       SMockMustBePresent);
   finally
-    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.Unregister(LFactory);
   end;
 end;
 
@@ -167,11 +167,11 @@ var
   LBaseline, LAfter: TCryptoLibStringArray;
   LIndex: Int32;
 begin
-  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.Register(LFactory);
   try
-    LAfter := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+    LAfter := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
     CheckEquals(System.Length(LBaseline) + 1, System.Length(LAfter),
       SCountMustGrowByOne);
     // Every baseline name must survive the registration.
@@ -179,7 +179,7 @@ begin
       CheckTrue(ProvidersContain(LAfter, LBaseline[LIndex]),
         SDefaultsMustSurvive);
   finally
-    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.Unregister(LFactory);
   end;
 end;
 
@@ -189,12 +189,12 @@ var
   LBaseline, LAfterUnregister: TCryptoLibStringArray;
   LIndex: Int32;
 begin
-  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
-  TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.Register(LFactory);
+  TAcceleratedKernelRegistry.Unregister(LFactory);
 
-  LAfterUnregister := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+  LAfterUnregister := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
   CheckEquals(System.Length(LBaseline), System.Length(LAfterUnregister),
     SCountMustRestoreBaseline);
   CheckFalse(ProvidersContain(LAfterUnregister, CMockExternalProviderName),
@@ -209,16 +209,16 @@ var
   LFactory: IAcceleratedGcmKernelFactory;
   LBaseline, LAfter: TCryptoLibStringArray;
 begin
-  LBaseline := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+  LBaseline := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
   LFactory := TMockExternalGcmKernelFactory.Create();
-  TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
+  TAcceleratedKernelRegistry.Register(LFactory);
   try
-    TAcceleratedKernelRegistry.RegisterGcmFactory(LFactory);
-    LAfter := TAcceleratedKernelRegistry.GetRegisteredGcmProviders;
+    TAcceleratedKernelRegistry.Register(LFactory);
+    LAfter := TAcceleratedKernelRegistry.GetRegisteredProviders(IAcceleratedGcmKernelFactory);
     CheckEquals(System.Length(LBaseline) + 1, System.Length(LAfter),
       SDuplicateMustBeIgnored);
   finally
-    TAcceleratedKernelRegistry.UnregisterGcmFactory(LFactory);
+    TAcceleratedKernelRegistry.Unregister(LFactory);
   end;
 end;
 

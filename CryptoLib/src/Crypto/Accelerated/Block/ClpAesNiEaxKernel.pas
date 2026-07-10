@@ -294,7 +294,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterEaxFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiEaxKernelFactory.Create() as IAcceleratedEaxKernelFactory);
 
 end.

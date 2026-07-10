@@ -307,7 +307,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterCcmFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiCcmKernelFactory.Create() as IAcceleratedCcmKernelFactory);
 
 end.

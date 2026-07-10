@@ -291,7 +291,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterOcbFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiOcbKernelFactory.Create() as IAcceleratedOcbKernelFactory);
 
 end.

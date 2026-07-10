@@ -86,24 +86,6 @@ type
     /// resolve an accelerated kernel the framework never enumerated.</summary>
     class function GetSnapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>; static;
 
-    class procedure RegisterGcmFactory(const AFactory: IAcceleratedGcmKernelFactory); static;
-    class procedure RegisterOcbFactory(const AFactory: IAcceleratedOcbKernelFactory); static;
-    class procedure RegisterCcmFactory(const AFactory: IAcceleratedCcmKernelFactory); static;
-    class procedure RegisterEaxFactory(const AFactory: IAcceleratedEaxKernelFactory); static;
-    class procedure RegisterGcmSivFactory(const AFactory: IAcceleratedGcmSivKernelFactory); static;
-    class procedure RegisterCtrFactory(const AFactory: IAcceleratedCtrKernelFactory); static;
-    class procedure RegisterCbcFactory(const AFactory: IAcceleratedCbcKernelFactory); static;
-    class procedure RegisterChaCha20Poly1305Factory(const AFactory: IAcceleratedChaCha20Poly1305KernelFactory); static;
-
-    class procedure UnregisterGcmFactory(const AFactory: IAcceleratedGcmKernelFactory); static;
-    class procedure UnregisterOcbFactory(const AFactory: IAcceleratedOcbKernelFactory); static;
-    class procedure UnregisterCcmFactory(const AFactory: IAcceleratedCcmKernelFactory); static;
-    class procedure UnregisterEaxFactory(const AFactory: IAcceleratedEaxKernelFactory); static;
-    class procedure UnregisterGcmSivFactory(const AFactory: IAcceleratedGcmSivKernelFactory); static;
-    class procedure UnregisterCtrFactory(const AFactory: IAcceleratedCtrKernelFactory); static;
-    class procedure UnregisterCbcFactory(const AFactory: IAcceleratedCbcKernelFactory); static;
-    class procedure UnregisterChaCha20Poly1305Factory(const AFactory: IAcceleratedChaCha20Poly1305KernelFactory); static;
-
     class function TryAcquireGcm(const ACipher: IBlockCipher;
       ADirection: TAcceleratedKernelDirection; AHPowers: Pointer;
       out AKernel: IAcceleratedGcmKernel): Boolean; static;
@@ -123,16 +105,10 @@ type
     class function TryAcquireChaCha20Poly1305(const ACipher: IStreamCipher;
       ADirection: TAcceleratedKernelDirection; out AKernel: IAcceleratedChaCha20Poly1305Kernel): Boolean; static;
 
-    /// <summary>Snapshot of ProviderName strings in current priority order.
-    /// Used for diagnostics and test assertions.</summary>
-    class function GetRegisteredGcmProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredOcbProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredCcmProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredEaxProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredGcmSivProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredCtrProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredCbcProviders: TCryptoLibStringArray; static;
-    class function GetRegisteredChaCha20Poly1305Providers: TCryptoLibStringArray; static;
+    /// <summary>Provider-name list (priority order) of every registered factory
+    /// supporting AFactoryIID. Pass a per-mode factory interface, e.g.
+    /// GetRegisteredProviders(IAcceleratedGcmKernelFactory). Diagnostics/tests.</summary>
+    class function GetRegisteredProviders(const AFactoryIID: TGUID): TCryptoLibStringArray; static;
   end;
 
 implementation
@@ -211,104 +187,6 @@ end;
 class function TAcceleratedKernelRegistry.GetSnapshot: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
 begin
   Result := Snapshot;
-end;
-
-{ ---- Register / Unregister wrappers ---------------------------------------- }
-
-class procedure TAcceleratedKernelRegistry.RegisterGcmFactory(
-  const AFactory: IAcceleratedGcmKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterOcbFactory(
-  const AFactory: IAcceleratedOcbKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterCcmFactory(
-  const AFactory: IAcceleratedCcmKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterEaxFactory(
-  const AFactory: IAcceleratedEaxKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterGcmSivFactory(
-  const AFactory: IAcceleratedGcmSivKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterCtrFactory(
-  const AFactory: IAcceleratedCtrKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterCbcFactory(
-  const AFactory: IAcceleratedCbcKernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.RegisterChaCha20Poly1305Factory(
-  const AFactory: IAcceleratedChaCha20Poly1305KernelFactory);
-begin
-  Register(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterGcmFactory(
-  const AFactory: IAcceleratedGcmKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterOcbFactory(
-  const AFactory: IAcceleratedOcbKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterCcmFactory(
-  const AFactory: IAcceleratedCcmKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterEaxFactory(
-  const AFactory: IAcceleratedEaxKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterGcmSivFactory(
-  const AFactory: IAcceleratedGcmSivKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterCtrFactory(
-  const AFactory: IAcceleratedCtrKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterCbcFactory(
-  const AFactory: IAcceleratedCbcKernelFactory);
-begin
-  Unregister(AFactory);
-end;
-
-class procedure TAcceleratedKernelRegistry.UnregisterChaCha20Poly1305Factory(
-  const AFactory: IAcceleratedChaCha20Poly1305KernelFactory);
-begin
-  Unregister(AFactory);
 end;
 
 { ---- TryAcquire ------------------------------------------------------------- }
@@ -510,146 +388,20 @@ end;
 
 { ---- Provider queries ------------------------------------------------------- }
 
-class function TAcceleratedKernelRegistry.GetRegisteredGcmProviders: TCryptoLibStringArray;
+class function TAcceleratedKernelRegistry.GetRegisteredProviders(
+  const AFactoryIID: TGUID): TCryptoLibStringArray;
 var
   LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
   LI, LN: Int32;
-  LFac: IAcceleratedGcmKernelFactory;
 begin
   LSnap := Snapshot;
-  System.SetLength(Result, 0);
+  Result := nil;
   LN := 0;
   for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedGcmKernelFactory, LFac) then
+    if Supports(LSnap[LI], AFactoryIID) then
     begin
       System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredOcbProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedOcbKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedOcbKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredCcmProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedCcmKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedCcmKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredEaxProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedEaxKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedEaxKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredGcmSivProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedGcmSivKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedGcmSivKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredCtrProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedCtrKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedCtrKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredCbcProviders: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedCbcKernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedCbcKernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
-      Inc(LN);
-    end;
-end;
-
-class function TAcceleratedKernelRegistry.GetRegisteredChaCha20Poly1305Providers: TCryptoLibStringArray;
-var
-  LSnap: TCryptoLibGenericArray<IAcceleratedKernelFactory>;
-  LI, LN: Int32;
-  LFac: IAcceleratedChaCha20Poly1305KernelFactory;
-begin
-  LSnap := Snapshot;
-  System.SetLength(Result, 0);
-  LN := 0;
-  for LI := 0 to System.Length(LSnap) - 1 do
-    if Supports(LSnap[LI], IAcceleratedChaCha20Poly1305KernelFactory, LFac) then
-    begin
-      System.SetLength(Result, LN + 1);
-      Result[LN] := LFac.ProviderName;
+      Result[LN] := LSnap[LI].ProviderName;
       Inc(LN);
     end;
 end;

@@ -237,7 +237,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterGcmFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiGcmKernelFactory.Create() as IAcceleratedGcmKernelFactory);
 
 end.

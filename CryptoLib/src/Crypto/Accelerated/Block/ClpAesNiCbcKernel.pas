@@ -196,7 +196,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterCbcFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiCbcKernelFactory.Create() as IAcceleratedCbcKernelFactory);
 
 end.

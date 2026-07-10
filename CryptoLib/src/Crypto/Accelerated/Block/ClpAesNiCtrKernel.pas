@@ -200,7 +200,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterCtrFactory(
+  TAcceleratedKernelRegistry.Register(
     TAesNiCtrKernelFactory.Create() as IAcceleratedCtrKernelFactory);
 
 end.

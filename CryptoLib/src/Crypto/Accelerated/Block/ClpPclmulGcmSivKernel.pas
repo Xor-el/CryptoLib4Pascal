@@ -118,7 +118,7 @@ begin
 end;
 
 initialization
-  TAcceleratedKernelRegistry.RegisterGcmSivFactory(
+  TAcceleratedKernelRegistry.Register(
     TPclmulGcmSivKernelFactory.Create() as IAcceleratedGcmSivKernelFactory);
 
 end.
