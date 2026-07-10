@@ -114,15 +114,15 @@ type
 
     /// <summary>
     /// Internal fast-path accessor for the AES-NI encrypt round-key schedule
-    /// used by the fused GCM + AES-NI pipeline kernel. Returns True (and sets
-    /// AKeysPtr to the aligned key-schedule buffer plus ANumRounds to the AES
-    /// round count) only when the engine is currently initialized for AES
-    /// encryption in any supported key size (AForEncryption=True; ANumRounds
-    /// in {10, 12, 14} for AES-128 / AES-192 / AES-256 respectively). Returns
-    /// False in every other state (including all decrypt-direction inits).
-    /// Note: GCM always uses AES in encrypt mode for CTR keystream generation,
-    /// regardless of whether the GCM caller is encrypting or decrypting; this
-    /// accessor therefore deliberately rejects only AES-side decrypt inits.
+    /// used by the AES-NI fused cipher kernels. Returns True (and sets AKeysPtr
+    /// to the aligned key-schedule buffer plus ANumRounds to the AES round
+    /// count) only when the engine is currently initialized for AES encryption
+    /// in any supported key size (AForEncryption=True; ANumRounds in {10, 12,
+    /// 14} for AES-128 / AES-192 / AES-256 respectively). Returns False in every
+    /// other state (including all decrypt-direction inits). Note: the fused
+    /// modes built on this accessor drive AES in encrypt mode for keystream
+    /// generation regardless of the AEAD direction, so it rejects decrypt inits;
+    /// kernels needing the decrypt schedule use TryGetDecKeysPtr instead.
     /// Callers MUST NOT retain the pointer beyond the lifetime of the current
     /// engine init; reinit / free invalidates it.
     /// </summary>
@@ -1143,9 +1143,9 @@ begin
 end;
 
 // =====================================================================
-// Key-schedule accessor used by the fused AES-NI + GHASH pipeline in
-// TGcmBlockCipher. Returns a pointer to the round-key schedule only when
-// the engine is in an AES-encrypt mode with a matching round count.
+// Key-schedule accessors used by the AES-NI fused cipher kernels. Return a
+// pointer to the round-key schedule only when the engine is in the requested
+// direction with a matching round count.
 // =====================================================================
 
 function TAesEngineX86.TryGetEncKeysPtr(out AKeysPtr: PByte; out ANumRounds: Int32): Boolean;
