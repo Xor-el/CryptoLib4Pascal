@@ -35,6 +35,7 @@ uses
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpAsn1Streams,
+  ClpStreams,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -42,12 +43,13 @@ uses
 type
 
   /// <summary>
-  /// Stream type not handled specially by <c>FindLimit</c> (exercises fallback limit).
+  /// Non-seekable input stream (CanSeek = False, inherited from
+  /// TBaseInputStream): <c>FindLimit</c> cannot infer a bound from it, so it
+  /// exercises the configured fallback limit.
   /// </summary>
-  TDummyStreamWithoutKnownLimit = class(TStream)
+  TDummyStreamWithoutKnownLimit = class(TBaseInputStream)
   public
-    function Read(var Buffer; Count: LongInt): LongInt; override;
-    function Write(const Buffer; Count: LongInt): LongInt; override;
+    function ReadByte: Int32; override;
     function Seek(const Offset: Int64; Origin: TSeekOrigin): Int64; override;
   end;
 
@@ -75,19 +77,17 @@ implementation
 
 { TDummyStreamWithoutKnownLimit }
 
-function TDummyStreamWithoutKnownLimit.Read(var Buffer; Count: LongInt): LongInt;
+function TDummyStreamWithoutKnownLimit.ReadByte: Int32;
 begin
-  Result := 0;
-end;
-
-function TDummyStreamWithoutKnownLimit.Write(const Buffer; Count: LongInt): LongInt;
-begin
-  Result := 0;
+  Result := -1; // always at EOF; this stream exists only to be non-seekable
 end;
 
 function TDummyStreamWithoutKnownLimit.Seek(const Offset: Int64; Origin: TSeekOrigin): Int64;
 begin
-  Result := 0;
+  Result := 0; // unreachable; the raise below never returns
+  // CanSeek is already False, so callers should not reach here; a genuine
+  // non-seekable stream raises if seeked anyway.
+  raise ENotSupportedCryptoLibException.Create('stream is not seekable');
 end;
 
 { TInputStreamTest }
@@ -249,16 +249,16 @@ end;
 procedure TInputStreamTest.TestNegativeMaxLimitClampsFindLimit;
 var
   LSaved: Int32;
-  LMs: TMemoryStream;
+  LDummy: TDummyStreamWithoutKnownLimit;
 begin
   LSaved := TAsn1InputStream.MaxLimitForUnknownStream;
   try
     TAsn1InputStream.MaxLimitForUnknownStream := -10;
-    LMs := TMemoryStream.Create();
+    LDummy := TDummyStreamWithoutKnownLimit.Create();
     try
-      CheckEquals(0, TAsn1InputStream.FindLimit(LMs));
+      CheckEquals(0, TAsn1InputStream.FindLimit(LDummy));
     finally
-      LMs.Free;
+      LDummy.Free;
     end;
   finally
     TAsn1InputStream.MaxLimitForUnknownStream := LSaved;

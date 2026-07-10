@@ -544,12 +544,6 @@ type
     class function FindLimit(const AInput: TStream): Int32; static;
 
     /// <summary>
-    /// Get fixed buffer stream limit.
-    /// </summary>
-    class function GetFixedBufferStreamLimit(const AInput: TFixedBufferStream): Int32;
-      static;
-
-    /// <summary>
     /// Read tag number from stream.
     /// </summary>
     class function ReadTagNumber(const AInput: TStream; ATagHdr: Int32): Int32;
@@ -1677,7 +1671,7 @@ class function TAsn1InputStream.FindLimit(const AInput: TStream): Int32;
 var
   LAsn1LimitedInputStream: TAsn1LimitedInputStream;
   LAsn1InputStream: TAsn1InputStream;
-  LFixedBufferStream: TFixedBufferStream;
+  LAvailable: Int64;
 begin
   if AInput is TAsn1LimitedInputStream then
   begin
@@ -1693,10 +1687,12 @@ begin
     Exit;
   end;
 
-  if AInput is TFixedBufferStream then
+  if TStreamUtilities.TryGetAvailable(AInput, LAvailable) then
   begin
-    LFixedBufferStream := AInput as TFixedBufferStream;
-    Result := GetFixedBufferStreamLimit(LFixedBufferStream);
+    if LAvailable > Int32.MaxValue then
+      Result := Int32.MaxValue
+    else
+      Result := Int32(LAvailable);
     Exit;
   end;
 
@@ -1704,12 +1700,6 @@ begin
     Result := Max(0, FMaxLimitForUnknownStream)
   else
     Result := Int32.MaxValue;
-end;
-
-class function TAsn1InputStream.GetFixedBufferStreamLimit(const AInput
-  : TFixedBufferStream): Int32;
-begin
-  Result := Int32(AInput.Size - AInput.Position);
 end;
 
 class function TAsn1InputStream.ReadTagNumber(const AInput: TStream;

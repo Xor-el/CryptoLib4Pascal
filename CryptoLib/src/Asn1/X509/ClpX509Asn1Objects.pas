@@ -5282,6 +5282,7 @@ var
   LOid: IDerObjectIdentifier;
 begin
   inherited Create();
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, Int32.MaxValue);
   FSeq := ASeq;
   FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
 
@@ -5310,6 +5311,7 @@ begin
   end;
 
   FSeq := TDerSequence.Create(LV);
+  TAsn1Utilities.CheckSequenceSize(FSeq, 1, Int32.MaxValue);
 end;
 
 constructor TExtendedKeyUsage.Create(const AUsages: array of IKeyPurposeId);
@@ -5332,6 +5334,8 @@ begin
   begin
     FUsageTable.Add(AUsages[LI], True);
   end;
+
+  TAsn1Utilities.CheckSequenceSize(FSeq, 1, Int32.MaxValue);
 end;
 
 destructor TExtendedKeyUsage.Destroy;
@@ -9564,6 +9568,7 @@ end;
 constructor TCrlDistPoint.Create(const ASeq: IAsn1Sequence);
 begin
   inherited Create();
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, Int32.MaxValue);
   FSeq := ASeq;
 end;
 
@@ -9579,6 +9584,7 @@ begin
     LV.Add(APoints[LI]);
   end;
   FSeq := TDerSequence.Create(LV);
+  TAsn1Utilities.CheckSequenceSize(FSeq, 1, Int32.MaxValue);
 end;
 
 function TCrlDistPoint.GetDistributionPoints: TCryptoLibGenericArray<IDistributionPoint>;
