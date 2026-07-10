@@ -1,0 +1,14 @@
+.github/workflows/mirror-to-gitlab.yml
+  h_878efc035442cc 1-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "6d83d3ee3fbbfe3adbdd08d218f9e853b0fed0dd",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
