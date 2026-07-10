@@ -1,0 +1,122 @@
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelRegistry.pas
+  s_4e396cb15e16b1::t_348abd6b06b009 17,29-37,39,43,48,56,58,62,69,72-73,81,83,86-87,90-91,93,99
+  s_4e396cb15e16b1::t_013c7e6db7cb80 100
+  s_4e396cb15e16b1::t_a5fa37e9ca57cd 95,97,102,104,106,110,116,118,121,124,130,157,172,187,194-196,198,200,204,210,220-221,223,225,229,234,244-245,247,249,253,258,268-269,271,273,277,282,292-294,296,298,302,307,317-318,320,322,326,331,341-342,344,346,350,355,365-366,368,370,374,379,389,392
+CryptoLib.Tests/src/Crypto/CipherKernelExternalRegistrationTests.pas
+  s_4e396cb15e16b1::t_348abd6b06b009 17,34-36,44
+  s_4e396cb15e16b1::t_6b6120ab9cd406 48,51,53-54,62,72,91,94,115,121,125-126,132,134,148,150,154,156,160,164,166,170,172,174,182,186,188,192,194-195,197,207,209,212,214,216-217,221,228,230
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4e396cb15e16b1::t_c7eb49e81d4634 13
+  s_4e396cb15e16b1::t_5d7c1d341ba414 2709-2710,2713-2714,2717-2718,2721-2722,2725-2726,2729-2730,2733-2734,2737,2741,2745,2749,2753,2757,2761-2762,3181,3193-3194,3197,3209-3210,3213,3221-3222,3225-3226,3229-3230
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4e396cb15e16b1::t_f89ae689a72772 689-690,692-700,702-704,706-713
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4e396cb15e16b1::t_92a55ebd615193 705-706,708-716,718-720,722-729
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_4e396cb15e16b1::t_493d8791506406 686-699,701-708,820,875
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4e396cb15e16b1::t_1b9a5cea9a745f 1029-1042,1044-1051,1163,1214
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_4e396cb15e16b1::t_6495271d6f7138 705-706,708-716,718-720,722-729,841,896
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_4e396cb15e16b1::t_32ac28bf4878a9 613,617
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_4e396cb15e16b1::t_431e11eb13192e 14,50
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_4e396cb15e16b1::t_117a789ba967aa 572,576
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_4e396cb15e16b1::t_85dea577df5676 15,51
+CryptoLib.Tests/src/Crypto/CcmTests.pas
+  s_4e396cb15e16b1::t_b958d2102e3736 52,84,508,513,518,523,682,754,759
+CryptoLib.Tests/src/Crypto/EaxTests.pas
+  s_4e396cb15e16b1::t_abef2d199c0c30 51,94,569,574,579,584,589
+CryptoLib.Tests/src/Crypto/GCMTests.pas
+  s_4e396cb15e16b1::t_b8a41208d66b90 54,84,580,585,590,595,600,605
+CryptoLib.Tests/src/Crypto/GcmSivBulkParityTests.pas
+  s_4e396cb15e16b1::t_01e591e2184d1c 37,75,78,89,100-101,112
+CryptoLib.Tests/src/Crypto/GcmSivTests.pas
+  s_4e396cb15e16b1::t_59cd650e9d7d55 44,298,303,308,313,318,323,328,333
+CryptoLib.Tests/src/Crypto/OcbTests.pas
+  s_4e396cb15e16b1::t_618fa44c04585f 47,95,584,589,594,599
+CryptoLib.Tests/src/Utils/CipherKernelToggle.pas
+  s_4e396cb15e16b1::t_8fb56fee262059 17,27,30,33,39,43,49,51,53,56
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCbcKernel.pas
+  s_4e396cb15e16b1::t_81c7ca29729c78 27-30,35,44,58,62-63,171,179,199-200
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCcmKernel.pas
+  s_4e396cb15e16b1::t_732c13ed5f05c2 27-30,36,46,61,66,72-73,77-78,203,248,277,310-311
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCtrKernel.pas
+  s_4e396cb15e16b1::t_4df2139e4eb1b8 27-30,35,43,61,65-66,177,203-204
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiEaxKernel.pas
+  s_4e396cb15e16b1::t_54a792c2113c92 27-30,36,50,58,63,69-70,74-75,204,239,268,297-298
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiGcmKernel.pas
+  s_4e396cb15e16b1::t_9358654e4873ad 27-30,36,48,67-68,72-73,208-209,240-241
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiOcbKernel.pas
+  s_4e396cb15e16b1::t_fdd95b5820b91d 27-30,36,48,60,63,70-71,75-76,199,234,263,277,294-295
+CryptoLib/src/Crypto/CipherKernels/Block/ClpPclmulGcmSivKernel.pas
+  s_4e396cb15e16b1::t_3c36fe1c46a129 26-29,34,40,54-55,59-60,101-102,121-122
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelDefaults.pas
+  s_4e396cb15e16b1::t_0f2da67f845b22 17,21
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelFactoryBase.pas
+  s_4e396cb15e16b1::t_c8e799a566c6a2 17,24,28,33,36,39,44,46,48
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelTypes.pas
+  s_4e396cb15e16b1::t_72da1fbc85aa3f 17,25,29,32,47
+CryptoLib/src/Crypto/Modes/ClpCbcBlockCipher.pas
+  s_4e396cb15e16b1::t_bddb0b7118cbff 33-35,79,350
+CryptoLib/src/Crypto/Modes/ClpCcmBlockCipher.pas
+  s_4e396cb15e16b1::t_6009efddf0c3a2 36-39,121,235,275,277-278
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_4e396cb15e16b1::t_02493b4136f6c8 34-36,119,293-294,296-297
+CryptoLib/src/Crypto/Modes/ClpEaxBlockCipher.pas
+  s_4e396cb15e16b1::t_1a38b64abe14e8 36-39,99,314-315,317-318
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_4e396cb15e16b1::t_dead92d52504eb 43-46,109,111-113,193,196,201,470,1146,1384
+CryptoLib/src/Crypto/Modes/ClpGcmSivBlockCipher.pas
+  s_4e396cb15e16b1::t_ea22aa8a94e56b 41-44,131,134,872-873
+CryptoLib/src/Crypto/Modes/ClpOcbBlockCipher.pas
+  s_4e396cb15e16b1::t_50d58369d5bbbb 28-31,127,134,270,343,345-346,666
+CryptoLib/src/Crypto/Modes/ClpSicBlockCipher.pas
+  s_4e396cb15e16b1::t_37583152257ffe 29-31,73,77,220
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpICbcKernel.pas
+  s_4e396cb15e16b1::t_db2ae5165d237f 17,26-27,39,56,62,72-73
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpICcmKernel.pas
+  s_4e396cb15e16b1::t_20d3ffa7484f94 17,25-26,38,62,66-67
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpICtrKernel.pas
+  s_4e396cb15e16b1::t_6fcab103686905 17,26-27,34,39,62,68,78-79
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpIEaxKernel.pas
+  s_4e396cb15e16b1::t_056289f3d65972 17,25-26,39,61,65-66
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpIGcmKernel.pas
+  s_4e396cb15e16b1::t_51c0b50d3bb1fd 17,25-26,37,62,69,79-80
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpIGcmSivKernel.pas
+  s_4e396cb15e16b1::t_04a1ff935bbcca 17,25-26,37,62,66,68
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpIOcbKernel.pas
+  s_4e396cb15e16b1::t_b8c85162796d7e 17,25-26,34,88,98-99
+CryptoLib/src/Interfaces/Crypto/CipherKernels/ClpICipherKernelFactory.pas
+  s_4e396cb15e16b1::t_3ef7d3602a9b87 17,24,28,34,37,44,46
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Stream/ClpIChaCha20Poly1305Kernel.pas
+  s_4e396cb15e16b1::t_91378db71649b5 17,25-26,39,61,67,71,77-78
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_4e396cb15e16b1::t_f2e666667b6e4e 688-701,703-710
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_4e396cb15e16b1::t_9a4aa16f44b2cd 221-223,225,259-262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.10",
+  "base_commit_sha": "ceb536fdb6a9002030bbe3fde2791e8998adff28",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
