@@ -12,7 +12,7 @@
 // Every working register (rcx,rdx,r8,r9,r10,r11,xmm0,xmm1) is volatile on the
 // MS x64 ABI, so this stays a true leaf: no xmm6-15 save, no callee-saved push.
 //
-// Entry (after ClpSimdProc1Begin_x86_64.inc): rcx = pointer to TCbcEncryptFusedCtx.
+// Entry (after ClpSimdProc1Begin_x86_64.inc): rcx = pointer to TCbcFusedCtx.
 // The kernel unpacks it (InPtr loaded into r11):
 //   [rcx +  0]  InPtr      -> r11 : input  (advances +16 per block)
 //   [rcx +  8]  OutPtr     -> rdx : output (advances +16)
@@ -25,7 +25,7 @@
 //
 // AES-NI instructions and the register pxor forms are db-encoded for broad
 // assembler compatibility.
-  // ---- unpack TCbcEncryptFusedCtx (rcx = PCtx); load InPtr into r11 last ----
+  // ---- unpack TCbcFusedCtx (rcx = PCtx); load InPtr into r11 last ----
   mov       r8,  [rcx + 16]                       // KeysPtr
   mov       r9,  [rcx + 24]                       // IvPtr
   mov       r10, [rcx + 32]                       // BlockCount
