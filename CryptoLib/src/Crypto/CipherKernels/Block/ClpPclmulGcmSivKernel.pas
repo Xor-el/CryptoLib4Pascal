@@ -85,9 +85,11 @@ end;
 procedure TPclmulGcmSivKernel.ProcessPolyvalBatch(AInPtr, AAccumulator: Pointer;
   ABlockCount: Int32);
 begin
-  if ABlockCount <> FUSED_POLYVAL_MIN_BLOCKS then
+  if (ABlockCount < FUSED_POLYVAL_MIN_BLOCKS) or
+    (ABlockCount mod FUSED_POLYVAL_MIN_BLOCKS <> 0) then
     Exit;
-  TGcmSivSimd.ProcessPolyvalBatch(AAccumulator, AInPtr, FHPow128, FMask);
+  TGcmSivSimd.ProcessPolyvalBatch(AAccumulator, AInPtr, FHPow128, FMask,
+    ABlockCount div FUSED_POLYVAL_MIN_BLOCKS);
 end;
 
 { TPclmulGcmSivKernelFactory }

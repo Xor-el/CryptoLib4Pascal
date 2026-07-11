@@ -45,10 +45,12 @@ type
     class function TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean; static;
     /// <summary>SIMD xor of three 16-byte limbs with three slices of a 48-byte MultiplyExt output.</summary>
     class function TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean; static;
-    /// <summary>PCLMULQDQ fused 4-way GHASH (requires packed vector layout). Uses the backend's own byte-reverse mask.</summary>
-    class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte): Boolean; static;
-    /// <summary>PCLMULQDQ fused 8-way GHASH (requires packed vector layout). Uses the backend's own byte-reverse mask.</summary>
-    class function TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte): Boolean; static;
+    /// <summary>PCLMULQDQ fused 4-way GHASH over ABatchCount 64-byte batches (requires packed vector layout). Uses the backend's own byte-reverse mask.</summary>
+    class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
+      ABatchCount: NativeInt): Boolean; static;
+    /// <summary>PCLMULQDQ fused 8-way GHASH over ABatchCount 128-byte batches (requires packed vector layout). Uses the backend's own byte-reverse mask.</summary>
+    class function TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte;
+      ABatchCount: NativeInt): Boolean; static;
 
     /// <summary>True when the fused shuffled-GHASH path is usable on this CPU (needs packed vector layout). Gates the 4-/8-way batch dispatch and the H-power precompute.</summary>
     class function IsShuffledGhashSupported: Boolean; static;
@@ -119,27 +121,27 @@ procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
 {$ENDIF}
 end;
 
-procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer);
+procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer; ABatchCount: NativeInt);
 {$DEFINE GCM_GHASH_FULL_BLOCKS_4}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_4}
 end;
 
-procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer);
+procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer; ABatchCount: NativeInt);
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}
@@ -242,28 +244,32 @@ begin
   Result := False;
 end;
 
-class function TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte): Boolean;
+class function TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
+  ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSSE3 and TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked then
   begin
-    // Monolithic kernel: byte-reverse + state fold + 4-way multiply-accumulate +
-    // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
-    GcmGhashFourFull(PFS, PC0, PHPow64, @ReverseBytesMask[0]);
+    // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
+    // fold, 4-way multiply-accumulate and folding reduction per batch - in a
+    // single assembly body (one call boundary).
+    GcmGhashFourFull(PFS, PC0, PHPow64, @ReverseBytesMask[0], ABatchCount);
     Exit(True);
   end;
 {$ENDIF}
   Result := False;
 end;
 
-class function TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte): Boolean;
+class function TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte;
+  ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if TCpuFeatures.X86.HasSSSE3 and TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked then
   begin
-    // Monolithic kernel: byte-reverse + state fold + 8-way multiply-accumulate +
-    // Reduce3 + byte-reverse back, all in a single assembly body (one call boundary).
-    GcmGhashEightFull(PFS, PC0, PHPow128, @ReverseBytesMask[0]);
+    // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
+    // fold, 8-way multiply-accumulate and folding reduction per batch - in a
+    // single assembly body (one call boundary).
+    GcmGhashEightFull(PFS, PC0, PHPow128, @ReverseBytesMask[0], ABatchCount);
     Exit(True);
   end;
 {$ENDIF}

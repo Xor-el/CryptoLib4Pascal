@@ -636,7 +636,7 @@ end;
 procedure TGcmBlockCipher.ProcessAadBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32);
 var
-  LAvailable, LInLimit: Int32;
+  LAvailable, LInLimit, LBatches: Int32;
 begin
   CheckStatus();
 
@@ -655,6 +655,20 @@ begin
     FAtLength := FAtLength + UInt64(BlockSize);
     AInOff := AInOff + LAvailable;
     ALen := ALen - LAvailable;
+  end;
+
+  // Bulk fast path: fold whole 128-byte spans through the fused 8-way GHASH
+  // kernel in one call; the per-block loop below handles the remainder.
+  if (FHPow <> nil) and (ALen >= 128) then
+  begin
+    LBatches := ALen div 128;
+    if TGhashSimd.TryFusedEightShuffledGhash(@FS_at[0], @AInput[AInOff],
+      @FHPow[0], LBatches) then
+    begin
+      AInOff := AInOff + LBatches * 128;
+      ALen := ALen - LBatches * 128;
+      FAtLength := FAtLength + UInt64(LBatches) * 128;
+    end;
   end;
 
   LInLimit := AInOff + ALen - BlockSize;
@@ -1104,19 +1118,14 @@ end;
 
 procedure TGcmBlockCipher.GhashFourShuffledBlocks(PC0, PC16, PC32, PC48: PByte);
 var
-  LB, LI: Int32;
-  LDblk: array[0..15] of Byte;
-  LBuf48: array[0..47] of Byte;
-  LU0, LU1, LU2: array[0..15] of Byte;
-  LSRev: array[0..15] of Byte;
+  LB: Int32;
   LPCiph: PByte;
 begin
-  if TGhashSimd.TryFusedFourShuffledGhash(@FS[0], PC0, @FHPow[64]) then
+  if TGhashSimd.TryFusedFourShuffledGhash(@FS[0], PC0, @FHPow[64], 1) then
     Exit;
-  GcmReverse16(@FS[0], @LSRev[0]);
-  FillChar(LU0, 16, 0);
-  FillChar(LU1, 16, 0);
-  FillChar(LU2, 16, 0);
+  // Unreachable in practice (the caller gates on the same predicate as the
+  // kernel); fold per block through the multiplier, which is independent of
+  // the x-pre-multiplied FHPow layout.
   for LB := 0 to 3 do
   begin
     case LB of
@@ -1129,15 +1138,9 @@ begin
     else
       LPCiph := PC48;
     end;
-    GcmReverse16(LPCiph, @LDblk[0]);
-    if LB = 0 then
-      for LI := 0 to 15 do
-        LDblk[LI] := LDblk[LI] xor LSRev[LI];
-    TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[64 + (LB * 16)], @LBuf48[0]);
-    TGcmUtilities.XorMultiplyExtLimbs48(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
+    TByteUtilities.&Xor(BlockSize, @FS[0], LPCiph, @FS[0]);
+    FMultiplier.MultiplyH(FS);
   end;
-  TGcmUtilities.Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
-  GcmReverse16(@LSRev[0], @FS[0]);
 end;
 
 // =======================================================================
@@ -1175,31 +1178,18 @@ end;
 
 procedure TGcmBlockCipher.GhashEightShuffledBlocks(PBase: PByte);
 var
-  LB, LI: Int32;
-  LDblk: array [0 .. 15] of Byte;
-  LBuf48: array [0 .. 47] of Byte;
-  LU0, LU1, LU2: array [0 .. 15] of Byte;
-  LSRev: array [0 .. 15] of Byte;
-  LPCiph: PByte;
+  LB: Int32;
 begin
-  if TGhashSimd.TryFusedEightShuffledGhash(@FS[0], PBase, @FHPow[0]) then
+  if TGhashSimd.TryFusedEightShuffledGhash(@FS[0], PBase, @FHPow[0], 1) then
     Exit;
-  GcmReverse16(@FS[0], @LSRev[0]);
-  FillChar(LU0, 16, 0);
-  FillChar(LU1, 16, 0);
-  FillChar(LU2, 16, 0);
+  // Unreachable in practice (the caller gates on the same predicate as the
+  // kernel); fold per block through the multiplier, which is independent of
+  // the x-pre-multiplied FHPow layout.
   for LB := 0 to 7 do
   begin
-    LPCiph := PBase + (LB * 16);
-    GcmReverse16(LPCiph, @LDblk[0]);
-    if LB = 0 then
-      for LI := 0 to 15 do
-        LDblk[LI] := LDblk[LI] xor LSRev[LI];
-    TGcmUtilities.MultiplyExt(@LDblk[0], @FHPow[LB * 16], @LBuf48[0]);
-    TGcmUtilities.XorMultiplyExtLimbs48(@LU0[0], @LU1[0], @LU2[0], @LBuf48[0]);
+    TByteUtilities.&Xor(BlockSize, @FS[0], PBase + (LB * BlockSize), @FS[0]);
+    FMultiplier.MultiplyH(FS);
   end;
-  TGcmUtilities.Reduce3(@LU0[0], @LU1[0], @LU2[0], @LSRev[0]);
-  GcmReverse16(@LSRev[0], @FS[0]);
 end;
 
 // Single-batch fused 8-way GCM step. See ProcessBlocks4Fused for direction semantics.

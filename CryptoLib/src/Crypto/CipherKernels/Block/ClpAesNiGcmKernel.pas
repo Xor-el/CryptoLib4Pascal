@@ -23,7 +23,6 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
-  ClpBinaryPrimitives,
   ClpIBlockCipher,
   ClpIAesEngineX86,
   ClpCipherKernelTypes,
@@ -57,9 +56,9 @@ type
     FRounds: Int32;
     FHPow128: Pointer;
     FMask: Pointer;
-    // Kernel-owned copy of the H^8..H^1 table with every power pre-multiplied
-    // by x in the reflected representation, matching the carry-less-multiply
-    // folding reduction inside the fused kernel. FHPow128 points at it.
+    // Kernel-owned copy of the mode's H^8..H^1 table (already x-pre-multiplied
+    // by TGcmUtilities.InitEightWayHPowFromH, matching the carry-less-multiply
+    // folding reduction inside the fused kernel). FHPow128 points at it.
     FHPowShifted: TCryptoLibByteArray;
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
@@ -159,35 +158,17 @@ const
 
 constructor TAesNiGcmKernel.Create(const AEngine: IAesEngineX86;
   AKeys: Pointer; ARounds: Int32; AHPow128, AMask: Pointer);
-var
-  LI: Int32;
-  LLo, LHi, LCarry: UInt64;
 begin
   inherited Create;
   FEngine := AEngine;
   FKeys := AKeys;
   FRounds := ARounds;
   FMask := AMask;
-  // Pre-multiply each H power by x in the reflected representation: shift the
-  // 128-bit value left by one with a conditional fold of the field polynomial
-  // (0xC2 in the top byte, 1 in the bottom). This lets the kernel reduce the
-  // batch product with two carry-less multiplies instead of a shift ladder.
+  // The mode's table already holds the powers pre-multiplied by x (see
+  // TGcmUtilities.InitEightWayHPowFromH); keep a kernel-owned copy so the
+  // pointer stays valid for the kernel's lifetime.
   System.SetLength(FHPowShifted, 128);
-  for LI := 0 to 7 do
-  begin
-    LLo := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(AHPow128), LI * 16);
-    LHi := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(AHPow128), LI * 16 + 8);
-    LCarry := LHi shr 63;
-    LHi := (LHi shl 1) or (LLo shr 63);
-    LLo := LLo shl 1;
-    if LCarry <> 0 then
-    begin
-      LHi := LHi xor UInt64($C200000000000000);
-      LLo := LLo xor 1;
-    end;
-    TBinaryPrimitives.WriteUInt64LittleEndian(FHPowShifted, LI * 16, LLo);
-    TBinaryPrimitives.WriteUInt64LittleEndian(FHPowShifted, LI * 16 + 8, LHi);
-  end;
+  System.Move(AHPow128^, FHPowShifted[0], 128);
   FHPow128 := @FHPowShifted[0];
 end;
 

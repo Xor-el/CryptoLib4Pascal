@@ -36,20 +36,22 @@ type
   public
     /// <summary>True when the PCLMULQDQ POLYVAL kernel is usable on this CPU.</summary>
     class function IsSupported: Boolean; static;
-    /// <summary>Eight-block POLYVAL Horner batch. Precondition: <c>IsSupported</c>.</summary>
-    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer); static;
+    /// <summary>ABatchCount eight-block POLYVAL Horner batches. Precondition: <c>IsSupported</c>.</summary>
+    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+      ABatchCount: NativeInt); static;
   end;
 
 implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
-procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer);
+procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer;
+  ABatchCount: NativeInt);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
 {$ENDIF}
 end;
@@ -67,10 +69,11 @@ begin
 {$ENDIF}
 end;
 
-class procedure TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer);
+class procedure TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+  ABatchCount: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask);
+  GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask, ABatchCount);
 {$ENDIF}
 end;
 
