@@ -1,0 +1,20 @@
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_x86_64.inc
+  s_866519afc9e586::t_0c6e26386b5c8e 52-59,62-63,71,77-83
+  s_866519afc9e586::t_7a9c99552d15a9 39,84-98,114,117,120,123,126,129,132,135,138-151,376-378,380-382,384-386,388-390,392-394,396-398,400-402,404-406,408-410,547
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "95aa97c89384bf74d5d6052cdb8e3184b8f82232",
+  "prompts": {},
+  "sessions": {
+    "s_866519afc9e586": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "722cb229-49fd-469d-87b7-ce024146da03",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
