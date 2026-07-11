@@ -22,13 +22,15 @@
 // direction is always encrypt (CTR keystream), so CRYPTOLIB_AESNI_DECRYPT must
 // NOT be defined when including this file.
 //
-// Constraints: i386 has only xmm0..7 (all volatile) and, after unpacking the
-// context, only edx as a free scratch GP register. The 128-bit counter lives in
-// memory at [eax] and is bumped in place with a byte-wise big-endian carry (edx =
-// byte index). Each staged block copies the current [eax] to the scratch (four
-// dword moves through edx, since no xmm is free mid-round) then advances. The
-// pipeline builds one batch ahead, so [eax] over-runs by exactly one batch (8) -
-// undone before returning. The keystream^plaintext XOR has no free xmm for the
+// Constraints: i386 has only xmm0..7 (all volatile). BlockCount parks in a frame
+// slot so both edx and ecx serve the staging: edx holds the counter's low dword
+// native-LE across the whole span (bswap/store/bswap/add per staged block - no
+// read-modify-write of counter memory, so no store-forward stalls), while ecx
+// copies the constant 12-byte prefix from [eax+0..11] (written only by the rare
+// carry-out path, which bumps those bytes big-endian). The pipeline builds one
+// batch ahead, so edx over-runs by exactly one batch (8) - undone (with a
+// byte-wise borrow when it crosses back over a 2^32 boundary) before the low
+// dword is stored back to [eax+12]. The keystream^plaintext XOR has no free xmm for the
 // plaintext (nor can it use a memory-operand pxor, which would require the input
 // to be 16-byte aligned), so it spills lane 7 to a scratch slot above the counter
 // area and reuses xmm7 for the movdqu plaintext load. AES-NI and register pxor
@@ -42,81 +44,156 @@
   mov       ecx, [ebx + 16]                       // BlockCount
   mov       ebx, [ebx + 0]                        // InPtr (overwrites PCtx)
 
-  sub       esp, 144                              // next-batch counters [esp+0..127]; ks7 spill [esp+128..143]
+  sub       esp, 152                              // next-batch counters [esp+0..127]; ks7 spill [esp+128..143]; countdown [esp+144]
+  mov       [esp + 144], ecx                        // park BlockCount; ecx = staging scratch
+  mov       edx, [eax + 12]                         // counter low dword, kept native-LE in edx
+  bswap     edx
 
   // ---- stage batch 0 into the scratch (xmm0 is free here), then load it ----
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 0], xmm0
-  mov       edx, 15
-@@PreA0:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD0
-  dec       edx
-  jns       @@PreA0
-@@PreD0:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 16], xmm0
-  mov       edx, 15
-@@PreA1:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD1
-  dec       edx
-  jns       @@PreA1
-@@PreD1:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 32], xmm0
-  mov       edx, 15
-@@PreA2:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD2
-  dec       edx
-  jns       @@PreA2
-@@PreD2:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 48], xmm0
-  mov       edx, 15
-@@PreA3:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD3
-  dec       edx
-  jns       @@PreA3
-@@PreD3:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 64], xmm0
-  mov       edx, 15
-@@PreA4:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD4
-  dec       edx
-  jns       @@PreA4
-@@PreD4:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 80], xmm0
-  mov       edx, 15
-@@PreA5:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD5
-  dec       edx
-  jns       @@PreA5
-@@PreD5:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 96], xmm0
-  mov       edx, 15
-@@PreA6:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD6
-  dec       edx
-  jns       @@PreA6
-@@PreD6:
-  movdqu    xmm0, [eax]
-  movdqu    [esp + 112], xmm0
-  mov       edx, 15
-@@PreA7:
-  inc       byte ptr [eax + edx]
-  jnz       @@PreD7
-  dec       edx
-  jns       @@PreA7
-@@PreD7:
+  mov       ecx, [eax]
+  mov       [esp + 0], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 4], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 8], ecx
+  bswap     edx
+  mov       [esp + 12], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP0
+  mov       ecx, 11
+@@StgCyP0:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP0
+  dec       ecx
+  jns       @@StgCyP0
+@@StgOkP0:
+  mov       ecx, [eax]
+  mov       [esp + 16], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 20], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 24], ecx
+  bswap     edx
+  mov       [esp + 28], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP1
+  mov       ecx, 11
+@@StgCyP1:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP1
+  dec       ecx
+  jns       @@StgCyP1
+@@StgOkP1:
+  mov       ecx, [eax]
+  mov       [esp + 32], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 36], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 40], ecx
+  bswap     edx
+  mov       [esp + 44], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP2
+  mov       ecx, 11
+@@StgCyP2:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP2
+  dec       ecx
+  jns       @@StgCyP2
+@@StgOkP2:
+  mov       ecx, [eax]
+  mov       [esp + 48], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 52], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 56], ecx
+  bswap     edx
+  mov       [esp + 60], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP3
+  mov       ecx, 11
+@@StgCyP3:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP3
+  dec       ecx
+  jns       @@StgCyP3
+@@StgOkP3:
+  mov       ecx, [eax]
+  mov       [esp + 64], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 68], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 72], ecx
+  bswap     edx
+  mov       [esp + 76], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP4
+  mov       ecx, 11
+@@StgCyP4:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP4
+  dec       ecx
+  jns       @@StgCyP4
+@@StgOkP4:
+  mov       ecx, [eax]
+  mov       [esp + 80], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 84], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 88], ecx
+  bswap     edx
+  mov       [esp + 92], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP5
+  mov       ecx, 11
+@@StgCyP5:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP5
+  dec       ecx
+  jns       @@StgCyP5
+@@StgOkP5:
+  mov       ecx, [eax]
+  mov       [esp + 96], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 100], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 104], ecx
+  bswap     edx
+  mov       [esp + 108], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP6
+  mov       ecx, 11
+@@StgCyP6:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP6
+  dec       ecx
+  jns       @@StgCyP6
+@@StgOkP6:
+  mov       ecx, [eax]
+  mov       [esp + 112], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 116], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 120], ecx
+  bswap     edx
+  mov       [esp + 124], edx
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkP7
+  mov       ecx, 11
+@@StgCyP7:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkP7
+  dec       ecx
+  jns       @@StgCyP7
+@@StgOkP7:
 
   movdqu    xmm0, [esp + 0]
   movdqu    xmm1, [esp + 16]
@@ -147,21 +224,24 @@
   db $66, $0F, $38, $DC, $6F, $10                 // aesenc xmm5, [edi+16]
   db $66, $0F, $38, $DC, $77, $10                 // aesenc xmm6, [edi+16]
   db $66, $0F, $38, $DC, $7F, $10                 // aesenc xmm7, [edi+16]
-  mov       edx, [eax]
-  mov       [esp + 0], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 4], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 8], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 0], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 4], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 8], ecx
+  bswap     edx
   mov       [esp + 12], edx
-  mov       edx, 15
-@@LpA0:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD0
-  dec       edx
-  jns       @@LpA0
-@@LpD0:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL0
+  mov       ecx, 11
+@@StgCyL0:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL0
+  dec       ecx
+  jns       @@StgCyL0
+@@StgOkL0:
 
   db $66, $0F, $38, $DC, $47, $20                 // aesenc xmm0, [edi+32]
   db $66, $0F, $38, $DC, $4F, $20                 // aesenc xmm1, [edi+32]
@@ -171,21 +251,24 @@
   db $66, $0F, $38, $DC, $6F, $20                 // aesenc xmm5, [edi+32]
   db $66, $0F, $38, $DC, $77, $20                 // aesenc xmm6, [edi+32]
   db $66, $0F, $38, $DC, $7F, $20                 // aesenc xmm7, [edi+32]
-  mov       edx, [eax]
-  mov       [esp + 16], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 20], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 24], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 16], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 20], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 24], ecx
+  bswap     edx
   mov       [esp + 28], edx
-  mov       edx, 15
-@@LpA1:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD1
-  dec       edx
-  jns       @@LpA1
-@@LpD1:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL1
+  mov       ecx, 11
+@@StgCyL1:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL1
+  dec       ecx
+  jns       @@StgCyL1
+@@StgOkL1:
 
   db $66, $0F, $38, $DC, $47, $30                 // aesenc xmm0, [edi+48]
   db $66, $0F, $38, $DC, $4F, $30                 // aesenc xmm1, [edi+48]
@@ -195,21 +278,24 @@
   db $66, $0F, $38, $DC, $6F, $30                 // aesenc xmm5, [edi+48]
   db $66, $0F, $38, $DC, $77, $30                 // aesenc xmm6, [edi+48]
   db $66, $0F, $38, $DC, $7F, $30                 // aesenc xmm7, [edi+48]
-  mov       edx, [eax]
-  mov       [esp + 32], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 36], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 40], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 32], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 36], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 40], ecx
+  bswap     edx
   mov       [esp + 44], edx
-  mov       edx, 15
-@@LpA2:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD2
-  dec       edx
-  jns       @@LpA2
-@@LpD2:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL2
+  mov       ecx, 11
+@@StgCyL2:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL2
+  dec       ecx
+  jns       @@StgCyL2
+@@StgOkL2:
 
   db $66, $0F, $38, $DC, $47, $40                 // aesenc xmm0, [edi+64]
   db $66, $0F, $38, $DC, $4F, $40                 // aesenc xmm1, [edi+64]
@@ -219,21 +305,24 @@
   db $66, $0F, $38, $DC, $6F, $40                 // aesenc xmm5, [edi+64]
   db $66, $0F, $38, $DC, $77, $40                 // aesenc xmm6, [edi+64]
   db $66, $0F, $38, $DC, $7F, $40                 // aesenc xmm7, [edi+64]
-  mov       edx, [eax]
-  mov       [esp + 48], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 52], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 56], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 48], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 52], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 56], ecx
+  bswap     edx
   mov       [esp + 60], edx
-  mov       edx, 15
-@@LpA3:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD3
-  dec       edx
-  jns       @@LpA3
-@@LpD3:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL3
+  mov       ecx, 11
+@@StgCyL3:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL3
+  dec       ecx
+  jns       @@StgCyL3
+@@StgOkL3:
 
   db $66, $0F, $38, $DC, $47, $50                 // aesenc xmm0, [edi+80]
   db $66, $0F, $38, $DC, $4F, $50                 // aesenc xmm1, [edi+80]
@@ -243,21 +332,24 @@
   db $66, $0F, $38, $DC, $6F, $50                 // aesenc xmm5, [edi+80]
   db $66, $0F, $38, $DC, $77, $50                 // aesenc xmm6, [edi+80]
   db $66, $0F, $38, $DC, $7F, $50                 // aesenc xmm7, [edi+80]
-  mov       edx, [eax]
-  mov       [esp + 64], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 68], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 72], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 64], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 68], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 72], ecx
+  bswap     edx
   mov       [esp + 76], edx
-  mov       edx, 15
-@@LpA4:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD4
-  dec       edx
-  jns       @@LpA4
-@@LpD4:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL4
+  mov       ecx, 11
+@@StgCyL4:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL4
+  dec       ecx
+  jns       @@StgCyL4
+@@StgOkL4:
 
   db $66, $0F, $38, $DC, $47, $60                 // aesenc xmm0, [edi+96]
   db $66, $0F, $38, $DC, $4F, $60                 // aesenc xmm1, [edi+96]
@@ -267,21 +359,24 @@
   db $66, $0F, $38, $DC, $6F, $60                 // aesenc xmm5, [edi+96]
   db $66, $0F, $38, $DC, $77, $60                 // aesenc xmm6, [edi+96]
   db $66, $0F, $38, $DC, $7F, $60                 // aesenc xmm7, [edi+96]
-  mov       edx, [eax]
-  mov       [esp + 80], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 84], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 88], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 80], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 84], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 88], ecx
+  bswap     edx
   mov       [esp + 92], edx
-  mov       edx, 15
-@@LpA5:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD5
-  dec       edx
-  jns       @@LpA5
-@@LpD5:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL5
+  mov       ecx, 11
+@@StgCyL5:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL5
+  dec       ecx
+  jns       @@StgCyL5
+@@StgOkL5:
 
   db $66, $0F, $38, $DC, $47, $70                 // aesenc xmm0, [edi+112]
   db $66, $0F, $38, $DC, $4F, $70                 // aesenc xmm1, [edi+112]
@@ -291,21 +386,24 @@
   db $66, $0F, $38, $DC, $6F, $70                 // aesenc xmm5, [edi+112]
   db $66, $0F, $38, $DC, $77, $70                 // aesenc xmm6, [edi+112]
   db $66, $0F, $38, $DC, $7F, $70                 // aesenc xmm7, [edi+112]
-  mov       edx, [eax]
-  mov       [esp + 96], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 100], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 104], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 96], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 100], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 104], ecx
+  bswap     edx
   mov       [esp + 108], edx
-  mov       edx, 15
-@@LpA6:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD6
-  dec       edx
-  jns       @@LpA6
-@@LpD6:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL6
+  mov       ecx, 11
+@@StgCyL6:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL6
+  dec       ecx
+  jns       @@StgCyL6
+@@StgOkL6:
 
   db $66, $0F, $38, $DC, $87, $80, $00, $00, $00  // aesenc xmm0, [edi+128]
   db $66, $0F, $38, $DC, $8F, $80, $00, $00, $00  // aesenc xmm1, [edi+128]
@@ -315,21 +413,24 @@
   db $66, $0F, $38, $DC, $AF, $80, $00, $00, $00  // aesenc xmm5, [edi+128]
   db $66, $0F, $38, $DC, $B7, $80, $00, $00, $00  // aesenc xmm6, [edi+128]
   db $66, $0F, $38, $DC, $BF, $80, $00, $00, $00  // aesenc xmm7, [edi+128]
-  mov       edx, [eax]
-  mov       [esp + 112], edx
-  mov       edx, [eax + 4]
-  mov       [esp + 116], edx
-  mov       edx, [eax + 8]
-  mov       [esp + 120], edx
-  mov       edx, [eax + 12]
+  mov       ecx, [eax]
+  mov       [esp + 112], ecx
+  mov       ecx, [eax + 4]
+  mov       [esp + 116], ecx
+  mov       ecx, [eax + 8]
+  mov       [esp + 120], ecx
+  bswap     edx
   mov       [esp + 124], edx
-  mov       edx, 15
-@@LpA7:
-  inc       byte ptr [eax + edx]
-  jnz       @@LpD7
-  dec       edx
-  jns       @@LpA7
-@@LpD7:
+  bswap     edx
+  add       edx, 1
+  jnc       @@StgOkL7
+  mov       ecx, 11
+@@StgCyL7:
+  inc       byte ptr [eax + ecx]
+  jnz       @@StgOkL7
+  dec       ecx
+  jns       @@StgCyL7
+@@StgOkL7:
 
   // ---- round 9 (all key sizes): aesenc, no more staging ----
   db $66, $0F, $38, $DC, $87, $90, $00, $00, $00  // aesenc xmm0, [edi+144]
@@ -453,21 +554,24 @@
 
   add       ebx, 128
   add       esi, 128
-  sub       ecx, 8
+  sub       dword ptr [esp + 144], 8
   jnz       @@CtrEightLoopI386
 
-  // ---- undo the one-batch build-ahead: counter (at [eax]) -= 8, big-endian ----
-  sub       byte ptr [eax + 15], 8
-  jnc       @@CtrWbDone
-  mov       edx, 14
+  // ---- undo the one-batch build-ahead (edx is 8 blocks ahead); a borrow
+  //      unwinds the prefix bytes, then the low dword stores big-endian ----
+  sub       edx, 8
+  jnc       @@CtrWbStore
+  mov       ecx, 11
 @@CtrWbBorrow:
-  sub       byte ptr [eax + edx], 1
-  jnc       @@CtrWbDone
-  dec       edx
+  sub       byte ptr [eax + ecx], 1
+  jnc       @@CtrWbStore
+  dec       ecx
   jns       @@CtrWbBorrow
-@@CtrWbDone:
+@@CtrWbStore:
+  bswap     edx
+  mov       [eax + 12], edx
 
-  add       esp, 144
+  add       esp, 152
   pop       edi
   pop       esi
   pop       ebx

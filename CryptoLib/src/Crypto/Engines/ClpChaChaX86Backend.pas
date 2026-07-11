@@ -45,12 +45,16 @@ type
     /// 64-bit-counter (DJB) variant; no SIMD 2-block kernel exists for it, so it
     /// returns False and the caller runs its scalar path.</summary>
     class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
-    /// <summary>Four-block ChaCha keystream (256 bytes). ACtr64 selects the DJB
-    /// 64-bit-counter kernel.</summary>
-    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
-    /// <summary>AVX2 eight-block ChaCha keystream (512 bytes). ACtr64 selects the
-    /// DJB 64-bit-counter kernel.</summary>
-    class function TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean = False): Boolean; static;
+    /// <summary>Four-block ChaCha keystream, streaming AGroups consecutive
+    /// 256-byte groups (AGroups >= 1) in one call. ACtr64 selects the DJB
+    /// 64-bit-counter kernel; the caller must guarantee the counter low word
+    /// does not wrap inside the 4*AGroups-block span.</summary>
+    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32; ACtr64: Boolean = False): Boolean; static;
+    /// <summary>AVX2 eight-block ChaCha keystream, streaming AGroups consecutive
+    /// 512-byte groups (AGroups >= 1) in one call. ACtr64 selects the DJB
+    /// 64-bit-counter kernel; the caller must guarantee the counter low word
+    /// does not wrap inside the 8*AGroups-block span.</summary>
+    class function TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32; ACtr64: Boolean = False): Boolean; static;
   end;
 
 implementation
@@ -83,79 +87,89 @@ procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte)
 {$ENDIF}
 end;
 
-procedure ChaCha7539ProcessBlocks4Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
+procedure ChaCha7539ProcessBlocks4Sse2(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Sse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Sse2_i386.inc}
 {$ENDIF}
 end;
 
-procedure ChaCha7539ProcessBlocks4Ssse3(ARounds: Int32; AState, AIn, AOut: PByte);
+procedure ChaCha7539ProcessBlocks4Ssse3(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Ssse3_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Ssse3_i386.inc}
 {$ENDIF}
 end;
 
-// AVX2 8-way (512B): x86_64 only (needs 16 ymm; i386 has 8, so it falls back to
-// two 256B ProcessBlocks4 in the engine).
+// AVX2 8-way: streams AGroups x 512B per call. x86_64 keeps the 16 state rows
+// in ymm registers; i386 (8 ymm) works them from a 64B-aligned stack frame.
+procedure ChaCha7539ProcessBlocks8Avx2(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure ChaCha7539ProcessBlocks8Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks8Avx2_x86_64.inc}
-end;
 {$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks8Avx2_i386.inc}
+{$ENDIF}
+end;
 
 // DJB ChaCha (64-bit counter, words 12-13): the vertical kernels are identical to
 // the 7539 ones except the counter advance carries into word 13, which the shared
 // includes emit under CHACHA_CTR64. Callers guard against a low-word wrap across the
-// lanes before invoking these (see the engine's WideBlocksSafe).
-procedure ChaChaProcessBlocks4Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
+// lanes before invoking these (see the engine's WideGroupsSafe).
+procedure ChaChaProcessBlocks4Sse2(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$DEFINE CHACHA_CTR64}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Sse2_x86_64.inc}
 {$UNDEF CHACHA_CTR64}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$DEFINE CHACHA_CTR64}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Sse2_i386.inc}
 {$UNDEF CHACHA_CTR64}
 {$ENDIF}
 end;
 
-procedure ChaChaProcessBlocks4Ssse3(ARounds: Int32; AState, AIn, AOut: PByte);
+procedure ChaChaProcessBlocks4Ssse3(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$DEFINE CHACHA_CTR64}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Ssse3_x86_64.inc}
 {$UNDEF CHACHA_CTR64}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
 {$DEFINE CHACHA_CTR64}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks4Ssse3_i386.inc}
 {$UNDEF CHACHA_CTR64}
 {$ENDIF}
 end;
 
+procedure ChaChaProcessBlocks8Avx2(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-procedure ChaChaProcessBlocks8Avx2(ARounds: Int32; AState, AIn, AOut: PByte);
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
 {$DEFINE CHACHA_CTR64}
 {$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks8Avx2_x86_64.inc}
 {$UNDEF CHACHA_CTR64}
-end;
 {$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$DEFINE CHACHA_CTR64}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks8Avx2_i386.inc}
+{$UNDEF CHACHA_CTR64}
+{$ENDIF}
+end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
 { TChaChaX86Backend }
@@ -193,7 +207,7 @@ begin
   Result := False;
 end;
 
-class function TChaChaX86Backend.TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean): Boolean;
+class function TChaChaX86Backend.TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32; ACtr64: Boolean): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   // 4-block (256B) tier: AVX2 gives no extra lanes at 4-way, and AVX2 CPUs run the
@@ -202,17 +216,17 @@ begin
     TX86SimdLevel.SSSE3:
     begin
       if ACtr64 then
-        ChaChaProcessBlocks4Ssse3(ARounds, AState, AIn, AOut)
+        ChaChaProcessBlocks4Ssse3(ARounds, AState, AIn, AOut, AGroups)
       else
-        ChaCha7539ProcessBlocks4Ssse3(ARounds, AState, AIn, AOut);
+        ChaCha7539ProcessBlocks4Ssse3(ARounds, AState, AIn, AOut, AGroups);
       Exit(True);
     end;
     TX86SimdLevel.SSE2:
     begin
       if ACtr64 then
-        ChaChaProcessBlocks4Sse2(ARounds, AState, AIn, AOut)
+        ChaChaProcessBlocks4Sse2(ARounds, AState, AIn, AOut, AGroups)
       else
-        ChaCha7539ProcessBlocks4Sse2(ARounds, AState, AIn, AOut);
+        ChaCha7539ProcessBlocks4Sse2(ARounds, AState, AIn, AOut, AGroups);
       Exit(True);
     end;
   end;
@@ -220,16 +234,16 @@ begin
   Result := False;
 end;
 
-class function TChaChaX86Backend.TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; ACtr64: Boolean): Boolean;
+class function TChaChaX86Backend.TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32; ACtr64: Boolean): Boolean;
 begin
-{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$IFDEF CRYPTOLIB_X86_SIMD}
   case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
     TX86SimdLevel.AVX2:
     begin
       if ACtr64 then
-        ChaChaProcessBlocks8Avx2(ARounds, AState, AIn, AOut)
+        ChaChaProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups)
       else
-        ChaCha7539ProcessBlocks8Avx2(ARounds, AState, AIn, AOut);
+        ChaCha7539ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
       Exit(True);
     end;
   end;

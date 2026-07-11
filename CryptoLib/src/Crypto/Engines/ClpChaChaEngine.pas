@@ -57,11 +57,14 @@ type
   TChaChaBaseEngine = class(TSalsa20Engine)
 
   strict private
-    // Pointer-form, unvalidated inner helpers (1 / 2 / 4 / 8 blocks).
+    // Pointer-form, unvalidated inner helpers (1 / 2 blocks).
     procedure ProcessBlockFast(AIn, AOut: PByte);
     procedure ProcessBlocks2Fast(AIn, AOut: PByte);
-    procedure ProcessBlocks4Fast(AIn, AOut: PByte);
-    procedure ProcessBlocks8Fast(AIn, AOut: PByte);
+    // One streaming SIMD tier (AGroupBlocks = 8 or 4): clamps to the wrap-safe
+    // span, runs the kernel once over every whole group, advances the cursors.
+    // False = no SIMD kernel for that width or no safe groups (degrade a tier).
+    function TryProcessWide(AGroupBlocks: Int32; var AIn, AOut: PByte;
+      var ABlockCount: Int32): Boolean;
 
   strict protected
     // 8 -> 4 -> 2 -> 1 bulk ladder (widest kernel first).
@@ -69,9 +72,10 @@ type
 
     // True for the DJB 64-bit counter (words 12-13); False (IETF).
     function CounterIs64Bit: Boolean; virtual;
-    // Wide kernels broadcast word 13; for the 64-bit counter that holds only while
-    // word 12 does not wrap over the N-block span (else the caller degrades a tier).
-    function WideBlocksSafe(ABlocks: Int32): Boolean; inline;
+    // Wide kernels broadcast word 13, valid only while word 12 does not wrap
+    // inside the processed span: clamps a span of AGroups x AGroupBlocks
+    // blocks to the groups fully before the wrap (identity for IETF).
+    function WideGroupsSafe(AGroups, AGroupBlocks: Int32): Int32;
 
     procedure GenerateKeyStream(const AOutput: TCryptoLibByteArray); override;
 
@@ -133,11 +137,19 @@ begin
   Result := False;
 end;
 
-function TChaChaBaseEngine.WideBlocksSafe(ABlocks: Int32): Boolean;
+function TChaChaBaseEngine.WideGroupsSafe(AGroups, AGroupBlocks: Int32): Int32;
+var
+  LSafeBlocks: UInt64;
 begin
-  Result := (not CounterIs64Bit) or
-    (FEngineState[12] <= (UInt32($FFFFFFFF) - UInt32(ABlocks - 1)));
+  Result := AGroups;
+  if CounterIs64Bit then
+  begin
+    LSafeBlocks := UInt64($100000000) - FEngineState[12];
+    if (UInt64(Result) * UInt32(AGroupBlocks)) > LSafeBlocks then
+      Result := Int32(LSafeBlocks div UInt32(AGroupBlocks));
+  end;
 end;
+
 
 procedure TChaChaBaseEngine.GenerateKeyStream(const AOutput: TCryptoLibByteArray);
 begin
@@ -299,26 +311,29 @@ begin
   ProcessBlockFast(AIn + 64, AOut + 64);
 end;
 
-procedure TChaChaBaseEngine.ProcessBlocks4Fast(AIn, AOut: PByte);
+function TChaChaBaseEngine.TryProcessWide(AGroupBlocks: Int32;
+  var AIn, AOut: PByte; var ABlockCount: Int32): Boolean;
+var
+  LGroups: Int32;
 begin
-  if WideBlocksSafe(4) then
-    if TChaChaSimd.TryProcessBlocks4(FRounds, PByte(@FEngineState[0]),
-      AIn, AOut, CounterIs64Bit) then
-      Exit;
-
-  ProcessBlocks2Fast(AIn, AOut);
-  ProcessBlocks2Fast(AIn + 128, AOut + 128);
-end;
-
-procedure TChaChaBaseEngine.ProcessBlocks8Fast(AIn, AOut: PByte);
-begin
-  if WideBlocksSafe(8) then
-    if TChaChaSimd.TryProcessBlocks8(FRounds, PByte(@FEngineState[0]),
-      AIn, AOut, CounterIs64Bit) then
-      Exit;
-
-  ProcessBlocks4Fast(AIn, AOut);
-  ProcessBlocks4Fast(AIn + 256, AOut + 256);
+  Result := False;
+  LGroups := WideGroupsSafe(ABlockCount div AGroupBlocks, AGroupBlocks);
+  if LGroups = 0 then
+    Exit;
+  case AGroupBlocks of
+    8:
+      Result := TChaChaSimd.TryProcessBlocks8(FRounds,
+        PByte(@FEngineState[0]), AIn, AOut, LGroups, CounterIs64Bit);
+  else
+    Result := TChaChaSimd.TryProcessBlocks4(FRounds,
+      PByte(@FEngineState[0]), AIn, AOut, LGroups, CounterIs64Bit);
+  end;
+  if Result then
+  begin
+    AIn := AIn + LGroups * (AGroupBlocks * 64);
+    AOut := AOut + LGroups * (AGroupBlocks * 64);
+    System.Dec(ABlockCount, LGroups * AGroupBlocks);
+  end;
 end;
 
 function TChaChaBaseEngine.DoProcessBlocks(AIn, AOut: PByte;
@@ -327,14 +342,24 @@ begin
   Result := ABlockCount * 64;
   while ABlockCount >= 8 do
   begin
-    ProcessBlocks8Fast(AIn, AOut);
+    // Widest streaming tier that lands, over all safe groups at once.
+    if TryProcessWide(8, AIn, AOut, ABlockCount) then
+      continue;
+    if TryProcessWide(4, AIn, AOut, ABlockCount) then
+      continue;
+    // No wide SIMD (or at the DJB wrap boundary): one 8-block group via 2/1.
+    ProcessBlocks2Fast(AIn, AOut);
+    ProcessBlocks2Fast(AIn + 128, AOut + 128);
+    ProcessBlocks2Fast(AIn + 256, AOut + 256);
+    ProcessBlocks2Fast(AIn + 384, AOut + 384);
     AIn := AIn + 512;
     AOut := AOut + 512;
     System.Dec(ABlockCount, 8);
   end;
-  if ABlockCount >= 4 then
+  if (ABlockCount >= 4) and (not TryProcessWide(4, AIn, AOut, ABlockCount)) then
   begin
-    ProcessBlocks4Fast(AIn, AOut);
+    ProcessBlocks2Fast(AIn, AOut);
+    ProcessBlocks2Fast(AIn + 128, AOut + 128);
     AIn := AIn + 256;
     AOut := AOut + 256;
     System.Dec(ABlockCount, 4);

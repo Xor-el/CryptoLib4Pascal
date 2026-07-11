@@ -46,10 +46,12 @@ type
     class function TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean; static;
     /// <summary>Xor three 16-byte limbs with three slices of a 48-byte MultiplyExt output.</summary>
     class function TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean; static;
-    /// <summary>Fused 4-way GHASH over 64 contiguous ciphertext bytes.</summary>
-    class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte): Boolean; static;
-    /// <summary>Fused 8-way GHASH over 128 contiguous ciphertext bytes.</summary>
-    class function TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte): Boolean; static;
+    /// <summary>Fused 4-way GHASH over ABatchCount contiguous 64-byte batches.</summary>
+    class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
+      ABatchCount: NativeInt): Boolean; static;
+    /// <summary>Fused 8-way GHASH over ABatchCount contiguous 128-byte batches.</summary>
+    class function TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte;
+      ABatchCount: NativeInt): Boolean; static;
 
     /// <summary>True when the shuffled/fused GHASH path (4-/8-way) is usable on this build/CPU. Gates the batch dispatch and the H-power precompute.</summary>
     class function IsShuffledGhashSupported: Boolean; static;
@@ -99,19 +101,21 @@ begin
 {$IFEND}
 end;
 
-class function TGhashSimd.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte): Boolean;
+class function TGhashSimd.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
+  ABatchCount: NativeInt): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64);
+  Result := TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64, ABatchCount);
 {$ELSE}
   Result := False;
 {$IFEND}
 end;
 
-class function TGhashSimd.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte): Boolean;
+class function TGhashSimd.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: PByte;
+  ABatchCount: NativeInt): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128);
+  Result := TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128, ABatchCount);
 {$ELSE}
   Result := False;
 {$IFEND}

@@ -39,7 +39,8 @@ type
     /// <summary>True when a POLYVAL batch kernel is usable on this CPU.</summary>
     class function IsSupported: Boolean; static;
     /// <summary>Eight-block POLYVAL Horner batch. Precondition: <c>IsSupported</c>.</summary>
-    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer); static;
+    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+      ABatchCount: NativeInt); static;
   end;
 
 implementation
@@ -55,10 +56,11 @@ begin
 {$IFEND}
 end;
 
-class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer);
+class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+  ABatchCount: NativeInt);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask);
+  TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
 {$IFEND}
 end;
 

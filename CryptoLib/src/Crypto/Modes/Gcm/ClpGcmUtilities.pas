@@ -69,7 +69,10 @@ type
     class procedure Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte); static;
     /// <summary>Xor three 16-byte limbs with three 16-byte slices from a 48-byte MultiplyExt output.</summary>
     class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
-    /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8). Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
+    /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8),
+    /// each PRE-MULTIPLIED BY x in the reflected representation (DivideP) to match the
+    /// carry-less-multiply folding reduction in the fused GHASH / POLYVAL kernels.
+    /// Four-way fused GHASH uses offsets 64..112 (H^4..H^1).</summary>
     class procedure InitEightWayHPowFromH(const AH: TCryptoLibByteArray; const AHPow128: TCryptoLibByteArray); static;
 
     class procedure &Xor(const AX, AY: TCryptoLibByteArray); overload; static;
@@ -387,6 +390,17 @@ begin
   LY := LF4;
   Multiply(LAcc, LY);
   LF8 := LAcc;
+  // Pre-multiply every power by x (DivideP in this field convention) so the
+  // fused kernels can reduce the batch product with two carry-less multiplies
+  // by 0xC2000000_00000000 instead of a bit-shift ladder.
+  LY := LF1; DivideP(LY, LF1);
+  LY := LF2; DivideP(LY, LF2);
+  LY := LF3; DivideP(LY, LF3);
+  LY := LF4; DivideP(LY, LF4);
+  LY := LF5; DivideP(LY, LF5);
+  LY := LF6; DivideP(LY, LF6);
+  LY := LF7; DivideP(LY, LF7);
+  LY := LF8; DivideP(LY, LF8);
   TPack.UInt64_To_LE(LF8.N1, AHPow128, 0);
   TPack.UInt64_To_LE(LF8.N0, AHPow128, 8);
   TPack.UInt64_To_LE(LF7.N1, AHPow128, 16);

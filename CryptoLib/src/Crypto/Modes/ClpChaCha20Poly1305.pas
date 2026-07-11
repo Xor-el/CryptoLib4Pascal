@@ -414,7 +414,7 @@ end;
 function TChaCha20Poly1305.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LResultLen, LAvailable, LInLimit1, LInLimit2, LRemBlocks: Int32;
+  LResultLen, LAvailable, LInLimit1, LRemBlocks: Int32;
 begin
   if (AInput = nil) then
     raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
@@ -461,7 +461,6 @@ begin
       end;
 
       LInLimit1 := AInOff + ALen - System.Length(FBuf);
-      LInLimit2 := LInLimit1 - BufSize;
 
       LAvailable := BufSize - FBufPos;
       System.Move(AInput[AInOff], FBuf[FBufPos], LAvailable);
@@ -472,15 +471,8 @@ begin
 
       if (FBulkChaCha <> nil) then
       begin
-        // Bulk: MAC + decrypt in 512B (8-way) strides, then the remaining whole
-        // blocks (< 8) in a single engine-laddered call.
-        while (AInOff <= LInLimit2 - (BufSize * 6)) do
-        begin
-          FPoly1305.BlockUpdate(AInput, AInOff, BufSize * 8);
-          ProcessBlocksBulk(AInput, AInOff, 8, AOutput, AOutOff + LResultLen);
-          AInOff := AInOff + BufSize * 8;
-          LResultLen := LResultLen + BufSize * 8;
-        end;
+        // Bulk: MAC then decrypt every whole block, one streaming call each
+        // (MAC first reads all ciphertext, so in-place decrypt stays safe).
         if (AInOff <= LInLimit1) then
         begin
           LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;
@@ -517,7 +509,6 @@ begin
       end;
 
       LInLimit1 := AInOff + ALen - BufSize;
-      LInLimit2 := LInLimit1 - BufSize;
 
       if (FBufPos > 0) then
       begin
@@ -529,14 +520,8 @@ begin
 
       if (FBulkChaCha <> nil) then
       begin
-        // Bulk: encrypt in 512B (8-way) strides, then the remaining whole blocks
-        // (< 8) in a single engine-laddered call; MAC over the ciphertext below.
-        while (AInOff <= LInLimit2 - (BufSize * 6)) do
-        begin
-          ProcessBlocksBulk(AInput, AInOff, 8, AOutput, AOutOff + LResultLen);
-          AInOff := AInOff + BufSize * 8;
-          LResultLen := LResultLen + BufSize * 8;
-        end;
+        // Bulk: encrypt every whole block in one streaming engine call (the
+        // ladder runs the widest kernels internally); MAC the ciphertext below.
         if (AInOff <= LInLimit1) then
         begin
           LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;

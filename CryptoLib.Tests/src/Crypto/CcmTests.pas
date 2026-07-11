@@ -668,9 +668,11 @@ begin
   except
     on E: EInvalidCipherTextCryptoLibException do
     begin
+      // The tentative plaintext must be wiped before the exception leaves:
+      // every byte of the output region has to read back as zero.
       for LI := 0 to High(LOutput) do
       begin
-        if LOutput[LI] <> $55 then
+        if LOutput[LI] <> $00 then
           Fail('CCM left unverified plaintext in the output buffer on tag failure');
       end;
     end;

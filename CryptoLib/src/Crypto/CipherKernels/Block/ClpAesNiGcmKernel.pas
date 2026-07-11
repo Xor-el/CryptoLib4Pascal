@@ -22,6 +22,7 @@ interface
 
 uses
   SysUtils,
+  ClpCryptoLibTypes,
   ClpIBlockCipher,
   ClpIAesEngineX86,
   ClpCipherKernelTypes,
@@ -55,6 +56,10 @@ type
     FRounds: Int32;
     FHPow128: Pointer;
     FMask: Pointer;
+    // Kernel-owned copy of the mode's H^8..H^1 table (already x-pre-multiplied
+    // by TGcmUtilities.InitEightWayHPowFromH, matching the carry-less-multiply
+    // folding reduction inside the fused kernel). FHPow128 points at it.
+    FHPowShifted: TCryptoLibByteArray;
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
       ARounds: Int32; AHPow128, AMask: Pointer);
@@ -82,11 +87,12 @@ type
   // Natural pointer-sized alignment, no padding: the field offsets match the
   // [rcx + N] / [ebx + N] accesses in AesGcmFusedCtrGhashEight_x86_64.inc and
   // AesGcmFusedCtrGhashEight_i386.inc (they differ with pointer / NativeUInt
-  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel advances
-  // PXorIn/POut/PPrevCipher and Counter32 in place across the batch run and
+  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel holds the loop
+  // state in registers across the batch run, writing only Counter32 back, and
   // builds each batch's counter blocks in-register from Counter32 + PJ0Template
   // (both arches); the GHASH-from-output flag is 1 for encrypt (fold the output
-  // ciphertext) and 0 for decrypt (fold the input).
+  // ciphertext) and 0 for decrypt (fold the input). PHPow128 points at the
+  // kernel-owned x-pre-multiplied H-power table (see TAesNiGcmKernel.Create).
   TGcmFusedCtx = record
     PXorIn: Pointer;
     POut: Pointer;
@@ -157,8 +163,13 @@ begin
   FEngine := AEngine;
   FKeys := AKeys;
   FRounds := ARounds;
-  FHPow128 := AHPow128;
   FMask := AMask;
+  // The mode's table already holds the powers pre-multiplied by x (see
+  // TGcmUtilities.InitEightWayHPowFromH); keep a kernel-owned copy so the
+  // pointer stays valid for the kernel's lifetime.
+  System.SetLength(FHPowShifted, 128);
+  System.Move(AHPow128^, FHPowShifted[0], 128);
+  FHPow128 := @FHPowShifted[0];
 end;
 
 function TAesNiGcmKernel.MinimumBlockCount: Int32;

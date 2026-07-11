@@ -102,6 +102,11 @@ type
     FMacSize: Int32;
     FKeyParam: ICipherParameters;
     FLastKey: TCryptoLibByteArray;
+    // CTR wrapper cached across packets (created once per keyed cipher); each
+    // packet re-inits it IV-only, so the AES schedule is never recomputed.
+    FCtrCipher: ISicBlockCipher;
+    FBulkCtr: IBulkBlockCipherMode;
+    FKernelForEnc: Boolean;
     FAssociatedText: TMemoryStream;
     // Accumulated body input (plaintext on encrypt, ciphertext+tag on decrypt).
     // CCM needs the total length before processing (B_0 encodes it), so input is
@@ -115,7 +120,6 @@ type
     // the plaintext copied to the caller's output (which stays untouched on
     // failure). Grown by doubling and reused across packets, and wiped after
     // every packet (in a finally) so no recovered plaintext lingers.
-    FPlainScratch: TCryptoLibByteArray;
     // Cached once per Init; non-nil when the registry resolved a fused
     // CCM kernel for the underlying cipher and current direction.
     FCcmKernel: ICcmKernel;
@@ -189,7 +193,6 @@ begin
   FAssociatedText := TMemoryStream.Create;
   FData := nil;
   FDataLen := 0;
-  FPlainScratch := nil;
 
   if (ACipher.GetBlockSize() <> BlockSize) then
     raise EArgumentCryptoLibException.CreateResFmt(@SCipherRequired, [BlockSize]);
@@ -233,6 +236,8 @@ var
   LChoice: TCipherAeadChoice;
   LRequestedMacSizeBits: Int32;
   LDirection: TCipherKernelDirection;
+  LPrevKey: TCryptoLibByteArray;
+  LSameKey: Boolean;
 begin
   FForEncryption := AForEncryption;
 
@@ -245,6 +250,7 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['CCM']);
 
   CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
+  LPrevKey := FLastKey;
 
   FNonce := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
@@ -264,19 +270,35 @@ begin
   if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
 
-  FCcmKernel := nil;
+  // Nonce-only rotation is the hot AEAD path: with the key and direction
+  // unchanged the AES schedule, the CTR wrapper and the fused-kernel binding
+  // all stay valid, so none of them are recomputed.
+  LSameKey := (LChoice.CipherKey = nil) or
+    ((LPrevKey <> nil) and (LChoice.KeyParameter <> nil) and
+    LChoice.KeyParameter.FixedTimeEquals(LPrevKey));
   if FKeyParam <> nil then
   begin
-    // Key FCipher now so the factory can read the finalised AES
-    // schedule. ProcessPacket re-keys through the SIC wrapper later; the
-    // schedule contents are identical across those re-keys.
-    FCipher.Init(True, FKeyParam);
-    if AForEncryption then
-      LDirection := TCipherKernelDirection.Encrypt
-    else
-      LDirection := TCipherKernelDirection.Decrypt;
-    TCipherKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
-  end;
+    if not LSameKey then
+      FCipher.Init(True, FKeyParam);
+    if (FCcmKernel = nil) or (not LSameKey) or
+      (FKernelForEnc <> AForEncryption) then
+    begin
+      FCcmKernel := nil;
+      if AForEncryption then
+        LDirection := TCipherKernelDirection.Encrypt
+      else
+        LDirection := TCipherKernelDirection.Decrypt;
+      TCipherKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
+      FKernelForEnc := AForEncryption;
+    end;
+    if FCtrCipher = nil then
+    begin
+      FCtrCipher := TSicBlockCipher.Create(FCipher);
+      TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCtrCipher, FBulkCtr);
+    end;
+  end
+  else
+    FCcmKernel := nil;
 
   Reset();
 end;
@@ -420,9 +442,11 @@ begin
   LIV[0] := Byte((LQ - 1) and $7);
   System.Move(FNonce[0], LIV[1], LN);
 
-  LCtrCipher := TSicBlockCipher.Create(FCipher);
-  LCtrCipher.Init(FForEncryption, TParametersWithIV.Create(FKeyParam, LIV) as IParametersWithIV);
-  TBlockCipherBulkUtilities.TryResolveBulkCipherMode(LCtrCipher, LBulkCtr);
+  // IV-only re-init of the cached CTR wrapper: the inner parameters are nil,
+  // so the (unchanged) AES schedule is not recomputed per packet.
+  LCtrCipher := FCtrCipher;
+  LCtrCipher.Init(FForEncryption, TParametersWithIV.Create(nil, LIV) as IParametersWithIV);
+  LBulkCtr := FBulkCtr;
 
   if FForEncryption then
   begin
@@ -856,21 +880,21 @@ function TCcmBlockCipher.RunDecrypt(AUseFused: Boolean;
 var
   LOk: Boolean;
 begin
-  TArrayUtilities.EnsureCapacity(FPlainScratch, ACtx.OutputLen);
-  ACtx.Dest := FPlainScratch;
-  ACtx.DestOff := 0;
-  try
-    if AUseFused then
-      LOk := DecryptBodyFused(ACtx)
-    else
-      LOk := DecryptBodyScalar(ACtx);
-    if not LOk then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
-    System.Move(FPlainScratch[0], AOutput[AOutOff], ACtx.OutputLen);
-    Result := True;
-  finally
-    TArrayUtilities.Fill(FPlainScratch, 0, ACtx.OutputLen, Byte(0));
+  // Decrypt straight into the caller's buffer (no scratch bounce); on a MAC
+  // failure the tentative plaintext is wiped before the exception leaves, so
+  // no unverified plaintext survives the call.
+  ACtx.Dest := AOutput;
+  ACtx.DestOff := AOutOff;
+  if AUseFused then
+    LOk := DecryptBodyFused(ACtx)
+  else
+    LOk := DecryptBodyScalar(ACtx);
+  if not LOk then
+  begin
+    TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + ACtx.OutputLen, Byte(0));
+    raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
   end;
+  Result := True;
 end;
 
 end.
