@@ -36,7 +36,7 @@
 // All loop-carried state lives in registers - no context memory is
 // touched inside the batch loop:
 //   rsi/rdi = PXorIn/POut (advance)   r10 = PPrevCipher (rotates)
-//   rdx = PRoundKeys   r11 = PHPow128   r8d = counter32   r9 = PJ0
+//   rdx = PRoundKeys   r11 = PHPow128   r8d = counter32
 //   rbx = batch count   ebp = GHASH-from-output flag   rax = scratch
 //
 // XMM (16/16 used):
@@ -49,12 +49,18 @@
 //   xmm14       : pclmul scratch destination
 //   xmm15       : byte-reverse mask (held for the whole kernel)
 //
-// Stack: 24 bytes below the nonvolatile-save area; [rsp] is 16-aligned
-// and holds the reduction constant (low qword 0xC2000000_00000000).
+// Stack (below the nonvolatile-save area; [rsp] is 16-aligned):
+//   [rsp +  0]   reduction constant (low qword 0xC2000000_00000000)
+//   [rsp + 16..143]  8 aligned counter-block slots. The fixed 12-byte J0
+//     prefix is staged once in the prologue, and each batch's AES-only
+//     tail rounds stage the NEXT batch's counter words (GPR stores, no
+//     shuffle-port inserts), so the loop-top movdqa loads never read a
+//     freshly written slot (no store-forward stalls). The prologue
+//     pre-stages batch 0; the final batch over-stages into scratch.
 //
 // AES-NI and PCLMULQDQ instructions, plus selected forms touching
-// xmm8..xmm15 (pxor) and PINSRD/PSHUFD, are db-encoded for broad
-// assembler compatibility.
+// xmm8..xmm15 (pxor) and PSHUFD, are db-encoded for broad assembler
+// compatibility.
 // -------------------------------------------------------------------
 
   push      rbx
@@ -62,11 +68,33 @@
   push      rdi
   push      rbp
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
-  sub       rsp, 24                             // [rsp] 16-aligned
+  sub       rsp, 152                            // [rsp] 16-aligned
   mov       rax, $C200000000000000
   mov       [rsp], rax                          // reduction constant (low qword)
   xor       eax, eax
   mov       [rsp + 8], rax
+
+  // --- Stage the fixed J0 prefix into the 8 counter slots once; only
+  //     bytes 12..15 (the counter word) change per batch. ---
+  mov       rax, [rcx + 64]                     // PJ0Template
+  mov       rdx, [rax]                          // J0 bytes 0..7
+  mov       eax, [rax + 8]                      // J0 bytes 8..11
+  mov       [rsp + 16], rdx
+  mov       [rsp + 24], eax
+  mov       [rsp + 32], rdx
+  mov       [rsp + 40], eax
+  mov       [rsp + 48], rdx
+  mov       [rsp + 56], eax
+  mov       [rsp + 64], rdx
+  mov       [rsp + 72], eax
+  mov       [rsp + 80], rdx
+  mov       [rsp + 88], eax
+  mov       [rsp + 96], rdx
+  mov       [rsp + 104], eax
+  mov       [rsp + 112], rdx
+  mov       [rsp + 120], eax
+  mov       [rsp + 128], rdx
+  mov       [rsp + 136], eax
 
   // --- Hoist the whole loop state into registers. ---
   mov       rdx, [rcx + 24]                     // rdx = PRoundKeys (aligned)
@@ -77,50 +105,50 @@
   mov       rdi, [rcx + 8]                      // rdi = POut
   mov       r10, [rcx + 16]                     // r10 = PPrevCipher
   mov       r8d, [rcx + 56]                     // r8d = counter32
-  mov       r9, [rcx + 64]                      // r9 = PJ0Template
   mov       rbx, [rcx + 72]                     // rbx = batch count
   mov       ebp, [rcx + 80]                     // ebp = GHASH-from-output flag
   mov       rax, [rcx + 40]                     // rax = PFS
   movdqu    xmm9, [rax]
   pshufb    xmm9, xmm15                         // xmm9 = reflected running state
 
-@@GcmFusedLoop:
-  // Build 8 counter blocks into xmm0..7: block j = J0[0..11] || BE(counter32+j+1).
-  // GCM's 32-bit counter holds the last-used value, so the batch based at
-  // counter32 spans counter32+1..counter32+8 (matching FillCtr8BlocksRaw); only
-  // bytes 12-15 vary. PINSRD is db-encoded.
-  movdqu    xmm0, [r9]
+  // --- Pre-stage batch 0's counter words (counter32+1..+8, big-endian). ---
   lea       eax, [r8 + 1]
   bswap     eax
-  db $66, $0F, $3A, $22, $C0, $03               // pinsrd xmm0, eax, 3
-  movdqu    xmm1, [r9]
+  mov       [rsp + 28], eax
   lea       eax, [r8 + 2]
   bswap     eax
-  db $66, $0F, $3A, $22, $C8, $03               // pinsrd xmm1, eax, 3
-  movdqu    xmm2, [r9]
+  mov       [rsp + 44], eax
   lea       eax, [r8 + 3]
   bswap     eax
-  db $66, $0F, $3A, $22, $D0, $03               // pinsrd xmm2, eax, 3
-  movdqu    xmm3, [r9]
+  mov       [rsp + 60], eax
   lea       eax, [r8 + 4]
   bswap     eax
-  db $66, $0F, $3A, $22, $D8, $03               // pinsrd xmm3, eax, 3
-  movdqu    xmm4, [r9]
+  mov       [rsp + 76], eax
   lea       eax, [r8 + 5]
   bswap     eax
-  db $66, $0F, $3A, $22, $E0, $03               // pinsrd xmm4, eax, 3
-  movdqu    xmm5, [r9]
+  mov       [rsp + 92], eax
   lea       eax, [r8 + 6]
   bswap     eax
-  db $66, $0F, $3A, $22, $E8, $03               // pinsrd xmm5, eax, 3
-  movdqu    xmm6, [r9]
+  mov       [rsp + 108], eax
   lea       eax, [r8 + 7]
   bswap     eax
-  db $66, $0F, $3A, $22, $F0, $03               // pinsrd xmm6, eax, 3
-  movdqu    xmm7, [r9]
+  mov       [rsp + 124], eax
   lea       eax, [r8 + 8]
   bswap     eax
-  db $66, $0F, $3A, $22, $F8, $03               // pinsrd xmm7, eax, 3
+  mov       [rsp + 140], eax
+
+@@GcmFusedLoop:
+  // Load the 8 pre-staged counter blocks: block j = J0[0..11] ||
+  // BE(counter32+j+1) (GCM's counter holds the last-used value, matching
+  // FillCtr8BlocksRaw). The words were staged a full round-chain ago.
+  movdqa    xmm0, [rsp + 16]
+  movdqa    xmm1, [rsp + 32]
+  movdqa    xmm2, [rsp + 48]
+  movdqa    xmm3, [rsp + 64]
+  movdqa    xmm4, [rsp + 80]
+  movdqa    xmm5, [rsp + 96]
+  movdqa    xmm6, [rsp + 112]
+  movdqa    xmm7, [rsp + 128]
 
   // --- Round 0: AddRoundKey (aligned key memory operands) + zero Z1/Z2.
   //     Z0 (xmm9) still holds the carried state; iter 0 folds and clears it. ---
@@ -345,15 +373,41 @@
   db $66, $0F, $38, $DC, $BA, $80, $00, $00, $00   // aesenc xmm7, [rdx+128]
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
-  // --- Variant-specific tail: aesenc rounds 9..Nr-1, then aesenclast. ---
+  // --- Variant-specific tail: aesenc rounds 9..Nr-1, then aesenclast.
+  //     Round 9 interleaves the staging of the NEXT batch's counter
+  //     words (counter32+9..+16) into the slots. ---
   db $66, $0F, $38, $DC, $82, $90, $00, $00, $00   // aesenc xmm0, [rdx+144]
+  lea       eax, [r8 + 9]
+  bswap     eax
+  mov       [rsp + 28], eax
   db $66, $0F, $38, $DC, $8A, $90, $00, $00, $00   // aesenc xmm1, [rdx+144]
+  lea       eax, [r8 + 10]
+  bswap     eax
+  mov       [rsp + 44], eax
   db $66, $0F, $38, $DC, $92, $90, $00, $00, $00   // aesenc xmm2, [rdx+144]
+  lea       eax, [r8 + 11]
+  bswap     eax
+  mov       [rsp + 60], eax
   db $66, $0F, $38, $DC, $9A, $90, $00, $00, $00   // aesenc xmm3, [rdx+144]
+  lea       eax, [r8 + 12]
+  bswap     eax
+  mov       [rsp + 76], eax
   db $66, $0F, $38, $DC, $A2, $90, $00, $00, $00   // aesenc xmm4, [rdx+144]
+  lea       eax, [r8 + 13]
+  bswap     eax
+  mov       [rsp + 92], eax
   db $66, $0F, $38, $DC, $AA, $90, $00, $00, $00   // aesenc xmm5, [rdx+144]
+  lea       eax, [r8 + 14]
+  bswap     eax
+  mov       [rsp + 108], eax
   db $66, $0F, $38, $DC, $B2, $90, $00, $00, $00   // aesenc xmm6, [rdx+144]
+  lea       eax, [r8 + 15]
+  bswap     eax
+  mov       [rsp + 124], eax
   db $66, $0F, $38, $DC, $BA, $90, $00, $00, $00   // aesenc xmm7, [rdx+144]
+  lea       eax, [r8 + 16]
+  bswap     eax
+  mov       [rsp + 140], eax
 {$IF DEFINED(GCM_FUSED_AES_ROUNDS_12) OR DEFINED(GCM_FUSED_AES_ROUNDS_14)}
   db $66, $0F, $38, $DC, $82, $A0, $00, $00, $00   // aesenc xmm0, [rdx+160]
   db $66, $0F, $38, $DC, $8A, $A0, $00, $00, $00   // aesenc xmm1, [rdx+160]
@@ -490,7 +544,7 @@
   pshufb    xmm9, xmm15                         // reflected -> canonical
   mov       rax, [rcx + 40]                     // PFS
   movdqu    [rax], xmm9
-  add       rsp, 24
+  add       rsp, 152
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
   pop       rbp
   pop       rdi
