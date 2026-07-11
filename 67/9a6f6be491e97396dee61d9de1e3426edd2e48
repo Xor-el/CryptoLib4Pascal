@@ -1,0 +1,39 @@
+CryptoLib/src/Include/Simd/Gcm/GcmGhashFull_i386.inc
+  s_866519afc9e586::t_4642835a0b84f3 1,3-13,16-17,26,28-29,31,33-36,38-39,41-44,46-61,64,66,69,71,73,76-79,81,84,88,90,92,95-98,100,103,107,109,111,114-117,119,122,126,128,130,133-136,138-139,142,146,148,150,153-156,161,165,167,169,172-175,180,184,186,188,191-194,199,203,205,207,210-213
+  s_866519afc9e586::t_778384ab6dbe9a 158,177,196,216-220,223-224,226-236,238-247,250-254
+CryptoLib/src/Include/Simd/Gcm/GcmGhashFull_x86_64.inc
+  s_866519afc9e586::t_4642835a0b84f3 1,3-13,16-17,26,28-29,31,33-36,38-39,42-49,51-56,61,64,66,68,71-74,76,83,85,87,90-93,95,102,104,106,109-112,114,121,123,125,128-131,133,141,143,145,148-151,160,162,164,167-170,179,181,183,186-189,198,200,202,205-208
+  s_866519afc9e586::t_8c44f5e0e158a2 134,153,172,191,211-215,218-219,221-231,233-243,245
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiGcmKernel.pas
+  s_866519afc9e586::t_eca575fff4f1e1 59-61,167-169,171
+CryptoLib/src/Crypto/CipherKernels/Block/ClpPclmulGcmSivKernel.pas
+  s_866519afc9e586::t_ab7d4a046593cd 88-89,91-92
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_866519afc9e586::t_ddf9ac308198c0 639,660-673,1121,1124,1126-1128,1141-1142,1181,1183,1185-1187,1190-1191
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmSivSimd.pas
+  s_866519afc9e586::t_c222d01ef7da81 42-43,59-60,63
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmSivX86Backend.pas
+  s_866519afc9e586::t_ebef25f6778d4b 39-41,47-48,50,54,72-73,76
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmUtilities.pas
+  s_866519afc9e586::t_c185f4e96ff86a 72-75,393-403
+CryptoLib/src/Crypto/Modes/Gcm/ClpGhashSimd.pas
+  s_866519afc9e586::t_4eac84a4e0e47d 49-54,104-105,108,114-115,118
+CryptoLib/src/Crypto/Modes/Gcm/ClpGhashX86Backend.pas
+  s_866519afc9e586::t_b2c3da69ae8ca7 48-53,124,127,131,137,140,144,247-248,253-256,263-264,269-272
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.12",
+  "base_commit_sha": "679a6f6be491e97396dee61d9de1e3426edd2e48",
+  "prompts": {},
+  "sessions": {
+    "s_866519afc9e586": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "722cb229-49fd-469d-87b7-ce024146da03",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
