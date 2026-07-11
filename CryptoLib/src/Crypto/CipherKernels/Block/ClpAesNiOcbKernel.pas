@@ -49,9 +49,9 @@ type
   strict private
   const
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-    FUSED_OCB_MIN_BLOCKS = 8;
+    FUSED_OCB_MIN_BLOCKS = 16;
 {$ELSE}
-    FUSED_OCB_MIN_BLOCKS = 4;
+    FUSED_OCB_MIN_BLOCKS = 12;
 {$ENDIF}
   strict private
     FEngine: IAesEngineX86;

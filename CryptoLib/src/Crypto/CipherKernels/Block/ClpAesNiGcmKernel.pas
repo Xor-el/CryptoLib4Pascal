@@ -22,6 +22,8 @@ interface
 
 uses
   SysUtils,
+  ClpCryptoLibTypes,
+  ClpBinaryPrimitives,
   ClpIBlockCipher,
   ClpIAesEngineX86,
   ClpCipherKernelTypes,
@@ -55,6 +57,10 @@ type
     FRounds: Int32;
     FHPow128: Pointer;
     FMask: Pointer;
+    // Kernel-owned copy of the H^8..H^1 table with every power pre-multiplied
+    // by x in the reflected representation, matching the carry-less-multiply
+    // folding reduction inside the fused kernel. FHPow128 points at it.
+    FHPowShifted: TCryptoLibByteArray;
   public
     constructor Create(const AEngine: IAesEngineX86; AKeys: Pointer;
       ARounds: Int32; AHPow128, AMask: Pointer);
@@ -82,11 +88,12 @@ type
   // Natural pointer-sized alignment, no padding: the field offsets match the
   // [rcx + N] / [ebx + N] accesses in AesGcmFusedCtrGhashEight_x86_64.inc and
   // AesGcmFusedCtrGhashEight_i386.inc (they differ with pointer / NativeUInt
-  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel advances
-  // PXorIn/POut/PPrevCipher and Counter32 in place across the batch run and
+  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel holds the loop
+  // state in registers across the batch run, writing only Counter32 back, and
   // builds each batch's counter blocks in-register from Counter32 + PJ0Template
   // (both arches); the GHASH-from-output flag is 1 for encrypt (fold the output
-  // ciphertext) and 0 for decrypt (fold the input).
+  // ciphertext) and 0 for decrypt (fold the input). PHPow128 points at the
+  // kernel-owned x-pre-multiplied H-power table (see TAesNiGcmKernel.Create).
   TGcmFusedCtx = record
     PXorIn: Pointer;
     POut: Pointer;
@@ -152,13 +159,36 @@ const
 
 constructor TAesNiGcmKernel.Create(const AEngine: IAesEngineX86;
   AKeys: Pointer; ARounds: Int32; AHPow128, AMask: Pointer);
+var
+  LI: Int32;
+  LLo, LHi, LCarry: UInt64;
 begin
   inherited Create;
   FEngine := AEngine;
   FKeys := AKeys;
   FRounds := ARounds;
-  FHPow128 := AHPow128;
   FMask := AMask;
+  // Pre-multiply each H power by x in the reflected representation: shift the
+  // 128-bit value left by one with a conditional fold of the field polynomial
+  // (0xC2 in the top byte, 1 in the bottom). This lets the kernel reduce the
+  // batch product with two carry-less multiplies instead of a shift ladder.
+  System.SetLength(FHPowShifted, 128);
+  for LI := 0 to 7 do
+  begin
+    LLo := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(AHPow128), LI * 16);
+    LHi := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(AHPow128), LI * 16 + 8);
+    LCarry := LHi shr 63;
+    LHi := (LHi shl 1) or (LLo shr 63);
+    LLo := LLo shl 1;
+    if LCarry <> 0 then
+    begin
+      LHi := LHi xor UInt64($C200000000000000);
+      LLo := LLo xor 1;
+    end;
+    TBinaryPrimitives.WriteUInt64LittleEndian(FHPowShifted, LI * 16, LLo);
+    TBinaryPrimitives.WriteUInt64LittleEndian(FHPowShifted, LI * 16 + 8, LHi);
+  end;
+  FHPow128 := @FHPowShifted[0];
 end;
 
 function TAesNiGcmKernel.MinimumBlockCount: Int32;

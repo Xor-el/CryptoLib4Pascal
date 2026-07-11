@@ -522,6 +522,7 @@ var
   LKeyParam: IKeyParameter;
   LNewNonce: TCryptoLibByteArray;
   LBufLength: Int32;
+  LSameKey: Boolean;
 begin
   FForEncryption := AForEncryption;
   FMacBlock := nil;
@@ -551,8 +552,14 @@ begin
 
   if LKeyParam <> nil then
   begin
+    // Same-key fast path: the key schedule, hash subkey, multiplier state,
+    // H-power table and fused kernel all depend only on the key, so a
+    // re-Init with the same key (fresh nonce per message) keeps them all.
+    LSameKey := (FH <> nil) and (FLastKey <> nil) and
+      LKeyParam.FixedTimeEquals(FLastKey);
     FLastKey := LKeyParam.GetKey();
-    InitCipherAndHashSubKey(LKeyParam);
+    if not LSameKey then
+      InitCipherAndHashSubKey(LKeyParam);
   end
   else if FH = nil then
   begin

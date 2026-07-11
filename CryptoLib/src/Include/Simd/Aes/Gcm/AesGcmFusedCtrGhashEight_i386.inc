@@ -1,324 +1,280 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (i386).
 // -------------------------------------------------------------------
 // Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01 - AES
-// and PCLMULQDQ instructions are interleaved so the AES port (p0 on
-// Skylake+/Zen+) and the PCLMUL port (p5) operate in parallel, hiding
-// GHASH latency inside the AES critical path.
+// and PCLMULQDQ instructions are interleaved so the AES port and the
+// carry-less-multiply port operate in parallel, hiding GHASH latency
+// inside the AES critical path.
 //
 // Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
-// counter blocks to produce a keystream, XORs it with PXorIn to produce POut,
-// and concurrently GHASHes the PREVIOUS batch's 8 ciphertext blocks into the
-// running authentication state (the pipeline lags by one batch). AES inside GCM
-// is always CTR keystream construction; GhashFromOutput picks which buffer feeds
-// GHASH (output on encrypt, input on decrypt). The 8-xmm budget does not fit a
-// single-pass 8-wide layout, so the body processes the batch as two back-to-back
-// 4-block halves sharing the same running Z0/Z1/Z2 accumulators; each half packs
-// 4 GHASH iters into AES rounds 1..4 to keep both ports busy, rounds 5..N-1 are
-// AES-only, and the 3-limb reduction runs once after half 2. Only 4 counter
-// blocks are live per half, so each half builds its four in-register (eax/edx
-// are free there) - no counter scratch buffer is needed. The mode primes batch 0
-// and drains the last.
+// counter blocks (generated in-register from Counter32 + PJ0Template) to
+// produce a keystream, XORs it with PXorIn to produce POut, and concurrently
+// GHASHes the PREVIOUS batch's 8 ciphertext blocks into the running
+// authentication state (the pipeline lags by one batch). AES inside GCM is
+// always CTR keystream construction; GhashFromOutput picks which buffer feeds
+// GHASH (output on encrypt, input on decrypt). The mode primes batch 0 and
+// drains the last.
+//
+// PHPow128 holds the kernel-owned H^8..H^1 table PRE-MULTIPLIED BY x in the
+// reflected representation, so the batch product reduces with two
+// carry-less multiplies by 0xC2000000_00000000 instead of a shift/XOR
+// ladder. The running GHASH state stays reflected between batches and is
+// only byte-reversed at kernel entry/exit.
 //
 // Variant selection (set EXACTLY ONE):
 //   GCM_FUSED_AES_ROUNDS_10  -> AES-128 (schedule = 11 x 16 bytes).
 //   GCM_FUSED_AES_ROUNDS_12  -> AES-192 (schedule = 13 x 16 bytes).
 //   GCM_FUSED_AES_ROUNDS_14  -> AES-256 (schedule = 15 x 16 bytes).
 //
+// The 8-xmm budget does not fit a single-pass 8-wide layout, so the body
+// processes the batch as two back-to-back 4-block halves sharing the same
+// Z0/Z1/Z2 accumulator slots; each half packs 4 GHASH iters into AES
+// rounds 1..4, rounds 5..N-1 are AES-only, and the reduction runs once
+// after half 2. Only 4 counter blocks are live per half, so each half
+// builds its four in-register right before that half runs.
+//
 // On entry (after ClpSimdProc1Begin_i386.inc): ebx = PCtx.
+// Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 4-byte fields):
+//   [ebx +  0]  PXorIn    [ebx +  4]  POut       [ebx +  8]  PPrevCipher
+//   [ebx + 12]  PRoundKeys (16-byte aligned)     [ebx + 16]  PHPow128
+//   [ebx + 20]  PFS       [ebx + 24]  PMask      [ebx + 28]  Counter32
+//   [ebx + 32]  PJ0Template                      [ebx + 36]  BatchCount
+//   [ebx + 40]  GhashFromOutput (1 = encrypt)
 //
-// Context layout (TGcmFusedCtx in ClpAesNiGcmKernel.pas; 4-byte fields).
-//   [ebx +  0]  PXorIn      : 128-byte input to XOR with keystream (advances)
-//   [ebx +  4]  POut        : 128-byte output (advances; may alias PXorIn)
-//   [ebx +  8]  PPrevCipher : prev-batch ciphertext for GHASH (rotated per batch)
-//   [ebx + 12]  PRoundKeys  : AES encrypt round-key schedule (16-byte aligned)
-//   [ebx + 16]  PHPow128    : H^8..H^1, eight 16-byte limbs (field form)
-//   [ebx + 20]  PFS         : 16-byte running GHASH state (in/out, canonical)
-//   [ebx + 24]  PMask       : 16-byte PSHUFB byte-reverse mask
-//   [ebx + 28]  Counter32   : 32-bit GCM counter, last-used value (advances by 8)
-//   [ebx + 32]  PJ0Template : 16-byte J0 (upper 96 bits reused per counter block)
-//   [ebx + 36]  BatchCount  : number of 8-block batches to process
-//   [ebx + 40]  GhashFromOutput : 1 = GHASH output (encrypt), 0 = input (decrypt)
+// GPR: ebx=PCtx, edi=Keys (pinned), ebp=HPow (pinned), esi=PPrevCipher
+//   (rotates per batch), ecx=counter32 (in-register across the call),
+//   eax/edx=scratch.
 //
-// XMM (8/8 used; i386 has only xmm0..xmm7):
-//   xmm0..xmm3 : 4 AES keystream lanes (per half; reloaded between halves)
-//   xmm4       : GHASH block cache (byte-reversed prev-cipher block, per iter)
-//   xmm5       : current H-power limb (per iter)
-//   xmm6       : pclmul product destination (re-inited from xmm4 per imm)
-//   xmm7       : transient scratch (byte-reverse mask, then Z-reload fold)
+// XMM: xmm0..xmm3 = 4 AES keystream lanes (per half); xmm4 = GHASH block;
+//   xmm5 = H-power limb; xmm6/xmm7 = pclmul product scratch.
 //
-// Stack scratch (64 bytes, base unaligned - movdqu only):
-//   [esp +  0..15]  Z0 accumulator  (updated 8x per batch)
-//   [esp + 16..31]  Z1 accumulator  (updated 16x per batch; imm=1 + imm=16)
-//   [esp + 32..47]  Z2 accumulator  (updated 8x per batch)
-//   [esp + 48..63]  byte-reversed PFS (computed once, folded into iter 0)
+// Stack scratch (base 16-aligned; caller esp parked inside):
+//   [esp +  0]  Z0   [esp + 16]  Z1   [esp + 32]  Z2   (movdqa)
+//   [esp + 48]  reflected running state (carried across batches)
+//   [esp + 64]  byte-reverse mask copy (PSHUFB memory operand)
+//   [esp + 80]  reduction constant     [esp + 96]  parked caller esp
 //
-// AES-NI (aesenc / aesenclast), PCLMULQDQ, and PINSRD (counter build)
-// instructions are db-encoded for broad assembler compatibility.
+// AES-NI (aesenc / aesenclast), PCLMULQDQ, PINSRD, PSHUFD and the
+// PSHUFB memory-operand form are db-encoded for broad assembler
+// compatibility.
 // -------------------------------------------------------------------
 
-  // --- Callee-save prologue. ClpSimdProc1Begin_i386.inc already pushed ebx
-  //     and moved PCtx into ebx, so this block only pushes the other
-  //     three callee-saved GPRs and reserves the Z / br(PFS) scratch. ---
+  // --- Callee-save prologue (ClpSimdProc1Begin_i386.inc already pushed
+  //     ebx); park the caller esp inside the 16-aligned frame. ---
   push      edi
   push      esi
   push      ebp
-  sub       esp, 64
+  mov       eax, esp
+  sub       esp, 120
+  and       esp, -16                            // align the frame
+  mov       [esp + 96], eax                     // park the caller esp
 
-  // --- Batch loop: process BatchCount batches, generating GCM counters and
-  //     rotating the GHASH pipeline in-asm. i386 has no spare GP registers, so
-  //     the loop state lives in the context: the 32-bit counter [ebx+28], the
-  //     J0 template [ebx+32], the batch count [ebx+36], and the
-  //     "GHASH-from-output" flag [ebx+40] (1=encrypt). Each batch's 8 counter
-  //     blocks are built in-register, 4 per half, right before that half runs
-  //     (see the per-half counter builds below). ---
+  // --- Frame constants: reduction constant, mask copy, reflected state. ---
+  mov       dword ptr [esp + 80], 0
+  mov       dword ptr [esp + 84], $C2000000
+  mov       dword ptr [esp + 88], 0
+  mov       dword ptr [esp + 92], 0
+  mov       eax, [ebx + 24]                     // PMask
+  movdqu    xmm0, [eax]
+  movdqa    [esp + 64], xmm0
+  mov       eax, [ebx + 20]                     // PFS
+  movdqu    xmm1, [eax]
+  pshufb    xmm1, xmm0                          // canonical -> reflected
+  movdqa    [esp + 48], xmm1
+
+  // --- Pinned loop registers. ---
+  mov       edi, [ebx + 12]                     // edi = PRoundKeys (aligned)
+  mov       ebp, [ebx + 16]                     // ebp = PHPow128 (x-shifted)
+  mov       esi, [ebx + 8]                      // esi = PPrevCipher
+  mov       ecx, [ebx + 28]                     // ecx = counter32
+
 @@GcmFusedLoop:
-
-  // --- Load context pointers. ---
-  mov       edi, [ebx + 12]                   // edi = PRoundKeys (pinned)
-  mov       esi, [ebx + 8]                    // esi = PPrevCipher (pinned base)
-  mov       ebp, [ebx + 16]                   // ebp = PHPow128 (pinned base)
-  mov       ecx, [ebx + 24]                   // ecx = PMask (pinned)
-
-  // --- Zero Z0 / Z1 / Z2 accumulator slots. ---
+  // --- Zero the Z accumulator slots. ---
   pxor      xmm0, xmm0
-  movdqu    [esp +  0], xmm0                  // Z0 = 0
-  movdqu    [esp + 16], xmm0                  // Z1 = 0
-  movdqu    [esp + 32], xmm0                  // Z2 = 0
-
-  // --- Compute byte-reversed running state once, stash for iter-0 fold. ---
-  mov       eax, [ebx + 20]                   // eax = PFS
-  movdqu    xmm0, [eax]                       // load canonical PFS
-  movdqu    xmm7, [ecx]                       // mask
-  pshufb    xmm0, xmm7                        // byte-reverse
-  movdqu    [esp + 48], xmm0                  // stash byte-reversed PFS
+  movdqa    [esp + 0], xmm0                    // Z0 = 0
+  movdqa    [esp + 16], xmm0                   // Z1 = 0
+  movdqa    [esp + 32], xmm0                   // Z2 = 0
 
   // --- Build 4 counter blocks for HALF 1 (blocks 0..3): J0[0..11] ||
-  //     BE(counter32+1..+4). GCM's counter is the last-used value, so the batch
-  //     based at counter32 spans counter32+1..counter32+8 (matching the scalar
-  //     GetNextCtrBlocks8). Load J0 into each lane, then PINSRD (db-encoded) the
-  //     big-endian counter word into dword 3; eax/edx are free here. ---
-  mov       eax, [ebx + 32]                   // PJ0Template
+  //     BE(counter32+1..+4); the counter holds the last-used value. ---
+  mov       eax, [ebx + 32]                     // PJ0Template
   movdqu    xmm0, [eax]
   movdqu    xmm1, [eax]
   movdqu    xmm2, [eax]
   movdqu    xmm3, [eax]
-  mov       eax, [ebx + 28]                   // counter32
-  lea       edx, [eax + 1]
+  lea       edx, [ecx + 1]
   bswap     edx
-  db $66, $0F, $3A, $22, $C2, $03              // pinsrd xmm0, edx, 3
-  lea       edx, [eax + 2]
+  db $66, $0F, $3A, $22, $C2, $03               // pinsrd xmm0, edx, 3
+  lea       edx, [ecx + 2]
   bswap     edx
-  db $66, $0F, $3A, $22, $CA, $03              // pinsrd xmm1, edx, 3
-  lea       edx, [eax + 3]
+  db $66, $0F, $3A, $22, $CA, $03               // pinsrd xmm1, edx, 3
+  lea       edx, [ecx + 3]
   bswap     edx
-  db $66, $0F, $3A, $22, $D2, $03              // pinsrd xmm2, edx, 3
-  lea       edx, [eax + 4]
+  db $66, $0F, $3A, $22, $D2, $03               // pinsrd xmm2, edx, 3
+  lea       edx, [ecx + 4]
   bswap     edx
-  db $66, $0F, $3A, $22, $DA, $03              // pinsrd xmm3, edx, 3
+  db $66, $0F, $3A, $22, $DA, $03               // pinsrd xmm3, edx, 3
 
   // ======================================================================
-  // HALF 1: blocks 0..3, GHASH iters 0..3 (prev_cipher[0..3], H^8..H^5)
-  //         iter 0 additionally folds byte-reversed PFS into the block.
+  // HALF 1: blocks 0..3, GHASH iters 0..3 (prev_cipher[0..3], H^8..H^5);
+  //         iter 0 additionally folds the carried reflected state.
   // ======================================================================
 
-  // --- Round 0: AddRoundKey (pxor with rk[0]). Round keys are aligned. ---
+  // --- Round 0: AddRoundKey (aligned key memory operands). ---
   pxor      xmm0, [edi + 0]
   pxor      xmm1, [edi + 0]
   pxor      xmm2, [edi + 0]
   pxor      xmm3, [edi + 0]
 
-  // --- Round 1 + GHASH iter 0 (with state fold). ---
-  db $66, $0F, $38, $DC, $47, $10              // aesenc     xmm0, [edi+0x10]
-  db $66, $0F, $38, $DC, $4F, $10              // aesenc     xmm1, [edi+0x10]
-  db $66, $0F, $38, $DC, $57, $10              // aesenc     xmm2, [edi+0x10]
-  db $66, $0F, $38, $DC, $5F, $10              // aesenc     xmm3, [edi+0x10]
+  // --- Round 1 + GHASH iter 0 (with carried-state fold). ---
+  db $66, $0F, $38, $DC, $47, $10               // aesenc xmm0, [edi+0x10]
+  db $66, $0F, $38, $DC, $4F, $10               // aesenc xmm1, [edi+0x10]
+  db $66, $0F, $38, $DC, $57, $10               // aesenc xmm2, [edi+0x10]
+  db $66, $0F, $38, $DC, $5F, $10               // aesenc xmm3, [edi+0x10]
 
-  // GHASH iter 0: block 0 byte-reverse + state fold
-  movdqu    xmm4, [esi + 0]                    // prev cipher block 0
-  movdqu    xmm7, [ecx]                        // mask
-  pshufb    xmm4, xmm7                         // byte-reverse
-  movdqu    xmm7, [esp + 48]                   // byte-reversed PFS
-  pxor      xmm4, xmm7                         // fold running state
-  movdqu    xmm5, [ebp + 0]                    // H^8
-
-  // 4 pclmul -> Z0 (imm=0), Z1 (imm=1), Z1 (imm=16), Z2 (imm=17).
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7                    // Z0 +=
+  movdqu    xmm4, [esi + 0]                   // prev cipher block 0
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  pxor      xmm4, [esp + 48]                  // fold carried state
+  movdqu    xmm5, [ebp + 0]                   // H^8 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7                   // Z1 +=
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7                   // Z1 +=
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7                   // Z2 +=
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
   // --- Round 2 + GHASH iter 1. ---
-  db $66, $0F, $38, $DC, $47, $20              // aesenc     xmm0, [edi+0x20]
-  db $66, $0F, $38, $DC, $4F, $20              // aesenc     xmm1, [edi+0x20]
-  db $66, $0F, $38, $DC, $57, $20              // aesenc     xmm2, [edi+0x20]
-  db $66, $0F, $38, $DC, $5F, $20              // aesenc     xmm3, [edi+0x20]
+  db $66, $0F, $38, $DC, $47, $20               // aesenc xmm0, [edi+0x20]
+  db $66, $0F, $38, $DC, $4F, $20               // aesenc xmm1, [edi+0x20]
+  db $66, $0F, $38, $DC, $57, $20               // aesenc xmm2, [edi+0x20]
+  db $66, $0F, $38, $DC, $5F, $20               // aesenc xmm3, [edi+0x20]
 
   movdqu    xmm4, [esi + 16]                   // prev cipher block 1
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 16]                   // H^7
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 16]                   // H^7 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
   // --- Round 3 + GHASH iter 2. ---
-  db $66, $0F, $38, $DC, $47, $30              // aesenc     xmm0, [edi+0x30]
-  db $66, $0F, $38, $DC, $4F, $30              // aesenc     xmm1, [edi+0x30]
-  db $66, $0F, $38, $DC, $57, $30              // aesenc     xmm2, [edi+0x30]
-  db $66, $0F, $38, $DC, $5F, $30              // aesenc     xmm3, [edi+0x30]
+  db $66, $0F, $38, $DC, $47, $30               // aesenc xmm0, [edi+0x30]
+  db $66, $0F, $38, $DC, $4F, $30               // aesenc xmm1, [edi+0x30]
+  db $66, $0F, $38, $DC, $57, $30               // aesenc xmm2, [edi+0x30]
+  db $66, $0F, $38, $DC, $5F, $30               // aesenc xmm3, [edi+0x30]
 
   movdqu    xmm4, [esi + 32]                   // prev cipher block 2
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 32]                   // H^6
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 32]                   // H^6 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
-
-  // --- Round 4 + GHASH iter 3 (last GHASH iter of half 1). ---
-  db $66, $0F, $38, $DC, $47, $40              // aesenc     xmm0, [edi+0x40]
-  db $66, $0F, $38, $DC, $4F, $40              // aesenc     xmm1, [edi+0x40]
-  db $66, $0F, $38, $DC, $57, $40              // aesenc     xmm2, [edi+0x40]
-  db $66, $0F, $38, $DC, $5F, $40              // aesenc     xmm3, [edi+0x40]
+  // --- Round 4 + GHASH iter 3. ---
+  db $66, $0F, $38, $DC, $47, $40               // aesenc xmm0, [edi+0x40]
+  db $66, $0F, $38, $DC, $4F, $40               // aesenc xmm1, [edi+0x40]
+  db $66, $0F, $38, $DC, $57, $40               // aesenc xmm2, [edi+0x40]
+  db $66, $0F, $38, $DC, $5F, $40               // aesenc xmm3, [edi+0x40]
 
   movdqu    xmm4, [esi + 48]                   // prev cipher block 3
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 48]                   // H^5
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 48]                   // H^5 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
   // --- Rounds 5..Nr-1 (variant-specific): AES-only. ---
-
-  // Round 5 (disp8 = 80)
-  db $66, $0F, $38, $DC, $47, $50              // aesenc     xmm0, [edi+0x50]
-  db $66, $0F, $38, $DC, $4F, $50              // aesenc     xmm1, [edi+0x50]
-  db $66, $0F, $38, $DC, $57, $50              // aesenc     xmm2, [edi+0x50]
-  db $66, $0F, $38, $DC, $5F, $50              // aesenc     xmm3, [edi+0x50]
-  // Round 6 (disp8 = 96)
-  db $66, $0F, $38, $DC, $47, $60              // aesenc     xmm0, [edi+0x60]
-  db $66, $0F, $38, $DC, $4F, $60              // aesenc     xmm1, [edi+0x60]
-  db $66, $0F, $38, $DC, $57, $60              // aesenc     xmm2, [edi+0x60]
-  db $66, $0F, $38, $DC, $5F, $60              // aesenc     xmm3, [edi+0x60]
-  // Round 7 (disp8 = 112)
-  db $66, $0F, $38, $DC, $47, $70              // aesenc     xmm0, [edi+0x70]
-  db $66, $0F, $38, $DC, $4F, $70              // aesenc     xmm1, [edi+0x70]
-  db $66, $0F, $38, $DC, $57, $70              // aesenc     xmm2, [edi+0x70]
-  db $66, $0F, $38, $DC, $5F, $70              // aesenc     xmm3, [edi+0x70]
-  // Round 8 (disp32 = 128)
+  // Round 5
+  db $66, $0F, $38, $DC, $47, $50               // aesenc xmm0, [edi+0x50]
+  db $66, $0F, $38, $DC, $4F, $50               // aesenc xmm1, [edi+0x50]
+  db $66, $0F, $38, $DC, $57, $50               // aesenc xmm2, [edi+0x50]
+  db $66, $0F, $38, $DC, $5F, $50               // aesenc xmm3, [edi+0x50]
+  // Round 6
+  db $66, $0F, $38, $DC, $47, $60               // aesenc xmm0, [edi+0x60]
+  db $66, $0F, $38, $DC, $4F, $60               // aesenc xmm1, [edi+0x60]
+  db $66, $0F, $38, $DC, $57, $60               // aesenc xmm2, [edi+0x60]
+  db $66, $0F, $38, $DC, $5F, $60               // aesenc xmm3, [edi+0x60]
+  // Round 7
+  db $66, $0F, $38, $DC, $47, $70               // aesenc xmm0, [edi+0x70]
+  db $66, $0F, $38, $DC, $4F, $70               // aesenc xmm1, [edi+0x70]
+  db $66, $0F, $38, $DC, $57, $70               // aesenc xmm2, [edi+0x70]
+  db $66, $0F, $38, $DC, $5F, $70               // aesenc xmm3, [edi+0x70]
+  // Round 8
   db $66, $0F, $38, $DC, $87, $80, $00, $00, $00   // aesenc xmm0, [edi+0x80]
   db $66, $0F, $38, $DC, $8F, $80, $00, $00, $00   // aesenc xmm1, [edi+0x80]
   db $66, $0F, $38, $DC, $97, $80, $00, $00, $00   // aesenc xmm2, [edi+0x80]
   db $66, $0F, $38, $DC, $9F, $80, $00, $00, $00   // aesenc xmm3, [edi+0x80]
-  // Round 9 (disp32 = 144)
+  // Round 9
   db $66, $0F, $38, $DC, $87, $90, $00, $00, $00   // aesenc xmm0, [edi+0x90]
   db $66, $0F, $38, $DC, $8F, $90, $00, $00, $00   // aesenc xmm1, [edi+0x90]
   db $66, $0F, $38, $DC, $97, $90, $00, $00, $00   // aesenc xmm2, [edi+0x90]
   db $66, $0F, $38, $DC, $9F, $90, $00, $00, $00   // aesenc xmm3, [edi+0x90]
-
 {$IF DEFINED(GCM_FUSED_AES_ROUNDS_12) OR DEFINED(GCM_FUSED_AES_ROUNDS_14)}
-  // Round 10 (disp32 = 160)
+  // Round 10
   db $66, $0F, $38, $DC, $87, $A0, $00, $00, $00   // aesenc xmm0, [edi+0xA0]
   db $66, $0F, $38, $DC, $8F, $A0, $00, $00, $00   // aesenc xmm1, [edi+0xA0]
   db $66, $0F, $38, $DC, $97, $A0, $00, $00, $00   // aesenc xmm2, [edi+0xA0]
   db $66, $0F, $38, $DC, $9F, $A0, $00, $00, $00   // aesenc xmm3, [edi+0xA0]
-  // Round 11 (disp32 = 176)
+  // Round 11
   db $66, $0F, $38, $DC, $87, $B0, $00, $00, $00   // aesenc xmm0, [edi+0xB0]
   db $66, $0F, $38, $DC, $8F, $B0, $00, $00, $00   // aesenc xmm1, [edi+0xB0]
   db $66, $0F, $38, $DC, $97, $B0, $00, $00, $00   // aesenc xmm2, [edi+0xB0]
   db $66, $0F, $38, $DC, $9F, $B0, $00, $00, $00   // aesenc xmm3, [edi+0xB0]
 {$IFEND}
-
 {$IFDEF GCM_FUSED_AES_ROUNDS_14}
-  // Round 12 (disp32 = 192)
+  // Round 12
   db $66, $0F, $38, $DC, $87, $C0, $00, $00, $00   // aesenc xmm0, [edi+0xC0]
   db $66, $0F, $38, $DC, $8F, $C0, $00, $00, $00   // aesenc xmm1, [edi+0xC0]
   db $66, $0F, $38, $DC, $97, $C0, $00, $00, $00   // aesenc xmm2, [edi+0xC0]
   db $66, $0F, $38, $DC, $9F, $C0, $00, $00, $00   // aesenc xmm3, [edi+0xC0]
-  // Round 13 (disp32 = 208)
+  // Round 13
   db $66, $0F, $38, $DC, $87, $D0, $00, $00, $00   // aesenc xmm0, [edi+0xD0]
   db $66, $0F, $38, $DC, $8F, $D0, $00, $00, $00   // aesenc xmm1, [edi+0xD0]
   db $66, $0F, $38, $DC, $97, $D0, $00, $00, $00   // aesenc xmm2, [edi+0xD0]
@@ -327,69 +283,63 @@
 
   // --- Final AES round (aesenclast on rk[Nr]). ---
 {$IFDEF GCM_FUSED_AES_ROUNDS_10}
-  // AES-128: aesenclast at disp32 = 160
   db $66, $0F, $38, $DD, $87, $A0, $00, $00, $00   // aesenclast xmm0, [edi+0xA0]
   db $66, $0F, $38, $DD, $8F, $A0, $00, $00, $00   // aesenclast xmm1, [edi+0xA0]
   db $66, $0F, $38, $DD, $97, $A0, $00, $00, $00   // aesenclast xmm2, [edi+0xA0]
   db $66, $0F, $38, $DD, $9F, $A0, $00, $00, $00   // aesenclast xmm3, [edi+0xA0]
 {$ENDIF}
 {$IFDEF GCM_FUSED_AES_ROUNDS_12}
-  // AES-192: aesenclast at disp32 = 192
   db $66, $0F, $38, $DD, $87, $C0, $00, $00, $00   // aesenclast xmm0, [edi+0xC0]
   db $66, $0F, $38, $DD, $8F, $C0, $00, $00, $00   // aesenclast xmm1, [edi+0xC0]
   db $66, $0F, $38, $DD, $97, $C0, $00, $00, $00   // aesenclast xmm2, [edi+0xC0]
   db $66, $0F, $38, $DD, $9F, $C0, $00, $00, $00   // aesenclast xmm3, [edi+0xC0]
 {$ENDIF}
 {$IFDEF GCM_FUSED_AES_ROUNDS_14}
-  // AES-256: aesenclast at disp32 = 224
   db $66, $0F, $38, $DD, $87, $E0, $00, $00, $00   // aesenclast xmm0, [edi+0xE0]
   db $66, $0F, $38, $DD, $8F, $E0, $00, $00, $00   // aesenclast xmm1, [edi+0xE0]
   db $66, $0F, $38, $DD, $97, $E0, $00, $00, $00   // aesenclast xmm2, [edi+0xE0]
   db $66, $0F, $38, $DD, $9F, $E0, $00, $00, $00   // aesenclast xmm3, [edi+0xE0]
 {$ENDIF}
 
-  // --- Post-AES (half 1): XOR with PXorIn[0..48] and store to POut[0..48]. ---
-  mov       eax, [ebx + 0]                    // eax = PXorIn
-  mov       edx, [ebx + 4]                    // edx = POut
-
-  movdqu    xmm7, [eax + 0]
-  pxor      xmm0, xmm7
+  // --- Post-AES (half 1): XOR with PXorIn[0..48], store POut. ---
+  mov       eax, [ebx + 0]                      // eax = PXorIn
+  mov       edx, [ebx + 4]                      // edx = POut
+  movdqu    xmm4, [eax + 0]
+  pxor      xmm0, xmm4
   movdqu    [edx + 0], xmm0
-  movdqu    xmm7, [eax + 16]
-  pxor      xmm1, xmm7
+  movdqu    xmm4, [eax + 16]
+  pxor      xmm1, xmm4
   movdqu    [edx + 16], xmm1
-  movdqu    xmm7, [eax + 32]
-  pxor      xmm2, xmm7
+  movdqu    xmm4, [eax + 32]
+  pxor      xmm2, xmm4
   movdqu    [edx + 32], xmm2
-  movdqu    xmm7, [eax + 48]
-  pxor      xmm3, xmm7
+  movdqu    xmm4, [eax + 48]
+  pxor      xmm3, xmm4
   movdqu    [edx + 48], xmm3
 
-  // ======================================================================
-  // HALF 2: blocks 4..7, GHASH iters 4..7 (prev_cipher[4..7], H^4..H^1)
-  //         no state fold (already consumed by iter 0 of half 1).
-  // ======================================================================
-
-  // --- Build 4 counter blocks for half 2 (blocks 4..7): counter32+5..+8. The
-  //     pinned regs (edi/esi/ebp/ecx) are untouched; eax/edx are free here. ---
-  mov       eax, [ebx + 32]                   // PJ0Template
+  // --- Build 4 counter blocks for HALF 2 (blocks 4..7): counter32+5..+8. ---
+  mov       eax, [ebx + 32]                     // PJ0Template
   movdqu    xmm0, [eax]
   movdqu    xmm1, [eax]
   movdqu    xmm2, [eax]
   movdqu    xmm3, [eax]
-  mov       eax, [ebx + 28]                   // counter32
-  lea       edx, [eax + 5]
+  lea       edx, [ecx + 5]
   bswap     edx
-  db $66, $0F, $3A, $22, $C2, $03              // pinsrd xmm0, edx, 3
-  lea       edx, [eax + 6]
+  db $66, $0F, $3A, $22, $C2, $03               // pinsrd xmm0, edx, 3
+  lea       edx, [ecx + 6]
   bswap     edx
-  db $66, $0F, $3A, $22, $CA, $03              // pinsrd xmm1, edx, 3
-  lea       edx, [eax + 7]
+  db $66, $0F, $3A, $22, $CA, $03               // pinsrd xmm1, edx, 3
+  lea       edx, [ecx + 7]
   bswap     edx
-  db $66, $0F, $3A, $22, $D2, $03              // pinsrd xmm2, edx, 3
-  lea       edx, [eax + 8]
+  db $66, $0F, $3A, $22, $D2, $03               // pinsrd xmm2, edx, 3
+  lea       edx, [ecx + 8]
   bswap     edx
-  db $66, $0F, $3A, $22, $DA, $03              // pinsrd xmm3, edx, 3
+  db $66, $0F, $3A, $22, $DA, $03               // pinsrd xmm3, edx, 3
+
+  // ======================================================================
+  // HALF 2: blocks 4..7, GHASH iters 4..7 (prev_cipher[4..7], H^4..H^1);
+  //         no state fold (already consumed by iter 0 of half 1).
+  // ======================================================================
 
   // --- Round 0: AddRoundKey. ---
   pxor      xmm0, [edi + 0]
@@ -398,337 +348,245 @@
   pxor      xmm3, [edi + 0]
 
   // --- Round 1 + GHASH iter 4. ---
-  db $66, $0F, $38, $DC, $47, $10              // aesenc     xmm0, [edi+0x10]
-  db $66, $0F, $38, $DC, $4F, $10              // aesenc     xmm1, [edi+0x10]
-  db $66, $0F, $38, $DC, $57, $10              // aesenc     xmm2, [edi+0x10]
-  db $66, $0F, $38, $DC, $5F, $10              // aesenc     xmm3, [edi+0x10]
+  db $66, $0F, $38, $DC, $47, $10               // aesenc xmm0, [edi+0x10]
+  db $66, $0F, $38, $DC, $4F, $10               // aesenc xmm1, [edi+0x10]
+  db $66, $0F, $38, $DC, $57, $10               // aesenc xmm2, [edi+0x10]
+  db $66, $0F, $38, $DC, $5F, $10               // aesenc xmm3, [edi+0x10]
 
   movdqu    xmm4, [esi + 64]                   // prev cipher block 4
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 64]                   // H^4
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 64]                   // H^4 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
   // --- Round 2 + GHASH iter 5. ---
-  db $66, $0F, $38, $DC, $47, $20              // aesenc     xmm0, [edi+0x20]
-  db $66, $0F, $38, $DC, $4F, $20              // aesenc     xmm1, [edi+0x20]
-  db $66, $0F, $38, $DC, $57, $20              // aesenc     xmm2, [edi+0x20]
-  db $66, $0F, $38, $DC, $5F, $20              // aesenc     xmm3, [edi+0x20]
+  db $66, $0F, $38, $DC, $47, $20               // aesenc xmm0, [edi+0x20]
+  db $66, $0F, $38, $DC, $4F, $20               // aesenc xmm1, [edi+0x20]
+  db $66, $0F, $38, $DC, $57, $20               // aesenc xmm2, [edi+0x20]
+  db $66, $0F, $38, $DC, $5F, $20               // aesenc xmm3, [edi+0x20]
 
   movdqu    xmm4, [esi + 80]                   // prev cipher block 5
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 80]                   // H^3
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 80]                   // H^3 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
   // --- Round 3 + GHASH iter 6. ---
-  db $66, $0F, $38, $DC, $47, $30              // aesenc     xmm0, [edi+0x30]
-  db $66, $0F, $38, $DC, $4F, $30              // aesenc     xmm1, [edi+0x30]
-  db $66, $0F, $38, $DC, $57, $30              // aesenc     xmm2, [edi+0x30]
-  db $66, $0F, $38, $DC, $5F, $30              // aesenc     xmm3, [edi+0x30]
+  db $66, $0F, $38, $DC, $47, $30               // aesenc xmm0, [edi+0x30]
+  db $66, $0F, $38, $DC, $4F, $30               // aesenc xmm1, [edi+0x30]
+  db $66, $0F, $38, $DC, $57, $30               // aesenc xmm2, [edi+0x30]
+  db $66, $0F, $38, $DC, $5F, $30               // aesenc xmm3, [edi+0x30]
 
   movdqu    xmm4, [esi + 96]                   // prev cipher block 6
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 96]                   // H^2
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 96]                   // H^2 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
+  movdqa    xmm6, xmm4
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
+
+  // --- Round 4 + GHASH iter 7. ---
+  db $66, $0F, $38, $DC, $47, $40               // aesenc xmm0, [edi+0x40]
+  db $66, $0F, $38, $DC, $4F, $40               // aesenc xmm1, [edi+0x40]
+  db $66, $0F, $38, $DC, $57, $40               // aesenc xmm2, [edi+0x40]
+  db $66, $0F, $38, $DC, $5F, $40               // aesenc xmm3, [edi+0x40]
+
+  movdqu    xmm4, [esi + 112]                   // prev cipher block 7
+  db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
+  movdqu    xmm5, [ebp + 112]                   // H^1 (x-shifted)
 
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
+  db $66, $0F, $3A, $44, $F5, $00               // pclmulqdq xmm6, xmm5, 0x00
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $11               // pclmulqdq xmm7, xmm5, 0x11
+  pxor      xmm6, [esp + 0]
+  movdqa    [esp + 0], xmm6                    // Z0 +=
+  pxor      xmm7, [esp + 32]
+  movdqa    [esp + 32], xmm7                   // Z2 +=
   movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
+  db $66, $0F, $3A, $44, $F5, $01               // pclmulqdq xmm6, xmm5, 0x01
+  movdqa    xmm7, xmm4
+  db $66, $0F, $3A, $44, $FD, $10               // pclmulqdq xmm7, xmm5, 0x10
+  pxor      xmm6, xmm7                          // both cross products
+  pxor      xmm6, [esp + 16]
+  movdqa    [esp + 16], xmm6                   // Z1 +=
 
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
-
-  // --- Round 4 + GHASH iter 7 (last GHASH iter of batch). ---
-  db $66, $0F, $38, $DC, $47, $40              // aesenc     xmm0, [edi+0x40]
-  db $66, $0F, $38, $DC, $4F, $40              // aesenc     xmm1, [edi+0x40]
-  db $66, $0F, $38, $DC, $57, $40              // aesenc     xmm2, [edi+0x40]
-  db $66, $0F, $38, $DC, $5F, $40              // aesenc     xmm3, [edi+0x40]
-
-  movdqu    xmm4, [esi + 112]                  // prev cipher block 7
-  movdqu    xmm7, [ecx]
-  pshufb    xmm4, xmm7
-  movdqu    xmm5, [ebp + 112]                  // H^1
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $00              // pclmulqdq  xmm6, xmm5, 0x00
-  movdqu    xmm7, [esp + 0]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 0], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $01              // pclmulqdq  xmm6, xmm5, 0x01
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $10              // pclmulqdq  xmm6, xmm5, 0x10
-  movdqu    xmm7, [esp + 16]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 16], xmm7
-
-  movdqa    xmm6, xmm4
-  db $66, $0F, $3A, $44, $F5, $11              // pclmulqdq  xmm6, xmm5, 0x11
-  movdqu    xmm7, [esp + 32]
-  pxor      xmm7, xmm6
-  movdqu    [esp + 32], xmm7
-
-  // --- Rounds 5..Nr-1 AES-only (variant-specific). ---
-  // Round 5 (disp8 = 80)
-  db $66, $0F, $38, $DC, $47, $50              // aesenc     xmm0, [edi+0x50]
-  db $66, $0F, $38, $DC, $4F, $50              // aesenc     xmm1, [edi+0x50]
-  db $66, $0F, $38, $DC, $57, $50              // aesenc     xmm2, [edi+0x50]
-  db $66, $0F, $38, $DC, $5F, $50              // aesenc     xmm3, [edi+0x50]
-  // Round 6 (disp8 = 96)
-  db $66, $0F, $38, $DC, $47, $60              // aesenc     xmm0, [edi+0x60]
-  db $66, $0F, $38, $DC, $4F, $60              // aesenc     xmm1, [edi+0x60]
-  db $66, $0F, $38, $DC, $57, $60              // aesenc     xmm2, [edi+0x60]
-  db $66, $0F, $38, $DC, $5F, $60              // aesenc     xmm3, [edi+0x60]
-  // Round 7 (disp8 = 112)
-  db $66, $0F, $38, $DC, $47, $70              // aesenc     xmm0, [edi+0x70]
-  db $66, $0F, $38, $DC, $4F, $70              // aesenc     xmm1, [edi+0x70]
-  db $66, $0F, $38, $DC, $57, $70              // aesenc     xmm2, [edi+0x70]
-  db $66, $0F, $38, $DC, $5F, $70              // aesenc     xmm3, [edi+0x70]
-  // Round 8 (disp32 = 128)
+  // --- Rounds 5..Nr-1 (variant-specific): AES-only. ---
+  // Round 5
+  db $66, $0F, $38, $DC, $47, $50               // aesenc xmm0, [edi+0x50]
+  db $66, $0F, $38, $DC, $4F, $50               // aesenc xmm1, [edi+0x50]
+  db $66, $0F, $38, $DC, $57, $50               // aesenc xmm2, [edi+0x50]
+  db $66, $0F, $38, $DC, $5F, $50               // aesenc xmm3, [edi+0x50]
+  // Round 6
+  db $66, $0F, $38, $DC, $47, $60               // aesenc xmm0, [edi+0x60]
+  db $66, $0F, $38, $DC, $4F, $60               // aesenc xmm1, [edi+0x60]
+  db $66, $0F, $38, $DC, $57, $60               // aesenc xmm2, [edi+0x60]
+  db $66, $0F, $38, $DC, $5F, $60               // aesenc xmm3, [edi+0x60]
+  // Round 7
+  db $66, $0F, $38, $DC, $47, $70               // aesenc xmm0, [edi+0x70]
+  db $66, $0F, $38, $DC, $4F, $70               // aesenc xmm1, [edi+0x70]
+  db $66, $0F, $38, $DC, $57, $70               // aesenc xmm2, [edi+0x70]
+  db $66, $0F, $38, $DC, $5F, $70               // aesenc xmm3, [edi+0x70]
+  // Round 8
   db $66, $0F, $38, $DC, $87, $80, $00, $00, $00   // aesenc xmm0, [edi+0x80]
   db $66, $0F, $38, $DC, $8F, $80, $00, $00, $00   // aesenc xmm1, [edi+0x80]
   db $66, $0F, $38, $DC, $97, $80, $00, $00, $00   // aesenc xmm2, [edi+0x80]
   db $66, $0F, $38, $DC, $9F, $80, $00, $00, $00   // aesenc xmm3, [edi+0x80]
-  // Round 9 (disp32 = 144)
+  // Round 9
   db $66, $0F, $38, $DC, $87, $90, $00, $00, $00   // aesenc xmm0, [edi+0x90]
   db $66, $0F, $38, $DC, $8F, $90, $00, $00, $00   // aesenc xmm1, [edi+0x90]
   db $66, $0F, $38, $DC, $97, $90, $00, $00, $00   // aesenc xmm2, [edi+0x90]
   db $66, $0F, $38, $DC, $9F, $90, $00, $00, $00   // aesenc xmm3, [edi+0x90]
-
 {$IF DEFINED(GCM_FUSED_AES_ROUNDS_12) OR DEFINED(GCM_FUSED_AES_ROUNDS_14)}
-  // Round 10 (disp32 = 160)
+  // Round 10
   db $66, $0F, $38, $DC, $87, $A0, $00, $00, $00   // aesenc xmm0, [edi+0xA0]
   db $66, $0F, $38, $DC, $8F, $A0, $00, $00, $00   // aesenc xmm1, [edi+0xA0]
   db $66, $0F, $38, $DC, $97, $A0, $00, $00, $00   // aesenc xmm2, [edi+0xA0]
   db $66, $0F, $38, $DC, $9F, $A0, $00, $00, $00   // aesenc xmm3, [edi+0xA0]
-  // Round 11 (disp32 = 176)
+  // Round 11
   db $66, $0F, $38, $DC, $87, $B0, $00, $00, $00   // aesenc xmm0, [edi+0xB0]
   db $66, $0F, $38, $DC, $8F, $B0, $00, $00, $00   // aesenc xmm1, [edi+0xB0]
   db $66, $0F, $38, $DC, $97, $B0, $00, $00, $00   // aesenc xmm2, [edi+0xB0]
   db $66, $0F, $38, $DC, $9F, $B0, $00, $00, $00   // aesenc xmm3, [edi+0xB0]
 {$IFEND}
-
 {$IFDEF GCM_FUSED_AES_ROUNDS_14}
-  // Round 12 (disp32 = 192)
+  // Round 12
   db $66, $0F, $38, $DC, $87, $C0, $00, $00, $00   // aesenc xmm0, [edi+0xC0]
   db $66, $0F, $38, $DC, $8F, $C0, $00, $00, $00   // aesenc xmm1, [edi+0xC0]
   db $66, $0F, $38, $DC, $97, $C0, $00, $00, $00   // aesenc xmm2, [edi+0xC0]
   db $66, $0F, $38, $DC, $9F, $C0, $00, $00, $00   // aesenc xmm3, [edi+0xC0]
-  // Round 13 (disp32 = 208)
+  // Round 13
   db $66, $0F, $38, $DC, $87, $D0, $00, $00, $00   // aesenc xmm0, [edi+0xD0]
   db $66, $0F, $38, $DC, $8F, $D0, $00, $00, $00   // aesenc xmm1, [edi+0xD0]
   db $66, $0F, $38, $DC, $97, $D0, $00, $00, $00   // aesenc xmm2, [edi+0xD0]
   db $66, $0F, $38, $DC, $9F, $D0, $00, $00, $00   // aesenc xmm3, [edi+0xD0]
 {$ENDIF}
 
-  // --- Final AES round (aesenclast) for half 2. ---
+  // --- Final AES round (aesenclast on rk[Nr]). ---
 {$IFDEF GCM_FUSED_AES_ROUNDS_10}
-  // AES-128: aesenclast at disp32 = 160
   db $66, $0F, $38, $DD, $87, $A0, $00, $00, $00   // aesenclast xmm0, [edi+0xA0]
   db $66, $0F, $38, $DD, $8F, $A0, $00, $00, $00   // aesenclast xmm1, [edi+0xA0]
   db $66, $0F, $38, $DD, $97, $A0, $00, $00, $00   // aesenclast xmm2, [edi+0xA0]
   db $66, $0F, $38, $DD, $9F, $A0, $00, $00, $00   // aesenclast xmm3, [edi+0xA0]
 {$ENDIF}
 {$IFDEF GCM_FUSED_AES_ROUNDS_12}
-  // AES-192: aesenclast at disp32 = 192
   db $66, $0F, $38, $DD, $87, $C0, $00, $00, $00   // aesenclast xmm0, [edi+0xC0]
   db $66, $0F, $38, $DD, $8F, $C0, $00, $00, $00   // aesenclast xmm1, [edi+0xC0]
   db $66, $0F, $38, $DD, $97, $C0, $00, $00, $00   // aesenclast xmm2, [edi+0xC0]
   db $66, $0F, $38, $DD, $9F, $C0, $00, $00, $00   // aesenclast xmm3, [edi+0xC0]
 {$ENDIF}
 {$IFDEF GCM_FUSED_AES_ROUNDS_14}
-  // AES-256: aesenclast at disp32 = 224
   db $66, $0F, $38, $DD, $87, $E0, $00, $00, $00   // aesenclast xmm0, [edi+0xE0]
   db $66, $0F, $38, $DD, $8F, $E0, $00, $00, $00   // aesenclast xmm1, [edi+0xE0]
   db $66, $0F, $38, $DD, $97, $E0, $00, $00, $00   // aesenclast xmm2, [edi+0xE0]
   db $66, $0F, $38, $DD, $9F, $E0, $00, $00, $00   // aesenclast xmm3, [edi+0xE0]
 {$ENDIF}
 
-  // --- Post-AES (half 2): XOR with PXorIn[64..112] and store POut[64..112]. ---
-  mov       eax, [ebx + 0]                    // eax = PXorIn
-  mov       edx, [ebx + 4]                    // edx = POut
-
-  movdqu    xmm7, [eax + 64]
-  pxor      xmm0, xmm7
+  // --- Post-AES (half 2): XOR with PXorIn[64..112], store POut. ---
+  mov       eax, [ebx + 0]                      // eax = PXorIn
+  mov       edx, [ebx + 4]                      // edx = POut
+  movdqu    xmm4, [eax + 64]
+  pxor      xmm0, xmm4
   movdqu    [edx + 64], xmm0
-  movdqu    xmm7, [eax + 80]
-  pxor      xmm1, xmm7
+  movdqu    xmm4, [eax + 80]
+  pxor      xmm1, xmm4
   movdqu    [edx + 80], xmm1
-  movdqu    xmm7, [eax + 96]
-  pxor      xmm2, xmm7
+  movdqu    xmm4, [eax + 96]
+  pxor      xmm2, xmm4
   movdqu    [edx + 96], xmm2
-  movdqu    xmm7, [eax + 112]
-  pxor      xmm3, xmm7
+  movdqu    xmm4, [eax + 112]
+  pxor      xmm3, xmm4
   movdqu    [edx + 112], xmm3
 
-  // ======================================================================
-  // Inline 3-limb GHASH reduction on Z0 / Z1 / Z2 (copied from
-  // GcmGhashFull_i386.inc). Load the stack-resident accumulators into
-  // xmm0..xmm2 (keystream lanes are no longer needed after the stores
-  // above), then fold Z1 into (Z0, Z2) and reduce modulo
-  // x^128 + x^7 + x^2 + x + 1.
-  // ======================================================================
-  movdqu    xmm0, [esp + 0]                    // Z0
-  movdqu    xmm1, [esp + 16]                   // Z1
-  movdqu    xmm2, [esp + 32]                   // Z2
-
+  // --- Reduce [Z2:Z1:Z0] modulo the field polynomial: fold Z1 into
+  //     the 256-bit product, then two carry-less multiplies by the
+  //     folded constant 0xC2000000_00000000 (the H powers are
+  //     pre-multiplied by x, so no bit-shift correction is needed). ---
+  movdqa    xmm0, [esp + 0]                    // Z0
+  movdqa    xmm1, [esp + 16]                   // Z1
+  movdqa    xmm2, [esp + 32]                   // Z2
+  movdqa    xmm3, [esp + 80]
   movdqa    xmm4, xmm1
-  movdqa    xmm5, xmm1
   pslldq    xmm4, 8
+  pxor      xmm0, xmm4                         // ZLo ^= Z1 << 64
+  movdqa    xmm5, xmm1
   psrldq    xmm5, 8
-  pxor      xmm0, xmm4
-  pxor      xmm2, xmm5
-  movq      xmm3, xmm0
-  movq      xmm4, xmm2
-  movdqa    xmm5, xmm3
-  psrlq     xmm5, 1
-  movdqa    xmm6, xmm3
-  psrlq     xmm6, 2
-  movdqa    xmm7, xmm3
-  psrlq     xmm7, 7
-  pxor      xmm4, xmm3
-  pxor      xmm4, xmm5
-  pxor      xmm4, xmm6
-  pxor      xmm4, xmm7
-  movdqa    xmm1, xmm0
-  psrldq    xmm1, 8
-  movdqa    xmm5, xmm3
-  psllq     xmm5, 63
-  movdqa    xmm6, xmm3
-  psllq     xmm6, 62
-  movdqa    xmm7, xmm3
-  psllq     xmm7, 57
-  pxor      xmm1, xmm5
-  pxor      xmm1, xmm6
-  pxor      xmm1, xmm7
-  movdqa    xmm5, xmm2
-  psrldq    xmm5, 8
-  movdqa    xmm6, xmm5
-  psllq     xmm6, 1
-  movdqa    xmm7, xmm4
-  psrlq     xmm7, 63
-  por       xmm6, xmm7
-  movdqa    xmm7, xmm4
-  psllq     xmm7, 1
-  movdqa    xmm3, xmm1
-  psrlq     xmm3, 63
-  por       xmm7, xmm3
-  movdqa    xmm0, xmm1
-  psllq     xmm0, 1
-  movdqa    xmm3, xmm0
-  psrlq     xmm3, 1
-  movdqa    xmm2, xmm0
-  psrlq     xmm2, 2
-  movdqa    xmm5, xmm0
-  psrlq     xmm5, 7
-  pxor      xmm6, xmm0
-  pxor      xmm6, xmm3
-  pxor      xmm6, xmm2
-  pxor      xmm6, xmm5
-  movdqa    xmm3, xmm1
-  psllq     xmm3, 63
-  movdqa    xmm2, xmm1
-  psllq     xmm2, 58
-  pxor      xmm7, xmm3
-  pxor      xmm7, xmm2
+  pxor      xmm2, xmm5                         // ZHi ^= Z1 >> 64
+  movdqa    xmm4, xmm0
+  db $66, $0F, $3A, $44, $E3, $00               // pclmulqdq xmm4, xmm3, 0x00
+  db $66, $0F, $70, $C0, $4E                    // pshufd xmm0, xmm0, 0x4E (swap halves)
+  pxor      xmm0, xmm4                         // fold 1
+  movdqa    xmm4, xmm0
+  db $66, $0F, $3A, $44, $E3, $00               // pclmulqdq xmm4, xmm3, 0x00
+  db $66, $0F, $70, $C0, $4E                    // pshufd xmm0, xmm0, 0x4E (swap halves)
+  pxor      xmm0, xmm4                         // fold 2
+  pxor      xmm0, xmm2                         // ^= ZHi -> reflected state
+  movdqa    [esp + 48], xmm0                   // carry state to the next batch
 
-  // Pack and byte-reverse final GHASH state; store to PFS.
-  movq      xmm0, xmm7
-  pslldq    xmm6, 8
-  por       xmm0, xmm6
-  movdqu    xmm7, [ecx]                        // mask reload
-  pshufb    xmm0, xmm7                         // byte-reverse -> canonical
-  mov       eax, [ebx + 20]                    // PFS
-  movdqu    [eax], xmm0
-
-  // --- Advance the context for the next batch, then loop. PPrevCipher becomes
-  //     this batch's ciphertext (output on encrypt, input on decrypt); the
-  //     counter advances by 8 in place so the caller reads the final value. ---
-  mov       eax, [ebx + 4]                    // POut (encrypt: prev = output)
-  cmp       dword ptr [ebx + 40], 0           // GHASH-from-output flag (1=encrypt)
+  // --- Advance for the next batch: PPrevCipher becomes this batch's
+  //     ciphertext (output on encrypt, input on decrypt). ---
+  mov       esi, [ebx + 4]                      // POut (encrypt: prev = output)
+  cmp       dword ptr [ebx + 40], 0             // GHASH-from-output flag
   jne       @@GcmPrevSet
-  mov       eax, [ebx + 0]                    // PXorIn (decrypt: prev = input)
+  mov       esi, [ebx + 0]                      // PXorIn (decrypt: prev = input)
 @@GcmPrevSet:
-  mov       [ebx + 8], eax                    // PPrevCipher = this batch's ciphertext
-  add       dword ptr [ebx + 0], 128          // PXorIn += 128
-  add       dword ptr [ebx + 4], 128          // POut   += 128
-  add       dword ptr [ebx + 28], 8           // counter32 += 8
-  dec       dword ptr [ebx + 36]              // batch count
+  add       dword ptr [ebx + 0], 128            // PXorIn += 128
+  add       dword ptr [ebx + 4], 128            // POut   += 128
+  add       ecx, 8                              // counter32 += 8
+  dec       dword ptr [ebx + 36]                // batch count
   jnz       @@GcmFusedLoop
 
-  // --- Epilogue: unwind stack scratch and pop callee-saved GPRs. ebx
-  //     is popped last because ClpSimdProc1Begin_i386.inc pushed it first. ---
-  add       esp, 64
+  // --- Epilogue: store counter, canonicalize + store the state, unwind.
+  //     ebx is popped last (ClpSimdProc1Begin_i386.inc pushed it first). ---
+  mov       [ebx + 28], ecx                     // store advanced counter32
+  movdqa    xmm0, [esp + 48]
+  db $66, $0F, $38, $00, $44, $24, $40          // pshufb xmm0, [esp+64] (-> canonical)
+  mov       eax, [ebx + 20]                     // PFS
+  movdqu    [eax], xmm0
+
+  mov       esp, [esp + 96]
   pop       ebp
   pop       esi
   pop       edi
   pop       ebx
+

@@ -24,11 +24,11 @@
 // direction is always encrypt (CTR keystream), so CRYPTOLIB_AESNI_DECRYPT must
 // NOT be defined when including this file.
 //
-// The 128-bit counter is held natively as r11 (high 64 bits) : rbx (low 64 bits)
-// across the whole span; the low half is bumped with add/adc so carry propagates
-// through the full 128 bits, matching SIC's big-endian whole-counter increment.
-// Each staged block writes bswap(r11) || bswap(rbx) (big-endian) to the scratch,
-// then advances. The pipeline builds one batch ahead, so on exit the counter has
+// The 128-bit counter is held as r11 (high 64 bits, KEPT big-endian since the
+// fast path only stores it) : rbx (low 64 bits, native-LE). Each staged block
+// writes r11 || bswap(rbx) to the scratch and bumps rbx; a low-half carry-out
+// (once per 2^64 blocks) increments r11 through a bswap round-trip, matching
+// SIC's big-endian whole-counter increment. The pipeline builds one batch ahead, so on exit the counter has
 // over-run by exactly one batch (8) - undone before write-back.
 //
 // Register/stack notes: rbx is callee-saved (push/pop). xmm6-15 are saved once
@@ -47,76 +47,91 @@
   mov       rdx, [rcx + 8]                        // OutPtr
   mov       rcx, [rcx + 0]                        // InPtr (overwrites PCtx)
 
-  mov       r11, [r9]                             // counter high 64 bits (big-endian)
-  bswap     r11
-  mov       rbx, [r9 + 8]                         // counter low 64 bits (big-endian)
+  mov       r11, [r9]                             // counter high 64 bits, KEPT big-endian (store-only)
+  mov       rbx, [r9 + 8]                         // counter low 64 bits, native-LE in rbx
   bswap     rbx
 
   // ---- stage batch 0 into the scratch, then load it into xmm0..7 ----
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 0], rax
+  mov       [rsp + 0], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 8], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 16], rax
+  jnc       @@StgOk0
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk0:
+  mov       [rsp + 16], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 24], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 32], rax
+  jnc       @@StgOk1
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk1:
+  mov       [rsp + 32], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 40], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 48], rax
+  jnc       @@StgOk2
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk2:
+  mov       [rsp + 48], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 56], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 64], rax
+  jnc       @@StgOk3
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk3:
+  mov       [rsp + 64], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 72], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 80], rax
+  jnc       @@StgOk4
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk4:
+  mov       [rsp + 80], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 88], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 96], rax
+  jnc       @@StgOk5
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk5:
+  mov       [rsp + 96], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 104], rax
   add       rbx, 1
-  adc       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 112], rax
+  jnc       @@StgOk6
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk6:
+  mov       [rsp + 112], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 120], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk7
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk7:
 
   movdqu    xmm0, [rsp]
   movdqu    xmm1, [rsp + 16]
@@ -149,14 +164,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 0], rax
+  mov       [rsp + 0], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 8], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk8
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk8:
 
   movdqa    xmm8, [r8 + 32]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -167,14 +184,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 16], rax
+  mov       [rsp + 16], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 24], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk9
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk9:
 
   movdqa    xmm8, [r8 + 48]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -185,14 +204,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 32], rax
+  mov       [rsp + 32], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 40], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk10
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk10:
 
   movdqa    xmm8, [r8 + 64]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -203,14 +224,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 48], rax
+  mov       [rsp + 48], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 56], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk11
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk11:
 
   movdqa    xmm8, [r8 + 80]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -221,14 +244,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 64], rax
+  mov       [rsp + 64], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 72], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk12
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk12:
 
   movdqa    xmm8, [r8 + 96]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -239,14 +264,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 80], rax
+  mov       [rsp + 80], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 88], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk13
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk13:
 
   movdqa    xmm8, [r8 + 112]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -257,14 +284,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 96], rax
+  mov       [rsp + 96], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 104], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk14
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk14:
 
   movdqa    xmm8, [r8 + 128]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -275,14 +304,16 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       rax, r11
-  bswap     rax
-  mov       [rsp + 112], rax
+  mov       [rsp + 112], r11
   mov       rax, rbx
   bswap     rax
   mov       [rsp + 120], rax
   add       rbx, 1
-  adc       r11, 0
+  jnc       @@StgOk15
+  bswap     r11
+  add       r11, 1
+  bswap     r11
+@@StgOk15:
 
   // ---- round 9 (all key sizes): aesenc, no more staging ----
   movdqa    xmm8, [r8 + 144]
@@ -399,13 +430,14 @@
 
   // ---- undo the one-batch build-ahead, write the counter back (big-endian) ----
   sub       rbx, 8
-  sbb       r11, 0
-  mov       rax, r11
-  bswap     rax
-  mov       [r9], rax
-  mov       rax, rbx
-  bswap     rax
-  mov       [r9 + 8], rax
+  jnc       @@CtrWbStore
+  bswap     r11
+  sub       r11, 1
+  bswap     r11
+@@CtrWbStore:
+  mov       [r9], r11
+  bswap     rbx
+  mov       [r9 + 8], rbx
 
   add       rsp, 128
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}

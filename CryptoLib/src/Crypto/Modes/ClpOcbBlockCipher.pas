@@ -268,6 +268,8 @@ var
   LMacSizeBits, LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
   LFusedDirection: TCipherKernelDirection;
+  LPrevKey: TCryptoLibByteArray;
+  LSameKey, LSameKeyDir: Boolean;
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
@@ -283,12 +285,20 @@ begin
 
   LN := LChoice.Nonce;
   CheckNonceReuse(FForEncryption, LN, LChoice.KeyParameter);
+  LPrevKey := FLastKey;
   FLastN := System.Copy(LN);
   if LChoice.KeyParameter <> nil then
     FLastKey := LChoice.KeyParameter.GetKey();
 
   FInitialAssociatedText := LChoice.AssociatedText;
   LKeyParameter := LChoice.KeyParameter;
+
+  // Nonce-only rotation is the hot AEAD path: when the key (and, for the main
+  // cipher / fused kernel, the direction) is unchanged, the key schedules, the
+  // L table and the kernel binding all stay valid and are not recomputed.
+  LSameKey := (LKeyParameter = nil) or
+    ((LPrevKey <> nil) and LKeyParameter.FixedTimeEquals(LPrevKey));
+  LSameKeyDir := LSameKey and (LOldForEncryption = AForEncryption);
 
   if LChoice.IsAead then
   begin
@@ -316,11 +326,14 @@ begin
   if (System.Length(LN) > 15) then
     raise EArgumentCryptoLibException.CreateRes(@SIVTooLong);
 
-  if (LKeyParameter <> nil) then
+  if (LKeyParameter <> nil) and (not LSameKeyDir) then
   begin
-    FHashCipher.Init(True, LKeyParameter);
+    if not LSameKey then
+    begin
+      FHashCipher.Init(True, LKeyParameter);
+      FKTopInput := nil;
+    end;
     FMainCipher.Init(AForEncryption, LKeyParameter);
-    FKTopInput := nil;
   end
   else if (LOldForEncryption <> AForEncryption) then
   begin
@@ -332,41 +345,48 @@ begin
   // same capability set. Kept as a plain interface QI (no algorithm-name
   // assumption); any engine that advertises the contract in ClpIBulkBlockCipher
   // is eligible for the 8-wide path in ProcessEightBlocksBulk.
-  TBlockCipherBulkUtilities.TryResolveBulkCipher(FMainCipher, FMainBulk);
-
-  // Resolve a fused OCB kernel via the open factory registry; the
-  // first factory whose TryCreate accepts the cipher / direction pair
-  // wins, and the result is cached for the whole Init cycle.
-  FOcbKernel := nil;
-  FOcbKernelMinBlocks := 0;
-  if FForEncryption then
-    LFusedDirection := TCipherKernelDirection.Encrypt
-  else
-    LFusedDirection := TCipherKernelDirection.Decrypt;
-  if TCipherKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
-    FOcbKernel) and (FOcbKernel <> nil) then
+  if not LSameKeyDir then
   begin
-    FOcbKernelMinBlocks := FOcbKernel.MinimumBlockCount;
-    // The fused batch buffer holds FUSED_BATCH_BLOCKS offsets; reject
-    // kernels whose stride does not divide that capacity so the mode
-    // can always present a full-stride batch.
-    if (FOcbKernelMinBlocks <= 0) or
-      (FUSED_BATCH_BLOCKS mod FOcbKernelMinBlocks <> 0) then
+    TBlockCipherBulkUtilities.TryResolveBulkCipher(FMainCipher, FMainBulk);
+
+    // Resolve a fused OCB kernel via the open factory registry; the
+    // first factory whose TryCreate accepts the cipher / direction pair
+    // wins, and the result stays bound until the key or direction changes
+    // (the engine schedule the kernel captured is untouched until then).
+    FOcbKernel := nil;
+    FOcbKernelMinBlocks := 0;
+    if FForEncryption then
+      LFusedDirection := TCipherKernelDirection.Encrypt
+    else
+      LFusedDirection := TCipherKernelDirection.Decrypt;
+    if TCipherKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
+      FOcbKernel) and (FOcbKernel <> nil) then
     begin
-      FOcbKernel := nil;
-      FOcbKernelMinBlocks := 0;
+      FOcbKernelMinBlocks := FOcbKernel.MinimumBlockCount;
+      // The fused batch buffer holds FUSED_BATCH_BLOCKS offsets; reject
+      // kernels whose stride does not divide that capacity so the mode
+      // can always present a full-stride batch.
+      if (FOcbKernelMinBlocks <= 0) or
+        (FUSED_BATCH_BLOCKS mod FOcbKernelMinBlocks <> 0) then
+      begin
+        FOcbKernel := nil;
+        FOcbKernelMinBlocks := 0;
+      end;
     end;
   end;
 
-  System.SetLength(FL_Asterisk, 16);
-  TArrayUtilities.Fill(FL_Asterisk, 0, 16, Byte(0));
-  FHashCipher.ProcessBlock(FL_Asterisk, 0, FL_Asterisk, 0);
+  if not LSameKey then
+  begin
+    System.SetLength(FL_Asterisk, 16);
+    TArrayUtilities.Fill(FL_Asterisk, 0, 16, Byte(0));
+    FHashCipher.ProcessBlock(FL_Asterisk, 0, FL_Asterisk, 0);
 
-  FL_Dollar := OCB_double(FL_Asterisk);
+    FL_Dollar := OCB_double(FL_Asterisk);
 
-  FL.Clear;
-  FL.Add(OCB_double(FL_Dollar));
-  FLTableFlatCount := 0; // FL rebuilt for the new key; drop the flattened cache
+    FL.Clear;
+    FL.Add(OCB_double(FL_Dollar));
+    FLTableFlatCount := 0; // FL rebuilt for the new key; drop the flattened cache
+  end;
 
   LBottom := ProcessNonce(LN);
 
