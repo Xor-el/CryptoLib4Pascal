@@ -26,7 +26,7 @@ uses
 
 type
   IMlKemEngine = interface(IInterface)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{8683833B-4F0C-4DD6-B117-F96CACB9E7C0}']
 
     function GetK: Int32;
     function GetPolyVecBytes: Int32;

@@ -831,7 +831,7 @@ type
   /// Interface for DL set objects.
   /// </summary>
   IDLSet = interface(IDerSet)
-    ['{A2B3C4D5-E6F7-8901-2345-6789ABCDEF01}']
+    ['{71272239-86BE-46F4-AF4D-CBB15B4ED195}']
   end;
 
   /// <summary>
