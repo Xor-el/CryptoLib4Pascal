@@ -37,7 +37,8 @@ uses
   ClpRandom,
   ClpBinPolyScalarBackend,
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  ClpBinPolyX86V128Backend,
+  ClpBinPolyX86Backend,
+  ClpBinPolySimd,
 {$ENDIF CRYPTOLIB_X86_SIMD}
   ClpBinPolyMulBaseBinomialReduce,
   CryptoLibTestBase;
@@ -178,10 +179,10 @@ type
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
   /// <summary>
-  /// x86/V128 (PCLMULQDQ) instantiation of the BinPoly backend suite. Registered
+  /// x86 (PCLMULQDQ) instantiation of the BinPoly backend suite. Registered
   /// only when CRYPTOLIB_X86_SIMD is defined.
   /// </summary>
-  TTestBinPolyX86V128 = class(TBinPolyBackendTestBase)
+  TTestBinPolyX86 = class(TBinPolyBackendTestBase)
   strict protected
     function BackendSupported: Boolean; override;
     function CreateBackendMul(AN: Int32; const AReduce: IBinPolyReduce)
@@ -1761,22 +1762,23 @@ end;
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
-{ TTestBinPolyX86V128 }
+{ TTestBinPolyX86 }
 
-function TTestBinPolyX86V128.BackendSupported: Boolean;
+function TTestBinPolyX86.BackendSupported: Boolean;
 begin
-  Result := TBinPolyX86V128Backend.IsSupported;
+  Result := TBinPolyX86Backend.IsSupported;
 end;
 
-function TTestBinPolyX86V128.CreateBackendMul(AN: Int32;
+function TTestBinPolyX86.CreateBackendMul(AN: Int32;
   const AReduce: IBinPolyReduce): IBinPolyMul;
 begin
-  Result := TBinPolyX86V128Backend.CreateBinPolyMul(AN, AReduce);
+  if not TBinPolySimd.TryCreateBinPolyMul(AN, AReduce, Result) then
+    Result := nil;
 end;
 
-function TTestBinPolyX86V128.BackendLabel: String;
+function TTestBinPolyX86.BackendLabel: String;
 begin
-  Result := 'X86V128';
+  Result := 'X86';
 end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -1791,9 +1793,9 @@ initialization
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 {$IFDEF FPC}
-  RegisterTest(TTestBinPolyX86V128);
+  RegisterTest(TTestBinPolyX86);
 {$ELSE}
-  RegisterTest(TTestBinPolyX86V128.Suite);
+  RegisterTest(TTestBinPolyX86.Suite);
 {$ENDIF FPC}
 {$ENDIF CRYPTOLIB_X86_SIMD}
 

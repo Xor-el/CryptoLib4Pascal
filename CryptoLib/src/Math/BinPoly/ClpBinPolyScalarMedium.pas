@@ -24,15 +24,14 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
-  ClpArrayUtilities,
-  ClpBinPolyScalarKernels;
+  ClpArrayUtilities;
 
 type
   /// <summary>
   /// Scalar <c>IBinPolyMul</c> implementation for sizes below
   /// <c>TBinPolyScalarLarge.KaratsubaCutoff</c>: small enough that the schoolbook leaf beats a
   /// Karatsuba descent. <c>Multiply</c> is a single call to
-  /// <c>TBinPolyScalarKernels.ImplMul</c> followed by reduction.
+  /// <c>TBinPolyScalarBackend.ImplMul</c> followed by reduction.
   /// </summary>
   TBinPolyScalarMedium = class sealed(TBinPolyMulBase)
   public
@@ -43,6 +42,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpBinPolyScalarBackend;
 
 { TBinPolyScalarMedium }
 
@@ -58,7 +60,7 @@ var
 begin
   SetLength(Ltt, FSizeExt);
   try
-    TBinPolyScalarKernels.ImplMul(FSize, AX, AXOff, AY, AYOff, Ltt, 0);
+    TBinPolyScalarBackend.ImplMul(FSize, AX, AXOff, AY, AYOff, Ltt, 0);
     FReduce.Reduce(Ltt, 0, AZ, AZOff);
   finally
     TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
