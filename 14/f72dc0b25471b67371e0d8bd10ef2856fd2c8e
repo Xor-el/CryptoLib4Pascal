@@ -1,0 +1,23 @@
+CryptoLib.Tests/src/Asn1/Cms/CcmParametersTests.pas
+  s_863773189f1f4f::t_1e004c0229651b 51,122-142
+CryptoLib.Tests/src/Asn1/Cms/GcmParametersTests.pas
+  s_863773189f1f4f::t_31ad43b84de3f7 51,122-142
+CryptoLib/src/Asn1/Cms/ClpCmsAsn1Objects.pas
+  s_863773189f1f4f::t_228054887b949d 57-58,147-148,184-185,1261-1272,1327,1334,1358-1369,1424,1431
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "14f72dc0b25471b67371e0d8bd10ef2856fd2c8e",
+  "prompts": {},
+  "sessions": {
+    "s_863773189f1f4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "49a3ae31-64c9-49ac-b131-686b774b3cd3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
