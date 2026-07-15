@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyX86V128Large;
+unit ClpBinPolySimdLarge;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,14 +24,13 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
-  ClpArrayUtilities,
-  ClpBinPolyX86V128Kernels;
+  ClpArrayUtilities;
 
 type
   /// <summary>
-  /// x86/V128 <c>IBinPolyMul</c> for sizes at or above <c>KaratsubaCutoff</c> (32 limbs).
+  /// SIMD <c>IBinPolyMul</c> for sizes at or above <c>KaratsubaCutoff</c> (32 limbs).
   /// </summary>
-  TBinPolyX86V128Large = class sealed(TBinPolyMulBase)
+  TBinPolySimdLarge = class sealed(TBinPolyMulBase)
   public
     const
       KaratsubaCutoff = 32;
@@ -53,14 +52,17 @@ type
 
 implementation
 
-{ TBinPolyX86V128Large }
+uses
+  ClpBinPolySimd;
 
-constructor TBinPolyX86V128Large.Create(AN: Int32; const AReduce: IBinPolyReduce);
+{ TBinPolySimdLarge }
+
+constructor TBinPolySimdLarge.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Large.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdLarge.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
   Ltt: TCryptoLibUInt64Array;
@@ -79,7 +81,7 @@ begin
   end;
 end;
 
-class function TBinPolyX86V128Large.KaratsubaScratchSize(ALen: Int32): Int32;
+class function TBinPolySimdLarge.KaratsubaScratchSize(ALen: Int32): Int32;
 var
   LTotal: Int32;
   LLen: Int32;
@@ -97,16 +99,16 @@ begin
   Result := LTotal shl 1;
 end;
 
-class procedure TBinPolyX86V128Large.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolySimdLarge.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
   if (ALen and 1) = 0 then
-    TBinPolyX86V128Kernels.ImplMulEven(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff)
+    TBinPolySimd.ImplMulEven(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff)
   else
-    TBinPolyX86V128Kernels.ImplMulOdd(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+    TBinPolySimd.ImplMulOdd(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
 end;
 
-class procedure TBinPolyX86V128Large.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolySimdLarge.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32;
   const AScratch: TCryptoLibUInt64Array; AScratchOff: Int32);
 var

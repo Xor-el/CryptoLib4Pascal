@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyX86V128Kernels;
+unit ClpBinPolyX86Backend;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -22,15 +22,23 @@ interface
 
 uses
   SysUtils,
+  ClpCpuFeatures,
+  ClpIntrinsicsVector,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// x86/V128 binary-polynomial multiply kernels. Hot paths are implemented in
+  /// x86 carryless-multiply (PCLMULQDQ, 128-bit) kernel backend for
+  /// binary-polynomial multiplication. A leaf: it exposes only the capability
+  /// probe and the hot leaf kernels. The arch-neutral size dispatch and the
+  /// scalar fallback live in <c>TBinPolySimd</c> / <c>TBinPolys</c>; the
+  /// arch-neutral multiplier classes reach these kernels through the
+  /// <c>TBinPolySimd</c> facade. Hot paths are implemented in
   /// <c>Include/Simd/BinPoly/</c>.
   /// </summary>
-  TBinPolyX86V128Kernels = class sealed
+  TBinPolyX86Backend = class sealed
   public
+    class function IsSupported: Boolean; static;
     class procedure ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
       const AY: TCryptoLibUInt64Array; AYOff: Int32;
       const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
@@ -79,7 +87,18 @@ procedure BinPolyPclmulImplMulOdd(ALen: Int32; PX, PY, PZz: Pointer);
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-class procedure TBinPolyX86V128Kernels.ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+{ TBinPolyX86Backend }
+
+class function TBinPolyX86Backend.IsSupported: Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  Result := TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class procedure TBinPolyX86Backend.ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -88,11 +107,11 @@ begin
 {$ENDIF}
   BinPolyPclmulImplMulSmall(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
 {$ELSE}
-  raise ENotImplemented.Create('x86/V128 ImplMulSmall is not available on this target');
+  raise ENotImplemented.Create('x86 ImplMulSmall is not available on this target');
 {$ENDIF}
 end;
 
-class procedure TBinPolyX86V128Kernels.ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolyX86Backend.ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -102,11 +121,11 @@ begin
 {$ENDIF}
   BinPolyPclmulImplMulEven(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
 {$ELSE}
-  raise ENotImplemented.Create('x86/V128 ImplMulEven is not available on this target');
+  raise ENotImplemented.Create('x86 ImplMulEven is not available on this target');
 {$ENDIF}
 end;
 
-class procedure TBinPolyX86V128Kernels.ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
+class procedure TBinPolyX86Backend.ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -116,7 +135,7 @@ begin
 {$ENDIF}
   BinPolyPclmulImplMulOdd(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
 {$ELSE}
-  raise ENotImplemented.Create('x86/V128 ImplMulOdd is not available on this target');
+  raise ENotImplemented.Create('x86 ImplMulOdd is not available on this target');
 {$ENDIF}
 end;
 

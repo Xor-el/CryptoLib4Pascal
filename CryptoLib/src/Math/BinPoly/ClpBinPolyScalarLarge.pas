@@ -24,8 +24,7 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
-  ClpArrayUtilities,
-  ClpBinPolyScalarKernels;
+  ClpArrayUtilities;
 
 type
   /// <summary>
@@ -51,7 +50,7 @@ type
   public
     /// <summary>
     /// Karatsuba cutoff (in machine words). Below this, the table-based
-    /// <c>TBinPolyScalarKernels.ImplMul</c> leaf is called directly; above it,
+    /// <c>TBinPolyScalarBackend.ImplMul</c> leaf is called directly; above it,
     /// <c>ImplKaratsuba</c> recurses by halving. Must be &gt;= 2 for recursion termination.
     /// </summary>
     const
@@ -64,6 +63,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpBinPolyScalarBackend;
 
 { TBinPolyScalarLarge }
 
@@ -112,7 +114,7 @@ end;
 class procedure TBinPolyScalarLarge.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
-  TBinPolyScalarKernels.ImplMul(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+  TBinPolyScalarBackend.ImplMul(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
 end;
 
 class procedure TBinPolyScalarLarge.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;

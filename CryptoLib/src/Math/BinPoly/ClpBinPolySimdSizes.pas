@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpBinPolyX86V128Sizes;
+unit ClpBinPolySimdSizes;
 
 {$I ..\..\Include\CryptoLib.inc}
 
@@ -24,11 +24,10 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
-  ClpArrayUtilities,
-  ClpBinPolyX86V128Kernels;
+  ClpArrayUtilities;
 
 type
-  TBinPolyX86V128Size1 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize1 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -36,7 +35,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size2 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize2 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -44,7 +43,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size3 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize3 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -52,7 +51,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size4 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize4 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -60,7 +59,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size5 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize5 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -68,7 +67,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size6 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize6 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -76,7 +75,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size7 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize7 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -84,7 +83,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size8 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize8 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -92,7 +91,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size9 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize9 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -100,7 +99,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolyX86V128Size10 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize10 = class sealed(TBinPolyMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -109,6 +108,9 @@ type
   end;
 
 implementation
+
+uses
+  ClpBinPolySimd;
 
 procedure MultiplySmallFixed(ASmallLen: Int32; const AReduce: IBinPolyReduce; ASizeExt: Int32;
   const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -119,138 +121,138 @@ var
 begin
   SetLength(Ltt, ASizeExt);
   try
-    TBinPolyX86V128Kernels.ImplMulSmall(ASmallLen, AX, AXOff, AY, AYOff, Ltt, 0);
+    TBinPolySimd.ImplMulSmall(ASmallLen, AX, AXOff, AY, AYOff, Ltt, 0);
     AReduce.Reduce(Ltt, 0, AZ, AZOff);
   finally
     TArrayUtilities.Fill(Ltt, 0, ASizeExt, 0);
   end;
 end;
 
-{ TBinPolyX86V128Size1 }
+{ TBinPolySimdSize1 }
 
-constructor TBinPolyX86V128Size1.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize1.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size1.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize1.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(1, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size2 }
+{ TBinPolySimdSize2 }
 
-constructor TBinPolyX86V128Size2.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize2.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size2.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize2.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(2, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size3 }
+{ TBinPolySimdSize3 }
 
-constructor TBinPolyX86V128Size3.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize3.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size3.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize3.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(3, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size4 }
+{ TBinPolySimdSize4 }
 
-constructor TBinPolyX86V128Size4.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize4.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size4.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize4.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(4, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size5 }
+{ TBinPolySimdSize5 }
 
-constructor TBinPolyX86V128Size5.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize5.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size5.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize5.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(5, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size6 }
+{ TBinPolySimdSize6 }
 
-constructor TBinPolyX86V128Size6.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize6.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size6.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize6.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(6, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size7 }
+{ TBinPolySimdSize7 }
 
-constructor TBinPolyX86V128Size7.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize7.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size7.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize7.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(7, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size8 }
+{ TBinPolySimdSize8 }
 
-constructor TBinPolyX86V128Size8.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize8.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size8.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize8.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(8, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size9 }
+{ TBinPolySimdSize9 }
 
-constructor TBinPolyX86V128Size9.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize9.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size9.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize9.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(9, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
 end;
 
-{ TBinPolyX86V128Size10 }
+{ TBinPolySimdSize10 }
 
-constructor TBinPolyX86V128Size10.Create(AN: Int32; const AReduce: IBinPolyReduce);
+constructor TBinPolySimdSize10.Create(AN: Int32; const AReduce: IBinPolyReduce);
 begin
   inherited Create(AN, AReduce);
 end;
 
-procedure TBinPolyX86V128Size10.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+procedure TBinPolySimdSize10.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   MultiplySmallFixed(10, FReduce, FSizeExt, AX, AXOff, AY, AYOff, AZ, AZOff);
