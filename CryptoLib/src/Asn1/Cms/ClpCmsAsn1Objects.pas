@@ -54,7 +54,8 @@ resourcestring
   SCmsBinaryTimeOutOfDateTimeRange = 'BinaryTime out of DateTime range';
   SCmsNoContentFound = 'No content found.';
   SCmsMalformedContent = 'Malformed content.';
-  SCmsInvalidIcvLen = 'Invalid ICV length: %d';
+  SCmsInvalidIcvLen = 'Invalid ''aes-ICVlen'': %d';
+  SCmsIcvLenNotInt32 = 'Invalid ''aes-ICVlen'' (outside Int32 range)';
 
 
 type
@@ -143,7 +144,8 @@ type
     FNonce: IAsn1OctetString;
     FIcvLen: Int32;
 
-    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+    class function ValidateIcvLen(const AIcvLen: IDerInteger): Int32; static;
+    class function ValidateIcvLenValue(AIcvLen: Int32): Int32; static;
 
   strict protected
     function GetNonce: TCryptoLibByteArray;
@@ -179,7 +181,8 @@ type
     FNonce: IAsn1OctetString;
     FIcvLen: Int32;
 
-    class function ValidateIcvLen(AIcvLen: Int32): Int32; static;
+    class function ValidateIcvLen(const AIcvLen: IDerInteger): Int32; static;
+    class function ValidateIcvLenValue(AIcvLen: Int32): Int32; static;
 
   strict protected
     function GetNonce: TCryptoLibByteArray;
@@ -1255,7 +1258,18 @@ end;
 
 { TCcmParameters }
 
-class function TCcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+class function TCcmParameters.ValidateIcvLen(const AIcvLen: IDerInteger): Int32;
+var
+  LValue: Int32;
+begin
+  if AIcvLen = nil then
+    Exit(DefaultIcvLen);
+  if not AIcvLen.TryGetIntValueExact(LValue) then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsIcvLenNotInt32);
+  Result := ValidateIcvLenValue(LValue);
+end;
+
+class function TCcmParameters.ValidateIcvLenValue(AIcvLen: Int32): Int32;
 begin
   if (AIcvLen < 4) or (AIcvLen > 16) or ((AIcvLen and 1) <> 0) then
     raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
@@ -1310,17 +1324,14 @@ begin
   LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
-  if LIcvLen = nil then
-    FIcvLen := ValidateIcvLen(DefaultIcvLen)
-  else
-    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+  FIcvLen := ValidateIcvLen(LIcvLen);
 end;
 
 constructor TCcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
 begin
   inherited Create();
   FNonce := TDerOctetString.FromContents(ANonce);
-  FIcvLen := ValidateIcvLen(AIcvLen);
+  FIcvLen := ValidateIcvLenValue(AIcvLen);
 end;
 
 function TCcmParameters.GetNonce: TCryptoLibByteArray;
@@ -1344,7 +1355,18 @@ end;
 
 { TGcmParameters }
 
-class function TGcmParameters.ValidateIcvLen(AIcvLen: Int32): Int32;
+class function TGcmParameters.ValidateIcvLen(const AIcvLen: IDerInteger): Int32;
+var
+  LValue: Int32;
+begin
+  if AIcvLen = nil then
+    Exit(DefaultIcvLen);
+  if not AIcvLen.TryGetIntValueExact(LValue) then
+    raise EArgumentCryptoLibException.CreateRes(@SCmsIcvLenNotInt32);
+  Result := ValidateIcvLenValue(LValue);
+end;
+
+class function TGcmParameters.ValidateIcvLenValue(AIcvLen: Int32): Int32;
 begin
   if (AIcvLen < 12) or (AIcvLen > 16) then
     raise EArgumentCryptoLibException.CreateResFmt(@SCmsInvalidIcvLen, [AIcvLen]);
@@ -1399,17 +1421,14 @@ begin
   LIcvLen := TAsn1Utilities.ReadOptional<IDerInteger>(ASeq, LPos, TDerInteger.GetOptional);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
-  if LIcvLen = nil then
-    FIcvLen := ValidateIcvLen(DefaultIcvLen)
-  else
-    FIcvLen := ValidateIcvLen(LIcvLen.IntValueExact);
+  FIcvLen := ValidateIcvLen(LIcvLen);
 end;
 
 constructor TGcmParameters.Create(const ANonce: TCryptoLibByteArray; AIcvLen: Int32);
 begin
   inherited Create();
   FNonce := TDerOctetString.FromContents(ANonce);
-  FIcvLen := ValidateIcvLen(AIcvLen);
+  FIcvLen := ValidateIcvLenValue(AIcvLen);
 end;
 
 function TGcmParameters.GetNonce: TCryptoLibByteArray;

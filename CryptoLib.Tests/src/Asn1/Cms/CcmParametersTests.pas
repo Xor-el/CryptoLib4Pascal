@@ -48,6 +48,7 @@ type
     procedure TestDefaultIcvLen;
     procedure TestInvalidIcvLen;
     procedure TestValidIcvLen;
+    procedure TestIcvLenOutsideInt32Range;
   end;
 
 implementation
@@ -115,6 +116,27 @@ begin
   begin
     CheckEquals(ValidIcvLens[LI], TCcmParameters.GetInstance(Seq(ValidIcvLens[LI])).IcvLen);
     CheckEquals(ValidIcvLens[LI], (TCcmParameters.Create(Nonce12, ValidIcvLens[LI]) as ICcmParameters).IcvLen);
+  end;
+end;
+
+procedure TCcmParametersTest.TestIcvLenOutsideInt32Range;
+var
+  LSeq: IAsn1Encodable;
+begin
+  // An ICVlen INTEGER wider than Int32 must surface as a controlled argument
+  // error, not an arithmetic exception leaking from integer extraction.
+  LSeq := TDerSequence.Create([
+    TDerOctetString.FromContents(Nonce12),
+    TDerInteger.ValueOf(Int64($100000000))
+  ]);
+  try
+    TCcmParameters.GetInstance(LSeq);
+    Fail('out-of-Int32 ICV length not rejected on parse');
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      // expected
+    end;
   end;
 end;
 
