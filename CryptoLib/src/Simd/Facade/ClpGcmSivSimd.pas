@@ -14,42 +14,54 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpByteXorSimd;
+unit ClpGcmSivSimd;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  ClpByteXorX86Backend,
-{$ENDIF}
-  ClpCryptoLibTypes;
+  ClpGcmSivX86Backend;
+{$IFEND}
 
 type
   /// <summary>
-  /// Arch-agnostic SIMD facade for the byte-array XOR primitives behind
-  /// <c>TByteUtilities</c>. Selects the per-arch backend at compile time; on a
-  /// build with no SIMD backend (or when the active SIMD level is too low) every
-  /// entry point returns <c>False</c>, leaving the caller on its scalar
-  /// qword/byte path.
+  /// Arch-neutral SIMD dispatch facade for the AES-GCM-SIV POLYVAL batch kernel.
+  /// Selects the per-arch backend at compile time; on a
+  /// build with no SIMD backend <c>IsSupported</c> is <c>False</c> (so the fused
+  /// GCM-SIV kernel factory declines) and <c>ProcessPolyvalBatch</c> is a no-op.
+  /// The kernel unit calls only this facade and stays free of any
+  /// <c>TCpuFeatures</c> / <c>CRYPTOLIB_*_ASM</c> knowledge.
   /// </summary>
-  TByteXorSimd = class sealed
+  TGcmSivSimd = class sealed
   public
-    /// <summary>AZ[i] := AX[i] xor AY[i] over ALen bytes; AZ may alias AX/AY
-    /// (so the in-place XorTo case is TryXor with AY = AZ). False if unavailable.</summary>
-    class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
+    /// <summary>True when a POLYVAL batch kernel is usable on this CPU.</summary>
+    class function IsSupported: Boolean; static;
+    /// <summary>Eight-block POLYVAL Horner batch. Precondition: <c>IsSupported</c>.</summary>
+    class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+      ABatchCount: NativeInt); static;
   end;
 
 implementation
 
-class function TByteXorSimd.TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean;
+{ TGcmSivSimd }
+
+class function TGcmSivSimd.IsSupported: Boolean;
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TByteXorX86Backend.TryXor(ALen, AX, AY, AZ);
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  Result := TGcmSivX86Backend.IsSupported;
 {$ELSE}
   Result := False;
-{$ENDIF}
+{$IFEND}
+end;
+
+class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+  ABatchCount: NativeInt);
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
+{$IFEND}
 end;
 
 end.

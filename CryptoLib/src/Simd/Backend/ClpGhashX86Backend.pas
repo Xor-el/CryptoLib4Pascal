@@ -16,7 +16,7 @@
 
 unit ClpGhashX86Backend;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
@@ -79,57 +79,57 @@ type
 
 procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
 {$ENDIF}
 end;
 
 procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
 {$ENDIF}
 end;
 
 procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2, POut: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
 {$ENDIF}
 end;
 
 procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
 {$ENDIF}
 end;
 
 procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer; ABatchCount: NativeInt);
 {$DEFINE GCM_GHASH_FULL_BLOCKS_4}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_4}
 end;
@@ -137,12 +137,12 @@ end;
 procedure GcmGhashEightFull(PFS, PC0, PHPow128, PMask: Pointer; ABatchCount: NativeInt);
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
 {$ENDIF}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}
 end;
@@ -156,12 +156,12 @@ const
 
 procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
 {$ENDIF}
 end;
 

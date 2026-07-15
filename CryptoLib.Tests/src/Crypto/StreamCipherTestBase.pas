@@ -31,7 +31,6 @@ uses
 {$ENDIF FPC}
   ClpIStreamCipher,
   ClpIBulkStreamCipher,
-  ClpICipherParameters,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
