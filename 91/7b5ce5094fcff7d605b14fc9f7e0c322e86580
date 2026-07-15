@@ -1,0 +1,65 @@
+CryptoLib/src/Simd/Facade/ClpAesFusedAeadSimd.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-62
+CryptoLib/src/Simd/Facade/ClpGcmSivSimd.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-67
+CryptoLib/src/Simd/Backend/ClpByteXorX86Backend.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-73
+CryptoLib/src/Simd/Backend/ClpAesNiFusedX86Backend.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-92
+CryptoLib/src/Simd/Facade/ClpGhashSimd.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-151
+CryptoLib/src/Simd/Facade/ClpAesSimd.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-78
+CryptoLib/src/Simd/Backend/ClpGhashX86Backend.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-310
+CryptoLib/src/Simd/Backend/ClpGcmSivX86Backend.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-80
+CryptoLib/src/Simd/Facade/ClpByteXorSimd.pas
+  s_863773189f1f4f::t_18c614ec00651e 1-55
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_863773189f1f4f::t_28c67c26689f70 19,187-190,192-197,359,701-703,739-740
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_863773189f1f4f::t_1b3815308613c8 35,203-206,208-213,375,717-719,755-756
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_863773189f1f4f::t_98a9f0ca021cea 16,184-187,189-194,356,696-698,734-735
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_863773189f1f4f::t_14d64e3f184264 359,527-530,532-537,699,1039-1041,1077-1078
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_863773189f1f4f::t_1d799e46584da1 35,203-206,208-213,375,717-719,755-756
+CryptoLib/src/Include/Simd/Gcm/GcmGhashFull_x86_64.inc
+  s_863773189f1f4f::t_6d2768f7246b78 41,244
+CryptoLib/src/Include/Simd/Gcm/GcmReduce3FoldSse2_x86_64.inc
+  s_863773189f1f4f::t_c52bcf4ea45967 8,77
+CryptoLib/src/Include/Simd/GcmSiv/PolyvalHornerEight_i386.inc
+  s_863773189f1f4f::t_fa5021a9c7e2d1 30
+CryptoLib/src/Include/Simd/GcmSiv/PolyvalHornerEight_x86_64.inc
+  s_863773189f1f4f::t_d82a707fd67173 30
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_863773189f1f4f::t_be3794cbe93049 44,198-201,203-208,370,698-700,736-737
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4e396cb15e16b1::t_347fd96f10d5f0 13,2737,2849,3129,3133,3137,3141,3149,3153,3157,3161,3165,3169,3173,3177,3181,3193,3197
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "917b5ce5094fcff7d605b14fc9f7e0c322e86580",
+  "prompts": {},
+  "sessions": {
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_863773189f1f4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "49a3ae31-64c9-49ac-b131-686b774b3cd3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
