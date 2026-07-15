@@ -1,0 +1,39 @@
+scripts/maintenance/check-file-format.ps1
+  s_863773189f1f4f::t_94de1d546bb8d0 19
+  s_863773189f1f4f::t_43f220bda44b37 1-5,7-18,20-68
+  s_863773189f1f4f::t_b81b39ae47c4fa 6
+scripts/maintenance/check-duplicate-guids.ps1
+  s_863773189f1f4f::t_1386de661b1fde 8
+  s_863773189f1f4f::t_e99dc5aceabab5 13-14
+CryptoLib.Tests/src/Crypto/Bip327MuSig2Tests.pas
+  s_863773189f1f4f::t_7a29dd401415c3 1
+CryptoLib.Tests/src/Asn1/X509/X509NameTests.pas
+  s_863773189f1f4f::t_7a29dd401415c3 1
+scripts/maintenance/sync-mobile-testdata.ps1
+  s_863773189f1f4f::t_25491f8d451283 74
+  s_863773189f1f4f::t_7f7b725a2e336c 9
+CryptoLib/src/Interfaces/Asn1/ClpIAsn1Objects.pas
+  s_863773189f1f4f::t_077ff2b708e529 834
+CryptoLib/src/Interfaces/Crypto/Kems/MlKem/ClpIMlKemEngine.pas
+  s_863773189f1f4f::t_b6c2383dce4b89 29
+CryptoLib/src/Interfaces/Crypto/Signers/MlDsa/ClpIMlDsaCore.pas
+  s_863773189f1f4f::t_a4a49536059e6f 30
+CryptoLib/src/Interfaces/X509/ClpIX509Certificate.pas
+  s_863773189f1f4f::t_453938eef4be37 38
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "6b6fef751f82feff619e75a2e61fae4b746cad4b",
+  "prompts": {},
+  "sessions": {
+    "s_863773189f1f4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "49a3ae31-64c9-49ac-b131-686b774b3cd3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
