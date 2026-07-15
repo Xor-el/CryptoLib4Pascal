@@ -27,7 +27,7 @@ type
   IMlDsaPolyVec = interface;
 
   IMlDsaSymmetric = interface(IInterface)
-    ['{A2B3C4D5-E6F7-8901-2345-6789ABCDEF01}']
+    ['{7AD72F84-31AA-4EAD-AB36-DF014DD0849A}']
 
     function GetStream128BlockBytes: Int32;
     function GetStream256BlockBytes: Int32;

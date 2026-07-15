@@ -5,13 +5,13 @@
   Extracts all ['{...}'] GUIDs from *.pas, groups by GUID, and exits with
   non-zero if any GUID appears more than once (reporting file:line for each).
 .EXAMPLE
-  .\scripts\check-duplicate-guids.ps1
+  .\scripts\maintenance\check-duplicate-guids.ps1
 #>
 
 $ErrorActionPreference = 'Stop'
 
-# Repo root: script lives in <repo>/scripts/check-duplicate-guids.ps1
-$root = if ($PSScriptRoot) { Split-Path $PSScriptRoot -Parent } else { Get-Location }
+# Repo root: script lives in <repo>/scripts/maintenance/check-duplicate-guids.ps1
+$root = if ($PSScriptRoot) { Split-Path (Split-Path $PSScriptRoot -Parent) -Parent } else { Get-Location }
 $pasFiles = Get-ChildItem -Path $root -Filter '*.pas' -Recurse -File -ErrorAction SilentlyContinue |
   Where-Object { $_.FullName -notmatch '\.git\\' }
 

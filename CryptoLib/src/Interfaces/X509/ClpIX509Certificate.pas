@@ -35,7 +35,7 @@ type
   /// Interface for X509Certificate.
   /// </summary>
   IX509Certificate = interface(IX509Extension)
-    ['{A1B2C3D4-E5F6-7890-ABCD-EF1234567890}']
+    ['{DF989BE9-0831-4324-A4D5-4645DC734D8D}']
 
     function GetCertificateStructure: IX509CertificateStructure;
     function IsValidNow: Boolean;
