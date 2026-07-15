@@ -14,49 +14,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesFusedAeadSimd;
+unit ClpByteXorSimd;
 
-{$I ..\..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-  ClpAesNiFusedX86Backend;
-{$IFEND}
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  ClpByteXorX86Backend,
+{$ENDIF}
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Arch-neutral capability gate for the fused hardware-AES AEAD pipeline
-  /// (e.g. AES-NI on x86). Selects the per-arch
-  /// backend at compile time and answers only the genuinely arch-neutral question
-  /// - "is a fused hardware-AES path available on this build/CPU?".
+  /// Arch-agnostic SIMD facade for the byte-array XOR primitives behind
+  /// <c>TByteUtilities</c>. Selects the per-arch backend at compile time; on a
+  /// build with no SIMD backend (or when the active SIMD level is too low) every
+  /// entry point returns <c>False</c>, leaving the caller on its scalar
+  /// qword/byte path.
   /// </summary>
-  /// <remarks>
-  /// Engine resolution deliberately does NOT live here: it hands back an
-  /// instruction-set-specific round-key schedule (see <c>IAesEngineX86</c>), so it
-  /// belongs on the per-arch backend (<c>TAesNiFusedX86Backend.TryResolveEngine</c>)
-  /// that the matching per-arch kernels call. Not exported via the public
-  /// interface surface and never imported by mode units, which stay
-  /// cipher-agnostic.
-  /// </remarks>
-  TAesFusedAeadSimd = class sealed
+  TByteXorSimd = class sealed
   public
-    /// <summary>CPU + build-time gate for the fused hardware-AES AEAD pipeline on this arch.</summary>
-    class function CpuSupports: Boolean; static;
+    /// <summary>AZ[i] := AX[i] xor AY[i] over ALen bytes; AZ may alias AX/AY
+    /// (so the in-place XorTo case is TryXor with AY = AZ). False if unavailable.</summary>
+    class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
   end;
 
 implementation
 
-{ TAesFusedAeadSimd }
-
-class function TAesFusedAeadSimd.CpuSupports: Boolean;
+class function TByteXorSimd.TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean;
 begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TAesNiFusedX86Backend.CpuSupports;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  Result := TByteXorX86Backend.TryXor(ALen, AX, AY, AZ);
 {$ELSE}
   Result := False;
-{$IFEND}
+{$ENDIF}
 end;
 
 end.

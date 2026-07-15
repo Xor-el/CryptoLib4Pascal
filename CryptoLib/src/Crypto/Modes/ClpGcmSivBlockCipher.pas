@@ -49,7 +49,6 @@ uses
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
-  ClpStreamUtilities,
   ClpCryptoLibTypes;
 
 resourcestring

@@ -27,6 +27,6 @@
 // body; this shell adds no asm of its own.
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
 {$DEFINE GCM_GHASH_RAW_INPUT}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_x86_64.inc}
 {$UNDEF GCM_GHASH_RAW_INPUT}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}

@@ -16,7 +16,7 @@
 
 unit ClpByteXorX86Backend;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
@@ -46,12 +46,12 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure ByteXorSse2(ALen: NativeInt; AX, AY, AZ: Pointer);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\Include\Simd\ByteXor\ByteXorSse2_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\ByteXor\ByteXorSse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\Include\Simd\ByteXor\ByteXorSse2_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
+{$I ..\..\Include\Simd\ByteXor\ByteXorSse2_i386.inc}
 {$ENDIF}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}

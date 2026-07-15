@@ -27,6 +27,6 @@
 //
 {$DEFINE GCM_GHASH_FULL_BLOCKS_8}
 {$DEFINE GCM_GHASH_RAW_INPUT}
-{$I ..\..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_i386.inc}
 {$UNDEF GCM_GHASH_RAW_INPUT}
 {$UNDEF GCM_GHASH_FULL_BLOCKS_8}

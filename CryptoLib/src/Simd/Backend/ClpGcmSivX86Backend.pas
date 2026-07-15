@@ -16,7 +16,7 @@
 
 unit ClpGcmSivX86Backend;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
@@ -47,12 +47,12 @@ implementation
 procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, PMask: Pointer;
   ABatchCount: NativeInt);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\GcmSiv\PolyvalHornerEight_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
-{$I ..\..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\GcmSiv\PolyvalHornerEight_i386.inc}
 {$ENDIF}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}

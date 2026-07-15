@@ -38,7 +38,7 @@
 // PCLMULQDQ / PSHUFD and pxor forms touching xmm8/xmm9 are db-encoded
 // for broad assembler compatibility.
 //
-{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   sub       rsp, 24                             // [rsp] 16-aligned
   mov       rax, $C200000000000000
   mov       [rsp], rax                          // reduction constant (low qword)
@@ -241,5 +241,5 @@
   pshufb    xmm9, xmm8                          // reflected -> canonical
   movdqu    [rcx], xmm9
   add       rsp, 24
-{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
 

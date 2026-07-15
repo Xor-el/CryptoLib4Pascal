@@ -5,7 +5,7 @@
 // of Karatsuba-style PCLMULQDQ GHASH products.
 // After ClpSimdProc4Begin_x86_64.inc: rcx = PZ0, rdx = PZ1, r8 = PZ2, r9 = POut.
 //
-{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   movdqu    xmm0, [rcx]
   movdqu    xmm2, [r8]
   movdqu    xmm1, [rdx]
@@ -74,4 +74,4 @@
   pxor      xmm7, xmm2
   movq      qword ptr [r9], xmm7
   movq      qword ptr [r9 + 8], xmm6
-{$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
