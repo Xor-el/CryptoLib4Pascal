@@ -1,0 +1,52 @@
+CryptoLib/src/Include/Simd/Gcm/GcmFieldOps_x86_64.inc
+  s_e5fb138dc4caab::t_c546e39cf7bbad 1-193
+CryptoLib/src/Include/Simd/Gcm/GcmFieldOps_i386.inc
+  s_e5fb138dc4caab::t_b19707258ea7d9 1-196
+CryptoLib/src/Include/Simd/Aes/AesNiKeySchedule_x86_64.inc
+  s_e5fb138dc4caab::t_4b389258f5b743 1-525
+CryptoLib/src/Include/Simd/Aes/AesNiCipher_x86_64.inc
+  s_e5fb138dc4caab::t_4b389258f5b743 1-14,19-22,25-27,30-37,39,41-145,147,149-150,152-155,157-573,575-578,580-581,583-591,593-1321,1323-1331,1333-1337
+  s_e5fb138dc4caab::t_14535c28e140e2 15-18,23-24,28-29,38,40,146,148,151,156,574,579,582,592,1322,1332
+CryptoLib/src/Include/Simd/Aes/AesNiKeySchedule_i386.inc
+  s_e5fb138dc4caab::t_4b389258f5b743 1-531
+CryptoLib/src/Crypto/Engines/ClpAesEngineX86.pas
+  s_e5fb138dc4caab::t_b4acf7f21fc367 58-59
+  s_e5fb138dc4caab::t_49c8a0bc98fc7c 148,152,161,165,174,178,184,187,191,193,196-197,201,205,208,211-212,216,220,223,226-227,231,235,238,241-242,247,251,255,258-259,264,268,272,275-276,281,285,289,292-293,297,301,304,307-308,312,316,319,322-323,327,331,334,337-338,343,347,351,354-355,360,364,368,371-372,377,381,385,388-389,393,397,400,403-404,408,412,415,418-419,423,427,430,433-434,439,443,447,450-451,456,460,464,467-468,473,477,481,750,753-754,756,761,775,781
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_x86_64.inc
+  s_e5fb138dc4caab::t_953fab80870b16 7
+  s_e5fb138dc4caab::t_8c08d628119446 8-12
+  s_e5fb138dc4caab::t_de6799d7271d27 30,58-62,101-105
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_i386.inc
+  s_e5fb138dc4caab::t_0eab9425da5c3d 8-11
+  s_e5fb138dc4caab::t_8d44552c2744f2 12-13
+  s_e5fb138dc4caab::t_ac2d2517042803 50-54,81-85
+CryptoLib/src/Include/Simd/Aes/AesNiCipher_i386.inc
+  s_e5fb138dc4caab::t_14535c28e140e2 15-18,23-25,37,39,145,147,150,155,573,578,581,590,1242,1251,1257,1261
+  s_e5fb138dc4caab::t_4b389258f5b743 1-14,19-22,26-36,38,40-144,146,148-149,151-154,156-572,574-577,579-580,582-589,591-1241,1243-1250,1252-1256,1258-1260
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCbcKernel.pas
+  s_e5fb138dc4caab::t_1d558947507051 38
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCtrKernel.pas
+  s_e5fb138dc4caab::t_350474f318b5cc 37-38
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_i386.inc
+  s_e5fb138dc4caab::t_f4007e7abdefcb 10-12,43-47
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_x86_64.inc
+  s_e5fb138dc4caab::t_701468e792dd68 10-12,41-45
+CryptoLib/src/Simd/Backend/ClpGhashX86Backend.pas
+  s_e5fb138dc4caab::t_8f29572b66bb2d 81,84,88,90,94,97,101,103,107,110,114,116,120,123,127,129,166,169,173,175
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "c439bff4dbd715df1977535c45faeed09d501857",
+  "prompts": {},
+  "sessions": {
+    "s_e5fb138dc4caab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f562a6e-7cea-4ac6-befd-c16ce37a44f7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
