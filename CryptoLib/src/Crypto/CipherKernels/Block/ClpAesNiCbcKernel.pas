@@ -35,7 +35,7 @@ type
   ///   AES-NI implementation of ICbcKernel, applied over a whole run in one
   ///   call (kernel bodies in Include\Simd\Aes\Cbc). Encrypt runs the serial
   ///   chain C_i = E_K(P_i xor C_{i-1}) 1-wide with the chaining value held in
-  ///   a register (reusing the shared rounds-only AES chain). Decrypt runs P_i = D_K(C_i) xor
+  ///   a register. Decrypt runs P_i = D_K(C_i) xor
   ///   C_{i-1}: the inverse transforms are independent, so it decrypts 8-wide
   ///   (x86_64) / 4-wide (i386) and folds the chain XOR into that pass, turning
   ///   the mode's decrypt-then-XOR two passes into one. Direction is fixed at
@@ -134,7 +134,6 @@ end;
 // chaining slot at IvPtr. Consumes the inverse-MixColumns (decrypt) schedule.
 procedure AesNiCbcDecrypt128(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_x86_64.inc}
@@ -143,13 +142,11 @@ procedure AesNiCbcDecrypt128(PCtx: Pointer);
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
 end;
 
 procedure AesNiCbcDecrypt192(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_x86_64.inc}
@@ -158,13 +155,11 @@ procedure AesNiCbcDecrypt192(PCtx: Pointer);
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
 end;
 
 procedure AesNiCbcDecrypt256(PCtx: Pointer);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_x86_64.inc}
@@ -173,7 +168,6 @@ procedure AesNiCbcDecrypt256(PCtx: Pointer);
 {$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
 {$I ..\..\..\Include\Simd\Aes\Cbc\AesNiCbcDecryptWide_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 

@@ -24,6 +24,8 @@ uses
   ClpIBlockCipher
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpAesEngineX86
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  , ClpAesEngineArm
 {$IFEND}
   ;
 
@@ -31,7 +33,8 @@ type
   /// <summary>
   /// Arch-neutral SIMD dispatch facade for hardware-accelerated AES engines.
   /// SIMD-only by contract: it produces the per-arch hardware engine (e.g.
-  /// AES-NI via <c>TAesEngineX86</c> on x86)
+  /// AES-NI via <c>TAesEngineX86</c> on x86, the ARMv8 Crypto Extensions via
+  /// <c>TAesEngineArm</c> on aarch64)
   /// when available, or reports "not handled" - it never returns the portable
   /// scalar engine. The scalar fallback belongs to the caller
   /// (<c>TAesUtilities</c>), matching the Try*-then-scalar shape used across the
@@ -57,6 +60,8 @@ class function TAesSimd.IsSupported: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TAesEngineX86.IsSupported;
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TAesEngineArm.IsSupported;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -69,6 +74,12 @@ begin
   if TAesEngineX86.IsSupported then
   begin
     AEngine := TAesEngineX86.Create();
+    Exit(True);
+  end;
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  if TAesEngineArm.IsSupported then
+  begin
+    AEngine := TAesEngineArm.Create();
     Exit(True);
   end;
 {$IFEND}

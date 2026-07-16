@@ -37,6 +37,9 @@ uses
 {$IFDEF CRYPTOLIB_X86_SIMD}
   ClpAesEngineX86,
 {$ENDIF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  ClpAesEngineArm,
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
   BlockCipherTestBase,
   AesBlockCipherTestBase;
 
@@ -105,12 +108,21 @@ type
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
-// To add an aarch64 (NEON / Crypto-Ext) suite later: under
-// {$IFDEF CRYPTOLIB_ARM_SIMD}, declare
-//   TTestAesAArch64 = class(TAesHardwareEngineTestBase) ... override the four
-//   hooks for TAesEngineAArch64 ... end;
-// and RegisterTest it in the initialization section under the same guard. No
-// test bodies need to be re-declared.
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+
+  /// <summary>
+  /// AArch64 (ARMv8 Crypto Extensions) instantiation of the hardware AES test
+  /// suite. Registered only when CRYPTOLIB_AARCH64_ASM is defined.
+  /// </summary>
+  TTestAesArm = class(TAesHardwareEngineTestBase)
+  strict protected
+    function CreateHwEngine: IAesHardwareEngine; override;
+    function EngineSupported: Boolean; override;
+    function EngineLabel: String; override;
+    function GetEngineFactory: TBlockCipherFactory; override;
+  end;
+
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 implementation
 
@@ -557,6 +569,37 @@ end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+
+function CreateAesArmEngine: IBlockCipher;
+begin
+  Result := TAesEngineArm.Create();
+end;
+
+{ TTestAesArm }
+
+function TTestAesArm.CreateHwEngine: IAesHardwareEngine;
+begin
+  Result := TAesEngineArm.Create();
+end;
+
+function TTestAesArm.EngineSupported: Boolean;
+begin
+  Result := TAesEngineArm.IsSupported;
+end;
+
+function TTestAesArm.EngineLabel: String;
+begin
+  Result := 'TAesEngineArm';
+end;
+
+function TTestAesArm.GetEngineFactory: TBlockCipherFactory;
+begin
+  Result := @CreateAesArmEngine;
+end;
+
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
+
 initialization
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -566,5 +609,12 @@ initialization
   RegisterTest(TTestAesX86.Suite);
 {$ENDIF FPC}
 {$ENDIF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+{$IFDEF FPC}
+  RegisterTest(TTestAesArm);
+{$ELSE}
+  RegisterTest(TTestAesArm.Suite);
+{$ENDIF FPC}
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 end.

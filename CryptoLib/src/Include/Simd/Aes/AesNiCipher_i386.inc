@@ -3,26 +3,20 @@
 //
 // Out-of-place AES over 1, 4 or 8 consecutive 16-byte blocks; the
 // width is selected per include site. In-place callers pass
-// RIn = ROut; partial overlap is unsupported. The fused AEAD kernels
-// (OCB / GCM / CCM / EAX) carry their own round chains with different
-// register allocations and do NOT include this file.
+// RIn = ROut; partial overlap is unsupported. The fused mode kernels
+// (CTR / CBC / OCB / GCM / CCM / EAX) carry their own round chains and
+// do NOT include this file.
 //
 // Variant selection:
 //   Exactly one of CRYPTOLIB_AESNI_ONE / FOUR / EIGHT selects the width.
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R
 //                              (10 / 12 / 14 rounds).
-//   CRYPTOLIB_AESNI_ROUNDS_ONLY -> bare round chain: no load/store shell,
-//                              no prologue expectations, no epilogue, no
-//                              nested includes. For kernels that keep the
-//                              data lanes in registers (e.g. fused CBC).
 //
 // Entry (after ClpSimdProc3Begin_i386.inc): ebx = RIn, esi = ROut,
 // edi = expanded round-key schedule pointer; must match the direction
 // (decrypt consumers pass the inverse-MixColumns schedule).
-// The epilogue pops edi / esi / ebx (full shell only).
-// Rounds-only entry/exit: xmm0..xmm{width-1} = data lanes (NOT
-// pre-whitened; K_0 XOR is round 0 here), edi = keys, unchanged on exit.
+// The epilogue pops edi / esi / ebx.
 //
 // Scratch: widths 1 and 8 none (round keys consumed as memory
 // operands); width 4 xmm4 (round-key broadcast).
@@ -34,9 +28,7 @@
 // AES-NI instructions, plus pxor forms touching extended registers,
 // are db-encoded for broad assembler compatibility.
 {$IFDEF CRYPTOLIB_AESNI_ONE}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    xmm0, [ebx + 0]
-{$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -142,17 +134,13 @@
 {$ENDIF}
 
 {$ENDIF}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    [esi + 0], xmm0
-{$ENDIF}
 {$ELSE}
   {$IFDEF CRYPTOLIB_AESNI_FOUR}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]
   movdqu    xmm3, [ebx + 48]
-{$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -570,15 +558,12 @@
 {$ENDIF}
 
 {$ENDIF}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    [esi + 0], xmm0
   movdqu    [esi + 16], xmm1
   movdqu    [esi + 32], xmm2
   movdqu    [esi + 48], xmm3
-{$ENDIF}
   {$ELSE}
     {$IFDEF CRYPTOLIB_AESNI_EIGHT}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]
@@ -587,7 +572,6 @@
   movdqu    xmm5, [ebx + 80]
   movdqu    xmm6, [ebx + 96]
   movdqu    xmm7, [ebx + 112]
-{$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -1239,7 +1223,6 @@
 {$ENDIF}
 
 {$ENDIF}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    [esi + 0], xmm0
   movdqu    [esi + 16], xmm1
   movdqu    [esi + 32], xmm2
@@ -1248,14 +1231,11 @@
   movdqu    [esi + 80], xmm5
   movdqu    [esi + 96], xmm6
   movdqu    [esi + 112], xmm7
-{$ENDIF}
     {$ELSE}
     {$FATAL Exactly one of CRYPTOLIB_AESNI_ONE, CRYPTOLIB_AESNI_FOUR, CRYPTOLIB_AESNI_EIGHT must be defined before including this file}
     {$ENDIF}
   {$ENDIF}
 {$ENDIF}
-{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   pop       edi
   pop       esi
   pop       ebx
-{$ENDIF}

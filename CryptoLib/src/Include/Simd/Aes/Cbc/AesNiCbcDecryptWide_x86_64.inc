@@ -4,12 +4,12 @@
 // Fused CBC-decrypt body for TCbcBlockCipher's bulk path:
 //   P_i = D_K(C_i) xor C_{i-1}   (C_{-1} = IV).
 // Unlike CBC encrypt, the D_K(C_i) are mutually independent, so 8 blocks
-// run through the shared 8-wide aesdec chain (AesNiCipher_x86_64.inc under
-// CRYPTOLIB_AESNI_ROUNDS_ONLY); the only serial part is the trailing XOR, and
+// run through an embedded 8-wide aesdec chain (matching the width-8 chain
+// in AesNiCipher_x86_64.inc); the only serial part is the trailing XOR, and
 // every feed is an *input* ciphertext block. Folding that XOR into the decrypt
 // pass turns the mode's decrypt-then-XOR (two passes over memory) into a
-// single pass. A 1-wide rounds-only tail drains the 1..7 residual blocks, so
-// the kernel accepts any block count >= 1.
+// single pass. An embedded 1-wide tail chain drains the 1..7 residual blocks,
+// so the kernel accepts any block count >= 1.
 //
 // In-place safe: within each 8-block group every input read (8 block loads +
 // 7 feedback reloads + the next chain seed) completes before the first output
@@ -23,11 +23,12 @@
 //   [rcx + 24]  IvPtr      -> r9  : 16-byte chaining value (seed + writeback)
 //   [rcx + 32]  BlockCount -> r10 : number of blocks, caller guarantees >= 1
 //
-// Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 must be defined,
-// together with CRYPTOLIB_AESNI_DECRYPT (selects aesdec in the shared chains).
+// Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 must be defined;
+// the embedded chains are always the decrypt direction (aesdec over the
+// inverse-MixColumns schedule).
 //
-// XMM: xmm0..xmm7 = 8 data lanes; xmm8 = shared round-key scratch (owned by
-// the 8-wide rounds-only chain); xmm9 = chaining value (persists across groups);
+// XMM: xmm0..xmm7 = 8 data lanes; xmm8 = round-key broadcast scratch (owned
+// by the 8-wide chain); xmm9 = chaining value (persists across groups);
 // xmm10 = feedback reload scratch. xmm6..xmm10 are nonvolatile on Win64, so
 // the ClpSimdNonVolatile{Save,Restore} frame brackets the body.
 //
@@ -55,11 +56,368 @@
   movdqu    xmm5, [r11 +  80]
   movdqu    xmm6, [r11 +  96]
   movdqu    xmm7, [r11 + 112]
-{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
-{$DEFINE CRYPTOLIB_AESNI_EIGHT}
-{$I ..\..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}          // xmm0..7 = D_K(C_i)
-{$UNDEF CRYPTOLIB_AESNI_EIGHT}
-{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  // xmm0..7 = D_K(C_i): embedded 8-wide decrypt round chain
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm8, [r8]
+  db $66, $41, $0F, $EF, $C0              // pxor xmm0, xmm8
+  db $66, $41, $0F, $EF, $C8              // pxor xmm1, xmm8
+  db $66, $41, $0F, $EF, $D0              // pxor xmm2, xmm8
+  db $66, $41, $0F, $EF, $D8              // pxor xmm3, xmm8
+  db $66, $41, $0F, $EF, $E0              // pxor xmm4, xmm8
+  db $66, $41, $0F, $EF, $E8              // pxor xmm5, xmm8
+  db $66, $41, $0F, $EF, $F0              // pxor xmm6, xmm8
+  db $66, $41, $0F, $EF, $F8              // pxor xmm7, xmm8
+  movdqa    xmm8, [r8 + 16]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 32]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 48]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 64]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 80]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 96]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 112]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 128]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 144]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 160]
+  db $66, $41, $0F, $38, $DF, $C0         // aesdeclast xmm0, xmm8
+  db $66, $41, $0F, $38, $DF, $C8         // aesdeclast xmm1, xmm8
+  db $66, $41, $0F, $38, $DF, $D0         // aesdeclast xmm2, xmm8
+  db $66, $41, $0F, $38, $DF, $D8         // aesdeclast xmm3, xmm8
+  db $66, $41, $0F, $38, $DF, $E0         // aesdeclast xmm4, xmm8
+  db $66, $41, $0F, $38, $DF, $E8         // aesdeclast xmm5, xmm8
+  db $66, $41, $0F, $38, $DF, $F0         // aesdeclast xmm6, xmm8
+  db $66, $41, $0F, $38, $DF, $F8         // aesdeclast xmm7, xmm8
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm8, [r8]
+  db $66, $41, $0F, $EF, $C0              // pxor xmm0, xmm8
+  db $66, $41, $0F, $EF, $C8              // pxor xmm1, xmm8
+  db $66, $41, $0F, $EF, $D0              // pxor xmm2, xmm8
+  db $66, $41, $0F, $EF, $D8              // pxor xmm3, xmm8
+  db $66, $41, $0F, $EF, $E0              // pxor xmm4, xmm8
+  db $66, $41, $0F, $EF, $E8              // pxor xmm5, xmm8
+  db $66, $41, $0F, $EF, $F0              // pxor xmm6, xmm8
+  db $66, $41, $0F, $EF, $F8              // pxor xmm7, xmm8
+  movdqa    xmm8, [r8 + 16]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 32]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 48]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 64]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 80]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 96]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 112]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 128]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 144]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 160]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 176]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 192]
+  db $66, $41, $0F, $38, $DF, $C0         // aesdeclast xmm0, xmm8
+  db $66, $41, $0F, $38, $DF, $C8         // aesdeclast xmm1, xmm8
+  db $66, $41, $0F, $38, $DF, $D0         // aesdeclast xmm2, xmm8
+  db $66, $41, $0F, $38, $DF, $D8         // aesdeclast xmm3, xmm8
+  db $66, $41, $0F, $38, $DF, $E0         // aesdeclast xmm4, xmm8
+  db $66, $41, $0F, $38, $DF, $E8         // aesdeclast xmm5, xmm8
+  db $66, $41, $0F, $38, $DF, $F0         // aesdeclast xmm6, xmm8
+  db $66, $41, $0F, $38, $DF, $F8         // aesdeclast xmm7, xmm8
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm8, [r8]
+  db $66, $41, $0F, $EF, $C0              // pxor xmm0, xmm8
+  db $66, $41, $0F, $EF, $C8              // pxor xmm1, xmm8
+  db $66, $41, $0F, $EF, $D0              // pxor xmm2, xmm8
+  db $66, $41, $0F, $EF, $D8              // pxor xmm3, xmm8
+  db $66, $41, $0F, $EF, $E0              // pxor xmm4, xmm8
+  db $66, $41, $0F, $EF, $E8              // pxor xmm5, xmm8
+  db $66, $41, $0F, $EF, $F0              // pxor xmm6, xmm8
+  db $66, $41, $0F, $EF, $F8              // pxor xmm7, xmm8
+  movdqa    xmm8, [r8 + 16]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 32]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 48]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 64]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 80]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 96]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 112]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 128]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 144]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 160]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 176]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 192]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 208]
+  db $66, $41, $0F, $38, $DE, $C0         // aesdec xmm0, xmm8
+  db $66, $41, $0F, $38, $DE, $C8         // aesdec xmm1, xmm8
+  db $66, $41, $0F, $38, $DE, $D0         // aesdec xmm2, xmm8
+  db $66, $41, $0F, $38, $DE, $D8         // aesdec xmm3, xmm8
+  db $66, $41, $0F, $38, $DE, $E0         // aesdec xmm4, xmm8
+  db $66, $41, $0F, $38, $DE, $E8         // aesdec xmm5, xmm8
+  db $66, $41, $0F, $38, $DE, $F0         // aesdec xmm6, xmm8
+  db $66, $41, $0F, $38, $DE, $F8         // aesdec xmm7, xmm8
+  movdqa    xmm8, [r8 + 224]
+  db $66, $41, $0F, $38, $DF, $C0         // aesdeclast xmm0, xmm8
+  db $66, $41, $0F, $38, $DF, $C8         // aesdeclast xmm1, xmm8
+  db $66, $41, $0F, $38, $DF, $D0         // aesdeclast xmm2, xmm8
+  db $66, $41, $0F, $38, $DF, $D8         // aesdeclast xmm3, xmm8
+  db $66, $41, $0F, $38, $DF, $E0         // aesdeclast xmm4, xmm8
+  db $66, $41, $0F, $38, $DF, $E8         // aesdeclast xmm5, xmm8
+  db $66, $41, $0F, $38, $DF, $F0         // aesdeclast xmm6, xmm8
+  db $66, $41, $0F, $38, $DF, $F8         // aesdeclast xmm7, xmm8
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
   // feedback: P_i = D_K(C_i) xor C_{i-1}. C_0..C_6 reloaded from the (still
   // intact) input; block 0 uses the running chain. All reads precede stores.
   movdqu    xmm10, [r11 +   0]
@@ -98,11 +456,56 @@
 @@CbcDecTailLoop:
   movdqu    xmm0, [r11]                           // C_i
   db $66, $44, $0F, $6F, $D0                      // movdqa xmm10, xmm0  (save C_i)
-{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
-{$DEFINE CRYPTOLIB_AESNI_ONE}
-{$I ..\..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}          // xmm0 = D_K(C_i)
-{$UNDEF CRYPTOLIB_AESNI_ONE}
-{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  // xmm0 = D_K(C_i): embedded 1-wide decrypt round chain
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DF, $80, $A0, $00, $00, $00 // aesdeclast xmm0, [r8+160]
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DE, $80, $A0, $00, $00, $00 // aesdec xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DE, $80, $B0, $00, $00, $00 // aesdec xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DF, $80, $C0, $00, $00, $00 // aesdeclast xmm0, [r8+192]
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DE, $80, $A0, $00, $00, $00 // aesdec xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DE, $80, $B0, $00, $00, $00 // aesdec xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DE, $80, $C0, $00, $00, $00 // aesdec xmm0, [r8+192]
+  db $66, $41, $0F, $38, $DE, $80, $D0, $00, $00, $00 // aesdec xmm0, [r8+208]
+  db $66, $41, $0F, $38, $DF, $80, $E0, $00, $00, $00 // aesdeclast xmm0, [r8+224]
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
   db $66, $41, $0F, $EF, $C1                      // pxor xmm0, xmm9    (^ chain)
   db $66, $45, $0F, $6F, $CA                      // movdqa xmm9, xmm10 (chain = C_i)
   movdqu    [rdx], xmm0                           // P_i
