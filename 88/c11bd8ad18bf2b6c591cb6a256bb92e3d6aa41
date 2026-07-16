@@ -1,0 +1,110 @@
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesCryptoExtCtrKernel.pas
+  s_328ec6f81eb027::t_d0f790cd33a316 1-258
+CryptoLib/src/Include/Simd/Common/ClpSimdProc3Begin_aarch64.inc
+  s_328ec6f81eb027::t_716eeb1411046c 1-12
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_i386.inc
+  s_328ec6f81eb027::t_02a36f6db89314 10-12,24-25,43-55,58-67,73-82
+  s_328ec6f81eb027::t_95d7359228299b 56-57,68-72,83-92
+CryptoLib/src/Include/Simd/Aes/AesCryptoExtKeySchedule_aarch64.inc
+  s_328ec6f81eb027::t_c96c64dda39794 1-500
+CryptoLib/src/Include/Simd/Common/ClpSimdProc4Begin_aarch64.inc
+  s_328ec6f81eb027::t_5c0ff45bc5803b 1-12
+CryptoLib/src/Simd/Backend/ClpAesCryptoExtFusedArmBackend.pas
+  s_328ec6f81eb027::t_89dec3300b6955 1-88
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_i386.inc
+  s_328ec6f81eb027::t_02a36f6db89314 6,8-13,27-29,51-256,284,296-297,311-312,328-332
+  s_328ec6f81eb027::t_8e858aa148de7d 283,285-295,298-310,313-327
+CryptoLib/src/Include/Simd/Common/ClpSimdNonVolatileRestore_aarch64.inc
+  s_328ec6f81eb027::t_d4bf2fc27d4c4e 1-12
+CryptoLib/src/Include/Simd/Common/ClpSimdNonVolatileSave_aarch64.inc
+  s_328ec6f81eb027::t_73fccf151acab9 1-22
+CryptoLib/src/Include/Simd/Aes/AesCryptoExtCipher_aarch64.inc
+  s_328ec6f81eb027::t_c96c64dda39794 1-2145
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcDecryptWide_x86_64.inc
+  s_328ec6f81eb027::t_02a36f6db89314 7-8,11-12,26-28,30-31,59-420,460,472-473,487-488,504-508
+  s_328ec6f81eb027::t_c882acdb7494c9 459,461-471,474-486,489-503
+CryptoLib/src/Include/Simd/Aes/Cbc/AesNiCbcEncryptSerial_x86_64.inc
+  s_328ec6f81eb027::t_02a36f6db89314 10-12,24-25,41-65,71-80
+  s_328ec6f81eb027::t_8db920d246cb66 66-70,81-90
+CryptoLib/src/Include/Simd/Common/ClpSimdProc2Begin_aarch64.inc
+  s_328ec6f81eb027::t_539d82f485f0d8 1-11
+CryptoLib/src/Include/Simd/Common/ClpSimdProc5Begin_aarch64.inc
+  s_328ec6f81eb027::t_340dfd8bc1ed1d 1-13
+CryptoLib/src/Include/Simd/Common/ClpSimdProc1Begin_aarch64.inc
+  s_328ec6f81eb027::t_466a390071d675 1-11
+CryptoLib/src/Interfaces/Crypto/Engines/ClpIAesEngineArm.pas
+  s_328ec6f81eb027::t_c3f5d5eb49728b 1-57
+CryptoLib.Tests/src/Crypto/AesHardwareEngineTests.pas
+  s_328ec6f81eb027::t_2585b7a35f6bb4 40-42,111,125,572,601,612,618
+  s_328ec6f81eb027::t_3c8b630325f44d 112-114,122-124
+  s_328ec6f81eb027::t_7cc3c31814ba7a 573-575,598-600
+  s_328ec6f81eb027::t_94750cee202217 602
+  s_328ec6f81eb027::t_a7427ebdab42de 613-617
+  s_328ec6f81eb027::t_2a9a8a44a4aa4b 115-121,576-597
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesCryptoExtCbcKernel.pas
+  s_328ec6f81eb027::t_f2b960c7d40cc7 1-231
+CryptoLib/src/Include/Simd/Common/ClpSimdProc6Begin_aarch64.inc
+  s_328ec6f81eb027::t_b0bfe01aa342a6 1-13
+CryptoLib/src/Crypto/Engines/ClpAesEngineArm.pas
+  s_328ec6f81eb027::t_774956b256bf3d 1-777
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_328ec6f81eb027::t_eddfa929380c17 34-35,721,729-730
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_328ec6f81eb027::t_c4f0fb3a3b6680 15-16,700,708-709
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_328ec6f81eb027::t_84fa3106e5a877 358-359,1043,1051-1052
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCbcKernel.pas
+  s_328ec6f81eb027::t_0c82a22ab8fae8 38
+CryptoLib/src/Include/Simd/Aes/AesNiCipher_i386.inc
+  s_328ec6f81eb027::t_2c893c2b0e2e3b 6-8,19
+CryptoLib/src/Include/Simd/Aes/AesNiCipher_x86_64.inc
+  s_328ec6f81eb027::t_45f5f237edf90e 6-8,22
+CryptoLib/src/Include/Simd/Aes/Cbc/AesCryptoExtCbcDecryptWide_aarch64.inc
+  s_328ec6f81eb027::t_a44846e13b6efb 1-913
+CryptoLib/src/Include/Simd/Aes/Cbc/AesCryptoExtCbcEncryptSerial_aarch64.inc
+  s_328ec6f81eb027::t_018b7762fe4a29 1-177
+CryptoLib/src/Include/Simd/Aes/Ctr/AesCryptoExtCtrEight_aarch64.inc
+  s_328ec6f81eb027::t_92809468aa6dc3 1-858
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_863773189f1f4f::t_019b8c526d2a37 34-35,721,729-730
+CryptoLib.Tests/src/Crypto/CbcBulkParityTests.pas
+  s_328ec6f81eb027::t_90c3fbed77cf9e 43-45,74-76,90-96,211-219
+CryptoLib.Tests/src/Crypto/EcbBulkParityTests.pas
+  s_328ec6f81eb027::t_82e5ecdc3e6757 42-44,70-72,86-92,195-203
+CryptoLib.Tests/src/Crypto/SicBulkParityTests.pas
+  s_328ec6f81eb027::t_4cd427f4e11e26 42-44,79-82,101-107,222-237
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelDefaults.pas
+  s_328ec6f81eb027::t_f29e6d1981522a 39-40
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_328ec6f81eb027::t_22f22e85868e81 43-44,702,710-711
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_328ec6f81eb027::t_2d9ae3b834656f 34,3224-3243
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_328ec6f81eb027::t_126116601e8bcb 221-246,260-262
+CryptoLib/src/Simd/Facade/ClpAesSimd.pas
+  s_328ec6f81eb027::t_4cebc267cfa984 27-28,36-37,63-64,79-84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "88c11bd8ad18bf2b6c591cb6a256bb92e3d6aa41",
+  "prompts": {},
+  "sessions": {
+    "s_328ec6f81eb027": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65474ab1-61e1-42dc-9e54-d32d6b513c77",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_863773189f1f4f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "49a3ae31-64c9-49ac-b131-686b774b3cd3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
