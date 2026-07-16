@@ -1,0 +1,32 @@
+CryptoLib.Tests/src/Crypto/SicBulkParityTests.pas
+  s_e5fb138dc4caab::t_c0287ddc5e31c0 65,67-69,77
+  s_e5fb138dc4caab::t_268787ceffe656 66,70,74
+  s_e5fb138dc4caab::t_c9c01c112c2122 199-205,208-276
+CryptoLib/src/Include/Simd/Aes/Ctr/AesNiCtrEight_i386.inc
+  s_e5fb138dc4caab::t_b4ce544f7aac75 13-20,26-28,31-38,44-50,60-63,66-83,85-88,90-93,95-98,100-103,105-108,110-113,115-117,141-144,155-158,169-172,183-186,197-200,211-214,225-228,239-241
+  s_e5fb138dc4caab::t_78da367c7e08ed 118,131-132,242,355,370-372
+CryptoLib/src/Include/Simd/Aes/Ctr/AesNiCtrEight_x86_64.inc
+  s_e5fb138dc4caab::t_6a60d7bcd1221c 11,15-21,27,30-37,42-47,59-70,72-116,128,139-143,154-158,169-173,184-188,199-203,214-218,229-233,244-248
+  s_e5fb138dc4caab::t_d0665125f57d46 129,348,363-367
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiCtrKernel.pas
+  s_e5fb138dc4caab::t_b78c9207d5588d 77-81
+  s_e5fb138dc4caab::t_316c8ce2450b41 91-93,151-168,174-179,183-235
+CryptoLib/src/Crypto/Modes/ClpSicBlockCipher.pas
+  s_e5fb138dc4caab::t_f24af87a7c1d98 242-244,246,332-334,336
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d09e3b73d9eb0f34e641fa770efb0f268b356146",
+  "prompts": {},
+  "sessions": {
+    "s_e5fb138dc4caab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f562a6e-7cea-4ac6-befd-c16ce37a44f7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
