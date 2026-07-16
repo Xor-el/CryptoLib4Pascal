@@ -62,11 +62,19 @@ type
   strict private
     procedure RunParityForEngine(AEngineFactory: TBlockCipherFactory;
       AKeyLen, AIvLen, ABlockSize: Int32; const ALabel: String);
+    // Engine-agnostic: any bulk/kernel provider must produce
+    // per-block-identical output across counter wrap boundaries.
+    procedure RunWrapCaseForEngine(AEngineFactory: TBlockCipherFactory;
+      const AIvHex: String; ABlockCount: Int32; const ALabel: String);
+    procedure RunWrapCasesForEngine(AEngineFactory: TBlockCipherFactory;
+      const ALabel: String);
   published
 {$IFDEF CRYPTOLIB_X86_SIMD}
     procedure TestAesX86SicBulkParity;
+    procedure TestAesX86SicCounterWrapParity;
 {$ENDIF CRYPTOLIB_X86_SIMD}
     procedure TestAesScalarSicBulkParity;
+    procedure TestAesScalarSicCounterWrapParity;
     procedure TestBlowfishSicBulkParity;
   end;
 
@@ -188,7 +196,83 @@ begin
   // 16-byte block, 16-byte key, 12-byte IV (leaves a 4-byte counter suffix).
   RunParityForEngine(@CreateAesX86Engine, 16, 12, 16, 'AES-NI (TAesEngineX86)');
 end;
+
+procedure TTestSicBulkParity.TestAesX86SicCounterWrapParity;
+begin
+  if not TAesEngineX86.IsSupported then
+    Exit;
+  RunWrapCasesForEngine(@CreateAesX86Engine, 'AES-NI (TAesEngineX86)');
+end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
+
+procedure TTestSicBulkParity.RunWrapCaseForEngine(
+  AEngineFactory: TBlockCipherFactory; const AIvHex: String;
+  ABlockCount: Int32; const ALabel: String);
+var
+  LRnd: ISecureRandom;
+  LKey, LIV, LPlain, LOutRef, LOutBulk: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: IParametersWithIV;
+  LRefSic, LBulkSic: ISicBlockCipher;
+  LBulkMode: IBulkBlockCipherMode;
+  LOff, LTotalBytes: Int32;
+begin
+  LRnd := TSecureRandom.Create();
+  System.SetLength(LKey, 16);
+  LRnd.NextBytes(LKey);
+  LIV := DecodeHex(AIvHex);
+  LTotalBytes := ABlockCount * 16;
+  System.SetLength(LPlain, LTotalBytes);
+  LRnd.NextBytes(LPlain);
+  System.SetLength(LOutRef, LTotalBytes);
+  System.SetLength(LOutBulk, LTotalBytes);
+
+  LKeyParam := TKeyParameter.Create(LKey) as IKeyParameter;
+  LParams := TParametersWithIV.Create(LKeyParam, LIV) as IParametersWithIV;
+
+  // Reference: per-block ProcessBlock loop (scalar big-endian counter carry).
+  LRefSic := TSicBlockCipher.Create(AEngineFactory()) as ISicBlockCipher;
+  LRefSic.Init(True, LParams);
+  LOff := 0;
+  while LOff < LTotalBytes do
+  begin
+    LRefSic.ProcessBlock(LPlain, LOff, LOutRef, LOff);
+    System.Inc(LOff, 16);
+  end;
+
+  // Bulk: single ProcessBlocks call across the counter boundary.
+  LBulkSic := TSicBlockCipher.Create(AEngineFactory()) as ISicBlockCipher;
+  LBulkSic.Init(True, LParams);
+  if not Supports(LBulkSic, IBulkBlockCipherMode, LBulkMode) then
+    Fail(Format('%s wrap case: TSicBlockCipher does not expose IBulkBlockCipherMode',
+      [ALabel]));
+  LBulkMode.ProcessBlocks(LPlain, 0, ABlockCount, LOutBulk, 0);
+
+  if not AreEqual(LOutRef, LOutBulk) then
+    Fail(Format('%s SIC counter-wrap parity mismatch (iv=%s, %d blocks)',
+      [ALabel, AIvHex, ABlockCount]));
+end;
+
+procedure TTestSicBulkParity.RunWrapCasesForEngine(
+  AEngineFactory: TBlockCipherFactory; const ALabel: String);
+begin
+  // Full 16-byte IVs landing the low-dword 2^32 boundary at different points
+  // within one bulk call. Accelerated kernels that split runs at that boundary
+  // must stay per-block-identical; the scalar bulk path must too.
+  // Boundary exactly 8 blocks in: batch-aligned split + upper-bytes carry.
+  RunWrapCaseForEngine(AEngineFactory, '000102030405060708090A0BFFFFFFF8', 24, ALabel);
+  // Boundary mid-batch: crossing handled block-at-a-time.
+  RunWrapCaseForEngine(AEngineFactory, '000102030405060708090A0BFFFFFFFE', 24, ALabel);
+  // Carry cascade through several upper counter bytes.
+  RunWrapCaseForEngine(AEngineFactory, '000102030405FFFFFFFFFFFFFFFFFFFC', 24, ALabel);
+  // Full 128-bit wrap: counter returns to zero mid-run.
+  RunWrapCaseForEngine(AEngineFactory, 'FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE', 24, ALabel);
+end;
+
+procedure TTestSicBulkParity.TestAesScalarSicCounterWrapParity;
+begin
+  RunWrapCasesForEngine(@CreateAesScalarEngine, 'AES scalar (TAesEngine)');
+end;
 
 procedure TTestSicBulkParity.TestAesScalarSicBulkParity;
 begin
