@@ -1,6 +1,6 @@
 // CCM fused AES-NI CTR+CBC-MAC kernel (x86-64).
 // -------------------------------------------------------------------
-// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01.
+// Technique: Shay Gueron, "Intel AES New Instructions" whitepaper.
 // Inspired by OpenSSL aesni_ccm64_{encrypt,decrypt}_blocks
 // (crypto/aes/asm/aesni-x86_64.pl, Andy Polyakov / @dot-asm).
 //

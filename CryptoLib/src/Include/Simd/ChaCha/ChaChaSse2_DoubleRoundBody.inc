@@ -1,6 +1,14 @@
-// One ChaCha double round (2 column rounds + 3 row shuffles), SSE2. Shared IA-32 / x86-64: XMM ARX only — no I/O xor here.
-// ChaCha20 parent stores keystream to AOut; ChaCha7539 parent xors in/out (fused I/O) after the round loop.
-// Include after the loop label; parent must emit: sub <roundsReg>, 2 / jg <loopLabel>.
+// One ChaCha double round, shared SSE2 body (IA-32 / x86-64).
+// -------------------------------------------------------------------
+// 2 column rounds + 3 row shuffles: XMM ARX only - no I/O xor here.
+// ChaCha20 parent stores keystream to AOut; ChaCha7539 parent xors in/out
+// (fused I/O) after the round loop.
+//
+// Include after the loop label; parent must emit: sub <roundsReg>, 2 /
+// jg <loopLabel>.
+//
+// Reference: D.J. Bernstein, "ChaCha, a variant of Salsa20" - the
+// quarter-round arithmetic that this body implements.
   paddd   xmm0, xmm1
   pxor    xmm3, xmm0
   movdqa  xmm4, xmm3

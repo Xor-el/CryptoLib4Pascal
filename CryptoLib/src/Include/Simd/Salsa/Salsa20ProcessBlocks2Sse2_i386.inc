@@ -1,8 +1,17 @@
-// Salsa20 128B, pure SSE2 i386: two 64B blocks, fused I/O (xor). Diagonal transpose via
-// scalar gather/scatter (no pblendw); see Salsa20BlockSse2_i386.inc.
-// After ClpSimdProc4Begin_i386: ebx=ARounds, esi=AState, edi=AIn, eax=AOut.
-// Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
-// edx: saved ARounds. push eax/pop eax: gather clobbers eax; xor needs AOut in eax.
+// Salsa20 128B (two 64B blocks), fused I/O, pure SSE2 (i386).
+// -------------------------------------------------------------------
+// Diagonal transpose via scalar gather/scatter (no pblendw); see
+// Salsa20BlockSse2_i386.inc. Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
+//
+// On entry (after ClpSimdProc4Begin_i386.inc):
+//   ebx = ARounds, esi = AState, edi = AIn, eax = AOut.
+//
+// edx: saved ARounds. push eax/pop eax: gather clobbers eax; xor needs
+// AOut in eax.
+//
+// Reference: D.J. Bernstein's Salsa20 SSE2 reference implementation
+// (cr.yp.to/salsa20/) - the diagonal-extraction layout that this kernel's
+// gather/scatter reproduces.
   mov     edx, ebx
   push    eax
   sub     esp, 512

@@ -1,13 +1,19 @@
 // SSE2 + PCLMULQDQ GHASH field multiply, partial carryless product (x86-64).
+// -------------------------------------------------------------------
 // Produces the 256-bit Karatsuba partial product (Z0, Z1, Z2) for two GHASH
-// field elements before degree reduction.
-// After ClpSimdProc3Begin_x86_64.inc: rcx = @X (TFieldElement), rdx = @Y,
-// r8 = @TGcmPartial128 output.
-// X.N0, X.N1 and Y.N0, Y.N1 are UInt64 GHASH field limbs (TFieldElement).
-// Pack each limb into xmm as high qword then low (movq + punpcklqdq);
-// little-endian 128-bit layout.
+// field elements before degree reduction. X.N0, X.N1 and Y.N0, Y.N1 are
+// UInt64 GHASH field limbs (TFieldElement); each limb is packed into xmm as
+// high qword then low (movq + punpcklqdq), little-endian 128-bit layout.
+//
+// On entry (after ClpSimdProc3Begin_x86_64.inc):
+//   rcx = @X (TFieldElement), rdx = @Y, r8 = @TGcmPartial128 output.
+//
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
+// Reference: Shay Gueron / Michael E. Kounavis, "Intel(R) Carry-Less
+// Multiplication Instruction and its Usage for Computing the GCM Mode"
+// (white paper) - the 3-multiply carry-less Karatsuba split that this
+// kernel implements.
   movq      xmm0, qword ptr [rcx + 8]
   movq      xmm4, qword ptr [rcx]
   punpcklqdq xmm0, xmm4

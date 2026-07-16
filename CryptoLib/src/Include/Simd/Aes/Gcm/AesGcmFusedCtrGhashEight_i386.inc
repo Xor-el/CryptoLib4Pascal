@@ -1,6 +1,6 @@
 // Fused AES-NI CTR keystream + 8-way GHASH kernel (i386).
 // -------------------------------------------------------------------
-// Technique: Shay Gueron, "Intel AES New Instructions" Rev 3.01 - AES
+// Technique: Shay Gueron, "Intel AES New Instructions" whitepaper - AES
 // and PCLMULQDQ instructions are interleaved so the AES port and the
 // carry-less-multiply port operate in parallel, hiding GHASH latency
 // inside the AES critical path.

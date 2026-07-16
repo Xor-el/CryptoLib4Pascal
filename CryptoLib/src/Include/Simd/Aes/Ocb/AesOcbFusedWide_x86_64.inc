@@ -32,6 +32,11 @@
 //
 // AES-NI instructions and forms touching xmm8..xmm15 are db-encoded for
 // broad assembler compatibility.
+//
+// Reference: the round-interleaved ladder structure was informed by
+// OpenSSL's aesni_ocb_encrypt/aesni_ocb_decrypt (crypto/aes/asm/
+// aesni-x86_64.pl, Andy Polyakov) - the encoding, register allocation
+// and ping-pong bank staging here are original.
 // -------------------------------------------------------------------
 
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}

@@ -1,10 +1,17 @@
 // SSE2 + PCLMULQDQ Karatsuba-style carryless multiply without reduction (i386).
+// -------------------------------------------------------------------
 // MultiplyExt: Z0, Z1, Z2 only (no Z1 merge / reduction). Operands are 16-byte
 // limbs, LE UInt64 pair each.
-// After ClpSimdProc3Begin_i386.inc: ebx = PX, esi = PY, edi = POut
-// (48 bytes: Z0, Z1, Z2).
+//
+// On entry (after ClpSimdProc3Begin_i386.inc):
+//   ebx = PX, esi = PY, edi = POut (48 bytes: Z0, Z1, Z2).
+//
 // PCLMULQDQ instructions are db-encoded for broad assembler compatibility.
 //
+// Reference: Shay Gueron / Michael E. Kounavis, "Intel(R) Carry-Less
+// Multiplication Instruction and its Usage for Computing the GCM Mode"
+// (white paper) - the 3-multiply carry-less Karatsuba split that this
+// kernel implements.
   movdqu    xmm0, [ebx]
   movdqu    xmm1, [esi]
 

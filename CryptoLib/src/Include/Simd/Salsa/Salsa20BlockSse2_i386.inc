@@ -1,6 +1,16 @@
-// Salsa20 block, pure SSE2 i386. Diagonal transpose via scalar gather/scatter (no pblendw).
-// After ClpSimdProc3Begin_i386.inc: ebx = ARounds, esi = AIn, edi = AOut.
-// Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc. End with: add esp, 512; pop edi; pop esi; pop ebx
+// Salsa20 one-block (16*UInt32) core, pure SSE2 (i386).
+// -------------------------------------------------------------------
+// Diagonal transpose via scalar gather/scatter (no pblendw).
+//
+// On entry (after ClpSimdProc3Begin_i386.inc):
+//   ebx = ARounds, esi = AIn, edi = AOut.
+//
+// Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc. End with: add esp, 512;
+// pop edi; pop esi; pop ebx.
+//
+// Reference: D.J. Bernstein's Salsa20 SSE2 reference implementation
+// (cr.yp.to/salsa20/) - the diagonal-extraction layout that this kernel's
+// gather/scatter reproduces (see Salsa20BlockSse2_x86_64.inc).
   sub     esp, 512
 { -- diagonal gather: b0..b3 into [esp+0..63] -- }
   mov     eax, [esi+0]
