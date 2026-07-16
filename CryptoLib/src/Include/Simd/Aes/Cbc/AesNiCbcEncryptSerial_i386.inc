@@ -7,8 +7,9 @@
 // in xmm1 across the whole run -- no per-block store/reload, no XOR helper call,
 // no per-block dispatch/validation.
 //
-// The AES rounds reuse the shared 1-wide chain (AesNiOneRoundsOnly_i386.inc),
-// which consumes round keys as [edi + K] memory operands and touches only xmm0.
+// The AES rounds reuse the shared 1-wide chain (AesNiCipher_i386.inc under
+// CRYPTOLIB_AESNI_ROUNDS_ONLY), which consumes round keys as [edi + K] memory
+// operands and touches only xmm0.
 // i386 has only xmm0..7 (all volatile); the chain uses xmm1. ebx (pushed by the
 // prologue), esi and edi are callee-saved and restored before return.
 //
@@ -39,7 +40,11 @@
 @@CbcEncryptSerialLoopI386:
   movdqu    xmm0, [esi]                           // P_i
   db $66, $0F, $EF, $C1                           // pxor xmm0, xmm1  (P_i xor chain)
-{$I ..\..\..\Include\Simd\Aes\AesNiOneRoundsOnly_i386.inc} // xmm0 = E_K(xmm0)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_ONE}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_i386.inc}        // xmm0 = E_K(xmm0)
+{$UNDEF CRYPTOLIB_AESNI_ONE}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    [edx], xmm0                           // C_i
   db $66, $0F, $6F, $C8                           // movdqa xmm1, xmm0  (chain = C_i)
   add       esi, 16

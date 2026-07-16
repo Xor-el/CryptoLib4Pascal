@@ -55,8 +55,8 @@ type
   strict private
   type
     TAesX86Mode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);
-    TAesNiCipherProc = procedure(State, Keys: PByte);
-    TAesNiCipherInOutProc = procedure(RIn, ROut, Keys: PByte);
+    // RIn = ROut (in-place) or fully disjoint; partial overlap unsupported.
+    TAesNiCipherProc = procedure(RIn, ROut, Keys: PByte);
   strict private
     FMode: TAesX86Mode;
     FNRounds: Int32;
@@ -65,9 +65,6 @@ type
     FAesNiCipherOne: TAesNiCipherProc;
     FAesNiCipherFour: TAesNiCipherProc;
     FAesNiCipherEight: TAesNiCipherProc;
-    FAesNiCipherOneInOut: TAesNiCipherInOutProc;
-    FAesNiCipherFourInOut: TAesNiCipherInOutProc;
-    FAesNiCipherEightInOut: TAesNiCipherInOutProc;
     procedure FreeAlignedKeys;
     procedure AllocAlignedKeys(AKeyBytes: Int32);
     procedure CreateRoundKeys(AForEncryption: Boolean; const AKey: TCryptoLibByteArray);
@@ -148,11 +145,11 @@ procedure AesNiExpandRoundKeys128(Key, KeysOut: PByte);
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
 end;
@@ -161,11 +158,11 @@ procedure AesNiExpandRoundKeys192(Key, KeysOut: PByte);
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
 end;
@@ -174,564 +171,314 @@ procedure AesNiExpandRoundKeys256(Key, KeysOut: PByte);
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiExpandRoundKeys_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
 end;
 
 procedure AesNiPrepareDecryptRoundKeys(Keys: PByte; NRounds: Int32);
+{$DEFINE CRYPTOLIB_AESNI_KEYSCHEDULE_INVERT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiPrepareDecryptRoundKeys_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiPrepareDecryptRoundKeys_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiKeySchedule_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_AESNI_KEYSCHEDULE_INVERT}
 end;
 
-procedure AesNiOneEnc128(State, Keys: PByte);
+procedure AesNiOneEnc128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiOneEnc192(State, Keys: PByte);
+procedure AesNiOneEnc192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiOneEnc256(State, Keys: PByte);
+procedure AesNiOneEnc256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiOneDec128(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiOneDec192(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiOneDec256(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiFourEnc128(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiFourEnc192(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiFourEnc256(State, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiFourDec128(State, Keys: PByte);
+procedure AesNiOneDec128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiFourDec192(State, Keys: PByte);
+procedure AesNiOneDec192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiFourDec256(State, Keys: PByte);
+procedure AesNiOneDec256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_ONE}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_ONE}
 end;
 
-procedure AesNiEightEnc128(State, Keys: PByte);
+procedure AesNiFourEnc128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiEightEnc192(State, Keys: PByte);
+procedure AesNiFourEnc192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiEightEnc256(State, Keys: PByte);
+procedure AesNiFourEnc256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiEightDec128(State, Keys: PByte);
+procedure AesNiFourDec128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiEightDec192(State, Keys: PByte);
+procedure AesNiFourDec192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiEightDec256(State, Keys: PByte);
+procedure AesNiFourDec256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
 end;
 
-procedure AesNiOneEnc128InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightEnc128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
-procedure AesNiOneEnc192InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightEnc192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
-procedure AesNiOneEnc256InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightEnc256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
-procedure AesNiOneDec128InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightDec128(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
-procedure AesNiOneDec192InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightDec192(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
-procedure AesNiOneDec256InOut(RIn, ROut, Keys: PByte);
+procedure AesNiEightDec256(RIn, ROut, Keys: PByte);
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
 {$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
 {$DEFINE CRYPTOLIB_AESNI_DECRYPT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_x86_64.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiOneCipher_i386.inc}
+{$I ..\..\Include\Simd\Aes\AesNiCipher_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
 {$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiFourEnc128InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiFourEnc192InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiFourEnc256InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiFourDec128InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiFourDec192InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiFourDec256InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiFourCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiEightEnc128InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiEightEnc192InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiEightEnc256InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
-end;
-
-procedure AesNiEightDec128InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
-end;
-
-procedure AesNiEightDec192InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
-end;
-
-procedure AesNiEightDec256InOut(RIn, ROut, Keys: PByte);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$DEFINE CRYPTOLIB_AESNI_INOUT}
-{$DEFINE CRYPTOLIB_AESNI_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Aes\AesNiEightCipher_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_INOUT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
 end;
 
 { TAesEngineX86 }
@@ -757,9 +504,6 @@ begin
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
   FAesNiCipherEight := nil;
-  FAesNiCipherOneInOut := nil;
-  FAesNiCipherFourInOut := nil;
-  FAesNiCipherEightInOut := nil;
 end;
 
 destructor TAesEngineX86.Destroy();
@@ -794,9 +538,6 @@ begin
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
   FAesNiCipherEight := nil;
-  FAesNiCipherOneInOut := nil;
-  FAesNiCipherFourInOut := nil;
-  FAesNiCipherEightInOut := nil;
 end;
 
 procedure TAesEngineX86.AllocAlignedKeys(AKeyBytes: Int32);
@@ -883,64 +624,43 @@ begin
   FAesNiCipherOne := nil;
   FAesNiCipherFour := nil;
   FAesNiCipherEight := nil;
-  FAesNiCipherOneInOut := nil;
-  FAesNiCipherFourInOut := nil;
-  FAesNiCipherEightInOut := nil;
 
   case FMode of
     TAesX86Mode.Enc128:
       begin
         FAesNiCipherOne := @AesNiOneEnc128;
         FAesNiCipherFour := @AesNiFourEnc128;
-        FAesNiCipherOneInOut := @AesNiOneEnc128InOut;
-        FAesNiCipherFourInOut := @AesNiFourEnc128InOut;
         FAesNiCipherEight := @AesNiEightEnc128;
-        FAesNiCipherEightInOut := @AesNiEightEnc128InOut;
       end;
     TAesX86Mode.Enc192:
       begin
         FAesNiCipherOne := @AesNiOneEnc192;
         FAesNiCipherFour := @AesNiFourEnc192;
-        FAesNiCipherOneInOut := @AesNiOneEnc192InOut;
-        FAesNiCipherFourInOut := @AesNiFourEnc192InOut;
         FAesNiCipherEight := @AesNiEightEnc192;
-        FAesNiCipherEightInOut := @AesNiEightEnc192InOut;
       end;
     TAesX86Mode.Enc256:
       begin
         FAesNiCipherOne := @AesNiOneEnc256;
         FAesNiCipherFour := @AesNiFourEnc256;
-        FAesNiCipherOneInOut := @AesNiOneEnc256InOut;
-        FAesNiCipherFourInOut := @AesNiFourEnc256InOut;
         FAesNiCipherEight := @AesNiEightEnc256;
-        FAesNiCipherEightInOut := @AesNiEightEnc256InOut;
       end;
     TAesX86Mode.Dec128:
       begin
         FAesNiCipherOne := @AesNiOneDec128;
         FAesNiCipherFour := @AesNiFourDec128;
-        FAesNiCipherOneInOut := @AesNiOneDec128InOut;
-        FAesNiCipherFourInOut := @AesNiFourDec128InOut;
         FAesNiCipherEight := @AesNiEightDec128;
-        FAesNiCipherEightInOut := @AesNiEightDec128InOut;
       end;
     TAesX86Mode.Dec192:
       begin
         FAesNiCipherOne := @AesNiOneDec192;
         FAesNiCipherFour := @AesNiFourDec192;
-        FAesNiCipherOneInOut := @AesNiOneDec192InOut;
-        FAesNiCipherFourInOut := @AesNiFourDec192InOut;
         FAesNiCipherEight := @AesNiEightDec192;
-        FAesNiCipherEightInOut := @AesNiEightDec192InOut;
       end;
     TAesX86Mode.Dec256:
       begin
         FAesNiCipherOne := @AesNiOneDec256;
         FAesNiCipherFour := @AesNiFourDec256;
-        FAesNiCipherOneInOut := @AesNiOneDec256InOut;
-        FAesNiCipherFourInOut := @AesNiFourDec256InOut;
         FAesNiCipherEight := @AesNiEightDec256;
-        FAesNiCipherEightInOut := @AesNiEightDec256InOut;
       end;
   else
     // stay nil
@@ -1027,26 +747,18 @@ begin
   if (AInput = nil) or (AOutput = nil) then
     raise EArgumentCryptoLibException.CreateRes(@SNilPointerBuffer);
 
-  if not Assigned(FAesNiCipherOne) or not Assigned(FAesNiCipherOneInOut) then
+  if not Assigned(FAesNiCipherOne) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SAesEngineX86NotInitialised);
 
-  if AInput = AOutput then
+  if ((AInput <> AOutput) and (AOutput >= AInput) and (AOutput < AInput + 16)) or
+    ((AInput > AOutput) and (AInput < AOutput + 16)) then
   begin
-    FAesNiCipherOne(AOutput, FKeys);
-    Result := 16;
-    Exit;
-  end;
-
-  if ((AOutput >= AInput) and (AOutput < AInput + 16)) or
-    ((AInput >= AOutput) and (AInput < AOutput + 16)) then
-  begin
-    System.Move(AInput^, LBuf[0], 16);
-    FAesNiCipherOne(@LBuf[0], FKeys);
+    FAesNiCipherOne(AInput, @LBuf[0], FKeys);
     System.Move(LBuf[0], AOutput^, 16);
     FillChar(LBuf, SizeOf(LBuf), 0);
   end
   else
-    FAesNiCipherOneInOut(AInput, AOutput, FKeys);
+    FAesNiCipherOne(AInput, AOutput, FKeys);
   Result := 16;
 end;
 
@@ -1060,19 +772,13 @@ end;
 
 function TAesEngineX86.ProcessFourBlocksFast(AInput, AOutput: PByte): Int32;
 begin
-  if AInput = AOutput then
-    FAesNiCipherFour(AOutput, FKeys)
-  else
-    FAesNiCipherFourInOut(AInput, AOutput, FKeys);
+  FAesNiCipherFour(AInput, AOutput, FKeys);
   Result := 64;
 end;
 
 function TAesEngineX86.ProcessEightBlocksFast(AInput, AOutput: PByte): Int32;
 begin
-  if AInput = AOutput then
-    FAesNiCipherEight(AOutput, FKeys)
-  else
-    FAesNiCipherEightInOut(AInput, AOutput, FKeys);
+  FAesNiCipherEight(AInput, AOutput, FKeys);
   Result := 128;
 end;
 

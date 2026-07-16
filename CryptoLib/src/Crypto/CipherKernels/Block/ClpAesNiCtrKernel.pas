@@ -34,8 +34,8 @@ type
   /// <summary>
   ///   AES-NI implementation of ICtrKernel: the fused counter-mode
   ///   keystream + XOR body used by TSicBlockCipher's bulk path. The MAC-free
-  ///   base of the fused-kernel family; reuses the plain 8-wide AES round chain
-  ///   (AesNiEightRoundsOnly) since CTR has no extra per-block state.
+  ///   base of the fused-kernel family; runs a plain 8-wide AES round chain
+  ///   since CTR has no extra per-block state.
   ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386 (CRYPTOLIB_I386_ASM);
   ///   both arms gated collectively by CRYPTOLIB_X86_SIMD. When unavailable the
   ///   factory returns nil and TSicBlockCipher keeps its existing bulk path.

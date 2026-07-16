@@ -35,7 +35,7 @@ type
   ///   AES-NI implementation of ICbcKernel, applied over a whole run in one
   ///   call (kernel bodies in Include\Simd\Aes\Cbc). Encrypt runs the serial
   ///   chain C_i = E_K(P_i xor C_{i-1}) 1-wide with the chaining value held in
-  ///   a register (reusing AesNiOneRoundsOnly). Decrypt runs P_i = D_K(C_i) xor
+  ///   a register (reusing the shared rounds-only AES chain). Decrypt runs P_i = D_K(C_i) xor
   ///   C_{i-1}: the inverse transforms are independent, so it decrypts 8-wide
   ///   (x86_64) / 4-wide (i386) and folds the chain XOR into that pass, turning
   ///   the mode's decrypt-then-XOR two passes into one. Direction is fixed at

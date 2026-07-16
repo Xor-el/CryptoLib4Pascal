@@ -78,47 +78,55 @@ type
   PGcmFieldRaw = ^TGcmFieldRaw;
 
 procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
+{$DEFINE CRYPTOLIB_GCMFIELD_PARTIAL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmPclmulPartial_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmPclmulPartial_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_GCMFIELD_PARTIAL}
 end;
 
 procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
+{$DEFINE CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmPclmulMultiplyExt_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
 end;
 
 procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2, POut: Pointer);
+{$DEFINE CRYPTOLIB_GCMFIELD_REDUCE3}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmReduce3FoldSse2_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_GCMFIELD_REDUCE3}
 end;
 
 procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
+{$DEFINE CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmXorMultiplyExtLimbs48Sse2_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
 end;
 
 procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer; ABatchCount: NativeInt);
@@ -155,14 +163,16 @@ const
     $0F, $0E, $0D, $0C, $0B, $0A, $09, $08, $07, $06, $05, $04, $03, $02, $01, $00);
 
 procedure GcmBlockReverse128Ssse3(PDst, PSrc, PMask: PByte);
+{$DEFINE CRYPTOLIB_GCMFIELD_BLOCK_REVERSE}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_x86_64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmBlockReverse128Ssse3_i386.inc}
+{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_GCMFIELD_BLOCK_REVERSE}
 end;
 
 // Scalar reduction of the 256-bit carryless product produced by
