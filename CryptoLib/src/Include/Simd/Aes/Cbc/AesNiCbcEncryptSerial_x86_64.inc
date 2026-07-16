@@ -7,8 +7,9 @@
 // in orchestration: the chaining value lives in xmm1 across the whole run -- no
 // per-block store/reload, no XOR helper call, no per-block dispatch/validation.
 //
-// The AES rounds reuse the shared 1-wide chain (AesNiOneRoundsOnly_x86_64.inc),
-// which consumes round keys as [r8 + K] memory operands and touches only xmm0.
+// The AES rounds reuse the shared 1-wide chain (AesNiCipher_x86_64.inc under
+// CRYPTOLIB_AESNI_ROUNDS_ONLY), which consumes round keys as [r8 + K] memory
+// operands and touches only xmm0.
 // Every working register (rcx,rdx,r8,r9,r10,r11,xmm0,xmm1) is volatile on the
 // MS x64 ABI, so this stays a true leaf: no xmm6-15 save, no callee-saved push.
 //
@@ -37,7 +38,11 @@
 @@CbcEncryptSerialLoop:
   movdqu    xmm0, [r11]                           // P_i
   db $66, $0F, $EF, $C1                           // pxor xmm0, xmm1  (P_i xor chain)
-{$I ..\..\..\Include\Simd\Aes\AesNiOneRoundsOnly_x86_64.inc} // xmm0 = E_K(xmm0)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_ONE}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}        // xmm0 = E_K(xmm0)
+{$UNDEF CRYPTOLIB_AESNI_ONE}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   movdqu    [rdx], xmm0                           // C_i
   db $66, $0F, $6F, $C8                           // movdqa xmm1, xmm0  (chain = C_i)
   add       r11, 16

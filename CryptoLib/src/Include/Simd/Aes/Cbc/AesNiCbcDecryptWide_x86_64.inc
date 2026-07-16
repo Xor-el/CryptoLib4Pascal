@@ -4,12 +4,12 @@
 // Fused CBC-decrypt body for TCbcBlockCipher's bulk path:
 //   P_i = D_K(C_i) xor C_{i-1}   (C_{-1} = IV).
 // Unlike CBC encrypt, the D_K(C_i) are mutually independent, so 8 blocks
-// run through one shared 8-wide aesdec chain (AesNiEightRoundsOnly, decrypt
-// variant); the only serial part is the trailing XOR, and every feed is an
-// *input* ciphertext block. Folding that XOR into the decrypt pass turns the
-// mode's decrypt-then-XOR (two passes over memory) into a single pass. A
-// 1-wide tail (AesNiOneRoundsOnly) drains the 1..7 residual blocks, so the
-// kernel accepts any block count >= 1.
+// run through the shared 8-wide aesdec chain (AesNiCipher_x86_64.inc under
+// CRYPTOLIB_AESNI_ROUNDS_ONLY); the only serial part is the trailing XOR, and
+// every feed is an *input* ciphertext block. Folding that XOR into the decrypt
+// pass turns the mode's decrypt-then-XOR (two passes over memory) into a
+// single pass. A 1-wide rounds-only tail drains the 1..7 residual blocks, so
+// the kernel accepts any block count >= 1.
 //
 // In-place safe: within each 8-block group every input read (8 block loads +
 // 7 feedback reloads + the next chain seed) completes before the first output
@@ -27,7 +27,7 @@
 // together with CRYPTOLIB_AESNI_DECRYPT (selects aesdec in the shared chains).
 //
 // XMM: xmm0..xmm7 = 8 data lanes; xmm8 = shared round-key scratch (owned by
-// AesNiEightRoundsOnly); xmm9 = chaining value (persists across groups);
+// the 8-wide rounds-only chain); xmm9 = chaining value (persists across groups);
 // xmm10 = feedback reload scratch. xmm6..xmm10 are nonvolatile on Win64, so
 // the ClpSimdNonVolatile{Save,Restore} frame brackets the body.
 //
@@ -55,7 +55,11 @@
   movdqu    xmm5, [r11 +  80]
   movdqu    xmm6, [r11 +  96]
   movdqu    xmm7, [r11 + 112]
-{$I ..\..\..\Include\Simd\Aes\AesNiEightRoundsOnly_x86_64.inc} // xmm0..7 = D_K(C_i)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_EIGHT}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}          // xmm0..7 = D_K(C_i)
+{$UNDEF CRYPTOLIB_AESNI_EIGHT}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   // feedback: P_i = D_K(C_i) xor C_{i-1}. C_0..C_6 reloaded from the (still
   // intact) input; block 0 uses the running chain. All reads precede stores.
   movdqu    xmm10, [r11 +   0]
@@ -94,7 +98,11 @@
 @@CbcDecTailLoop:
   movdqu    xmm0, [r11]                           // C_i
   db $66, $44, $0F, $6F, $D0                      // movdqa xmm10, xmm0  (save C_i)
-{$I ..\..\..\Include\Simd\Aes\AesNiOneRoundsOnly_x86_64.inc}   // xmm0 = D_K(C_i)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_ONE}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_x86_64.inc}          // xmm0 = D_K(C_i)
+{$UNDEF CRYPTOLIB_AESNI_ONE}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   db $66, $41, $0F, $EF, $C1                      // pxor xmm0, xmm9    (^ chain)
   db $66, $45, $0F, $6F, $CA                      // movdqa xmm9, xmm10 (chain = C_i)
   movdqu    [rdx], xmm0                           // P_i

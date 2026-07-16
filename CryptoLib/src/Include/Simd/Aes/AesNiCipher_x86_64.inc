@@ -1,30 +1,595 @@
-// AES-NI 8-wide round chain, reusable kernel, merged Enc + Dec, merged key sizes (x86-64).
+// AES-NI block-cipher kernel, merged widths 1 / 4 / 8, merged Enc + Dec, merged key sizes (x86-64).
 // -------------------------------------------------------------------
 //
-// Shared 8-wide AES round chain consumed by the merged AesNiEightCipher_x86_64
-// wrapper. The fused AEAD kernels (OCB / GCM / CCM / EAX) carry their
-// own round chains with different register allocations and do NOT
-// include this file.
+// Out-of-place AES over 1, 4 or 8 consecutive 16-byte blocks; the
+// width is selected per include site. In-place callers pass
+// RIn = ROut; partial overlap is unsupported. The fused AEAD kernels
+// (OCB / GCM / CCM / EAX) carry their own round chains with different
+// register allocations and do NOT include this file.
 //
 // Variant selection:
+//   Exactly one of CRYPTOLIB_AESNI_ONE / FOUR / EIGHT selects the width.
 //   CRYPTOLIB_AESNI_DECRYPT  -> aesdec / aesdeclast; else aesenc / aesenclast.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R
 //                              (10 / 12 / 14 rounds).
+//   CRYPTOLIB_AESNI_ROUNDS_ONLY -> bare round chain: no load/store shell,
+//                              no prologue expectations, no epilogue, no
+//                              nested includes. For kernels that keep the
+//                              data lanes in registers (e.g. fused CBC).
 //
-// On entry:
-//   xmm0..xmm7 = 8 data blocks (NOT pre-whitened; K_0 XOR happens in round 0
-//                  inside this file).
-//   r8 = expanded round-key schedule pointer; must match the direction
-//                  (decrypt consumers pass the inverse-MixColumns schedule).
-//   each round key is loaded into xmm8 and broadcast across the lanes.
+// Entry (after ClpSimdProc3Begin_x86_64.inc): rcx = RIn, rdx = ROut,
+// r8 = expanded round-key schedule pointer; must match the direction
+// (decrypt consumers pass the inverse-MixColumns schedule).
+// Rounds-only entry/exit: xmm0..xmm{width-1} = data lanes (NOT
+// pre-whitened; K_0 XOR is round 0 here), r8 = keys, unchanged on exit.
 //
-// On exit:
-//   xmm0..xmm7 = 8 post-AES blocks, ready for caller storeback / XOR.
-//   r8 = unchanged.
-//   Scratch: xmm8 (clobbered: shared round-key broadcast register)
+// Scratch: width 1 none (round keys consumed as memory operands);
+// width 4 xmm4; width 8 xmm8 (round-key broadcast), with callee-saved
+// xmm6..xmm7 preserved via ClpSimdNonVolatileSave/Restore (full shell
+// only; rounds-only consumers own their save frame).
+//
+// Reference: Shay Gueron, "Intel AES New Instructions" whitepaper - the
+// multi-block-interleaved AES-NI technique implemented by the round
+// chains below.
 //
 // AES-NI instructions, plus pxor forms touching extended registers,
 // are db-encoded for broad assembler compatibility.
+{$IFDEF CRYPTOLIB_AESNI_ONE}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  movdqu    xmm0, [rcx]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_DECRYPT}
+
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DF, $80, $A0, $00, $00, $00 // aesdeclast xmm0, [r8+160]
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DE, $80, $A0, $00, $00, $00 // aesdec xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DE, $80, $B0, $00, $00, $00 // aesdec xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DF, $80, $C0, $00, $00, $00 // aesdeclast xmm0, [r8+192]
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DE, $40, $10    // aesdec xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DE, $40, $20    // aesdec xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DE, $40, $30    // aesdec xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DE, $40, $40    // aesdec xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DE, $40, $50    // aesdec xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DE, $40, $60    // aesdec xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DE, $40, $70    // aesdec xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DE, $80, $80, $00, $00, $00 // aesdec xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DE, $80, $90, $00, $00, $00 // aesdec xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DE, $80, $A0, $00, $00, $00 // aesdec xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DE, $80, $B0, $00, $00, $00 // aesdec xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DE, $80, $C0, $00, $00, $00 // aesdec xmm0, [r8+192]
+  db $66, $41, $0F, $38, $DE, $80, $D0, $00, $00, $00 // aesdec xmm0, [r8+208]
+  db $66, $41, $0F, $38, $DF, $80, $E0, $00, $00, $00 // aesdeclast xmm0, [r8+224]
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
+{$ELSE}
+
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DC, $40, $10    // aesenc xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DC, $40, $20    // aesenc xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DC, $40, $30    // aesenc xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DC, $40, $40    // aesenc xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DC, $40, $50    // aesenc xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DC, $40, $60    // aesenc xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DC, $40, $70    // aesenc xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DC, $80, $80, $00, $00, $00 // aesenc xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DC, $80, $90, $00, $00, $00 // aesenc xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DD, $80, $A0, $00, $00, $00 // aesenclast xmm0, [r8+160]
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DC, $40, $10    // aesenc xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DC, $40, $20    // aesenc xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DC, $40, $30    // aesenc xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DC, $40, $40    // aesenc xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DC, $40, $50    // aesenc xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DC, $40, $60    // aesenc xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DC, $40, $70    // aesenc xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DC, $80, $80, $00, $00, $00 // aesenc xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DC, $80, $90, $00, $00, $00 // aesenc xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DC, $80, $A0, $00, $00, $00 // aesenc xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DC, $80, $B0, $00, $00, $00 // aesenc xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DD, $80, $C0, $00, $00, $00 // aesenclast xmm0, [r8+192]
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  db $66, $41, $0F, $EF, $00              // pxor xmm0, [r8+0]
+  db $66, $41, $0F, $38, $DC, $40, $10    // aesenc xmm0, [r8+16]
+  db $66, $41, $0F, $38, $DC, $40, $20    // aesenc xmm0, [r8+32]
+  db $66, $41, $0F, $38, $DC, $40, $30    // aesenc xmm0, [r8+48]
+  db $66, $41, $0F, $38, $DC, $40, $40    // aesenc xmm0, [r8+64]
+  db $66, $41, $0F, $38, $DC, $40, $50    // aesenc xmm0, [r8+80]
+  db $66, $41, $0F, $38, $DC, $40, $60    // aesenc xmm0, [r8+96]
+  db $66, $41, $0F, $38, $DC, $40, $70    // aesenc xmm0, [r8+112]
+  db $66, $41, $0F, $38, $DC, $80, $80, $00, $00, $00 // aesenc xmm0, [r8+128]
+  db $66, $41, $0F, $38, $DC, $80, $90, $00, $00, $00 // aesenc xmm0, [r8+144]
+  db $66, $41, $0F, $38, $DC, $80, $A0, $00, $00, $00 // aesenc xmm0, [r8+160]
+  db $66, $41, $0F, $38, $DC, $80, $B0, $00, $00, $00 // aesenc xmm0, [r8+176]
+  db $66, $41, $0F, $38, $DC, $80, $C0, $00, $00, $00 // aesenc xmm0, [r8+192]
+  db $66, $41, $0F, $38, $DC, $80, $D0, $00, $00, $00 // aesenc xmm0, [r8+208]
+  db $66, $41, $0F, $38, $DD, $80, $E0, $00, $00, $00 // aesenclast xmm0, [r8+224]
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
+{$ENDIF}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  movdqu    [rdx], xmm0
+{$ENDIF}
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_FOUR}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  movdqu    xmm0, [rcx]
+  movdqu    xmm1, [rcx + 16]
+  movdqu    xmm2, [rcx + 32]
+  movdqu    xmm3, [rcx + 48]
+{$ENDIF}
+{$IFDEF CRYPTOLIB_AESNI_DECRYPT}
+
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DF, $C4              // aesdeclast xmm0, xmm4
+  db $66, $0F, $38, $DF, $CC              // aesdeclast xmm1, xmm4
+  db $66, $0F, $38, $DF, $D4              // aesdeclast xmm2, xmm4
+  db $66, $0F, $38, $DF, $DC              // aesdeclast xmm3, xmm4
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 176]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 192]
+  db $66, $0F, $38, $DF, $C4              // aesdeclast xmm0, xmm4
+  db $66, $0F, $38, $DF, $CC              // aesdeclast xmm1, xmm4
+  db $66, $0F, $38, $DF, $D4              // aesdeclast xmm2, xmm4
+  db $66, $0F, $38, $DF, $DC              // aesdeclast xmm3, xmm4
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 176]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 192]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 208]
+  db $66, $0F, $38, $DE, $C4              // aesdec xmm0, xmm4
+  db $66, $0F, $38, $DE, $CC              // aesdec xmm1, xmm4
+  db $66, $0F, $38, $DE, $D4              // aesdec xmm2, xmm4
+  db $66, $0F, $38, $DE, $DC              // aesdec xmm3, xmm4
+  movdqa    xmm4, [r8 + 224]
+  db $66, $0F, $38, $DF, $C4              // aesdeclast xmm0, xmm4
+  db $66, $0F, $38, $DF, $CC              // aesdeclast xmm1, xmm4
+  db $66, $0F, $38, $DF, $D4              // aesdeclast xmm2, xmm4
+  db $66, $0F, $38, $DF, $DC              // aesdeclast xmm3, xmm4
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
+{$ELSE}
+
+{$IFDEF CRYPTOLIB_AESNI_KEY128}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DD, $C4              // aesenclast xmm0, xmm4
+  db $66, $0F, $38, $DD, $CC              // aesenclast xmm1, xmm4
+  db $66, $0F, $38, $DD, $D4              // aesenclast xmm2, xmm4
+  db $66, $0F, $38, $DD, $DC              // aesenclast xmm3, xmm4
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AESNI_KEY192}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 176]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 192]
+  db $66, $0F, $38, $DD, $C4              // aesenclast xmm0, xmm4
+  db $66, $0F, $38, $DD, $CC              // aesenclast xmm1, xmm4
+  db $66, $0F, $38, $DD, $D4              // aesenclast xmm2, xmm4
+  db $66, $0F, $38, $DD, $DC              // aesenclast xmm3, xmm4
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_KEY256}
+  movdqa    xmm4, [r8]
+  db $66, $0F, $EF, $C4                   // pxor xmm0, xmm4
+  db $66, $0F, $EF, $CC                   // pxor xmm1, xmm4
+  db $66, $0F, $EF, $D4                   // pxor xmm2, xmm4
+  db $66, $0F, $EF, $DC                   // pxor xmm3, xmm4
+  movdqa    xmm4, [r8 + 16]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 32]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 48]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 64]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 80]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 96]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 112]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 128]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 144]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 160]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 176]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 192]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 208]
+  db $66, $0F, $38, $DC, $C4              // aesenc xmm0, xmm4
+  db $66, $0F, $38, $DC, $CC              // aesenc xmm1, xmm4
+  db $66, $0F, $38, $DC, $D4              // aesenc xmm2, xmm4
+  db $66, $0F, $38, $DC, $DC              // aesenc xmm3, xmm4
+  movdqa    xmm4, [r8 + 224]
+  db $66, $0F, $38, $DD, $C4              // aesenclast xmm0, xmm4
+  db $66, $0F, $38, $DD, $CC              // aesenclast xmm1, xmm4
+  db $66, $0F, $38, $DD, $D4              // aesenclast xmm2, xmm4
+  db $66, $0F, $38, $DD, $DC              // aesenclast xmm3, xmm4
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_KEY128, CRYPTOLIB_AESNI_KEY192, CRYPTOLIB_AESNI_KEY256 must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
+{$ENDIF}
+
+{$ENDIF}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  movdqu    [rdx], xmm0
+  movdqu    [rdx + 16], xmm1
+  movdqu    [rdx + 32], xmm2
+  movdqu    [rdx + 48], xmm3
+{$ENDIF}
+  {$ELSE}
+    {$IFDEF CRYPTOLIB_AESNI_EIGHT}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
+  movdqu    xmm0, [rcx]
+  movdqu    xmm1, [rcx + 16]
+  movdqu    xmm2, [rcx + 32]
+  movdqu    xmm3, [rcx + 48]
+  movdqu    xmm4, [rcx + 64]
+  movdqu    xmm5, [rcx + 80]
+  movdqu    xmm6, [rcx + 96]
+  movdqu    xmm7, [rcx + 112]
+{$ENDIF}
 {$IFDEF CRYPTOLIB_AESNI_DECRYPT}
 
 {$IFDEF CRYPTOLIB_AESNI_KEY128}
@@ -753,4 +1318,20 @@
   {$ENDIF}
 {$ENDIF}
 
+{$ENDIF}
+{$IFNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
+  movdqu    [rdx], xmm0
+  movdqu    [rdx + 16], xmm1
+  movdqu    [rdx + 32], xmm2
+  movdqu    [rdx + 48], xmm3
+  movdqu    [rdx + 64], xmm4
+  movdqu    [rdx + 80], xmm5
+  movdqu    [rdx + 96], xmm6
+  movdqu    [rdx + 112], xmm7
+{$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
+{$ENDIF}
+    {$ELSE}
+    {$FATAL Exactly one of CRYPTOLIB_AESNI_ONE, CRYPTOLIB_AESNI_FOUR, CRYPTOLIB_AESNI_EIGHT must be defined before including this file}
+    {$ENDIF}
+  {$ENDIF}
 {$ENDIF}

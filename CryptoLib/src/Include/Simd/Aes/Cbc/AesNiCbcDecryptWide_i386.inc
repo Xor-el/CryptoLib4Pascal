@@ -5,12 +5,12 @@
 // C_{i-1} (C_{-1} = IV). The D_K(C_i) are independent, so blocks run through
 // the shared aesdec chain in parallel; the trailing XOR (fed by input
 // ciphertext) folds into the same pass, replacing the mode's decrypt-then-XOR
-// two passes with one. i386 has only xmm0..7 (all volatile) and the 4-wide
-// chain (AesNiFourRoundsOnly_i386) uses xmm4 as its round-key register, so the
-// batch is 4 blocks: xmm0..3 = data, xmm4 = feedback reload scratch (free once
-// the chain returns), xmm5 = chaining value (persists across groups). A 1-wide
-// tail (AesNiOneRoundsOnly_i386) drains 1..3 residual blocks; the kernel
-// accepts any block count >= 1.
+// two passes with one. i386 has only xmm0..7 (all volatile) and the shared
+// 4-wide chain (AesNiCipher_i386.inc under CRYPTOLIB_AESNI_ROUNDS_ONLY) uses
+// xmm4 as its round-key register, so the batch is 4 blocks: xmm0..3 = data,
+// xmm4 = feedback reload scratch (free once the chain returns), xmm5 =
+// chaining value (persists across groups). A 1-wide rounds-only tail drains
+// 1..3 residual blocks; the kernel accepts any block count >= 1.
 //
 // In-place safe: within each 4-block group every input read (4 block loads +
 // 3 feedback reloads + the next chain seed) precedes the first output store,
@@ -47,7 +47,11 @@
   movdqu    xmm1, [esi + 16]
   movdqu    xmm2, [esi + 32]
   movdqu    xmm3, [esi + 48]
-{$I ..\..\..\Include\Simd\Aes\AesNiFourRoundsOnly_i386.inc}    // xmm0..3 = D_K(C_i)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_FOUR}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_i386.inc}            // xmm0..3 = D_K(C_i)
+{$UNDEF CRYPTOLIB_AESNI_FOUR}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   // feedback: P_i = D_K(C_i) xor C_{i-1}. C_0..C_2 reloaded from the (still
   // intact) input; block 0 uses the running chain. All reads precede stores.
   movdqu    xmm4, [esi +  0]
@@ -74,7 +78,11 @@
 @@CbcDecTailLoopI386:
   movdqu    xmm0, [esi]                           // C_i
   db $66, $0F, $6F, $C8                           // movdqa xmm1, xmm0  (save C_i)
-{$I ..\..\..\Include\Simd\Aes\AesNiOneRoundsOnly_i386.inc}     // xmm0 = D_K(C_i)
+{$DEFINE CRYPTOLIB_AESNI_ROUNDS_ONLY}
+{$DEFINE CRYPTOLIB_AESNI_ONE}
+{$I ..\..\..\Include\Simd\Aes\AesNiCipher_i386.inc}            // xmm0 = D_K(C_i)
+{$UNDEF CRYPTOLIB_AESNI_ONE}
+{$UNDEF CRYPTOLIB_AESNI_ROUNDS_ONLY}
   db $66, $0F, $EF, $C5                           // pxor xmm0, xmm5   (^ chain)
   db $66, $0F, $6F, $E9                           // movdqa xmm5, xmm1 (chain = C_i)
   movdqu    [edx], xmm0                           // P_i
