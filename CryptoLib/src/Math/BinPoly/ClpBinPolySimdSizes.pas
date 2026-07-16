@@ -27,7 +27,18 @@ uses
   ClpArrayUtilities;
 
 type
-  TBinPolySimdSize1 = class sealed(TBinPolyMulBase)
+  /// <summary>
+  /// Shared base for the SIMD <c>IBinPolyMul</c> classes: squaring expands via
+  /// one carryless multiply of each limb with itself (a GF(2)[x] square IS the
+  /// bit interleave) instead of the scalar shuffle-based expansion.
+  /// </summary>
+  TBinPolySimdMulBase = class abstract(TBinPolyMulBase)
+  protected
+    procedure ExpandSquare(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+      Att: PUInt64); override;
+  end;
+
+  TBinPolySimdSize1 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -35,7 +46,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize2 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize2 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -43,7 +54,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize3 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize3 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -51,7 +62,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize4 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize4 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -59,7 +70,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize5 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize5 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -67,7 +78,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize6 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize6 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -75,7 +86,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize7 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize7 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -83,7 +94,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize8 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize8 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -91,7 +102,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize9 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize9 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -99,7 +110,7 @@ type
       const AZ: TCryptoLibUInt64Array; AZOff: Int32); override;
   end;
 
-  TBinPolySimdSize10 = class sealed(TBinPolyMulBase)
+  TBinPolySimdSize10 = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -112,19 +123,26 @@ implementation
 uses
   ClpBinPolySimd;
 
+{ TBinPolySimdMulBase }
+
+procedure TBinPolySimdMulBase.ExpandSquare(const AX: TCryptoLibUInt64Array;
+  AXOff: Int32; Att: PUInt64);
+begin
+  TBinPolySimd.ImplSquare(FSize, @AX[AXOff], Att);
+end;
+
 procedure MultiplySmallFixed(ASmallLen: Int32; const AReduce: IBinPolyReduce; ASizeExt: Int32;
   const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32;
   const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
-  Ltt: TCryptoLibUInt64Array;
+  Ltt: array [0 .. 19] of UInt64; // ASizeExt <= 20 for limb counts 1..10
 begin
-  SetLength(Ltt, ASizeExt);
   try
-    TBinPolySimd.ImplMulSmall(ASmallLen, AX, AXOff, AY, AYOff, Ltt, 0);
-    AReduce.Reduce(Ltt, 0, AZ, AZOff);
+    TBinPolySimd.ImplMulSmall(ASmallLen, @AX[AXOff], @AY[AYOff], @Ltt[0]);
+    AReduce.Reduce(@Ltt[0], @AZ[AZOff]);
   finally
-    TArrayUtilities.Fill(Ltt, 0, ASizeExt, 0);
+    FillChar(Ltt, System.SizeOf(Ltt), 0);
   end;
 end;
 

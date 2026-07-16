@@ -50,12 +50,27 @@ type
   /// </para>
   /// </remarks>
   TBinPolyMulBase = class abstract(TInterfacedObject, IBinPolyMul)
+  public const
+    /// <summary>
+    /// Stack-scratch capacity in limbs for extended-product buffers
+    /// (2 * Size); covers every field up to GF(2^2048). Larger custom
+    /// fields fall back to a heap buffer.
+    /// </summary>
+    MaxStackExtLimbs = 64;
   protected
     FN: Int32;
     FSize: Int32;
     FSizeExt: Int32;
     FReduce: IBinPolyReduce;
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
+    /// <summary>
+    /// Expand FSize limbs at AX[AXOff] into the 2*FSize-limb carryless square
+    /// at Att (bits spread to even positions). Default is the scalar
+    /// bit-interleave; SIMD subclasses override with a carryless-multiply
+    /// square.
+    /// </summary>
+    procedure ExpandSquare(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+      Att: PUInt64); virtual;
   public
     function GetN: Int32;
     function GetSize: Int32;
@@ -77,7 +92,7 @@ type
     /// contain no bits at positions above <c>2n - 2</c>. Fully elided in release builds.
     /// </summary>
     class procedure DebugAssertReducePreconditions(AN: Int32;
-      const Att: TCryptoLibUInt64Array; AttOff: Int32); static;
+      Att: PUInt64); static;
     {$ENDIF}
   end;
 
@@ -104,41 +119,65 @@ begin
   Result := FSize;
 end;
 
+procedure TBinPolyMulBase.ExpandSquare(const AX: TCryptoLibUInt64Array; AXOff: Int32;
+  Att: PUInt64);
+begin
+  TInterleave.Expand64To128(AX, AXOff, FSize, Att);
+end;
+
 procedure TBinPolyMulBase.Square(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
-  Ltt: TCryptoLibUInt64Array;
+  LStk: array [0 .. MaxStackExtLimbs - 1] of UInt64;
+  LHeap: TCryptoLibUInt64Array;
+  Ltt: PUInt64;
 begin
-  SetLength(Ltt, FSizeExt);
+  // Scratch on the stack for every real field size; heap only for outsized
+  // custom fields. Wiped either way (the extended square is key-dependent).
+  if FSizeExt <= MaxStackExtLimbs then
+    Ltt := @LStk[0]
+  else
+  begin
+    SetLength(LHeap, FSizeExt);
+    Ltt := @LHeap[0];
+  end;
   try
-    TInterleave.Expand64To128(AX, AXOff, FSize, Ltt, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    ExpandSquare(AX, AXOff, Ltt);
+    FReduce.Reduce(Ltt, @AZ[AZOff]);
   finally
-    TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
+    FillChar(Ltt^, FSizeExt * System.SizeOf(UInt64), 0);
   end;
 end;
 
 procedure TBinPolyMulBase.SquareN(const AX: TCryptoLibUInt64Array; AXOff: Int32; AN: Int32;
   const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
-  Ltt: TCryptoLibUInt64Array;
+  LStk: array [0 .. MaxStackExtLimbs - 1] of UInt64;
+  LHeap: TCryptoLibUInt64Array;
+  Ltt: PUInt64;
   LI: Int32;
 begin
   if AN < 1 then
     raise EArgumentOutOfRangeException.Create('n must be positive');
 
-  SetLength(Ltt, FSizeExt);
+  if FSizeExt <= MaxStackExtLimbs then
+    Ltt := @LStk[0]
+  else
+  begin
+    SetLength(LHeap, FSizeExt);
+    Ltt := @LHeap[0];
+  end;
   try
-    TInterleave.Expand64To128(AX, AXOff, FSize, Ltt, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    ExpandSquare(AX, AXOff, Ltt);
+    FReduce.Reduce(Ltt, @AZ[AZOff]);
 
     for LI := AN - 1 downto 1 do
     begin
-      TInterleave.Expand64To128(AZ, AZOff, FSize, Ltt, 0);
-      FReduce.Reduce(Ltt, 0, AZ, AZOff);
+      ExpandSquare(AZ, AZOff, Ltt);
+      FReduce.Reduce(Ltt, @AZ[AZOff]);
     end;
   finally
-    TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
+    FillChar(Ltt^, FSizeExt * System.SizeOf(UInt64), 0);
   end;
 end;
 
@@ -150,7 +189,7 @@ end;
 
 {$IFDEF DEBUG}
 class procedure TBinPolyMulBase.DebugAssertReducePreconditions(AN: Int32;
-  const Att: TCryptoLibUInt64Array; AttOff: Int32);
+  Att: PUInt64);
 var
   LSizeExt: Int32;
   LSlackBit: Int32;
@@ -161,9 +200,9 @@ begin
   LSizeExt := ((AN + 63) shr 6) shl 1;
   LSlackBit := 2 * AN - 1;
   LSlackWord := LSlackBit shr 6;
-  LSlack := Att[AttOff + LSlackWord] shr (LSlackBit and 63);
+  LSlack := Att[LSlackWord] shr (LSlackBit and 63);
   for LI := LSlackWord + 1 to LSizeExt - 1 do
-    LSlack := LSlack or Att[AttOff + LI];
+    LSlack := LSlack or Att[LI];
   System.Assert(LSlack = 0,
     'IBinPolyReduce.Reduce: tt has bits set above position 2n-2; slack must be zero.');
 end;

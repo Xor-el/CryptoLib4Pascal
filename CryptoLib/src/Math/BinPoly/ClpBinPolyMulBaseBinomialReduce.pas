@@ -46,8 +46,7 @@ type
       FN: Int32;
     public
       constructor Create(AN: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
 
     /// <summary>
@@ -60,8 +59,7 @@ type
       FN: Int32;
     public
       constructor Create(AN: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
   public
     /// <summary>Select a binomial reducer for bit length <paramref name="AN"/>.</summary>
@@ -91,30 +89,38 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBaseBinomialReduce.TUnaligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBaseBinomialReduce.TUnaligned.Reduce(Att: PUInt64; Az: PUInt64);
 var
   LN: Int32;
   LLast: Int32;
   LSize: Int32;
   LExcessBits: Int32;
-  LC: UInt64;
+  LI: Int32;
+  LC, LXi: UInt64;
 begin
   LN := FN;
   {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(LN, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(LN, Att);
   {$ENDIF}
 
   LLast := LN shr 6;
   LSize := LLast + 1;
   LExcessBits := -LN and 63;
 
-  LC := TNat.ShiftUpBitsXor64(LSize, Att, AttOff + LSize, LExcessBits, Att[AttOff + LLast],
-    Att, AttOff, Az, AzOff);
+  // Shift the upper half up by LExcessBits (carry seeded from Att[LLast])
+  // and xor with the lower half into Az.
+  LC := Att[LLast];
+  for LI := 0 to LSize - 1 do
+  begin
+    LXi := Att[LSize + LI];
+    Az[LI] := ((LXi shl LExcessBits) or
+      TBitOperations.NegativeRightShift64(LC, -LExcessBits)) xor Att[LI];
+    LC := LXi;
+  end;
 {$IFDEF DEBUG}
-  System.Assert(LC = 0);
+  System.Assert(TBitOperations.NegativeRightShift64(LC, -LExcessBits) = 0);
 {$ENDIF}
-  Az[AzOff + LLast] := Az[AzOff + LLast] and (UInt64.MaxValue shr LExcessBits);
+  Az[LLast] := Az[LLast] and (UInt64.MaxValue shr LExcessBits);
 end;
 
 { TBinPolyMulBaseBinomialReduce.TAligned }
@@ -128,19 +134,20 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBaseBinomialReduce.TAligned.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBaseBinomialReduce.TAligned.Reduce(Att: PUInt64; Az: PUInt64);
 var
   LN: Int32;
   LSize: Int32;
+  LI: Int32;
 begin
   LN := FN;
   {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(LN, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(LN, Att);
   {$ENDIF}
 
   LSize := TBitOperations.Asr32(LN, 6);
-  TNat.Xor64(LSize, Att, AttOff, Att, AttOff + LSize, Az, AzOff);
+  for LI := 0 to LSize - 1 do
+    Az[LI] := Att[LI] xor Att[LSize + LI];
 end;
 
 end.

@@ -38,8 +38,11 @@ type
     class function Expand32to64(AX: UInt32): UInt64; static;
 
     class procedure Expand64To128(AX: UInt64; const AZ: TCryptoLibUInt64Array; AZOff: Int32); overload; static;
+    class procedure Expand64To128(AX: UInt64; AZ: PUInt64); overload; static;
     class procedure Expand64To128(const AXs: TCryptoLibUInt64Array; AXsOff: Int32; AXsLen: Int32;
       const AZs: TCryptoLibUInt64Array; AZsOff: Int32); overload; static;
+    class procedure Expand64To128(const AXs: TCryptoLibUInt64Array; AXsOff: Int32; AXsLen: Int32;
+      AZs: PUInt64); overload; static;
 
     class function Expand64To128Rev(AX: UInt64; out ALow: UInt64): UInt64; static;
 
@@ -112,20 +115,8 @@ begin
 end;
 
 class procedure TInterleave.Expand64To128(AX: UInt64; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
-var
-  LX: UInt64;
 begin
-  LX := AX;
-
-  // "shuffle" low half to even bits and high half to odd bits
-  LX := TBits.BitPermuteStep(LX, UInt64($00000000FFFF0000), 16);
-  LX := TBits.BitPermuteStep(LX, UInt64($0000FF000000FF00), 8);
-  LX := TBits.BitPermuteStep(LX, UInt64($00F000F000F000F0), 4);
-  LX := TBits.BitPermuteStep(LX, UInt64($0C0C0C0C0C0C0C0C), 2);
-  LX := TBits.BitPermuteStep(LX, UInt64($2222222222222222), 1);
-
-  AZ[AZOff] := LX and M64;
-  AZ[AZOff + 1] := (LX shr 1) and M64;
+  Expand64To128(AX, @AZ[AZOff]);
 end;
 
 class procedure TInterleave.Expand64To128(const AXs: TCryptoLibUInt64Array; AXsOff: Int32; AXsLen: Int32;
@@ -143,6 +134,39 @@ begin
 
     System.Dec(LZsPos, 2);
     Expand64To128(AXs[AXsOff + LXsPos], AZs, LZsPos);
+  end;
+end;
+
+class procedure TInterleave.Expand64To128(AX: UInt64; AZ: PUInt64);
+var
+  LX: UInt64;
+begin
+  LX := AX;
+
+  // "shuffle" low half to even bits and high half to odd bits
+  LX := TBits.BitPermuteStep(LX, UInt64($00000000FFFF0000), 16);
+  LX := TBits.BitPermuteStep(LX, UInt64($0000FF000000FF00), 8);
+  LX := TBits.BitPermuteStep(LX, UInt64($00F000F000F000F0), 4);
+  LX := TBits.BitPermuteStep(LX, UInt64($0C0C0C0C0C0C0C0C), 2);
+  LX := TBits.BitPermuteStep(LX, UInt64($2222222222222222), 1);
+
+  AZ[0] := LX and M64;
+  AZ[1] := (LX shr 1) and M64;
+end;
+
+class procedure TInterleave.Expand64To128(const AXs: TCryptoLibUInt64Array; AXsOff: Int32; AXsLen: Int32;
+  AZs: PUInt64);
+var
+  LXsPos: Int32;
+begin
+  LXsPos := AXsLen;
+  while True do
+  begin
+    System.Dec(LXsPos);
+    if LXsPos < 0 then
+      Break;
+
+    Expand64To128(AXs[AXsOff + LXsPos], AZs + (LXsPos shl 1));
   end;
 end;
 

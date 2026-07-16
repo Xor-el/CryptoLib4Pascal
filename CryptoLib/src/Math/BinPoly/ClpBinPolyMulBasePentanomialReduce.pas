@@ -49,8 +49,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA3 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -60,8 +59,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA4 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -71,8 +69,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA5 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -82,8 +79,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA6 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -93,8 +89,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA7 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -104,8 +99,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TA8 = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -115,8 +109,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TB = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -126,8 +119,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TD = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -137,8 +129,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TC = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -148,8 +139,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
     TE = class sealed(TInterfacedObject, IBinPolyReduce)
     private
@@ -159,8 +149,7 @@ type
       FK3: Int32;
     public
       constructor Create(AN: Int32; AK1: Int32; AK2: Int32; AK3: Int32);
-      procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-        const Az: TCryptoLibUInt64Array; AzOff: Int32);
+      procedure Reduce(Att: PUInt64; Az: PUInt64);
     end;
   public
     /// <summary>
@@ -230,8 +219,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -249,7 +237,7 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
@@ -260,23 +248,23 @@ begin
   {(= tt[(Lpos - 1) + Lw_n + 1] = tt[Lpos + Lw_n]), so we carry it}
   {forward in LtHigh instead of re-loading.}
   Lpos := Lw_n;
-  LtHigh := Att[AttOff + Lpos + Lw_n + 1];
-  LtLow := Att[AttOff + Lpos + Lw_n    ];
+  LtHigh := Att[Lpos + Lw_n + 1];
+  LtLow := Att[Lpos + Lw_n];
   Lt := ((LtLow shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(LtHigh, -Ls_n));
-  Att[AttOff + Lpos    ] := Att[AttOff + Lpos    ] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
-  Att[AttOff + Lpos + 1] := Att[AttOff + Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
+  Att[Lpos] := Att[Lpos] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
+  Att[Lpos + 1] := Att[Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
   System.Dec(Lpos);
   while Lpos >= 0 do
   begin
     LtHigh := LtLow;
-    LtLow := Att[AttOff + Lpos + Lw_n];
+    LtLow := Att[Lpos + Lw_n];
     Lt := ((LtLow shr Ls_n)) or (TBitOperations.NegativeLeftShift64(LtHigh, -Ls_n));
-    Att[AttOff + Lpos] := Att[AttOff + Lpos] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
-    Att[AttOff + Lpos + 1] := Att[AttOff + Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
+    Att[Lpos] := Att[Lpos] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
+    Att[Lpos + 1] := Att[Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
     System.Dec(Lpos);
   end;
-  TNat.Copy64(Lw_n, Att, AttOff, Az, AzOff);
-  Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
+  System.Move(Att^, Az^, (Lw_n) * System.SizeOf(UInt64));
+  Az[Lw_n] := Att[Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA3 }
@@ -293,8 +281,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA3.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA3.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -312,16 +299,16 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 1);
 {$ENDIF}
   {Load tt[0..2] into locals; tt[3] is slack (= 0 by contract) and elided.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
   {Unrolled top-down word fold (Lpos = 1, 0). At Lpos = 1 the read}
   {simplifies because tt[3] = 0.}
   Lt := (Lt2 shr Ls_n);
@@ -330,8 +317,8 @@ begin
   Lt := ((Lt1 shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(Lt2, -Ls_n));
   Lt0 := Lt0 xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
+  Az[0] := Lt0;
+  Az[1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA4 }
@@ -348,8 +335,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA4.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA4.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -368,17 +354,17 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 1);
 {$ENDIF}
   {Load tt[0..3] into locals.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
-  Lt3 := Att[AttOff + 3];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
+  Lt3 := Att[3];
   {Unrolled top-down word fold (Lpos = 1, 0).}
   Lt := ((Lt2 shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(Lt3, -Ls_n));
   Lt1 := Lt1 xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
@@ -386,8 +372,8 @@ begin
   Lt := ((Lt1 shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(Lt2, -Ls_n));
   Lt0 := Lt0 xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
+  Az[0] := Lt0;
+  Az[1] := Lt1 and not (UInt64.MaxValue shl Ls_n);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA5 }
@@ -404,8 +390,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA5.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA5.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -425,18 +410,18 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 2);
 {$ENDIF}
   {Load tt[0..4] into locals; tt[5] is slack (= 0 by contract) and elided.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
-  Lt3 := Att[AttOff + 3];
-  Lt4 := Att[AttOff + 4];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
+  Lt3 := Att[3];
+  Lt4 := Att[4];
   {Unrolled top-down word fold (Lpos = 2, 1, 0). At Lpos = 2 the read}
   {simplifies because tt[5] = 0.}
   Lt := (Lt4 shr Ls_n);
@@ -450,9 +435,9 @@ begin
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
   {Mask off bits above position Ln - 1 in the top result limb.}
   Lt2 := Lt2 and not (UInt64.MaxValue shl Ls_n);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1;
-  Az[AzOff + 2] := Lt2;
+  Az[0] := Lt0;
+  Az[1] := Lt1;
+  Az[2] := Lt2;
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA6 }
@@ -469,8 +454,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA6.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA6.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -491,19 +475,19 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 2);
 {$ENDIF}
   {Load tt[0..5] into locals.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
-  Lt3 := Att[AttOff + 3];
-  Lt4 := Att[AttOff + 4];
-  Lt5 := Att[AttOff + 5];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
+  Lt3 := Att[3];
+  Lt4 := Att[4];
+  Lt5 := Att[5];
   {Unrolled top-down word fold (Lpos = 2, 1, 0).}
   Lt := ((Lt4 shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(Lt5, -Ls_n));
   Lt2 := Lt2 xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
@@ -516,9 +500,9 @@ begin
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
   {Mask off bits above position Ln - 1 in the top result limb.}
   Lt2 := Lt2 and not (UInt64.MaxValue shl Ls_n);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1;
-  Az[AzOff + 2] := Lt2;
+  Az[0] := Lt0;
+  Az[1] := Lt1;
+  Az[2] := Lt2;
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA7 }
@@ -535,8 +519,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA7.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA7.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -558,20 +541,20 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 3);
 {$ENDIF}
   {Load tt[0..6] into locals; tt[7] is slack (= 0 by contract) and elided.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
-  Lt3 := Att[AttOff + 3];
-  Lt4 := Att[AttOff + 4];
-  Lt5 := Att[AttOff + 5];
-  Lt6 := Att[AttOff + 6];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
+  Lt3 := Att[3];
+  Lt4 := Att[4];
+  Lt5 := Att[5];
+  Lt6 := Att[6];
   {Unrolled top-down word fold (Lpos = 3, 2, 1, 0). At Lpos = 3 the read}
   {simplifies because tt[7] = 0.}
   Lt := (Lt6 shr Ls_n);
@@ -588,10 +571,10 @@ begin
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
   {Mask off bits above position Ln - 1 in the top result limb.}
   Lt3 := Lt3 and not (UInt64.MaxValue shl Ls_n);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1;
-  Az[AzOff + 2] := Lt2;
-  Az[AzOff + 3] := Lt3;
+  Az[0] := Lt0;
+  Az[1] := Lt1;
+  Az[2] := Lt2;
+  Az[3] := Lt3;
 end;
 
 { TBinPolyMulBasePentanomialReduce.TA8 }
@@ -608,8 +591,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TA8.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TA8.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -632,21 +614,21 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
 {$IFDEF DEBUG}
   System.Assert(Lw_n = 3);
 {$ENDIF}
   {Load tt[0..7] into locals.}
-  Lt0 := Att[AttOff];
-  Lt1 := Att[AttOff + 1];
-  Lt2 := Att[AttOff + 2];
-  Lt3 := Att[AttOff + 3];
-  Lt4 := Att[AttOff + 4];
-  Lt5 := Att[AttOff + 5];
-  Lt6 := Att[AttOff + 6];
-  Lt7 := Att[AttOff + 7];
+  Lt0 := Att[0];
+  Lt1 := Att[1];
+  Lt2 := Att[2];
+  Lt3 := Att[3];
+  Lt4 := Att[4];
+  Lt5 := Att[5];
+  Lt6 := Att[6];
+  Lt7 := Att[7];
   {Unrolled top-down word fold (Lpos = 3, 2, 1, 0).}
   Lt := ((Lt6 shr Ls_n))  or  (TBitOperations.NegativeLeftShift64(Lt7, -Ls_n));
   Lt3 := Lt3 xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2) xor (Lt shl Lk3);
@@ -662,10 +644,10 @@ begin
   Lt1 := Lt1 xor TBitOperations.NegativeRightShift64(Lt, -Lk1) xor TBitOperations.NegativeRightShift64(Lt, -Lk2) xor TBitOperations.NegativeRightShift64(Lt, -Lk3);
   {Mask off bits above position Ln - 1 in the top result limb.}
   Lt3 := Lt3 and not (UInt64.MaxValue shl Ls_n);
-  Az[AzOff] := Lt0;
-  Az[AzOff + 1] := Lt1;
-  Az[AzOff + 2] := Lt2;
-  Az[AzOff + 3] := Lt3;
+  Az[0] := Lt0;
+  Az[1] := Lt1;
+  Az[2] := Lt2;
+  Az[3] := Lt3;
 end;
 
 { TBinPolyMulBasePentanomialReduce.TB }
@@ -682,8 +664,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TB.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TB.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -705,7 +686,7 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
   TBinPolyMulBase.BitPos(Lk1, Lw_k1, Ls_k1);
@@ -713,19 +694,19 @@ begin
   TBinPolyMulBase.BitPos(Lk3, Lw_k3, Ls_k3);
   Lpos := Lw_n;
   repeat
-    Lt := (Att[AttOff + Lpos + Lw_n] shr Ls_n)
-      or TBitOperations.NegativeLeftShift64(Att[AttOff + Lpos + Lw_n + 1], -Ls_n);
-    Att[AttOff + Lpos] := Att[AttOff + Lpos] xor Lt;
-    Att[AttOff + Lpos + Lw_k1] := Att[AttOff + Lpos + Lw_k1] xor (Lt shl Ls_k1);
-    Att[AttOff + Lpos + Lw_k1 + 1] := Att[AttOff + Lpos + Lw_k1 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k1);
-    Att[AttOff + Lpos + Lw_k2] := Att[AttOff + Lpos + Lw_k2] xor (Lt shl Ls_k2);
-    Att[AttOff + Lpos + Lw_k2 + 1] := Att[AttOff + Lpos + Lw_k2 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k2);
-    Att[AttOff + Lpos + Lw_k3] := Att[AttOff + Lpos + Lw_k3] xor (Lt shl Ls_k3);
-    Att[AttOff + Lpos + Lw_k3 + 1] := Att[AttOff + Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
+    Lt := (Att[Lpos + Lw_n] shr Ls_n)
+      or TBitOperations.NegativeLeftShift64(Att[Lpos + Lw_n + 1], -Ls_n);
+    Att[Lpos] := Att[Lpos] xor Lt;
+    Att[Lpos + Lw_k1] := Att[Lpos + Lw_k1] xor (Lt shl Ls_k1);
+    Att[Lpos + Lw_k1 + 1] := Att[Lpos + Lw_k1 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k1);
+    Att[Lpos + Lw_k2] := Att[Lpos + Lw_k2] xor (Lt shl Ls_k2);
+    Att[Lpos + Lw_k2 + 1] := Att[Lpos + Lw_k2 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k2);
+    Att[Lpos + Lw_k3] := Att[Lpos + Lw_k3] xor (Lt shl Ls_k3);
+    Att[Lpos + Lw_k3 + 1] := Att[Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
     System.Dec(Lpos);
   until Lpos < 0;
-  TNat.Copy64(Lw_n, Att, AttOff, Az, AzOff);
-  Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
+  System.Move(Att^, Az^, (Lw_n) * System.SizeOf(UInt64));
+  Az[Lw_n] := Att[Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TD }
@@ -742,8 +723,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TD.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TD.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -761,7 +741,7 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   TBinPolyMulBase.BitPos(Ln, Lw_n, Ls_n);
   TBinPolyMulBase.BitPos(Lk3, Lw_k3, Ls_k3);
@@ -770,17 +750,17 @@ begin
 {$ENDIF}
   Lpos := Lw_n;
   repeat
-    Lt := (Att[AttOff + Lpos + Lw_n] shr Ls_n)
-      or TBitOperations.NegativeLeftShift64(Att[AttOff + Lpos + Lw_n + 1], -Ls_n);
-    Att[AttOff + Lpos] := Att[AttOff + Lpos] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2);
-    Att[AttOff + Lpos + 1] := Att[AttOff + Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1)
+    Lt := (Att[Lpos + Lw_n] shr Ls_n)
+      or TBitOperations.NegativeLeftShift64(Att[Lpos + Lw_n + 1], -Ls_n);
+    Att[Lpos] := Att[Lpos] xor Lt xor (Lt shl Lk1) xor (Lt shl Lk2);
+    Att[Lpos + 1] := Att[Lpos + 1] xor TBitOperations.NegativeRightShift64(Lt, -Lk1)
       xor TBitOperations.NegativeRightShift64(Lt, -Lk2);
-    Att[AttOff + Lpos + Lw_k3] := Att[AttOff + Lpos + Lw_k3] xor (Lt shl Ls_k3);
-    Att[AttOff + Lpos + Lw_k3 + 1] := Att[AttOff + Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
+    Att[Lpos + Lw_k3] := Att[Lpos + Lw_k3] xor (Lt shl Ls_k3);
+    Att[Lpos + Lw_k3 + 1] := Att[Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
     System.Dec(Lpos);
   until Lpos < 0;
-  TNat.Copy64(Lw_n, Att, AttOff, Az, AzOff);
-  Az[AzOff + Lw_n] := Att[AttOff + Lw_n] and not (UInt64.MaxValue shl Ls_n);
+  System.Move(Att^, Az^, (Lw_n) * System.SizeOf(UInt64));
+  Az[Lw_n] := Att[Lw_n] and not (UInt64.MaxValue shl Ls_n);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TC }
@@ -797,8 +777,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TC.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TC.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -824,29 +803,29 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   Lpos_0 := Ln - 1;
   while Lpos_0 >= 0 do
   begin
     TBinPolyMulBase.BitPos(Lpos_0 + Ln, Lw_n, Ls_n);
-    Lbit_n := (Att[AttOff + Lw_n] shr Ls_n) and 1;
+    Lbit_n := (Att[Lw_n] shr Ls_n) and 1;
     TBinPolyMulBase.BitPos(Lpos_0, Lw_0, Ls_0);
-    Att[AttOff + Lw_0] := Att[AttOff + Lw_0] xor (Lbit_n shl Ls_0);
+    Att[Lw_0] := Att[Lw_0] xor (Lbit_n shl Ls_0);
     TBinPolyMulBase.BitPos(Lpos_0 + Lk1, Lw_k1, Ls_k1);
-    Att[AttOff + Lw_k1] := Att[AttOff + Lw_k1] xor (Lbit_n shl Ls_k1);
+    Att[Lw_k1] := Att[Lw_k1] xor (Lbit_n shl Ls_k1);
     TBinPolyMulBase.BitPos(Lpos_0 + Lk2, Lw_k2, Ls_k2);
-    Att[AttOff + Lw_k2] := Att[AttOff + Lw_k2] xor (Lbit_n shl Ls_k2);
+    Att[Lw_k2] := Att[Lw_k2] xor (Lbit_n shl Ls_k2);
     TBinPolyMulBase.BitPos(Lpos_0 + Lk3, Lw_k3, Ls_k3);
-    Att[AttOff + Lw_k3] := Att[AttOff + Lw_k3] xor (Lbit_n shl Ls_k3);
+    Att[Lw_k3] := Att[Lw_k3] xor (Lbit_n shl Ls_k3);
     System.Dec(Lpos_0);
   end;
   TBinPolyMulBase.BitPos(Ln, Lw_top, Ls_top);
-  TNat.Copy64(Lw_top, Att, AttOff, Az, AzOff);
+  System.Move(Att^, Az^, (Lw_top) * System.SizeOf(UInt64));
   {Ls_top = 0 (Ln a multiple of 64): the copy above already wrote the full top}
   {limb (Lw_top = Lsize); no partial-limb mask, and z has no limb Lw_top to write.}
   if Ls_top <> 0 then
-  Az[AzOff + Lw_top] := Att[AttOff + Lw_top] and not (UInt64.MaxValue shl Ls_top);
+  Az[Lw_top] := Att[Lw_top] and not (UInt64.MaxValue shl Ls_top);
 end;
 
 { TBinPolyMulBasePentanomialReduce.TE }
@@ -863,8 +842,7 @@ begin
 {$ENDIF}
 end;
 
-procedure TBinPolyMulBasePentanomialReduce.TE.Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-  const Az: TCryptoLibUInt64Array; AzOff: Int32);
+procedure TBinPolyMulBasePentanomialReduce.TE.Reduce(Att: PUInt64; Az: PUInt64);
 var
   Lk1: Int32;
   Lk2: Int32;
@@ -885,7 +863,7 @@ begin
   Lk2 := FK2;
   Lk3 := FK3;
 {$IFDEF DEBUG}
-  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att, AttOff);
+  TBinPolyMulBase.DebugAssertReducePreconditions(Ln, Att);
 {$ENDIF}
   LW := (Ln shr 6);
   TBinPolyMulBase.BitPos(Lk1, Lw_k1, Ls_k1);
@@ -896,17 +874,17 @@ begin
 {$ENDIF}
   Lpos := LW - 1;
   repeat
-    Lt := Att[AttOff + Lpos + LW];
-    Att[AttOff + Lpos] := Att[AttOff + Lpos] xor Lt;
-    Att[AttOff + Lpos + Lw_k1] := Att[AttOff + Lpos + Lw_k1] xor (Lt shl Ls_k1);
-    Att[AttOff + Lpos + Lw_k1 + 1] := Att[AttOff + Lpos + Lw_k1 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k1);
-    Att[AttOff + Lpos + Lw_k2] := Att[AttOff + Lpos + Lw_k2] xor (Lt shl Ls_k2);
-    Att[AttOff + Lpos + Lw_k2 + 1] := Att[AttOff + Lpos + Lw_k2 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k2);
-    Att[AttOff + Lpos + Lw_k3] := Att[AttOff + Lpos + Lw_k3] xor (Lt shl Ls_k3);
-    Att[AttOff + Lpos + Lw_k3 + 1] := Att[AttOff + Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
+    Lt := Att[Lpos + LW];
+    Att[Lpos] := Att[Lpos] xor Lt;
+    Att[Lpos + Lw_k1] := Att[Lpos + Lw_k1] xor (Lt shl Ls_k1);
+    Att[Lpos + Lw_k1 + 1] := Att[Lpos + Lw_k1 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k1);
+    Att[Lpos + Lw_k2] := Att[Lpos + Lw_k2] xor (Lt shl Ls_k2);
+    Att[Lpos + Lw_k2 + 1] := Att[Lpos + Lw_k2 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k2);
+    Att[Lpos + Lw_k3] := Att[Lpos + Lw_k3] xor (Lt shl Ls_k3);
+    Att[Lpos + Lw_k3 + 1] := Att[Lpos + Lw_k3 + 1] xor TBitOperations.NegativeRightShift64(Lt, -Ls_k3);
     System.Dec(Lpos);
   until Lpos < 0;
-  TNat.Copy64(LW, Att, AttOff, Az, AzOff);
+  System.Move(Att^, Az^, (LW) * System.SizeOf(UInt64));
 end;
 
 end.
