@@ -1,0 +1,61 @@
+CryptoLib/src/Include/Simd/BinPoly/BinPolyMul_i386.inc
+  s_e5fb138dc4caab::t_f3a2402e1d890a 1-3597
+CryptoLib/src/Simd/Backend/ClpBinPolyX86Backend.pas
+  s_e5fb138dc4caab::t_54934c02b09de4 42
+  s_e5fb138dc4caab::t_10a8b20bb9b02d 43-45
+  s_e5fb138dc4caab::t_3fc35036654543 52,55,59,61,65,68,72,74,78,81,85,87-100,115,121,127,134,140,147,153-164
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBase.pas
+  s_e5fb138dc4caab::t_5a482d4a1872aa 53-55,66
+  s_e5fb138dc4caab::t_a9e0be68731de5 56-58
+  s_e5fb138dc4caab::t_363678c7609964 67-69
+  s_e5fb138dc4caab::t_0620ad134405dd 59,70-73,95,122-127,131-133,135-143,145-146,148,155-157,163-169,171-172,176-177,180,192,203,205
+CryptoLib/src/Math/BinPoly/ClpBinPolySimdSizes.pas
+  s_e5fb138dc4caab::t_54934c02b09de4 30-33
+  s_e5fb138dc4caab::t_5a7ec2c3d3327a 34-36
+  s_e5fb138dc4caab::t_6c2ded890539b1 37-41,49,57,65,73,81,89,97,105,113,126-133,139,142-143,145
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBaseTrinomialReduce.pas
+  s_e5fb138dc4caab::t_1f7ffc64cea5ce 59,67,75,83,91,99,107,115,123,131,139,147,155,163,171
+  s_e5fb138dc4caab::t_8225a3db0eef4a 238,254,266-267,269-270,275,278-279,282-284,299,313,320-322,331-332,347,362,368-371,378-379,394,410,417-421,438-440,455,472,479-484,500-502,517,535,542-548,568-571,586,605,612-619,638-641,656,669,675-678,681-682,697,711,720-724,727-728,743,761,772-776,795-797,812,831,842-847,865-867,882,902,913-919,965-968,983,1004,1015-1022,1071-1074,1089,1107,1113,1115,1117,1121,1125,1140,1153,1162-1165,1168
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBasePentanomialReduce.pas
+  s_e5fb138dc4caab::t_1f7ffc64cea5ce 52,62,72,82,92,102,112,122,132,142,152
+  s_e5fb138dc4caab::t_d27548e771b7c1 222,240,251-252,254-255,260,262-263,266-267,284,302,309-311,320-321,338,357,364-367,375-376,393,413,420-424,438-440,457,478,485-490,503-505,522,544,551-557,574-577,594,617,624-631,647-650,667,689,697-705,708-709,726,744,753-756,758-759,762-763,780,806,812,814,816,818,820,824,828,845,866,877-884,887
+CryptoLib/src/Include/Simd/BinPoly/BinPolyMul_x86_64.inc
+  s_e5fb138dc4caab::t_f3a2402e1d890a 1-3011
+CryptoLib/src/Interfaces/Math/BinPoly/ClpIBinPolyMul.pas
+  s_e5fb138dc4caab::t_a2118d285fda7e 32-34,52
+CryptoLib/src/Math/BinPoly/ClpBinPolyScalarLarge.pas
+  s_e5fb138dc4caab::t_a2b197e4b1cc77 89
+CryptoLib/src/Math/BinPoly/ClpBinPolyScalarMedium.pas
+  s_e5fb138dc4caab::t_b30282d18cce61 64
+CryptoLib/src/Math/BinPoly/ClpBinPolySimdLarge.pas
+  s_e5fb138dc4caab::t_3a88bdd65975e7 27,34,78,107,109
+CryptoLib/src/Math/BinPoly/ClpBinPolySimdMedium.pas
+  s_e5fb138dc4caab::t_9e26df3c617300 27,34,45,72,75-76,78,96,99-100,102
+CryptoLib/src/Simd/Facade/ClpBinPolySimd.pas
+  s_e5fb138dc4caab::t_049e6d0e298d97 56-59,110,113,119,122,128,131,137-145
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBaseBinomialReduce.pas
+  s_e5fb138dc4caab::t_9e7903a36ea9b8 49,62,92,98-99,103,110-119,121,123,137,141,145,149-150
+CryptoLib/src/Math/Raw/ClpInterleave.pas
+  s_e5fb138dc4caab::t_066e7851742228 41,44-45,118-140,153-154,158,160,169
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3d1c202631821d29a57120008f8a2133156c3f92",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_e5fb138dc4caab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f562a6e-7cea-4ac6-befd-c16ce37a44f7",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
