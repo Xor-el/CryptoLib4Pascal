@@ -1,7 +1,19 @@
-// ChaCha7539 (IETF) 128B, SSE2. Two 64B blocks; little-endian state in [rdx]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
-// Fused I/O xor: read plaintext at AIn (r8), xor with ChaCha output, write to AOut (r9) — no 64B LK/keystream temp in Pascal.
-// After ClpSimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState (R/W, 16 UInt32), r8=AIn, r9=AOut.
-// Word 12 at [rdx+48] is advanced by 2 (once per 64B block). On 32-bit counter wrap to 0, calls ChaCha7539RaiseCounter7539.
+// ChaCha7539 (IETF) 128B (two 64B blocks), fused I/O, pure SSE2 (x86-64).
+// -------------------------------------------------------------------
+// Little-endian state in [rdx]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
+// Fused I/O xor: read plaintext at AIn (r8), xor with ChaCha output, write
+// to AOut (r9) - no 64B LK/keystream temp in Pascal.
+//
+// On entry (after ClpSimdProc4Begin_x86_64.inc):
+//   rcx = ARounds, rdx = AState (R/W, 16 UInt32), r8 = AIn, r9 = AOut.
+//
+// Word 12 at [rdx+48] is advanced by 2 (once per 64B block). On 32-bit
+// counter wrap to 0, calls ChaCha7539RaiseCounter7539.
+//
+// Reference: RFC 7539 (IETF ChaCha20, superseded by RFC 8439) - the
+// 32-bit-counter/96-bit-nonce state layout that this kernel operates on;
+// quarter-round arithmetic per D.J. Bernstein, "ChaCha, a variant of
+// Salsa20".
   mov     r11, rcx
   // --- block 1 (counter C in memory) ---
   sub     rsp, 64

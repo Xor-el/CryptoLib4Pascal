@@ -37,7 +37,6 @@
 //
 // PCLMULQDQ / PSHUFD and the PSHUFB memory-operand form are db-encoded
 // for broad assembler compatibility.
-//
   mov       edx, esp
   sub       esp, 72
   and       esp, -16                            // align the frame

@@ -1,8 +1,17 @@
-// Salsa20 128B, pure SSE2: two 64B blocks, fused I/O (xor) like ChaCha7539ProcessBlocks2Sse2.
-// Diagonal transpose done as a scalar gather/scatter (no pblendw); see Salsa20BlockSse2_x86_64.inc.
-// Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
-// After ClpSimdProc4Begin_x86_64.inc: rcx=ARounds, rdx=AState, r8=AIn (plain), r9=AOut (cipher).
-// r10 = round counter per block. Counter words: FEngineState[8]@[rdx+32], FEngineState[9]@[rdx+36].
+// Salsa20 128B (two 64B blocks), fused I/O, pure SSE2 (x86-64).
+// -------------------------------------------------------------------
+// Two 64B blocks, fused I/O (xor) like ChaCha7539ProcessBlocks2Sse2. Diagonal
+// transpose done as a scalar gather/scatter (no pblendw); see
+// Salsa20BlockSse2_x86_64.inc. Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
+//
+// On entry (after ClpSimdProc4Begin_x86_64.inc):
+//   rcx = ARounds, rdx = AState, r8 = AIn (plain), r9 = AOut (cipher).
+//   r10 = round counter per block. Counter words: FEngineState[8]@[rdx+32],
+//   FEngineState[9]@[rdx+36].
+//
+// Reference: D.J. Bernstein's Salsa20 SSE2 reference implementation
+// (cr.yp.to/salsa20/) - the diagonal-extraction layout that this kernel's
+// gather/scatter reproduces.
 {$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   sub     rsp, 512
 { -------- block 1 (64B) at I/O offset 0 -------- }

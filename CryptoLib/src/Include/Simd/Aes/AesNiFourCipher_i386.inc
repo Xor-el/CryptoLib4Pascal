@@ -18,6 +18,10 @@
 // Variant selection (forwarded to the rounds-only include):
 //   CRYPTOLIB_AESNI_DECRYPT  -> decrypt; else encrypt.
 //   Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 selects N_R.
+//
+// Reference: Shay Gueron, "Intel AES New Instructions" whitepaper - the
+// multi-block-interleaved AES-NI technique implemented by the round chain
+// that this file wraps (AesNiFourRoundsOnly_i386.inc).
   movdqu    xmm0, [ebx + 0]
   movdqu    xmm1, [ebx + 16]
   movdqu    xmm2, [ebx + 32]

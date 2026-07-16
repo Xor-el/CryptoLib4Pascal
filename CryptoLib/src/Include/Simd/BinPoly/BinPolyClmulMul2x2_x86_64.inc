@@ -1,7 +1,20 @@
-// 2x2 carryless Karatsuba multiply (3 PCLMULQDQ).
-// Entry:  xmm0 = X (x0, x1), xmm1 = Y (y0, y1).
-// Exit:   xmm8 = W0, xmm9 = W1.
+// 2x2-limb carryless Karatsuba multiply (x86-64).
+// -------------------------------------------------------------------
+// Multiplies two 2-limb (256-bit) polynomials X=(x0,x1), Y=(y0,y1) over
+// GF(2)[x] using 3 PCLMULQDQ products instead of the schoolbook 4 (x0*y0,
+// x1*y1, and (x0 xor x1)*(y0 xor y1) to recover the cross term), then
+// combines the partials into the 4-limb (512-bit) product W=(W0,W1).
+//
+// On entry: xmm0 = X (x0, x1), xmm1 = Y (y0, y1).
+// On exit:  xmm8 = W0, xmm9 = W1.
 // Clobbers: xmm2..xmm7.
+//
+// PCLMULQDQ forms are db-encoded for broad assembler compatibility.
+//
+// Reference: Karatsuba's algorithm applied to carry-less multiplication -
+// the standard 3-multiply reduction described in Shay Gueron / Michael E.
+// Kounavis, "Intel(R) Carry-Less Multiplication Instruction and its Usage
+// for Computing the GCM Mode" (white paper).
   movdqa    xmm2, xmm0
   punpcklqdq xmm2, xmm1
   movdqa    xmm3, xmm0

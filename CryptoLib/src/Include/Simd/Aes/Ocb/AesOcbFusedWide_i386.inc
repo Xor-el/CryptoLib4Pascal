@@ -39,6 +39,11 @@
 //   [esp + 208..223]  checksum spill during the round chain
 //
 // AES-NI instructions are db-encoded for broad assembler compatibility.
+//
+// Reference: the round-interleaved ladder structure was informed by
+// OpenSSL's aesni_ocb_encrypt/aesni_ocb_decrypt (crypto/aes/asm/
+// aesni-x86_64.pl, Andy Polyakov) - the encoding, register allocation
+// and ping-pong bank staging here are original.
 // -------------------------------------------------------------------
 
   push      edi

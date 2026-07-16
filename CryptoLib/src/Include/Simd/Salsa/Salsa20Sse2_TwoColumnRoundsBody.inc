@@ -1,9 +1,15 @@
-// Two Salsa20 column rounds (4-lane SSE4.1 quarter-round path): swap xmm1/xmm3,
-// first SalsaQ on xmm0..3, diagonal pshufd, swap again, second SalsaQ, pshufd.
-// Shared IA-32 / x86-64: XMM ARX + pshufd only — no stack, no GPR round counter.
-// Parent must emit the loop label immediately before this include, then after
-// the include: sub <roundsReg>, 2 / jg <sameLabel>. xmm0..xmm3 hold packed
-// state lanes; xmm4..xmm7 are scratch.
+// Two Salsa20 column rounds, shared SSE2 body (IA-32 / x86-64).
+// -------------------------------------------------------------------
+// 4-lane quarter-round path: swap xmm1/xmm3, first SalsaQ on xmm0..3,
+// diagonal pshufd, swap again, second SalsaQ, pshufd. XMM ARX + pshufd
+// only - no stack, no GPR round counter.
+//
+// Parent must emit the loop label immediately before this include, then
+// after the include: sub <roundsReg>, 2 / jg <sameLabel>. xmm0..xmm3 hold
+// packed state lanes; xmm4..xmm7 are scratch.
+//
+// Reference: D.J. Bernstein, "Salsa20 specification" (cr.yp.to/salsa20/) -
+// the quarterround/rowround/columnround arithmetic that this body implements.
   movdqa  xmm4, xmm1
   movdqa  xmm1, xmm3
   movdqa  xmm3, xmm4

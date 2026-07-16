@@ -13,6 +13,10 @@
 // Power table: row j at [rdx + 16*j]; rows 0..4 r-limbs [r2,r2,r2,r1],
 // rows 5..8 s-limbs (5*r), row 9 pad. Bulk reads [+16*j] (broadcast r^2);
 // tail reads [+16*j+4] ([r^2,r^1]).
+//
+// Reference: Goll/Gueron, "Vectorization of Poly1305 Message Authentication
+// Code" - the radix-2^26 multi-lane construction that this 2-lane form narrows
+// from the 4-lane AVX2 kernel (Poly1305BlocksBulkAvx2Core_x86_64.inc).
 
 {$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   // ---- 64B-aligned frame: bulk table rows copied in once ----

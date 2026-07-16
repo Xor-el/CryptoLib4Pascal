@@ -1,7 +1,16 @@
 // V128 BinPoly medium multiply, odd limb count (i386).
-// Entry (after ClpSimdProc4Begin_i386.inc):
+// -------------------------------------------------------------------
+// N-limb schoolbook polynomial multiply built on the 2x2 Karatsuba
+// primitive (BinPolyClmulMul2x2_i386.inc); ZZ is addressed as packed
+// V128 slots (16-byte stride).
+//
+// On entry (after ClpSimdProc4Begin_i386.inc):
 //   ebx = ALen (UInt32 limb count, odd), esi = PX, edi = PY, eax = PZz.
-// ZZ is addressed as packed V128 slots (16-byte stride).
+//
+// Reference: Shay Gueron / Michael E. Kounavis, "Intel(R) Carry-Less
+// Multiplication Instruction and its Usage for Computing the GCM Mode"
+// (white paper) - the carry-less multiplication technique that this
+// N-limb form generalizes.
 //
 // Local stack layout (after push ebp/push edx/sub esp,24):
 //   [esp +  0] = L

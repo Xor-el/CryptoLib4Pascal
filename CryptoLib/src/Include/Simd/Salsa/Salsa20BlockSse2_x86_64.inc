@@ -1,10 +1,18 @@
-// Salsa20 one 16*UInt32 block: LE state in, LE state+input out, pure SSE2.
-// The 4-lane quarter round works on the diagonal layout
+// Salsa20 one-block (16*UInt32) core, pure SSE2 (x86-64).
+// -------------------------------------------------------------------
+// LE state in, LE state+input out. The 4-lane quarter round works on the
+// diagonal layout
 //   b0=[s0,s5,s10,s15] b1=[s12,s1,s6,s11] b2=[s8,s13,s2,s7] b3=[s4,s9,s14,s3].
 // SSE2 has no pblendw, so the diagonal transpose is a direct scalar gather on
 // the way in and the inverse scatter on the way out (dword granular, no masks).
 // Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc (pure SSE2 body).
-// After ClpSimdProc3Begin_x86_64.inc: rcx = ARounds, rdx = AIn (16 UInt32), r8 = AOut (16 UInt32).
+//
+// On entry (after ClpSimdProc3Begin_x86_64.inc):
+//   rcx = ARounds, rdx = AIn (16 UInt32), r8 = AOut (16 UInt32).
+//
+// Reference: D.J. Bernstein's Salsa20 SSE2 reference implementation
+// (cr.yp.to/salsa20/) - the diagonal-extraction layout that this kernel's
+// gather/scatter reproduces.
 {$I ..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   sub     rsp, 512
   mov     r9, rcx

@@ -1,8 +1,18 @@
-// x86/V128 BinPoly fixed-size carryless multiply kernels for limb counts 1..10.
-// PCLMULQDQ instruction is db-encoded for broad assembler compatibility.
+// x86/V128 BinPoly fixed-size carryless multiply kernels for limb counts 1..10 (x86-64).
+// -------------------------------------------------------------------
+// One fully-unrolled case per limb count, avoiding the medium-multiply
+// loop overhead for small operands. ZZ output: V128 lane k at byte offset
+// 16*k in PZz.
+//
 // Included inside BinPolyPclmulImplMulSmall after ClpSimdProc4Begin_x86_64.inc:
-//   rcx = ALen, rdx = PX, r8 = PY, r9 = PZz
-// ZZ output: V128 lane k at byte offset 16*k in PZz.
+//   rcx = ALen, rdx = PX, r8 = PY, r9 = PZz.
+//
+// PCLMULQDQ instruction is db-encoded for broad assembler compatibility.
+//
+// Reference: Shay Gueron / Michael E. Kounavis, "Intel(R) Carry-Less
+// Multiplication Instruction and its Usage for Computing the GCM Mode"
+// (white paper) - the carry-less multiplication technique that these
+// fixed-size cases implement.
 
   // Each size case reaches @@BinPolySmallXmmDone via `jmp` (not `ret`) so the
   // restore of the registers saved here always runs.

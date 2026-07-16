@@ -4,7 +4,7 @@
 // OpenSSL, BoringSSL, AWS-LC or Botan (all ship scalar EAX). Technique
 // derived from Bogdanov-Lauridsen-Tischhauser "Comb to Pipeline" (FSE
 // 2016, eprint 2016/047) and the AES-NI AEAD pattern shared with CCM
-// (Shay Gueron, "Intel AES New Instructions" Rev 3.01).
+// (Shay Gueron, "Intel AES New Instructions" whitepaper).
 //
 // Two lanes (CTR / MAC) share each round-key broadcast: the second
 // aesenc fills a pipeline slot that would otherwise idle. EAX is
