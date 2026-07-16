@@ -24,13 +24,14 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
+  ClpBinPolySimdSizes,
   ClpArrayUtilities;
 
 type
   /// <summary>
   /// SIMD <c>IBinPolyMul</c> for sizes at or above <c>KaratsubaCutoff</c> (32 limbs).
   /// </summary>
-  TBinPolySimdLarge = class sealed(TBinPolyMulBase)
+  TBinPolySimdLarge = class sealed(TBinPolySimdMulBase)
   public
     const
       KaratsubaCutoff = 32;
@@ -74,7 +75,7 @@ begin
   SetLength(LScratch, LScratchSize);
   try
     ImplKaratsuba(FSize, AX, AXOff, AY, AYOff, Ltt, 0, LScratch, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    FReduce.Reduce(@Ltt[0], @AZ[AZOff]);
   finally
     TArrayUtilities.Fill(LScratch, 0, LScratchSize, 0);
     TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
@@ -103,9 +104,9 @@ class procedure TBinPolySimdLarge.ImplLeaf(ALen: Int32; const AX: TCryptoLibUInt
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
 begin
   if (ALen and 1) = 0 then
-    TBinPolySimd.ImplMulEven(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff)
+    TBinPolySimd.ImplMulEven(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff])
   else
-    TBinPolySimd.ImplMulOdd(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+    TBinPolySimd.ImplMulOdd(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
 end;
 
 class procedure TBinPolySimdLarge.ImplKaratsuba(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;

@@ -61,7 +61,7 @@ begin
   SetLength(Ltt, FSizeExt);
   try
     TBinPolyScalarBackend.ImplMul(FSize, AX, AXOff, AY, AYOff, Ltt, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    FReduce.Reduce(@Ltt[0], @AZ[AZOff]);
   finally
     TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
   end;

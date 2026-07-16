@@ -53,15 +53,10 @@ type
     /// Leaf carryless multiply, routed to the active per-arch SIMD backend; called by
     /// the arch-neutral <c>ClpBinPolySimd*</c> multipliers.
     /// </summary>
-    class procedure ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
-    class procedure ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
-    class procedure ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
+    class procedure ImplMulSmall(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplMulEven(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplMulOdd(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplSquare(ALen: Int32; PX, PZz: PUInt64); static;
   end;
 
 implementation
@@ -112,33 +107,39 @@ begin
   Result := False;
 end;
 
-class procedure TBinPolySimd.ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolySimd.ImplMulSmall(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TBinPolyX86Backend.ImplMulSmall(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+  TBinPolyX86Backend.ImplMulSmall(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulSmall is not available on this target');
 {$IFEND}
 end;
 
-class procedure TBinPolySimd.ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolySimd.ImplMulEven(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TBinPolyX86Backend.ImplMulEven(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+  TBinPolyX86Backend.ImplMulEven(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulEven is not available on this target');
 {$IFEND}
 end;
 
-class procedure TBinPolySimd.ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolySimd.ImplMulOdd(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TBinPolyX86Backend.ImplMulOdd(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff);
+  TBinPolyX86Backend.ImplMulOdd(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulOdd is not available on this target');
+{$IFEND}
+end;
+
+class procedure TBinPolySimd.ImplSquare(ALen: Int32; PX, PZz: PUInt64);
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+  TBinPolyX86Backend.ImplSquare(ALen, PX, PZz);
+{$ELSE}
+  raise ENotImplementedCryptoLibException.Create('SIMD ImplSquare is not available on this target');
 {$IFEND}
 end;
 

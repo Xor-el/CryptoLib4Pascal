@@ -39,51 +39,65 @@ type
   TBinPolyX86Backend = class sealed
   public
     class function IsSupported: Boolean; static;
-    class procedure ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
-    class procedure ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
-    class procedure ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-      const AY: TCryptoLibUInt64Array; AYOff: Int32;
-      const AZz: TCryptoLibUInt64Array; AZzOff: Int32); static;
+    class procedure ImplMulSmall(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplMulEven(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplMulOdd(ALen: Int32; PX, PY, PZz: PUInt64); static;
+    class procedure ImplSquare(ALen: Int32; PX, PZz: PUInt64); static;
   end;
 
 implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 procedure BinPolyPclmulImplMulSmall(ALen: Int32; PX, PY, PZz: Pointer);
+{$DEFINE CRYPTOLIB_BINPOLY_SMALL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulSmall_x86_64.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulSmall_i386.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_BINPOLY_SMALL}
 end;
 
 procedure BinPolyPclmulImplMulEven(ALen: Int32; PX, PY, PZz: Pointer);
+{$DEFINE CRYPTOLIB_BINPOLY_EVEN}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulEven_x86_64.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulEven_i386.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_BINPOLY_EVEN}
 end;
 
 procedure BinPolyPclmulImplMulOdd(ALen: Int32; PX, PY, PZz: Pointer);
+{$DEFINE CRYPTOLIB_BINPOLY_ODD}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulOdd_x86_64.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\BinPoly\BinPolyPclmulImplMulOdd_i386.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_i386.inc}
 {$ENDIF}
+{$UNDEF CRYPTOLIB_BINPOLY_ODD}
+end;
+
+procedure BinPolyPclmulImplSquare(ALen: Int32; PX, PZz: Pointer);
+{$DEFINE CRYPTOLIB_BINPOLY_SQUARE}
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
+{$I ..\..\Include\Simd\BinPoly\BinPolyMul_i386.inc}
+{$ENDIF}
+{$UNDEF CRYPTOLIB_BINPOLY_SQUARE}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
@@ -98,44 +112,53 @@ begin
 {$ENDIF}
 end;
 
-class procedure TBinPolyX86Backend.ImplMulSmall(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolyX86Backend.ImplMulSmall(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
 {$IFDEF DEBUG}
   System.Assert((ALen >= 1) and (ALen <= 10));
 {$ENDIF}
-  BinPolyPclmulImplMulSmall(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
+  BinPolyPclmulImplMulSmall(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplemented.Create('x86 ImplMulSmall is not available on this target');
 {$ENDIF}
 end;
 
-class procedure TBinPolyX86Backend.ImplMulEven(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolyX86Backend.ImplMulEven(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
 {$IFDEF DEBUG}
   System.Assert((ALen and 1) = 0);
   System.Assert(ALen >= 2);
 {$ENDIF}
-  BinPolyPclmulImplMulEven(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
+  BinPolyPclmulImplMulEven(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplemented.Create('x86 ImplMulEven is not available on this target');
 {$ENDIF}
 end;
 
-class procedure TBinPolyX86Backend.ImplMulOdd(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;
-  const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZz: TCryptoLibUInt64Array; AZzOff: Int32);
+class procedure TBinPolyX86Backend.ImplMulOdd(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
 {$IFDEF DEBUG}
   System.Assert((ALen and 1) = 1);
   System.Assert(ALen >= 1);
 {$ENDIF}
-  BinPolyPclmulImplMulOdd(ALen, @AX[AXOff], @AY[AYOff], @AZz[AZzOff]);
+  BinPolyPclmulImplMulOdd(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplemented.Create('x86 ImplMulOdd is not available on this target');
+{$ENDIF}
+end;
+
+class procedure TBinPolyX86Backend.ImplSquare(ALen: Int32; PX, PZz: PUInt64);
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF DEBUG}
+  System.Assert(ALen >= 1);
+{$ENDIF}
+  BinPolyPclmulImplSquare(ALen, PX, PZz);
+{$ELSE}
+  raise ENotImplemented.Create('x86 ImplSquare is not available on this target');
 {$ENDIF}
 end;
 

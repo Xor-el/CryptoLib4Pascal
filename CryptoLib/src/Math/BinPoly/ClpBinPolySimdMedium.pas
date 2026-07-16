@@ -24,13 +24,14 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
+  ClpBinPolySimdSizes,
   ClpArrayUtilities;
 
 type
   /// <summary>
   /// SIMD <c>IBinPolyMul</c> for even limb counts in (10, <c>KaratsubaCutoff</c>).
   /// </summary>
-  TBinPolySimdMediumEven = class sealed(TBinPolyMulBase)
+  TBinPolySimdMediumEven = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -41,7 +42,7 @@ type
   /// <summary>
   /// SIMD <c>IBinPolyMul</c> for odd limb counts in (10, <c>KaratsubaCutoff</c>).
   /// </summary>
-  TBinPolySimdMediumOdd = class sealed(TBinPolyMulBase)
+  TBinPolySimdMediumOdd = class sealed(TBinPolySimdMulBase)
   public
     constructor Create(AN: Int32; const AReduce: IBinPolyReduce);
     procedure Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
@@ -68,14 +69,13 @@ end;
 procedure TBinPolySimdMediumEven.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
-  Ltt: TCryptoLibUInt64Array;
+  Ltt: array [0 .. TBinPolyMulBase.MaxStackExtLimbs - 1] of UInt64; // FSizeExt <= 62 here
 begin
-  SetLength(Ltt, FSizeExt);
   try
-    TBinPolySimd.ImplMulEven(FSize, AX, AXOff, AY, AYOff, Ltt, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    TBinPolySimd.ImplMulEven(FSize, @AX[AXOff], @AY[AYOff], @Ltt[0]);
+    FReduce.Reduce(@Ltt[0], @AZ[AZOff]);
   finally
-    TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
+    FillChar(Ltt, FSizeExt * System.SizeOf(UInt64), 0);
   end;
 end;
 
@@ -93,14 +93,13 @@ end;
 procedure TBinPolySimdMediumOdd.Multiply(const AX: TCryptoLibUInt64Array; AXOff: Int32;
   const AY: TCryptoLibUInt64Array; AYOff: Int32; const AZ: TCryptoLibUInt64Array; AZOff: Int32);
 var
-  Ltt: TCryptoLibUInt64Array;
+  Ltt: array [0 .. TBinPolyMulBase.MaxStackExtLimbs - 1] of UInt64; // FSizeExt <= 62 here
 begin
-  SetLength(Ltt, FSizeExt);
   try
-    TBinPolySimd.ImplMulOdd(FSize, AX, AXOff, AY, AYOff, Ltt, 0);
-    FReduce.Reduce(Ltt, 0, AZ, AZOff);
+    TBinPolySimd.ImplMulOdd(FSize, @AX[AXOff], @AY[AYOff], @Ltt[0]);
+    FReduce.Reduce(@Ltt[0], @AZ[AZOff]);
   finally
-    TArrayUtilities.Fill(Ltt, 0, FSizeExt, 0);
+    FillChar(Ltt, FSizeExt * System.SizeOf(UInt64), 0);
   end;
 end;
 

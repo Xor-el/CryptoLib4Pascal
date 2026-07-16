@@ -29,8 +29,9 @@ type
   /// </summary>
   /// <remarks>
   /// <para>
-  /// Reduces the extended product in <c>Att[AttOff..AttOff + 2*Size - 1]</c> into
-  /// <c>Az[AzOff..AzOff + Size - 1]</c>. The reducer knows its own field size.
+  /// Reduces the extended product in <c>Att[0..2*Size - 1]</c> into
+  /// <c>Az[0..Size - 1]</c>. The reducer knows its own field size. Pointer-based
+  /// so callers may hand it stack scratch buffers without a heap allocation.
   /// </para>
   /// <para>
   /// Post-condition on <c>Att</c>: arbitrary. The reducer may freely mutate any limb in
@@ -47,11 +48,8 @@ type
     /// Reduce an extended product buffer into a result buffer.
     /// </summary>
     /// <param name="Att">Extended product buffer (2 * Size limbs).</param>
-    /// <param name="AttOff">Offset into <paramref name="Att"/>.</param>
     /// <param name="Az">Output buffer (Size limbs).</param>
-    /// <param name="AzOff">Offset into <paramref name="Az"/>.</param>
-    procedure Reduce(const Att: TCryptoLibUInt64Array; AttOff: Int32;
-      const Az: TCryptoLibUInt64Array; AzOff: Int32);
+    procedure Reduce(Att: PUInt64; Az: PUInt64);
   end;
 
   /// <summary>
