@@ -1041,6 +1041,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpAesFusedAeadSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpAesNiFusedX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpAesCryptoExtFusedArmBackend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpGhashArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpBinPolySimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiOcbKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiCcmKernel.pas"/>
@@ -1050,6 +1051,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiCbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCtrKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCbcKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtGcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpPclmulGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelDefaults.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpAeadParameters.pas"/>

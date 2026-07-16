@@ -259,7 +259,7 @@ uses
   ClpICipherKernelFactory, ClpIChaCha20Poly1305Kernel, 
   ClpCipherKernelFactoryBase, ClpIAesEngineArm, ClpAesEngineArm, 
   ClpAesCryptoExtFusedArmBackend, ClpAesCryptoExtCtrKernel, 
-  ClpAesCryptoExtCbcKernel;
+  ClpAesCryptoExtCbcKernel, ClpGhashArmBackend, ClpAesCryptoExtGcmKernel;
 
 implementation
 

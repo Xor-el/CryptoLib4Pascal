@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="802">
+    <Files Count="804">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3241,6 +3241,14 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtCbcKernel.pas"/>
         <UnitName Value="ClpAesCryptoExtCbcKernel"/>
       </Item802>
+      <Item803>
+        <Filename Value="..\..\Simd\Backend\ClpGhashArmBackend.pas"/>
+        <UnitName Value="ClpGhashArmBackend"/>
+      </Item803>
+      <Item804>
+        <Filename Value="..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtGcmKernel.pas"/>
+        <UnitName Value="ClpAesCryptoExtGcmKernel"/>
+      </Item804>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
