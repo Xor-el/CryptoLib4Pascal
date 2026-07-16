@@ -239,10 +239,11 @@ begin
   for LI := 0 to System.Pred(System.Length(FCounterOut)) do
     AOutput[AOutOff + LI] := Byte(FCounterOut[LI] xor AInput[AInOff + LI]);
 
-  LJ := System.Length(FCounter);
-  System.Dec(LJ);
+  // Big-endian increment; on a full wrap (all bytes FF) the counter returns
+  // to zero. The LJ > 0 guard stops at byte 0 without underflowing the array.
+  LJ := System.Length(FCounter) - 1;
   System.Inc(FCounter[LJ]);
-  while ((LJ >= 0) and (FCounter[LJ] = 0)) do
+  while ((FCounter[LJ] = 0) and (LJ > 0)) do
   begin
     System.Dec(LJ);
     System.Inc(FCounter[LJ]);
@@ -328,10 +329,11 @@ begin
   begin
     System.Move(FCounter[0], APlainCounters[LI * FBlockSize], FBlockSize);
 
-    LJ := System.Length(FCounter);
-    System.Dec(LJ);
+    // Same guarded big-endian increment as ProcessBlock: full wrap returns
+    // to zero without underflowing the array.
+    LJ := System.Length(FCounter) - 1;
     System.Inc(FCounter[LJ]);
-    while ((LJ >= 0) and (FCounter[LJ] = 0)) do
+    while ((FCounter[LJ] = 0) and (LJ > 0)) do
     begin
       System.Dec(LJ);
       System.Inc(FCounter[LJ]);

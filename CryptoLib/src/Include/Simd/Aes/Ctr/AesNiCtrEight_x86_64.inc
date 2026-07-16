@@ -8,34 +8,43 @@
 // live in xmm0..7 across the whole AES round chain, and the NEXT batch's eight
 // counter blocks are materialised (to a 128-byte stack scratch) *interleaved
 // between the aesenc rounds* of the current batch. The counter build is scalar
-// (mov / bswap / add / adc on the integer ports) so it overlaps the aesenc
+// (mov / bswap / xor on the integer ports) so it overlaps the aesenc
 // throughput (vector port) instead of serialising ahead of it. The XOR with
 // plaintext reuses xmm8 (the round-key scratch) after the final round.
+//
+// Counters are staged PRE-WHITENED: the K_0 XOR is folded into the scalar
+// counter build. The whitened base block (counter ^ K_0) is written to all
+// eight scratch slots once at entry; only the counter dword (bytes 12..15)
+// changes between blocks, so each staged lane is a 4-byte patch of
+// bswap(ctr32) ^ K_0.dword3. This removes the whole round-0 pxor pass from
+// the AES port budget, and the round chain starts directly at K_1.
 //
 // Entry (after ClpSimdProc1Begin_x86_64.inc): rcx = pointer to TCtrFusedCtx. The
 // kernel unpacks it (InPtr loaded into rcx last) into the working registers:
 //   [rcx +  0]  InPtr      -> rcx : input  (advances +128 per 8-block iteration)
 //   [rcx +  8]  OutPtr     -> rdx : output (advances +128)
 //   [rcx + 16]  KeysPtr    -> r8  : AES encrypt round-key schedule (16-byte aligned)
-//   [rcx + 24]  CounterPtr -> r9  : 16-byte big-endian counter (updated in place)
+//   [rcx + 24]  CounterPtr -> r9  : 16-byte big-endian counter (low dword updated in place)
 //   [rcx + 32]  BlockCount -> r10 : positive multiple of 8 (caller guarantees it)
+//
+// Counter contract: the caller guarantees the low-32 counter dword does NOT
+// wrap within the call (ctr32 + BlockCount <= 2^32) - TAesNiCtrKernel splits
+// runs at the 2^32 boundary and propagates the carry into the upper 12 bytes
+// in Pascal. The kernel therefore carries no in-loop carry logic and never
+// touches counter bytes 0..11; only the low dword is stored back. The
+// pipeline builds one batch ahead, so ebx over-runs by exactly 8 - undone
+// (modulo 2^32) before write-back.
 //
 // Exactly one of CRYPTOLIB_AESNI_KEY128 / KEY192 / KEY256 must be defined; the
 // direction is always encrypt (CTR keystream), so CRYPTOLIB_AESNI_DECRYPT must
 // NOT be defined when including this file.
 //
-// The 128-bit counter is held as r11 (high 64 bits, KEPT big-endian since the
-// fast path only stores it) : rbx (low 64 bits, native-LE). Each staged block
-// writes r11 || bswap(rbx) to the scratch and bumps rbx; a low-half carry-out
-// (once per 2^64 blocks) increments r11 through a bswap round-trip, matching
-// SIC's big-endian whole-counter increment. The pipeline builds one batch ahead, so on exit the counter has
-// over-run by exactly one batch (8) - undone before write-back.
-//
-// Register/stack notes: rbx is callee-saved (push/pop). xmm6-15 are saved once
-// via the shared core (xmm8 is the round-key / plaintext-XOR scratch). A 128-byte
-// stack scratch below the xmm save area holds the next batch's counter blocks.
-// AES-NI instructions and pxor forms touching xmm8 are db-encoded for broad
-// assembler compatibility.
+// Register/stack notes: rbx is callee-saved (push/pop); ebx = counter low dword
+// native-LE, r11d = K_0.dword3 (whitening constant), rax = staging scratch.
+// xmm6-15 are saved once via the shared core (xmm8 is the round-key /
+// plaintext-XOR scratch). A 128-byte stack scratch below the xmm save area
+// holds the next batch's pre-whitened counter blocks. AES-NI instructions and
+// pxor forms touching xmm8 are db-encoded for broad assembler compatibility.
   push      rbx
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileSave_x86_64.inc}
   sub       rsp, 128                              // next-batch counter scratch: [rsp+0..127]
@@ -47,91 +56,64 @@
   mov       rdx, [rcx + 8]                        // OutPtr
   mov       rcx, [rcx + 0]                        // InPtr (overwrites PCtx)
 
-  mov       r11, [r9]                             // counter high 64 bits, KEPT big-endian (store-only)
-  mov       rbx, [r9 + 8]                         // counter low 64 bits, native-LE in rbx
-  bswap     rbx
+  // ---- whitened base block (counter ^ K_0) into all 8 scratch slots ----
+  movdqu    xmm0, [r9]                            // counter block
+  movdqa    xmm8, [r8]                            // K_0
+  db $66, $41, $0F, $EF, $C0                      // pxor xmm0, xmm8
+  movdqu    [rsp], xmm0
+  movdqu    [rsp + 16], xmm0
+  movdqu    [rsp + 32], xmm0
+  movdqu    [rsp + 48], xmm0
+  movdqu    [rsp + 64], xmm0
+  movdqu    [rsp + 80], xmm0
+  movdqu    [rsp + 96], xmm0
+  movdqu    [rsp + 112], xmm0
 
-  // ---- stage batch 0 into the scratch, then load it into xmm0..7 ----
-  mov       [rsp + 0], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 8], rax
-  add       rbx, 1
-  jnc       @@StgOk0
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk0:
-  mov       [rsp + 16], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 24], rax
-  add       rbx, 1
-  jnc       @@StgOk1
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk1:
-  mov       [rsp + 32], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 40], rax
-  add       rbx, 1
-  jnc       @@StgOk2
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk2:
-  mov       [rsp + 48], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 56], rax
-  add       rbx, 1
-  jnc       @@StgOk3
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk3:
-  mov       [rsp + 64], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 72], rax
-  add       rbx, 1
-  jnc       @@StgOk4
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk4:
-  mov       [rsp + 80], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 88], rax
-  add       rbx, 1
-  jnc       @@StgOk5
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk5:
-  mov       [rsp + 96], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 104], rax
-  add       rbx, 1
-  jnc       @@StgOk6
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk6:
-  mov       [rsp + 112], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 120], rax
-  add       rbx, 1
-  jnc       @@StgOk7
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk7:
+  mov       ebx, [r9 + 12]                        // counter low dword (big-endian in memory)
+  bswap     ebx                                   // native-LE in ebx
+  mov       r11d, [r8 + 12]                       // K_0.dword3 whitening constant
+
+  // ---- stage batch 0: patch the whitened counter dword of each slot ----
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 12], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 28], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 44], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 60], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 76], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 92], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 108], eax
+  add       ebx, 1
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 124], eax
+  add       ebx, 1
 
   movdqu    xmm0, [rsp]
   movdqu    xmm1, [rsp + 16]
@@ -143,18 +125,8 @@
   movdqu    xmm7, [rsp + 112]
 
 @@CtrEightLoop:
-  // ---- round 0: whiten with K_0 ----
-  movdqa    xmm8, [r8]
-  db $66, $41, $0F, $EF, $C0                      // pxor xmm0, xmm8
-  db $66, $41, $0F, $EF, $C8                      // pxor xmm1, xmm8
-  db $66, $41, $0F, $EF, $D0                      // pxor xmm2, xmm8
-  db $66, $41, $0F, $EF, $D8                      // pxor xmm3, xmm8
-  db $66, $41, $0F, $EF, $E0                      // pxor xmm4, xmm8
-  db $66, $41, $0F, $EF, $E8                      // pxor xmm5, xmm8
-  db $66, $41, $0F, $EF, $F0                      // pxor xmm6, xmm8
-  db $66, $41, $0F, $EF, $F8                      // pxor xmm7, xmm8
-
-  // ---- rounds 1..8: aesenc, each interleaved with staging one next counter ----
+  // ---- rounds 1..8: aesenc (lanes are pre-whitened), each interleaved with
+  //      staging one next pre-whitened counter dword ----
   movdqa    xmm8, [r8 + 16]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
   db $66, $41, $0F, $38, $DC, $C8                 // aesenc xmm1, xmm8
@@ -164,16 +136,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 0], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 8], rax
-  add       rbx, 1
-  jnc       @@StgOk8
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk8:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 12], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 32]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -184,16 +151,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 16], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 24], rax
-  add       rbx, 1
-  jnc       @@StgOk9
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk9:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 28], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 48]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -204,16 +166,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 32], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 40], rax
-  add       rbx, 1
-  jnc       @@StgOk10
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk10:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 44], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 64]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -224,16 +181,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 48], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 56], rax
-  add       rbx, 1
-  jnc       @@StgOk11
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk11:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 60], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 80]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -244,16 +196,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 64], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 72], rax
-  add       rbx, 1
-  jnc       @@StgOk12
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk12:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 76], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 96]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -264,16 +211,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 80], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 88], rax
-  add       rbx, 1
-  jnc       @@StgOk13
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk13:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 92], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 112]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -284,16 +226,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 96], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 104], rax
-  add       rbx, 1
-  jnc       @@StgOk14
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk14:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 108], eax
+  add       ebx, 1
 
   movdqa    xmm8, [r8 + 128]
   db $66, $41, $0F, $38, $DC, $C0                 // aesenc xmm0, xmm8
@@ -304,16 +241,11 @@
   db $66, $41, $0F, $38, $DC, $E8                 // aesenc xmm5, xmm8
   db $66, $41, $0F, $38, $DC, $F0                 // aesenc xmm6, xmm8
   db $66, $41, $0F, $38, $DC, $F8                 // aesenc xmm7, xmm8
-  mov       [rsp + 112], r11
-  mov       rax, rbx
-  bswap     rax
-  mov       [rsp + 120], rax
-  add       rbx, 1
-  jnc       @@StgOk15
-  bswap     r11
-  add       r11, 1
-  bswap     r11
-@@StgOk15:
+  mov       eax, ebx
+  bswap     eax
+  xor       eax, r11d
+  mov       [rsp + 124], eax
+  add       ebx, 1
 
   // ---- round 9 (all key sizes): aesenc, no more staging ----
   movdqa    xmm8, [r8 + 144]
@@ -413,7 +345,7 @@
   db $66, $41, $0F, $EF, $F8                      // pxor xmm7, xmm8
   movdqu    [rdx + 112], xmm7
 
-  // ---- load the staged next-batch counters into xmm0..7 ----
+  // ---- load the staged next-batch pre-whitened counters into xmm0..7 ----
   movdqu    xmm0, [rsp]
   movdqu    xmm1, [rsp + 16]
   movdqu    xmm2, [rsp + 32]
@@ -428,16 +360,11 @@
   sub       r10, 8
   jnz       @@CtrEightLoop
 
-  // ---- undo the one-batch build-ahead, write the counter back (big-endian) ----
-  sub       rbx, 8
-  jnc       @@CtrWbStore
-  bswap     r11
-  sub       r11, 1
-  bswap     r11
-@@CtrWbStore:
-  mov       [r9], r11
-  bswap     rbx
-  mov       [r9 + 8], rbx
+  // ---- undo the one-batch build-ahead (mod 2^32; no carry by contract),
+  //      write the low counter dword back big-endian ----
+  sub       ebx, 8
+  bswap     ebx
+  mov       [r9 + 12], ebx
 
   add       rsp, 128
 {$I ..\..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
