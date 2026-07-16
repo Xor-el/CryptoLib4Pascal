@@ -1,0 +1,133 @@
+CryptoLib/src/Include/Simd/Salsa/Salsa20Sse2_TwoColumnRoundsBody.inc
+  s_1a7490b2af7d4d::t_e2cb565858309e 1-11
+  s_1a7490b2af7d4d::t_7ef94ada176ef7 12
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulEven_i386.inc
+  s_1a7490b2af7d4d::t_9eafa3c2a7a508 2-7
+  s_1a7490b2af7d4d::t_ea3e0758cee19c 9-11
+  s_1a7490b2af7d4d::t_27d0c3b5ea1d89 12-13
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulSmall_x86_64.inc
+  s_1a7490b2af7d4d::t_61cb066f62f40e 1-6,8-10
+  s_1a7490b2af7d4d::t_65bb3145222b2e 11-14
+  s_1a7490b2af7d4d::t_1025f62c682a6c 15
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539ProcessBlocks2Sse2_i386.inc
+  s_1a7490b2af7d4d::t_21df64381942c6 1-17
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulOdd_i386.inc
+  s_1a7490b2af7d4d::t_b8e8758fe1afe8 2-7
+  s_1a7490b2af7d4d::t_bfe2b1e8839088 9-11
+  s_1a7490b2af7d4d::t_0d7ab79bacfba3 12-13
+CryptoLib/src/Include/Simd/Salsa/Salsa20ProcessBlocks2Sse2_i386.inc
+  s_1a7490b2af7d4d::t_b32849e583a7cd 1-14
+CryptoLib/src/Include/Simd/BinPoly/BinPolyClmulMul2x2_x86_64.inc
+  s_1a7490b2af7d4d::t_cd2ae573116219 1-9,11-14
+  s_1a7490b2af7d4d::t_a1eee792e6c435 15-16
+  s_1a7490b2af7d4d::t_911def87f54dcd 17
+CryptoLib/src/Include/Simd/Gcm/GcmReduce3FoldSse2_i386.inc
+  s_1a7490b2af7d4d::t_f42b25dc53df98 2
+  s_1a7490b2af7d4d::t_d4eec2eb18b639 8
+  s_1a7490b2af7d4d::t_d79cc3fb753a26 9-11
+  s_1a7490b2af7d4d::t_66c12495aa950c 12-14
+CryptoLib/src/Include/Simd/BinPoly/BinPolyClmulMul2x2_i386.inc
+  s_1a7490b2af7d4d::t_8edc60a8136dae 15-16
+  s_1a7490b2af7d4d::t_dbc9d6855b2cc1 1-9,11-14
+  s_1a7490b2af7d4d::t_7cfc333842ad23 17
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulEven_x86_64.inc
+  s_1a7490b2af7d4d::t_9278a1212c4e18 2-7
+  s_1a7490b2af7d4d::t_8c39e6bf5f5cd4 9-11
+  s_1a7490b2af7d4d::t_384db8419cd864 12-13
+CryptoLib/src/Include/Simd/Gcm/GcmPclmulPartial_i386.inc
+  s_1a7490b2af7d4d::t_37d028ceeb294d 9-11
+  s_1a7490b2af7d4d::t_916b380cd651a7 2,4-6,8
+  s_1a7490b2af7d4d::t_86d11af54fc9d7 14-17
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_i386.inc
+  s_1a7490b2af7d4d::t_de55792b431c72 12
+  s_1a7490b2af7d4d::t_6cdc2cf1adb1a4 1-11,13
+CryptoLib/src/Include/Simd/Salsa/Salsa20ProcessBlocks2Sse2_x86_64.inc
+  s_1a7490b2af7d4d::t_20e58cb9426006 1-12,14
+  s_1a7490b2af7d4d::t_e1beb38996b39f 13
+CryptoLib/src/Include/Simd/Gcm/GcmReduce3FoldSse2_x86_64.inc
+  s_1a7490b2af7d4d::t_3c648c3126e61b 8
+  s_1a7490b2af7d4d::t_cebb504f7d4d31 2
+  s_1a7490b2af7d4d::t_d0a4cd6c970465 9-11
+  s_1a7490b2af7d4d::t_303c26c11494ce 12-14
+CryptoLib/src/Include/Simd/Gcm/GcmPclmulMultiplyExt_x86_64.inc
+  s_1a7490b2af7d4d::t_b91cc3e310dbe3 2,5
+  s_1a7490b2af7d4d::t_101ec9a092e7db 6-8
+  s_1a7490b2af7d4d::t_b9aeb1d7e9f9ce 11-14
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulSmall_i386.inc
+  s_1a7490b2af7d4d::t_eaba9363e501bf 1-6,8-10
+  s_1a7490b2af7d4d::t_6b2ae5412f16c4 11-13
+  s_1a7490b2af7d4d::t_cfed9146caa9bd 14-15
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_x86_64.inc
+  s_1a7490b2af7d4d::t_0eba21e518ed9f 10
+  s_1a7490b2af7d4d::t_44872b1c3d5f68 1-4,9,11-12
+  s_1a7490b2af7d4d::t_c6bc0a13b25a65 13-15
+CryptoLib/src/Include/Simd/BinPoly/BinPolyPclmulImplMulOdd_x86_64.inc
+  s_1a7490b2af7d4d::t_f4483fa7cc9560 2-7
+  s_1a7490b2af7d4d::t_9f2b8b412e4cce 9-11
+  s_1a7490b2af7d4d::t_9cb2f06c1d2f6b 12-13
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockSse2_x86_64.inc
+  s_1a7490b2af7d4d::t_35974b4a77a574 1-11
+CryptoLib/src/Include/Simd/Gcm/GcmPclmulPartial_x86_64.inc
+  s_1a7490b2af7d4d::t_a1b9a8badc1ae7 2,4-8
+  s_1a7490b2af7d4d::t_0f641fbb710a32 9-10
+  s_1a7490b2af7d4d::t_6e4bda4a94315c 13-16
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockSse2_i386.inc
+  s_1a7490b2af7d4d::t_084f81514396bb 1-12
+CryptoLib/src/Include/Simd/ChaCha/ChaChaSse2_DoubleRoundBody.inc
+  s_1a7490b2af7d4d::t_b9c9d364075dd1 1-11
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539ProcessBlocks2Sse2_x86_64.inc
+  s_1a7490b2af7d4d::t_880658cbc50ac0 14
+  s_1a7490b2af7d4d::t_3fc6f4398aced2 1-13,15-16
+CryptoLib/src/Include/Simd/Gcm/GcmPclmulMultiplyExt_i386.inc
+  s_1a7490b2af7d4d::t_0b1a4b1b63a715 6-8
+  s_1a7490b2af7d4d::t_0da88f73a87b21 2,5
+  s_1a7490b2af7d4d::t_275bccd0e84fd3 11-14
+CryptoLib/src/Include/Simd/Aes/AesNiEightCipher_i386.inc
+  s_1a7490b2af7d4d::t_3da82d5584d326 21-24
+CryptoLib/src/Include/Simd/Aes/AesNiEightCipher_x86_64.inc
+  s_1a7490b2af7d4d::t_b71d79e6a0173e 19-22
+CryptoLib/src/Include/Simd/Aes/AesNiFourCipher_i386.inc
+  s_1a7490b2af7d4d::t_64faf2d88ecf92 21-24
+CryptoLib/src/Include/Simd/Aes/AesNiFourCipher_x86_64.inc
+  s_1a7490b2af7d4d::t_80dac347dff877 19-22
+CryptoLib/src/Include/Simd/Aes/AesNiOneCipher_i386.inc
+  s_1a7490b2af7d4d::t_c09f15ebf7dde8 21-24
+CryptoLib/src/Include/Simd/Aes/AesNiOneCipher_x86_64.inc
+  s_1a7490b2af7d4d::t_e271fc79b7fc69 19-22
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_i386.inc
+  s_1a7490b2af7d4d::t_f0d06a2eb5e0c3 3
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_x86_64.inc
+  s_1a7490b2af7d4d::t_d713d4bd116550 3
+CryptoLib/src/Include/Simd/Aes/Ocb/AesOcbFusedWide_i386.inc
+  s_1a7490b2af7d4d::t_7e64d01ecae6a9 42-46
+CryptoLib/src/Include/Simd/Aes/Ocb/AesOcbFusedWide_x86_64.inc
+  s_1a7490b2af7d4d::t_d61def1e233295 35-39
+CryptoLib/src/Include/Simd/Poly1305/Poly1305BlocksBulkSse2Core_i386.inc
+  s_1a7490b2af7d4d::t_4f4b45012d9f00 21-24
+CryptoLib/src/Include/Simd/Poly1305/Poly1305BlocksBulkSse2Core_x86_64.inc
+  s_1a7490b2af7d4d::t_749c0456a5d538 16-19
+CryptoLib/src/Include/Simd/Aes/Ccm/AesCcmFusedCtrCbcMacTwo_i386.inc
+  s_1a7490b2af7d4d::t_3047b83c40c5e6 3
+CryptoLib/src/Include/Simd/Aes/Ccm/AesCcmFusedCtrCbcMacTwo_x86_64.inc
+  s_1a7490b2af7d4d::t_e9117abecc7a78 3
+CryptoLib/src/Include/Simd/Aes/Eax/AesEaxFusedCtrOmacTwo_i386.inc
+  s_1a7490b2af7d4d::t_7b2931d5fae246 7
+CryptoLib/src/Include/Simd/Aes/Eax/AesEaxFusedCtrOmacTwo_x86_64.inc
+  s_1a7490b2af7d4d::t_f9ffe93c298e2f 7
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0a0590efffa3ff441e0baa833c22ceaf46adb1dd",
+  "prompts": {},
+  "sessions": {
+    "s_1a7490b2af7d4d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2db2a412-525a-4e89-8ae2-c65e6d497eaa",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
