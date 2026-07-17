@@ -1,0 +1,39 @@
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks8Avx2_x86_64.inc
+  s_4439590f1f00be::t_a481daa85c3415 1-164,169,172-174,177-179,182-184,187-189,192-194,197-199,202-204,207-209,212-214,217-219,222-224,227-229,232-234,237-239,242-244,247-252,257-408
+  s_4439590f1f00be::t_2d1a696521e91e 165-168,170-171,175-176,180-181,185-186,190-191,195-196,200-201,205-206,210-211,215-216,220-221,225-226,230-231,235-236,240-241,245-246,253-256
+CryptoLib/src/Simd/Backend/ClpSalsaArmBackend.pas
+  s_4439590f1f00be::t_4bbf08d12a4b2b 30-34
+  s_4439590f1f00be::t_608612c3f383ae 42-50,65-70,101-119
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks4Sse2_x86_64.inc
+  s_4439590f1f00be::t_a481daa85c3415 1-190,195-310,315-497
+  s_4439590f1f00be::t_2d1a696521e91e 191-194,311-314
+CryptoLib/src/Simd/Backend/ClpSalsaX86Backend.pas
+  s_4439590f1f00be::t_9bf21dd8f517d9 42-50
+  s_4439590f1f00be::t_74c8bda79b792f 77-100,133-162
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks8Avx2_i386.inc
+  s_4439590f1f00be::t_a481daa85c3415 1-522
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks4Sse2_i386.inc
+  s_4439590f1f00be::t_a481daa85c3415 1-576
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks4Neon_aarch64.inc
+  s_4439590f1f00be::t_1a69c79d3b7e4a 1-356
+CryptoLib/src/Crypto/Engines/ClpSalsa20Engine.pas
+  s_4439590f1f00be::t_6d3670a5699cde 80-87,114-115,355-389,394-418
+CryptoLib/src/Simd/Facade/ClpSalsaSimd.pas
+  s_4439590f1f00be::t_80b90e33e0394e 46-54,83-106
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "101d7d3195ac1f343bf8086124763a514ed4eb08",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
