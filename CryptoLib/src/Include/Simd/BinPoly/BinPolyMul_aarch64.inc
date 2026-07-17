@@ -12,8 +12,8 @@
 //       runs the same carry-less product schedule (Karatsuba decomposition
 //       and reconstruction) as the matching x86_64 case: operands are
 //       XOR-combined input limbs (built in v28/v29), one pmull per product
-//       (v30), with the product halves routed into the v0..v9 slot
-//       accumulators directly or through fmov/ext half-isolation (v26,
+//       (v30), with the product halves routed into the slot accumulators
+//       (v0..v7, then v16/v17) directly or through fmov/ext half-isolation (v26,
 //       zero in v25).
 //   CRYPTOLIB_BINPOLY_EVEN    (same entry)
 //     - looped N-limb schoolbook multiply over the inlined 2x2 Karatsuba
@@ -24,8 +24,8 @@
 //     - carryless square: bits of each limb spread to even positions via
 //       one pmull(a, a) per limb; PZz receives 2*ALen limbs.
 //
-// Every path uses only caller-saved registers (v0..v9, v25..v30,
-// x4..x13), so no save frames are needed; each selector returns with a
+// Every path uses only caller-saved registers (v0..v7, v16/v17,
+// v25..v30, x4..x13), so no save frames are needed; each selector returns with a
 // plain ret.
 //
 // Reference: Karatsuba's algorithm applied to carry-less multiplication -
@@ -1883,7 +1883,7 @@
   .long 0x4f00e405                    // movi v5.16b, #0
   .long 0x4f00e406                    // movi v6.16b, #0
   .long 0x4f00e407                    // movi v7.16b, #0
-  .long 0x4f00e408                    // movi v8.16b, #0
+  .long 0x4f00e410                    // movi v16.16b, #0
   .long 0x4f00e419                    // movi v25.16b, #0
   .long 0xfd40003c                    // ldr d28, [x1]
   .long 0xfd40005d                    // ldr d29, [x2]
@@ -2175,7 +2175,7 @@
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd40203c                    // ldr d28, [x1, #64]
   .long 0xfd40205d                    // ldr d29, [x2, #64]
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
@@ -2197,9 +2197,9 @@
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
-  .long 0x6e3e1d08                    // eor v8.16b, v8.16b, v30.16b
+  .long 0x6e3e1e10                    // eor v16.16b, v16.16b, v30.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd40183c                    // ldr d28, [x1, #48]
   .long 0xfd401c3b                    // ldr d27, [x1, #56]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2244,7 +2244,7 @@
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd40003c                    // ldr d28, [x1]
   .long 0xfd400c3b                    // ldr d27, [x1, #24]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2541,7 +2541,7 @@
   .long 0x3d801465                    // str q5, [x3, #80]
   .long 0x3d801866                    // str q6, [x3, #96]
   .long 0x3d801c67                    // str q7, [x3, #112]
-  .long 0x3d802068                    // str q8, [x3, #128]
+  .long 0x3d802070                    // str q16, [x3, #128]
   ret
 
 .Lbpsmall_case10:
@@ -2554,8 +2554,8 @@
   .long 0x4f00e405                    // movi v5.16b, #0
   .long 0x4f00e406                    // movi v6.16b, #0
   .long 0x4f00e407                    // movi v7.16b, #0
-  .long 0x4f00e408                    // movi v8.16b, #0
-  .long 0x4f00e409                    // movi v9.16b, #0
+  .long 0x4f00e410                    // movi v16.16b, #0
+  .long 0x4f00e411                    // movi v17.16b, #0
   .long 0x4f00e419                    // movi v25.16b, #0
   .long 0xfd40003c                    // ldr d28, [x1]
   .long 0xfd40005d                    // ldr d29, [x2]
@@ -2761,7 +2761,7 @@
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd401c3c                    // ldr d28, [x1, #56]
   .long 0xfd401c5d                    // ldr d29, [x2, #56]
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
@@ -2773,9 +2773,9 @@
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
-  .long 0x6e3e1d08                    // eor v8.16b, v8.16b, v30.16b
+  .long 0x6e3e1e10                    // eor v16.16b, v16.16b, v30.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd40203c                    // ldr d28, [x1, #64]
   .long 0xfd40205d                    // ldr d29, [x2, #64]
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
@@ -2786,27 +2786,27 @@
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
-  .long 0x6e3e1d08                    // eor v8.16b, v8.16b, v30.16b
+  .long 0x6e3e1e10                    // eor v16.16b, v16.16b, v30.16b
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d29                    // eor v9.16b, v9.16b, v26.16b
+  .long 0x6e3a1e31                    // eor v17.16b, v17.16b, v26.16b
   .long 0xfd40243c                    // ldr d28, [x1, #72]
   .long 0xfd40245d                    // ldr d29, [x2, #72]
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
   .long 0x6e3e1ce7                    // eor v7.16b, v7.16b, v30.16b
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
-  .long 0x6e3e1d08                    // eor v8.16b, v8.16b, v30.16b
+  .long 0x6e3e1e10                    // eor v16.16b, v16.16b, v30.16b
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
-  .long 0x6e3e1d29                    // eor v9.16b, v9.16b, v30.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
+  .long 0x6e3e1e31                    // eor v17.16b, v17.16b, v30.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d29                    // eor v9.16b, v9.16b, v26.16b
+  .long 0x6e3a1e31                    // eor v17.16b, v17.16b, v26.16b
   .long 0xfd40143c                    // ldr d28, [x1, #40]
   .long 0xfd40183b                    // ldr d27, [x1, #48]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2874,7 +2874,7 @@
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd401c3c                    // ldr d28, [x1, #56]
   .long 0xfd40203b                    // ldr d27, [x1, #64]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2885,7 +2885,7 @@
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
   .long 0x6e3a1ce7                    // eor v7.16b, v7.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0xfd401c3c                    // ldr d28, [x1, #56]
   .long 0xfd40243b                    // ldr d27, [x1, #72]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2893,7 +2893,7 @@
   .long 0xfd40245b                    // ldr d27, [x2, #72]
   .long 0x6e3b1fbd                    // eor v29.16b, v29.16b, v27.16b
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
-  .long 0x6e3e1d08                    // eor v8.16b, v8.16b, v30.16b
+  .long 0x6e3e1e10                    // eor v16.16b, v16.16b, v30.16b
   .long 0xfd40203c                    // ldr d28, [x1, #64]
   .long 0xfd40243b                    // ldr d27, [x1, #72]
   .long 0x6e3b1f9c                    // eor v28.16b, v28.16b, v27.16b
@@ -2902,9 +2902,9 @@
   .long 0x6e3b1fbd                    // eor v29.16b, v29.16b, v27.16b
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
   .long 0x6e1e433a                    // ext v26.16b, v25.16b, v30.16b, #8
-  .long 0x6e3a1d08                    // eor v8.16b, v8.16b, v26.16b
+  .long 0x6e3a1e10                    // eor v16.16b, v16.16b, v26.16b
   .long 0x6e1943da                    // ext v26.16b, v30.16b, v25.16b, #8
-  .long 0x6e3a1d29                    // eor v9.16b, v9.16b, v26.16b
+  .long 0x6e3a1e31                    // eor v17.16b, v17.16b, v26.16b
   .long 0xfd40003c                    // ldr d28, [x1]
   .long 0xfd40145d                    // ldr d29, [x2, #40]
   .long 0x0efde39e                    // pmull v30.1q, v28.1d, v29.1d
@@ -3255,8 +3255,8 @@
   .long 0x3d801465                    // str q5, [x3, #80]
   .long 0x3d801866                    // str q6, [x3, #96]
   .long 0x3d801c67                    // str q7, [x3, #112]
-  .long 0x3d802068                    // str q8, [x3, #128]
-  .long 0x3d802469                    // str q9, [x3, #144]
+  .long 0x3d802070                    // str q16, [x3, #128]
+  .long 0x3d802471                    // str q17, [x3, #144]
   ret
 {$ELSE}
   {$IFDEF CRYPTOLIB_BINPOLY_EVEN}
@@ -3274,7 +3274,7 @@
   .long 0xd37ceca6                    // lsl x6, x5, #4
   add x7, x2, x6
   .long 0x3dc000e1                    // ldr q1, [x7]
-  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v8, v9) ----
+  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v16, v17) ----
   .long 0x6e004002                    // ext v2.16b, v0.16b, v0.16b, #8
   .long 0x6e201c42                    // eor v2.16b, v2.16b, v0.16b
   .long 0x6e014023                    // ext v3.16b, v1.16b, v1.16b, #8
@@ -3285,13 +3285,13 @@
   .long 0x6e251c87                    // eor v7.16b, v4.16b, v5.16b
   .long 0x6e261ce7                    // eor v7.16b, v7.16b, v6.16b
   .long 0x6e074322                    // ext v2.16b, v25.16b, v7.16b, #8
-  .long 0x6e221c88                    // eor v8.16b, v4.16b, v2.16b
+  .long 0x6e221c90                    // eor v16.16b, v4.16b, v2.16b
   .long 0x6e1940e3                    // ext v3.16b, v7.16b, v25.16b, #8
-  .long 0x6e231ca9                    // eor v9.16b, v5.16b, v3.16b
+  .long 0x6e231cb1                    // eor v17.16b, v5.16b, v3.16b
   .long 0xd37be8a6                    // lsl x6, x5, #5
   add x7, x3, x6
-  .long 0x3d8000e8                    // str q8, [x7]
-  .long 0x3d8004e9                    // str q9, [x7, #16]
+  .long 0x3d8000f0                    // str q16, [x7]
+  .long 0x3d8004f1                    // str q17, [x7, #16]
   add x5, x5, #1
   b .Lbpeven_diag
 .Lbpeven_diag_done:
@@ -3365,7 +3365,7 @@
   add x7, x2, x6
   .long 0x3dc000e4                    // ldr q4, [x7]
   .long 0x6e241c21                    // eor v1.16b, v1.16b, v4.16b
-  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v8, v9) ----
+  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v16, v17) ----
   .long 0x6e004002                    // ext v2.16b, v0.16b, v0.16b, #8
   .long 0x6e201c42                    // eor v2.16b, v2.16b, v0.16b
   .long 0x6e014023                    // ext v3.16b, v1.16b, v1.16b, #8
@@ -3376,16 +3376,16 @@
   .long 0x6e251c87                    // eor v7.16b, v4.16b, v5.16b
   .long 0x6e261ce7                    // eor v7.16b, v7.16b, v6.16b
   .long 0x6e074322                    // ext v2.16b, v25.16b, v7.16b, #8
-  .long 0x6e221c88                    // eor v8.16b, v4.16b, v2.16b
+  .long 0x6e221c90                    // eor v16.16b, v4.16b, v2.16b
   .long 0x6e1940e3                    // ext v3.16b, v7.16b, v25.16b, #8
-  .long 0x6e231ca9                    // eor v9.16b, v5.16b, v3.16b
+  .long 0x6e231cb1                    // eor v17.16b, v5.16b, v3.16b
   .long 0xd37ced46                    // lsl x6, x10, #4
   add x7, x3, x6
   .long 0x3dc000e4                    // ldr q4, [x7]
-  .long 0x6e281c84                    // eor v4.16b, v4.16b, v8.16b
+  .long 0x6e301c84                    // eor v4.16b, v4.16b, v16.16b
   .long 0x3d8000e4                    // str q4, [x7]
   .long 0x3dc004e4                    // ldr q4, [x7, #16]
-  .long 0x6e291c84                    // eor v4.16b, v4.16b, v9.16b
+  .long 0x6e311c84                    // eor v4.16b, v4.16b, v17.16b
   .long 0x3d8004e4                    // str q4, [x7, #16]
   add x5, x5, #1
   sub x11, x11, #1
@@ -3411,7 +3411,7 @@
   .long 0xd37ceca6                    // lsl x6, x5, #4
   add x7, x2, x6
   .long 0x3dc000e1                    // ldr q1, [x7]
-  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v8, v9) ----
+  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v16, v17) ----
   .long 0x6e004002                    // ext v2.16b, v0.16b, v0.16b, #8
   .long 0x6e201c42                    // eor v2.16b, v2.16b, v0.16b
   .long 0x6e014023                    // ext v3.16b, v1.16b, v1.16b, #8
@@ -3422,13 +3422,13 @@
   .long 0x6e251c87                    // eor v7.16b, v4.16b, v5.16b
   .long 0x6e261ce7                    // eor v7.16b, v7.16b, v6.16b
   .long 0x6e074322                    // ext v2.16b, v25.16b, v7.16b, #8
-  .long 0x6e221c88                    // eor v8.16b, v4.16b, v2.16b
+  .long 0x6e221c90                    // eor v16.16b, v4.16b, v2.16b
   .long 0x6e1940e3                    // ext v3.16b, v7.16b, v25.16b, #8
-  .long 0x6e231ca9                    // eor v9.16b, v5.16b, v3.16b
+  .long 0x6e231cb1                    // eor v17.16b, v5.16b, v3.16b
   .long 0xd37be8a6                    // lsl x6, x5, #5
   add x7, x3, x6
-  .long 0x3d8000e8                    // str q8, [x7]
-  .long 0x3d8004e9                    // str q9, [x7, #16]
+  .long 0x3d8000f0                    // str q16, [x7]
+  .long 0x3d8004f1                    // str q17, [x7, #16]
   add x5, x5, #1
   b .Lbpodd_diag
 .Lbpodd_diag_done:
@@ -3439,10 +3439,10 @@
   .long 0xd37cec86                    // lsl x6, x4, #4
   add x7, x2, x6
   .long 0xfd4000e1                    // ldr d1, [x7]
-  .long 0x0ee1e008                    // pmull v8.1q, v0.1d, v1.1d
+  .long 0x0ee1e010                    // pmull v16.1q, v0.1d, v1.1d
   .long 0xd37be886                    // lsl x6, x4, #5
   add x7, x3, x6
-  .long 0x3d8000e8                    // str q8, [x7]
+  .long 0x3d8000f0                    // str q16, [x7]
   // ALen = 1 special case (L = 0): only tail diagonal exists.
   cbz x4, .Lbpodd_done
   // Streak: V0 = ZZ[0], V1 = ZZ[1]; for i = 1..L:
@@ -3534,7 +3534,7 @@
   .long 0x3dc000e4                    // ldr q4, [x7]
 .Lbpodd_yhi_done:
   .long 0x6e241c21                    // eor v1.16b, v1.16b, v4.16b
-  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v8, v9) ----
+  // ---- inline: 2x2-limb carryless Karatsuba (v0, v1 -> v16, v17) ----
   .long 0x6e004002                    // ext v2.16b, v0.16b, v0.16b, #8
   .long 0x6e201c42                    // eor v2.16b, v2.16b, v0.16b
   .long 0x6e014023                    // ext v3.16b, v1.16b, v1.16b, #8
@@ -3545,16 +3545,16 @@
   .long 0x6e251c87                    // eor v7.16b, v4.16b, v5.16b
   .long 0x6e261ce7                    // eor v7.16b, v7.16b, v6.16b
   .long 0x6e074322                    // ext v2.16b, v25.16b, v7.16b, #8
-  .long 0x6e221c88                    // eor v8.16b, v4.16b, v2.16b
+  .long 0x6e221c90                    // eor v16.16b, v4.16b, v2.16b
   .long 0x6e1940e3                    // ext v3.16b, v7.16b, v25.16b, #8
-  .long 0x6e231ca9                    // eor v9.16b, v5.16b, v3.16b
+  .long 0x6e231cb1                    // eor v17.16b, v5.16b, v3.16b
   .long 0xd37ced46                    // lsl x6, x10, #4
   add x7, x3, x6
   .long 0x3dc000e4                    // ldr q4, [x7]
-  .long 0x6e281c84                    // eor v4.16b, v4.16b, v8.16b
+  .long 0x6e301c84                    // eor v4.16b, v4.16b, v16.16b
   .long 0x3d8000e4                    // str q4, [x7]
   .long 0x3dc004e4                    // ldr q4, [x7, #16]
-  .long 0x6e291c84                    // eor v4.16b, v4.16b, v9.16b
+  .long 0x6e311c84                    // eor v4.16b, v4.16b, v17.16b
   .long 0x3d8004e4                    // str q4, [x7, #16]
   add x5, x5, #1
   sub x11, x11, #1
