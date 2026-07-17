@@ -1,0 +1,27 @@
+CryptoLib.Benchmark/src/Core/MacPerformanceBenchmark.pas
+  s_4439590f1f00be::t_08bb32751765b1 64-67,72-73,79
+  s_4439590f1f00be::t_9fe46a4b8d160a 99-100,105-106,113-114,116-128
+  s_4439590f1f00be::t_c698a57e6817d2 1-63,68-71,74-78,80-98,101-104,107-112,115,129-158,160-162,167-173,182-183,186-239
+  s_4439590f1f00be::t_0db66f76f721c3 159,163-165,184-185
+  s_4439590f1f00be::t_23a2a8dfda0b45 166,174-181
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4439590f1f00be::t_9d15415b9c8f62 11
+CryptoLib.Benchmark/src/Core/PerformanceBenchmark.pas
+  s_4439590f1f00be::t_d2bf617b9b5fa5 43,59,64-65,71-72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "91283603f7008065b66dadf1ae1d6b6679fb3d3d",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
