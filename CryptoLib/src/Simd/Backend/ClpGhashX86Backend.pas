@@ -208,7 +208,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ then
+  if TCpuFeatures.X86.HasPCLMULQDQ() then
   begin
     GcmPclmulFieldPartial(PX, PY, @LPartial);
     GcmPclmulReducePartial(LPartial, PGcmFieldRaw(PX)^);
@@ -221,7 +221,7 @@ end;
 class function TGhashX86Backend.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ then
+  if TCpuFeatures.X86.HasPCLMULQDQ() then
   begin
     GcmPclmulMultiplyExtBytes(PX, PY, POut48);
     Exit(True);
@@ -233,7 +233,7 @@ end;
 class function TGhashX86Backend.TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2 then
+  if TCpuFeatures.X86.HasSSE2() then
   begin
     GcmReduce3FoldSse2(PZ0, PZ1, PZ2, PSVector16);
     Exit(True);
@@ -245,7 +245,7 @@ end;
 class function TGhashX86Backend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2 then
+  if TCpuFeatures.X86.HasSSE2() then
   begin
     GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48);
     Exit(True);
@@ -258,7 +258,7 @@ class function TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PBy
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3 and TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked then
+  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 4-way multiply-accumulate and folding reduction per batch - in a
@@ -274,7 +274,7 @@ class function TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: P
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3 and TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked then
+  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 8-way multiply-accumulate and folding reduction per batch - in a
@@ -289,7 +289,7 @@ end;
 class function TGhashX86Backend.IsShuffledGhashSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
+  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TCpuFeatures.X86.HasSSSE3() and
     TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
@@ -299,7 +299,7 @@ end;
 class function TGhashX86Backend.HasCarrylessMultiply: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ();
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -308,7 +308,7 @@ end;
 class function TGhashX86Backend.TryBlockReverse128(PDst, PSrc: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3 then
+  if TCpuFeatures.X86.HasSSSE3() then
   begin
     GcmBlockReverse128Ssse3(PDst, PSrc, @ReverseBytesMask[0]);
     Exit(True);

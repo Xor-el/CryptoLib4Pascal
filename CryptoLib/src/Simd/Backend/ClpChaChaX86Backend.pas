@@ -177,12 +177,10 @@ end;
 class function TChaChaX86Backend.TryCore(ARounds: Int32; AInput, AOut: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
-    TX86SimdLevel.SSE2:
-    begin
-      ChaCha20BlockSse2(ARounds, AInput, AOut);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    ChaCha20BlockSse2(ARounds, AInput, AOut);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;
@@ -195,14 +193,11 @@ begin
   // every SIMD CPU (the vertical 4-way/8-way kernels handle the larger tiers). The
   // 2-block kernel is 7539-only (32-bit counter with raise-on-wrap), so DJB
   // (ACtr64) has no SIMD body here and runs scalar.
-  if not ACtr64 then
-    case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
-      TX86SimdLevel.SSE2:
-      begin
-        ChaCha7539ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
-        Exit(True);
-      end;
-    end;
+  if (not ACtr64) and TCpuFeatures.X86.HasSSE2() then
+  begin
+    ChaCha7539ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
+    Exit(True);
+  end;
 {$ENDIF}
   Result := False;
 end;
@@ -237,15 +232,13 @@ end;
 class function TChaChaX86Backend.TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte; AGroups: Int32; ACtr64: Boolean): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
-    TX86SimdLevel.AVX2:
-    begin
-      if ACtr64 then
-        ChaChaProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups)
-      else
-        ChaCha7539ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasAVX2() then
+  begin
+    if ACtr64 then
+      ChaChaProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups)
+    else
+      ChaCha7539ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;

@@ -61,7 +61,7 @@ end;
 class function TByteXorX86Backend.TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2 then
+  if TCpuFeatures.X86.HasSSE2() then
   begin
     ByteXorSse2(ALen, AX, AY, AZ);
     Exit(True);

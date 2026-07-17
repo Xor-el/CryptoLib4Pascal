@@ -58,8 +58,8 @@ implementation
 class function TAesNiFusedX86Backend.CpuSupports: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasPCLMULQDQ and
-    TCpuFeatures.X86.HasSSSE3 and TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasAESNI() and TCpuFeatures.X86.HasPCLMULQDQ() and
+    TCpuFeatures.X86.HasSSSE3() and TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
 {$ENDIF CRYPTOLIB_X86_SIMD}

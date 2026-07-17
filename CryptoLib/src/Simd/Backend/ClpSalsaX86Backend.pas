@@ -22,7 +22,6 @@ interface
 
 uses
   ClpCpuFeatures,
-  ClpSimdLevels,
   ClpCryptoLibTypes;
 
 type
@@ -105,12 +104,10 @@ end;
 class function TSalsaX86Backend.TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
-    TX86SimdLevel.SSE2:
-    begin
-      Salsa20BlockSse2(ARounds, AInput, AOut);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    Salsa20BlockSse2(ARounds, AInput, AOut);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;
@@ -119,12 +116,10 @@ end;
 class function TSalsaX86Backend.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
-    TX86SimdLevel.SSE2:
-    begin
-      Salsa20ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    Salsa20ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;
@@ -134,12 +129,10 @@ class function TSalsaX86Backend.TryProcessBlocks4(ARounds: Int32;
   AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
-    TX86SimdLevel.SSE2:
-    begin
-      Salsa20ProcessBlocks4Sse2(ARounds, AState, AIn, AOut, AGroups);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasSSE2() then
+  begin
+    Salsa20ProcessBlocks4Sse2(ARounds, AState, AIn, AOut, AGroups);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;
@@ -149,12 +142,10 @@ class function TSalsaX86Backend.TryProcessBlocks8(ARounds: Int32;
   AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
-    TX86SimdLevel.AVX2:
-    begin
-      Salsa20ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
-      Exit(True);
-    end;
+  if TCpuFeatures.X86.HasAVX2() then
+  begin
+    Salsa20ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
+    Exit(True);
   end;
 {$ENDIF}
   Result := False;

@@ -106,7 +106,7 @@ end;
 class function TBinPolyX86Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ and TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
 {$ENDIF}

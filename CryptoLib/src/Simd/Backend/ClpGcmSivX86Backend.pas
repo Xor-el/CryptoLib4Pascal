@@ -62,7 +62,7 @@ end;
 class function TGcmSivX86Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
+  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TCpuFeatures.X86.HasSSSE3() and
     TIntrinsicsVector.IsPacked;
 {$ELSE}
   Result := False;
