@@ -531,6 +531,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpChaChaArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpSalsaSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpSalsaX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpSalsaArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpPoly1305Simd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpPoly1305X86Backend.pas"/>

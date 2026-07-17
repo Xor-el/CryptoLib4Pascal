@@ -14,61 +14,72 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpSalsaSimd;
+unit ClpSalsaArmBackend;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpCryptoLibTypes
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  , ClpSalsaX86Backend
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  , ClpSalsaArmBackend
-{$IFEND}
-  ;
+  ClpCpuFeatures,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Arch-neutral SIMD dispatch facade for the Salsa20 family. Selects the
-  /// per-arch backend at compile time; on a build with no
-  /// SIMD backend every entry point degrades to "not handled" so callers run
-  /// their scalar reference path. The Salsa20 engine calls only this facade and
-  /// stays free of any <c>TCpuFeatures</c> / <c>CRYPTOLIB_*_ASM</c> knowledge.
+  /// ARM (NEON) SIMD backend for the Salsa20 family: owns the NEON kernels
+  /// (bodies in <c>Include\Simd\Salsa\</c>): the 1-block core and the
+  /// 2-block fused-I/O kernel. Compiles on every target - when built
+  /// without AArch64 SIMD the <c>Try*</c> entry points return <c>False</c>
+  /// and the callers fall back to their scalar reference path.
   /// </summary>
-  TSalsaSimd = class sealed
+  TSalsaArmBackend = class sealed
   public
-    /// <summary>Single-block Salsa20 core.</summary>
+    /// <summary>NEON single-block Salsa20 core.</summary>
     class function TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean; static;
-    /// <summary>Two-block Salsa20 keystream (128 bytes).</summary>
+    /// <summary>NEON two-block Salsa20 keystream (128 bytes), fused I/O.</summary>
     class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
   end;
 
 implementation
 
-{ TSalsaSimd }
-
-class function TSalsaSimd.TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean;
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TSalsaX86Backend.TryCore(ARounds, AInput, AOut);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TSalsaArmBackend.TryCore(ARounds, AInput, AOut);
-{$ELSE}
-  Result := False;
-{$IFEND}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+procedure Salsa20BlockNeon(ARounds: Int32; AInput, AOut: Pointer);
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20BlockNeon_aarch64.inc}
 end;
 
-class function TSalsaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean;
+procedure Salsa20ProcessBlocks2Neon(ARounds: Int32; AState, AIn, AOut: PByte);
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks2Neon_aarch64.inc}
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
+
+{ TSalsaArmBackend }
+
+class function TSalsaArmBackend.TryCore(ARounds: Int32;
+  AInput, AOut: Pointer): Boolean;
 begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TSalsaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TSalsaArmBackend.TryProcessBlocks2(ARounds, AState, AIn, AOut);
-{$ELSE}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if TCpuFeatures.Arm.HasNEON() then
+  begin
+    Salsa20BlockNeon(ARounds, AInput, AOut);
+    Exit(True);
+  end;
+{$ENDIF}
   Result := False;
-{$IFEND}
+end;
+
+class function TSalsaArmBackend.TryProcessBlocks2(ARounds: Int32;
+  AState, AIn, AOut: PByte): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if TCpuFeatures.Arm.HasNEON() then
+  begin
+    Salsa20ProcessBlocks2Neon(ARounds, AState, AIn, AOut);
+    Exit(True);
+  end;
+{$ENDIF}
+  Result := False;
 end;
 
 end.

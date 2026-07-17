@@ -202,6 +202,7 @@ contains
   ClpChaChaArmBackend in '..\..\Simd\Backend\ClpChaChaArmBackend.pas',
   ClpSalsaSimd in '..\..\Simd\Facade\ClpSalsaSimd.pas',
   ClpSalsaX86Backend in '..\..\Simd\Backend\ClpSalsaX86Backend.pas',
+  ClpSalsaArmBackend in '..\..\Simd\Backend\ClpSalsaArmBackend.pas',
   ClpPoly1305State in '..\..\Crypto\Macs\ClpPoly1305State.pas',
   ClpPoly1305Simd in '..\..\Simd\Facade\ClpPoly1305Simd.pas',
   ClpPoly1305X86Backend in '..\..\Simd\Backend\ClpPoly1305X86Backend.pas',

@@ -207,6 +207,7 @@ uses
   ClpChaChaArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpChaChaArmBackend.pas',
   ClpSalsaSimd in '..\..\CryptoLib\src\Simd\Facade\ClpSalsaSimd.pas',
   ClpSalsaX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpSalsaX86Backend.pas',
+  ClpSalsaArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpSalsaArmBackend.pas',
   ClpPoly1305State in '..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas',
   ClpPoly1305Simd in '..\..\CryptoLib\src\Simd\Facade\ClpPoly1305Simd.pas',
   ClpPoly1305X86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpPoly1305X86Backend.pas',
