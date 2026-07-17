@@ -1,0 +1,25 @@
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks4Neon_aarch64.inc
+  s_4439590f1f00be::t_6843f92b4c5dab 12-14
+  s_4439590f1f00be::t_9af2601edf21db 115-120,123-128,131-136,145-150,153-158,161-166,176-181,184-189,192-197,206-211,214-219,222-227
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockNeon_aarch64.inc
+  s_4439590f1f00be::t_6843f92b4c5dab 7-8
+  s_4439590f1f00be::t_da6dfdb0c94985 30-32,34-36,38-40,48-50,52-54,56-58
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks2Neon_aarch64.inc
+  s_4439590f1f00be::t_86e5b197f0932d 37-39,41-43,45-47,55-57,59-61,63-65,112-114,116-118,120-122,130-132,134-136,138-140
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "726259266479c8d5f4c1689952ac0831dced99d9",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
