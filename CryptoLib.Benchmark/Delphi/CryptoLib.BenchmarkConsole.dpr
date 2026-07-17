@@ -8,6 +8,7 @@ uses
   BenchmarkCommon in '..\src\Core\BenchmarkCommon.pas',
   CipherPerformanceBenchmark in '..\src\Core\CipherPerformanceBenchmark.pas',
   DigestPerformanceBenchmark in '..\src\Core\DigestPerformanceBenchmark.pas',
+  MacPerformanceBenchmark in '..\src\Core\MacPerformanceBenchmark.pas',
   KdfPerformanceBenchmark in '..\src\Core\KdfPerformanceBenchmark.pas',
   PerformanceBenchmark in '..\src\Core\PerformanceBenchmark.pas',
   SignerPerformanceBenchmark in '..\src\Core\SignerPerformanceBenchmark.pas',

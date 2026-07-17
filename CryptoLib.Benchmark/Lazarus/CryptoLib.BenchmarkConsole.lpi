@@ -32,7 +32,7 @@
         <PackageName Value="CryptoLib4PascalPackage"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="7">
+    <Units Count="8">
       <Unit0>
         <Filename Value="CryptoLib.BenchmarkConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -61,6 +61,10 @@
         <Filename Value="..\src\Core\KdfPerformanceBenchmark.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit6>
+      <Unit7>
+        <Filename Value="..\src\Core\MacPerformanceBenchmark.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit7>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
