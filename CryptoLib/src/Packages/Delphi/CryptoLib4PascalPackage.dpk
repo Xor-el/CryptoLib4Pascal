@@ -751,6 +751,7 @@ contains
   ClpByteUtilities in '..\..\NumberUtilities\ClpByteUtilities.pas',
   ClpByteXorSimd in '..\..\Simd\Facade\ClpByteXorSimd.pas',
   ClpByteXorX86Backend in '..\..\Simd\Backend\ClpByteXorX86Backend.pas',
+  ClpByteXorArmBackend in '..\..\Simd\Backend\ClpByteXorArmBackend.pas',
   ClpInt16Utilities in '..\..\NumberUtilities\ClpInt16Utilities.pas',
   ClpInt32Utilities in '..\..\NumberUtilities\ClpInt32Utilities.pas',
   ClpInt64Utilities in '..\..\NumberUtilities\ClpInt64Utilities.pas',

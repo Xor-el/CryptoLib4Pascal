@@ -1092,6 +1092,7 @@
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpByteXorSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpByteXorX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpByteXorArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas"/>

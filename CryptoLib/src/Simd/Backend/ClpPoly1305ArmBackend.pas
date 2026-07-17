@@ -27,10 +27,10 @@ uses
 
 type
   /// <summary>
-  /// ARM (NEON) SIMD backend for Poly1305: owns the r/r^2 power-table
-  /// builder and the 2-way bulk kernel (body in
+  /// ARM (NEON) SIMD backend for Poly1305: owns the r^1..r^4 power-table
+  /// builder and the 4-way bulk kernel (body in
   /// <c>Include\Simd\Poly1305\</c>), sharing the radix-2^26 field
-  /// arithmetic and power-table layout with the x86 2-way kernel.
+  /// arithmetic and power-table layout with the x86 4-way kernel.
   /// Compiles on every target - when built without AArch64 SIMD
   /// <c>TryInitPowerTable</c> returns <c>False</c> (leaving the caller on
   /// the scalar path) and <c>ProcessBulk</c> consumes zero blocks.
@@ -48,9 +48,9 @@ type
     /// <summary>
     /// Process the leading lane-multiple of <paramref name="ANumBlocks"/>
     /// 16-byte blocks with the NEON kernel and return the number of blocks
-    /// consumed (a multiple of 2). Returns 0 - leaving the whole batch to
+    /// consumed (a multiple of 4). Returns 0 - leaving the whole batch to
     /// the caller's scalar path - when no power table is present, fewer than
-    /// 2 blocks are available, or the build has no AArch64 SIMD.
+    /// 4 blocks are available, or the build has no AArch64 SIMD.
     /// </summary>
     class function ProcessBulk(var AState: TPoly1305State; APowTable: PByte;
       const ABuf: TCryptoLibByteArray; AOff, ANumBlocks: Int32): Int32; static;
@@ -101,13 +101,17 @@ end;
 procedure Poly1305NeonInitPowerTable(var APowTable: TCryptoLibByteArray;
   const AState: TPoly1305State);
 const
-  TableSize = Int32(160);
+  // 10 rows x 8 lanes x 4 bytes = 320. Rows 0..4 hold the limbs of
+  // r^4|r^4|r^4|r^3 | r^4|r^2|r^4|r^1 across the 8 lanes; rows 5..8 hold
+  // the 5x wraparound multipliers; row 9 is padding for the over-read of
+  // the last shifted load.
+  TableSize = Int32(320);
 type
-  TPowTableLayout = array[0..9, 0..3] of UInt32;
+  TPowTableLayout = array[0..9, 0..7] of UInt32;
   PPowTableLayout = ^TPowTableLayout;
 var
   LTbl: PPowTableLayout;
-  Lr1, Lr2: array[0..4] of UInt32;
+  Lr1, Lr2, Lr3, Lr4: array[0..4] of UInt32;
   LIdx, LRow, LJ: Int32;
 begin
   System.SetLength(APowTable, TableSize);
@@ -120,29 +124,39 @@ begin
   Lr1[4] := AState.R4;
 
   Poly1305MulLimbs(Lr2, Lr1, Lr1);
+  Poly1305MulLimbs(Lr3, Lr2, Lr1);
+  Poly1305MulLimbs(Lr4, Lr2, Lr2);
 
   for LIdx := 0 to 4 do
   begin
-    LTbl^[LIdx, 0] := Lr2[LIdx];
-    LTbl^[LIdx, 1] := Lr2[LIdx];
-    LTbl^[LIdx, 2] := Lr2[LIdx];
-    LTbl^[LIdx, 3] := Lr1[LIdx];
+    LTbl^[LIdx, 0] := Lr4[LIdx];
+    LTbl^[LIdx, 1] := Lr4[LIdx];
+    LTbl^[LIdx, 2] := Lr4[LIdx];
+    LTbl^[LIdx, 3] := Lr3[LIdx];
+    LTbl^[LIdx, 4] := Lr4[LIdx];
+    LTbl^[LIdx, 5] := Lr2[LIdx];
+    LTbl^[LIdx, 6] := Lr4[LIdx];
+    LTbl^[LIdx, 7] := Lr1[LIdx];
   end;
 
   for LRow := 5 to 8 do
   begin
     LJ := LRow - 4; // 1..4
-    LTbl^[LRow, 0] := Lr2[LJ] * 5;
-    LTbl^[LRow, 1] := Lr2[LJ] * 5;
-    LTbl^[LRow, 2] := Lr2[LJ] * 5;
-    LTbl^[LRow, 3] := Lr1[LJ] * 5;
+    LTbl^[LRow, 0] := Lr4[LJ] * 5;
+    LTbl^[LRow, 1] := Lr4[LJ] * 5;
+    LTbl^[LRow, 2] := Lr4[LJ] * 5;
+    LTbl^[LRow, 3] := Lr3[LJ] * 5;
+    LTbl^[LRow, 4] := Lr4[LJ] * 5;
+    LTbl^[LRow, 5] := Lr2[LJ] * 5;
+    LTbl^[LRow, 6] := Lr4[LJ] * 5;
+    LTbl^[LRow, 7] := Lr1[LJ] * 5;
   end;
 
-  for LIdx := 0 to 3 do
+  for LIdx := 0 to 7 do
     LTbl^[9, LIdx] := 0;
 end;
 
-// NEON 2-way bulk kernel (r/r^2 power table, 32-byte stride).
+// NEON 4-way bulk kernel (r^1..r^4 power table, 64-byte stride).
 procedure Poly1305BlocksBulkNeonCore(ACtx, APowTable, AInp: PByte;
   ALen: NativeUInt; APad: Int32);
 {$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_aarch64.inc}
@@ -179,9 +193,9 @@ begin
     Exit(0);
   if TCpuFeatures.Arm.HasNEON() then
   begin
-    if ANumBlocks < 2 then
+    if ANumBlocks < 4 then
       Exit(0);
-    LSimdBlocks := ANumBlocks and not 1;
+    LSimdBlocks := ANumBlocks and not 3;
     Poly1305BlocksBulkNeonCore(@AState, APowTable, @ABuf[AOff],
       NativeUInt(LSimdBlocks) * 16, 1);
     Exit(LSimdBlocks);

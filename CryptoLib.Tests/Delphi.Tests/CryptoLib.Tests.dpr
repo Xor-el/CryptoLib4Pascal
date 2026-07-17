@@ -770,6 +770,7 @@ uses
   ClpByteUtilities in '..\..\CryptoLib\src\NumberUtilities\ClpByteUtilities.pas',
   ClpByteXorSimd in '..\..\CryptoLib\src\Simd\Facade\ClpByteXorSimd.pas',
   ClpByteXorX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpByteXorX86Backend.pas',
+  ClpByteXorArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpByteXorArmBackend.pas',
   ClpInt16Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt16Utilities.pas',
   ClpInt32Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt32Utilities.pas',
   ClpInt64Utilities in '..\..\CryptoLib\src\NumberUtilities\ClpInt64Utilities.pas',

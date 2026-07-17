@@ -14,49 +14,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpByteXorSimd;
+unit ClpByteXorArmBackend;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  ClpByteXorX86Backend,
-{$ENDIF}
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-  ClpByteXorArmBackend,
-{$ENDIF}
+  ClpCpuFeatures,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Arch-agnostic SIMD facade for the byte-array XOR primitives behind
-  /// <c>TByteUtilities</c>. Selects the per-arch backend at compile time; on a
-  /// build with no SIMD backend (or when the active SIMD level is too low) every
-  /// entry point returns <c>False</c>, leaving the caller on its scalar
-  /// qword/byte path.
+  /// ARM (NEON) backend for the variable-length XOR utility (body in
+  /// <c>Include\Simd\ByteXor\</c>). Compiles on every target - when built
+  /// without AArch64 SIMD <c>TryXor</c> returns <c>False</c> and the caller
+  /// runs its scalar path.
   /// </summary>
-  TByteXorSimd = class sealed
+  TByteXorArmBackend = class sealed
   public
-    /// <summary>AZ[i] := AX[i] xor AY[i] over ALen bytes; AZ may alias AX/AY
-    /// (so the in-place XorTo case is TryXor with AY = AZ). False if unavailable.</summary>
+    /// <summary>PZ[i] := PX[i] xor PY[i] for i in [0, ALen); PZ may alias
+    /// PX or PY.</summary>
     class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
   end;
 
 implementation
 
-class function TByteXorSimd.TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TByteXorX86Backend.TryXor(ALen, AX, AY, AZ);
-{$ELSE}
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  Result := TByteXorArmBackend.TryXor(ALen, AX, AY, AZ);
-{$ELSE}
+procedure ByteXorNeon(ALen: NativeInt; AX, AY, AZ: Pointer);
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\ByteXor\ByteXorNeon_aarch64.inc}
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
+
+{ TByteXorArmBackend }
+
+class function TByteXorArmBackend.TryXor(ALen: NativeInt;
+  AX, AY, AZ: PByte): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if TCpuFeatures.Arm.HasNEON() then
+  begin
+    ByteXorNeon(ALen, AX, AY, AZ);
+    Exit(True);
+  end;
+{$ENDIF}
   Result := False;
-{$ENDIF}
-{$ENDIF}
 end;
 
 end.
