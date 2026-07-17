@@ -1,0 +1,49 @@
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesCryptoExtOcbKernel.pas
+  s_4439590f1f00be::t_a945393abf0d6e 1-262
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4439590f1f00be::t_74644951b29d2a 718
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4439590f1f00be::t_eb7e73019eef04 734
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_4439590f1f00be::t_a60436311998c2 713
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4439590f1f00be::t_4e7dc6228f5337 1056
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_4439590f1f00be::t_06760da7440f52 734
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_4439590f1f00be::t_e00153445a8f8f 715
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4439590f1f00be::t_5982be2aed2228 34,3260-3263
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiOcbKernel.pas
+  s_4439590f1f00be::t_15695790b653ef 273,288
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelDefaults.pas
+  s_4439590f1f00be::t_3a8263e569eb38 42
+CryptoLib/src/Include/Simd/Aes/Ocb/AesOcbFusedWide_aarch64.inc
+  s_4439590f1f00be::t_2d7cf20ce86c55 1-4331
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_328ec6f81eb027::t_c2ccab9bd42546 263
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "dd7a5f3641bf38c7343c9483f78d70b38a16ba10",
+  "prompts": {},
+  "sessions": {
+    "s_328ec6f81eb027": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65474ab1-61e1-42dc-9e54-d32d6b513c77",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
