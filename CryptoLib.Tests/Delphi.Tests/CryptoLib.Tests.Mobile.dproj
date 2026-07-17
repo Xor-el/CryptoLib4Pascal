@@ -921,7 +921,6 @@
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpX86SimdFeatures.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpArmHwCapProvider.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpDarwinSysCtl.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpIntrinsicsVector.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpPack.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpBits.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\Raw\ClpMod.pas"/>

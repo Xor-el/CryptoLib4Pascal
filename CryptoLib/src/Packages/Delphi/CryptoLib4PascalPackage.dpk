@@ -580,7 +580,6 @@ contains
   ClpX86SimdFeatures in '..\..\Misc\ClpX86SimdFeatures.pas',
   ClpArmHwCapProvider in '..\..\Misc\ClpArmHwCapProvider.pas',
   ClpDarwinSysCtl in '..\..\Misc\ClpDarwinSysCtl.pas',
-  ClpIntrinsicsVector in '..\..\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\Misc\ClpPack.pas',
   ClpBits in '..\..\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\Math\Raw\ClpMod.pas',

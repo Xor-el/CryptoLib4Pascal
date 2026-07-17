@@ -22,7 +22,6 @@ interface
 
 uses
   ClpCpuFeatures,
-  ClpIntrinsicsVector,
   ClpCryptoLibTypes;
 
 type
@@ -258,7 +257,7 @@ class function TGhashX86Backend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PBy
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked then
+  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 4-way multiply-accumulate and folding reduction per batch - in a
@@ -274,7 +273,7 @@ class function TGhashX86Backend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: P
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked then
+  if TCpuFeatures.X86.HasSSSE3() and TCpuFeatures.X86.HasPCLMULQDQ() then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 8-way multiply-accumulate and folding reduction per batch - in a
@@ -289,8 +288,7 @@ end;
 class function TGhashX86Backend.IsShuffledGhashSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TCpuFeatures.X86.HasSSSE3() and
-    TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TCpuFeatures.X86.HasSSSE3();
 {$ELSE}
   Result := False;
 {$ENDIF}

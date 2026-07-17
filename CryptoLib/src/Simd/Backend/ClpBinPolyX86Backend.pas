@@ -23,7 +23,6 @@ interface
 uses
   SysUtils,
   ClpCpuFeatures,
-  ClpIntrinsicsVector,
   ClpCryptoLibTypes;
 
 type
@@ -106,7 +105,7 @@ end;
 class function TBinPolyX86Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ();
 {$ELSE}
   Result := False;
 {$ENDIF}

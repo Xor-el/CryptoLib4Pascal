@@ -578,7 +578,6 @@ uses
   ClpX86SimdFeatures in '..\..\CryptoLib\src\Misc\ClpX86SimdFeatures.pas',
   ClpArmHwCapProvider in '..\..\CryptoLib\src\Misc\ClpArmHwCapProvider.pas',
   ClpDarwinSysCtl in '..\..\CryptoLib\src\Misc\ClpDarwinSysCtl.pas',
-  ClpIntrinsicsVector in '..\..\CryptoLib\src\Misc\ClpIntrinsicsVector.pas',
   ClpPack in '..\..\CryptoLib\src\Misc\ClpPack.pas',
   ClpBits in '..\..\CryptoLib\src\Math\Raw\ClpBits.pas',
   ClpMod in '..\..\CryptoLib\src\Math\Raw\ClpMod.pas',
