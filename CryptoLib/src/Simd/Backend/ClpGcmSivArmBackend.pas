@@ -14,61 +14,65 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpGcmSivSimd;
+unit ClpGcmSivArmBackend;
 
 {$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
-  ClpGcmSivX86Backend;
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-uses
-  ClpGcmSivArmBackend;
-{$IFEND}
+  ClpCpuFeatures;
 
 type
   /// <summary>
-  /// Arch-neutral SIMD dispatch facade for the AES-GCM-SIV POLYVAL batch kernel.
-  /// Selects the per-arch backend at compile time; on a
-  /// build with no SIMD backend <c>IsSupported</c> is <c>False</c> (so the fused
-  /// GCM-SIV kernel factory declines) and <c>ProcessPolyvalBatch</c> is a no-op.
-  /// The kernel unit calls only this facade and stays free of any
-  /// <c>TCpuFeatures</c> / <c>CRYPTOLIB_*_ASM</c> knowledge.
+  /// AArch64 SIMD backend for the AES-GCM-SIV POLYVAL batch kernel: owns the
+  /// PMULL 8-block Horner kernel (the raw-input variant of the GHASH batch
+  /// body in <c>Include\Simd\Gcm\</c>) and the runtime capability gate.
+  /// Compiles on every target - <c>IsSupported</c> returns <c>False</c> off aarch64
+  /// (so the fused-kernel factory declines to build a kernel) and
+  /// <c>ProcessPolyvalBatch</c> is a no-op there. PMask is accepted for facade
+  /// parity but unused (rev64 replaces the shuffle mask on AArch64).
   /// </summary>
-  TGcmSivSimd = class sealed
+  TGcmSivArmBackend = class sealed
   public
-    /// <summary>True when a POLYVAL batch kernel is usable on this CPU.</summary>
+    /// <summary>True when the PMULL POLYVAL kernel is usable on this CPU.</summary>
     class function IsSupported: Boolean; static;
-    /// <summary>Eight-block POLYVAL Horner batch. Precondition: <c>IsSupported</c>.</summary>
+    /// <summary>ABatchCount eight-block POLYVAL Horner batches. Precondition: <c>IsSupported</c>.</summary>
     class procedure ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
       ABatchCount: NativeInt); static;
   end;
 
 implementation
 
-{ TGcmSivSimd }
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128: Pointer;
+  ABatchCount: NativeInt);
+{$DEFINE GCM_GHASH_FULL_BLOCKS_8}
+{$DEFINE GCM_GHASH_RAW_INPUT}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Gcm\GcmGhashFull_aarch64.inc}
+{$UNDEF GCM_GHASH_RAW_INPUT}
+{$UNDEF GCM_GHASH_FULL_BLOCKS_8}
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
-class function TGcmSivSimd.IsSupported: Boolean;
+{ TGcmSivArmBackend }
+
+class function TGcmSivArmBackend.IsSupported: Boolean;
 begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGcmSivX86Backend.IsSupported;
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TGcmSivArmBackend.IsSupported;
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  Result := TCpuFeatures.Arm.HasAES();
 {$ELSE}
   Result := False;
-{$IFEND}
+{$ENDIF}
 end;
 
-class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
+class procedure TGcmSivArmBackend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Pointer;
   ABatchCount: NativeInt);
 begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  TGcmSivArmBackend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
-{$IFEND}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  GcmSivPolyvalHornerEight(PFS, PC0, PHPow128, ABatchCount);
+{$ENDIF}
 end;
 
 end.
