@@ -9,8 +9,9 @@
 // (the two sigma words are re-broadcast from AState instead of parked, so
 // v16/v17 remain free as the only rotate/transpose scratch; no stack
 // frame beyond the shared d8..d15 save). rot16 is one in-place rev32 on
-// 16-bit lanes; rot12/rot8/rot7 use ushr+shl+orr. Quarter-rounds run as
-// interleaved independent pairs.
+// 16-bit lanes; rot12/rot8/rot7 fold the preceding xor into the scratch
+// and rotate with shl + sri (result back in the home register).
+// Quarter-rounds run as interleaved independent pairs.
 //
 // Streams AGroups x 256B in one call: prologue once, light per-group
 // reload (counter lanes +4), fused accumulate/transpose/xor tail straight
@@ -111,34 +112,28 @@
   .long 0x6e6009ad                    // rev32 v13.8h, v13.8h
   .long 0x4eac8508                    // add v8.4s, v8.4s, v12.4s
   .long 0x4ead8529                    // add v9.4s, v9.4s, v13.4s
-  .long 0x6e281c84                    // eor v4.16b, v4.16b, v8.16b
-  .long 0x6e291ca5                    // eor v5.16b, v5.16b, v9.16b
-  .long 0x6f2c0490                    // ushr v16.4s, v4.4s, #20
-  .long 0x6f2c04b1                    // ushr v17.4s, v5.4s, #20
-  .long 0x4f2c5484                    // shl v4.4s, v4.4s, #12
-  .long 0x4f2c54a5                    // shl v5.4s, v5.4s, #12
-  .long 0x4eb01c84                    // orr v4.16b, v4.16b, v16.16b
-  .long 0x4eb11ca5                    // orr v5.16b, v5.16b, v17.16b
+  .long 0x6e281c90                    // eor v16.16b, v4.16b, v8.16b
+  .long 0x6e291cb1                    // eor v17.16b, v5.16b, v9.16b
+  .long 0x4f2c5604                    // shl v4.4s, v16.4s, #12
+  .long 0x4f2c5625                    // shl v5.4s, v17.4s, #12
+  .long 0x6f2c4604                    // sri v4.4s, v16.4s, #20
+  .long 0x6f2c4625                    // sri v5.4s, v17.4s, #20
   .long 0x4ea48400                    // add v0.4s, v0.4s, v4.4s
   .long 0x4ea58421                    // add v1.4s, v1.4s, v5.4s
-  .long 0x6e201d8c                    // eor v12.16b, v12.16b, v0.16b
-  .long 0x6e211dad                    // eor v13.16b, v13.16b, v1.16b
-  .long 0x6f280590                    // ushr v16.4s, v12.4s, #24
-  .long 0x6f2805b1                    // ushr v17.4s, v13.4s, #24
-  .long 0x4f28558c                    // shl v12.4s, v12.4s, #8
-  .long 0x4f2855ad                    // shl v13.4s, v13.4s, #8
-  .long 0x4eb01d8c                    // orr v12.16b, v12.16b, v16.16b
-  .long 0x4eb11dad                    // orr v13.16b, v13.16b, v17.16b
+  .long 0x6e201d90                    // eor v16.16b, v12.16b, v0.16b
+  .long 0x6e211db1                    // eor v17.16b, v13.16b, v1.16b
+  .long 0x4f28560c                    // shl v12.4s, v16.4s, #8
+  .long 0x4f28562d                    // shl v13.4s, v17.4s, #8
+  .long 0x6f28460c                    // sri v12.4s, v16.4s, #24
+  .long 0x6f28462d                    // sri v13.4s, v17.4s, #24
   .long 0x4eac8508                    // add v8.4s, v8.4s, v12.4s
   .long 0x4ead8529                    // add v9.4s, v9.4s, v13.4s
-  .long 0x6e281c84                    // eor v4.16b, v4.16b, v8.16b
-  .long 0x6e291ca5                    // eor v5.16b, v5.16b, v9.16b
-  .long 0x6f270490                    // ushr v16.4s, v4.4s, #25
-  .long 0x6f2704b1                    // ushr v17.4s, v5.4s, #25
-  .long 0x4f275484                    // shl v4.4s, v4.4s, #7
-  .long 0x4f2754a5                    // shl v5.4s, v5.4s, #7
-  .long 0x4eb01c84                    // orr v4.16b, v4.16b, v16.16b
-  .long 0x4eb11ca5                    // orr v5.16b, v5.16b, v17.16b
+  .long 0x6e281c90                    // eor v16.16b, v4.16b, v8.16b
+  .long 0x6e291cb1                    // eor v17.16b, v5.16b, v9.16b
+  .long 0x4f275604                    // shl v4.4s, v16.4s, #7
+  .long 0x4f275625                    // shl v5.4s, v17.4s, #7
+  .long 0x6f274604                    // sri v4.4s, v16.4s, #25
+  .long 0x6f274625                    // sri v5.4s, v17.4s, #25
   .long 0x4ea68442                    // add v2.4s, v2.4s, v6.4s
   .long 0x4ea78463                    // add v3.4s, v3.4s, v7.4s
   .long 0x6e221dce                    // eor v14.16b, v14.16b, v2.16b
@@ -147,34 +142,28 @@
   .long 0x6e6009ef                    // rev32 v15.8h, v15.8h
   .long 0x4eae854a                    // add v10.4s, v10.4s, v14.4s
   .long 0x4eaf856b                    // add v11.4s, v11.4s, v15.4s
-  .long 0x6e2a1cc6                    // eor v6.16b, v6.16b, v10.16b
-  .long 0x6e2b1ce7                    // eor v7.16b, v7.16b, v11.16b
-  .long 0x6f2c04d0                    // ushr v16.4s, v6.4s, #20
-  .long 0x6f2c04f1                    // ushr v17.4s, v7.4s, #20
-  .long 0x4f2c54c6                    // shl v6.4s, v6.4s, #12
-  .long 0x4f2c54e7                    // shl v7.4s, v7.4s, #12
-  .long 0x4eb01cc6                    // orr v6.16b, v6.16b, v16.16b
-  .long 0x4eb11ce7                    // orr v7.16b, v7.16b, v17.16b
+  .long 0x6e2a1cd0                    // eor v16.16b, v6.16b, v10.16b
+  .long 0x6e2b1cf1                    // eor v17.16b, v7.16b, v11.16b
+  .long 0x4f2c5606                    // shl v6.4s, v16.4s, #12
+  .long 0x4f2c5627                    // shl v7.4s, v17.4s, #12
+  .long 0x6f2c4606                    // sri v6.4s, v16.4s, #20
+  .long 0x6f2c4627                    // sri v7.4s, v17.4s, #20
   .long 0x4ea68442                    // add v2.4s, v2.4s, v6.4s
   .long 0x4ea78463                    // add v3.4s, v3.4s, v7.4s
-  .long 0x6e221dce                    // eor v14.16b, v14.16b, v2.16b
-  .long 0x6e231def                    // eor v15.16b, v15.16b, v3.16b
-  .long 0x6f2805d0                    // ushr v16.4s, v14.4s, #24
-  .long 0x6f2805f1                    // ushr v17.4s, v15.4s, #24
-  .long 0x4f2855ce                    // shl v14.4s, v14.4s, #8
-  .long 0x4f2855ef                    // shl v15.4s, v15.4s, #8
-  .long 0x4eb01dce                    // orr v14.16b, v14.16b, v16.16b
-  .long 0x4eb11def                    // orr v15.16b, v15.16b, v17.16b
+  .long 0x6e221dd0                    // eor v16.16b, v14.16b, v2.16b
+  .long 0x6e231df1                    // eor v17.16b, v15.16b, v3.16b
+  .long 0x4f28560e                    // shl v14.4s, v16.4s, #8
+  .long 0x4f28562f                    // shl v15.4s, v17.4s, #8
+  .long 0x6f28460e                    // sri v14.4s, v16.4s, #24
+  .long 0x6f28462f                    // sri v15.4s, v17.4s, #24
   .long 0x4eae854a                    // add v10.4s, v10.4s, v14.4s
   .long 0x4eaf856b                    // add v11.4s, v11.4s, v15.4s
-  .long 0x6e2a1cc6                    // eor v6.16b, v6.16b, v10.16b
-  .long 0x6e2b1ce7                    // eor v7.16b, v7.16b, v11.16b
-  .long 0x6f2704d0                    // ushr v16.4s, v6.4s, #25
-  .long 0x6f2704f1                    // ushr v17.4s, v7.4s, #25
-  .long 0x4f2754c6                    // shl v6.4s, v6.4s, #7
-  .long 0x4f2754e7                    // shl v7.4s, v7.4s, #7
-  .long 0x4eb01cc6                    // orr v6.16b, v6.16b, v16.16b
-  .long 0x4eb11ce7                    // orr v7.16b, v7.16b, v17.16b
+  .long 0x6e2a1cd0                    // eor v16.16b, v6.16b, v10.16b
+  .long 0x6e2b1cf1                    // eor v17.16b, v7.16b, v11.16b
+  .long 0x4f275606                    // shl v6.4s, v16.4s, #7
+  .long 0x4f275627                    // shl v7.4s, v17.4s, #7
+  .long 0x6f274606                    // sri v6.4s, v16.4s, #25
+  .long 0x6f274627                    // sri v7.4s, v17.4s, #25
   // diagonal quarter-rounds
   .long 0x4ea58400                    // add v0.4s, v0.4s, v5.4s
   .long 0x4ea68421                    // add v1.4s, v1.4s, v6.4s
@@ -184,34 +173,28 @@
   .long 0x6e60098c                    // rev32 v12.8h, v12.8h
   .long 0x4eaf854a                    // add v10.4s, v10.4s, v15.4s
   .long 0x4eac856b                    // add v11.4s, v11.4s, v12.4s
-  .long 0x6e2a1ca5                    // eor v5.16b, v5.16b, v10.16b
-  .long 0x6e2b1cc6                    // eor v6.16b, v6.16b, v11.16b
-  .long 0x6f2c04b0                    // ushr v16.4s, v5.4s, #20
-  .long 0x6f2c04d1                    // ushr v17.4s, v6.4s, #20
-  .long 0x4f2c54a5                    // shl v5.4s, v5.4s, #12
-  .long 0x4f2c54c6                    // shl v6.4s, v6.4s, #12
-  .long 0x4eb01ca5                    // orr v5.16b, v5.16b, v16.16b
-  .long 0x4eb11cc6                    // orr v6.16b, v6.16b, v17.16b
+  .long 0x6e2a1cb0                    // eor v16.16b, v5.16b, v10.16b
+  .long 0x6e2b1cd1                    // eor v17.16b, v6.16b, v11.16b
+  .long 0x4f2c5605                    // shl v5.4s, v16.4s, #12
+  .long 0x4f2c5626                    // shl v6.4s, v17.4s, #12
+  .long 0x6f2c4605                    // sri v5.4s, v16.4s, #20
+  .long 0x6f2c4626                    // sri v6.4s, v17.4s, #20
   .long 0x4ea58400                    // add v0.4s, v0.4s, v5.4s
   .long 0x4ea68421                    // add v1.4s, v1.4s, v6.4s
-  .long 0x6e201def                    // eor v15.16b, v15.16b, v0.16b
-  .long 0x6e211d8c                    // eor v12.16b, v12.16b, v1.16b
-  .long 0x6f2805f0                    // ushr v16.4s, v15.4s, #24
-  .long 0x6f280591                    // ushr v17.4s, v12.4s, #24
-  .long 0x4f2855ef                    // shl v15.4s, v15.4s, #8
-  .long 0x4f28558c                    // shl v12.4s, v12.4s, #8
-  .long 0x4eb01def                    // orr v15.16b, v15.16b, v16.16b
-  .long 0x4eb11d8c                    // orr v12.16b, v12.16b, v17.16b
+  .long 0x6e201df0                    // eor v16.16b, v15.16b, v0.16b
+  .long 0x6e211d91                    // eor v17.16b, v12.16b, v1.16b
+  .long 0x4f28560f                    // shl v15.4s, v16.4s, #8
+  .long 0x4f28562c                    // shl v12.4s, v17.4s, #8
+  .long 0x6f28460f                    // sri v15.4s, v16.4s, #24
+  .long 0x6f28462c                    // sri v12.4s, v17.4s, #24
   .long 0x4eaf854a                    // add v10.4s, v10.4s, v15.4s
   .long 0x4eac856b                    // add v11.4s, v11.4s, v12.4s
-  .long 0x6e2a1ca5                    // eor v5.16b, v5.16b, v10.16b
-  .long 0x6e2b1cc6                    // eor v6.16b, v6.16b, v11.16b
-  .long 0x6f2704b0                    // ushr v16.4s, v5.4s, #25
-  .long 0x6f2704d1                    // ushr v17.4s, v6.4s, #25
-  .long 0x4f2754a5                    // shl v5.4s, v5.4s, #7
-  .long 0x4f2754c6                    // shl v6.4s, v6.4s, #7
-  .long 0x4eb01ca5                    // orr v5.16b, v5.16b, v16.16b
-  .long 0x4eb11cc6                    // orr v6.16b, v6.16b, v17.16b
+  .long 0x6e2a1cb0                    // eor v16.16b, v5.16b, v10.16b
+  .long 0x6e2b1cd1                    // eor v17.16b, v6.16b, v11.16b
+  .long 0x4f275605                    // shl v5.4s, v16.4s, #7
+  .long 0x4f275626                    // shl v6.4s, v17.4s, #7
+  .long 0x6f274605                    // sri v5.4s, v16.4s, #25
+  .long 0x6f274626                    // sri v6.4s, v17.4s, #25
   .long 0x4ea78442                    // add v2.4s, v2.4s, v7.4s
   .long 0x4ea48463                    // add v3.4s, v3.4s, v4.4s
   .long 0x6e221dad                    // eor v13.16b, v13.16b, v2.16b
@@ -220,34 +203,28 @@
   .long 0x6e6009ce                    // rev32 v14.8h, v14.8h
   .long 0x4ead8508                    // add v8.4s, v8.4s, v13.4s
   .long 0x4eae8529                    // add v9.4s, v9.4s, v14.4s
-  .long 0x6e281ce7                    // eor v7.16b, v7.16b, v8.16b
-  .long 0x6e291c84                    // eor v4.16b, v4.16b, v9.16b
-  .long 0x6f2c04f0                    // ushr v16.4s, v7.4s, #20
-  .long 0x6f2c0491                    // ushr v17.4s, v4.4s, #20
-  .long 0x4f2c54e7                    // shl v7.4s, v7.4s, #12
-  .long 0x4f2c5484                    // shl v4.4s, v4.4s, #12
-  .long 0x4eb01ce7                    // orr v7.16b, v7.16b, v16.16b
-  .long 0x4eb11c84                    // orr v4.16b, v4.16b, v17.16b
+  .long 0x6e281cf0                    // eor v16.16b, v7.16b, v8.16b
+  .long 0x6e291c91                    // eor v17.16b, v4.16b, v9.16b
+  .long 0x4f2c5607                    // shl v7.4s, v16.4s, #12
+  .long 0x4f2c5624                    // shl v4.4s, v17.4s, #12
+  .long 0x6f2c4607                    // sri v7.4s, v16.4s, #20
+  .long 0x6f2c4624                    // sri v4.4s, v17.4s, #20
   .long 0x4ea78442                    // add v2.4s, v2.4s, v7.4s
   .long 0x4ea48463                    // add v3.4s, v3.4s, v4.4s
-  .long 0x6e221dad                    // eor v13.16b, v13.16b, v2.16b
-  .long 0x6e231dce                    // eor v14.16b, v14.16b, v3.16b
-  .long 0x6f2805b0                    // ushr v16.4s, v13.4s, #24
-  .long 0x6f2805d1                    // ushr v17.4s, v14.4s, #24
-  .long 0x4f2855ad                    // shl v13.4s, v13.4s, #8
-  .long 0x4f2855ce                    // shl v14.4s, v14.4s, #8
-  .long 0x4eb01dad                    // orr v13.16b, v13.16b, v16.16b
-  .long 0x4eb11dce                    // orr v14.16b, v14.16b, v17.16b
+  .long 0x6e221db0                    // eor v16.16b, v13.16b, v2.16b
+  .long 0x6e231dd1                    // eor v17.16b, v14.16b, v3.16b
+  .long 0x4f28560d                    // shl v13.4s, v16.4s, #8
+  .long 0x4f28562e                    // shl v14.4s, v17.4s, #8
+  .long 0x6f28460d                    // sri v13.4s, v16.4s, #24
+  .long 0x6f28462e                    // sri v14.4s, v17.4s, #24
   .long 0x4ead8508                    // add v8.4s, v8.4s, v13.4s
   .long 0x4eae8529                    // add v9.4s, v9.4s, v14.4s
-  .long 0x6e281ce7                    // eor v7.16b, v7.16b, v8.16b
-  .long 0x6e291c84                    // eor v4.16b, v4.16b, v9.16b
-  .long 0x6f2704f0                    // ushr v16.4s, v7.4s, #25
-  .long 0x6f270491                    // ushr v17.4s, v4.4s, #25
-  .long 0x4f2754e7                    // shl v7.4s, v7.4s, #7
-  .long 0x4f275484                    // shl v4.4s, v4.4s, #7
-  .long 0x4eb01ce7                    // orr v7.16b, v7.16b, v16.16b
-  .long 0x4eb11c84                    // orr v4.16b, v4.16b, v17.16b
+  .long 0x6e281cf0                    // eor v16.16b, v7.16b, v8.16b
+  .long 0x6e291c91                    // eor v17.16b, v4.16b, v9.16b
+  .long 0x4f275607                    // shl v7.4s, v16.4s, #7
+  .long 0x4f275624                    // shl v4.4s, v17.4s, #7
+  .long 0x6f274607                    // sri v7.4s, v16.4s, #25
+  .long 0x6f274624                    // sri v4.4s, v17.4s, #25
   subs w5, w5, #2
   b.gt .Lc7539_neon_round
   // advance the state block counter (word 12)
