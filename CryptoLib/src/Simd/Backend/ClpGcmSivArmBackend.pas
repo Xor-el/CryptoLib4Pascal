@@ -47,12 +47,8 @@ implementation
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
 procedure GcmSivPolyvalHornerEight(PFS, PC0, PHPow128: Pointer;
   ABatchCount: NativeInt);
-{$DEFINE GCM_GHASH_FULL_BLOCKS_8}
-{$DEFINE GCM_GHASH_RAW_INPUT}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmGhashFull_aarch64.inc}
-{$UNDEF GCM_GHASH_RAW_INPUT}
-{$UNDEF GCM_GHASH_FULL_BLOCKS_8}
+{$I ..\..\Include\Simd\GcmSiv\PolyvalHornerEight_aarch64.inc}
 end;
 {$ENDIF CRYPTOLIB_AARCH64_ASM}
 
