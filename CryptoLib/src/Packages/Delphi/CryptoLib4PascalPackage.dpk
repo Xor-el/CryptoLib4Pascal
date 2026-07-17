@@ -206,6 +206,7 @@ contains
   ClpPoly1305State in '..\..\Crypto\Macs\ClpPoly1305State.pas',
   ClpPoly1305Simd in '..\..\Simd\Facade\ClpPoly1305Simd.pas',
   ClpPoly1305X86Backend in '..\..\Simd\Backend\ClpPoly1305X86Backend.pas',
+  ClpPoly1305ArmBackend in '..\..\Simd\Backend\ClpPoly1305ArmBackend.pas',
   ClpGhashSimd in '..\..\Simd\Facade\ClpGhashSimd.pas',
   ClpGhashX86Backend in '..\..\Simd\Backend\ClpGhashX86Backend.pas',
   ClpGcmSivSimd in '..\..\Simd\Facade\ClpGcmSivSimd.pas',

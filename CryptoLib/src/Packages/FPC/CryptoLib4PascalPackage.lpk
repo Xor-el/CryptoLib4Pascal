@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="812">
+    <Files Count="813">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3281,6 +3281,10 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Simd\Backend\ClpSalsaArmBackend.pas"/>
         <UnitName Value="ClpSalsaArmBackend"/>
       </Item812>
+      <Item813>
+        <Filename Value="..\..\Simd\Backend\ClpPoly1305ArmBackend.pas"/>
+        <UnitName Value="ClpPoly1305ArmBackend"/>
+      </Item813>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

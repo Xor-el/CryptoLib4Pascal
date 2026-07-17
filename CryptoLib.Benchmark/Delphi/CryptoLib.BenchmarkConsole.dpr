@@ -196,6 +196,7 @@ uses
   ClpPoly1305State in '..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas',
   ClpPoly1305Simd in '..\..\CryptoLib\src\Simd\Facade\ClpPoly1305Simd.pas',
   ClpPoly1305X86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpPoly1305X86Backend.pas',
+  ClpPoly1305ArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpPoly1305ArmBackend.pas',
   ClpGhashSimd in '..\..\CryptoLib\src\Simd\Facade\ClpGhashSimd.pas',
   ClpGhashX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpGhashX86Backend.pas',
   ClpGhashArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpGhashArmBackend.pas',
