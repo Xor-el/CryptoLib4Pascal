@@ -40,6 +40,8 @@ uses
   ClpAesCryptoExtCbcKernel,
   ClpAesCryptoExtGcmKernel,
   ClpAesCryptoExtOcbKernel,
+  ClpAesCryptoExtCcmKernel,
+  ClpAesCryptoExtEaxKernel,
   ClpPclmulGcmSivKernel,
   ClpPmullGcmSivKernel;
 

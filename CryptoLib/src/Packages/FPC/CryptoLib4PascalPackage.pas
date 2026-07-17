@@ -260,7 +260,8 @@ uses
   ClpCipherKernelFactoryBase, ClpIAesEngineArm, ClpAesEngineArm, 
   ClpAesCryptoExtFusedArmBackend, ClpAesCryptoExtCtrKernel, 
   ClpAesCryptoExtCbcKernel, ClpGhashArmBackend, ClpAesCryptoExtGcmKernel, 
-  ClpGcmSivArmBackend, ClpPmullGcmSivKernel, ClpAesCryptoExtOcbKernel;
+  ClpGcmSivArmBackend, ClpPmullGcmSivKernel, ClpAesCryptoExtOcbKernel, 
+  ClpAesCryptoExtCcmKernel, ClpAesCryptoExtEaxKernel;
 
 implementation
 

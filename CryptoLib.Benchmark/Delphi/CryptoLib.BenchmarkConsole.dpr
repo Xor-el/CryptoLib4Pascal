@@ -716,6 +716,8 @@ uses
   ClpAesCryptoExtCbcKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCbcKernel.pas',
   ClpAesCryptoExtGcmKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtGcmKernel.pas',
   ClpAesCryptoExtOcbKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtOcbKernel.pas',
+  ClpAesCryptoExtCcmKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCcmKernel.pas',
+  ClpAesCryptoExtEaxKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtEaxKernel.pas',
   ClpPmullGcmSivKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpPmullGcmSivKernel.pas',
   ClpPclmulGcmSivKernel in '..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpPclmulGcmSivKernel.pas',
   ClpCipherKernelDefaults in '..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelDefaults.pas',

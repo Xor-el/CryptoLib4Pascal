@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpAesNiCcmKernel;
+unit ClpAesCryptoExtCcmKernel;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -23,53 +23,52 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpIAesEngineX86,
+  ClpIAesEngineArm,
   ClpCipherKernelTypes,
   ClpICcmKernel,
   ClpCipherKernelFactoryBase,
   ClpCipherKernelRegistry,
   ClpAesFusedAeadSimd,
-  ClpAesNiFusedX86Backend;
+  ClpAesCryptoExtFusedArmBackend;
 
 type
   /// <summary>
-  ///   AES-NI implementation of ICcmKernel.
-  ///   Available on x86_64 (CRYPTOLIB_X86_64_ASM) and i386
-  ///   (CRYPTOLIB_I386_ASM); both arms gated collectively by
-  ///   CRYPTOLIB_X86_SIMD.
-  ///   Direction-bound at construction: an encrypt kernel captures the
-  ///   forward AES schedule, a decrypt kernel the inverse-MixColumns
-  ///   schedule.
+  ///   AES CryptoExt (ARMv8) implementation of ICcmKernel: the fused
+  ///   two-lane CTR + CBC-MAC body used by TCcmBlockCipher's bulk path.
+  ///   Byte-compatible with the x86 kernel (same context layout and
+  ///   counter/MAC state contract).
+  ///   Available on aarch64 (CRYPTOLIB_AARCH64_ASM). When unavailable the
+  ///   factory returns nil and TCcmBlockCipher keeps its block path.
+  ///   Both directions consume the forward (encrypt) schedule.
   ///   The kernel loops internally over ABlockCount body blocks; the
   ///   mode invokes ProcessBody once per Init cycle.
   /// </summary>
-  TAesNiCcmKernel = class sealed(TInterfacedObject, ICcmKernel)
+  TAesCryptoExtCcmKernel = class sealed(TInterfacedObject, ICcmKernel)
   strict private
   const
     FUSED_CCM_MIN_BLOCKS = 1;
   strict private
     // Strong ref pins the engine (and therefore the round-key buffer's
     // owner) for the kernel's lifetime. The round-key pointer itself is
-    // NOT cached here: TAesEngineX86.Init free-and-reallocates the
+    // NOT cached here: TAesEngineArm.Init free-and-reallocates the
     // aligned key-schedule buffer, so a pointer captured at TryCreate
     // time can dangle after any subsequent re-Init (e.g. CCM's
     // per-packet SIC wrapper re-keying). ProcessBody re-resolves it on
     // every call; cost is one virtual dispatch amortised over a
     // multi-block SIMD loop.
-    FEngine: IAesEngineX86;
+    FEngine: IAesEngineArm;
     FRounds: Int32;
     FDirection: TCipherKernelDirection;
-    FMask: Pointer;
     FIncrement: Pointer;
   public
-    constructor Create(const AEngine: IAesEngineX86; ARounds: Int32;
-      ADirection: TCipherKernelDirection; AMask, AIncrement: Pointer);
+    constructor Create(const AEngine: IAesEngineArm; ARounds: Int32;
+      ADirection: TCipherKernelDirection; AIncrement: Pointer);
     function MinimumBlockCount: Int32;
     procedure ProcessBody(AInPtr, AOutPtr, ACtrState, ACbcMacState: Pointer;
       ABlockCount: Int32);
   end;
 
-  TAesNiCcmKernelFactory = class sealed(TCipherKernelFactoryBase,
+  TAesCryptoExtCcmKernelFactory = class sealed(TCipherKernelFactoryBase,
     ICcmKernelFactory)
   public
     function ProviderName: String; override;
@@ -80,11 +79,13 @@ type
 
 implementation
 
-{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
 type
-  // Context handed to the 2-wide fused AES-NI CCM CTR+CBC-MAC kernel.
-  // OutPtr may alias InPtr. Seven pointers + NativeUInt; natural
-  // alignment matches the kernel's [rcx+offset] accesses.
+  // Context handed to the 2-wide fused AES CryptoExt CCM CTR+CBC-MAC
+  // kernel. OutPtr may alias InPtr. Seven pointers + NativeUInt; field
+  // offsets match the kernel's [x0 + N] accesses (identical layout to
+  // the x86_64 kernel's). PMask is unused on AArch64 (rev64 + ext
+  // replaces the shuffle mask) and kept for layout parity.
   TCcmFusedTwoCtx = record
     InPtr: Pointer;
     OutPtr: Pointer;
@@ -95,137 +96,92 @@ type
     PIncrement: Pointer;
     BlockCount: NativeUInt;
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
-{$IFDEF CRYPTOLIB_X86_SIMD}
 
 procedure CcmFusedCtrCbcMacEnc128(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY128}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY128}
 end;
 
 procedure CcmFusedCtrCbcMacEnc192(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY192}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY192}
 end;
 
 procedure CcmFusedCtrCbcMacEnc256(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY256}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY256}
 end;
 
 procedure CcmFusedCtrCbcMacDec128(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY128}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY128}
 {$DEFINE CRYPTOLIB_CCM_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
 {$UNDEF CRYPTOLIB_CCM_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY128}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY128}
 end;
 
 procedure CcmFusedCtrCbcMacDec192(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY192}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY192}
 {$DEFINE CRYPTOLIB_CCM_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
 {$UNDEF CRYPTOLIB_CCM_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY192}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY192}
 end;
 
 procedure CcmFusedCtrCbcMacDec256(PCtx: Pointer);
-{$DEFINE CRYPTOLIB_AESNI_KEY256}
+{$DEFINE CRYPTOLIB_AESCRYPTOEXT_KEY256}
 {$DEFINE CRYPTOLIB_CCM_DECRYPT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_x86_64.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_i386.inc}
-{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_i386.inc}
-{$ENDIF}
+{$I ..\..\..\Include\Simd\Common\ClpSimdProc1Begin_aarch64.inc}
+{$I ..\..\..\Include\Simd\Aes\Ccm\AesCcmFusedCtrCbcMacTwo_aarch64.inc}
 {$UNDEF CRYPTOLIB_CCM_DECRYPT}
-{$UNDEF CRYPTOLIB_AESNI_KEY256}
+{$UNDEF CRYPTOLIB_AESCRYPTOEXT_KEY256}
 end;
 
-{$ENDIF CRYPTOLIB_X86_SIMD}
-
 const
-  // PSHUFB full-reverse control: flips a BE counter to LE for paddq
-  // then back.
-  CcmKernelReverseMask: packed array[0..15] of Byte = (
-    $0F, $0E, $0D, $0C, $0B, $0A, $09, $08,
-    $07, $06, $05, $04, $03, $02, $01, $00);
-  // CTR +1 in the low 64-bit LE limb (applied after PSHUFB byte-reverse
-  // then undone). Sufficient for CCM's <= 8-byte counter field.
+  // CTR +1 in the low 64-bit LE limb (applied after the rev64 + ext
+  // byte-reverse then undone). Sufficient for CCM's <= 8-byte counter
+  // field.
   CcmKernelCtrIncrement: packed array[0..15] of Byte = (
     $01, $00, $00, $00, $00, $00, $00, $00,
     $00, $00, $00, $00, $00, $00, $00, $00);
 
-{ TAesNiCcmKernel }
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
-constructor TAesNiCcmKernel.Create(const AEngine: IAesEngineX86;
-  ARounds: Int32; ADirection: TCipherKernelDirection;
-  AMask, AIncrement: Pointer);
+{ TAesCryptoExtCcmKernel }
+
+constructor TAesCryptoExtCcmKernel.Create(const AEngine: IAesEngineArm;
+  ARounds: Int32; ADirection: TCipherKernelDirection; AIncrement: Pointer);
 begin
   inherited Create;
   FEngine := AEngine;
   FRounds := ARounds;
   FDirection := ADirection;
-  FMask := AMask;
   FIncrement := AIncrement;
 end;
 
-function TAesNiCcmKernel.MinimumBlockCount: Int32;
+function TAesCryptoExtCcmKernel.MinimumBlockCount: Int32;
 begin
   Result := FUSED_CCM_MIN_BLOCKS;
 end;
 
-procedure TAesNiCcmKernel.ProcessBody(AInPtr, AOutPtr, ACtrState,
+procedure TAesCryptoExtCcmKernel.ProcessBody(AInPtr, AOutPtr, ACtrState,
   ACbcMacState: Pointer; ABlockCount: Int32);
-{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
 var
   LCtx: TCcmFusedTwoCtx;
   LKeys: PByte;
   LRounds: Int32;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
   if ABlockCount < FUSED_CCM_MIN_BLOCKS then
     Exit;
   // Resolve the live key-schedule pointer on every call: the engine
@@ -242,7 +198,7 @@ begin
   LCtx.Keys := LKeys;
   LCtx.CtrState := ACtrState;
   LCtx.MacState := ACbcMacState;
-  LCtx.PMask := FMask;
+  LCtx.PMask := nil;
   LCtx.PIncrement := FIncrement;
   LCtx.BlockCount := NativeUInt(ABlockCount);
   if FDirection = TCipherKernelDirection.Encrypt then
@@ -263,30 +219,30 @@ begin
       CcmFusedCtrCbcMacDec256(@LCtx);
     end;
   end;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 end;
 
-{ TAesNiCcmKernelFactory }
+{ TAesCryptoExtCcmKernelFactory }
 
-function TAesNiCcmKernelFactory.ProviderName: String;
+function TAesCryptoExtCcmKernelFactory.ProviderName: String;
 begin
-  Result := 'AES-NI';
+  Result := 'AES-CryptoExt';
 end;
 
-function TAesNiCcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
+function TAesCryptoExtCcmKernelFactory.TryCreate(const ACipher: IBlockCipher;
   ADirection: TCipherKernelDirection; out AKernel: ICcmKernel): Boolean;
 var
-  LEngine: IAesEngineX86;
+  LEngine: IAesEngineArm;
   LKeys: PByte;
   LRounds: Int32;
 begin
   AKernel := nil;
   Result := False;
   try
-{$IFDEF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
-    if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
+    if not TAesCryptoExtFusedArmBackend.TryResolveEngine(ACipher, LEngine) then
       Exit;
     // CCM drives CTR and CBC-MAC lanes from the same forward-encrypt
     // schedule for both directions. LKeys is consumed only to probe
@@ -298,10 +254,10 @@ begin
       Exit;
     if not (LRounds in [10, 12, 14]) then
       Exit;
-    AKernel := TAesNiCcmKernel.Create(LEngine, LRounds, ADirection,
-      @CcmKernelReverseMask[0], @CcmKernelCtrIncrement[0]);
+    AKernel := TAesCryptoExtCcmKernel.Create(LEngine, LRounds, ADirection,
+      @CcmKernelCtrIncrement[0]);
     Result := True;
-{$ENDIF CRYPTOLIB_X86_SIMD}
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
   except
     AKernel := nil;
     Result := False;
@@ -310,6 +266,6 @@ end;
 
 initialization
   TCipherKernelRegistry.Register(
-    TAesNiCcmKernelFactory.Create() as ICcmKernelFactory);
+    TAesCryptoExtCcmKernelFactory.Create() as ICcmKernelFactory);
 
 end.

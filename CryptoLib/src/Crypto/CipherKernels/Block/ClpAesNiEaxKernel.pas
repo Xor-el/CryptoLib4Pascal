@@ -43,9 +43,6 @@ type
   ///   The kernel loops internally over ABlockCount body blocks in a
   ///   2-wide CTR + OMAC (CBC-MAC variant) interleave; the mode invokes
   ///   ProcessBody once per Init cycle.
-  ///   Novel work in CryptoLib: no mainstream cryptographic library
-  ///   ships a fused EAX kernel (OpenSSL, BoringSSL, AWS-LC, Botan all
-  ///   scalar).
   /// </summary>
   TAesNiEaxKernel = class sealed(TInterfacedObject, IEaxKernel)
   strict private
@@ -274,6 +271,7 @@ begin
   AKernel := nil;
   Result := False;
   try
+{$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
     if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
@@ -287,6 +285,7 @@ begin
     AKernel := TAesNiEaxKernel.Create(LEngine, LKeys, LRounds, ADirection,
       @EaxKernelReverseMask[0], @EaxKernelCtrIncrement[0]);
     Result := True;
+{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;

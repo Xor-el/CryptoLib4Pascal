@@ -1054,6 +1054,8 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtGcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtOcbKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpPmullGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpPclmulGcmSivKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelDefaults.pas"/>
