@@ -1,0 +1,21 @@
+CryptoLib/src/Include/Simd/GcmSiv/PolyvalHornerEight_aarch64.inc
+  s_4439590f1f00be::t_4f575d2a6790a5 1-33
+CryptoLib/src/Simd/Backend/ClpGcmSivArmBackend.pas
+  s_4439590f1f00be::t_e1d2c8744bcee6 51
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "edc421b8f2ecfcf03e56434d7bf15bef519bd7b4",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
