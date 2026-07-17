@@ -712,6 +712,7 @@ contains
   ClpAesCryptoExtCtrKernel in '..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtCtrKernel.pas',
   ClpAesCryptoExtCbcKernel in '..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtCbcKernel.pas',
   ClpAesCryptoExtGcmKernel in '..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtGcmKernel.pas',
+  ClpAesCryptoExtOcbKernel in '..\..\Crypto\CipherKernels\Block\ClpAesCryptoExtOcbKernel.pas',
   ClpPmullGcmSivKernel in '..\..\Crypto\CipherKernels\Block\ClpPmullGcmSivKernel.pas',
   ClpPclmulGcmSivKernel in '..\..\Crypto\CipherKernels\Block\ClpPclmulGcmSivKernel.pas',
   ClpCipherKernelDefaults in '..\..\Crypto\CipherKernels\ClpCipherKernelDefaults.pas',
