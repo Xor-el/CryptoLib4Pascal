@@ -37,8 +37,9 @@ type
   TAesCryptoExtFusedArmBackend = class sealed
   public
     /// <summary>True only when the build defines CRYPTOLIB_AARCH64_ASM and the
-    /// CPU exposes the ARMv8 AES Crypto Extensions (which the feature layer
-    /// gates on NEON + carryless multiply agreement).</summary>
+    /// CPU exposes both FEAT_AES and FEAT_PMULL (the fused GCM kernel runs
+    /// aese and pmull; mirrors the x86 gate, which requires AESNI and
+    /// PCLMULQDQ together).</summary>
     class function CpuSupports: Boolean; static;
 
     /// <summary>Probe ACipher for IAesEngineArm, handling both the direct case
@@ -55,7 +56,7 @@ implementation
 class function TAesCryptoExtFusedArmBackend.CpuSupports: Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  Result := TCpuFeatures.Arm.HasAES();
+  Result := TCpuFeatures.Arm.HasAES() and TCpuFeatures.Arm.HasPMULL();
 {$ELSE}
   Result := False;
 {$ENDIF CRYPTOLIB_AARCH64_ASM}

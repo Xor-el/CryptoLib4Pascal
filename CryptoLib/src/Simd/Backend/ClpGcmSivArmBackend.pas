@@ -61,7 +61,7 @@ end;
 class function TGcmSivArmBackend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  Result := TCpuFeatures.Arm.HasAES();
+  Result := TCpuFeatures.Arm.HasPMULL();
 {$ELSE}
   Result := False;
 {$ENDIF}

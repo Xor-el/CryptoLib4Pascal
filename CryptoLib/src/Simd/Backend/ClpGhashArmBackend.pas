@@ -160,7 +160,7 @@ var
 {$ENDIF}
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasAES() then
+  if TCpuFeatures.Arm.HasPMULL() then
   begin
     GcmPmullFieldPartial(PX, PY, @LPartial);
     GcmPmullReducePartial(LPartial, PGcmFieldRaw(PX)^);
@@ -173,7 +173,7 @@ end;
 class function TGhashArmBackend.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasAES() then
+  if TCpuFeatures.Arm.HasPMULL() then
   begin
     GcmPmullMultiplyExtBytes(PX, PY, POut48);
     Exit(True);
@@ -210,7 +210,7 @@ class function TGhashArmBackend.TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PBy
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasAES() then
+  if TCpuFeatures.Arm.HasPMULL() then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 4-way multiply-accumulate and folding reduction per batch - in a
@@ -226,7 +226,7 @@ class function TGhashArmBackend.TryFusedEightShuffledGhash(PFS, PC0, PHPow128: P
   ABatchCount: NativeInt): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasAES() then
+  if TCpuFeatures.Arm.HasPMULL() then
   begin
     // Monolithic kernel: the whole ABatchCount-batch run - byte-reverse, state
     // fold, 8-way multiply-accumulate and folding reduction per batch - in a
@@ -241,7 +241,7 @@ end;
 class function TGhashArmBackend.IsShuffledGhashSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  Result := TCpuFeatures.Arm.HasAES();
+  Result := TCpuFeatures.Arm.HasPMULL();
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -250,7 +250,7 @@ end;
 class function TGhashArmBackend.HasCarrylessMultiply: Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  Result := TCpuFeatures.Arm.HasAES();
+  Result := TCpuFeatures.Arm.HasPMULL();
 {$ELSE}
   Result := False;
 {$ENDIF}

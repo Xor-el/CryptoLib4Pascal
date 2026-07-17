@@ -81,10 +81,7 @@ end;
 class function TBinPolyArmBackend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  // The feature layer reports AES only when the PMULL half of the crypto
-  // extensions agrees, so HasAES is the PMULL gate (same as the GHASH
-  // backend).
-  Result := TCpuFeatures.Arm.HasAES();
+  Result := TCpuFeatures.Arm.HasPMULL();
 {$ELSE}
   Result := False;
 {$ENDIF}
