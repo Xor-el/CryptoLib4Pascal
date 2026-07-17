@@ -1,0 +1,47 @@
+CryptoLib/src/Simd/Backend/ClpPoly1305ArmBackend.pas
+  s_4439590f1f00be::t_ad8c38dbed6eeb 1-193
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4439590f1f00be::t_49da185390dab0 199
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4439590f1f00be::t_a1cf0666b45427 214
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_4439590f1f00be::t_2c0545ac6febdd 195
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4439590f1f00be::t_f28da3597330d9 538
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_4439590f1f00be::t_cb1d174b562fa4 214
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_4439590f1f00be::t_33439b2cf853fc 209
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4439590f1f00be::t_6b1563e7704ed2 34,3284-3287
+CryptoLib/src/Simd/Facade/ClpPoly1305Simd.pas
+  s_4439590f1f00be::t_f0aa858941f024 28-29,70-71,82-83
+CryptoLib/src/Include/Simd/Poly1305/Poly1305BlocksBulkNeon_aarch64.inc
+  s_4439590f1f00be::t_348f1b3ccd487f 1-313
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_328ec6f81eb027::t_ccbe3f4e18c048 265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "0297cdbb651e1f51b4c0e64dd048251aa0af42cc",
+  "prompts": {},
+  "sessions": {
+    "s_328ec6f81eb027": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65474ab1-61e1-42dc-9e54-d32d6b513c77",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
