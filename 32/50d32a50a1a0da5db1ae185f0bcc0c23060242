@@ -1,0 +1,49 @@
+CryptoLib/src/Simd/Backend/ClpSalsaArmBackend.pas
+  s_4439590f1f00be::t_1a6144b88e2d3b 1-85
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4439590f1f00be::t_90e20c7c946f41 194
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4439590f1f00be::t_1ed41d95c05543 210
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_4439590f1f00be::t_725adb3bd58a2e 191
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4439590f1f00be::t_75feb096db6825 534
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_4439590f1f00be::t_9334aef2ae52bc 210
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_4439590f1f00be::t_e468f3562df0e1 205
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4439590f1f00be::t_632f4ea13e6b63 34,3280-3283
+CryptoLib/src/Simd/Facade/ClpSalsaSimd.pas
+  s_4439590f1f00be::t_401c5a7746accc 27-28,56-57,67-68
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockNeon_aarch64.inc
+  s_4439590f1f00be::t_f6abb11850a49e 1-150
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks2Neon_aarch64.inc
+  s_4439590f1f00be::t_2e568ecd58aae2 1-351
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_328ec6f81eb027::t_ea6bc0905bc757 265
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "3250d32a50a1a0da5db1ae185f0bcc0c23060242",
+  "prompts": {},
+  "sessions": {
+    "s_328ec6f81eb027": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "65474ab1-61e1-42dc-9e54-d32d6b513c77",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
