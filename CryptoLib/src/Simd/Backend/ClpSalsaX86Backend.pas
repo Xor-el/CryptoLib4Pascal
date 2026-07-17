@@ -39,6 +39,15 @@ type
     class function TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean; static;
     /// <summary>SIMD two-block Salsa20 keystream (128 bytes).</summary>
     class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
+    /// <summary>SIMD 4-way vertical streaming kernel: AGroups x 256 bytes.
+    /// The caller must pre-clamp AGroups so the low counter word (state
+    /// word 8) does not wrap inside the span.</summary>
+    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte;
+      AGroups: Int32): Boolean; static;
+    /// <summary>SIMD 8-way vertical streaming kernel: AGroups x 512 bytes.
+    /// Same counter pre-clamp contract as the 4-way kernel.</summary>
+    class function TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte;
+      AGroups: Int32): Boolean; static;
   end;
 
 implementation
@@ -63,6 +72,30 @@ procedure Salsa20ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20Blocks2Sse2_i386.inc}
+{$ENDIF}
+end;
+
+procedure Salsa20ProcessBlocks4Sse2(ARounds: Int32; AState, AIn, AOut: PByte;
+  AGroups: Int32);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks4Sse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks4Sse2_i386.inc}
+{$ENDIF}
+end;
+
+procedure Salsa20ProcessBlocks8Avx2(ARounds: Int32; AState, AIn, AOut: PByte;
+  AGroups: Int32);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks8Avx2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks8Avx2_i386.inc}
 {$ENDIF}
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -90,6 +123,36 @@ begin
     TX86SimdLevel.SSE2:
     begin
       Salsa20ProcessBlocks2Sse2(ARounds, AState, AIn, AOut);
+      Exit(True);
+    end;
+  end;
+{$ENDIF}
+  Result := False;
+end;
+
+class function TSalsaX86Backend.TryProcessBlocks4(ARounds: Int32;
+  AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.SSE2]) of
+    TX86SimdLevel.SSE2:
+    begin
+      Salsa20ProcessBlocks4Sse2(ARounds, AState, AIn, AOut, AGroups);
+      Exit(True);
+    end;
+  end;
+{$ENDIF}
+  Result := False;
+end;
+
+class function TSalsaX86Backend.TryProcessBlocks8(ARounds: Int32;
+  AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  case TCpuFeatures.X86.SelectSlot([TX86SimdLevel.AVX2]) of
+    TX86SimdLevel.AVX2:
+    begin
+      Salsa20ProcessBlocks8Avx2(ARounds, AState, AIn, AOut, AGroups);
       Exit(True);
     end;
   end;

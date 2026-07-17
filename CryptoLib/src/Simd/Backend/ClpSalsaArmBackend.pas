@@ -27,10 +27,11 @@ uses
 type
   /// <summary>
   /// ARM (NEON) SIMD backend for the Salsa20 family: owns the NEON kernels
-  /// (bodies in <c>Include\Simd\Salsa\</c>): the 1-block core and the
-  /// 2-block fused-I/O kernel. Compiles on every target - when built
-  /// without AArch64 SIMD the <c>Try*</c> entry points return <c>False</c>
-  /// and the callers fall back to their scalar reference path.
+  /// (bodies in <c>Include\Simd\Salsa\</c>): the 1-block core, the
+  /// 2-block fused-I/O kernel and the 4-way vertical streaming kernel.
+  /// Compiles on every target - when built without AArch64 SIMD the
+  /// <c>Try*</c> entry points return <c>False</c> and the callers fall
+  /// back to their scalar reference path.
   /// </summary>
   TSalsaArmBackend = class sealed
   public
@@ -38,6 +39,15 @@ type
     class function TryCore(ARounds: Int32; AInput, AOut: Pointer): Boolean; static;
     /// <summary>NEON two-block Salsa20 keystream (128 bytes), fused I/O.</summary>
     class function TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: PByte): Boolean; static;
+    /// <summary>NEON 4-way vertical streaming kernel: AGroups x 256 bytes.
+    /// The caller must pre-clamp AGroups so the low counter word (state
+    /// word 8) does not wrap inside the span.</summary>
+    class function TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: PByte;
+      AGroups: Int32): Boolean; static;
+    /// <summary>Always False: NEON has 4 lanes, so the engine ladder
+    /// degrades to the 4-block tier.</summary>
+    class function TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: PByte;
+      AGroups: Int32): Boolean; static;
   end;
 
 implementation
@@ -51,6 +61,12 @@ end;
 procedure Salsa20ProcessBlocks2Neon(ARounds: Int32; AState, AIn, AOut: PByte);
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\Salsa\Salsa20Blocks2Neon_aarch64.inc}
+end;
+
+procedure Salsa20ProcessBlocks4Neon(ARounds: Int32; AState, AIn, AOut: PByte;
+  AGroups: Int32);
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Salsa\Salsa20Blocks4Neon_aarch64.inc}
 end;
 {$ENDIF CRYPTOLIB_AARCH64_ASM}
 
@@ -79,6 +95,25 @@ begin
     Exit(True);
   end;
 {$ENDIF}
+  Result := False;
+end;
+
+class function TSalsaArmBackend.TryProcessBlocks4(ARounds: Int32;
+  AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if TCpuFeatures.Arm.HasNEON() then
+  begin
+    Salsa20ProcessBlocks4Neon(ARounds, AState, AIn, AOut, AGroups);
+    Exit(True);
+  end;
+{$ENDIF}
+  Result := False;
+end;
+
+class function TSalsaArmBackend.TryProcessBlocks8(ARounds: Int32;
+  AState, AIn, AOut: PByte; AGroups: Int32): Boolean;
+begin
   Result := False;
 end;
 
