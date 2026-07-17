@@ -93,7 +93,7 @@ const
     KeyByteCount: 32; IvOrNonceByteCount: 12; AeadMacBitLength: 128;
     KeyParameterAlgorithm: ''; Kind: TCipherBenchKind.Buffered),
     (Algorithm: 'AES/CCM/NOPADDING'; RowLabel: 'AES-256-CCM';
-    KeyByteCount: 32; IvOrNonceByteCount: 12; AeadMacBitLength: 128;
+    KeyByteCount: 32; IvOrNonceByteCount: 11; AeadMacBitLength: 128;
     KeyParameterAlgorithm: ''; Kind: TCipherBenchKind.Buffered),
     (Algorithm: 'AES/EAX/NOPADDING'; RowLabel: 'AES-256-EAX';
     KeyByteCount: 32; IvOrNonceByteCount: 16; AeadMacBitLength: 128;
