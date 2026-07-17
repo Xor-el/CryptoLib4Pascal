@@ -1,0 +1,19 @@
+CryptoLib/src/Include/Simd/BinPoly/BinPolyMul_aarch64.inc
+  s_4439590f1f00be::t_4b37ac6343a8f6 15-16,27-28,1886,2178,2200,2202,2247,2544,2557-2558,2764,2776,2778,2789,2791,2793,2795,2802,2804,2806-2807,2809,2877,2888,2896,2905,2907,3258-3259,3277,3288,3290,3293-3294,3368,3379,3381,3385,3388,3414,3425,3427,3430-3431,3442,3445,3537,3548,3550,3554,3557
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "499988c9a78400f8601ea382f7ea8c78de604c81",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
