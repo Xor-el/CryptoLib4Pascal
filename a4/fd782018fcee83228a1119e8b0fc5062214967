@@ -1,0 +1,19 @@
+CryptoLib.Benchmark/src/Core/CipherPerformanceBenchmark.pas
+  s_4439590f1f00be::t_43ed24c70b1a06 96
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "a4fd782018fcee83228a1119e8b0fc5062214967",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
