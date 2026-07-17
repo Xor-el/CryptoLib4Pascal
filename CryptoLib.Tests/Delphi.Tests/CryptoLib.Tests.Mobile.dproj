@@ -528,6 +528,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpChaChaSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpChaChaX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpChaChaArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpSalsaSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpSalsaX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas"/>

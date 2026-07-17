@@ -261,7 +261,8 @@ uses
   ClpAesCryptoExtFusedArmBackend, ClpAesCryptoExtCtrKernel, 
   ClpAesCryptoExtCbcKernel, ClpGhashArmBackend, ClpAesCryptoExtGcmKernel, 
   ClpGcmSivArmBackend, ClpPmullGcmSivKernel, ClpAesCryptoExtOcbKernel, 
-  ClpAesCryptoExtCcmKernel, ClpAesCryptoExtEaxKernel, ClpBinPolyArmBackend;
+  ClpAesCryptoExtCcmKernel, ClpAesCryptoExtEaxKernel, ClpBinPolyArmBackend, 
+  ClpChaChaArmBackend;
 
 implementation
 

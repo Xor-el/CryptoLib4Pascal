@@ -185,6 +185,7 @@ uses
   ClpIBackingHashProvider in '..\..\CryptoLib\src\Interfaces\Crypto\Digests\ClpIBackingHashProvider.pas',
   ClpChaChaSimd in '..\..\CryptoLib\src\Simd\Facade\ClpChaChaSimd.pas',
   ClpChaChaX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpChaChaX86Backend.pas',
+  ClpChaChaArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpChaChaArmBackend.pas',
   ClpSalsaSimd in '..\..\CryptoLib\src\Simd\Facade\ClpSalsaSimd.pas',
   ClpSalsaX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpSalsaX86Backend.pas',
   ClpPoly1305State in '..\..\CryptoLib\src\Crypto\Macs\ClpPoly1305State.pas',
