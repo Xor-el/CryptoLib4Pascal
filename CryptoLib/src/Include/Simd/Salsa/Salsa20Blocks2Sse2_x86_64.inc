@@ -2,7 +2,7 @@
 // -------------------------------------------------------------------
 // Two 64B blocks, fused I/O (xor) like ChaCha7539ProcessBlocks2Sse2. Diagonal
 // transpose done as a scalar gather/scatter (no pblendw); see
-// Salsa20BlockSse2_x86_64.inc. Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
+// Salsa20BlockSse2_x86_64.inc.
 //
 // On entry (after ClpSimdProc4Begin_x86_64.inc):
 //   rcx = ARounds, rdx = AState, r8 = AIn (plain), r9 = AOut (cipher).
@@ -53,7 +53,75 @@
   movdqu  xmm2, [rsp+32]
   movdqu  xmm3, [rsp+48]
 @@s2p2s2_x64_b1r:
-{$I ..\..\Include\Simd\Salsa\Salsa20Sse2_TwoColumnRoundsBody.inc}
+  { ---- inline: shared SSE2 two column rounds ---- }
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     r10, 2
   jg      @@s2p2s2_x64_b1r
   movdqu  xmm4, [rsp+0]
@@ -160,7 +228,75 @@
   movdqu  xmm2, [rsp+32]
   movdqu  xmm3, [rsp+48]
 @@s2p2s2_x64_b2r:
-{$I ..\..\Include\Simd\Salsa\Salsa20Sse2_TwoColumnRoundsBody.inc}
+  { ---- inline: shared SSE2 two column rounds ---- }
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     r10, 2
   jg      @@s2p2s2_x64_b2r
   movdqu  xmm4, [rsp+0]
@@ -229,3 +365,5 @@
 @@s2p2s2_x64_c2d:
   add     rsp, 512
 {$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
+
+

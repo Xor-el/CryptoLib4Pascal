@@ -1,6 +1,6 @@
 // ChaCha7539 (IETF) 128B (two 64B blocks), fused I/O, pure SSE2 (x86-64).
 // -------------------------------------------------------------------
-// Little-endian state in [rdx]. Rounds: ChaChaSse2_DoubleRoundBody.inc.
+// Little-endian state in [rdx].
 // Fused I/O xor: read plaintext at AIn (r8), xor with ChaCha output, write
 // to AOut (r9) - no 64B LK/keystream temp in Pascal.
 //
@@ -27,7 +27,61 @@
   movdqu  [rsp+48], xmm3
   mov     r10, r11
 @@c53b1r:
-{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody.inc}
+  { ---- inline: shared SSE2 double round (column + diagonal) ---- }
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 16
+  pslld   xmm4, 16
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 20
+  pslld   xmm4, 12
+  por     xmm1, xmm4
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 24
+  pslld   xmm4, 8
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 25
+  pslld   xmm4, 7
+  por     xmm1, xmm4
+  pshufd  xmm1, xmm1, $39
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $93
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 16
+  pslld   xmm4, 16
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 20
+  pslld   xmm4, 12
+  por     xmm1, xmm4
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 24
+  pslld   xmm4, 8
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 25
+  pslld   xmm4, 7
+  por     xmm1, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     r10, 2
   jg      @@c53b1r
   movdqu  xmm4, [rsp+0]
@@ -65,7 +119,61 @@
   movdqu  [rsp+48], xmm3
   mov     r10, r11
 @@c53b2r:
-{$I ..\..\Include\Simd\ChaCha\ChaChaSse2_DoubleRoundBody.inc}
+  { ---- inline: shared SSE2 double round (column + diagonal) ---- }
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 16
+  pslld   xmm4, 16
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 20
+  pslld   xmm4, 12
+  por     xmm1, xmm4
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 24
+  pslld   xmm4, 8
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 25
+  pslld   xmm4, 7
+  por     xmm1, xmm4
+  pshufd  xmm1, xmm1, $39
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $93
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 16
+  pslld   xmm4, 16
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 20
+  pslld   xmm4, 12
+  por     xmm1, xmm4
+  paddd   xmm0, xmm1
+  pxor    xmm3, xmm0
+  movdqa  xmm4, xmm3
+  psrld   xmm3, 24
+  pslld   xmm4, 8
+  por     xmm3, xmm4
+  paddd   xmm2, xmm3
+  pxor    xmm1, xmm2
+  movdqa  xmm4, xmm1
+  psrld   xmm1, 25
+  pslld   xmm4, 7
+  por     xmm1, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     r10, 2
   jg      @@c53b2r
   movdqu  xmm4, [rsp+0]
@@ -95,3 +203,5 @@
 @@c53bad:
   call    ChaCha7539RaiseCounter7539
 @@c53done:
+
+

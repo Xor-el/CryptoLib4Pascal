@@ -1,5 +1,5 @@
 // ChaCha 128B (two 64B blocks), fused I/O, NEON (aarch64), matching the
-// contract of ChaCha7539ProcessBlocks2Sse2_x86_64.inc.
+// contract of ChaCha7539Blocks2Sse2_x86_64.inc.
 // -------------------------------------------------------------------
 // Little-endian state in [x1], reloaded per block so the counter advance
 // carries over. Fused I/O xor: read plaintext at AIn, xor with the ChaCha

@@ -1,7 +1,7 @@
 // Salsa20 128B (two 64B blocks), fused I/O, pure SSE2 (i386).
 // -------------------------------------------------------------------
 // Diagonal transpose via scalar gather/scatter (no pblendw); see
-// Salsa20BlockSse2_i386.inc. Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc.
+// Salsa20BlockSse2_i386.inc.
 //
 // On entry (after ClpSimdProc4Begin_i386.inc):
 //   ebx = ARounds, esi = AState, edi = AIn, eax = AOut.
@@ -54,7 +54,75 @@
   movdqu  xmm2, [esp+32]
   movdqu  xmm3, [esp+48]
 @@s2p2s2_i386_b1r:
-{$I ..\..\Include\Simd\Salsa\Salsa20Sse2_TwoColumnRoundsBody.inc}
+  { ---- inline: shared SSE2 two column rounds ---- }
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     ebx, 2
   jg      @@s2p2s2_i386_b1r
   movdqu  xmm4, [esp+0]
@@ -181,7 +249,75 @@
   movdqu  xmm2, [esp+32]
   movdqu  xmm3, [esp+48]
 @@s2p2s2_i386_b2r:
-{$I ..\..\Include\Simd\Salsa\Salsa20Sse2_TwoColumnRoundsBody.inc}
+  { ---- inline: shared SSE2 two column rounds ---- }
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     ebx, 2
   jg      @@s2p2s2_i386_b2r
   movdqu  xmm4, [esp+0]
@@ -270,3 +406,5 @@
   pop     edi
   pop     esi
   pop     ebx
+
+

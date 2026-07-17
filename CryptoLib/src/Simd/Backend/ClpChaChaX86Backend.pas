@@ -79,11 +79,11 @@ end;
 procedure ChaCha7539ProcessBlocks2Sse2(ARounds: Int32; AState, AIn, AOut: PByte);
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_x86_64.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks2Sse2_x86_64.inc}
 {$ENDIF}
 {$IFDEF CRYPTOLIB_I386_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\ChaCha\ChaCha7539ProcessBlocks2Sse2_i386.inc}
+{$I ..\..\Include\Simd\ChaCha\ChaCha7539Blocks2Sse2_i386.inc}
 {$ENDIF}
 end;
 
