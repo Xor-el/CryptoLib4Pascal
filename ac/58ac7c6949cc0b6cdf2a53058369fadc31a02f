@@ -1,0 +1,31 @@
+CryptoLib/src/Simd/Backend/ClpAesNiFusedX86Backend.pas
+  s_4439590f1f00be::t_f318bfb3abf379 61-62
+CryptoLib/src/Simd/Backend/ClpBinPolyX86Backend.pas
+  s_4439590f1f00be::t_9e983dbb3d3f2f 109
+CryptoLib/src/Simd/Backend/ClpByteXorX86Backend.pas
+  s_4439590f1f00be::t_4f56c628bc55b1 64
+CryptoLib/src/Simd/Backend/ClpChaChaX86Backend.pas
+  s_4439590f1f00be::t_7a29b716214624 180-183,196-200,235-241
+CryptoLib/src/Simd/Backend/ClpGcmSivX86Backend.pas
+  s_4439590f1f00be::t_46a3768a131560 65
+CryptoLib/src/Simd/Backend/ClpGhashX86Backend.pas
+  s_4439590f1f00be::t_eef6845e4b6efb 211,224,236,248,261,277,292,302,311
+CryptoLib/src/Simd/Backend/ClpSalsaX86Backend.pas
+  s_4439590f1f00be::t_4f68f72daf26c8 107-110,119-122,132-135,145-148
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "ac58ac7c6949cc0b6cdf2a53058369fadc31a02f",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
