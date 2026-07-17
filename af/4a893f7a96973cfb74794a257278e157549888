@@ -1,0 +1,25 @@
+CryptoLib/src/Simd/Backend/ClpAesCryptoExtFusedArmBackend.pas
+  s_4439590f1f00be::t_875b7ff200c563 40-42,59
+CryptoLib/src/Simd/Backend/ClpGcmSivArmBackend.pas
+  s_4439590f1f00be::t_b4e9d3daff66ed 64
+CryptoLib/src/Simd/Backend/ClpGhashArmBackend.pas
+  s_4439590f1f00be::t_1b6e1c363f03b4 163,176,213,229,244,253
+CryptoLib/src/Simd/Backend/ClpBinPolyArmBackend.pas
+  s_4439590f1f00be::t_b458f842f6a6d5 84
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "af4a893f7a96973cfb74794a257278e157549888",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
