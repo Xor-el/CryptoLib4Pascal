@@ -1,0 +1,46 @@
+CryptoLib/src/Simd/Backend/ClpChaChaArmBackend.pas
+  s_4439590f1f00be::t_8eadee456e875c 64-85
+  s_4439590f1f00be::t_9005999d169fe9 24,28-30,33-40,44,46-49
+  s_4439590f1f00be::t_ac57d26d1d8c9a 105-111,118-127
+  s_4439590f1f00be::t_d2bfb31582ae60 1-23,25-27,31-32,41-43,45,50-63,86-104,112-117,128-153
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_4439590f1f00be::t_c61b28ebd96ab7 191
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4439590f1f00be::t_0ce0c30d7e96d0 207
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_4439590f1f00be::t_81e6d2f560267c 188
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4439590f1f00be::t_cbe4a2bab4cf44 531
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_4439590f1f00be::t_b9218290a48898 207
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_4439590f1f00be::t_33ab3307afae6d 202
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_4439590f1f00be::t_943c91c441583c 34,3276-3279
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_4439590f1f00be::t_47d9cb38efb8bf 264-265
+CryptoLib/src/Simd/Facade/ClpChaChaSimd.pas
+  s_4439590f1f00be::t_10f09e92048699 27-28,65-66,76-77,87-88,98-99
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockNeon_aarch64.inc
+  s_4439590f1f00be::t_bd6320d5170dbb 1-77
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks2Neon_aarch64.inc
+  s_4439590f1f00be::t_24572464e4c214 1-190
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks4Neon_aarch64.inc
+  s_4439590f1f00be::t_906f011db8387f 1-372
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "d2e273d6d6b3c19c9c6758c9df7ae9e8cca44393",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
