@@ -23,6 +23,8 @@ interface
 uses
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   ClpBinPolyX86Backend,
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  ClpBinPolyArmBackend,
 {$IFEND}
   ClpCryptoLibTypes,
   ClpIBinPolyMul;
@@ -33,7 +35,7 @@ type
   /// size-dispatch factory that builds the arch-neutral SIMD multipliers
   /// (<c>ClpBinPolySimd{Sizes,Medium,Large}</c>) and exposes the leaf carryless
   /// multiply kernels, routing them at compile time to the active per-arch backend
-  /// (x86 today; ARM in future). SIMD-only by contract: <c>TryCreateBinPolyMul</c>
+  /// (x86 PCLMULQDQ, aarch64 PMULL). SIMD-only by contract: <c>TryCreateBinPolyMul</c>
   /// reports "not handled" (False) when no SIMD backend is available or supported,
   /// so the scalar fallback stays with the caller (<c>TBinPolys</c>), matching the
   /// Try*-then-scalar shape used across the other SIMD families.
@@ -61,7 +63,7 @@ type
 
 implementation
 
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
 uses
   ClpBinPolySimdSizes,
   ClpBinPolySimdMedium,
@@ -72,14 +74,18 @@ uses
 
 class function TBinPolySimd.TryCreateBinPolyMul(AN: Int32; const AReduce: IBinPolyReduce;
   out AMul: IBinPolyMul): Boolean;
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
 var
   LSize: Int32;
 {$IFEND}
 begin
   AMul := nil;
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   if TBinPolyX86Backend.IsSupported then
+{$ELSE}
+  if TBinPolyArmBackend.IsSupported then
+{$IFEND}
   begin
     LSize := (AN + 63) shr 6;
     case LSize of
@@ -111,6 +117,8 @@ class procedure TBinPolySimd.ImplMulSmall(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TBinPolyX86Backend.ImplMulSmall(ALen, PX, PY, PZz);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  TBinPolyArmBackend.ImplMulSmall(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulSmall is not available on this target');
 {$IFEND}
@@ -120,6 +128,8 @@ class procedure TBinPolySimd.ImplMulEven(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TBinPolyX86Backend.ImplMulEven(ALen, PX, PY, PZz);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  TBinPolyArmBackend.ImplMulEven(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulEven is not available on this target');
 {$IFEND}
@@ -129,6 +139,8 @@ class procedure TBinPolySimd.ImplMulOdd(ALen: Int32; PX, PY, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TBinPolyX86Backend.ImplMulOdd(ALen, PX, PY, PZz);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  TBinPolyArmBackend.ImplMulOdd(ALen, PX, PY, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplMulOdd is not available on this target');
 {$IFEND}
@@ -138,6 +150,8 @@ class procedure TBinPolySimd.ImplSquare(ALen: Int32; PX, PZz: PUInt64);
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TBinPolyX86Backend.ImplSquare(ALen, PX, PZz);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  TBinPolyArmBackend.ImplSquare(ALen, PX, PZz);
 {$ELSE}
   raise ENotImplementedCryptoLibException.Create('SIMD ImplSquare is not available on this target');
 {$IFEND}

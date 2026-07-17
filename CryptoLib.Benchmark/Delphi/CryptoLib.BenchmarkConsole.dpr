@@ -361,6 +361,7 @@ uses
   ClpBinPolySimdMedium in '..\..\CryptoLib\src\Math\BinPoly\ClpBinPolySimdMedium.pas',
   ClpBinPolySimdLarge in '..\..\CryptoLib\src\Math\BinPoly\ClpBinPolySimdLarge.pas',
   ClpBinPolyX86Backend in '..\..\CryptoLib\src\Simd\Backend\ClpBinPolyX86Backend.pas',
+  ClpBinPolyArmBackend in '..\..\CryptoLib\src\Simd\Backend\ClpBinPolyArmBackend.pas',
   ClpBinPolyMulBase in '..\..\CryptoLib\src\Math\BinPoly\ClpBinPolyMulBase.pas',
   ClpItohTsujiiInv in '..\..\CryptoLib\src\Math\BinPoly\ClpItohTsujiiInv.pas',
   ClpBinPolys in '..\..\CryptoLib\src\Math\BinPoly\ClpBinPolys.pas',

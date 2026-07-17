@@ -370,6 +370,7 @@ contains
   ClpBinPolySimdMedium in '..\..\Math\BinPoly\ClpBinPolySimdMedium.pas',
   ClpBinPolySimdLarge in '..\..\Math\BinPoly\ClpBinPolySimdLarge.pas',
   ClpBinPolyX86Backend in '..\..\Simd\Backend\ClpBinPolyX86Backend.pas',
+  ClpBinPolyArmBackend in '..\..\Simd\Backend\ClpBinPolyArmBackend.pas',
   ClpBinPolyMulBase in '..\..\Math\BinPoly\ClpBinPolyMulBase.pas',
   ClpItohTsujiiInv in '..\..\Math\BinPoly\ClpItohTsujiiInv.pas',
   ClpBinPolys in '..\..\Math\BinPoly\ClpBinPolys.pas',
