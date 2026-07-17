@@ -1,0 +1,47 @@
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockSse2_i386.inc
+  s_4439590f1f00be::t_b663871e49c7ae 4,26-77,79
+  s_4439590f1f00be::t_b3e1a0bca7d2b6 78,80,100-101
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks2Sse2_i386.inc
+  s_4439590f1f00be::t_72fa1aabc0103f 4
+  s_4439590f1f00be::t_f604816840a340 1-3,5-410
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_i386.inc
+  s_4439590f1f00be::t_f604816840a340 8,53-73,76,80,83,88-107,110,114,117
+  s_4439590f1f00be::t_f9ac6a421d98d2 74-75,77-79,81-82,84-87,108-109,111-113,115-116,118-121,173-174
+CryptoLib/src/Include/Simd/Salsa/Salsa20BlockSse2_x86_64.inc
+  s_4439590f1f00be::t_f604816840a340 8,58-72,74,78,81,85,88,93-106,108,112,115,119,122
+  s_4439590f1f00be::t_0eccc660b77b4b 73,75-77,79-80,82-84,86-87,89-92,107,109-111,113-114,116-118,120-121,123-126,177-178
+CryptoLib/src/Include/Simd/ChaCha/ChaCha20BlockSse2_x86_64.inc
+  s_4439590f1f00be::t_b663871e49c7ae 4,22-73,75
+  s_4439590f1f00be::t_735fddba95cb4d 74,76,92-93
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks2Sse2_x86_64.inc
+  s_4439590f1f00be::t_72fa1aabc0103f 3
+  s_4439590f1f00be::t_b663871e49c7ae 1-2,4-207
+CryptoLib/src/Include/Simd/Salsa/Salsa20Blocks2Sse2_x86_64.inc
+  s_4439590f1f00be::t_72fa1aabc0103f 5
+  s_4439590f1f00be::t_f604816840a340 1-4,6-369
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks2Sse2_i386.inc
+  s_4439590f1f00be::t_b663871e49c7ae 1-2,4-219
+  s_4439590f1f00be::t_72fa1aabc0103f 3
+CryptoLib/src/Include/Simd/ChaCha/ChaCha7539Blocks2Neon_aarch64.inc
+  s_4439590f1f00be::t_7cfdb38033051b 2
+CryptoLib/src/Simd/Backend/ClpChaChaX86Backend.pas
+  s_4439590f1f00be::t_cf0a749a9e46ae 82,86
+CryptoLib/src/Simd/Backend/ClpSalsaX86Backend.pas
+  s_4439590f1f00be::t_54c3a44f6b58f7 61,65
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "38546492ebdf61e5e31aa43f132a164bb985168f",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-fable-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
