@@ -1,0 +1,73 @@
+CryptoLib/src/Pkcs/ClpPkcs12Store.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Asn1/ParseTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBaseTrinomialReduce.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Crypto/Parameters/ClpParameterUtilities.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Asn1/X509/X509NameTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Crypto/CcmTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Interfaces/Math/BinPoly/ClpIBinPolyInv.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Crypto/Modes/ClpCbcBlockCipher.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Others/Curve448KeyUtilitiesTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBasePentanomialReduce.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Math/BinPoly/ClpItohTsujiiInv.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Crypto/Generators/ClpDsaGenerators.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Crypto/Macs/ClpMacUtilities.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Interfaces/Pkcs/ClpIPkcs12Store.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Asn1/ExternalTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Math/BinPoly/ClpBinPolys.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Misc/ClpX86SimdFeatures.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+scripts/maintenance/check-file-format.ps1
+  s_4439590f1f00be::t_e030ade46da32a 3,7
+  s_4439590f1f00be::t_0a49060decc415 11-12,23-24
+  s_4439590f1f00be::t_587cde3bcb3576 8-10
+  s_4439590f1f00be::t_f1025ea5061c79 25
+  s_4439590f1f00be::t_241799042dac09 42-55,82
+CryptoLib/src/Asn1/ClpAsn1Streams.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Interfaces/Crypto/Modes/ClpIAeadCipher.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Helpers/ClpFormatSettingsHelper.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Pkcs/Pkcs12StoreTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib/src/Crypto/Parameters/ClpCurve448KeyUtilities.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Examples/src/Utilities/HybridEncryption.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Others/CertTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+CryptoLib.Tests/src/Others/SignerUtilitiesTests.pas
+  s_4439590f1f00be::t_668af3d55c6e86 1
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "8e29925c14c551dc1d17569069445688c458aee7",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
