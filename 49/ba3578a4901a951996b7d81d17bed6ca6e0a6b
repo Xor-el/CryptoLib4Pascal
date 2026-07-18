@@ -1,0 +1,34 @@
+CryptoLib.Examples/src/Examples/BlockCipherExample.pas
+  s_4439590f1f00be::t_9d32dee82183b0 17
+  s_4439590f1f00be::t_03f073b3f0b286 28,31,38-51,53
+CryptoLib.Examples/src/Examples/StreamCipherExample.pas
+  s_4439590f1f00be::t_2381af5b19dbab 1-52
+CryptoLib.Examples/src/Examples/AeadCipherExample.pas
+  s_4439590f1f00be::t_4286463630334c 1-77
+CryptoLib.Examples/src/Utilities/AeadCipherExampleUtilities.pas
+  s_4439590f1f00be::t_ba2e0ca2b05c21 1-206
+CryptoLib.Examples/src/Examples/CipherExampleBase.pas
+  s_4439590f1f00be::t_7479a3fb9f9cda 1-120
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_4439590f1f00be::t_4df3cc88e476db 17,23-26
+CryptoLib.Examples/src/ExampleExplorer.pas
+  s_4439590f1f00be::t_e440a92c7737e1 42-44,55,57-59
+CryptoLib.Examples/src/Utilities/CipherExampleUtilities.pas
+  s_4439590f1f00be::t_562cacedd78591 40-46,53-54,58-63,124-126,135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.14",
+  "base_commit_sha": "49ba3578a4901a951996b7d81d17bed6ca6e0a6b",
+  "prompts": {},
+  "sessions": {
+    "s_4439590f1f00be": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "373b73cc-ff14-4e8d-a2c0-a35e070341c3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
