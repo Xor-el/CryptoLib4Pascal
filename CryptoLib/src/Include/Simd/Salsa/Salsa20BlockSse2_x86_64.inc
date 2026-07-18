@@ -5,7 +5,7 @@
 //   b0=[s0,s5,s10,s15] b1=[s12,s1,s6,s11] b2=[s8,s13,s2,s7] b3=[s4,s9,s14,s3].
 // SSE2 has no pblendw, so the diagonal transpose is a direct scalar gather on
 // the way in and the inverse scatter on the way out (dword granular, no masks).
-// Rounds: Salsa20Sse2_TwoColumnRoundsBody.inc (pure SSE2 body).
+//
 //
 // On entry (after ClpSimdProc3Begin_x86_64.inc):
 //   rcx = ARounds, rdx = AIn (16 UInt32), r8 = AOut (16 UInt32).
@@ -55,7 +55,75 @@
   movdqu  xmm3, [rsp+48]
 { rounds }
 @@salsa20_sse2_x64_rd:
-{$I ..\..\Include\Simd\Salsa\Salsa20Sse2_TwoColumnRoundsBody.inc}
+  { ---- inline: shared SSE2 two column rounds ---- }
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
+  movdqa  xmm4, xmm1
+  movdqa  xmm1, xmm3
+  movdqa  xmm3, xmm4
+  movdqa  xmm4, xmm0
+  paddd   xmm4, xmm3
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 7
+  psrld   xmm5, 25
+  por     xmm4, xmm5
+  pxor    xmm1, xmm4
+  movdqa  xmm4, xmm1
+  paddd   xmm4, xmm0
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 9
+  psrld   xmm5, 23
+  por     xmm4, xmm5
+  pxor    xmm2, xmm4
+  movdqa  xmm4, xmm2
+  paddd   xmm4, xmm1
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 13
+  psrld   xmm5, 19
+  por     xmm4, xmm5
+  pxor    xmm3, xmm4
+  movdqa  xmm4, xmm3
+  paddd   xmm4, xmm2
+  movdqa  xmm5, xmm4
+  pslld   xmm4, 18
+  psrld   xmm5, 14
+  por     xmm4, xmm5
+  pxor    xmm0, xmm4
+  pshufd  xmm1, xmm1, $93
+  pshufd  xmm2, xmm2, $4E
+  pshufd  xmm3, xmm3, $39
   sub     r9, 2
   jg      @@salsa20_sse2_x64_rd
 { c += b (initial diagonal state, still in [rsp+0..63]) }
@@ -106,3 +174,5 @@
   mov     [r8+12], eax
   add     rsp, 512
 {$I ..\..\Include\Simd\Common\ClpSimdNonVolatileRestore_x86_64.inc}
+
+

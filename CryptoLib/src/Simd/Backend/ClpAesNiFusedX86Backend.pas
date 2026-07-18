@@ -25,8 +25,7 @@ uses
   ClpIBlockCipher,
   ClpIBlockCipherMode,
   ClpIAesEngineX86,
-  ClpCpuFeatures,
-  ClpIntrinsicsVector;
+  ClpCpuFeatures;
 
 type
   /// <summary>
@@ -58,8 +57,8 @@ implementation
 class function TAesNiFusedX86Backend.CpuSupports: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasAESNI and TCpuFeatures.X86.HasPCLMULQDQ and
-    TCpuFeatures.X86.HasSSSE3 and TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasAESNI() and TCpuFeatures.X86.HasPCLMULQDQ() and
+    TCpuFeatures.X86.HasSSSE3();
 {$ELSE}
   Result := False;
 {$ENDIF CRYPTOLIB_X86_SIMD}

@@ -23,6 +23,9 @@ interface
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
 uses
   ClpGcmSivX86Backend;
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+uses
+  ClpGcmSivArmBackend;
 {$IFEND}
 
 type
@@ -51,6 +54,8 @@ class function TGcmSivSimd.IsSupported: Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TGcmSivX86Backend.IsSupported;
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TGcmSivArmBackend.IsSupported;
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -61,6 +66,8 @@ class procedure TGcmSivSimd.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask: Point
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   TGcmSivX86Backend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  TGcmSivArmBackend.ProcessPolyvalBatch(PFS, PC0, PHPow128, PMask, ABatchCount);
 {$IFEND}
 end;
 

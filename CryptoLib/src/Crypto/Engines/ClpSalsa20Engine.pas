@@ -77,6 +77,14 @@ type
     // Pointer-form, unvalidated inner helpers (1 / 2 blocks).
     procedure ProcessBlockFast(AIn, AOut: PByte);
     procedure ProcessBlocks2Fast(AIn, AOut: PByte);
+    // Clamp a wide-kernel group count so the low counter word (state
+    // word 8) cannot wrap inside the span: the wide kernels broadcast
+    // word 9 once per call, so the carry must land between calls.
+    function WideGroupsSafe(AGroups, AGroupBlocks: Int32): Int32;
+    // One wide streaming call (4- or 8-block groups) over all safe
+    // groups; advances the pointers/count on success.
+    function TryProcessWide(AGroupBlocks: Int32; var AIn, AOut: PByte;
+      var ABlockCount: Int32): Boolean;
 
   strict protected
   var
@@ -103,7 +111,8 @@ type
     procedure ImplProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32); inline;
 
-    // 2 -> 1 bulk ladder; the ChaCha engine overrides with 8 -> 4 -> 2 -> 1.
+    // 8 -> 4 -> 2 -> 1 bulk ladder (the ChaCha engine overrides with its
+    // counter-variant-aware equivalent).
     function DoProcessBlocks(AIn, AOut: PByte; ABlockCount: Int32): Int32; virtual;
 
     /// <summary>
@@ -343,11 +352,70 @@ begin
   ProcessBlockFast(AIn + 64, AOut + 64);
 end;
 
+function TSalsa20Engine.WideGroupsSafe(AGroups, AGroupBlocks: Int32): Int32;
+var
+  LSafeBlocks: UInt64;
+begin
+  Result := AGroups;
+  LSafeBlocks := UInt64($100000000) - FEngineState[8];
+  if (UInt64(Result) * UInt32(AGroupBlocks)) > LSafeBlocks then
+    Result := Int32(LSafeBlocks div UInt32(AGroupBlocks));
+end;
+
+function TSalsa20Engine.TryProcessWide(AGroupBlocks: Int32;
+  var AIn, AOut: PByte; var ABlockCount: Int32): Boolean;
+var
+  LGroups: Int32;
+begin
+  Result := False;
+  LGroups := WideGroupsSafe(ABlockCount div AGroupBlocks, AGroupBlocks);
+  if LGroups = 0 then
+    Exit;
+  case AGroupBlocks of
+    8:
+      Result := TSalsaSimd.TryProcessBlocks8(FRounds,
+        PByte(@FEngineState[0]), AIn, AOut, LGroups);
+  else
+    Result := TSalsaSimd.TryProcessBlocks4(FRounds,
+      PByte(@FEngineState[0]), AIn, AOut, LGroups);
+  end;
+  if Result then
+  begin
+    AIn := AIn + LGroups * (AGroupBlocks * 64);
+    AOut := AOut + LGroups * (AGroupBlocks * 64);
+    System.Dec(ABlockCount, LGroups * AGroupBlocks);
+  end;
+end;
+
 function TSalsa20Engine.DoProcessBlocks(AIn, AOut: PByte;
   ABlockCount: Int32): Int32;
 begin
   Result := ABlockCount * 64;
-  while ABlockCount >= 2 do
+  while ABlockCount >= 8 do
+  begin
+    // Widest streaming tier that lands, over all safe groups at once.
+    if TryProcessWide(8, AIn, AOut, ABlockCount) then
+      continue;
+    if TryProcessWide(4, AIn, AOut, ABlockCount) then
+      continue;
+    // No wide SIMD (or at the counter wrap boundary): one 8-block group via 2/1.
+    ProcessBlocks2Fast(AIn, AOut);
+    ProcessBlocks2Fast(AIn + 128, AOut + 128);
+    ProcessBlocks2Fast(AIn + 256, AOut + 256);
+    ProcessBlocks2Fast(AIn + 384, AOut + 384);
+    AIn := AIn + 512;
+    AOut := AOut + 512;
+    System.Dec(ABlockCount, 8);
+  end;
+  if (ABlockCount >= 4) and (not TryProcessWide(4, AIn, AOut, ABlockCount)) then
+  begin
+    ProcessBlocks2Fast(AIn, AOut);
+    ProcessBlocks2Fast(AIn + 128, AOut + 128);
+    AIn := AIn + 256;
+    AOut := AOut + 256;
+    System.Dec(ABlockCount, 4);
+  end;
+  if ABlockCount >= 2 then
   begin
     ProcessBlocks2Fast(AIn, AOut);
     AIn := AIn + 128;

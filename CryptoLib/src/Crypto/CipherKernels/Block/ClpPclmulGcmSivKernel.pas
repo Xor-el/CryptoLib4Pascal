@@ -106,6 +106,7 @@ begin
   AKernel := nil;
   Result := False;
   try
+{$IFDEF CRYPTOLIB_X86_SIMD}
     if AHPowers = nil then
       Exit;
     if not TGcmSivSimd.IsSupported then
@@ -113,6 +114,7 @@ begin
     AKernel := TPclmulGcmSivKernel.Create(AHPowers,
       @GcmSivKernelReverseMask[0]);
     Result := True;
+{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;

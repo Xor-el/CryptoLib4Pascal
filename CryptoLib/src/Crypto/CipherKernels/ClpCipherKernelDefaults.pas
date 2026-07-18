@@ -36,6 +36,13 @@ uses
   ClpAesNiEaxKernel,
   ClpAesNiCtrKernel,
   ClpAesNiCbcKernel,
-  ClpPclmulGcmSivKernel;
+  ClpAesCryptoExtCtrKernel,
+  ClpAesCryptoExtCbcKernel,
+  ClpAesCryptoExtGcmKernel,
+  ClpAesCryptoExtOcbKernel,
+  ClpAesCryptoExtCcmKernel,
+  ClpAesCryptoExtEaxKernel,
+  ClpPclmulGcmSivKernel,
+  ClpPmullGcmSivKernel;
 
 end.

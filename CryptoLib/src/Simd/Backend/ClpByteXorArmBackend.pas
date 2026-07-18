@@ -14,32 +14,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIntrinsicsVector;
+unit ClpByteXorArmBackend;
 
-{$I ..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-type
-  /// Vector64/128/256 byte sizes.
-  TIntrinsicsVector64Bytes = packed array[0..7] of Byte;
-  TIntrinsicsVector128Bytes = packed array[0..15] of Byte;
-  TIntrinsicsVector256Bytes = packed array[0..31] of Byte;
+uses
+  ClpCpuFeatures,
+  ClpCryptoLibTypes;
 
-  TIntrinsicsVector = class sealed(TObject)
+type
+  /// <summary>
+  /// ARM (NEON) backend for the variable-length XOR utility (body in
+  /// <c>Include\Simd\ByteXor\</c>). Compiles on every target - when built
+  /// without AArch64 SIMD <c>TryXor</c> returns <c>False</c> and the caller
+  /// runs its scalar path.
+  /// </summary>
+  TByteXorArmBackend = class sealed
   public
-    class function IsPacked: Boolean; static;
+    /// <summary>PZ[i] := PX[i] xor PY[i] for i in [0, ALen); PZ may alias
+    /// PX or PY.</summary>
+    class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
   end;
 
 implementation
 
-{ TIntrinsicsVector }
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+procedure ByteXorNeon(ALen: NativeInt; AX, AY, AZ: Pointer);
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\ByteXor\ByteXorNeon_aarch64.inc}
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
-class function TIntrinsicsVector.IsPacked: Boolean;
+{ TByteXorArmBackend }
+
+class function TByteXorArmBackend.TryXor(ALen: NativeInt;
+  AX, AY, AZ: PByte): Boolean;
 begin
-  Result := (SizeOf(TIntrinsicsVector64Bytes) = 8) and
-    (SizeOf(TIntrinsicsVector128Bytes) = 16) and
-    (SizeOf(TIntrinsicsVector256Bytes) = 32);
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if TCpuFeatures.Arm.HasNEON() then
+  begin
+    ByteXorNeon(ALen, AX, AY, AZ);
+    Exit(True);
+  end;
+{$ENDIF}
+  Result := False;
 end;
 
 end.

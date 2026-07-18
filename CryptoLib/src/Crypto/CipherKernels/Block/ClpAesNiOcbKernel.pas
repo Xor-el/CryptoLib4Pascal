@@ -270,6 +270,7 @@ begin
   AKernel := nil;
   Result := False;
   try
+{$IFDEF CRYPTOLIB_X86_SIMD}
     if not TAesFusedAeadSimd.CpuSupports then
       Exit;
     if not TAesNiFusedX86Backend.TryResolveEngine(ACipher, LEngine) then
@@ -284,6 +285,7 @@ begin
       Exit;
     AKernel := TAesNiOcbKernel.Create(LEngine, LKeys, LRounds, ADirection);
     Result := True;
+{$ENDIF CRYPTOLIB_X86_SIMD}
   except
     AKernel := nil;
     Result := False;

@@ -24,6 +24,9 @@ uses
 {$IFDEF CRYPTOLIB_X86_SIMD}
   ClpByteXorX86Backend,
 {$ENDIF}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  ClpByteXorArmBackend,
+{$ENDIF}
   ClpCryptoLibTypes;
 
 type
@@ -48,7 +51,11 @@ begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
   Result := TByteXorX86Backend.TryXor(ALen, AX, AY, AZ);
 {$ELSE}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  Result := TByteXorArmBackend.TryXor(ALen, AX, AY, AZ);
+{$ELSE}
   Result := False;
+{$ENDIF}
 {$ENDIF}
 end;
 

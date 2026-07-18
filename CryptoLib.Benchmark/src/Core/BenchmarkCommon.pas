@@ -38,8 +38,7 @@ const
   BENCH_KDF_VALUE_COL_WIDTH = 22;
   { Wide enough for "9,999.99 MB/s / 9,999.99 MB/s" in cipher combined cells. }
   BENCH_CIPHER_COMBINED_COL_WIDTH = 36;
-  DEFAULT_BENCH_BUFFER_SIZES: array [0 .. 4] of Int32 =
-    (256, 1024, 8192, 65536, 1048576);
+  DEFAULT_BENCH_BUFFER_SIZES: array [0 .. 2] of Int32 = (65536, 1048576, 16777216);
 
 procedure BenchFillRandom(var ADest: TBytes);
 procedure BenchAllocRandom(ALen: Int32; var ADest: TBytes);

@@ -24,6 +24,8 @@ uses
   ClpCryptoLibTypes
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   , ClpChaChaX86Backend
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  , ClpChaChaArmBackend
 {$IFEND}
   ;
 
@@ -60,6 +62,8 @@ class function TChaChaSimd.TryCore(ARounds: Int32; AInput, AOut: PByte): Boolean
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TChaChaX86Backend.TryCore(ARounds, AInput, AOut);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TChaChaArmBackend.TryCore(ARounds, AInput, AOut);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -69,6 +73,8 @@ class function TChaChaSimd.TryProcessBlocks2(ARounds: Int32; AState, AIn, AOut: 
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TChaChaX86Backend.TryProcessBlocks2(ARounds, AState, AIn, AOut, ACtr64);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TChaChaArmBackend.TryProcessBlocks2(ARounds, AState, AIn, AOut, ACtr64);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -78,6 +84,8 @@ class function TChaChaSimd.TryProcessBlocks4(ARounds: Int32; AState, AIn, AOut: 
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TChaChaX86Backend.TryProcessBlocks4(ARounds, AState, AIn, AOut, AGroups, ACtr64);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TChaChaArmBackend.TryProcessBlocks4(ARounds, AState, AIn, AOut, AGroups, ACtr64);
 {$ELSE}
   Result := False;
 {$IFEND}
@@ -87,6 +95,8 @@ class function TChaChaSimd.TryProcessBlocks8(ARounds: Int32; AState, AIn, AOut: 
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD)}
   Result := TChaChaX86Backend.TryProcessBlocks8(ARounds, AState, AIn, AOut, AGroups, ACtr64);
+{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  Result := TChaChaArmBackend.TryProcessBlocks8(ARounds, AState, AIn, AOut, AGroups, ACtr64);
 {$ELSE}
   Result := False;
 {$IFEND}

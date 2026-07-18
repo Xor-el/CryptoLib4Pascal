@@ -40,6 +40,7 @@ uses
   SysUtils,
   Math,
   DigestPerformanceBenchmark,
+  MacPerformanceBenchmark,
   CipherPerformanceBenchmark,
   SignerPerformanceBenchmark,
   KdfPerformanceBenchmark;
@@ -55,17 +56,20 @@ end;
 class procedure TPerformanceBenchmark.Run(ALogProc: TBenchmarkLogProc;
   const ADigestSizes, AEncryptSizes, ADecryptSizes: array of Int32);
 var
-  WD, WC, WS, WK, LMax: Int32;
+  WD, WM, WC, WS, WK, LMax: Int32;
 begin
   Randomize;
   WD := TDigestPerformanceBenchmark.Run(ALogProc, ADigestSizes);
+  ALogProc('');
+  WM := TMacPerformanceBenchmark.Run(ALogProc, ADigestSizes);
   ALogProc('');
   WC := TCipherPerformanceBenchmark.Run(ALogProc, AEncryptSizes, ADecryptSizes);
   ALogProc('');
   WS := TSignerPerformanceBenchmark.Run(ALogProc);
   ALogProc('');
   WK := TKdfPerformanceBenchmark.Run(ALogProc);
-  LMax := Math.Max(WD, WC);
+  LMax := Math.Max(WD, WM);
+  LMax := Math.Max(LMax, WC);
   LMax := Math.Max(LMax, WS);
   LMax := Math.Max(LMax, WK);
   TBenchmarkReport.WriteStandardFooter(ALogProc, LMax);

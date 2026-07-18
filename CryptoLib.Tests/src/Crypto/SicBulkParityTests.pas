@@ -39,6 +39,9 @@ uses
 {$IFDEF CRYPTOLIB_X86_SIMD}
   ClpAesEngineX86,
 {$ENDIF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  ClpAesEngineArm,
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
   ClpSicBlockCipher,
   ClpISicBlockCipher,
   ClpSecureRandom,
@@ -73,6 +76,10 @@ type
     procedure TestAesX86SicBulkParity;
     procedure TestAesX86SicCounterWrapParity;
 {$ENDIF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+    procedure TestAesArmSicBulkParity;
+    procedure TestAesArmSicCounterWrapParity;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
     procedure TestAesScalarSicBulkParity;
     procedure TestAesScalarSicCounterWrapParity;
     procedure TestBlowfishSicBulkParity;
@@ -90,6 +97,13 @@ begin
   Result := TAesEngineX86.Create();
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
+
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+function CreateAesArmEngine: IBlockCipher;
+begin
+  Result := TAesEngineArm.Create();
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 function CreateAesScalarEngine: IBlockCipher;
 begin
@@ -204,6 +218,22 @@ begin
   RunWrapCasesForEngine(@CreateAesX86Engine, 'AES-NI (TAesEngineX86)');
 end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
+
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+procedure TTestSicBulkParity.TestAesArmSicBulkParity;
+begin
+  if not TAesEngineArm.IsSupported then
+    Exit;
+  RunParityForEngine(@CreateAesArmEngine, 16, 12, 16, 'AES-CryptoExt (TAesEngineArm)');
+end;
+
+procedure TTestSicBulkParity.TestAesArmSicCounterWrapParity;
+begin
+  if not TAesEngineArm.IsSupported then
+    Exit;
+  RunWrapCasesForEngine(@CreateAesArmEngine, 'AES-CryptoExt (TAesEngineArm)');
+end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 procedure TTestSicBulkParity.RunWrapCaseForEngine(
   AEngineFactory: TBlockCipherFactory; const AIvHex: String;

@@ -21,8 +21,7 @@ unit ClpGcmSivX86Backend;
 interface
 
 uses
-  ClpCpuFeatures,
-  ClpIntrinsicsVector;
+  ClpCpuFeatures;
 
 type
   /// <summary>
@@ -62,8 +61,7 @@ end;
 class function TGcmSivX86Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Result := TCpuFeatures.X86.HasPCLMULQDQ and TCpuFeatures.X86.HasSSSE3 and
-    TIntrinsicsVector.IsPacked;
+  Result := TCpuFeatures.X86.HasPCLMULQDQ() and TCpuFeatures.X86.HasSSSE3();
 {$ELSE}
   Result := False;
 {$ENDIF}

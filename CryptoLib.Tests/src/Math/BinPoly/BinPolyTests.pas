@@ -40,6 +40,10 @@ uses
   ClpBinPolyX86Backend,
   ClpBinPolySimd,
 {$ENDIF CRYPTOLIB_X86_SIMD}
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  ClpBinPolyArmBackend,
+  ClpBinPolySimd,
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
   ClpBinPolyMulBaseBinomialReduce,
   CryptoLibTestBase;
 
@@ -190,6 +194,20 @@ type
     function BackendLabel: String; override;
   end;
 {$ENDIF CRYPTOLIB_X86_SIMD}
+
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  /// <summary>
+  /// ARM (PMULL) instantiation of the BinPoly backend suite. Registered
+  /// only when CRYPTOLIB_AARCH64_ASM is defined.
+  /// </summary>
+  TTestBinPolyArm = class(TBinPolyBackendTestBase)
+  strict protected
+    function BackendSupported: Boolean; override;
+    function CreateBackendMul(AN: Int32; const AReduce: IBinPolyReduce)
+      : IBinPolyMul; override;
+    function BackendLabel: String; override;
+  end;
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 implementation
 
@@ -1783,6 +1801,29 @@ end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
 
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+
+{ TTestBinPolyArm }
+
+function TTestBinPolyArm.BackendSupported: Boolean;
+begin
+  Result := TBinPolyArmBackend.IsSupported;
+end;
+
+function TTestBinPolyArm.CreateBackendMul(AN: Int32;
+  const AReduce: IBinPolyReduce): IBinPolyMul;
+begin
+  if not TBinPolySimd.TryCreateBinPolyMul(AN, AReduce, Result) then
+    Result := nil;
+end;
+
+function TTestBinPolyArm.BackendLabel: String;
+begin
+  Result := 'ARM';
+end;
+
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
+
 initialization
 
 {$IFDEF FPC}
@@ -1798,5 +1839,13 @@ initialization
   RegisterTest(TTestBinPolyX86.Suite);
 {$ENDIF FPC}
 {$ENDIF CRYPTOLIB_X86_SIMD}
+
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+{$IFDEF FPC}
+  RegisterTest(TTestBinPolyArm);
+{$ELSE}
+  RegisterTest(TTestBinPolyArm.Suite);
+{$ENDIF FPC}
+{$ENDIF CRYPTOLIB_AARCH64_ASM}
 
 end.
