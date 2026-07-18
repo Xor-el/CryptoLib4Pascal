@@ -39,7 +39,9 @@ uses
   EcExample,
   EdExample,
   DigestExample,
-  CipherExample,
+  BlockCipherExample,
+  StreamCipherExample,
+  AeadCipherExample,
   MlKemExample,
   MlDsaExample,
   SlhDsaExample,
@@ -50,9 +52,11 @@ type
   TExampleBaseClass = class of TExampleBase;
 
 const
-  KnownExamples: array[0..9] of TExampleBaseClass = (
+  KnownExamples: array[0..11] of TExampleBaseClass = (
     TDigestExample,
-    TCipherExample,
+    TBlockCipherExample,
+    TStreamCipherExample,
+    TAeadCipherExample,
     TEcExample,
     TEdExample,
     TRsaExample,

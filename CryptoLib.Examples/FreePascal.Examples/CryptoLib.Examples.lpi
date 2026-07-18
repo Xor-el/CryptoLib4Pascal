@@ -45,10 +45,6 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\src\Examples\CipherExample.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
         <Filename Value="..\src\Examples\DigestExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -126,6 +122,26 @@
       </Unit>
       <Unit>
         <Filename Value="..\src\Examples\SecureRandomExample.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Utilities\AeadCipherExampleUtilities.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Examples\AeadCipherExample.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Examples\BlockCipherExample.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Examples\CipherExampleBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\src\Examples\StreamCipherExample.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

@@ -37,17 +37,30 @@ uses
   ClpICipherParameters;
 
 type
+  /// <summary>
+  /// Shared driver for the non-AEAD symmetric ciphers (block and stream):
+  /// both are driven identically through <c>IBufferedCipher</c> +
+  /// <c>ParametersWithIV</c>, so a single generic roundtrip serves every
+  /// block mode and stream cipher - the category is only a matter of which
+  /// algorithm/key/IV data is fed in.
+  /// </summary>
   TCipherExampleUtilities = class sealed
   strict private
     class function GetKeyAlgorithmName(const ACipherAlgorithm: string): string; static;
     class function ProcessIncrementally(const ACipher: IBufferedCipher;
       const AInput: TBytes): TBytes; static;
   public
+    /// <summary>Generic buffered-cipher roundtrip against a caller-built
+    /// parameter set. Returns True if decrypt recovers the plaintext.</summary>
     class function EncryptDecryptRoundtripMatches(const ACipherAlgorithm: string;
       const AParams: ICipherParameters; const APlain: TBytes;
       out ACipherTextLen: Int32): Boolean; static;
-    class function AesEncryptDecryptRoundtripMatches(const ACipherAlgorithm: string;
-      AKeySizeBytes: Int32; const APlain: TBytes; out ACipherTextLen: Int32): Boolean; static;
+    /// <summary>Non-AEAD roundtrip: generates a random key + IV of the given
+    /// sizes, builds a <c>ParametersWithIV</c> and runs the buffered
+    /// roundtrip. Serves both block and stream ciphers.</summary>
+    class function NonAeadRoundtripMatches(const ACipherAlgorithm: string;
+      AKeySizeBytes, AIvSizeBytes: Int32; const APlain: TBytes;
+      out ACipherTextLen: Int32): Boolean; static;
   end;
 
 implementation
@@ -108,22 +121,18 @@ begin
   Result := TArrayUtilities.AreEqual(APlain, LDecrypted);
 end;
 
-class function TCipherExampleUtilities.AesEncryptDecryptRoundtripMatches(
-  const ACipherAlgorithm: string; AKeySizeBytes: Int32; const APlain: TBytes;
-  out ACipherTextLen: Int32): Boolean;
+class function TCipherExampleUtilities.NonAeadRoundtripMatches(
+  const ACipherAlgorithm: string; AKeySizeBytes, AIvSizeBytes: Int32;
+  const APlain: TBytes; out ACipherTextLen: Int32): Boolean;
 var
   LKey, LIV: TBytes;
   LSecureRandom: ISecureRandom;
   LParams: ICipherParameters;
   LKeyAlg: string;
 begin
-  ACipherTextLen := 0;
-  if not (AKeySizeBytes in [16, 24, 32]) then
-    raise EArgumentException.Create(Format('Invalid AES key size: %d bytes. Valid sizes are 16, 24, 32.', [AKeySizeBytes]));
-
   LSecureRandom := TSecureRandom.Create();
   System.SetLength(LKey, AKeySizeBytes);
-  System.SetLength(LIV, 16);
+  System.SetLength(LIV, AIvSizeBytes);
   LSecureRandom.NextBytes(LKey);
   LSecureRandom.NextBytes(LIV);
   LKeyAlg := GetKeyAlgorithmName(ACipherAlgorithm);
