@@ -6368,8 +6368,6 @@ end;
 
 class function TDerOctetString.WithContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalWithContents(AContents);
 end;
 
@@ -6410,22 +6408,6 @@ begin
 end;
 
 { TBerOctetString }
-
-function MapElementToOctetString(const AElement: IAsn1Encodable): IAsn1OctetString;
-var
-  LObj: IAsn1Object;
-begin
-  LObj := AElement.ToAsn1Object();
-  Result := TAsn1OctetString.GetInstance(LObj);
-end;
-
-function MapElementToBitString(const AElement: IAsn1Encodable): IDerBitString;
-var
-  LObj: IAsn1Object;
-begin
-  LObj := AElement.ToAsn1Object();
-  Result := TDerBitString.GetInstance(LObj);
-end;
 
 class function TBerOctetString.GetEmpty(): IBerOctetString;
 begin

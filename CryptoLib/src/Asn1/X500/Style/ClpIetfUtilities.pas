@@ -26,6 +26,7 @@ uses
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpIAsn1Objects,
+  ClpIX500Asn1Objects,
   ClpCryptoLibTypes,
   ClpConverters,
   ClpStreamUtilities,
@@ -53,6 +54,7 @@ type
       var ALastEscaped: Int32); static;
     class procedure CheckCompleteHexPair(AHex1: Int32); static;
     class procedure AppendValue(ABuf: TStringBuilder; const AAttrValue: String); static;
+    class function AtvAreEqual(const AAtv1, AAtv2: IAttributeTypeAndValue): Boolean; static;
 
   public
     /// <summary>
@@ -75,6 +77,10 @@ type
     /// Strip internal spaces from a string (collapse multiple spaces to single).
     /// </summary>
     class function StripInternalSpaces(const AStr: String): String; static;
+    /// <summary>
+    /// Check whether two RDNs hold the same type/value pairs in the same order.
+    /// </summary>
+    class function RdnAreEqual(const ARdn1, ARdn2: IRdn): Boolean; static;
   end;
 
 implementation
@@ -416,6 +422,61 @@ begin
   finally
     LSb.Free;
   end;
+end;
+
+class function TIetfUtilities.AtvAreEqual(const AAtv1, AAtv2: IAttributeTypeAndValue): Boolean;
+begin
+  if AAtv1 = AAtv2 then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  if (AAtv1 = nil) or (AAtv2 = nil) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if not AAtv1.AttrType.Equals(AAtv2.AttrType as IAsn1Convertible) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Result := CanonicalString(AAtv1.Value) = CanonicalString(AAtv2.Value);
+end;
+
+class function TIetfUtilities.RdnAreEqual(const ARdn1, ARdn2: IRdn): Boolean;
+var
+  LAtvs1, LAtvs2: TCryptoLibGenericArray<IAttributeTypeAndValue>;
+  LI: Int32;
+begin
+  if ARdn1.Count <> ARdn2.Count then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  LAtvs1 := ARdn1.GetTypesAndValues();
+  LAtvs2 := ARdn2.GetTypesAndValues();
+
+  if System.Length(LAtvs1) <> System.Length(LAtvs2) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  for LI := 0 to System.Length(LAtvs1) - 1 do
+  begin
+    if not AtvAreEqual(LAtvs1[LI], LAtvs2[LI]) then
+    begin
+      Result := False;
+      Exit;
+    end;
+  end;
+
+  Result := True;
 end;
 
 end.

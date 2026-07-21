@@ -652,12 +652,12 @@ end;
 
 procedure TX509V2AttributeCertificateGenerator.SetNotBeforeUtc(const AUtcDate: TDateTime);
 begin
-  FACInfoGen.SetStartDate(TRfc5280Asn1Utilities.CreateGeneralizedTime(AUtcDate));
+  FACInfoGen.SetStartDate(TRfc5280Asn1Utilities.CreateGeneralizedTimeFromUtc(AUtcDate));
 end;
 
 procedure TX509V2AttributeCertificateGenerator.SetNotAfterUtc(const AUtcDate: TDateTime);
 begin
-  FACInfoGen.SetEndDate(TRfc5280Asn1Utilities.CreateGeneralizedTime(AUtcDate));
+  FACInfoGen.SetEndDate(TRfc5280Asn1Utilities.CreateGeneralizedTimeFromUtc(AUtcDate));
 end;
 
 procedure TX509V2AttributeCertificateGenerator.AddAttribute(const AAttribute: IX509Attribute);

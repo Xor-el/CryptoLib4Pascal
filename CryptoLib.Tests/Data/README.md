@@ -16,7 +16,7 @@ fixtures). Layout and formats are documented below.
 
 ## Layout
 
-All folders and files use **PascalCase** names.
+All folders and files prefer **PascalCase** names where possible.
 
 ```
 Data/
@@ -44,7 +44,7 @@ Data/
 
 | Root | Typical subfolders |
 |------|-------------------|
-| `Cert/` | `Chains/`, `Crl/`, `Delta/`, `Extensions/`, `Legacy/`, `Pkcs7/`, `Pqc/` |
+| `Cert/` | `Chains/`, `Crl/`, `Delta/`, `Extensions/`, `Legacy/`, `Ocsp/`, `Pkcs7/`, `Pkits/`, `Pkix/`, `Pqc/` |
 | `Pkcs/` | `Pkcs12Store/Stores/`, `EncryptedPrivateKeyInfo/Keys/` |
 | `Pem/` | `Reader/` |
 | `OpenSsl/` | `Reader/Keys/` |
@@ -57,13 +57,26 @@ Several test areas iterate a `Manifest.csv` index. The `File` column holds paths
 
 | Manifest | Columns (summary) | Used by (examples) |
 |----------|-------------------|-------------------|
-| `Cert/Manifest.csv` | `CertId`, `File`, `Encoding`, `Category`, … | `CertTests`, `CertificateTests`, `DeltaCertificateTests`, `PqcCertCredentialsTests` |
+| `Cert/Manifest.csv` | `CertId`, `File`, `Encoding`, `Category`, … | `CertTests`, `CertificateTests`, `DeltaCertificateTests`, `PqcCertCredentialsTests`, `PkixFoundationTests`, `CertPathTests`, `CertPathValidatorTests`, `OcspTests` |
 | `Pkcs/Pkcs12Store/Manifest.csv` | `FixtureId`, `File`, `Password`, `Description` | `Pkcs12StoreTests` |
 | `Pkcs/EncryptedPrivateKeyInfo/Manifest.csv` | `VectorId`, `File`, `Password`, `AlgorithmLabel` | `PkcsEncryptedPrivateKeyInfoTests` |
 | `Pem/Reader/Manifest.csv` | `VectorId`, `File`, `Notes` | `PemReaderTests` |
 | `OpenSsl/Reader/Manifest.csv` | `VectorId`, `File`, `Password`, `KeyKind`, `Notes` | `OpenSslReaderTests` |
 | `Crypto/Rsa/Oaep/Manifest.csv` | `VectorId`, `KeySetId`, `VectorNo`, `SeedHex`, `SeedSource`, `InputHex`, `OutputHex`, `OaepDigest`, `OaepMgf` | `OaepTests` (with `KeySets.csv`) |
 | `Crypto/Rsa/Pss/Manifest.csv` | `ExampleId`, CRT key columns, `MsgHex`, `SaltHex`, `SigHex` | `PssTests` |
+
+### NIST PKITS (`Cert/Pkits/`)
+
+The NIST Public Key Interoperability Test Suite corpus is **not** manifest-indexed. It is loaded by
+path convention from `Cert/Pkits/Certs/<name>.crt` and `Cert/Pkits/Crls/<name>.crl`, where `<name>`
+is the PKITS object name with spaces and hyphens removed (`PkitsVectors`).
+
+The corpus is a fixed external conformance set published by NIST
+(<https://csrc.nist.gov/projects/pki-testing>, "Public Key Interoperability Test Suite (PKITS)
+Certification Path Validation"): 405 certificates under `Certs/` and 173 CRLs under `Crls/`, all
+DER-encoded, exercising RFC 5280 path validation. The file set is defined upstream and is not edited
+here — hence the path convention rather than a hand-maintained index, which cannot drift from the
+folder. Source and edition are recorded in `Cert/Pkits/README`.
 
 ## Vector formats
 

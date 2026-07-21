@@ -23,7 +23,6 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
-  ClpNat,
   ClpBitOperations,
   ClpBinPolyMulBase,
   ClpIBinPolyMul;

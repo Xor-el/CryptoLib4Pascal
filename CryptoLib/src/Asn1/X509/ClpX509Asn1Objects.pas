@@ -24,6 +24,7 @@ uses
   SysUtils,
   DateUtils,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   SyncObjs,
   ClpAsn1Tags,
   ClpAsn1Objects,
@@ -89,8 +90,15 @@ resourcestring
   STBSCSubjectPublicKeyInfoNil = 'subject public key info cannot be nil';
   SIpAddressIsInvalid = 'IP address is invalid';
   SNameNil = 'name cannot be nil';
+  SOtherNameTypeIDNil = 'type ID cannot be nil';
+  SOtherNameValueNil = 'value cannot be nil';
   SNamesCannotBeNilOrEmpty = 'names cannot be nil or empty';
   SNamesCannotContainNil = 'names cannot contain nil';
+  SAccessMethodNil = 'access method cannot be nil';
+  SAccessLocationNil = 'access location cannot be nil';
+  SAccessDescriptionNil = 'access description cannot be nil';
+  SAccessDescriptionsCannotBeNilOrEmpty = 'access descriptions cannot be nil or empty';
+  SAccessDescriptionsCannotContainNil = 'access descriptions cannot contain nil';
   SExtensionIdNil = 'extension ID cannot be nil';
   SCriticalNil = 'critical cannot be nil';
   SExtensionValueNil = 'extension value cannot be nil';
@@ -102,6 +110,8 @@ resourcestring
   SNotBeforeTimeNil = 'not before time cannot be nil';
   SNotAfterTimeNil = 'not after time cannot be nil';
   SPolicyIdentifierNil = 'policy identifier cannot be nil';
+  SPolicyQualifierIdNil = 'policy qualifier id cannot be nil';
+  SPolicyQualifierNil = 'qualifier cannot be nil';
   SSerialNil = 'serial cannot be nil';
   SObjectDigestInfoDigestAlgorithmNil = 'digest algorithm cannot be nil';
   SUnknownTagInHolder = 'unknown tag in Holder';
@@ -117,6 +127,14 @@ resourcestring
   SUnknownObjectInFactory = 'unknown object in factory: %s';
   SOnlyOneOfOnlyContainsCaCertsUserCertsAttrCerts = 'only one of only-contains-CA-certs, only-contains-user-certs, or only-contains-attribute-certs can be true';
   SOidsMustBeSameLengthAsValues = 'OIDs must be same length as values';
+  SGeneralSubtreeBaseNil = 'base name cannot be nil';
+  SGeneralSubtreesMinimumSizeOne = 'minimum sequence size is 1';
+  SGeneralSubtreesCannotContainNil = 'general subtrees cannot contain nil';
+  SUnknownTagInTarget = 'unknown tag in Target: %d';
+  STargetChoiceNotSet = 'neither target name nor target group is set';
+  STargetsCannotBeNilOrEmpty = 'targets cannot be nil or empty';
+  STargetsCannotContainNil = 'targets cannot contain nil';
+  STargetsNil = 'targets cannot be nil';
 
 type
   /// <summary>
@@ -300,6 +318,51 @@ type
 
   end;
 
+  /// <summary>The OtherName ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// OtherName ::= SEQUENCE {
+  ///   type-id    OBJECT IDENTIFIER,
+  ///   value  [0] EXPLICIT ANY DEFINED BY type-id
+  /// }
+  /// </code>
+  /// </remarks>
+  TOtherName = class(TAsn1Encodable, IOtherName)
+
+  strict private
+  var
+    FTypeID: IDerObjectIdentifier;
+    FValue: IAsn1Encodable;
+
+    class function TaggedExplicitBaseObject(const ATagged: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAsn1Encodable; static;
+
+  strict protected
+    function GetTypeID: IDerObjectIdentifier;
+    function GetValue: IAsn1Encodable;
+
+  public
+    class function GetInstance(AObj: TObject): IOtherName; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IOtherName; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IOtherName; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IOtherName; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IOtherName; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ATypeID: IDerObjectIdentifier; const AValue: IAsn1Encodable); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property TypeID: IDerObjectIdentifier read GetTypeID;
+    property Value: IAsn1Encodable read GetValue;
+
+  end;
+
   /// <summary>
   /// The GeneralName object.
   /// </summary>
@@ -399,6 +462,182 @@ type
     function ToString: String; override;
 
     property Count: Int32 read GetCount;
+
+  end;
+
+  /// <summary>The GeneralSubtree ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// GeneralSubtree ::= SEQUENCE {
+  ///   base        GeneralName,
+  ///   minimum [0] BaseDistance DEFAULT 0,
+  ///   maximum [1] BaseDistance OPTIONAL
+  /// }
+  /// </code>
+  /// Restriction subtree of a NameConstraints extension (RFC 5280 sec. 4.2.1.10).
+  /// </remarks>
+  TGeneralSubtree = class(TAsn1Encodable, IGeneralSubtree)
+
+  strict private
+  var
+    FBase: IGeneralName;
+    FMinimum: IDerInteger;
+    FMaximum: IDerInteger;
+
+  strict protected
+    function GetBase: IGeneralName;
+    function GetMinimum: IDerInteger;
+    function GetMaximum: IDerInteger;
+
+  public
+    class function GetInstance(AObj: TObject): IGeneralSubtree; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IGeneralSubtree; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IGeneralSubtree; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IGeneralSubtree; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IGeneralSubtree; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ABase: IGeneralName); overload;
+    /// <summary>Constructor from the given details.</summary>
+    /// <remarks>
+    /// A nil minimum is treated as zero, a nil maximum means the field is absent.
+    /// </remarks>
+    constructor Create(const ABase: IGeneralName; const AMinimum, AMaximum: IDerInteger); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property Base: IGeneralName read GetBase;
+    property Minimum: IDerInteger read GetMinimum;
+    property Maximum: IDerInteger read GetMaximum;
+
+  end;
+
+  /// <summary>The GeneralSubtrees ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
+  /// </code>
+  /// </remarks>
+  TGeneralSubtrees = class(TAsn1Encodable, IGeneralSubtrees)
+
+  strict private
+  var
+    FElements: IDerSequence;
+
+    class function ElementToGeneralSubtree(AElement: IAsn1Encodable): IGeneralSubtree; static;
+
+  strict protected
+    function GetElements: IAsn1Sequence;
+
+  public
+    class function GetInstance(AObj: TObject): IGeneralSubtrees; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IGeneralSubtrees; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IGeneralSubtrees; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IGeneralSubtrees; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IGeneralSubtrees; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IGeneralSubtrees; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ASubtree: IGeneralSubtree); overload;
+    constructor Create(const ASubtrees: TCryptoLibGenericArray<IGeneralSubtree>); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function GetSubtrees: TCryptoLibGenericArray<IGeneralSubtree>;
+
+    property Elements: IAsn1Sequence read GetElements;
+
+  end;
+
+  /// <summary>The NameConstraints ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// NameConstraints ::= SEQUENCE {
+  ///   permittedSubtrees [0] GeneralSubtrees OPTIONAL,
+  ///   excludedSubtrees  [1] GeneralSubtrees OPTIONAL
+  /// }
+  /// </code>
+  /// </remarks>
+  TNameConstraints = class(TAsn1Encodable, INameConstraints)
+
+  strict private
+  var
+    FPermittedSubtrees: IGeneralSubtrees;
+    FExcludedSubtrees: IGeneralSubtrees;
+
+  strict protected
+    function GetPermittedSubtrees: IGeneralSubtrees;
+    function GetExcludedSubtrees: IGeneralSubtrees;
+
+  public
+    class function GetInstance(AObj: TObject): INameConstraints; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): INameConstraints; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): INameConstraints; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): INameConstraints; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): INameConstraints; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const APermitted, AExcluded: IGeneralSubtrees); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property PermittedSubtrees: IGeneralSubtrees read GetPermittedSubtrees;
+    property ExcludedSubtrees: IGeneralSubtrees read GetExcludedSubtrees;
+
+  end;
+
+  /// <summary>The PrivateKeyUsagePeriod ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// PrivateKeyUsagePeriod ::= SEQUENCE {
+  ///   notBefore [0] GeneralizedTime OPTIONAL,
+  ///   notAfter  [1] GeneralizedTime OPTIONAL
+  /// }
+  /// </code>
+  /// </remarks>
+  TPrivateKeyUsagePeriod = class(TAsn1Encodable, IPrivateKeyUsagePeriod)
+
+  strict private
+  var
+    FNotBefore: IAsn1GeneralizedTime;
+    FNotAfter: IAsn1GeneralizedTime;
+
+  strict protected
+    function GetNotBefore: IAsn1GeneralizedTime;
+    function GetNotAfter: IAsn1GeneralizedTime;
+
+  public
+    class function GetInstance(AObj: TObject): IPrivateKeyUsagePeriod; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IPrivateKeyUsagePeriod; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPrivateKeyUsagePeriod; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IPrivateKeyUsagePeriod; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPrivateKeyUsagePeriod; static;
+
+    constructor Create(const ASeq: IAsn1Sequence);
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property NotBefore: IAsn1GeneralizedTime read GetNotBefore;
+    property NotAfter: IAsn1GeneralizedTime read GetNotAfter;
 
   end;
 
@@ -504,7 +743,7 @@ type
 
   strict private
   var
-    FUsageTable: TDictionary<IDerObjectIdentifier, Boolean>;
+    FUsageTable: TCryptoLibHashSet<IDerObjectIdentifier>;
     FSeq: IAsn1Sequence;
 
   strict protected
@@ -1727,6 +1966,50 @@ type
 
   end;
 
+  /// <summary>The PolicyQualifierInfo ASN.1 type.</summary>
+  /// <remarks>
+  /// <code>
+  /// PolicyQualifierInfo ::= SEQUENCE {
+  ///   policyQualifierId  PolicyQualifierId,
+  ///   qualifier          ANY DEFINED BY policyQualifierId
+  /// }
+  /// </code>
+  /// Policy qualifier of a CertificatePolicies extension (RFC 5280 sec. 4.2.1.4).
+  /// </remarks>
+  TPolicyQualifierInfo = class(TAsn1Encodable, IPolicyQualifierInfo)
+
+  strict private
+  var
+    FPolicyQualifierId: IDerObjectIdentifier;
+    FQualifier: IAsn1Encodable;
+
+  strict protected
+    function GetPolicyQualifierId: IDerObjectIdentifier;
+    function GetQualifier: IAsn1Encodable;
+
+  public
+    class function GetInstance(AObj: TObject): IPolicyQualifierInfo; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IPolicyQualifierInfo; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IPolicyQualifierInfo; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPolicyQualifierInfo; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IPolicyQualifierInfo; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const APolicyQualifierId: IDerObjectIdentifier;
+      const AQualifier: IAsn1Encodable); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property PolicyQualifierId: IDerObjectIdentifier read GetPolicyQualifierId;
+    property Qualifier: IAsn1Encodable read GetQualifier;
+
+  end;
+
   /// <summary>
   /// The IssuerSerial object.
   /// </summary>
@@ -1863,6 +2146,128 @@ type
     property OtherObjectTypeID: IDerObjectIdentifier read GetOtherObjectTypeID;
     property DigestAlgorithm: IAlgorithmIdentifier read GetDigestAlgorithm;
     property ObjectDigest: IDerBitString read GetObjectDigest;
+
+  end;
+
+  /// <summary>The Target ASN.1 type (RFC 3281).</summary>
+  /// <remarks>
+  /// <code>
+  /// Target ::= CHOICE {
+  ///   targetName  [0] GeneralName,
+  ///   targetGroup [1] GeneralName,
+  ///   targetCert  [2] TargetCert
+  /// }
+  /// </code>
+  /// The targetCert alternative must not be used according to RFC 3281 and is not supported.
+  /// </remarks>
+  TTarget = class(TAsn1Encodable, ITarget, IAsn1Choice)
+
+  strict private
+  var
+    FTargetName: IGeneralName;
+    FTargetGroup: IGeneralName;
+
+    class function ChoiceGetOptional(AElement: IAsn1Encodable): ITarget; static;
+    class function ChoiceGetInstance(AElement: IAsn1Encodable): ITarget; static;
+
+  public
+    const
+      ChoiceName = 0;
+      ChoiceGroup = 1;
+
+  strict protected
+    function GetTargetName: IGeneralName;
+    function GetTargetGroup: IGeneralName;
+
+  public
+    class function GetInstance(AObj: TObject): ITarget; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): ITarget; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ITarget; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ITarget; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): ITarget; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ITarget; static;
+
+    constructor Create(const ATagObj: IAsn1TaggedObject); overload;
+    constructor Create(ATagNo: Int32; const AName: IGeneralName); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+
+    property TargetName: IGeneralName read GetTargetName;
+    property TargetGroup: IGeneralName read GetTargetGroup;
+
+  end;
+
+  /// <summary>The Targets ASN.1 type (RFC 3281).</summary>
+  /// <remarks>
+  /// <code>
+  /// Targets ::= SEQUENCE OF Target
+  /// </code>
+  /// </remarks>
+  TTargets = class(TAsn1Encodable, ITargets)
+
+  strict private
+  var
+    FTargets: IAsn1Sequence;
+
+    class function ElementToTarget(AElement: IAsn1Encodable): ITarget; static;
+
+  public
+    class function GetInstance(AObj: TObject): ITargets; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): ITargets; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ITargets; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ITargets; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ITargets; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ATargets: TCryptoLibGenericArray<ITarget>); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function GetTargets: TCryptoLibGenericArray<ITarget>;
+
+  end;
+
+  /// <summary>The TargetInformation ASN.1 type (RFC 3281).</summary>
+  /// <remarks>
+  /// <code>
+  /// TargetInformation ::= SEQUENCE OF Targets
+  /// </code>
+  /// Only one Targets element must be produced according to RFC 3281.
+  /// </remarks>
+  TTargetInformation = class(TAsn1Encodable, ITargetInformation)
+
+  strict private
+  var
+    FTargets: IAsn1Sequence;
+
+    class function ElementToTargets(AElement: IAsn1Encodable): ITargets; static;
+
+  public
+    class function GetInstance(AObj: TObject): ITargetInformation; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): ITargetInformation; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): ITargetInformation; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): ITargetInformation; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): ITargetInformation; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ATargets: ITargets); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function GetTargetsObjects: TCryptoLibGenericArray<ITargets>;
 
   end;
 
@@ -2436,6 +2841,92 @@ type
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const APoints: TCryptoLibGenericArray<IDistributionPoint>); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function ToString: String; override;
+
+  end;
+
+  /// <summary>The AccessDescription ASN.1 type (RFC 5280 sec. 4.2.2.1).</summary>
+  /// <remarks>
+  /// <code>
+  /// AccessDescription ::= SEQUENCE {
+  ///   accessMethod   OBJECT IDENTIFIER,
+  ///   accessLocation GeneralName
+  /// }
+  /// </code>
+  /// </remarks>
+  TAccessDescription = class(TAsn1Encodable, IAccessDescription)
+
+  strict private
+  var
+    FAccessMethod: IDerObjectIdentifier;
+    FAccessLocation: IGeneralName;
+
+  strict protected
+    function GetAccessMethod: IDerObjectIdentifier;
+    function GetAccessLocation: IGeneralName;
+
+  public
+    class function GetInstance(AObj: TObject): IAccessDescription; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAccessDescription; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAccessDescription; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IAccessDescription; overload; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAccessDescription; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const AAccessMethod: IDerObjectIdentifier;
+      const AAccessLocation: IGeneralName); overload;
+
+    function ToAsn1Object: IAsn1Object; override;
+    function ToString: String; override;
+
+    property AccessMethod: IDerObjectIdentifier read GetAccessMethod;
+    property AccessLocation: IGeneralName read GetAccessLocation;
+
+  end;
+
+  /// <summary>The AuthorityInfoAccessSyntax ASN.1 type (RFC 5280 sec. 4.2.2.1).</summary>
+  /// <remarks>
+  /// <code>
+  /// AuthorityInfoAccessSyntax ::= SEQUENCE SIZE (1..MAX) OF AccessDescription
+  /// </code>
+  /// </remarks>
+  TAuthorityInformationAccess = class(TAsn1Encodable, IAuthorityInformationAccess)
+
+  strict private
+  var
+    FDescriptions: TCryptoLibGenericArray<IAccessDescription>;
+
+    class function ElementToAccessDescription(AElement: IAsn1Encodable): IAccessDescription; static;
+    class function IdentityAccessDescription(AElement: IAccessDescription): IAccessDescription; static;
+
+  public
+    class function GetInstance(AObj: TObject): IAuthorityInformationAccess; overload; static;
+    /// <summary>
+    /// Get instance from ASN.1 convertible.
+    /// </summary>
+    class function GetInstance(const AObj: IAsn1Convertible): IAuthorityInformationAccess; overload; static;
+    class function GetInstance(const AEncoded: TCryptoLibByteArray): IAuthorityInformationAccess; overload; static;
+    class function GetInstance(const AObj: IAsn1TaggedObject;
+      AExplicitly: Boolean): IAuthorityInformationAccess; overload; static;
+    class function GetOptional(const AElement: IAsn1Encodable): IAuthorityInformationAccess; static;
+    class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
+      ADeclaredExplicit: Boolean): IAuthorityInformationAccess; static;
+    class function FromExtensions(const AExtensions: IX509Extensions): IAuthorityInformationAccess; static;
+
+    constructor Create(const ASeq: IAsn1Sequence); overload;
+    constructor Create(const ADescription: IAccessDescription); overload;
+    constructor Create(const ADescriptions: TCryptoLibGenericArray<IAccessDescription>); overload;
+    constructor Create(const AAccessMethod: IDerObjectIdentifier;
+      const AAccessLocation: IGeneralName); overload;
+
+    function GetAccessDescriptions: TCryptoLibGenericArray<IAccessDescription>;
 
     function ToAsn1Object: IAsn1Object; override;
     function ToString: String; override;
@@ -4353,6 +4844,103 @@ begin
   Result := TDerSequence.Create(LV);
 end;
 
+{ TOtherName }
+
+class function TOtherName.GetInstance(AObj: TObject): IOtherName;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IOtherName, Result) then
+    Exit;
+
+  Result := TOtherName.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TOtherName.GetInstance(const AObj: IAsn1Convertible): IOtherName;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IOtherName, Result) then
+    Exit;
+
+  Result := TOtherName.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TOtherName.GetInstance(const AEncoded: TCryptoLibByteArray): IOtherName;
+begin
+  Result := TOtherName.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TOtherName.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IOtherName;
+begin
+  Result := TOtherName.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TOtherName.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IOtherName;
+begin
+  Result := TOtherName.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TOtherName.TaggedExplicitBaseObject(const ATagged: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAsn1Encodable;
+begin
+  Result := ATagged.GetExplicitBaseObject();
+end;
+
+constructor TOtherName.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FTypeID := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FValue := TAsn1Utilities.ReadContextTagged<IAsn1Encodable>(ASeq, LPos, 0, True,
+    TaggedExplicitBaseObject);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+constructor TOtherName.Create(const ATypeID: IDerObjectIdentifier; const AValue: IAsn1Encodable);
+begin
+  inherited Create();
+  if ATypeID = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherNameTypeIDNil);
+  if AValue = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SOtherNameValueNil);
+  FTypeID := ATypeID;
+  FValue := AValue;
+end;
+
+function TOtherName.GetTypeID: IDerObjectIdentifier;
+begin
+  Result := FTypeID;
+end;
+
+function TOtherName.GetValue: IAsn1Encodable;
+begin
+  Result := FValue;
+end;
+
+function TOtherName.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(2);
+  LV.Add(FTypeID as IAsn1Encodable);
+  LV.Add(TDerTaggedObject.Create(True, 0, FValue));
+  Result := TDerSequence.Create(LV);
+end;
+
 { TGeneralName }
 
 class function TGeneralName.GetInstance(AObj: TObject): IGeneralName;
@@ -4981,6 +5569,413 @@ begin
   end;
 end;
 
+{ TGeneralSubtree }
+
+class function TGeneralSubtree.GetInstance(AObj: TObject): IGeneralSubtree;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IGeneralSubtree, Result) then
+    Exit;
+
+  Result := TGeneralSubtree.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGeneralSubtree.GetInstance(const AObj: IAsn1Convertible): IGeneralSubtree;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IGeneralSubtree, Result) then
+    Exit;
+
+  Result := TGeneralSubtree.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGeneralSubtree.GetInstance(const AEncoded: TCryptoLibByteArray): IGeneralSubtree;
+begin
+  Result := TGeneralSubtree.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TGeneralSubtree.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IGeneralSubtree;
+begin
+  Result := TGeneralSubtree.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TGeneralSubtree.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IGeneralSubtree;
+begin
+  Result := TGeneralSubtree.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TGeneralSubtree.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, 3);
+  FBase := TAsn1Utilities.Read<IGeneralName>(ASeq, LPos, TGeneralName.GetInstance);
+  FMinimum := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 0, False,
+    TDerInteger.GetTagged);
+  if FMinimum = nil then
+    FMinimum := TDerInteger.Zero;
+  FMaximum := TAsn1Utilities.ReadOptionalContextTagged<IDerInteger>(ASeq, LPos, 1, False,
+    TDerInteger.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+constructor TGeneralSubtree.Create(const ABase: IGeneralName);
+begin
+  Create(ABase, nil, nil);
+end;
+
+constructor TGeneralSubtree.Create(const ABase: IGeneralName; const AMinimum, AMaximum: IDerInteger);
+begin
+  inherited Create();
+  if ABase = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SGeneralSubtreeBaseNil);
+  FBase := ABase;
+  if AMinimum <> nil then
+    FMinimum := AMinimum
+  else
+    FMinimum := TDerInteger.Zero;
+  FMaximum := AMaximum;
+end;
+
+function TGeneralSubtree.GetBase: IGeneralName;
+begin
+  Result := FBase;
+end;
+
+function TGeneralSubtree.GetMinimum: IDerInteger;
+begin
+  Result := FMinimum;
+end;
+
+function TGeneralSubtree.GetMaximum: IDerInteger;
+begin
+  Result := FMaximum;
+end;
+
+function TGeneralSubtree.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(3);
+  LV.Add(FBase as IAsn1Encodable);
+  if not FMinimum.HasValue(0) then
+    LV.Add(TDerTaggedObject.Create(False, 0, FMinimum));
+  LV.AddOptionalTagged(False, 1, FMaximum);
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TGeneralSubtrees }
+
+class function TGeneralSubtrees.GetInstance(AObj: TObject): IGeneralSubtrees;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IGeneralSubtrees, Result) then
+    Exit;
+
+  Result := TGeneralSubtrees.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGeneralSubtrees.GetInstance(const AObj: IAsn1Convertible): IGeneralSubtrees;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IGeneralSubtrees, Result) then
+    Exit;
+
+  Result := TGeneralSubtrees.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TGeneralSubtrees.GetInstance(const AEncoded: TCryptoLibByteArray): IGeneralSubtrees;
+begin
+  Result := TGeneralSubtrees.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TGeneralSubtrees.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IGeneralSubtrees;
+begin
+  Result := TGeneralSubtrees.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TGeneralSubtrees.GetOptional(const AElement: IAsn1Encodable): IGeneralSubtrees;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
+
+  if Supports(AElement, IGeneralSubtrees, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TGeneralSubtrees.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TGeneralSubtrees.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IGeneralSubtrees;
+begin
+  Result := TGeneralSubtrees.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TGeneralSubtrees.Create(const ASeq: IAsn1Sequence);
+var
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LV: IAsn1EncodableVector;
+  LI: Int32;
+begin
+  inherited Create();
+  if ASeq.Count < 1 then
+    raise EArgumentCryptoLibException.CreateRes(@SGeneralSubtreesMinimumSizeOne);
+  LElements := ASeq.GetElements();
+  LV := TAsn1EncodableVector.Create(System.Length(LElements));
+  for LI := 0 to System.Length(LElements) - 1 do
+  begin
+    LV.Add(TGeneralSubtree.GetInstance(LElements[LI]) as IAsn1Encodable);
+  end;
+  FElements := TDerSequence.FromVector(LV);
+end;
+
+constructor TGeneralSubtrees.Create(const ASubtree: IGeneralSubtree);
+begin
+  inherited Create();
+  if ASubtree = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SGeneralSubtreesCannotContainNil);
+  FElements := TDerSequence.FromElement(ASubtree as IAsn1Encodable);
+end;
+
+constructor TGeneralSubtrees.Create(const ASubtrees: TCryptoLibGenericArray<IGeneralSubtree>);
+var
+  LV: IAsn1EncodableVector;
+  LI: Int32;
+begin
+  inherited Create();
+  if System.Length(ASubtrees) < 1 then
+    raise EArgumentCryptoLibException.CreateRes(@SGeneralSubtreesMinimumSizeOne);
+  LV := TAsn1EncodableVector.Create(System.Length(ASubtrees));
+  for LI := 0 to System.Length(ASubtrees) - 1 do
+  begin
+    if ASubtrees[LI] = nil then
+      raise EArgumentNilCryptoLibException.CreateRes(@SGeneralSubtreesCannotContainNil);
+    LV.Add(ASubtrees[LI] as IAsn1Encodable);
+  end;
+  FElements := TDerSequence.FromVector(LV);
+end;
+
+class function TGeneralSubtrees.ElementToGeneralSubtree(AElement: IAsn1Encodable): IGeneralSubtree;
+begin
+  Result := TGeneralSubtree.GetInstance(AElement);
+end;
+
+function TGeneralSubtrees.GetElements: IAsn1Sequence;
+begin
+  Result := FElements;
+end;
+
+function TGeneralSubtrees.GetSubtrees: TCryptoLibGenericArray<IGeneralSubtree>;
+begin
+  Result := TArrayUtilities.Map<IAsn1Encodable, IGeneralSubtree>(FElements.GetElements(),
+    ElementToGeneralSubtree);
+end;
+
+function TGeneralSubtrees.ToAsn1Object: IAsn1Object;
+begin
+  Result := FElements as IAsn1Object;
+end;
+
+{ TNameConstraints }
+
+class function TNameConstraints.GetInstance(AObj: TObject): INameConstraints;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, INameConstraints, Result) then
+    Exit;
+
+  Result := TNameConstraints.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TNameConstraints.GetInstance(const AObj: IAsn1Convertible): INameConstraints;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, INameConstraints, Result) then
+    Exit;
+
+  Result := TNameConstraints.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TNameConstraints.GetInstance(const AEncoded: TCryptoLibByteArray): INameConstraints;
+begin
+  Result := TNameConstraints.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TNameConstraints.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): INameConstraints;
+begin
+  Result := TNameConstraints.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TNameConstraints.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): INameConstraints;
+begin
+  Result := TNameConstraints.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TNameConstraints.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 2);
+  FPermittedSubtrees := TAsn1Utilities.ReadOptionalContextTagged<IGeneralSubtrees>(ASeq, LPos, 0, False,
+    TGeneralSubtrees.GetTagged);
+  FExcludedSubtrees := TAsn1Utilities.ReadOptionalContextTagged<IGeneralSubtrees>(ASeq, LPos, 1, False,
+    TGeneralSubtrees.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+constructor TNameConstraints.Create(const APermitted, AExcluded: IGeneralSubtrees);
+begin
+  inherited Create();
+  FPermittedSubtrees := APermitted;
+  FExcludedSubtrees := AExcluded;
+end;
+
+function TNameConstraints.GetPermittedSubtrees: IGeneralSubtrees;
+begin
+  Result := FPermittedSubtrees;
+end;
+
+function TNameConstraints.GetExcludedSubtrees: IGeneralSubtrees;
+begin
+  Result := FExcludedSubtrees;
+end;
+
+function TNameConstraints.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(2);
+  LV.AddOptionalTagged(False, 0, FPermittedSubtrees);
+  LV.AddOptionalTagged(False, 1, FExcludedSubtrees);
+  Result := TDerSequence.Create(LV);
+end;
+
+{ TPrivateKeyUsagePeriod }
+
+class function TPrivateKeyUsagePeriod.GetInstance(AObj: TObject): IPrivateKeyUsagePeriod;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPrivateKeyUsagePeriod, Result) then
+    Exit;
+
+  Result := TPrivateKeyUsagePeriod.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPrivateKeyUsagePeriod.GetInstance(const AObj: IAsn1Convertible): IPrivateKeyUsagePeriod;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPrivateKeyUsagePeriod, Result) then
+    Exit;
+
+  Result := TPrivateKeyUsagePeriod.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPrivateKeyUsagePeriod.GetInstance(const AEncoded: TCryptoLibByteArray): IPrivateKeyUsagePeriod;
+begin
+  Result := TPrivateKeyUsagePeriod.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TPrivateKeyUsagePeriod.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IPrivateKeyUsagePeriod;
+begin
+  Result := TPrivateKeyUsagePeriod.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TPrivateKeyUsagePeriod.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPrivateKeyUsagePeriod;
+begin
+  Result := TPrivateKeyUsagePeriod.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TPrivateKeyUsagePeriod.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 0, 2);
+  FNotBefore := TAsn1Utilities.ReadOptionalContextTagged<IAsn1GeneralizedTime>(ASeq, LPos, 0, False,
+    TAsn1GeneralizedTime.GetTagged);
+  FNotAfter := TAsn1Utilities.ReadOptionalContextTagged<IAsn1GeneralizedTime>(ASeq, LPos, 1, False,
+    TAsn1GeneralizedTime.GetTagged);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+function TPrivateKeyUsagePeriod.GetNotBefore: IAsn1GeneralizedTime;
+begin
+  Result := FNotBefore;
+end;
+
+function TPrivateKeyUsagePeriod.GetNotAfter: IAsn1GeneralizedTime;
+begin
+  Result := FNotAfter;
+end;
+
+function TPrivateKeyUsagePeriod.ToAsn1Object: IAsn1Object;
+var
+  LV: IAsn1EncodableVector;
+begin
+  LV := TAsn1EncodableVector.Create(2);
+  LV.AddOptionalTagged(False, 0, FNotBefore);
+  LV.AddOptionalTagged(False, 1, FNotAfter);
+  Result := TDerSequence.Create(LV);
+end;
+
 { TKeyUsage }
 
 class function TKeyUsage.GetKeyUsageInstance(AObj: TObject): IKeyUsage;
@@ -5284,12 +6279,12 @@ begin
   inherited Create();
   TAsn1Utilities.CheckSequenceSize(ASeq, 1, Int32.MaxValue);
   FSeq := ASeq;
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FUsageTable := TCryptoLibHashSet<IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
 
   for LI := 0 to ASeq.Count - 1 do
   begin
     LOid := TDerObjectIdentifier.GetInstance(ASeq[LI]);
-    FUsageTable.Add(LOid, True);
+    FUsageTable.Add(LOid);
   end;
 end;
 
@@ -5300,14 +6295,14 @@ var
   LOid: IDerObjectIdentifier;
 begin
   inherited Create();
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FUsageTable := TCryptoLibHashSet<IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
   LV := TAsn1EncodableVector.Create();
 
   for LI := 0 to System.Length(AUsages) - 1 do
   begin
     LOid := AUsages[LI];
     LV.Add(LOid);
-    FUsageTable.Add(LOid, True);
+    FUsageTable.Add(LOid);
   end;
 
   FSeq := TDerSequence.Create(LV);
@@ -5321,7 +6316,7 @@ var
   LElements: TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   inherited Create();
-  FUsageTable := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FUsageTable := TCryptoLibHashSet<IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
 
   LCount := High(AUsages) - Low(AUsages) + 1;
   System.SetLength(LElements, LCount);
@@ -5332,7 +6327,7 @@ begin
 
   for LI := Low(AUsages) to High(AUsages) do
   begin
-    FUsageTable.Add(AUsages[LI], True);
+    FUsageTable.Add(AUsages[LI]);
   end;
 
   TAsn1Utilities.CheckSequenceSize(FSeq, 1, Int32.MaxValue);
@@ -5346,12 +6341,12 @@ end;
 
 function TExtendedKeyUsage.HasKeyPurposeId(const AKeyPurposeId: IDerObjectIdentifier): Boolean;
 begin
-  Result := FUsageTable.ContainsKey(AKeyPurposeId);
+  Result := FUsageTable.Contains(AKeyPurposeId);
 end;
 
 function TExtendedKeyUsage.GetAllUsages: TCryptoLibGenericArray<IDerObjectIdentifier>;
 begin
-  Result := TCollectionUtilities.Keys<IDerObjectIdentifier, Boolean>(FUsageTable);
+  Result := FUsageTable.ToArray();
 end;
 
 function TExtendedKeyUsage.GetCount: Int32;
@@ -7836,6 +8831,93 @@ begin
     Result := TDerSequence.Create(FPolicyIdentifier, FPolicyQualifiers);
 end;
 
+{ TPolicyQualifierInfo }
+
+class function TPolicyQualifierInfo.GetInstance(AObj: TObject): IPolicyQualifierInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPolicyQualifierInfo, Result) then
+    Exit;
+
+  Result := TPolicyQualifierInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPolicyQualifierInfo.GetInstance(const AObj: IAsn1Convertible): IPolicyQualifierInfo;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IPolicyQualifierInfo, Result) then
+    Exit;
+
+  Result := TPolicyQualifierInfo.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TPolicyQualifierInfo.GetInstance(const AEncoded: TCryptoLibByteArray): IPolicyQualifierInfo;
+begin
+  Result := TPolicyQualifierInfo.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TPolicyQualifierInfo.GetInstance(const AObj: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPolicyQualifierInfo;
+begin
+  Result := TPolicyQualifierInfo.Create(TAsn1Sequence.GetInstance(AObj, ADeclaredExplicit));
+end;
+
+class function TPolicyQualifierInfo.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IPolicyQualifierInfo;
+begin
+  Result := TPolicyQualifierInfo.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TPolicyQualifierInfo.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FPolicyQualifierId := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  // the qualifier is ANY DEFINED BY policyQualifierId, so it is kept untyped
+  FQualifier := TAsn1Utilities.ReadEncodable(ASeq, LPos);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+constructor TPolicyQualifierInfo.Create(const APolicyQualifierId: IDerObjectIdentifier;
+  const AQualifier: IAsn1Encodable);
+begin
+  inherited Create();
+  if APolicyQualifierId = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPolicyQualifierIdNil);
+  if AQualifier = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPolicyQualifierNil);
+  FPolicyQualifierId := APolicyQualifierId;
+  FQualifier := AQualifier;
+end;
+
+function TPolicyQualifierInfo.GetPolicyQualifierId: IDerObjectIdentifier;
+begin
+  Result := FPolicyQualifierId;
+end;
+
+function TPolicyQualifierInfo.GetQualifier: IAsn1Encodable;
+begin
+  Result := FQualifier;
+end;
+
+function TPolicyQualifierInfo.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.Create(FPolicyQualifierId, FQualifier);
+end;
+
 { TIssuerSerial }
 
 class function TIssuerSerial.GetInstance(AObj: TObject): IIssuerSerial;
@@ -8196,6 +9278,285 @@ begin
     Result := TDerSequence.Create([FDigestedObjectType, FDigestAlgorithm, FObjectDigest])
   else
     Result := TDerSequence.Create([FDigestedObjectType, FOtherObjectTypeID, FDigestAlgorithm, FObjectDigest]);
+end;
+
+{ TTarget }
+
+class function TTarget.GetInstance(AObj: TObject): ITarget;
+begin
+  Result := TAsn1Utilities.GetInstanceChoice<ITarget>(AObj, ChoiceGetOptional);
+end;
+
+class function TTarget.GetInstance(const AObj: IAsn1Convertible): ITarget;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITarget, Result) then
+    Exit;
+
+  Result := TAsn1Utilities.GetInstanceChoice<ITarget>(AObj.ToAsn1Object(), ChoiceGetOptional);
+end;
+
+class function TTarget.GetInstance(const AEncoded: TCryptoLibByteArray): ITarget;
+begin
+  Result := TAsn1Utilities.GetInstanceChoice<ITarget>(AEncoded, ChoiceGetOptional);
+end;
+
+class function TTarget.GetInstance(const AObj: IAsn1TaggedObject; AExplicitly: Boolean): ITarget;
+begin
+  Result := TAsn1Utilities.GetInstanceChoice<ITarget>(AObj, AExplicitly, ChoiceGetInstance);
+end;
+
+class function TTarget.GetOptional(const AElement: IAsn1Encodable): ITarget;
+var
+  LTaggedObject: IAsn1TaggedObject;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
+
+  if Supports(AElement, ITarget, Result) then
+    Exit;
+
+  LTaggedObject := TAsn1TaggedObject.GetOptional(AElement);
+  if LTaggedObject <> nil then
+  begin
+    if LTaggedObject.HasContextTag(ChoiceName) or LTaggedObject.HasContextTag(ChoiceGroup) then
+    begin
+      Result := TTarget.Create(LTaggedObject);
+      Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
+
+class function TTarget.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ITarget;
+begin
+  Result := TAsn1Utilities.GetTaggedChoice<ITarget>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
+end;
+
+class function TTarget.ChoiceGetOptional(AElement: IAsn1Encodable): ITarget;
+begin
+  Result := GetOptional(AElement);
+end;
+
+class function TTarget.ChoiceGetInstance(AElement: IAsn1Encodable): ITarget;
+begin
+  Result := GetInstance(AElement);
+end;
+
+constructor TTarget.Create(const ATagObj: IAsn1TaggedObject);
+begin
+  inherited Create();
+  if not ATagObj.HasContextTag() then
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownTagInTarget, [ATagObj.TagNo]);
+
+  // GeneralName is a CHOICE so it must be explicitly tagged
+  case ATagObj.TagNo of
+    ChoiceName:
+      FTargetName := TGeneralName.GetTagged(ATagObj, True);
+    ChoiceGroup:
+      FTargetGroup := TGeneralName.GetTagged(ATagObj, True);
+  else
+    raise EArgumentCryptoLibException.CreateResFmt(@SUnknownTagInTarget, [ATagObj.TagNo]);
+  end;
+end;
+
+constructor TTarget.Create(ATagNo: Int32; const AName: IGeneralName);
+var
+  LTagged: IAsn1TaggedObject;
+begin
+  if AName = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SNameNil);
+  LTagged := TDerTaggedObject.Create(True, ATagNo, AName as IAsn1Encodable);
+  Create(LTagged);
+end;
+
+function TTarget.GetTargetName: IGeneralName;
+begin
+  Result := FTargetName;
+end;
+
+function TTarget.GetTargetGroup: IGeneralName;
+begin
+  Result := FTargetGroup;
+end;
+
+function TTarget.ToAsn1Object: IAsn1Object;
+begin
+  // GeneralName is a CHOICE so it must be explicitly tagged
+  if FTargetName <> nil then
+    Result := TDerTaggedObject.Create(True, ChoiceName, FTargetName as IAsn1Encodable)
+  else if FTargetGroup <> nil then
+    Result := TDerTaggedObject.Create(True, ChoiceGroup, FTargetGroup as IAsn1Encodable)
+  else
+    raise EInvalidOperationCryptoLibException.CreateRes(@STargetChoiceNotSet);
+end;
+
+{ TTargets }
+
+class function TTargets.GetInstance(AObj: TObject): ITargets;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITargets, Result) then
+    Exit;
+
+  Result := TTargets.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTargets.GetInstance(const AObj: IAsn1Convertible): ITargets;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITargets, Result) then
+    Exit;
+
+  Result := TTargets.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTargets.GetInstance(const AEncoded: TCryptoLibByteArray): ITargets;
+begin
+  Result := TTargets.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TTargets.GetInstance(const AObj: IAsn1TaggedObject; AExplicitly: Boolean): ITargets;
+begin
+  Result := TTargets.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TTargets.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ITargets;
+begin
+  Result := TTargets.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TTargets.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  FTargets := ASeq;
+end;
+
+constructor TTargets.Create(const ATargets: TCryptoLibGenericArray<ITarget>);
+var
+  LV: IAsn1EncodableVector;
+  LI: Int32;
+begin
+  inherited Create();
+  if System.Length(ATargets) < 1 then
+    raise EArgumentCryptoLibException.CreateRes(@STargetsCannotBeNilOrEmpty);
+  LV := TAsn1EncodableVector.Create(System.Length(ATargets));
+  for LI := 0 to System.Length(ATargets) - 1 do
+  begin
+    if ATargets[LI] = nil then
+      raise EArgumentNilCryptoLibException.CreateRes(@STargetsCannotContainNil);
+    LV.Add(ATargets[LI] as IAsn1Encodable);
+  end;
+  FTargets := TDerSequence.FromVector(LV);
+end;
+
+class function TTargets.ElementToTarget(AElement: IAsn1Encodable): ITarget;
+begin
+  Result := TTarget.GetInstance(AElement);
+end;
+
+function TTargets.GetTargets: TCryptoLibGenericArray<ITarget>;
+begin
+  Result := TArrayUtilities.Map<IAsn1Encodable, ITarget>(FTargets.GetElements(), ElementToTarget);
+end;
+
+function TTargets.ToAsn1Object: IAsn1Object;
+begin
+  Result := FTargets as IAsn1Object;
+end;
+
+{ TTargetInformation }
+
+class function TTargetInformation.GetInstance(AObj: TObject): ITargetInformation;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITargetInformation, Result) then
+    Exit;
+
+  Result := TTargetInformation.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTargetInformation.GetInstance(const AObj: IAsn1Convertible): ITargetInformation;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, ITargetInformation, Result) then
+    Exit;
+
+  Result := TTargetInformation.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TTargetInformation.GetInstance(const AEncoded: TCryptoLibByteArray): ITargetInformation;
+begin
+  Result := TTargetInformation.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TTargetInformation.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): ITargetInformation;
+begin
+  Result := TTargetInformation.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TTargetInformation.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): ITargetInformation;
+begin
+  Result := TTargetInformation.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TTargetInformation.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  FTargets := ASeq;
+end;
+
+constructor TTargetInformation.Create(const ATargets: ITargets);
+begin
+  inherited Create();
+  if ATargets = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@STargetsNil);
+  FTargets := TDerSequence.FromElement(ATargets as IAsn1Encodable);
+end;
+
+class function TTargetInformation.ElementToTargets(AElement: IAsn1Encodable): ITargets;
+begin
+  Result := TTargets.GetInstance(AElement);
+end;
+
+function TTargetInformation.GetTargetsObjects: TCryptoLibGenericArray<ITargets>;
+begin
+  Result := TArrayUtilities.Map<IAsn1Encodable, ITargets>(FTargets.GetElements(), ElementToTargets);
+end;
+
+function TTargetInformation.ToAsn1Object: IAsn1Object;
+begin
+  Result := FTargets as IAsn1Object;
 end;
 
 { TDistributionPoint }
@@ -9624,6 +10985,250 @@ begin
     for LI := 0 to System.Length(LDps) - 1 do
     begin
       LBuf.Append('    ').Append(LDps[LI].ToString()).AppendLine();
+    end;
+    Result := LBuf.ToString();
+  finally
+    LBuf.Free;
+  end;
+end;
+
+{ TAccessDescription }
+
+class function TAccessDescription.GetInstance(AObj: TObject): IAccessDescription;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAccessDescription, Result) then
+    Exit;
+
+  Result := TAccessDescription.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAccessDescription.GetInstance(const AObj: IAsn1Convertible): IAccessDescription;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAccessDescription, Result) then
+    Exit;
+
+  Result := TAccessDescription.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAccessDescription.GetInstance(const AEncoded: TCryptoLibByteArray): IAccessDescription;
+begin
+  Result := TAccessDescription.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TAccessDescription.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IAccessDescription;
+begin
+  Result := TAccessDescription.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TAccessDescription.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAccessDescription;
+begin
+  Result := TAccessDescription.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+constructor TAccessDescription.Create(const ASeq: IAsn1Sequence);
+var
+  LPos: Int32;
+begin
+  inherited Create();
+  LPos := 0;
+  TAsn1Utilities.CheckSequenceSize(ASeq, 2, 2);
+  FAccessMethod := TAsn1Utilities.Read<IDerObjectIdentifier>(ASeq, LPos, TDerObjectIdentifier.GetInstance);
+  FAccessLocation := TAsn1Utilities.Read<IGeneralName>(ASeq, LPos, TGeneralName.GetInstance);
+  TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+end;
+
+constructor TAccessDescription.Create(const AAccessMethod: IDerObjectIdentifier;
+  const AAccessLocation: IGeneralName);
+begin
+  inherited Create();
+  if AAccessMethod = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAccessMethodNil);
+  if AAccessLocation = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAccessLocationNil);
+  FAccessMethod := AAccessMethod;
+  FAccessLocation := AAccessLocation;
+end;
+
+function TAccessDescription.GetAccessMethod: IDerObjectIdentifier;
+begin
+  Result := FAccessMethod;
+end;
+
+function TAccessDescription.GetAccessLocation: IGeneralName;
+begin
+  Result := FAccessLocation;
+end;
+
+function TAccessDescription.ToAsn1Object: IAsn1Object;
+begin
+  Result := TDerSequence.FromElements(FAccessMethod, FAccessLocation);
+end;
+
+function TAccessDescription.ToString: String;
+begin
+  Result := 'AccessDescription: Oid(' + FAccessMethod.ID + ')';
+end;
+
+{ TAuthorityInformationAccess }
+
+class function TAuthorityInformationAccess.ElementToAccessDescription(AElement: IAsn1Encodable): IAccessDescription;
+begin
+  Result := TAccessDescription.GetInstance(AElement);
+end;
+
+class function TAuthorityInformationAccess.IdentityAccessDescription(AElement: IAccessDescription): IAccessDescription;
+begin
+  Result := AElement;
+end;
+
+class function TAuthorityInformationAccess.GetInstance(AObj: TObject): IAuthorityInformationAccess;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAuthorityInformationAccess, Result) then
+    Exit;
+
+  Result := TAuthorityInformationAccess.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAuthorityInformationAccess.GetInstance(const AObj: IAsn1Convertible): IAuthorityInformationAccess;
+begin
+  if AObj = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  if Supports(AObj, IAuthorityInformationAccess, Result) then
+    Exit;
+
+  Result := TAuthorityInformationAccess.Create(TAsn1Sequence.GetInstance(AObj));
+end;
+
+class function TAuthorityInformationAccess.GetInstance(const AEncoded: TCryptoLibByteArray): IAuthorityInformationAccess;
+begin
+  Result := TAuthorityInformationAccess.Create(TAsn1Sequence.GetInstance(AEncoded));
+end;
+
+class function TAuthorityInformationAccess.GetInstance(const AObj: IAsn1TaggedObject;
+  AExplicitly: Boolean): IAuthorityInformationAccess;
+begin
+  Result := TAuthorityInformationAccess.Create(TAsn1Sequence.GetInstance(AObj, AExplicitly));
+end;
+
+class function TAuthorityInformationAccess.GetOptional(const AElement: IAsn1Encodable): IAuthorityInformationAccess;
+var
+  LSequence: IAsn1Sequence;
+begin
+  if AElement = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SX509Asn1ElementNil);
+
+  if Supports(AElement, IAuthorityInformationAccess, Result) then
+    Exit;
+
+  LSequence := TAsn1Sequence.GetOptional(AElement);
+  if LSequence <> nil then
+    Result := TAuthorityInformationAccess.Create(LSequence)
+  else
+    Result := nil;
+end;
+
+class function TAuthorityInformationAccess.GetTagged(const ATaggedObject: IAsn1TaggedObject;
+  ADeclaredExplicit: Boolean): IAuthorityInformationAccess;
+begin
+  Result := TAuthorityInformationAccess.Create(TAsn1Sequence.GetTagged(ATaggedObject, ADeclaredExplicit));
+end;
+
+class function TAuthorityInformationAccess.FromExtensions(const AExtensions: IX509Extensions): IAuthorityInformationAccess;
+begin
+  Result := GetInstance(TX509Extensions.GetExtensionParsedValue(AExtensions, TX509Extensions.AuthorityInfoAccess));
+end;
+
+constructor TAuthorityInformationAccess.Create(const ASeq: IAsn1Sequence);
+begin
+  inherited Create();
+  TAsn1Utilities.CheckSequenceSize(ASeq, 1, Int32.MaxValue);
+  FDescriptions := TArrayUtilities.Map<IAsn1Encodable, IAccessDescription>(ASeq.Elements,
+    ElementToAccessDescription);
+end;
+
+constructor TAuthorityInformationAccess.Create(const ADescription: IAccessDescription);
+begin
+  inherited Create();
+  if ADescription = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAccessDescriptionNil);
+  System.SetLength(FDescriptions, 1);
+  FDescriptions[0] := ADescription;
+end;
+
+constructor TAuthorityInformationAccess.Create(const ADescriptions: TCryptoLibGenericArray<IAccessDescription>);
+var
+  LI: Int32;
+begin
+  inherited Create();
+  if (ADescriptions = nil) or (System.Length(ADescriptions) = 0) then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAccessDescriptionsCannotBeNilOrEmpty);
+  for LI := 0 to System.Length(ADescriptions) - 1 do
+  begin
+    if ADescriptions[LI] = nil then
+      raise EArgumentNilCryptoLibException.CreateRes(@SAccessDescriptionsCannotContainNil);
+  end;
+  FDescriptions := TArrayUtilities.Clone<IAccessDescription>(ADescriptions, IdentityAccessDescription);
+end;
+
+constructor TAuthorityInformationAccess.Create(const AAccessMethod: IDerObjectIdentifier;
+  const AAccessLocation: IGeneralName);
+begin
+  Create(TAccessDescription.Create(AAccessMethod, AAccessLocation) as IAccessDescription);
+end;
+
+function TAuthorityInformationAccess.GetAccessDescriptions: TCryptoLibGenericArray<IAccessDescription>;
+begin
+  Result := TArrayUtilities.Clone<IAccessDescription>(FDescriptions, IdentityAccessDescription);
+end;
+
+function TAuthorityInformationAccess.ToAsn1Object: IAsn1Object;
+var
+  LElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LI: Int32;
+begin
+  System.SetLength(LElements, System.Length(FDescriptions));
+  for LI := 0 to System.Length(FDescriptions) - 1 do
+  begin
+    LElements[LI] := FDescriptions[LI];
+  end;
+  Result := TDerSequence.FromElements(LElements);
+end;
+
+function TAuthorityInformationAccess.ToString: String;
+var
+  LBuf: TStringBuilder;
+  LI: Int32;
+begin
+  LBuf := TStringBuilder.Create();
+  try
+    LBuf.AppendLine('AuthorityInformationAccess:');
+    for LI := 0 to System.Length(FDescriptions) - 1 do
+    begin
+      LBuf.Append('    ').Append(FDescriptions[LI].ToString()).AppendLine();
     end;
     Result := LBuf.ToString();
   finally

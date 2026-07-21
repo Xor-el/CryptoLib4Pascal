@@ -24,7 +24,6 @@ uses
   SysUtils,
   ClpBitOperations,
   ClpCryptoLibTypes,
-  ClpNat,
   ClpIBinPolyMul,
   ClpBinPolyMulBase;
 

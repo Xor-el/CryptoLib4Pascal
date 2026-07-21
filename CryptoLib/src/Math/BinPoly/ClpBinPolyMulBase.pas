@@ -22,7 +22,6 @@ interface
 
 uses
   SysUtils,
-  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpInterleave,
   ClpIBinPolyMul;

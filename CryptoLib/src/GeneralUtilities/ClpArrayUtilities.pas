@@ -48,6 +48,14 @@ type
   public
 
     class function AreEqual(const A, B: TCryptoLibByteArray): Boolean; overload; static;
+    /// <summary>
+    /// Lexicographic order: the first differing byte decides, otherwise the shorter array sorts
+    /// first. Matches the usual array-compare contract.
+    /// </summary>
+    /// <remarks>
+    /// NOT constant time - for ordering only, never for comparing secrets (use FixedTimeEquals).
+    /// </remarks>
+    class function LexicographicCompare(const A, B: TCryptoLibByteArray): Int32; static;
     class function AreEqual(const A, B: TCryptoLibInt32Array): Boolean; overload; static;
 
     class function Concatenate<T>(const AArrays: TCryptoLibMatrixGenericArray<T>)
@@ -200,6 +208,40 @@ begin
   if LLen = 0 then
     Exit(True);
   Result := CompareMem(@A[0], @B[0], LLen * System.SizeOf(Byte));
+end;
+
+class function TArrayUtilities.LexicographicCompare(const A, B: TCryptoLibByteArray): Int32;
+var
+  LIdx, LLenA, LLenB, LCommon: Int32;
+begin
+  LLenA := System.Length(A);
+  LLenB := System.Length(B);
+
+  if LLenA < LLenB then
+    LCommon := LLenA
+  else
+    LCommon := LLenB;
+
+  // the first differing byte decides, regardless of the lengths
+  for LIdx := 0 to LCommon - 1 do
+  begin
+    if A[LIdx] <> B[LIdx] then
+    begin
+      if A[LIdx] < B[LIdx] then
+        Result := -1
+      else
+        Result := 1;
+      Exit;
+    end;
+  end;
+
+  // a common prefix: the shorter array sorts first
+  if LLenA < LLenB then
+    Result := -1
+  else if LLenA > LLenB then
+    Result := 1
+  else
+    Result := 0;
 end;
 
 class function TArrayUtilities.AreEqual(const A, B: TCryptoLibInt32Array): Boolean;

@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpAsn1Core,
@@ -181,7 +182,7 @@ type
 
   strict private
     class var
-      FDupsAllowed: TDictionary<IDerObjectIdentifier, Boolean>;
+      FDupsAllowed: TCryptoLibHashSet<IDerObjectIdentifier>;
     class constructor Create;
     class destructor Destroy;
 
@@ -686,12 +687,12 @@ end;
 
 class constructor TX509ExtensionsGenerator.Create;
 begin
-  FDupsAllowed := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FDupsAllowed := TCryptoLibHashSet<IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
   // OIDs that allow duplicate extensions
-  FDupsAllowed.Add(TX509Extensions.SubjectAlternativeName, True);
-  FDupsAllowed.Add(TX509Extensions.IssuerAlternativeName, True);
-  FDupsAllowed.Add(TX509Extensions.SubjectDirectoryAttributes, True);
-  FDupsAllowed.Add(TX509Extensions.CertificateIssuer, True);
+  FDupsAllowed.Add(TX509Extensions.SubjectAlternativeName);
+  FDupsAllowed.Add(TX509Extensions.IssuerAlternativeName);
+  FDupsAllowed.Add(TX509Extensions.SubjectDirectoryAttributes);
+  FDupsAllowed.Add(TX509Extensions.CertificateIssuer);
 end;
 
 class destructor TX509ExtensionsGenerator.Destroy;
@@ -864,7 +865,7 @@ procedure TX509ExtensionsGenerator.ImplAddExtensionDup(const AExistingExtension:
 var
   LSeq1, LSeq2, LConcat: IAsn1Sequence;
 begin
-  if not FDupsAllowed.ContainsKey(AOid) then
+  if not FDupsAllowed.Contains(AOid) then
     raise EArgumentCryptoLibException.CreateResFmt(@SExtensionAlreadyAdded, [AOid.Id]);
 
   LSeq1 := TAsn1Sequence.GetInstance(AExistingExtension.Value.GetOctets());

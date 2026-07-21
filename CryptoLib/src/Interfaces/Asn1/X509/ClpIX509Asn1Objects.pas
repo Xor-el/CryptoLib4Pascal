@@ -36,6 +36,7 @@ type
   IAuthorityKeyIdentifier = interface;
   IBasicConstraints = interface;
   IExtendedKeyUsage = interface;
+  IOtherName = interface;
   IGeneralName = interface;
   IGeneralNames = interface;
   IKeyUsage = interface;
@@ -64,6 +65,7 @@ type
   IAttributeCertificate = interface;
   IAttributeCertificateInfo = interface;
   IPolicyInformation = interface;
+  IPolicyQualifierInfo = interface;
   ICrlDistPoint = interface;
   IDeltaCertificateDescriptor = interface;
   ICrlEntry = interface;
@@ -71,6 +73,15 @@ type
   ICrlReason = interface;
   IIssuingDistributionPoint = interface;
   ICertificateList = interface;
+  IGeneralSubtree = interface;
+  IGeneralSubtrees = interface;
+  INameConstraints = interface;
+  IPrivateKeyUsagePeriod = interface;
+  ITarget = interface;
+  ITargets = interface;
+  ITargetInformation = interface;
+  IAccessDescription = interface;
+  IAuthorityInformationAccess = interface;
 
   /// <summary>
   /// Interface for the AlgorithmIdentifier object.
@@ -146,6 +157,25 @@ type
   end;
 
   /// <summary>
+  /// Interface for OtherName.
+  /// <code>
+  /// OtherName ::= SEQUENCE {
+  ///   type-id    OBJECT IDENTIFIER,
+  ///   value  [0] EXPLICIT ANY DEFINED BY type-id
+  /// }
+  /// </code>
+  /// </summary>
+  IOtherName = interface(IAsn1Encodable)
+    ['{A476B3A7-C76E-4AEC-B7D2-2DC018C2F76C}']
+
+    function GetTypeID: IDerObjectIdentifier;
+    function GetValue: IAsn1Encodable;
+
+    property TypeID: IDerObjectIdentifier read GetTypeID;
+    property Value: IAsn1Encodable read GetValue;
+  end;
+
+  /// <summary>
   /// Interface for GeneralName.
   /// </summary>
   IGeneralName = interface(IAsn1Encodable)
@@ -172,6 +202,81 @@ type
     function ToString: String;
 
     property Count: Int32 read GetCount;
+  end;
+
+  /// <summary>
+  /// Interface for GeneralSubtree.
+  /// <code>
+  /// GeneralSubtree ::= SEQUENCE {
+  ///   base        GeneralName,
+  ///   minimum [0] BaseDistance DEFAULT 0,
+  ///   maximum [1] BaseDistance OPTIONAL
+  /// }
+  /// </code>
+  /// </summary>
+  IGeneralSubtree = interface(IAsn1Encodable)
+    ['{1A2B3C4D-5E6F-4071-8291-A3B4C5D6E7F8}']
+
+    function GetBase: IGeneralName;
+    function GetMinimum: IDerInteger;
+    function GetMaximum: IDerInteger;
+
+    property Base: IGeneralName read GetBase;
+    property Minimum: IDerInteger read GetMinimum;
+    property Maximum: IDerInteger read GetMaximum;
+  end;
+
+  /// <summary>
+  /// Interface for GeneralSubtrees.
+  /// <code>
+  /// GeneralSubtrees ::= SEQUENCE SIZE (1..MAX) OF GeneralSubtree
+  /// </code>
+  /// </summary>
+  IGeneralSubtrees = interface(IAsn1Encodable)
+    ['{2B3C4D5E-6F70-4182-93A4-B5C6D7E8F901}']
+
+    function GetElements: IAsn1Sequence;
+    function GetSubtrees: TCryptoLibGenericArray<IGeneralSubtree>;
+
+    property Elements: IAsn1Sequence read GetElements;
+  end;
+
+  /// <summary>
+  /// Interface for NameConstraints.
+  /// <code>
+  /// NameConstraints ::= SEQUENCE {
+  ///   permittedSubtrees [0] GeneralSubtrees OPTIONAL,
+  ///   excludedSubtrees  [1] GeneralSubtrees OPTIONAL
+  /// }
+  /// </code>
+  /// </summary>
+  INameConstraints = interface(IAsn1Encodable)
+    ['{3C4D5E6F-7081-4293-A4B5-C6D7E8F9021A}']
+
+    function GetPermittedSubtrees: IGeneralSubtrees;
+    function GetExcludedSubtrees: IGeneralSubtrees;
+
+    property PermittedSubtrees: IGeneralSubtrees read GetPermittedSubtrees;
+    property ExcludedSubtrees: IGeneralSubtrees read GetExcludedSubtrees;
+  end;
+
+  /// <summary>
+  /// Interface for PrivateKeyUsagePeriod.
+  /// <code>
+  /// PrivateKeyUsagePeriod ::= SEQUENCE {
+  ///   notBefore [0] GeneralizedTime OPTIONAL,
+  ///   notAfter  [1] GeneralizedTime OPTIONAL
+  /// }
+  /// </code>
+  /// </summary>
+  IPrivateKeyUsagePeriod = interface(IAsn1Encodable)
+    ['{4D5E6F70-8192-43A4-B5C6-D7E8F9012B3C}']
+
+    function GetNotBefore: IAsn1GeneralizedTime;
+    function GetNotAfter: IAsn1GeneralizedTime;
+
+    property NotBefore: IAsn1GeneralizedTime read GetNotBefore;
+    property NotAfter: IAsn1GeneralizedTime read GetNotAfter;
   end;
 
   /// <summary>
@@ -538,6 +643,17 @@ type
   end;
 
   /// <summary>
+  /// Interface for PolicyQualifierInfo.
+  /// </summary>
+  IPolicyQualifierInfo = interface(IAsn1Encodable)
+    ['{B0C1D2E3-F4A5-6789-BCDE-F01234567890}']
+    function GetPolicyQualifierId: IDerObjectIdentifier;
+    function GetQualifier: IAsn1Encodable;
+    property PolicyQualifierId: IDerObjectIdentifier read GetPolicyQualifierId;
+    property Qualifier: IAsn1Encodable read GetQualifier;
+  end;
+
+  /// <summary>
   /// Interface for CrlDistPoint.
   /// </summary>
   ICrlDistPoint = interface(IAsn1Encodable)
@@ -617,6 +733,50 @@ type
   end;
 
   /// <summary>
+  /// Interface for Target (RFC 3281).
+  /// <code>
+  /// Target ::= CHOICE {
+  ///   targetName  [0] GeneralName,
+  ///   targetGroup [1] GeneralName,
+  ///   targetCert  [2] TargetCert
+  /// }
+  /// </code>
+  /// </summary>
+  ITarget = interface(IAsn1Choice)
+    ['{5E6F7081-92A3-44B5-C6D7-E8F9012A3B4C}']
+
+    function GetTargetName: IGeneralName;
+    function GetTargetGroup: IGeneralName;
+
+    property TargetName: IGeneralName read GetTargetName;
+    property TargetGroup: IGeneralName read GetTargetGroup;
+  end;
+
+  /// <summary>
+  /// Interface for Targets (RFC 3281).
+  /// <code>
+  /// Targets ::= SEQUENCE OF Target
+  /// </code>
+  /// </summary>
+  ITargets = interface(IAsn1Encodable)
+    ['{6F708192-A3B4-45C6-D7E8-F9012A3B4C5D}']
+
+    function GetTargets: TCryptoLibGenericArray<ITarget>;
+  end;
+
+  /// <summary>
+  /// Interface for TargetInformation (RFC 3281).
+  /// <code>
+  /// TargetInformation ::= SEQUENCE OF Targets
+  /// </code>
+  /// </summary>
+  ITargetInformation = interface(IAsn1Encodable)
+    ['{7081920A-B4C5-46D7-E8F9-012A3B4C5D6E}']
+
+    function GetTargetsObjects: TCryptoLibGenericArray<ITargets>;
+  end;
+
+  /// <summary>
   /// Interface for DistributionPoint.
   /// </summary>
   IDistributionPoint = interface(IAsn1Encodable)
@@ -635,6 +795,10 @@ type
   /// </summary>
   IDistributionPointName = interface(IAsn1Choice)
     ['{A3B4C5D6-E7F8-9012-4567-890123456789}']
+
+    /// <summary>The CHOICE alternative: fullName or nameRelativeToCRLIssuer.</summary>
+    function GetType: Int32;
+    function GetName: IAsn1Encodable;
 
     function ToString: String;
   end;
@@ -744,6 +908,41 @@ type
     property ThisUpdate: ITime read GetThisUpdate;
     property NextUpdate: ITime read GetNextUpdate;
     property Extensions: IX509Extensions read GetExtensions;
+  end;
+
+  /// <summary>
+  /// Interface for AccessDescription (RFC 5280 sec. 4.2.2.1).
+  /// <code>
+  /// AccessDescription ::= SEQUENCE {
+  ///   accessMethod   OBJECT IDENTIFIER,
+  ///   accessLocation GeneralName
+  /// }
+  /// </code>
+  /// </summary>
+  IAccessDescription = interface(IAsn1Encodable)
+    ['{6D1F0A54-3C7B-4A2E-9E11-5B8C0D3F7A61}']
+
+    function GetAccessMethod: IDerObjectIdentifier;
+    function GetAccessLocation: IGeneralName;
+
+    function ToString: String;
+
+    property AccessMethod: IDerObjectIdentifier read GetAccessMethod;
+    property AccessLocation: IGeneralName read GetAccessLocation;
+  end;
+
+  /// <summary>
+  /// Interface for AuthorityInfoAccessSyntax (RFC 5280 sec. 4.2.2.1).
+  /// <code>
+  /// AuthorityInfoAccessSyntax ::= SEQUENCE SIZE (1..MAX) OF AccessDescription
+  /// </code>
+  /// </summary>
+  IAuthorityInformationAccess = interface(IAsn1Encodable)
+    ['{9A4E2C77-8B05-4D6F-BC13-2E7A9F04D5B8}']
+
+    function GetAccessDescriptions: TCryptoLibGenericArray<IAccessDescription>;
+
+    function ToString: String;
   end;
 
 implementation
