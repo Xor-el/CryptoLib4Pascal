@@ -66,7 +66,6 @@ resourcestring
   SElement2Nil = 'element2 cannot be nil';
   SElementsCannotContainNil = 'elements cannot contain nil';
   SElementVectorNil = 'element vector cannot be nil';
-  SElementsNil = 'elements cannot be nil';
   SIndexOutOfRange = 'index out of range';
   SSequenceNil = 'sequence cannot be nil';
   SSetNil = 'set cannot be nil';
@@ -75,7 +74,6 @@ resourcestring
   SContentsNil = 'contents cannot be nil';
   SZeroLengthDataWithNonZeroPadBits = 'zero length data with non-zero pad bits';
   SPadBitsOutOfRange = 'pad bits cannot be greater than 7 or less than 0';
-  SDataNil = 'data cannot be nil';
   SPadBitsMustBeInRangeZeroToSeven = 'pad bits must be in the range 0 to 7';
   SIfDataIsEmptyPadBitsMustBeZero = 'if data is empty, padBits must be 0';
   STruncatedBitStringDetected = 'truncated BIT STRING detected';
@@ -86,7 +84,6 @@ resourcestring
   SInputSequenceTooLarge = 'input sequence too large';
   SNoTaggedObjectFoundInSequence = 'no tagged object found in sequence, structure does not seem to be of type External';
   SMalformedBmpStringEncodingEncountered = 'malformed BMPString encoding encountered';
-  SStrNil = 'string cannot be nil';
   SEofEncounteredInMiddleOfBmpString = 'EOF encountered in middle of BMPString';
   SDerBmpStringLengthMismatch = 'BMP string length mismatch after parsing';
   SEofEncounteredReadingBooleanOctet = 'EOF encountered reading BOOLEAN octet';
@@ -4254,8 +4251,6 @@ var
   LI: Int32;
 begin
   inherited Create;
-  if AC = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementsNil);
   System.SetLength(FElements, System.Length(AC));
   for LI := 0 to System.Length(AC) - 1 do
     FElements[LI] := AC[LI];
@@ -5013,8 +5008,6 @@ var
   LI: Int32;
 begin
   inherited Create;
-  if AC = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SElementsNil);
   System.SetLength(FElements, System.Length(AC));
   for LI := 0 to System.Length(AC) - 1 do
     FElements[LI] := AC[LI];
@@ -6347,8 +6340,6 @@ end;
 
 class function TDerOctetString.FromContents(const AContents: TCryptoLibByteArray): IDerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalFromContents(AContents);
 end;
 
@@ -6426,8 +6417,6 @@ end;
 
 class function TBerOctetString.FromContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalFromContents(AContents);
 end;
 
@@ -6464,8 +6453,6 @@ end;
 
 class function TBerOctetString.WithContents(const AContents: TCryptoLibByteArray): IBerOctetString;
 begin
-  if AContents = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   Result := InternalWithContents(AContents);
 end;
 
@@ -6631,8 +6618,6 @@ end;
 constructor TDerBitString.Create(const AData: TCryptoLibByteArray; APadBits: Int32);
 begin
   inherited Create();
-  if AData = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SDataNil);
   if (APadBits < 0) or (APadBits > 7) then
     raise EArgumentCryptoLibException.CreateRes(@SPadBitsMustBeInRangeZeroToSeven);
   if (System.Length(AData) = 0) and (APadBits <> 0) then
@@ -7588,8 +7573,6 @@ var
   LCs: TCryptoLibCharArray;
 begin
   inherited Create();
-  if AStr = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SContentsNil);
   LByteLen := System.Length(AStr);
   if (LByteLen and 1) <> 0 then
     raise EArgumentCryptoLibException.CreateRes(@SMalformedBmpStringEncodingEncountered);
@@ -7603,8 +7586,6 @@ end;
 constructor TDerBmpString.Create(const AStr: String);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FStr := AStr;
 end;
 
@@ -10787,8 +10768,6 @@ end;
 constructor TDerGeneralString.Create(const AStr: String);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -11118,8 +11097,6 @@ end;
 constructor TDerIA5String.Create(const AStr: String; AValidate: Boolean);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   if AValidate and not IsIA5String(AStr) then
     raise EArgumentCryptoLibException.CreateRes(@SStringContainsIllegalCharacters);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
@@ -11309,8 +11286,6 @@ end;
 constructor TDerNumericString.Create(const AStr: String; AValidate: Boolean);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   if AValidate and not IsNumericString(AStr) then
     raise EArgumentCryptoLibException.CreateRes(@SStringContainsIllegalCharacters);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
@@ -11517,8 +11492,6 @@ end;
 constructor TDerPrintableString.Create(const AStr: String);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
@@ -11729,8 +11702,6 @@ end;
 constructor TDerT61String.Create(const AStr: String);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, FEncoding);
 end;
 
@@ -12264,8 +12235,6 @@ end;
 constructor TDerVisibleString.Create(const AStr: String);
 begin
   inherited Create();
-  if AStr = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SStrNil);
   FContents := TConverters.ConvertStringToBytes(AStr, TEncoding.ASCII);
 end;
 
