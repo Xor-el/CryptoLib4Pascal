@@ -1,0 +1,24 @@
+CryptoLib.Tests/src/Crypto/DSATests.pas
+  s_3bb9e34946d0c8::t_7c5db7602e63d4 62-67,110-111
+  s_3bb9e34946d0c8::t_860c07f65089b3 143-156,1054-1149
+CryptoLib/src/Crypto/Signers/ClpDsaSigner.pas
+  s_3bb9e34946d0c8::t_2dff5813f0021a 37,158,236
+CryptoLib/src/Crypto/Signers/ClpECDsaSigner.pas
+  s_3bb9e34946d0c8::t_36cce8bb740aec 26,207,311
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "916d9040134298afae8b364324d63529c62c5cfc",
+  "prompts": {},
+  "sessions": {
+    "s_3bb9e34946d0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35fdc8b7-c18d-42aa-a7b4-c8af87e3f9af",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
