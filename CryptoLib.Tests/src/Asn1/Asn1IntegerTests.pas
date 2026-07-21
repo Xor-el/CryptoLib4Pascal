@@ -32,6 +32,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpBigInteger,
+  ClpCryptoLibConfig,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase;
@@ -95,6 +96,7 @@ end;
 
 procedure TAsn1IntegerTest.TearDown;
 begin
+  TCryptoLibConfig.Asn1.ResetToDefaults();
   FSuspectKey := nil;
   inherited;
 end;
@@ -147,7 +149,7 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
   try
     LRawInt := DecodeHex('0010FF');
     LInteger := TDerInteger.Create(LRawInt);
@@ -165,7 +167,7 @@ procedure TAsn1IntegerTest.TestInvalidEncoding_00_32Bits;
 var
   LRawInt: TCryptoLibByteArray;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
   try
     LRawInt := DecodeHex('0000000010FF');
@@ -183,7 +185,7 @@ procedure TAsn1IntegerTest.TestInvalidEncoding_FF;
 var
   LRawInt: TCryptoLibByteArray;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
   try
     LRawInt := DecodeHex('FF81FF');
@@ -201,7 +203,7 @@ procedure TAsn1IntegerTest.TestInvalidEncoding_FF_32Bits;
 var
   LRawInt: TCryptoLibByteArray;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
   try
     LRawInt := DecodeHex('FFFFFFFF01FF');
@@ -220,7 +222,7 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LRawInt := DecodeHex('FFFFFF10FF000000');
   LInteger := TDerInteger.Create(LRawInt);
   CheckLongValue(LInteger, -1026513960960);
@@ -231,7 +233,7 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LRawInt := DecodeHex('FFFEFF10FF000000');
   LInteger := TDerInteger.Create(LRawInt);
   CheckLongValue(LInteger, -282501490671616);
@@ -242,7 +244,7 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LRawInt := DecodeHex('FFFFFE10FF000000');
   LInteger := TDerInteger.Create(LRawInt);
   CheckLongValue(LInteger, -2126025588736);
@@ -253,7 +255,7 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LRawInt := DecodeHex('00000010FF000000');
   LInteger := TDerInteger.Create(LRawInt);
   CheckLongValue(LInteger, 72997666816);
@@ -265,7 +267,7 @@ var
   LInteger: IDerInteger;
   LBigInteger: TBigInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LRawInt := DecodeHex('FFFFFFFE10FF000000000000');
   LInteger := TDerInteger.Create(LRawInt);
   LBigInteger := TBigInteger.Create(DecodeHex('FFFFFFFE10FF000000000000'));
@@ -287,13 +289,13 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
   LRawInt := DecodeHex('10FF');
   LInteger := TDerInteger.Create(LRawInt);
   CheckIntValue(LInteger, 4351);
 
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
 
   LRawInt := DecodeHex('10FF');
   LInteger := TDerInteger.Create(LRawInt);
@@ -305,13 +307,13 @@ var
   LRawInt: TCryptoLibByteArray;
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := False;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
   LRawInt := DecodeHex('10');
   LInteger := TDerInteger.Create(LRawInt);
   CheckIntValue(LInteger, 16);
 
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
 
   LRawInt := DecodeHex('10');
   LInteger := TDerInteger.Create(LRawInt);
@@ -320,7 +322,7 @@ end;
 
 procedure TAsn1IntegerTest.TestSuspectKeySequence;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   TAsn1Sequence.GetInstance(FSuspectKey);
 end;
 
@@ -328,7 +330,7 @@ procedure TAsn1IntegerTest.TestLargeIntegerWithUnsafeAllowed;
 var
   LInteger: IDerInteger;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LInteger := TDerInteger.Create(DecodeHex
     ('ffda47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 end;
@@ -337,7 +339,7 @@ procedure TAsn1IntegerTest.TestLargeEnumeratedWithUnsafeAllowed;
 var
   LEnumerated: IDerEnumerated;
 begin
-  TDerInteger.AllowUnsafeInteger := True;
+  TCryptoLibConfig.Asn1.AllowUnsafeInteger := True;
   LEnumerated := TDerEnumerated.Create(DecodeHex
     ('005a47bfc776bcd269da4832626ac332adfca6dd835e8ecd83cd1ebe7d709b0e'));
 end;
@@ -346,9 +348,9 @@ procedure TAsn1IntegerTest.TestLargeIntegerWithUnsafeDisabled;
 var
   LOriginalValue: Boolean;
 begin
-  LOriginalValue := TDerInteger.AllowUnsafeInteger;
+  LOriginalValue := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
   try
-    TDerInteger.AllowUnsafeInteger := False;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
     try
       TDerInteger.Create(DecodeHex
@@ -362,7 +364,7 @@ begin
       end;
     end;
   finally
-    TDerInteger.AllowUnsafeInteger := LOriginalValue;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := LOriginalValue;
   end;
 end;
 
@@ -370,9 +372,9 @@ procedure TAsn1IntegerTest.TestSuspectKeySequenceWithUnsafeDisabled;
 var
   LOriginalValue: Boolean;
 begin
-  LOriginalValue := TDerInteger.AllowUnsafeInteger;
+  LOriginalValue := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
   try
-    TDerInteger.AllowUnsafeInteger := False;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
     try
       TAsn1Sequence.GetInstance(FSuspectKey);
@@ -386,7 +388,7 @@ begin
       end;
     end;
   finally
-    TDerInteger.AllowUnsafeInteger := LOriginalValue;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := LOriginalValue;
   end;
 end;
 
@@ -394,9 +396,9 @@ procedure TAsn1IntegerTest.TestLargeIntegerWithUnsafeDisabled2;
 var
   LOriginalValue: Boolean;
 begin
-  LOriginalValue := TDerInteger.AllowUnsafeInteger;
+  LOriginalValue := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
   try
-    TDerInteger.AllowUnsafeInteger := False;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
     try
       TDerInteger.Create(DecodeHex
@@ -410,7 +412,7 @@ begin
       end;
     end;
   finally
-    TDerInteger.AllowUnsafeInteger := LOriginalValue;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := LOriginalValue;
   end;
 end;
 
@@ -418,9 +420,9 @@ procedure TAsn1IntegerTest.TestLargeEnumeratedWithUnsafeDisabled;
 var
   LOriginalValue: Boolean;
 begin
-  LOriginalValue := TDerInteger.AllowUnsafeInteger;
+  LOriginalValue := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
   try
-    TDerInteger.AllowUnsafeInteger := False;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
     try
       TDerEnumerated.Create(DecodeHex
@@ -434,7 +436,7 @@ begin
       end;
     end;
   finally
-    TDerInteger.AllowUnsafeInteger := LOriginalValue;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := LOriginalValue;
   end;
 end;
 
@@ -442,9 +444,9 @@ procedure TAsn1IntegerTest.TestLargeEnumeratedWithUnsafeDisabled2;
 var
   LOriginalValue: Boolean;
 begin
-  LOriginalValue := TDerInteger.AllowUnsafeInteger;
+  LOriginalValue := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
   try
-    TDerInteger.AllowUnsafeInteger := False;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := False;
 
     try
       TDerEnumerated.Create(DecodeHex
@@ -458,7 +460,7 @@ begin
       end;
     end;
   finally
-    TDerInteger.AllowUnsafeInteger := LOriginalValue;
+    TCryptoLibConfig.Asn1.AllowUnsafeInteger := LOriginalValue;
   end;
 end;
 

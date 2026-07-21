@@ -40,6 +40,7 @@ uses
   ClpX509ObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpBigInteger,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpArrayUtilities,
   ClpAsn1Utilities,
@@ -1677,8 +1678,6 @@ type
   TTbsCertificateStructure = class(TAsn1Encodable, ITbsCertificateStructure)
 
   strict private
-  class var
-    FAllowNonDERTbsCertificate: Boolean;
   var
     FVersion: IDerInteger;
     FSerialNumber: IDerInteger;
@@ -1709,8 +1708,6 @@ type
     function GetExtensions: IX509Extensions;
 
   public
-    class constructor Create;
-
     class function GetInstance(AObj: TObject): ITbsCertificateStructure; overload; static;
     /// <summary>
     /// Get instance from ASN.1 convertible.
@@ -1721,11 +1718,6 @@ type
       AExplicitly: Boolean): ITbsCertificateStructure; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): ITbsCertificateStructure; static;
-
-    class function GetAllowNonDERTbsCertificate: Boolean; static;
-    class procedure SetAllowNonDERTbsCertificate(AValue: Boolean); static;
-
-    class property AllowNonDERTbsCertificate: Boolean read GetAllowNonDERTbsCertificate write SetAllowNonDERTbsCertificate;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
     constructor Create(const AVersion: IDerInteger; const ASerialNumber: IDerInteger;
@@ -4516,28 +4508,13 @@ begin
   Result := FExtensions;
 end;
 
-class constructor TTbsCertificateStructure.Create;
-begin
-  FAllowNonDERTbsCertificate := False;
-end;
-
-class function TTbsCertificateStructure.GetAllowNonDERTbsCertificate: Boolean;
-begin
-  Result := FAllowNonDERTbsCertificate;
-end;
-
-class procedure TTbsCertificateStructure.SetAllowNonDERTbsCertificate(AValue: Boolean);
-begin
-  FAllowNonDERTbsCertificate := AValue;
-end;
-
 function TTbsCertificateStructure.ToAsn1Object: IAsn1Object;
 var
   LV: IAsn1EncodableVector;
 begin
   if FSeq <> nil then
   begin
-    if AllowNonDERTbsCertificate then
+    if TCryptoLibConfig.X509.AllowNonDerTbsCertificate then
     begin
       Result := FSeq;
       Exit;

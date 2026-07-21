@@ -33,6 +33,7 @@ uses
   ClpNat,
   ClpBitOperations,
   ClpArrayUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -158,20 +159,9 @@ type
     IDHPublicKeyParameters)
 
   strict private
-    /// <summary>
-    /// Default maximum DH modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
-    /// </summary>
-    const
-      DefaultMaxBitLength = 16384;
-    class var
-      FMaxSize: Int32;
-
     var
     FY: TBigInteger;
 
-    class constructor Create;
-
-    class function GetEffectiveMaxSize: Int32; static;
     class function Legendre(const AA, AB: TBigInteger): Int32; static;
 
     class function Validate(const AY: TBigInteger; const ADHParams: IDHParameters)
@@ -182,12 +172,6 @@ type
     function GetY: TBigInteger; virtual;
 
   public
-    /// <summary>
-    /// Maximum allowed DH modulus bit length for externally supplied keys.
-    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
-    /// </summary>
-    class property MaxSize: Int32 read FMaxSize write FMaxSize;
-
     constructor Create(const AY: TBigInteger;
       const AParameters: IDHParameters); overload;
 
@@ -582,19 +566,6 @@ begin
   end;
 end;
 
-class constructor TDHPublicKeyParameters.Create;
-begin
-  FMaxSize := -1;
-end;
-
-class function TDHPublicKeyParameters.GetEffectiveMaxSize: Int32;
-begin
-  if FMaxSize < 0 then
-    Result := DefaultMaxBitLength
-  else
-    Result := FMaxSize;
-end;
-
 class function TDHPublicKeyParameters.Validate(const AY: TBigInteger;
   const ADHParams: IDHParameters): TBigInteger;
 var
@@ -607,7 +578,7 @@ begin
 
   LP := ADHParams.P;
 
-  if LP.BitLength > GetEffectiveMaxSize then
+  if LP.BitLength > TCryptoLibConfig.DH.MaxSize then
     raise EArgumentCryptoLibException.CreateRes(@SDHModulusOutOfRange);
 
   if ((AY.CompareTo(TBigInteger.Two) < 0) or

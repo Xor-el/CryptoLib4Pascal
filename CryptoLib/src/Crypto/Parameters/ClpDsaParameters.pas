@@ -28,6 +28,7 @@ uses
   ClpKeyGenerationParameters,
   ClpISecureRandom,
   ClpArrayUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -120,32 +121,15 @@ type
     IDsaPublicKeyParameters)
 
   strict private
-    /// <summary>
-    /// Default maximum DSA modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
-    /// </summary>
-    const
-      DefaultMaxBitLength = 16384;
-    class var
-      FMaxSize: Int32;
-
     var
     FY: TBigInteger;
 
-    class constructor Create;
-
-    class function GetEffectiveMaxSize: Int32; static;
     class function Validate(const AY: TBigInteger;
       const AParameters: IDsaParameters): TBigInteger; static; inline;
 
     function GetY: TBigInteger; inline;
 
   public
-    /// <summary>
-    /// Maximum allowed DSA modulus bit length for externally supplied keys.
-    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
-    /// </summary>
-    class property MaxSize: Int32 read FMaxSize write FMaxSize;
-
     constructor Create(const AY: TBigInteger; const AParameters: IDsaParameters);
 
     function Equals(const AOther: IDsaPublicKeyParameters): Boolean;
@@ -406,19 +390,6 @@ end;
 
 { TDsaPublicKeyParameters }
 
-class constructor TDsaPublicKeyParameters.Create;
-begin
-  FMaxSize := -1;
-end;
-
-class function TDsaPublicKeyParameters.GetEffectiveMaxSize: Int32;
-begin
-  if FMaxSize < 0 then
-    Result := DefaultMaxBitLength
-  else
-    Result := FMaxSize;
-end;
-
 function TDsaPublicKeyParameters.GetY: TBigInteger;
 begin
   Result := FY;
@@ -433,7 +404,7 @@ begin
   end;
   if (AParameters <> nil) then
   begin
-    if AParameters.P.BitLength > GetEffectiveMaxSize then
+    if AParameters.P.BitLength > TCryptoLibConfig.Dsa.MaxSize then
       raise EArgumentCryptoLibException.CreateRes(@SDsaModulusOutOfRange);
     if ((AY.CompareTo(TBigInteger.Two) < 0) or
       (AY.CompareTo(AParameters.P.Subtract(TBigInteger.Two)) > 0) or

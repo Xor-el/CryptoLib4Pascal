@@ -30,6 +30,7 @@ uses
   ClpAsymmetricKeyParameter,
   ClpKeyGenerationParameters,
   ClpISecureRandom,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -49,22 +50,11 @@ type
   TRsaKeyParameters = class(TAsymmetricKeyParameter, IRsaKeyParameters)
 
   strict private
-    /// <summary>
-    /// Default maximum RSA modulus bit length when <see cref="MaxSize"/> is unset (<c>-1</c>).
-    /// </summary>
-    const
-      DefaultMaxBitLength = 16384;
-    class var
-      FMaxSize: Int32;
-      FMaxMRTests: Int32;
     var
     FModulus: TBigInteger;
     FExponent: TBigInteger;
 
-    class constructor Create;
-
     class function Validate(const AModulus: TBigInteger; AIsInternal: Boolean): TBigInteger; static;
-    class function GetEffectiveMaxSize: Int32; static;
     class function GetEffectiveMaxMRTests(ABits: Int32): Int32; static;
     class function GetMRIterations(ABits: Int32): Int32; static;
 
@@ -75,19 +65,6 @@ type
   public
 
     class function ValidateModulus(const AModulus: TBigInteger): TBigInteger; static;
-
-    /// <summary>
-    /// Maximum allowed RSA modulus bit length for externally supplied keys.
-    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxBitLength"/>.
-    /// </summary>
-    class property MaxSize: Int32 read FMaxSize write FMaxSize;
-
-    /// <summary>
-    /// Enhanced Miller-Rabin iteration count for externally supplied moduli.
-    /// Unset (<c>-1</c>) or any negative value selects a bit-length-dependent default;
-    /// <c>0</c> disables composite testing.
-    /// </summary>
-    class property MaxMRTests: Int32 read FMaxMRTests write FMaxMRTests;
 
     constructor Create(AIsPrivate: Boolean;
       const AModulus, AExponent: TBigInteger); overload;
@@ -204,26 +181,12 @@ implementation
 
 { TRsaKeyParameters }
 
-class constructor TRsaKeyParameters.Create;
-begin
-  FMaxSize := -1;
-  FMaxMRTests := -1;
-end;
-
-class function TRsaKeyParameters.GetEffectiveMaxSize: Int32;
-begin
-  if FMaxSize < 0 then
-    Result := DefaultMaxBitLength
-  else
-    Result := FMaxSize;
-end;
-
 class function TRsaKeyParameters.GetEffectiveMaxMRTests(ABits: Int32): Int32;
 begin
-  if FMaxMRTests < 0 then
-    Result := GetMRIterations(ABits)
+  if TCryptoLibConfig.Rsa.MaxMRTests.HasValue then
+    Result := TCryptoLibConfig.Rsa.MaxMRTests.Value
   else
-    Result := FMaxMRTests;
+    Result := GetMRIterations(ABits);
 end;
 
 class function TRsaKeyParameters.GetMRIterations(ABits: Int32): Int32;
@@ -254,7 +217,7 @@ begin
   begin
     if not AModulus.TestBit(0) then
       raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsEven);
-    if AModulus.BitLength > GetEffectiveMaxSize then
+    if AModulus.BitLength > TCryptoLibConfig.Rsa.MaxSize then
       raise EArgumentCryptoLibException.CreateRes(@SRsaModulusOutOfRange);
     if TBigIntegerUtilities.HasAnySmallFactors(AModulus) then
       raise EArgumentCryptoLibException.CreateRes(@SRsaModulusHasSmallPrimeFactor);

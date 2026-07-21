@@ -31,6 +31,7 @@ uses
   ClpAsn1Tags,
   ClpBitOperations,
   ClpPlatformUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpStreams,
   ClpStreamUtilities;
@@ -443,17 +444,12 @@ type
   /// </summary>
   TAsn1InputStream = class(TFilterStream)
   strict private
-    class var
-      FMaxLimitForUnknownStream: Int32;
-      FMaxConstructedDepth: Int32;
     var
       FDepth: Int32;
       FLimit: Int32;
       FLeaveOpen: Boolean;
       FTmp: TCryptoLibByteArray;
       FStream: TStream;
-
-    class constructor Create;
 
     function BuildObject(ATagHdr, ATagNo, ALength: Int32): IAsn1Object;
     function ReadTaggedObjectDL(ATagClass, ATagNo: Int32;
@@ -506,13 +502,8 @@ type
     property Limit: Int32 read FLimit;
 
     /// <summary>
-    /// Default recursion budget when <see cref="MaxConstructedDepth"/> is <c>-1</c>.
-    /// </summary>
-    const
-      DefaultMaxConstructedDepth = 64;
-
-    /// <summary>
-    /// Effective root recursion budget for nested constructed values (used when creating streams and parsers).
+    /// Effective root recursion budget for nested constructed values (used when creating streams
+    /// and parsers). Reflects <c>TCryptoLibConfig.Asn1.MaxDepth</c>.
     /// </summary>
     class function FindDepth: Int32; static;
 
@@ -520,18 +511,6 @@ type
     /// Returns the parent's decremented recursion budget or raises <see cref="EAsn1ParsingCryptoLibException"/> when the budget is exhausted.
     /// </summary>
     class function DecrementDepth(AParentDepth: Int32): Int32; static;
-
-    /// <summary>
-    /// When <c>FindLimit</c> cannot infer a stream bound, this value applies if set (not <c>-1</c>);
-    /// normalized with <c>Max(0, …)</c>; <c>-1</c> leaves behavior unchanged (<c>MaxInt</c>).
-    /// </summary>
-    class property MaxLimitForUnknownStream: Int32 read FMaxLimitForUnknownStream
-      write FMaxLimitForUnknownStream;
-
-    /// <summary>
-    /// Application override: anything except <c>-1</c> yields <c>Max(0, …)</c> from <see cref="FindDepth"/>; <c>-1</c> selects <see cref="DefaultMaxConstructedDepth"/>.
-    /// </summary>
-    class property MaxConstructedDepth: Int32 read FMaxConstructedDepth write FMaxConstructedDepth;
 
     /// <summary>
     /// Read the next ASN.1 object from the stream.
@@ -616,18 +595,9 @@ end;
 
 { TAsn1InputStream }
 
-class constructor TAsn1InputStream.Create;
-begin
-  FMaxLimitForUnknownStream := -1;
-  FMaxConstructedDepth := -1;
-end;
-
 class function TAsn1InputStream.FindDepth: Int32;
 begin
-  if FMaxConstructedDepth <> -1 then
-    Result := Max(0, FMaxConstructedDepth)
-  else
-    Result := DefaultMaxConstructedDepth;
+  Result := Max(0, TCryptoLibConfig.Asn1.MaxDepth);
 end;
 
 class function TAsn1InputStream.DecrementDepth(AParentDepth: Int32): Int32;
@@ -1696,10 +1666,7 @@ begin
     Exit;
   end;
 
-  if FMaxLimitForUnknownStream <> -1 then
-    Result := Max(0, FMaxLimitForUnknownStream)
-  else
-    Result := Int32.MaxValue;
+  Result := Max(0, TCryptoLibConfig.Asn1.MaxLimit);
 end;
 
 class function TAsn1InputStream.ReadTagNumber(const AInput: TStream;

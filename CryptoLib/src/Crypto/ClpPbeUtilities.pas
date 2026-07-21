@@ -26,6 +26,7 @@ uses
   Generics.Collections,
   ClpAsn1Objects,
   ClpIAsn1Objects,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpIAsn1Core,
   ClpIDigest,
@@ -84,16 +85,13 @@ type
     Pkcs5S2 = 'Pkcs5S2';
     Pkcs12 = 'Pkcs12';
     OpenSsl = 'OpenSsl';
-    DefaultMaxIterationCount = 5000000;
   class var
     FAlgorithms: TDictionary<String, String>;
     FAlgorithmType: TDictionary<String, String>;
     FOids: TDictionary<String, IDerObjectIdentifier>;
-    FMaxIterationCount: Int32;
   class constructor Create;
   class destructor Destroy;
   strict private
-    class function GetEffectiveMaxIterationCount: Int32; static;
     class function MakePbeGenerator(const AType: String; const ADigest: IDigest;
       const AKey: TCryptoLibByteArray; const ASalt: TCryptoLibByteArray;
       AIterationCount: Int32): IPbeParametersGenerator; static;
@@ -175,15 +173,9 @@ type
 
     /// <summary>
     /// Validates a supplied PBE/PBKDF2 iteration count against
-    /// <see cref="MaxIterationCount"/> (or <see cref="DefaultMaxIterationCount"/> when unset).
+    /// <c>TCryptoLibConfig.Pbe.MaxIterationCount</c>.
     /// </summary>
     class function CheckPbeIterationCount(const AIterationCountObject: IDerInteger): Int32; static;
-
-    /// <summary>
-    /// Maximum allowed PBE iteration count when decrypting PKCS#8 / PEM keys.
-    /// Unset (<c>-1</c>) or any negative value selects <see cref="DefaultMaxIterationCount"/>.
-    /// </summary>
-    class property MaxIterationCount: Int32 read FMaxIterationCount write FMaxIterationCount;
   end;
 
 implementation
@@ -193,7 +185,6 @@ uses
 
 class constructor TPbeUtilities.Create;
 begin
-  FMaxIterationCount := -1;
   FAlgorithms := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmType := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
@@ -294,14 +285,6 @@ begin
   FOids.Free;
 end;
 
-class function TPbeUtilities.GetEffectiveMaxIterationCount: Int32;
-begin
-  if FMaxIterationCount < 0 then
-    Result := DefaultMaxIterationCount
-  else
-    Result := FMaxIterationCount;
-end;
-
 class function TPbeUtilities.CheckPbeIterationCount(
   const AIterationCountObject: IDerInteger): Int32;
 var
@@ -311,7 +294,7 @@ begin
     (not AIterationCountObject.TryGetIntValueExact(LIterationCount)) or
     (LIterationCount <= 0) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidPbeIterationCount);
-  LMax := GetEffectiveMaxIterationCount;
+  LMax := TCryptoLibConfig.Pbe.MaxIterationCount;
   if LIterationCount > LMax then
     raise EArgumentCryptoLibException.CreateResFmt(@SPbeIterationExceedsMax,
       [LIterationCount, LMax]);

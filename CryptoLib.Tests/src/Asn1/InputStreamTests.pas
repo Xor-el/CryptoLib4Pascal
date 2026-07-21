@@ -35,6 +35,7 @@ uses
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpAsn1Streams,
+  ClpCryptoLibConfig,
   ClpStreams,
   ClpEncoders,
   ClpCryptoLibTypes,
@@ -104,6 +105,7 @@ end;
 
 procedure TInputStreamTest.TearDown;
 begin
+  TCryptoLibConfig.Asn1.ResetToDefaults();
   FOutOfBoundsLength := nil;
   FNegativeLength := nil;
   FOutsideLimitLength := nil;
@@ -220,9 +222,9 @@ var
   LDummy: TDummyStreamWithoutKnownLimit;
   LAIn: TAsn1InputStream;
 begin
-  LSaved := TAsn1InputStream.MaxLimitForUnknownStream;
+  LSaved := TCryptoLibConfig.Asn1.MaxLimit;
   try
-    TAsn1InputStream.MaxLimitForUnknownStream := 1024;
+    TCryptoLibConfig.Asn1.MaxLimit := 1024;
     LDummy := TDummyStreamWithoutKnownLimit.Create;
     LAIn := TAsn1InputStream.Create(LDummy);
     try
@@ -231,7 +233,7 @@ begin
       LAIn.Free;
     end;
 
-    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+    TCryptoLibConfig.Asn1.MaxLimit := LSaved;
 
     LDummy := TDummyStreamWithoutKnownLimit.Create;
     LAIn := TAsn1InputStream.Create(LDummy);
@@ -241,7 +243,7 @@ begin
       LAIn.Free;
     end;
   finally
-    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+    TCryptoLibConfig.Asn1.MaxLimit := LSaved;
   end;
 end;
 
@@ -250,9 +252,9 @@ var
   LSaved: Int32;
   LDummy: TDummyStreamWithoutKnownLimit;
 begin
-  LSaved := TAsn1InputStream.MaxLimitForUnknownStream;
+  LSaved := TCryptoLibConfig.Asn1.MaxLimit;
   try
-    TAsn1InputStream.MaxLimitForUnknownStream := -10;
+    TCryptoLibConfig.Asn1.MaxLimit := -10;
     LDummy := TDummyStreamWithoutKnownLimit.Create();
     try
       CheckEquals(0, TAsn1InputStream.FindLimit(LDummy));
@@ -260,7 +262,7 @@ begin
       LDummy.Free;
     end;
   finally
-    TAsn1InputStream.MaxLimitForUnknownStream := LSaved;
+    TCryptoLibConfig.Asn1.MaxLimit := LSaved;
   end;
 end;
 
