@@ -89,10 +89,6 @@ type
 
     class function ElementToAttributeTypeAndValue(AElement: IAsn1Encodable): IAttributeTypeAndValue; static;
 
-    function CollectAttributeTypes(const AOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
-      AOidsOff: Int32): Int32;
-    function ContainsAttributeType(const AAttributeType: IDerObjectIdentifier): Boolean;
-
   strict protected
     function GetIsMultiValued: Boolean;
     function GetCount: Int32;
@@ -389,39 +385,6 @@ function TRdn.GetTypesAndValues: TCryptoLibGenericArray<IAttributeTypeAndValue>;
 begin
   Result := TArrayUtilities.Map<IAsn1Encodable, IAttributeTypeAndValue>(FValues.Elements,
     ElementToAttributeTypeAndValue);
-end;
-
-function TRdn.CollectAttributeTypes(const AOids: TCryptoLibGenericArray<IDerObjectIdentifier>;
-  AOidsOff: Int32): Int32;
-var
-  LI, LCount: Int32;
-  LAttr: IAttributeTypeAndValue;
-begin
-  LCount := FValues.Count;
-  for LI := 0 to LCount - 1 do
-  begin
-    LAttr := TAttributeTypeAndValue.GetInstance(FValues[LI]);
-    AOids[AOidsOff + LI] := LAttr.AttrType;
-  end;
-  Result := LCount;
-end;
-
-function TRdn.ContainsAttributeType(const AAttributeType: IDerObjectIdentifier): Boolean;
-var
-  LI, LCount: Int32;
-  LAttr: IAttributeTypeAndValue;
-begin
-  LCount := FValues.Count;
-  for LI := 0 to LCount - 1 do
-  begin
-    LAttr := TAttributeTypeAndValue.GetInstance(FValues[LI]);
-    if TAsn1Comparers.OidEqualityComparer.Equals(LAttr.AttrType, AAttributeType) then
-    begin
-      Result := True;
-      Exit;
-    end;
-  end;
-  Result := False;
 end;
 
 function TRdn.ToAsn1Object: IAsn1Object;

@@ -23,7 +23,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="..\src\Asn1;..\src\Asn1\Cms;..\src\Math;..\src\Math\BinPoly;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg;..\src\Asn1\X500;..\src\Math\Raw"/>
+            <OtherUnitFiles Value="..\src\Asn1;..\src\Asn1\Cms;..\src\Math;..\src\Math\BinPoly;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg;..\src\Asn1\X500;..\src\Math\Raw;..\src\Pkix;..\src\Collections;..\src\Ocsp"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="192">
+    <Units Count="204">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -849,6 +849,54 @@
         <Filename Value="..\src\Crypto\StreamCipherTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit191>
+      <Unit192>
+        <Filename Value="..\src\Pkix\PkixFoundationTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit192>
+      <Unit193>
+        <Filename Value="..\src\Pkix\PkixNameConstraintTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit193>
+      <Unit194>
+        <Filename Value="..\src\Utils\Vectors\PkitsVectors.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit194>
+      <Unit195>
+        <Filename Value="..\src\Pkix\PkixComparerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit195>
+      <Unit196>
+        <Filename Value="..\src\Collections\CryptoLibHashSetTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit196>
+      <Unit197>
+        <Filename Value="..\src\Pkix\PkitsTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit197>
+      <Unit198>
+        <Filename Value="..\src\Pkix\NistCertPathTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit198>
+      <Unit199>
+        <Filename Value="..\src\Pkix\CertPathTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit199>
+      <Unit200>
+        <Filename Value="..\src\Pkix\CertPathValidatorTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit200>
+      <Unit201>
+        <Filename Value="..\src\Pkix\PkixPolicyMappingTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit201>
+      <Unit202>
+        <Filename Value="..\src\Ocsp\OcspTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit202>
+      <Unit203>
+        <Filename Value="..\src\Pkix\AttrCertPathTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit203>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -859,7 +907,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\src\Asn1;..\src\Asn1\Cms;..\src\Math;..\src\Math\BinPoly;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg;..\src\Asn1\X500;..\src\Math\Raw"/>
+      <OtherUnitFiles Value="..\src\Asn1;..\src\Asn1\Cms;..\src\Math;..\src\Math\BinPoly;..\src\Math\EC\Custom\Sec;..\src\Others;..\src\Security;..\src\Utils;..\src\Crypto;..\src\Math\EC;..\src\Math\EC\Rfc7748;..\src\Math\EC\Rfc8032;..\src;..\src\Misc;..\src\Asn1\X509;..\src\X509;..\src\Asn1\Pkcs;..\src\Utils\Pem;..\src\Utils\Net;..\src\OpenSsl;..\src\Utils\NumberUtilities;..\src\Pkcs;..\src\Utils\Parsers;..\src\Utils\Vectors;..\src\Rngs\Drbg;..\src\Asn1\X500;..\src\Math\Raw;..\src\Pkix;..\src\Collections;..\src\Ocsp"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

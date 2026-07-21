@@ -24,8 +24,7 @@ uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
   ClpBinPolyMulBase,
-  ClpBinPolySimdSizes,
-  ClpArrayUtilities;
+  ClpBinPolySimdSizes;
 
 type
   /// <summary>

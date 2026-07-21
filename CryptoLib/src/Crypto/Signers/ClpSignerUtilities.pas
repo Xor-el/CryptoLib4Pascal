@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIX509Asn1Objects,
@@ -109,7 +110,7 @@ type
     class var
       FAlgorithmMap: TDictionary<String, String>;
       FAlgorithmOidMap: TDictionary<IDerObjectIdentifier, String>;
-      FNoRandom: TDictionary<String, Byte>;
+      FNoRandom: TCryptoLibHashSet<String>;
       FOids: TDictionary<String, IDerObjectIdentifier>;
 
     class function GetMechanism(const AAlgorithm: String): String; static;
@@ -251,7 +252,7 @@ begin
     FOids.Add(AName, AOid);
   end;
   if AIsNoRandom then
-    FNoRandom.Add(AName, 0);
+    FNoRandom.Add(AName);
 end;
 
 class constructor TSignerUtilities.Create;
@@ -261,7 +262,7 @@ var
 begin
   FAlgorithmMap := TDictionary<String, String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FAlgorithmOidMap := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
-  FNoRandom := TDictionary<String, Byte>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  FNoRandom := TCryptoLibHashSet<String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FOids := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
 
   FAlgorithmMap.AddOrSetValue('MD2WITHRSA', 'MD2withRSA');
@@ -1127,7 +1128,7 @@ begin
     raise ESecurityUtilityCryptoLibException.CreateResFmt(@SUnrecognizedAlgorithm, [AMechanism]);
 
   LCipherParameters := AKey;
-  if AForSigning and (not ADeterministic) and (not FNoRandom.ContainsKey(AMechanism)) then
+  if AForSigning and (not ADeterministic) and (not FNoRandom.Contains(AMechanism)) then
   begin
     LCipherParameters := TParameterUtilities.WithRandom(LCipherParameters, ARandom);
   end;

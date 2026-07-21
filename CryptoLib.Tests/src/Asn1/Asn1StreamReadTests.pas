@@ -39,6 +39,8 @@ uses
   ClpIAsn1Parsers,
   ClpIAsn1Generators,
   ClpAsn1Generators,
+  ClpIAsn1Core,
+  ClpAsn1Core,
   ClpCryptoLibTypes,
   ClpArrayUtilities,
   ClpStreams,
@@ -107,6 +109,9 @@ type
     procedure TestIndefiniteLengthBulkReadDelegatesToWrappedStream;
     procedure TestIndefiniteLengthRespectsEndOfContentsMarker;
     procedure TestIndefiniteLengthMalformedEndOfContentsRaises;
+    procedure TestTaggedPrimitiveWithEmptyContentsDecodes;
+    procedure TestImplicitNullRoundTrips;
+    procedure TestOctetStringContentsNilIsEmptyNotAnError;
   end;
 
 implementation
@@ -470,6 +475,42 @@ begin
   finally
     LWrapped.Free;
   end;
+end;
+
+// A context-tagged implicit primitive may carry zero-length contents - RFC 6960 encodes the common
+// OCSP status "good" as [0] IMPLICIT NULL, on the wire 80 00. An empty dynamic array is nil in
+// Object Pascal, so a nil check on decoded contents rejects this legal encoding.
+procedure TAsn1StreamReadTest.TestTaggedPrimitiveWithEmptyContentsDecodes;
+var
+  LObj: IAsn1Object;
+begin
+  LObj := TAsn1Object.FromByteArray(TCryptoLibByteArray.Create($80, $00));
+  CheckNotNull(LObj, 'a tagged primitive with empty contents must decode');
+end;
+
+procedure TAsn1StreamReadTest.TestImplicitNullRoundTrips;
+var
+  LEncoded: TCryptoLibByteArray;
+begin
+  LEncoded := TAsn1Object.FromByteArray(TCryptoLibByteArray.Create($80, $00)).GetEncoded();
+  CheckEquals(2, System.Length(LEncoded), 'the re-encoding must stay two bytes');
+  CheckEquals(Int32($80), Int32(LEncoded[0]), 'the tag octet must survive the round trip');
+  CheckEquals(Int32($00), Int32(LEncoded[1]), 'the length octet must stay zero');
+end;
+
+// WithContents and WithContentsOptional deliberately differ on nil: nil contents are an empty octet
+// string, while "no contents at all" is what the Optional form reports. Pascal cannot tell an empty
+// array from nil, so only the Optional form can carry absence.
+procedure TAsn1StreamReadTest.TestOctetStringContentsNilIsEmptyNotAnError;
+var
+  LOctets: IDerOctetString;
+begin
+  LOctets := TDerOctetString.WithContents(nil);
+  CheckNotNull(LOctets, 'nil contents must give the empty octet string, not an error');
+  CheckEquals(0, System.Length(LOctets.GetOctets()), 'the octet string must be empty');
+
+  CheckNull(TDerOctetString.WithContentsOptional(nil),
+    'the optional form must still report absence as nil');
 end;
 
 initialization

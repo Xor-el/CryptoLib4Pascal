@@ -24,6 +24,7 @@ uses
   SysUtils,
   Classes,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpAsn1Objects,
@@ -87,7 +88,7 @@ type
     class var
       FAlgorithms: TDictionary<String, IDerObjectIdentifier>;
       FExParams: TDictionary<String, IAsn1Encodable>;
-      FNoParams: TDictionary<IDerObjectIdentifier, Boolean>;
+      FNoParams: TCryptoLibHashSet<IDerObjectIdentifier>;
       FKeyAlgorithms: TDictionary<IDerObjectIdentifier, String>;
     class function CreatePssParams(const AHashAlgId: IAlgorithmIdentifier;
       ASaltSize: Int32): IRsassaPssParameters; static;
@@ -133,7 +134,7 @@ var
 begin
   FAlgorithms := TDictionary<String, IDerObjectIdentifier>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   FExParams := TDictionary<String, IAsn1Encodable>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FNoParams := TDictionary<IDerObjectIdentifier, Boolean>.Create(TAsn1Comparers.OidEqualityComparer);
+  FNoParams := TCryptoLibHashSet<IDerObjectIdentifier>.Create(TAsn1Comparers.OidEqualityComparer);
   FKeyAlgorithms := TDictionary<IDerObjectIdentifier, String>.Create(TAsn1Comparers.OidEqualityComparer);
 
   // FAlgorithms
@@ -229,38 +230,38 @@ begin
   FKeyAlgorithms.Add(TX9ObjectIdentifiers.IdDsa, 'DSA');
 
   // FNoParams
-  FNoParams.Add(TX9ObjectIdentifiers.IdDsaWithSha1, True);
-  FNoParams.Add(TOiwObjectIdentifiers.DsaWithSha1, True);
-  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha224, True);
-  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha256, True);
-  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha384, True);
-  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha512, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_224, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_256, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_384, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_512, True);
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha1, True);
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha224, True);
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha256, True);
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha384, True);
-  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha512, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_224, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_256, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_384, True);
-  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_512, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha1, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha224, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha256, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha384, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha512, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_224, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_256, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_384, True);
-  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_512, True);
-  FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94, True);
-  FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001, True);
-  FNoParams.Add(TEdECObjectIdentifiers.IdEd25519, True);
-  FNoParams.Add(TEdECObjectIdentifiers.IdEd448, True);
+  FNoParams.Add(TX9ObjectIdentifiers.IdDsaWithSha1);
+  FNoParams.Add(TOiwObjectIdentifiers.DsaWithSha1);
+  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha224);
+  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha256);
+  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha384);
+  FNoParams.Add(TNistObjectIdentifiers.DsaWithSha512);
+  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_224);
+  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_256);
+  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_384);
+  FNoParams.Add(TNistObjectIdentifiers.IdDsaWithSha3_512);
+  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha1);
+  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha224);
+  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha256);
+  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha384);
+  FNoParams.Add(TX9ObjectIdentifiers.ECDsaWithSha512);
+  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_224);
+  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_256);
+  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_384);
+  FNoParams.Add(TNistObjectIdentifiers.IdECDsaWithSha3_512);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha1);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha224);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha256);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha384);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha512);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_224);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_256);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_384);
+  FNoParams.Add(TBsiObjectIdentifiers.EcdsaPlainSha3_512);
+  FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x94);
+  FNoParams.Add(TCryptoProObjectIdentifiers.GostR3411x94WithGostR3410x2001);
+  FNoParams.Add(TEdECObjectIdentifiers.IdEd25519);
+  FNoParams.Add(TEdECObjectIdentifiers.IdEd448);
 
   // FExParams (PSS)
   LSha1AlgId := TAlgorithmIdentifier.Create(TOiwObjectIdentifiers.IdSha1, TDerNull.Instance);

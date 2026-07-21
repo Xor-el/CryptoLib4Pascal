@@ -21,6 +21,7 @@ unit ClpIX509Crl;
 interface
 
 uses
+  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509CrlEntry,
   ClpIX509Certificate,
@@ -42,6 +43,9 @@ type
     function GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509CrlEntry;
     function GetRevokedCertificates: TCryptoLibGenericArray<IX509CrlEntry>;
     function GetTbsCertList: TCryptoLibByteArray;
+    function GetNonCriticalExtensionOids: TCryptoLibStringArray;
+    function GetCriticalExtensionOids: TCryptoLibStringArray;
+    function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
     function GetSignature: TCryptoLibByteArray;
     function GetSigAlgName: String;
     function GetSigAlgOid: String;
@@ -57,7 +61,9 @@ type
     procedure VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 
     function IsRevoked(const ACert: IX509Certificate): Boolean;
-    function Equals(const AOther: TObject): Boolean;
+    function Equals(const AOther: TObject): Boolean; overload;
+    /// <summary>Value equality on the encoded CRL.</summary>
+    function Equals(const AOther: IX509Crl): Boolean; overload;
     function GetHashCode: Int32;
     function ToString: String;
 

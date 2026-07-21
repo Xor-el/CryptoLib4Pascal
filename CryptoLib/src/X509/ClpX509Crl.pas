@@ -128,7 +128,8 @@ type
     procedure VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 
     function IsRevoked(const ACert: IX509Certificate): Boolean;
-    function Equals(const AOther: TObject): Boolean; reintroduce;
+    function Equals(const AOther: TObject): Boolean; reintroduce; overload;
+    function Equals(const AOther: IX509Crl): Boolean; reintroduce; overload;
     function GetHashCode: Int32; reintroduce;
     function ToString: String; override;
   end;
@@ -518,6 +519,30 @@ begin
   LThisEncoding := GetCachedEncoding().GetEncoding();
   LThatEncoding := LThatObj.GetCachedEncoding().GetEncoding();
   Result := (LThisEncoding <> nil) and (LThatEncoding <> nil) and (TArrayUtilities.AreEqual(LThisEncoding, LThatEncoding));
+end;
+
+function TX509Crl.Equals(const AOther: IX509Crl): Boolean;
+begin
+  if AOther = nil then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  if (Self as IX509Crl) = AOther then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // the hash is the cached encoding's, so an unequal hash rules out equality cheaply
+  if GetHashCode() <> AOther.GetHashCode() then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  Result := TArrayUtilities.AreEqual(GetEncoded(), AOther.GetEncoded());
 end;
 
 function TX509Crl.GetHashCode: Int32;

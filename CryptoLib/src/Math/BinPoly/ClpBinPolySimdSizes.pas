@@ -23,8 +23,7 @@ interface
 uses
   ClpCryptoLibTypes,
   ClpIBinPolyMul,
-  ClpBinPolyMulBase,
-  ClpArrayUtilities;
+  ClpBinPolyMulBase;
 
 type
   /// <summary>

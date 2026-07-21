@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
@@ -69,7 +70,7 @@ type
       FAlgorithms: TDictionary<String, IDerObjectIdentifier>;
       FNoParams: TDictionary<IDerObjectIdentifier, IAlgorithmIdentifier>;
       FParameters: TDictionary<String, IAsn1Encodable>;
-      FPkcs15RsaEncryption: TDictionary<IDerObjectIdentifier, Byte>;
+      FPkcs15RsaEncryption: TCryptoLibHashSet<IDerObjectIdentifier>;
       FDigestOids: TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>;
     class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier); overload; static;
     class procedure AddAlgorithm(const AName: String; const AOid: IDerObjectIdentifier;
@@ -107,7 +108,7 @@ begin
   TAsn1Comparers.OidEqualityComparer);
   FParameters := TDictionary<String, IAsn1Encodable>.Create(
   TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
-  FPkcs15RsaEncryption := TDictionary<IDerObjectIdentifier, Byte>.Create(
+  FPkcs15RsaEncryption := TCryptoLibHashSet<IDerObjectIdentifier>.Create(
   TAsn1Comparers.OidEqualityComparer);
   FDigestOids := TDictionary<IDerObjectIdentifier, IDerObjectIdentifier>.Create(
   TAsn1Comparers.OidEqualityComparer);
@@ -471,8 +472,8 @@ end;
 class procedure TDefaultSignatureAlgorithmFinder.AddPkcs15RsaEncryption(
   const AOid: IDerObjectIdentifier);
 begin
-  if not FPkcs15RsaEncryption.ContainsKey(AOid) then
-    FPkcs15RsaEncryption.Add(AOid, 0);
+  if not FPkcs15RsaEncryption.Contains(AOid) then
+    FPkcs15RsaEncryption.Add(AOid);
 end;
 
 class procedure TDefaultSignatureAlgorithmFinder.AddNoParams(const AOid: IDerObjectIdentifier);

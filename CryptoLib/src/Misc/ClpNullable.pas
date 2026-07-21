@@ -73,7 +73,9 @@ begin
   LKind := PTypeInfo(TypeInfo(T)).Kind;
 
   case LKind of
-    tkInteger, tkInt64, tkEnumeration, tkFloat, tkSet, tkChar, tkWChar, tkRecord:
+    // Boolean is tkEnumeration on Delphi but has its own kind on FPC; both are value types
+    tkInteger, tkInt64, tkEnumeration, tkFloat, tkSet, tkChar, tkWChar, tkRecord
+{$IFDEF FPC}, tkBool{$ENDIF FPC}:
       Exit; // OK
   else
     raise EInvalidOp.CreateFmt(

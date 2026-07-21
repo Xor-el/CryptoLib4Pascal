@@ -21,6 +21,7 @@ unit ClpIX509V2AttributeCertificate;
 interface
 
 uses
+  ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509Extension,
   ClpIAsymmetricKeyParameter,
@@ -61,6 +62,9 @@ type
     procedure Verify(const AVerifierProvider: IVerifierFactoryProvider); overload;
 
     function GetEncoded: TCryptoLibByteArray;
+    function GetNonCriticalExtensionOids: TCryptoLibStringArray;
+    function GetCriticalExtensionOids: TCryptoLibStringArray;
+    function GetExtensionValue(const AOid: IDerObjectIdentifier): IAsn1OctetString;
     function GetAttributes: TCryptoLibGenericArray<IX509Attribute>; overload;
     function GetAttributes(const AOid: String): TCryptoLibGenericArray<IX509Attribute>; overload;
     function Equals(const AOther: IX509V2AttributeCertificate): Boolean;

@@ -26,6 +26,7 @@ uses
   Rtti,
   TypInfo,
   Generics.Collections,
+  ClpCryptoLibHashSet,
   Generics.Defaults,
   ClpIMac,
   ClpPkcsRsaAsn1Objects,
@@ -982,16 +983,16 @@ end;
 
 function TPkcs12Store.GetAliases: TCryptoLibStringArray;
 var
-  LSet: TDictionary<String, Byte>;
+  LSet: TCryptoLibHashSet<String>;
   LKey: String;
 begin
-  LSet := TDictionary<String, Byte>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
+  LSet := TCryptoLibHashSet<String>.Create(TCryptoLibComparers.OrdinalIgnoreCaseEqualityComparer);
   try
     for LKey in FCerts.Keys do
-      LSet.AddOrSetValue(LKey, 0);
+      LSet.Add(LKey);
     for LKey in FKeys.Keys do
-      LSet.AddOrSetValue(LKey, 0);
-    Result := TCollectionUtilities.Keys<String, Byte>(LSet);
+      LSet.Add(LKey);
+    Result := LSet.ToArray();
   finally
     LSet.Free;
   end;
