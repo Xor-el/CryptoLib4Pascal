@@ -45,6 +45,7 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
   ClpPbeUtilities,
+  ClpCryptoLibConfig,
   ClpAsn1Objects,
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
@@ -90,6 +91,7 @@ end;
 
 procedure TTestPkcsEncryptedPrivateKeyInfo.TearDown;
 begin
+  TCryptoLibConfig.Pbe.ResetToDefaults();
   inherited;
 end;
 
@@ -236,9 +238,9 @@ begin
     TNistObjectIdentifiers.IdAes256Cbc, TPkcsObjectIdentifiers.IdHmacWithSha256,
     LPassword, LSalt, 2048, TSecureRandom.Create() as ISecureRandom, LPlain);
 
-  LOldMax := TPbeUtilities.MaxIterationCount;
+  LOldMax := TCryptoLibConfig.Pbe.MaxIterationCount;
   try
-    TPbeUtilities.MaxIterationCount := 1;
+    TCryptoLibConfig.Pbe.MaxIterationCount := 1;
     try
       TPrivateKeyInfoFactory.CreatePrivateKeyInfo(LPassword, LEncInfo);
       Fail('excessive PBKDF2 iteration count accepted');
@@ -248,7 +250,7 @@ begin
           'unexpected message: ' + E.Message);
     end;
   finally
-    TPbeUtilities.MaxIterationCount := LOldMax;
+    TCryptoLibConfig.Pbe.MaxIterationCount := LOldMax;
   end;
 end;
 
@@ -265,9 +267,9 @@ begin
   LSalt := DecodeHex('0102030405060708');
   LPbeParams := TPbeParameter.Create(LSalt, 2048);
 
-  LOldMax := TPbeUtilities.MaxIterationCount;
+  LOldMax := TCryptoLibConfig.Pbe.MaxIterationCount;
   try
-    TPbeUtilities.MaxIterationCount := 1;
+    TCryptoLibConfig.Pbe.MaxIterationCount := 1;
     try
       TPbeUtilities.GenerateCipherParameters(LPbeAlgorithm, LPassword, LPbeParams);
       Fail('excessive PBE iteration count accepted');
@@ -277,7 +279,7 @@ begin
           'unexpected message: ' + E.Message);
     end;
   finally
-    TPbeUtilities.MaxIterationCount := LOldMax;
+    TCryptoLibConfig.Pbe.MaxIterationCount := LOldMax;
   end;
 end;
 
@@ -286,9 +288,9 @@ var
   LOldMax: Int32;
   LCount: Int32;
 begin
-  LOldMax := TPbeUtilities.MaxIterationCount;
+  LOldMax := TCryptoLibConfig.Pbe.MaxIterationCount;
   try
-    TPbeUtilities.MaxIterationCount := -1;
+    TCryptoLibConfig.Pbe.ResetToDefaults();
 
     LCount := TPbeUtilities.CheckPbeIterationCount(TDerInteger.ValueOf(5000000));
     CheckEquals(5000000, LCount, 'default max iteration count should allow 5_000_000');
@@ -302,7 +304,7 @@ begin
           'unexpected message: ' + E.Message);
     end;
   finally
-    TPbeUtilities.MaxIterationCount := LOldMax;
+    TCryptoLibConfig.Pbe.MaxIterationCount := LOldMax;
   end;
 end;
 
@@ -328,9 +330,9 @@ begin
     TDerOctetString.FromContents(LIv));
   LPbeS2Params := TPbeS2Parameters.Create(LKeyDerivFunc, LEncScheme);
 
-  LOldMax := TPbeUtilities.MaxIterationCount;
+  LOldMax := TCryptoLibConfig.Pbe.MaxIterationCount;
   try
-    TPbeUtilities.MaxIterationCount := -1;
+    TCryptoLibConfig.Pbe.ResetToDefaults();
     try
       TPbeUtilities.GenerateCipherParameters(TPkcsObjectIdentifiers.IdPbeS2,
         LPassword, LPbeS2Params);
@@ -341,7 +343,7 @@ begin
           'unexpected message: ' + E.Message);
     end;
   finally
-    TPbeUtilities.MaxIterationCount := LOldMax;
+    TCryptoLibConfig.Pbe.MaxIterationCount := LOldMax;
   end;
 end;
 

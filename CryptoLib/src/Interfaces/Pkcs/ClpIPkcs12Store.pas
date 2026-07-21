@@ -49,7 +49,7 @@ type
     /// </exception>
     /// <exception cref="EIOCryptoLibException">
     /// The MAC verification failed, a password was supplied when none is required (unless
-    /// <see cref="TPkcs12Store.IgnoreUselessPassword"/> is <c>true</c>), or bag attributes conflict.
+    /// <c>TCryptoLibConfig.Pkcs12.IgnoreUselessPassword</c> is <c>true</c>), or bag attributes conflict.
     /// </exception>
     procedure Load(const AInput: TStream; const APassword: TCryptoLibCharArray);
     /// <summary>

@@ -31,6 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpBigInteger,
+  ClpCryptoLibConfig,
   ClpIRsaParameters,
   ClpRsaParameters,
   ClpIRsaGenerators,
@@ -392,13 +393,9 @@ begin
 end;
 
 procedure TTestRSA.TestMaxSizeRejectsOversizedModulus;
-var
-  LOldMaxSize, LOldMaxMRTests: Int32;
 begin
-  LOldMaxSize := TRsaKeyParameters.MaxSize;
-  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
   try
-    TRsaKeyParameters.MaxSize := 512;
+    TCryptoLibConfig.Rsa.MaxSize := 512;
     CheckTrue(FPubParams.Modulus.BitLength > 512, 'test modulus must exceed MaxSize cap');
     try
       TRsaKeyParameters.Create(False, FPubParams.Modulus, FPubParams.Exponent);
@@ -408,46 +405,36 @@ begin
         CheckEquals('RSA modulus out of range', E.Message);
     end;
   finally
-    TRsaKeyParameters.MaxSize := LOldMaxSize;
-    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+    TCryptoLibConfig.Rsa.ResetToDefaults();
   end;
 end;
 
 procedure TTestRSA.TestMaxMRTestsZeroSkipsCompositeCheck;
 var
-  LOldMaxSize, LOldMaxMRTests: Int32;
   LParams: IRsaKeyParameters;
 begin
-  LOldMaxSize := TRsaKeyParameters.MaxSize;
-  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
   try
-    TRsaKeyParameters.MaxMRTests := 0;
+    TCryptoLibConfig.Rsa.MaxMRTests := 0;
     LParams := TRsaKeyParameters.Create(False, FPubParams.Modulus, FPubParams.Exponent);
     CheckTrue(LParams.Modulus.Equals(FPubParams.Modulus), 'modulus should be accepted when MR is disabled');
   finally
-    TRsaKeyParameters.MaxSize := LOldMaxSize;
-    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+    TCryptoLibConfig.Rsa.ResetToDefaults();
   end;
 end;
 
 procedure TTestRSA.TestMaxSizeMaxMRTestsUnsetDefault;
 var
-  LOldMaxSize, LOldMaxMRTests: Int32;
   LParams: IRsaKeyParameters;
 begin
-  LOldMaxSize := TRsaKeyParameters.MaxSize;
-  LOldMaxMRTests := TRsaKeyParameters.MaxMRTests;
   try
-    TRsaKeyParameters.MaxSize := -1;
-    TRsaKeyParameters.MaxMRTests := -1;
-    CheckEquals(-1, TRsaKeyParameters.MaxSize, 'unset MaxSize should be -1');
-    CheckEquals(-1, TRsaKeyParameters.MaxMRTests, 'unset MaxMRTests should be -1');
+    TCryptoLibConfig.Rsa.ResetToDefaults();
+    CheckFalse(TCryptoLibConfig.Rsa.MaxMRTests.HasValue,
+      'unset MaxMRTests should have no value');
     LParams := TRsaKeyParameters.Create(False, FPubParams.Modulus, FPubParams.Exponent);
     CheckTrue(LParams.Modulus.Equals(FPubParams.Modulus),
       'default limits should accept standard test modulus');
   finally
-    TRsaKeyParameters.MaxSize := LOldMaxSize;
-    TRsaKeyParameters.MaxMRTests := LOldMaxMRTests;
+    TCryptoLibConfig.Rsa.ResetToDefaults();
   end;
 end;
 

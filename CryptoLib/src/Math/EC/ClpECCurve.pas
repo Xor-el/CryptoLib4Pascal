@@ -44,6 +44,7 @@ uses
   ClpBigIntegerUtilities,
   ClpECLookupTables,
   ClpECCurveConstants,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -171,8 +172,6 @@ type
     class var
       FKnownPrimes: TDictionary<TBigInteger, Boolean>;
       FLockPrimes: TCriticalSection;
-      FMaxFieldSize: Int32;
-      FCertainty: Int32;
     class procedure ImplCheckQ(const AQ: TBigInteger); static;
     class function ImplIsPrime(const AQ: TBigInteger): Boolean; static;
     class function ImplGetIterations(ABits, ACertainty: Int32): Int32; static;
@@ -190,8 +189,6 @@ type
     function RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement; override;
     function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
     function DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint; override;
-    class property MaxFieldSize: Int32 read FMaxFieldSize write FMaxFieldSize;
-    class property Certainty: Int32 read FCertainty write FCertainty;
   end;
 
   TFpCurve = class sealed(TAbstractFpCurve, IECCurve, IFpCurve)
@@ -218,13 +215,10 @@ type
   end;
 
   TAbstractF2mCurve = class abstract(TECCurve, IECCurve, IAbstractF2mCurve)
-  strict private
-    class var FMaxFieldSize: Int32;
   strict protected
     class function ImplRandomFieldElementMult(const ARandom: ISecureRandom; AM: Int32): TBigInteger; static;
     function GetIsKoblitz: Boolean; virtual;
   public
-    class constructor Create;
     constructor Create(AM, AK1, AK2, AK3: Int32);
     class function Inverse(AM: Int32; const AKs: TCryptoLibInt32Array; const AX: TBigInteger): TBigInteger; static;
     function CreatePoint(const AX, AY: TBigInteger): IECPoint; override;
@@ -233,7 +227,6 @@ type
     function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
     function DecompressPoint(AYTilde: Int32; const AX1: TBigInteger): IECPoint; override;
     function SolveQuadraticEquation(const ABeta: IECFieldElement): IECFieldElement; virtual;
-    class property MaxFieldSize: Int32 read FMaxFieldSize write FMaxFieldSize;
   end;
 
   TF2mCurve = class sealed(TAbstractF2mCurve, IECCurve, IF2mCurve)
@@ -857,8 +850,6 @@ class constructor TAbstractFpCurve.Create;
 begin
   FKnownPrimes := TDictionary<TBigInteger, Boolean>.Create(TBigIntegerUtilities.BigIntegerEqualityComparer);
   FLockPrimes := TCriticalSection.Create;
-  FMaxFieldSize := 1042; // 2 * 521
-  FCertainty := 100;
 end;
 
 class destructor TAbstractFpCurve.Destroy;
@@ -899,7 +890,7 @@ end;
 
 class procedure TAbstractFpCurve.ImplCheckQ(const AQ: TBigInteger);
 begin
-  if AQ.BitLength > FMaxFieldSize then
+  if AQ.BitLength > TCryptoLibConfig.EC.FpMaxSize then
     raise EArgumentCryptoLibException.CreateRes(@SFpQValueOutOfRange);
   if not ImplIsPrime(AQ) then
     raise EArgumentCryptoLibException.CreateRes(@SFpQValueNotPrime);
@@ -911,7 +902,7 @@ var
 begin
   if TPrimes.HasAnySmallFactors(AQ) then
     Exit(False);
-  LIterations := ImplGetIterations(AQ.BitLength, FCertainty);
+  LIterations := ImplGetIterations(AQ.BitLength, TCryptoLibConfig.EC.FpCertainty);
   Result := TPrimes.IsMRProbablePrime(AQ, TSecureRandom.MasterRandom, LIterations);
 end;
 
@@ -1116,16 +1107,11 @@ end;
 
 { TAbstractF2mCurve }
 
-class constructor TAbstractF2mCurve.Create;
-begin
-  FMaxFieldSize := 1142; // 2 * 571
-end;
-
 function BuildF2mField(AM, AK1, AK2, AK3: Int32): IFiniteField;
 var
   LExponents: TCryptoLibInt32Array;
 begin
-  if AM > TAbstractF2mCurve.MaxFieldSize then
+  if AM > TCryptoLibConfig.EC.F2mMaxSize then
     raise EArgumentCryptoLibException.CreateRes(@SF2mMValueOutOfRange);
   if (AK2 or AK3) = 0 then
     LExponents := TCryptoLibInt32Array.Create(0, AK1, AM)

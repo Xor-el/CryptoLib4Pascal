@@ -26,6 +26,7 @@ uses
   Math,
   DateUtils,
   ClpBitOperations,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpBigInteger,
   ClpBigIntegerUtilities,
@@ -2569,15 +2570,12 @@ type
       FThree: IDerInteger;
       FFour: IDerInteger;
       FFive: IDerInteger;
-      FAllowUnsafeInteger: Boolean;
     class function GetZero(): IDerInteger; static;
     class function GetOne(): IDerInteger; static;
     class function GetTwo(): IDerInteger; static;
     class function GetThree(): IDerInteger; static;
     class function GetFour(): IDerInteger; static;
     class function GetFive(): IDerInteger; static;
-    class function GetAllowUnsafeInteger(): Boolean; static;
-    class procedure SetAllowUnsafeInteger(const AValue: Boolean); static;
     class function AllowUnsafe(): Boolean; static;
     class constructor Create;
   strict protected
@@ -2679,11 +2677,7 @@ type
     class property Three: IDerInteger read GetThree;
     class property Four: IDerInteger read GetFour;
     class property Five: IDerInteger read GetFive;
-    /// <summary>
-    /// Allow unsafe integer operations (bypasses some validation).
-    /// </summary>
-    class property AllowUnsafeInteger: Boolean read GetAllowUnsafeInteger write SetAllowUnsafeInteger;
-    
+
     function GetBytes(): TCryptoLibByteArray;
     /// <summary>
     /// Get the BigInteger value.
@@ -12450,7 +12444,6 @@ begin
   FThree := FSmallConstants[3];
   FFour := FSmallConstants[4];
   FFive := FSmallConstants[5];
-  FAllowUnsafeInteger := False;
 end;
 
 class function TDerInteger.GetZero(): IDerInteger;
@@ -12550,19 +12543,9 @@ begin
   Result := TDerInteger.Create(AContents, False);
 end;
 
-class function TDerInteger.GetAllowUnsafeInteger(): Boolean;
-begin
-  Result := FAllowUnsafeInteger;
-end;
-
-class procedure TDerInteger.SetAllowUnsafeInteger(const AValue: Boolean);
-begin
-  FAllowUnsafeInteger := AValue;
-end;
-
 class function TDerInteger.AllowUnsafe(): Boolean;
 begin
-  Result := AllowUnsafeInteger;
+  Result := TCryptoLibConfig.Asn1.AllowUnsafeInteger;
 end;
 
 class function TDerInteger.IsMalformed(const ABytes: TCryptoLibByteArray): Boolean;

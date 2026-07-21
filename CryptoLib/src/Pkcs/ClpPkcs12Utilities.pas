@@ -30,6 +30,7 @@ uses
   ClpPkcsAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes;
 
 resourcestring
@@ -47,13 +48,6 @@ type
   /// </summary>
   TPkcs12Utilities = class sealed(TObject)
   strict private
-    const
-      DefaultMaxPkcs12Iterations = 5000000;
-    class var
-      FMaxPkcs12Iterations: Int32;
-    class constructor Create;
-
-    class function GetEffectiveMaxPkcs12Iterations: Int32; static;
     class function DLEncode(const AAsn1Encodable: IAsn1Encodable): TCryptoLibByteArray; static;
 
   public
@@ -77,8 +71,6 @@ type
     /// <returns>Byte array representing the DER encoding of the PFX structure.</returns>
     class function ConvertToDefiniteLength(const ABerPkcs12File: TCryptoLibByteArray;
       const APassword: TCryptoLibCharArray): TCryptoLibByteArray; overload; static;
-
-    class property MaxPkcs12Iterations: Int32 read FMaxPkcs12Iterations write FMaxPkcs12Iterations;
   end;
 
 implementation
@@ -88,26 +80,13 @@ uses
 
 { TPkcs12Utilities }
 
-class constructor TPkcs12Utilities.Create;
-begin
-  FMaxPkcs12Iterations := -1;
-end;
-
-class function TPkcs12Utilities.GetEffectiveMaxPkcs12Iterations: Int32;
-begin
-  if FMaxPkcs12Iterations < 0 then
-    Result := DefaultMaxPkcs12Iterations
-  else
-    Result := FMaxPkcs12Iterations;
-end;
-
 class function TPkcs12Utilities.ValidateIterations(AIterationCount: Int32): Int32;
 var
   LMax: Int32;
 begin
   if AIterationCount < 0 then
     raise EInvalidOperationCryptoLibException.CreateRes(@SNegativePkcs12IterationCount);
-  LMax := GetEffectiveMaxPkcs12Iterations;
+  LMax := TCryptoLibConfig.Pkcs12.MaxIterationCount;
   if AIterationCount > LMax then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SPkcs12IterationExceedsMax, [AIterationCount, LMax]);
   Result := AIterationCount;

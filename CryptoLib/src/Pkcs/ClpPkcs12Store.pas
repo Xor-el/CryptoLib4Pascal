@@ -58,6 +58,7 @@ uses
   ClpCryptoLibComparers,
   ClpCollectionUtilities,
   ClpArrayUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpEncoders,
   ClpPbeUtilities,
@@ -119,7 +120,6 @@ type
       end;
   strict private
     class var
-      FIgnoreUselessPassword: Boolean;
       FCertIDEqualityComparer: IEqualityComparer<TCertID>;
       FCertIDComparer: IComparer<TCertID>;
     class constructor Create;
@@ -189,11 +189,6 @@ type
     const
       DefaultIterations = 1024;
       DefaultSaltSize = 20;
-    /// <summary>
-    /// When <c>true</c>, suppresses the error raised when <see cref="Load"/> is called with a password
-    /// but the file does not require one.
-    /// </summary>
-    class property IgnoreUselessPassword: Boolean read FIgnoreUselessPassword write FIgnoreUselessPassword;
     /// <summary>Calculate PBE MAC for PKCS#12 (exposed for Pkcs12Utilities).</summary>
     class function CalculatePbeMac(const AMacAlgID: IAlgorithmIdentifier;
       const ASalt: TCryptoLibByteArray; AIterations: Int32;
@@ -227,7 +222,7 @@ type
     /// </exception>
     /// <exception cref="EIOCryptoLibException">
     /// The MAC verification failed, a password was supplied when none is required (unless
-    /// <see cref="IgnoreUselessPassword"/> is <c>true</c>), or bag attributes conflict.
+    /// <c>TCryptoLibConfig.Pkcs12.IgnoreUselessPassword</c> is <c>true</c>), or bag attributes conflict.
     /// </exception>
     procedure Load(const AInput: TStream; const APassword: TCryptoLibCharArray);
     /// <summary>
@@ -483,7 +478,6 @@ end;
 
 class constructor TPkcs12Store.Create;
 begin
-  FIgnoreUselessPassword := False;
   FCertIDEqualityComparer := TCertIDEqualityComparer.Create;
   FCertIDComparer := TCertIDComparer.Create;
 end;
@@ -951,7 +945,7 @@ begin
       MapKey('unmarked', LUnmarkedKeyEntry);
     if not LPasswordNeeded and (APassword <> nil) then
     begin
-      LIgnore := FIgnoreUselessPassword;
+      LIgnore := TCryptoLibConfig.Pkcs12.IgnoreUselessPassword;
       if not LIgnore then
         raise EIOCryptoLibException.CreateRes(@SPasswordNotNeeded);
     end;
