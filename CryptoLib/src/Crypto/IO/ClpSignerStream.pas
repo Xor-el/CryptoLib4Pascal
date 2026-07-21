@@ -26,7 +26,8 @@ uses
   ClpStreams,
   ClpStreamUtilities,
   ClpISigner,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSizeNotSupported = 'size not supported';

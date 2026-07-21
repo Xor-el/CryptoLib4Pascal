@@ -408,6 +408,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibComparers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibTypes.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibConfig.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Misc\ClpCryptoLibExceptions.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\GeneralUtilities\ClpDateTimeUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestCalculator.pas"/>

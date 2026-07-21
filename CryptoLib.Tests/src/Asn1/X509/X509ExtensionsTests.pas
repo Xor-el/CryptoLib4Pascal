@@ -40,6 +40,7 @@ uses
   ClpAsn1Core,
   ClpIAsn1Core,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpArrayUtilities,
   CryptoLibTestBase;
 

@@ -35,7 +35,8 @@ uses
   ClpBigInteger,
   ClpArrayUtilities,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMustHaveLengthKeySize = 'must have length %d';

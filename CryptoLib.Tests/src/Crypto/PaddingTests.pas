@@ -56,7 +56,7 @@ uses
   ClpPaddedBufferedBlockCipher,
   ClpIPaddedBufferedBlockCipher,
   ClpIBufferedCipher,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

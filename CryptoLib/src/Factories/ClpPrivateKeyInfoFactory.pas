@@ -62,6 +62,7 @@ uses
   ClpECGenerators,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIBufferedCipher,
   ClpPbeUtilities;
 

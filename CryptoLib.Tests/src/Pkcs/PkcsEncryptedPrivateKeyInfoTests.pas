@@ -50,6 +50,7 @@ uses
   ClpIPkcsAsn1Objects,
   ClpPkcsAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   PkcsVectors;
 

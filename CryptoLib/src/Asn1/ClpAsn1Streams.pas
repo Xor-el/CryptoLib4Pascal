@@ -33,6 +33,7 @@ uses
   ClpPlatformUtilities,
   ClpCryptoLibConfig,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpStreams,
   ClpStreamUtilities;
 

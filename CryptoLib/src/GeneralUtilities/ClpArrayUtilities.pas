@@ -23,7 +23,8 @@ interface
 uses
   SysUtils,
   Math,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidLength = 'length %d exceeds %d';

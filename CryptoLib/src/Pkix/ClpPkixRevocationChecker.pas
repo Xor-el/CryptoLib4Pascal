@@ -28,7 +28,8 @@ uses
   ClpIPkixTypes,
   ClpPkixOcspRevocationChecker,
   ClpPkixCrlRevocationChecker,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SForwardCheckingUnsupported = 'forward checking is not supported by the revocation checker';

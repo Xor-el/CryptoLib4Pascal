@@ -28,7 +28,8 @@ uses
   ClpIBufferedCipher,
   ClpArrayUtilities,
   ClpStreamUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSizeNotSupported = 'size not supported';

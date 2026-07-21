@@ -29,7 +29,8 @@ uses
   ClpKeyGenerationParameters,
   ClpArrayUtilities,
   ClpStreamUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SEOFInPublicKey = 'EOF encountered in middle of Ed25519 public key';

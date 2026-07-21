@@ -23,7 +23,8 @@ interface
 uses
   Classes,
   SysUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCountCannotBeNegative = 'count cannot be negative';

@@ -42,6 +42,7 @@ uses
   ClpAsn1Core,
   ClpAsn1Streams,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

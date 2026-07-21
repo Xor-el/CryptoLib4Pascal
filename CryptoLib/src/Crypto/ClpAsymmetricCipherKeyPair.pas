@@ -21,7 +21,7 @@ unit ClpAsymmetricCipherKeyPair;
 interface
 
 uses
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPair;
 

@@ -38,6 +38,7 @@ uses
   ClpIAsn1Core,
   ClpIX509Extension,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   CertVectors;
 

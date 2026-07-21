@@ -23,7 +23,8 @@ interface
 uses
   ClpIHkdfParameters,
   ClpIDerivationParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SIKMNil = 'ikm cannot be nil';

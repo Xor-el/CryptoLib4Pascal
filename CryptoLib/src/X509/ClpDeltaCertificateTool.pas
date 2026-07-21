@@ -30,7 +30,8 @@ uses
   ClpIX509Extension,
   ClpX509Asn1Objects,
   ClpX509Asn1Generators,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNoExtensionsInBaseTbsCertificate = 'no extensions in base TBS certificate';

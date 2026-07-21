@@ -40,6 +40,7 @@ uses
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

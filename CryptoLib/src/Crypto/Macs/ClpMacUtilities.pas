@@ -28,6 +28,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDigestUtilities,
   ClpIAsn1Objects,
   ClpICipherParameters,

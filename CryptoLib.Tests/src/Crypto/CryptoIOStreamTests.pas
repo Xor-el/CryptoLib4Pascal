@@ -68,6 +68,7 @@ uses
   ClpStringUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

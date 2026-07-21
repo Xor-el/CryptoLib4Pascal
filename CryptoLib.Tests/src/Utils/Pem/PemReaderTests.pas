@@ -45,6 +45,7 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   PemReaderVectors;
 

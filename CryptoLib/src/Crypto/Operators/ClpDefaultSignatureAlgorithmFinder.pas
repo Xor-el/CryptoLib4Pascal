@@ -50,7 +50,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpISignatureAlgorithmFinder,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNameNil = 'name cannot be nil';

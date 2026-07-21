@@ -33,7 +33,7 @@ uses
   ClpIDigest,
   ShortenedDigest,
   ClpDigestUtilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

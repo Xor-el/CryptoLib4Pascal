@@ -40,7 +40,7 @@ uses
   ClpX509Asn1Objects,
   ClpX509ObjectIdentifiers,
   ClpDateTimeUtilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

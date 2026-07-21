@@ -23,7 +23,8 @@ interface
 uses
   SysUtils,
   ClpIECCommon,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SConstantTimeLookupNotSupported = 'constant-time lookup not supported';

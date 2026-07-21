@@ -50,6 +50,7 @@ uses
   ClpIAsn1Core,
   ClpPkcsObjectIdentifiers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Objects,
   ClpAsn1Core,
   ClpIAsn1Objects,

@@ -25,7 +25,8 @@ uses
   ClpIISO10126d2Padding,
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCorruptedPadBlock = 'pad block corrupted';

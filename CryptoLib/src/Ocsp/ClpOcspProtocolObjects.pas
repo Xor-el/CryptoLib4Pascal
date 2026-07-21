@@ -49,7 +49,8 @@ uses
   ClpIOcspProtocolObjects,
   ClpBigInteger,
   ClpNullable,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOcspCertIDNil = 'certificate ID cannot be nil';

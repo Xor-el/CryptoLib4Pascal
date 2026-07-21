@@ -68,6 +68,7 @@ uses
   ClpISecECAsn1Objects,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpPrivateKeyInfoFactory;
 
 resourcestring

@@ -45,7 +45,8 @@ uses
   ClpCertStatus,
   ClpReasonsMask,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STargetInformationReadFailed = 'the target information extension could not be read: %s';

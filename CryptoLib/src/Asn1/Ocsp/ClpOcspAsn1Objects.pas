@@ -30,7 +30,8 @@ uses
   ClpIOcspAsn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOcspAsn1ElementNil = 'ASN.1 encodable element cannot be nil';

@@ -34,7 +34,8 @@ uses
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooSmall = 'output buffer too short';

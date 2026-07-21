@@ -28,7 +28,8 @@ uses
   ClpIStandardDsaEncoding,
   ClpIAsn1Objects,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMalformedSignature = 'malformed signature, %s';

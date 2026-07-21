@@ -33,6 +33,7 @@ uses
   ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

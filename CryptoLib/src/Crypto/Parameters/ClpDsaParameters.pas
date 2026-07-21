@@ -29,7 +29,8 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPUninitialized = 'P cannot be uninitialized';

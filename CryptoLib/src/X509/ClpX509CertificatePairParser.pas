@@ -34,7 +34,8 @@ uses
   ClpAsn1Objects,
   ClpStreams,
   ClpStreamUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInStreamNil = 'input stream cannot be nil';

@@ -39,7 +39,8 @@ uses
   ClpIECCommon,
   ClpIECFieldElement,
   ClpISecP384R1Custom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidSecP384R1FieldElement = 'value invalid for SecP384R1FieldElement';

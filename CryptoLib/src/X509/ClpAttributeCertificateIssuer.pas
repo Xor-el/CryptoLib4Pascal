@@ -29,7 +29,8 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Certificate,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnexpectedFormInAttributeCertificateIssuer = 'unexpected form in AttributeCertificateIssuer';

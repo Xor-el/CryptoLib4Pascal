@@ -34,7 +34,8 @@ uses
   ClpRandomDsaKCalculator,
   ClpBitOperations,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDSAPrivateKeyNotFound = 'DSA private key required for signing';

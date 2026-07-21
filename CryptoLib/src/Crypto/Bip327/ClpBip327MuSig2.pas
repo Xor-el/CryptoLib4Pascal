@@ -36,7 +36,8 @@ uses
   ClpArrayUtilities,
   ClpByteUtilities,
   ClpBigIntegerUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNoncegenRequiresASecureRandomGenerator = 'NonceGen requires a secure random generator (BIP-327)';
@@ -247,15 +248,15 @@ begin
     for LI := 0 to LU - 1 do
     begin
       if (APubNonces[LI] = nil) or (System.Length(APubNonces[LI]) <> TBip327MuSig2Utilities.BIP327_PUBNONCE_SIZE) then
-        raise EBip327InvalidContributionException.Create('Invalid pubnonce length', LI, 'pubnonce');
+        raise EBip327InvalidContributionCryptoLibException.Create('Invalid pubnonce length', LI, 'pubnonce');
       try
         if LJ = 0 then
           LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubNonces[LI], 0, 33), LI)
         else
           LPt := TBip327MuSig2Utilities.CPoint(ADomain, System.Copy(APubNonces[LI], 33, 33), LI);
       except
-        on E: EBip327InvalidContributionException do
-          raise EBip327InvalidContributionException.Create(E.Message, E.SignerIndex, 'pubnonce');
+        on E: EBip327InvalidContributionCryptoLibException do
+          raise EBip327InvalidContributionCryptoLibException.Create(E.Message, E.SignerIndex, 'pubnonce');
       end;
       LRJ := LRJ.Add(LPt);
     end;
@@ -290,7 +291,7 @@ begin
   except
     on E: EArgumentCryptoLibException do
       raise;
-    on E: EBip327InvalidContributionException do
+    on E: EBip327InvalidContributionCryptoLibException do
       raise;
     else
       Exit;
@@ -516,7 +517,7 @@ begin
   begin
     LSi := TBigInteger.Create(1, APsigs[LI]);
     if LSi.CompareTo(LN) >= 0 then
-      raise EBip327InvalidContributionException.Create('Invalid psig', LI, 'psig');
+      raise EBip327InvalidContributionCryptoLibException.Create('Invalid psig', LI, 'psig');
     LS := LS.Add(LSi).&Mod(LN);
   end;
   if TBip340SchnorrUtilities.HasEvenY(LValues.Q) then

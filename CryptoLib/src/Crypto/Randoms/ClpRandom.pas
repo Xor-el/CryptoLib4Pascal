@@ -23,6 +23,7 @@ interface
 uses
   Classes,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIRandom;
 
 resourcestring

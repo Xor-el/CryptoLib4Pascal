@@ -56,6 +56,7 @@ uses
   ClpSecureRandom,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   Bip327Vectors,
   CryptoLibTestBase;
 
@@ -65,7 +66,7 @@ type
     function Secp256k1Domain: IECDomainParameters;
     procedure VerifyAggSigBip340(const AMsg, AAggPk, AAggsig: TCryptoLibByteArray;
       const ACheckMessage: string);
-    procedure ExpectInvalidContribution(const E: EBip327InvalidContributionException;
+    procedure ExpectInvalidContribution(const E: EBip327InvalidContributionCryptoLibException;
       ASigner: Int32; const AContrib: string);
   published
     procedure TestKeyAggSingleKey;
@@ -119,7 +120,7 @@ begin
 end;
 
 procedure TTestBip327MuSig2.ExpectInvalidContribution(
-  const E: EBip327InvalidContributionException; ASigner: Int32; const AContrib: string);
+  const E: EBip327InvalidContributionCryptoLibException; ASigner: Int32; const AContrib: string);
 begin
   Check(E.SignerIndex = ASigner, 'signer index');
   Check(E.Contribution = AContrib, 'contrib');
@@ -202,7 +203,7 @@ begin
         TBip327MuSig2KeyAggregation.KeyAgg(LDomain, LErrorCase.Keys);
         Fail(Format('KeyAgg error case %d should raise', [LI]));
       except
-        on E: EBip327InvalidContributionException do
+        on E: EBip327InvalidContributionCryptoLibException do
           ExpectInvalidContribution(E, LErrorCase.ExpectedSigner, LErrorCase.ExpectedContrib);
         else
           raise;
@@ -275,7 +276,7 @@ begin
       TBip327MuSig2.NonceAgg(LDomain, LErrorCase.Pnonces);
       Fail(Format('NonceAgg error case %d should raise', [LI]));
     except
-      on E: EBip327InvalidContributionException do
+      on E: EBip327InvalidContributionCryptoLibException do
         ExpectInvalidContribution(E, LErrorCase.ExpectedSigner, LErrorCase.ExpectedContrib);
       else
         raise;
@@ -383,7 +384,7 @@ begin
         TBip327MuSig2.Sign(LDomain, LSecnonce, TBip327Vectors.GetSignVerify.Sk, LSessionCtx, LPsig);
         Fail(Format('Sign error case %d should raise', [LI]));
       except
-        on E: EBip327InvalidContributionException do
+        on E: EBip327InvalidContributionCryptoLibException do
         begin
           if LErrorCase.MapAggnonceContribToPubkey then
             ExpectInvalidContribution(E, -1, 'pubkey')
@@ -425,7 +426,7 @@ begin
         LVerifyErrorCase.Keys, nil, nil, LVerifyErrorCase.Msg, LVerifyErrorCase.SignerIndex);
       Fail(Format('Verify error case %d should raise', [LI]));
     except
-      on E: EBip327InvalidContributionException do
+      on E: EBip327InvalidContributionCryptoLibException do
         ExpectInvalidContribution(E, LVerifyErrorCase.ExpectedSigner, LVerifyErrorCase.ExpectedContrib);
       else
         raise;
@@ -482,7 +483,7 @@ begin
       TBip327MuSig2.PartialSigAgg(LDomain, LErrorCase.Psigs, LSessionCtx);
       Fail(Format('SigAgg error case %d should raise', [LI]));
     except
-      on E: EBip327InvalidContributionException do
+      on E: EBip327InvalidContributionCryptoLibException do
         ExpectInvalidContribution(E, LErrorCase.ExpectedSigner, LErrorCase.ExpectedContrib);
       else
         raise;
@@ -517,7 +518,7 @@ begin
         LErrorCase.RandBytes, LPubnonce, LPsig);
       Fail(Format('DetSign error case %d should raise', [LI]));
     except
-      on E: EBip327InvalidContributionException do
+      on E: EBip327InvalidContributionCryptoLibException do
       begin
         if LErrorCase.ExpectAggOtherNonceMapping then
         begin

@@ -44,7 +44,8 @@ uses
   ClpX509Asn1Objects,
   ClpX509Utilities,
   ClpAsn1VerifierFactory,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCertificateExpiredOn = 'certificate expired on %s';

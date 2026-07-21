@@ -51,6 +51,7 @@ uses
   ClpDateTimeUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CipherKernelToggle,
   AeadTestUtilities,
   CryptoLibTestBase,

@@ -28,7 +28,8 @@ uses
   ClpInt32Utilities,
   ClpInt64Utilities,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SValueOutOfRangeForBitLength = 'value out of range for specified bit length';

@@ -34,7 +34,8 @@ uses
   ClpIFixedPointPreCompInfo,
   ClpEndoUtilities,
   ClpNat,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidPoint = 'invalid point';

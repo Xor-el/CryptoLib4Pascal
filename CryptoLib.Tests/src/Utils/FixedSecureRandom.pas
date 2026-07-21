@@ -27,6 +27,7 @@ uses
   SysUtils,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpPack,
   ClpBigInteger,
   ClpISecureRandom,

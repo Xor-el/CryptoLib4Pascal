@@ -38,6 +38,7 @@ uses
   ClpDigestUtilities,
   ClpIDigest,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

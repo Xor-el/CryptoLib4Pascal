@@ -27,7 +27,8 @@ uses
   ClpParameterUtilities,
   ClpIBufferedStreamCipher,
   ClpBufferedCipherBase,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCipherNil = 'cipher instance cannot be nil';

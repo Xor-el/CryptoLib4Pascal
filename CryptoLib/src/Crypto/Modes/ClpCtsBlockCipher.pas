@@ -30,7 +30,8 @@ uses
   ClpIEcbBlockCipher,
   ClpEcbBlockCipher,
   ClpBufferedBlockCipher,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnsupportedCipher = 'CtsBlockCipher can only accept ECB, or CBC ciphers';

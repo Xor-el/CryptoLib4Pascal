@@ -42,6 +42,7 @@ uses
   ClpISecureRandom,
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAesUtilities,
   ClpOcbBlockCipher,
   CipherKernelToggle,

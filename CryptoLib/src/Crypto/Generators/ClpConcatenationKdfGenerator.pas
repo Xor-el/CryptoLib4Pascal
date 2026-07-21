@@ -29,7 +29,8 @@ uses
   ClpIKdfParameters,
   ClpCheck,
   ClpPack,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKdfParametersRequired =

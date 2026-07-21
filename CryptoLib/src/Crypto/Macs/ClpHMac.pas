@@ -32,7 +32,8 @@ uses
   ClpIBackingHashProvider,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooShort = 'output buffer too short';

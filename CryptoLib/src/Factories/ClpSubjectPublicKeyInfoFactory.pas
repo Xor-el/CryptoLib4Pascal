@@ -51,7 +51,8 @@ uses
   ClpIX9ECAsn1Objects,
   ClpIPkcsDHAsn1Objects,
   ClpPkcsDHAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPublicKeyNil = 'public key cannot be nil';

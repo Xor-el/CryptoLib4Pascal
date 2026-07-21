@@ -28,6 +28,7 @@ uses
   ClpIAsn1Core,
   ClpIX9DHAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Utilities;
 
 resourcestring

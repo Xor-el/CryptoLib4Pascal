@@ -33,7 +33,8 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotUseHashSlhDsa = 'cannot be used for HashSLH-DSA';

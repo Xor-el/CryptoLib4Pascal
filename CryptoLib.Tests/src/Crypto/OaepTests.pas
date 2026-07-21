@@ -50,6 +50,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   AsymmetricTestVectors;
 

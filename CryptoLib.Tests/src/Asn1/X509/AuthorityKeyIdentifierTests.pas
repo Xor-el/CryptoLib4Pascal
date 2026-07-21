@@ -31,6 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,

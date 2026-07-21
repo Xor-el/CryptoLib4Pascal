@@ -36,7 +36,8 @@ uses
   ClpISecureRandom,
   ClpECUtilities,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCurveNil = 'curve cannot be nil';

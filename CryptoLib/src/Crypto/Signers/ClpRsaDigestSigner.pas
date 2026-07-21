@@ -45,7 +45,8 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpArrayUtilities,
   ClpCollectionUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSigningRequiresPrivateKey = 'signing requires private key';

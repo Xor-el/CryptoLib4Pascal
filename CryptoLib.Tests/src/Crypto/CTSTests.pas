@@ -44,7 +44,7 @@ uses
   ClpICtsBlockCipher,
   ClpISicBlockCipher,
   ClpIBlockCipher,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

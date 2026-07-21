@@ -31,7 +31,8 @@ uses
   ClpAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMalformedPemDataEncountered = 'malformed PEM data encountered';

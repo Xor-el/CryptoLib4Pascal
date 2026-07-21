@@ -29,6 +29,7 @@ uses
   ClpSecNamedCurves,
   ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects;
 

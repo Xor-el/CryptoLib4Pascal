@@ -26,7 +26,8 @@ uses
   ClpIPkixTypes,
   ClpRfc3280CertPathUtilities,
   ClpDateTimeHelper,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCrlNotInitialized = 'the CRL revocation checker was not initialized';

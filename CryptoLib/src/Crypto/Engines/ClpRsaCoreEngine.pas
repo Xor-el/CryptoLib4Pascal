@@ -29,7 +29,8 @@ uses
   ClpIRsaParameters,
   ClpIRsa,
   ClpIRsaCoreEngine,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SRsaEngineNotInitialised = 'RSA engine not initialized';

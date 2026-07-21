@@ -31,7 +31,8 @@ uses
   ClpIKeyParameter,
   ClpAeadParameters,
   ClpIAeadParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SGMacRequiresParametersWithIV = 'GMAC requires ParametersWithIV';

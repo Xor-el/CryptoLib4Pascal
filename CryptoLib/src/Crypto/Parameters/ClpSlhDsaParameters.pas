@@ -36,7 +36,8 @@ uses
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidSlhDsaLength = 'invalid encoding';

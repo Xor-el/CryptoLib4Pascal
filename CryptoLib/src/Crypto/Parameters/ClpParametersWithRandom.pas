@@ -21,7 +21,7 @@ unit ClpParametersWithRandom;
 interface
 
 uses
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIParametersWithRandom,
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,

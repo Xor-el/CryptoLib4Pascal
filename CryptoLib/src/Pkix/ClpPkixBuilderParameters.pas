@@ -27,7 +27,8 @@ uses
   ClpPkixParameters,
   ClpIX509Certificate,
   ClpIX509V2AttributeCertificate,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMaxPathLengthTooSmall = 'the maximum path length cannot be less than -1';

@@ -38,6 +38,7 @@ uses
   ClpIetfUtilities,
   ClpX509DefaultEntryConverter,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

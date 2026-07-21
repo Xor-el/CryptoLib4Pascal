@@ -41,7 +41,8 @@ uses
   ClpIPkcs10CertificationRequest,
   ClpIPkcs10CertificationRequestBuilder,
   ClpIAsymmetricCipherKeyPair,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSubjectNotSet = 'Subject must be set before calling Build';

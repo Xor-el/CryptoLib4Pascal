@@ -33,7 +33,8 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidArgon2Selection = 'selected %s is invalid';

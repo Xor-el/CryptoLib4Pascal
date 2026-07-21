@@ -48,6 +48,7 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   Bip340Vectors;
 

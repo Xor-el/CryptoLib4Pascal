@@ -48,6 +48,7 @@ uses
   ClpISecureRandom,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;
 

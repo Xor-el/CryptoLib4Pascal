@@ -33,6 +33,7 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Utilities,
   ClpArrayUtilities,
   ClpPlatformUtilities;

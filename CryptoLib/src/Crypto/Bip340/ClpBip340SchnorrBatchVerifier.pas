@@ -41,7 +41,8 @@ uses
   ClpDigestUtilities,
   ClpBigIntegerUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SBuildBatchSeedArraysCannotBeNil = 'BuildBatchSeed: arrays cannot be nil';

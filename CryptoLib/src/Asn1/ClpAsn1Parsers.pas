@@ -25,6 +25,7 @@ uses
   Math,
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Tags,
   ClpIAsn1Core,
   ClpIAsn1Objects,

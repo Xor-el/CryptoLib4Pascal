@@ -33,7 +33,8 @@ uses
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SRsaEngineNotInitialised = 'RSA engine not initialized';

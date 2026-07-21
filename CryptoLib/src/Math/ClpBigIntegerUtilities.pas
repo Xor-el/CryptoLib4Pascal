@@ -29,7 +29,8 @@ uses
   ClpMod,
   ClpNat,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SStandardLengthExceeded = 'standard length exceeded';

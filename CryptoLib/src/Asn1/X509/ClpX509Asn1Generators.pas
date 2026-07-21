@@ -33,6 +33,7 @@ uses
   ClpIX509Extension,
   ClpX509Extension,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Comparers,
   ClpIX509Asn1Generators;
 

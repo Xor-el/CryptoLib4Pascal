@@ -31,7 +31,8 @@ uses
   ClpPack,
   ClpArrayUtilities,
   ClpPlatformUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SAesEngineNotInitialized = 'AES engine not initialized';

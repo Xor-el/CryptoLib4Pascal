@@ -24,6 +24,7 @@ uses
   ClpArrayUtilities,
   ClpBitOperations,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpEd25519,
   ClpISecureRandom,
   ClpX25519Field;

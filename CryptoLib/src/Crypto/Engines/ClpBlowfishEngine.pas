@@ -29,7 +29,8 @@ uses
   ClpCheck,
   ClpPack,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SBlowfishEngineNotInitialised = 'Blowfish engine not initialized';

@@ -26,6 +26,7 @@ uses
   ClpIDigest,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpParameterUtilities,
   ClpStandardDsaEncoding,
   ClpIDsaEncoding,

@@ -41,7 +41,7 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

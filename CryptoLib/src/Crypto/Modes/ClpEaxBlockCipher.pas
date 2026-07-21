@@ -45,7 +45,8 @@ uses
   ClpCheck,
   ClpArrayUtilities,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidMacSize = 'invalid value for MAC size: %d';

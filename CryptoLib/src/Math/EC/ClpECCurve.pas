@@ -45,7 +45,8 @@ uses
   ClpECLookupTables,
   ClpECCurveConstants,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMustBeNonNilAndOnThisCurve = 'must be non-nil and on this curve';

@@ -29,7 +29,8 @@ uses
   ClpNameConstraintTypes,
   ClpCryptoLibHashSet,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidIPAddressLength = 'iPAddress name has invalid length: %d';

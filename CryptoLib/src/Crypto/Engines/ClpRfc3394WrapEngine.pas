@@ -30,7 +30,8 @@ uses
   ClpIParametersWithIV,
   ClpIParametersWithRandom,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotSetForWrapping = 'not set for wrapping';

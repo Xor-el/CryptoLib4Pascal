@@ -48,7 +48,8 @@ uses
   ClpNullable,
   ClpEncoders,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCrlEncodingIsNil = 'CRL encoding is nil';

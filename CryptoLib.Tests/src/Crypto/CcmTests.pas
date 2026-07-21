@@ -46,7 +46,7 @@ uses
   ClpConverters,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAeadCipher,
   AeadTestUtilities,
   CipherKernelToggle,

@@ -29,7 +29,8 @@ uses
   ClpIEd25519CtxSigner,
   ClpIEd25519Parameters,
   ClpEd25519Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SContextNil = 'ctx must not be nil for Ed25519ctx/Ed25519ph';

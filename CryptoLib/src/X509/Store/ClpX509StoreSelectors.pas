@@ -39,7 +39,8 @@ uses
   ClpArrayUtilities,
   ClpNullable,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SBasicConstraintsTooSmall = 'basic constraints cannot be less than -2';

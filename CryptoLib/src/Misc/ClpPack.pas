@@ -23,7 +23,8 @@ interface
 uses
   SysUtils,
   ClpBinaryPrimitives,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidLength = 'invalid length';

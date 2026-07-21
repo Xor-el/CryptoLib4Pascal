@@ -29,6 +29,7 @@ uses
   ClpIPkcs1Encoding,
   ClpOaepEncoding,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoTestKeys;
 
 type

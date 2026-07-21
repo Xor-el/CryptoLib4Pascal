@@ -27,7 +27,7 @@ uses
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509Extension,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotConvertExtension = 'cannot convert extension: %s';

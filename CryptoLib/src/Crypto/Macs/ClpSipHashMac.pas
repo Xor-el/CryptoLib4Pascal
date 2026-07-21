@@ -31,7 +31,8 @@ uses
   ClpMac,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooShort = 'output buffer too short';

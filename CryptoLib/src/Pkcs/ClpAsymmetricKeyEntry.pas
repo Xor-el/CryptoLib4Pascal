@@ -29,7 +29,7 @@ uses
   ClpIAsymmetricKeyEntry,
   ClpIAsymmetricKeyParameter,
   ClpPkcs12Entry,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeyNil = 'key cannot be nil';

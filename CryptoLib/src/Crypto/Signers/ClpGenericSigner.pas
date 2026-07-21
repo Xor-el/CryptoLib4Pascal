@@ -31,7 +31,8 @@ uses
   ClpParameterUtilities,
   ClpDigestUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSigningRequiresPrivateKey = 'signing requires private key';

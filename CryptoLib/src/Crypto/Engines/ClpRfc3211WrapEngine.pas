@@ -34,7 +34,8 @@ uses
   ClpParameterUtilities,
   ClpCryptoServicesRegistrar,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotSetForWrapping = 'not set for wrapping';

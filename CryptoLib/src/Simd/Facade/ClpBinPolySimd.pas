@@ -26,7 +26,7 @@ uses
 {$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
   ClpBinPolyArmBackend,
 {$IFEND}
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIBinPolyMul;
 
 type

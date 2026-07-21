@@ -24,6 +24,7 @@ uses
   SysUtils,
   Generics.Collections,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIDigest,
   ClpPack,
   ClpArrayUtilities,

@@ -24,7 +24,8 @@ uses
   Classes,
   ClpISigner,
   ClpStreams,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSignerNil = 'signer cannot be nil';

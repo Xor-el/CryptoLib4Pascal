@@ -32,7 +32,8 @@ uses
   ClpBitOperations,
   ClpInt32Utilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SF2mFieldElementsNotBothInstances = 'field elements are not both instances of F2mFieldElement';

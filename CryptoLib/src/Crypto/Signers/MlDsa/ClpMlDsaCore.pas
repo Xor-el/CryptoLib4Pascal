@@ -29,7 +29,8 @@ uses
   ClpDigestUtilities,
   ClpIDigest,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SWrongMlDsaEta = 'wrong ML-DSA eta';

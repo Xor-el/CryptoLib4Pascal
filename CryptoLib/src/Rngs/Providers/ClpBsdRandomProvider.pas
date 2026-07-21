@@ -27,6 +27,7 @@ uses
   ClpArc4RandomBufReader,
 {$ENDIF}
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBaseRandomProvider;
 
 resourcestring

@@ -29,7 +29,8 @@ uses
   ClpICipherParameters,
   ClpIAeadParameters,
   ClpAeadParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 type
   TAeadTestUtilities = class sealed(TObject)

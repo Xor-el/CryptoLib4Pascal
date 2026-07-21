@@ -32,7 +32,8 @@ uses
   ClpEnumUtilities,
   ClpStringUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnknownDekAlgorithm = 'unknown DEK algorithm: %s';

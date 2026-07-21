@@ -35,7 +35,8 @@ uses
   ClpDigestUtilities,
   ClpIDigest,
   ClpAsn1Core,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotUseSlhDsa = 'cannot be used for SLH-DSA';

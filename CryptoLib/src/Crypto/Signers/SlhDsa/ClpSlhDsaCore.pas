@@ -27,7 +27,8 @@ uses
   ClpArrayUtilities,
   ClpISlhDsaCore,
   ClpISlhDsaEngine,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSlhDsaInvalidTreeHashIndex = 'invalid tree hash index';

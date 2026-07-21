@@ -24,6 +24,7 @@ uses
   Classes,
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpStreams;
 
 resourcestring

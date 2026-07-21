@@ -33,7 +33,8 @@ uses
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNoValidTrailer = 'no valid trailer';

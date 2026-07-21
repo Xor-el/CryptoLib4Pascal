@@ -28,7 +28,7 @@ uses
   ClpIDHBasicAgreement,
   ClpIDHParameters,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDHPublicKeyWrongParameter =

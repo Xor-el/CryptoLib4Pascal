@@ -47,7 +47,8 @@ uses
   ClpBigInteger,
   ClpNullable,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STrustAnchorValidationFailed = 'trust anchor found but certificate validation failed: %s';

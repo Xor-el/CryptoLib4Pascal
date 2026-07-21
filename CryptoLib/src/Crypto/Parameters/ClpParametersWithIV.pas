@@ -24,7 +24,8 @@ uses
   ClpIParametersWithIV,
   ClpICipherParameters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SIVNil = 'IV cannot be nil';

@@ -29,7 +29,8 @@ uses
   ClpPemWriter,
   ClpOpenSslMiscPemGenerator,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 type
   /// <summary>

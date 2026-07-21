@@ -27,7 +27,8 @@ uses
   ClpICipherParameters,
   ClpIX448Parameters,
   ClpX448Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SWrongInitCipherParameter =

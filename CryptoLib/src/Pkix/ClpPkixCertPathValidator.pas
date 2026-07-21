@@ -36,7 +36,8 @@ uses
   ClpRfc3280CertPathUtilities,
   ClpPkixRevocationChecker,
   ClpDateTimeHelper,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STrustAnchorsNil = 'trust anchors cannot be nil for certification path validation';

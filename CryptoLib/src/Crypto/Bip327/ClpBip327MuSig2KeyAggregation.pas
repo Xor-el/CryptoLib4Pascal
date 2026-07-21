@@ -32,7 +32,8 @@ uses
   ClpECAlgorithms,
   ClpConverters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeySortEachKeyMustBeThirtyThree = 'KeySort: each key must be 33 bytes';

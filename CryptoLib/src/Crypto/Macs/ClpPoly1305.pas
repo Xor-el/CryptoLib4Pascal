@@ -36,7 +36,8 @@ uses
   ClpArrayUtilities,
   ClpPoly1305State,
   ClpPoly1305Simd,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCipherBlockSizeMismatch =

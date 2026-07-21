@@ -38,7 +38,8 @@ uses
   ClpIECFieldElement,
   ClpISecT283K1Custom,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidSecT283FieldElement = 'value invalid for SecT283FieldElement';

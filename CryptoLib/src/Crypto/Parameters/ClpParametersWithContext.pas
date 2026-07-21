@@ -24,7 +24,8 @@ uses
   ClpIParametersWithContext,
   ClpICipherParameters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SContextNilWithLength = 'context cannot be nil when length is non-zero';

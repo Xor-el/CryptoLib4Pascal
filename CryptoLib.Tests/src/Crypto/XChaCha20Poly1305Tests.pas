@@ -54,6 +54,7 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;
 

@@ -28,7 +28,8 @@ uses
   ClpBip340SchnorrUtilities,
   ClpECAlgorithms,
   ClpBigIntegerUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCBytesPointMustNotBeInfinity = 'CBytes: point must not be infinity';
@@ -38,23 +39,6 @@ resourcestring
   SIndividualPubkeyInvalidSecretKey = 'IndividualPubkey: invalid secret key';
 
 type
-  /// <summary>
-  /// Raised when a signer or the nonce aggregator sends an invalid contribution.
-  /// FSignerIndex is the 0-based signer index, or -1 for aggregator (e.g. invalid aggnonce).
-  /// FContribution is one of 'pubkey', 'pubnonce', 'aggnonce', 'psig'.
-  /// </summary>
-  EBip327InvalidContributionException = class(ECryptoLibException)
-  strict private
-    var
-      FSignerIndex: Int32;
-      FContribution: string;
-  public
-    constructor Create(const AMessage: string; ASignerIndex: Int32;
-      const AContribution: string);
-    property SignerIndex: Int32 read FSignerIndex;
-    property Contribution: string read FContribution;
-  end;
-
   TBip327MuSig2Utilities = class sealed(TObject)
   public
     const
@@ -97,16 +81,6 @@ type
 
 implementation
 
-{ EBip327InvalidContributionException }
-
-constructor EBip327InvalidContributionException.Create(const AMessage: string;
-  ASignerIndex: Int32; const AContribution: string);
-begin
-  inherited Create(AMessage);
-  FSignerIndex := ASignerIndex;
-  FContribution := AContribution;
-end;
-
 { TBip327MuSig2Utilities }
 
 class function TBip327MuSig2Utilities.CBytes(const ADomain: IECDomainParameters;
@@ -146,14 +120,14 @@ var
   LCurve: IECCurve;
 begin
   if (ABytes = nil) or (System.Length(ABytes) <> BIP327_PLAIN_PUBKEY_SIZE) then
-    raise EBip327InvalidContributionException.Create(
+    raise EBip327InvalidContributionCryptoLibException.Create(
       'CPoint: invalid length (expected 33)', ASignerIndex, 'pubkey');
   LCurve := ADomain.Curve;
   try
     Result := LCurve.DecodePoint(ABytes);
   except
     on E: Exception do
-      raise EBip327InvalidContributionException.Create(
+      raise EBip327InvalidContributionCryptoLibException.Create(
         'CPoint: ' + E.Message, ASignerIndex, 'pubkey');
   end;
 end;

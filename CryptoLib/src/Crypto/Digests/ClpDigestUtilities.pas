@@ -32,6 +32,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpCryptoProObjectIdentifiers,
   ClpDigest,
   ClpXof,

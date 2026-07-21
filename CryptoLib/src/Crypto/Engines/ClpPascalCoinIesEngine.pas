@@ -38,7 +38,8 @@ uses
   ClpPack,
   ClpBigInteger,
   ClpBigIntegerUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SErrorRecoveringEphemeralPublicKey =

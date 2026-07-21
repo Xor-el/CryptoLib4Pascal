@@ -40,7 +40,8 @@ uses
   ClpIPemObject,
   ClpPemObject,
   ClpPemWriter,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPkiPathNotSequence = 'input stream does not contain an ASN.1 SEQUENCE while reading a PkiPath encoded path';

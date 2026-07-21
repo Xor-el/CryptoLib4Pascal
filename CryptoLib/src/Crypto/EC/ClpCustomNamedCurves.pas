@@ -31,6 +31,7 @@ uses
   ClpIGlvTypeBEndomorphism,
   ClpSecObjectIdentifiers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBigInteger,
   ClpECCurve,
   ClpSecP256K1Custom,

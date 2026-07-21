@@ -34,7 +34,8 @@ uses
   ClpX509Asn1Objects,
   ClpDateTimeUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCmsContentTypeNil = 'CMS content type cannot be nil';

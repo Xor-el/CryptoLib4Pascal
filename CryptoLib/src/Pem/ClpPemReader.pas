@@ -30,6 +30,7 @@ uses
   ClpPemHeader,
   ClpPemObject,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpEncoders,
   ClpStringUtilities,
   ClpAsn1Objects,

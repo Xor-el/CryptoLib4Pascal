@@ -277,8 +277,9 @@ uses
   ClpIOcspGenerators, ClpOcspProtocolObjects, ClpOcspGenerators, 
   ClpPkixOcspRevocationChecker, ClpPkixCertRevocationCheckerParameters, 
   ClpPkixCrlRevocationChecker, ClpPkixRevocationChecker, 
-  ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities,
-  ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder;
+  ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities, 
+  ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder, 
+  ClpCryptoLibExceptions;
 
 implementation
 

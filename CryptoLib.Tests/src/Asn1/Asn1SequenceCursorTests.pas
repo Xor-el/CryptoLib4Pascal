@@ -36,6 +36,7 @@ uses
   ClpIAsn1Core,
   ClpAsn1Utilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

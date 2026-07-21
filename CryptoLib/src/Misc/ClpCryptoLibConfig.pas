@@ -22,7 +22,7 @@ interface
 
 uses
   ClpNullable,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMaxPolicyNodesNotPositive = 'the valid policy tree node ceiling must be greater than zero, got %d';

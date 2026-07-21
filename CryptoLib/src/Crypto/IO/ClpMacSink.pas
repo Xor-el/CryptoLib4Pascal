@@ -24,7 +24,8 @@ uses
   Classes,
   ClpIMac,
   ClpStreams,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMacNil = 'MAC cannot be nil';

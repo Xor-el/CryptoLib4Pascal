@@ -31,7 +31,8 @@ uses
   ClpByteUtilities,
   ClpDigestUtilities,
   ClpBigIntegerUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SLiftXMustBeThirtyTwoBytes = 'LiftX: x must be 32 bytes';

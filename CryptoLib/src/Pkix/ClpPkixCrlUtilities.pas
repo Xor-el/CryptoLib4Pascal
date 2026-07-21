@@ -28,7 +28,8 @@ uses
   ClpIX509Certificate,
   ClpIX509Crl,
   ClpNullable,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCrlStoreSearchFailed = 'exception searching the X.509 CRL store: %s';

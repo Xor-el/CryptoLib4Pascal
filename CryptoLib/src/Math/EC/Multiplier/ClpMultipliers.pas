@@ -41,7 +41,8 @@ uses
   ClpIPreCompInfo,
   ClpWNafUtilities,
   ClpWeakRef,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNeedCurveWithKnownGroupOrder = 'need curve with known group order';

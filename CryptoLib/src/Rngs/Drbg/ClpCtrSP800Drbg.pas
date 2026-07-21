@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIBlockCipher,
   ClpIKeyParameter,
   ClpKeyParameter,

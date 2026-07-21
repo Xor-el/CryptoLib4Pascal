@@ -30,6 +30,7 @@ uses
   ClpIECParameters,
   ClpMultipliers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpICipherParameters,
   ClpISecureRandom,
   ClpParameterUtilities,

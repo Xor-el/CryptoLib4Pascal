@@ -39,7 +39,8 @@ uses
   ClpPbeUtilities,
   ClpCipherUtilities,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnknownEncryptionAlgorithm = 'unknown encryption algorithm: %s';

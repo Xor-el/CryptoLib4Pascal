@@ -28,7 +28,8 @@ uses
   ClpDigest,
   ClpIDigest,
   ClpIBackingHashProvider,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SBaseDigestNil = 'BaseDigest Nil';

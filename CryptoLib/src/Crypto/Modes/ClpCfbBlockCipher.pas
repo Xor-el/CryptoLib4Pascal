@@ -32,7 +32,8 @@ uses
   ClpArrayUtilities,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInputBufferTooShort = 'input buffer too short';

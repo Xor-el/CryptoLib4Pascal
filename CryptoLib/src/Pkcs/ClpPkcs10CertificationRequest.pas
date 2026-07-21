@@ -58,7 +58,8 @@ uses
   ClpX9ObjectIdentifiers,
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSignatureFactoryNil = 'signature factory cannot be nil';

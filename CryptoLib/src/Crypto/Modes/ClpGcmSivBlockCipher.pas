@@ -49,7 +49,8 @@ uses
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCipherBlockSizeRequired = 'cipher required with a block size of %d';

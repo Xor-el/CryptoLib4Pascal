@@ -31,7 +31,8 @@ uses
   ClpOSRandomProvider,
   ClpBaseRandomProvider,
   ClpIRandomSourceProvider,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidAesRngSeedLength =

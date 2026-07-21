@@ -23,7 +23,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SScaleMayNotBeNegative = 'scale may not be negative';

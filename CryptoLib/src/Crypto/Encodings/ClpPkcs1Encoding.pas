@@ -32,7 +32,8 @@ uses
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInputDataTooLarge = 'input data too large';

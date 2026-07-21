@@ -21,7 +21,8 @@ unit ClpCheck;
 interface
 
 uses
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 type
   TCheck = class sealed(TObject)

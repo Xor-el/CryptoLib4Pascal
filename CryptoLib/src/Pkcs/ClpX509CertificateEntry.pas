@@ -29,7 +29,7 @@ uses
   ClpIX509CertificateEntry,
   ClpIX509Certificate,
   ClpPkcs12Entry,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCertNil = 'certificate cannot be nil';

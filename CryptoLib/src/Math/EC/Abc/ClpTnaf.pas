@@ -32,7 +32,8 @@ uses
   ClpIPreCompInfo,
   ClpArrayUtilities,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMuMustBeOneOrMinusOne = 'mu must be 1 or -1';

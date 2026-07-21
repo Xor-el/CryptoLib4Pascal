@@ -45,6 +45,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   StreamCipherTestBase,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;

@@ -33,7 +33,8 @@ uses
   ClpIDsaKCalculator,
   ClpIHMacDsaKCalculator,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnsupportedOperation = 'operation not supported';

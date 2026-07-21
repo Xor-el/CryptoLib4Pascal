@@ -29,7 +29,8 @@ uses
   ClpRfc3281CertPathUtilities,
   ClpPkixCertPathValidatorUtilities,
   ClpDateTimeHelper,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STargetConstraintsNotAttrCert =

@@ -30,7 +30,8 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPrimesArgumentNil = '%s cannot be nil';

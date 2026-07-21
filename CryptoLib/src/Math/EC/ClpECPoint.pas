@@ -37,7 +37,8 @@ uses
   ClpIPreCompCallback,
   ClpIPreCompInfo,
   ClpSecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPointNotInNormalForm = 'point not in normal form';

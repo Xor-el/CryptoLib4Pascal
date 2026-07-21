@@ -32,7 +32,8 @@ uses
   ClpPkixCertPathValidator,
   ClpPkixCertPathValidatorResult,
   ClpPkixCertPathValidatorUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STargetCertSearchFailed = 'error finding target certificate: %s';

@@ -38,7 +38,7 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   StreamCipherTestBase,
   CryptoLibTestBase,
   ChaChaPoly1305Vectors;

@@ -32,6 +32,7 @@ uses
   ClpIAsn1Parsers,
   ClpAsn1Parsers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

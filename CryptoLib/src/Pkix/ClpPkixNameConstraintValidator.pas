@@ -35,7 +35,8 @@ uses
   ClpPkixComparers,
   ClpCryptoLibHashSet,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDNNotPermitted = 'subject distinguished name is not from a permitted subtree';

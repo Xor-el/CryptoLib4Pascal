@@ -26,7 +26,7 @@ uses
   ClpAsn1Objects,
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Objects,
   ClpIMlKemParameters,
   ClpMlKemParameters,

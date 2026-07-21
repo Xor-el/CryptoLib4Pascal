@@ -27,7 +27,8 @@ uses
   ClpX509Asn1Objects,
   ClpNistObjectIdentifiers,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnableToMatchAlgorithm = 'unable to match algorithm: %s';

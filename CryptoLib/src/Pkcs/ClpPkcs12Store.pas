@@ -60,6 +60,7 @@ uses
   ClpArrayUtilities,
   ClpCryptoLibConfig,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpEncoders,
   ClpPbeUtilities,
   ClpValueHelper,

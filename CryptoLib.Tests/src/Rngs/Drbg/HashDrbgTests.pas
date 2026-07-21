@@ -31,6 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDigestUtilities,
   ClpIEntropySource,
   ClpIEntropySourceProvider,

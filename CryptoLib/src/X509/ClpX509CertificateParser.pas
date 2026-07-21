@@ -36,6 +36,7 @@ uses
   ClpAsn1Streams,
   ClpAsn1Utilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpStreams,
   ClpStreamUtilities,
   ClpPkcsAsn1Objects,

@@ -65,7 +65,7 @@ uses
   ClpAesUtilities,
   ClpBigInteger,
   ClpDigestUtilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpArrayUtilities,
   ClpKeyParameter,
   ClpIKeyParameter,

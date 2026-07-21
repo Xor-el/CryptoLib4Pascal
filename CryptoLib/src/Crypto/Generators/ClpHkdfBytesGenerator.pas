@@ -32,7 +32,8 @@ uses
   ClpIHkdfBytesGenerator,
   ClpIDerivationFunction,
   ClpIDerivationParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SHkdfTooManyBlocks = 'HKDF cannot generate more than 255 blocks of HashLen size';

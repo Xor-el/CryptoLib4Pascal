@@ -25,6 +25,7 @@ uses
   Windows,
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBaseRandomProvider;
 
 resourcestring

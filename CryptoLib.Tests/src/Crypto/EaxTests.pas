@@ -44,7 +44,7 @@ uses
   ClpAesUtilities,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpConverters,
   ClpIAeadCipher,
   AeadTestUtilities,

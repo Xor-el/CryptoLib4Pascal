@@ -29,7 +29,8 @@ uses
   ClpIEd25519Signer,
   ClpIEd25519Parameters,
   ClpEd25519Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotInitialized = 'Ed25519Signer not initialized for %s';

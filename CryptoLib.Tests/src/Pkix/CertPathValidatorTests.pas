@@ -51,6 +51,7 @@ uses
   ClpX509CrlParser,
   ClpNullable,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpCryptoLibConfig,
   CertVectors,
   CryptoLibTestBase;

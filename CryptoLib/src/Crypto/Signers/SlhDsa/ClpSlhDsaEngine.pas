@@ -34,7 +34,8 @@ uses
   ClpKeyParameter,
   ClpPack,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSlhDsaInvalidWotsW = 'wots_w assumed 16 or 256';

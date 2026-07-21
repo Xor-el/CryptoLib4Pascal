@@ -41,7 +41,8 @@ uses
   ClpBigIntegerUtilities,
   ClpArrayUtilities,
   ClpConverters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotInitialized = 'BIP340SchnorrSigner not initialized for %s';

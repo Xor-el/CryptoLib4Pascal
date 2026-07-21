@@ -31,7 +31,8 @@ uses
   ClpX509SignatureUtilities,
   ClpSignerUtilities,
   ClpDefaultSignatureCalculator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SAlgorithmNil = 'algorithm cannot be nil';

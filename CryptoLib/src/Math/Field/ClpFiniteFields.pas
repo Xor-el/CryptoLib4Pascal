@@ -24,6 +24,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIFiniteField,
   ClpIPolynomial,
   ClpIPolynomialExtensionField,

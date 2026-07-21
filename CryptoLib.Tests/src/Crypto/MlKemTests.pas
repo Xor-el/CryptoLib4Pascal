@@ -42,7 +42,8 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpSubjectPublicKeyInfoFactory,
   ClpDigestUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 type
   TTestMlKem = class(TCryptoLibAlgorithmTestCase)

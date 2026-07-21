@@ -39,6 +39,7 @@ uses
   ClpX509Utilities,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDeltaCertificateTool,
   ClpIX509Attribute,
   ClpIX509V2AttributeCertificate,

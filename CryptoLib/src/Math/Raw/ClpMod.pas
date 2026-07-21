@@ -28,7 +28,8 @@ uses
   ClpNat,
   ClpBitOperations,
   ClpInt32Utilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInverseDoesNotExist = 'inverse does not exist';

@@ -43,7 +43,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpDateTimeUtilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   AeadTestUtilities,
   ClpEncoders,
   ClpConverters,

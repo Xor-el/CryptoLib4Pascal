@@ -22,7 +22,8 @@ interface
 
 uses
   SysUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SEncodingInstanceNil = 'encoding instance cannot be nil';

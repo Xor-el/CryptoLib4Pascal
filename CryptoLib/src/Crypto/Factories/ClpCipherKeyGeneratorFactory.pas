@@ -28,7 +28,7 @@ uses
   ClpKeyGenerationParameters,
   ClpIKeyGenerationParameters,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotRecognizeCipher = 'cannot recognize cipher: %s';

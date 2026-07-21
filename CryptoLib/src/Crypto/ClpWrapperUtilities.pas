@@ -36,7 +36,8 @@ uses
   ClpAesWrapPadEngine,
   ClpRfc3211WrapEngine,
   ClpCipherUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SWrapperNotRecognized = 'wrapper %s not recognized';

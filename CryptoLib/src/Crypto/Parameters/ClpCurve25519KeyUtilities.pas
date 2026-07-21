@@ -28,7 +28,8 @@ uses
   ClpX25519Parameters,
   ClpIEd25519Parameters,
   ClpIX25519Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCurve25519Ed25519PublicKeyNil = 'Ed25519 public key cannot be nil';

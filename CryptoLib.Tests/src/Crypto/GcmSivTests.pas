@@ -41,6 +41,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CipherKernelToggle,
   CryptoLibTestBase,
   SymmetricBlockVectors;

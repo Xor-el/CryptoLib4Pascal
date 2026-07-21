@@ -66,7 +66,8 @@ uses
   ClpX509RsaAsn1Objects,
   ClpX509DsaAsn1Objects,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';

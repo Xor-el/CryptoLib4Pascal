@@ -62,6 +62,7 @@ uses
   FixedSecureRandom,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   AsymmetricTestVectors;
 

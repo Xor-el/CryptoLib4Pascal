@@ -32,7 +32,8 @@ uses
   ClpWnaf,
   ClpX25519Field,
   ClpInterleave,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDigestMustProduce64Bytes = 'digest must produce 64 bytes';

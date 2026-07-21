@@ -39,6 +39,7 @@ uses
   ClpIX509Crl,
   ClpNullable,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   PkitsVectors,
   CryptoLibTestBase;
 

@@ -30,7 +30,8 @@ uses
   ClpICipherBuilder,
   ClpIDecryptorBuilderProvider,
   ClpStreamUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMalformedData = 'malformed data: %s';

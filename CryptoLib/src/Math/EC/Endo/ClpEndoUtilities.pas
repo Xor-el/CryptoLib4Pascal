@@ -29,7 +29,8 @@ uses
   ClpIEndoPreCompInfo,
   ClpIScalarSplitParameters,
   ClpEndoPreCompInfo,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SExpectedEndoPreCompInfo = 'expected EndoPreCompInfo';

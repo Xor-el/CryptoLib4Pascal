@@ -29,7 +29,8 @@ uses
   ClpParameterUtilities,
   ClpArrayUtilities,
   ClpMlKemEngine,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMlKemDecapsulationRequiresPrivateKey = 'ML-KEM decapsulation requires private key';

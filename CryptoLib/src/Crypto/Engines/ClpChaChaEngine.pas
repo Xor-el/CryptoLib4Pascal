@@ -29,7 +29,8 @@ uses
   ClpPack,
   ClpChaChaSimd,
   ClpByteUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SChaChaStateWords = 'ChaCha state must be at least 16 UInt32 values';

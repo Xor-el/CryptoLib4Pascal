@@ -33,7 +33,8 @@ uses
   ClpISecureRandom,
   ClpDHParametersHelper,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SParametersCannotBeNil = 'parameters cannot be nil';

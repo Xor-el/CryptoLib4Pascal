@@ -26,7 +26,8 @@ uses
   ClpIXChaCha20Engine,
   ClpChaChaEngine,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNilKeyReInit = '%s doesn''t support re-init with nil key';

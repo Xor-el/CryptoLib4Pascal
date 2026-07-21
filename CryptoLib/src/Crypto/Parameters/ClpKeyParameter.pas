@@ -24,7 +24,8 @@ uses
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeyNil = 'key cannot be nil';

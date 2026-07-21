@@ -28,7 +28,8 @@ uses
   ClpIECParameters,
   ClpECDHBasicAgreement,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SECDHRawAgreementExpectsECPrivateKeyParameters =

@@ -71,6 +71,7 @@ uses
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Comparers,
   ClpIX509NameBuilder,
   ClpX509NameBuilder,

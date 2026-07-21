@@ -35,7 +35,8 @@ uses
   ClpCipherKernelRegistry,
   ClpArrayUtilities,
   ClpByteUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidIVLength =

@@ -28,7 +28,8 @@ uses
   ClpIXof,
   ClpDigest,
   ClpCheck,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SHashMustImplementIXof = 'hash must implement IXOF and IXOFStream';

@@ -33,6 +33,7 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpOiwObjectIdentifiers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Utilities;
 
 resourcestring

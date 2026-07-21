@@ -51,6 +51,7 @@ uses
   ClpBigInteger,
   ClpIAsymmetricCipherKeyPair,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

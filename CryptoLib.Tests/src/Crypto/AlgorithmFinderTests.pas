@@ -48,7 +48,7 @@ uses
   ClpDefaultSignatureAlgorithmFinder,
   ClpISignatureAlgorithmFinder,
   ClpX509Utilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

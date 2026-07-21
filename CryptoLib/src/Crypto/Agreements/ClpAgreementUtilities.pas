@@ -27,7 +27,7 @@ uses
   ClpCollectionUtilities,
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDHBasicAgreement,
   ClpECDHBasicAgreement,
   ClpECDHCBasicAgreement,

@@ -88,6 +88,7 @@ uses
   ClpCryptoLibComparers in '..\..\CryptoLib\src\Misc\ClpCryptoLibComparers.pas',
   ClpCryptoLibTypes in '..\..\CryptoLib\src\Misc\ClpCryptoLibTypes.pas',
   ClpCryptoLibConfig in '..\..\CryptoLib\src\Misc\ClpCryptoLibConfig.pas',
+  ClpCryptoLibExceptions in '..\..\CryptoLib\src\Misc\ClpCryptoLibExceptions.pas',
   ClpCryptoProObjectIdentifiers in '..\..\CryptoLib\src\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpDateTimeUtilities in '..\..\CryptoLib\src\GeneralUtilities\ClpDateTimeUtilities.pas',
   ClpDefaultDigestCalculator in '..\..\CryptoLib\src\Crypto\Operators\ClpDefaultDigestCalculator.pas',

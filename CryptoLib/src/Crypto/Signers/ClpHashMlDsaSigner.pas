@@ -34,7 +34,8 @@ uses
   ClpIXof,
   ClpIDigest,
   ClpAsn1Core,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotUseMlDsa = 'cannot be used for ML-DSA';

@@ -30,7 +30,8 @@ uses
   ClpIOcspProtocolObjects,
   ClpIPkixTypes,
   ClpPkixCertPathValidatorUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOcspCertificateRevoked =

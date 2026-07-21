@@ -30,7 +30,8 @@ uses
   ClpParametersWithIV,
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotGenerateDerivedKey = 'can''t generate a derived key %d bytes long';

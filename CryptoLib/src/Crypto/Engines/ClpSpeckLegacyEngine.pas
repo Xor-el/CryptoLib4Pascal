@@ -29,7 +29,8 @@ uses
   ClpIKeyParameter,
   ClpArrayUtilities,
   ClpPlatformUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSpeckLegacyEngineNotInitialised = '%s engine not initialized';

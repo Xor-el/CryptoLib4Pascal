@@ -25,7 +25,7 @@ uses
   ClpIPkixTypes,
   ClpIAsymmetricKeyParameter,
   ClpIX509Certificate,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   STrustAnchorNil = 'trust anchor cannot be nil';

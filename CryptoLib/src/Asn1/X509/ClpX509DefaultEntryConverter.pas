@@ -28,7 +28,7 @@ uses
   ClpIX509NameEntryConverter,
   ClpX509NameEntryConverter,
   ClpX509Asn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotRecodeValueForOid = 'cannot recode value for OID %s';

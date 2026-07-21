@@ -33,7 +33,8 @@ uses
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPrivateKeyInfoNil = 'private key info cannot be nil';

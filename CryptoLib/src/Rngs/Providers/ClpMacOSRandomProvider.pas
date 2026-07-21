@@ -32,6 +32,7 @@ uses
   ClpSecRandomCopyBytesReader,
 {$ENDIF}
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBaseRandomProvider;
 
 resourcestring

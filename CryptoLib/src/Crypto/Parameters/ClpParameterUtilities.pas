@@ -27,6 +27,7 @@ uses
   ClpCollectionUtilities,
   ClpCryptoLibComparers,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpIKeyParameter,

@@ -28,7 +28,7 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpIAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnknownOid = 'unknown OID: %s';

@@ -33,7 +33,8 @@ uses
   ClpX509ExtensionBase,
   ClpX509ExtensionUtilities,
   ClpAsn1Dumper,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 type
   TX509CrlEntry = class(TX509ExtensionBase, IX509CrlEntry)

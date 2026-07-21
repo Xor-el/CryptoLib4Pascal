@@ -25,6 +25,7 @@ uses
   SysUtils,
   ClpBitOperations,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDateTimeUtilities,
   ClpDateTimeHelper,
   ClpIDigest,

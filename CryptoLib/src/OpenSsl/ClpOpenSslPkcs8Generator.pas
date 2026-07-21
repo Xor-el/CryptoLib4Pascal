@@ -32,7 +32,8 @@ uses
   ClpCryptoServicesRegistrar,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SErrorEncryptingPrivateKey = 'couldn''t encrypt private key';

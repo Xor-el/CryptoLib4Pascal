@@ -65,6 +65,7 @@ uses
   ClpX9DHAsn1Objects,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

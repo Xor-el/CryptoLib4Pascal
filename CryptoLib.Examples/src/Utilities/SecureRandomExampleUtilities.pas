@@ -27,6 +27,7 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoApiRandomGenerator,

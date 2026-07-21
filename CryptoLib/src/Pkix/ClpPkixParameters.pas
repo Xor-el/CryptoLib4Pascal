@@ -28,7 +28,8 @@ uses
   ClpIX509Crl,
   ClpIX509V2AttributeCertificate,
   ClpNullable,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STrustAnchorsNil = 'trust anchors cannot be nil';

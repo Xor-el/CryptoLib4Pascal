@@ -34,7 +34,8 @@ uses
   ClpIPreCompInfo,
   ClpIWNafPreCompInfo,
   ClpWNafPreCompInfo,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SWNafWidthMustBeInRange = 'must be in the range [%d, %d]';

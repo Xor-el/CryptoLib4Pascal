@@ -22,6 +22,7 @@ interface
 
 uses
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBigInteger,
   ClpISecureRandom,
   ClpIDsaKCalculator,

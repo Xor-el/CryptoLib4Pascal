@@ -27,7 +27,8 @@ uses
   ClpIOfbBlockCipher,
   ClpICipherParameters,
   ClpCipherModeParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInputBufferTooShort = 'input buffer too short';

@@ -27,7 +27,8 @@ uses
   ClpIIESEngine,
   ClpIIesParameters,
   ClpBufferedCipherBase,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SEngineNil = 'engine cannot be nil';

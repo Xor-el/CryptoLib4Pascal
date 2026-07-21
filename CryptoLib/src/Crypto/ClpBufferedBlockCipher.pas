@@ -33,7 +33,8 @@ uses
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidLength = 'cannot have a negative input length';

@@ -67,7 +67,7 @@ uses
   ClpConverters,
   ClpArrayUtilities,
   ClpPack,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 type
   /// <summary>

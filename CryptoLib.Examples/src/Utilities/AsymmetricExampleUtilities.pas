@@ -45,7 +45,7 @@ uses
   ClpIECGenerators,
   ClpEncoders,
   ClpConverters,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpStringUtilities,
   ExampleBase,
   ExampleLogger,

@@ -27,7 +27,8 @@ uses
   ClpIPlainDsaEncoding,
   ClpArrayUtilities,
   ClpBigIntegerUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SValueOutOfRange = 'value out of range, %s';

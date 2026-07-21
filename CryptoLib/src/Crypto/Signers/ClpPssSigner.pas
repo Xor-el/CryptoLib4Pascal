@@ -35,7 +35,8 @@ uses
   ClpParameterUtilities,
   ClpBigInteger,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeyTooSmall = 'key too small for specified hash and salt lengths';

@@ -31,7 +31,7 @@ uses
   ClpIBasicAgreement,
   ClpIECDHBasicAgreement,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotECPrivateKeyParameters = 'ECDHBasicAgreement expects ECPrivateKeyParameters';

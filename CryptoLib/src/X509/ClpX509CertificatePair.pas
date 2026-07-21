@@ -29,7 +29,8 @@ uses
   ClpX509Asn1Objects,
   ClpAsn1Core,
   ClpAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SAtLeastOneOfPairPresent = 'at least one of the pair shall be present';

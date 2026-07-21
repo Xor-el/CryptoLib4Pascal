@@ -38,7 +38,8 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpIKeyGenerationParameters,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SParametersCannotBeNil = 'parameters cannot be nil';

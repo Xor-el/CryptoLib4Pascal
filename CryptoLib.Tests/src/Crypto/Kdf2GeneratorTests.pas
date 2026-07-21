@@ -37,7 +37,7 @@ uses
   ClpIKdfParameters,
   ClpKdf2BytesGenerator,
   ClpIKdf2BytesGenerator,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

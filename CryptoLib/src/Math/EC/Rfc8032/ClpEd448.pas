@@ -31,7 +31,8 @@ uses
   ClpScalar448,
   ClpWnaf,
   ClpX448Field,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidPoint = 'invalid point';

@@ -23,7 +23,7 @@ interface
 uses
   SysUtils,
   ClpStringUtilities,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIX509NameTokenizer;
 
 resourcestring

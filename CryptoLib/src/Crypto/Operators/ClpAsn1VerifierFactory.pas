@@ -30,7 +30,7 @@ uses
   ClpX509SignatureUtilities,
   ClpSignerUtilities,
   ClpDefaultVerifierCalculator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SAlgorithmNil = 'algorithm cannot be nil';

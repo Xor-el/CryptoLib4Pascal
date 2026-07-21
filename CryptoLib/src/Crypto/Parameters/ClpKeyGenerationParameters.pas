@@ -22,7 +22,7 @@ interface
 
 uses
   ClpIKeyGenerationParameters,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpISecureRandom;
 
 resourcestring

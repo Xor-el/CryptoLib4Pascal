@@ -30,7 +30,7 @@ uses
   ClpIAsn1Parsers,
   ClpICmsParsers,
   ClpPlatformUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCmsUnknownObjectEncountered = 'unknown object encountered: %s';

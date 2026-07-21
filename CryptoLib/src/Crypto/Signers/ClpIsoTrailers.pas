@@ -24,7 +24,7 @@ uses
   SysUtils,
   Generics.Collections,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIDigest;
 
 resourcestring

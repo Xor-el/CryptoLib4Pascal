@@ -25,7 +25,8 @@ uses
   ClpBigInteger,
   ClpWNafUtilities,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSizeTooSmall = 'size < 64';

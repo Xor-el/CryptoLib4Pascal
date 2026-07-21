@@ -70,6 +70,7 @@ uses
   ClpBigInteger,
   ClpNullable,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CertTestUtilities,
   CertVectors,
   CryptoLibTestBase;

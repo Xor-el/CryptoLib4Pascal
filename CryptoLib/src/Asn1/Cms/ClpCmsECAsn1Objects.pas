@@ -30,7 +30,8 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpICmsECAsn1Objects,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SEccCmsBadSequenceSize = 'bad sequence size: %d';

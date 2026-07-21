@@ -36,6 +36,7 @@ uses
   ClpX9ObjectIdentifiers,
   ClpX9IntegerConverter,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Utilities,
   ClpIFiniteField,
   ClpIPolynomialExtensionField,

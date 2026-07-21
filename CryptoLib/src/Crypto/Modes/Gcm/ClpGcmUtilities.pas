@@ -28,6 +28,7 @@ uses
   ClpInterleave,
   ClpGhashSimd,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpByteUtilities;
 
 resourcestring

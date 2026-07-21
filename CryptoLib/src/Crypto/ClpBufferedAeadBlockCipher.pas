@@ -27,7 +27,8 @@ uses
   ClpIAeadBlockCipher,
   ClpICipherParameters,
   ClpParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCipherNil = 'cipher instance cannot be nil';

@@ -36,6 +36,7 @@ uses
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBigInteger,

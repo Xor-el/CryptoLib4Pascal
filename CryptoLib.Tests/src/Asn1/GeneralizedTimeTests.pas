@@ -37,6 +37,7 @@ uses
   ClpFormatSettingsHelper,
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

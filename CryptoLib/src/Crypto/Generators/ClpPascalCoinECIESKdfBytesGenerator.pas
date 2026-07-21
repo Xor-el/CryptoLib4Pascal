@@ -27,7 +27,8 @@ uses
   ClpIDerivationParameters,
   ClpIKdfParameters,
   ClpIPascalCoinECIESKdfBytesGenerator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooSmall = 'output buffer too small';

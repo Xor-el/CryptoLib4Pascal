@@ -39,6 +39,7 @@ uses
   ClpStreams,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

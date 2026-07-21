@@ -27,7 +27,8 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpIAsymmetricKeyParameter,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STrustedCertNil = 'trusted certificate cannot be nil';

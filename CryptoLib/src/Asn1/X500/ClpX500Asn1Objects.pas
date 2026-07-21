@@ -28,6 +28,7 @@ uses
   ClpIAsn1Core,
   ClpIX500Asn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpArrayUtilities,
   ClpAsn1Utilities,
   ClpAsn1Comparers;

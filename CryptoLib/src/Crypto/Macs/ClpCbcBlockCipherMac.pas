@@ -30,7 +30,8 @@ uses
   ClpIBlockCipherPadding,
   ClpICipherParameters,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMacSizeMultipleOfEight = 'MAC size must be multiple of 8';

@@ -41,7 +41,8 @@ uses
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPoly1305Nil = 'Poly1305 cannot be nil';

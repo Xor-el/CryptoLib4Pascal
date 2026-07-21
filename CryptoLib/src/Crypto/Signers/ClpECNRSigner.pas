@@ -37,7 +37,8 @@ uses
   ClpCryptoServicesRegistrar,
   ClpECAlgorithms,
   ClpParameterUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SECPublicKeyNotFound = 'EC public key required for verification';

@@ -48,7 +48,7 @@ uses
   ClpISecureRandom,
   ClpArrayUtilities,
   ClpEncoders,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ExampleBase,
   ExampleLogger,
   ClpParameterUtilities;

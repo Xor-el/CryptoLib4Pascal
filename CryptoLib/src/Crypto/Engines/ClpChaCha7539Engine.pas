@@ -25,7 +25,8 @@ uses
   ClpIChaCha7539Engine,
   ClpChaChaEngine,
   ClpPack,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidKeySizeTwoFiftySix = '%s requires 256 bit key';

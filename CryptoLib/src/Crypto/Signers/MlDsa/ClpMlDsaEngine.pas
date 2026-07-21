@@ -33,7 +33,8 @@ uses
   ClpSecureRandom,
   ClpBitOperations,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnsupportedMlDsaMode = 'mode %d is not supported for ML-DSA';

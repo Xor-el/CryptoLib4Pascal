@@ -40,6 +40,7 @@ uses
   ClpParametersWithIV,
   ClpICipherParameters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   SymmetricBlockVectors;
 

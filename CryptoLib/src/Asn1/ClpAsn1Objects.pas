@@ -28,6 +28,7 @@ uses
   ClpBitOperations,
   ClpCryptoLibConfig,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpAsn1Tags,

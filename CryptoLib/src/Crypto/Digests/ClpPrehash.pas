@@ -27,7 +27,8 @@ uses
   ClpDigest,
   ClpIDigest,
   ClpIPrehash,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotSupported = 'not supported';

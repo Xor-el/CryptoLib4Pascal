@@ -23,6 +23,7 @@ interface
 uses
   Classes,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Generators,
   ClpIAsn1Core,
   ClpAsn1Tags,

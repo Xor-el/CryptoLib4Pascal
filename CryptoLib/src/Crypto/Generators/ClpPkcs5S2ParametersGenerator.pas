@@ -35,7 +35,8 @@ uses
   ClpParameterUtilities,
   ClpPbeParametersGenerator,
   ClpDigestUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDigestNoBackingHash =

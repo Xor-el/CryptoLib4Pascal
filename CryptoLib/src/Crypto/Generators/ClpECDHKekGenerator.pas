@@ -38,7 +38,8 @@ uses
   ClpIKdfParameters,
   ClpCheck,
   ClpPack,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooShort = 'output buffer too short';

@@ -57,6 +57,7 @@ uses
   ClpBigIntegerUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpICipherParameters,
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPairGenerator,

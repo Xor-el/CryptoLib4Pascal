@@ -28,7 +28,8 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIECIESPublicKeyParser,
   ClpStreamUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SSenderPublicKeyInvalid = 'sender''s public key invalid';

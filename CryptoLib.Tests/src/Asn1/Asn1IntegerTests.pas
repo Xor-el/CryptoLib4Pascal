@@ -35,6 +35,7 @@ uses
   ClpCryptoLibConfig,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

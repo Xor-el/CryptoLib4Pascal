@@ -40,7 +40,8 @@ uses
   ClpPkcs7Padding,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotMatchParameters = 'cannot match parameters';

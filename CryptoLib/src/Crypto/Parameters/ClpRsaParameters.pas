@@ -31,7 +31,7 @@ uses
   ClpKeyGenerationParameters,
   ClpISecureRandom,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SModulusNil = 'modulus cannot be nil';

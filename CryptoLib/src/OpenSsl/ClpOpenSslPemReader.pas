@@ -71,7 +71,8 @@ uses
   ClpEncoders,
   ClpIOpenSslPasswordFinder,
   ClpOpenSslPemUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnrecognizedObject = 'unrecognized object: %s';

@@ -28,6 +28,7 @@ uses
   ClpIAsn1Objects,
   ClpIX500Asn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpConverters,
   ClpStreamUtilities,
   ClpStringUtilities,

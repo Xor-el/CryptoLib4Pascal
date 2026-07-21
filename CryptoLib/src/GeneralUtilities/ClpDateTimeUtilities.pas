@@ -23,7 +23,8 @@ interface
 uses
   SysUtils,
   DateUtils,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidFormatFractionDotWithoutF = 'invalid format (fraction dot without f)';

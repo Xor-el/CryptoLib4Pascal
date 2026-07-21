@@ -24,6 +24,7 @@ uses
   SysUtils,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpEd25519,
   ClpISecureRandom,
   ClpSecureRandom,

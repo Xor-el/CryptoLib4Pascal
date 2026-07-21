@@ -28,7 +28,8 @@ uses
   ClpIRsaParameters,
   ClpIAsymmetricBlockCipher,
   ClpIISO9796d1Encoding,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPadBitsOutOfRange = 'padBits out of range (0-7)';

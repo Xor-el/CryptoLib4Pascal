@@ -25,6 +25,7 @@ uses
   Math,
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Encodings;
 
 resourcestring

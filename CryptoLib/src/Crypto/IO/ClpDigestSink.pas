@@ -24,7 +24,8 @@ uses
   Classes,
   ClpIDigest,
   ClpStreams,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDigestNil = 'digest cannot be nil';

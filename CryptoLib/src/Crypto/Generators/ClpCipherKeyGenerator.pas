@@ -29,7 +29,8 @@ uses
   ClpKeyGenerationParameters,
   ClpIKeyGenerationParameters,
   ClpCryptoServicesRegistrar,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidStrengthValue = 'strength must be a positive value';

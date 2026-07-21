@@ -34,7 +34,7 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIAsymmetricCipherKeyPair,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDHPublicKeyWrongParameter =

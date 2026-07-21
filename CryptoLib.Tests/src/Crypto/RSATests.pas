@@ -49,6 +49,7 @@ uses
   ClpConverters,
   ClpEncoders,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Core,
   ClpIAsn1Objects,
   ClpPkcsObjectIdentifiers,

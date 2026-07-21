@@ -25,7 +25,8 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpIECParameters,
   ClpIKeyEncoder,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SKeyParameterNotECPublicKey = 'key parameter is not an IECPublicKeyParameters';

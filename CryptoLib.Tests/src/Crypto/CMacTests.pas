@@ -41,7 +41,7 @@ uses
   ClpParametersWithIV,
   ClpIParametersWithIV,
   ClpEncoders,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

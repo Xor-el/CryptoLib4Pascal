@@ -29,7 +29,7 @@ uses
   ClpIX509Asn1Objects,
   ClpStringUtilities,
   ClpCryptoLibHashSet,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SEmptyLabelInHost = '%s has an empty label in the host: %s';

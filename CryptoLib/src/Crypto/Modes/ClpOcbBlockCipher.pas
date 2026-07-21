@@ -40,7 +40,8 @@ uses
   ClpBitOperations,
   ClpByteUtilities,
   ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SHashCipherNil = 'hash cipher cannot be nil';

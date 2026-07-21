@@ -56,6 +56,7 @@ uses
   ClpIWrapper,
   FixedSecureRandom,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase,
   BlockCipherTestBase,
   AesBlockCipherTestBase,

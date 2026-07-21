@@ -35,6 +35,7 @@ uses
   ClpIX509Extension,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPairGenerator,
   ClpGeneratorUtilities,

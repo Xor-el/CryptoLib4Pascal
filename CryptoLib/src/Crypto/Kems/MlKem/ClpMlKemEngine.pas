@@ -32,7 +32,8 @@ uses
   ClpSecureRandom,
   ClpArrayUtilities,
   ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SUnsupportedMlKemK = 'K: %d is not supported for ML-KEM';

@@ -42,6 +42,7 @@ uses
   ClpBigInteger,
   ClpCryptoLibConfig,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpArrayUtilities,
   ClpAsn1Utilities,
   ClpCollectionUtilities,

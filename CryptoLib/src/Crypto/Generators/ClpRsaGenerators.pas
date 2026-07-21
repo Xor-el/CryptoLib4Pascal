@@ -38,7 +38,8 @@ uses
   ClpParameterUtilities,
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SRsaKeyGenNotInit = 'RSA key pair generator not initialized';

@@ -56,6 +56,7 @@ uses
   ClpBigIntegerUtilities,
   ClpConverters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDigestUtilities,
   CryptoLibTestBase;
 

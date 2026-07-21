@@ -35,6 +35,7 @@ uses
   ClpISecureRandom,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

@@ -93,6 +93,7 @@ contains
   ClpCryptoLibComparers in '..\..\Misc\ClpCryptoLibComparers.pas',
   ClpCryptoLibTypes in '..\..\Misc\ClpCryptoLibTypes.pas',
   ClpCryptoLibConfig in '..\..\Misc\ClpCryptoLibConfig.pas',
+  ClpCryptoLibExceptions in '..\..\Misc\ClpCryptoLibExceptions.pas',
   ClpCryptoProObjectIdentifiers in '..\..\Asn1\CryptoPro\ClpCryptoProObjectIdentifiers.pas',
   ClpDateTimeUtilities in '..\..\GeneralUtilities\ClpDateTimeUtilities.pas',
   ClpDefaultDigestCalculator in '..\..\Crypto\Operators\ClpDefaultDigestCalculator.pas',

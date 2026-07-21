@@ -29,7 +29,8 @@ uses
   ClpX448Parameters,
   ClpIEd448Parameters,
   ClpIX448Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCurve448Ed448PublicKeyNil = 'Ed448 public key cannot be nil';

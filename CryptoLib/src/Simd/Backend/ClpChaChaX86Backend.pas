@@ -24,7 +24,7 @@ uses
   SysUtils,
   ClpCpuFeatures,
   ClpSimdLevels,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCounterExceeded = 'attempt to increase counter past 2^32';

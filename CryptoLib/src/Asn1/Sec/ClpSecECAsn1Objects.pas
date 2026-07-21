@@ -30,6 +30,7 @@ uses
   ClpIAsn1Core,
   ClpISecECAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpAsn1Utilities;
 
 resourcestring

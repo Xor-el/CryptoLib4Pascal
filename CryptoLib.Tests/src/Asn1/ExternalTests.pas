@@ -33,6 +33,7 @@ uses
   ClpAsn1Core,
   ClpAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

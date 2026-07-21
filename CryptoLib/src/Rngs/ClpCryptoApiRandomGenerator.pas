@@ -25,7 +25,8 @@ uses
   ClpRandomNumberGenerator,
   ClpICryptoApiRandomGenerator,
   ClpIRandomGenerator,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNegativeOffset = 'start offset cannot be negative';

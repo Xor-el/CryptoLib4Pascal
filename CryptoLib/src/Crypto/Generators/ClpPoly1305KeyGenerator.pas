@@ -25,7 +25,8 @@ uses
   ClpICipherKeyGenerator,
   ClpIPoly1305KeyGenerator,
   ClpIKeyGenerationParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPoly1305KeyMustBeTwoFiftySixBits = 'Poly1305 key must be 256 bits';

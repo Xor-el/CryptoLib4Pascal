@@ -23,7 +23,8 @@ interface
 uses
   ClpBigInteger,
   ClpIScalarSplitParameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMustConsistOfExactlyTwoValues = 'must consist of exactly 2 (non-nil) values: %s';

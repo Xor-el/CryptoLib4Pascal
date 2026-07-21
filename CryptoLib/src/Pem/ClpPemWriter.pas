@@ -27,6 +27,7 @@ uses
   ClpIPemHeader,
   ClpIPemObject,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpEncoders,
   ClpConverters;
 

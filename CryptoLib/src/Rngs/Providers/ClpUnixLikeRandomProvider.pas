@@ -24,6 +24,7 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBaseRandomProvider;
 
 resourcestring

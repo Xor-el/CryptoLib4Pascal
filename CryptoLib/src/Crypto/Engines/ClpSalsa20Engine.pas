@@ -33,7 +33,8 @@ uses
   ClpPack,
   ClpSalsaSimd,
   ClpByteUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidRound = 'rounds must be a positive, even number';

@@ -30,7 +30,7 @@ uses
   ClpECDHBasicAgreement,
   ClpIDerivationFunction,
   ClpBasicAgreementWithKdf,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SAlgorithmNil = 'algorithm cannot be nil';

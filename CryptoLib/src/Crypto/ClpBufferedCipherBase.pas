@@ -24,7 +24,8 @@ uses
   ClpIBufferedCipher,
   ClpICipherParameters,
   ClpIBufferedCipherBase,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooSmall = 'output buffer too short';

@@ -26,7 +26,8 @@ uses
   HlpIHash,
   ClpIDigest,
   ClpIBackingHashProvider,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOutputBufferTooShort = 'output buffer too short';

@@ -55,6 +55,7 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpDateTimeHelper,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpCryptoLibConfig,
   TestKeyBuilders,
   CryptoTestKeys,

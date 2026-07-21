@@ -50,7 +50,8 @@ uses
   ClpReasonsMask,
   ClpArrayUtilities,
   ClpBigInteger,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SExtensionDecodeFailed = '%s extension could not be decoded: %s';

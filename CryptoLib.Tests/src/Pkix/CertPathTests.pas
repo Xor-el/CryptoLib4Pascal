@@ -44,6 +44,7 @@ uses
   ClpIX509CertificateParser,
   ClpX509CertificateParser,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CertVectors,
   CryptoLibTestBase;
 

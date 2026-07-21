@@ -35,6 +35,7 @@ uses
   ClpICmsAsn1Objects,
   ClpCmsAsn1Objects,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type

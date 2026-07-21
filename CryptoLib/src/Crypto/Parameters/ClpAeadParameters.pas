@@ -24,7 +24,8 @@ uses
   ClpIAeadParameters,
   ClpICipherParameters,
   ClpIKeyParameter,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNonceNil = 'nonce cannot be nil';

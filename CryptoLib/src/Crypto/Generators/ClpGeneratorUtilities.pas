@@ -26,7 +26,7 @@ uses
   ClpCollectionUtilities,
   ClpCipherKeyGenerator,
   ClpCryptoLibComparers,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDsaGenerators,
   ClpECGenerators,
   ClpEd25519Generators,

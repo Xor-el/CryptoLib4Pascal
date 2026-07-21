@@ -80,6 +80,7 @@ uses
   ClpPkcsObjectIdentifiers,
   ClpStringUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpPkcsRsaAsn1Objects,
   ClpX509Asn1Objects;
 

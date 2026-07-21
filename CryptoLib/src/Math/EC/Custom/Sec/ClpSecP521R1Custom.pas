@@ -39,7 +39,8 @@ uses
   ClpIECCommon,
   ClpIECFieldElement,
   ClpISecP521R1Custom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SInvalidSecP521R1FieldElement = 'value invalid for SecP521R1FieldElement';

@@ -35,6 +35,7 @@ uses
   ClpArrayUtilities,
   ClpBitOperations,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpPlatformUtilities;
 
 resourcestring

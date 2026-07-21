@@ -31,7 +31,7 @@ uses
   ClpIECParameters,
   ClpIECDHCBasicAgreement,
   ClpIParametersWithRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotECPrivateKeyParameters =

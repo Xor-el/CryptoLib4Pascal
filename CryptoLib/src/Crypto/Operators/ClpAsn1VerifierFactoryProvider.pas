@@ -28,7 +28,8 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpAsn1VerifierFactory,
   ClpX509SignatureUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SPublicKeyNil = 'public key cannot be nil';

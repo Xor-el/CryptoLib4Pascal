@@ -43,7 +43,7 @@ uses
   ClpAlgorithmIdentifierFactory,
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMaxOutputSizeNotImplemented = 'GetMaxOutputSize not implemented';

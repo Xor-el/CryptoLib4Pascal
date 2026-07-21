@@ -24,7 +24,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBitOperations,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpECParameters,
   ClpIECGenerators,
   ClpIAsn1Objects,

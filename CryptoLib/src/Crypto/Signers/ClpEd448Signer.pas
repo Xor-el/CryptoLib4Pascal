@@ -29,7 +29,8 @@ uses
   ClpIEd448Signer,
   ClpIEd448Parameters,
   ClpEd448Parameters,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SNotInitialized = 'Ed448Signer not initialized for %s';

@@ -31,7 +31,8 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpCryptoLibConfig,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SErrorConstructingMac = 'error constructing MAC: %s';

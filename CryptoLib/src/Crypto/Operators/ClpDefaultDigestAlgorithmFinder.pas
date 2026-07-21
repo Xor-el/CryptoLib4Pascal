@@ -47,7 +47,7 @@ uses
   ClpSlhDsaParameters,
   ClpCollectionUtilities,
   ClpIDigestAlgorithmFinder,
-  ClpCryptoLibTypes;
+  ClpCryptoLibExceptions;
 
 resourcestring
   SDigestOidNil = 'digest OID cannot be nil';

@@ -33,7 +33,8 @@ uses
   ClpArrayUtilities,
   ClpMlKemEngine,
   ClpMlKemCore,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SMlKemEncapsulationRequiresPublicKey = 'ML-KEM encapsulation requires public key';

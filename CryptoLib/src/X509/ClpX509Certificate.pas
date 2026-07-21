@@ -50,6 +50,7 @@ uses
   ClpBigInteger,
   ClpIX509Extension,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpDateTimeHelper,
   ClpArrayUtilities,
   ClpCollectionUtilities,

@@ -41,7 +41,7 @@ uses
   ClpIPemObject,
   ClpIPemReader,
   ClpPemReader,
-  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpBigInteger,
   ClpGeneratorUtilities,
   ClpRsaParameters,

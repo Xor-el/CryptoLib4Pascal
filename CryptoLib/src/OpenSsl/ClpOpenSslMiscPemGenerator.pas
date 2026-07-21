@@ -58,6 +58,7 @@ uses
   ClpISecureRandom,
   ClpValueHelper,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIPkcs8EncryptedPrivateKeyInfo;
 
 resourcestring

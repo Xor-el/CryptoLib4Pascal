@@ -26,6 +26,7 @@ uses
   Math,
   ClpStreams,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpIAsn1Encodings,

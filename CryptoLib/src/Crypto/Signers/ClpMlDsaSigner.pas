@@ -32,7 +32,8 @@ uses
   ClpISecureRandom,
   ClpDigestUtilities,
   ClpIXof,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SCannotUseHashMlDsa = 'cannot be used for HashML-DSA';

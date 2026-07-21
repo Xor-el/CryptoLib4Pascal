@@ -31,7 +31,8 @@ uses
   ClpRsaCoreEngine,
   ClpIAsymmetricBlockCipher,
   ClpIRsaBlindingEngine,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SParametersMustSupportRsaBlindingParameters = 'parameters must support IRsaBlindingParameters';

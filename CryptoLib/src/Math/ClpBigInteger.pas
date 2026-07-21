@@ -24,6 +24,7 @@ uses
   SysUtils,
   Math,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   ClpPack,
   ClpBitOperations,
   ClpInt32Utilities,

@@ -28,7 +28,8 @@ uses
   ClpIAsn1Core,
   ClpIAsn1Parsers,
   ClpPlatformUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STaggedObjectNil = 'tagged object cannot be nil';

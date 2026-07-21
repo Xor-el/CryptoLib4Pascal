@@ -52,6 +52,7 @@ uses
   ClpNullable,
   ClpBigInteger,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CertVectors,
   CryptoLibTestBase;
 

@@ -36,7 +36,8 @@ uses
   ClpPkixCertPathValidatorResult,
   ClpPkixAttrCertPathValidator,
   ClpPkixCertPathValidatorUtilities,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   STargetConstraintsNotAttrCert =

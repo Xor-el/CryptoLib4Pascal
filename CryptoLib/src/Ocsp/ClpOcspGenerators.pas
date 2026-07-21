@@ -43,7 +43,8 @@ uses
   ClpIAsymmetricKeyParameter,
   ClpISecureRandom,
   ClpNullable,
-  ClpCryptoLibTypes;
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
 
 resourcestring
   SOcspGenCertIdNil = 'certificate ID cannot be nil';
