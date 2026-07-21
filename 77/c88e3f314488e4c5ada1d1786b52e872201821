@@ -1,0 +1,23 @@
+CryptoLib.Tests/src/Asn1/Asn1StreamReadTests.pas
+  s_f0357621f14725::t_a101c5858878d5 115-118
+  s_f0357621f14725::t_4ff87841db66c8 119
+  s_f0357621f14725::t_f8243fe6726d86 521-660
+CryptoLib.Tests/src/Asn1/BitStringTests.pas
+  s_f0357621f14725::t_09e4617e6ccd1a 91-92,97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "77c88e3f314488e4c5ada1d1786b52e872201821",
+  "prompts": {},
+  "sessions": {
+    "s_f0357621f14725": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d6c591f-073e-4c2e-ac2f-7738c45c05b3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
