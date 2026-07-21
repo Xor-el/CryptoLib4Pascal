@@ -1,0 +1,828 @@
+CryptoLib/src/Misc/ClpCryptoLibExceptions.pas
+  s_f0357621f14725::t_309bda6f6553ee 158,160-166
+  s_f0357621f14725::t_3fb6aa4e368597 104-108,110-120
+  s_f0357621f14725::t_c98eed31243caa 1-103,121-156,167
+  s_f0357621f14725::t_1e94f52946e7b9 109
+  s_f0357621f14725::t_b2d86bcbd46d1c 157
+  s_f0357621f14725::t_0b5be664bd188d 159
+CryptoLib.Examples/src/Utilities/AsymmetricExampleUtilities.pas
+  s_f0357621f14725::t_de015004aa89e6 48
+CryptoLib.Examples/src/Utilities/HybridEncryption.pas
+  s_f0357621f14725::t_e66eb2607898f9 70
+CryptoLib.Examples/src/Utilities/PqcExampleUtilities.pas
+  s_f0357621f14725::t_6a4432e5e7f6cc 51
+CryptoLib.Examples/src/Utilities/SecureRandomExampleUtilities.pas
+  s_f0357621f14725::t_ec5ef6b0cc8a65 30
+CryptoLib.Tests/src/Asn1/Asn1IntegerTests.pas
+  s_f0357621f14725::t_ff6867a338d4e4 38
+CryptoLib.Tests/src/Asn1/Asn1SequenceCursorTests.pas
+  s_f0357621f14725::t_a3902c8fa880ae 39
+CryptoLib.Tests/src/Asn1/Asn1SequenceParserTests.pas
+  s_f0357621f14725::t_7128fd008d7b78 45
+CryptoLib.Tests/src/Asn1/Asn1StreamReadTests.pas
+  s_f0357621f14725::t_15c377583e2b6c 45
+CryptoLib.Tests/src/Asn1/BitStringTests.pas
+  s_f0357621f14725::t_5e923db0dcf1c5 39
+CryptoLib.Tests/src/Asn1/Cms/CcmParametersTests.pas
+  s_f0357621f14725::t_d9fae695bb6b50 38
+CryptoLib.Tests/src/Asn1/Cms/GcmParametersTests.pas
+  s_f0357621f14725::t_45bc9b2a8d4ec1 38
+CryptoLib.Tests/src/Asn1/DefiniteLengthAllocationTests.pas
+  s_f0357621f14725::t_5ceb8dcfc89831 39
+CryptoLib.Tests/src/Asn1/ExternalTests.pas
+  s_f0357621f14725::t_16a2bcb05a90df 36
+CryptoLib.Tests/src/Asn1/GeneralizedTimeTests.pas
+  s_f0357621f14725::t_ac467f76ecd0a2 40
+CryptoLib.Tests/src/Asn1/InputStreamTests.pas
+  s_f0357621f14725::t_69ff31904dc6e0 42
+CryptoLib.Tests/src/Asn1/OIDTests.pas
+  s_f0357621f14725::t_855f081535388d 38
+CryptoLib.Tests/src/Asn1/ParseTests.pas
+  s_f0357621f14725::t_93b86d07c1a147 39
+CryptoLib.Tests/src/Asn1/ParsingTests.pas
+  s_f0357621f14725::t_cc5bc26509039b 35
+CryptoLib.Tests/src/Asn1/Pkcs/Pkcs10CertRequestTests.pas
+  s_f0357621f14725::t_17233fc9d6c6f4 38
+CryptoLib.Tests/src/Asn1/RelativeOidTests.pas
+  s_f0357621f14725::t_474834fbfda66a 38
+CryptoLib.Tests/src/Asn1/X509/AuthorityKeyIdentifierTests.pas
+  s_f0357621f14725::t_bdb5dfbde2fb78 34
+CryptoLib.Tests/src/Asn1/X509/CertificateTests.pas
+  s_f0357621f14725::t_96b5532b428fe6 41
+CryptoLib.Tests/src/Asn1/X509/DeltaCertificateTests.pas
+  s_f0357621f14725::t_7fe21396ff0583 44
+CryptoLib.Tests/src/Asn1/X509/RelatedCertificateTests.pas
+  s_f0357621f14725::t_e1793f1ec6f6b1 43
+CryptoLib.Tests/src/Asn1/X509/X509ExtensionsTests.pas
+  s_f0357621f14725::t_cee18f21e37a18 43
+CryptoLib.Tests/src/Asn1/X509/X509NameTests.pas
+  s_f0357621f14725::t_b63417d0c35d14 41
+CryptoLib.Tests/src/Crypto/AESTests.pas
+  s_f0357621f14725::t_2f95085274458c 59
+CryptoLib.Tests/src/Crypto/AeadTestUtilities.pas
+  s_f0357621f14725::t_b5b065ee4dfbf7 32-33
+CryptoLib.Tests/src/Crypto/AlgorithmFinderTests.pas
+  s_f0357621f14725::t_857b039d818c1e 51
+CryptoLib.Tests/src/Crypto/Bip340SchnorrTests.pas
+  s_f0357621f14725::t_8d5c334a003947 51
+CryptoLib.Tests/src/Crypto/BlockCipherTestBase.pas
+  s_f0357621f14725::t_2f74cc3a44814d 36
+CryptoLib.Tests/src/Crypto/CMacTests.pas
+  s_f0357621f14725::t_c3db9d9c9fcda1 44
+CryptoLib.Tests/src/Crypto/CTSTests.pas
+  s_f0357621f14725::t_04938496da7174 47
+CryptoLib.Tests/src/Crypto/CcmTests.pas
+  s_f0357621f14725::t_8ef800f3d8edd7 49
+CryptoLib.Tests/src/Crypto/ChaCha20Poly1305Tests.pas
+  s_f0357621f14725::t_4460a24262b635 46
+CryptoLib.Tests/src/Crypto/ChaChaTests.pas
+  s_f0357621f14725::t_2360a399daa32c 41
+CryptoLib.Tests/src/Crypto/CryptoIOSinkTests.pas
+  s_f0357621f14725::t_1ebebe7058d9d9 54
+CryptoLib.Tests/src/Crypto/CryptoIOStreamTests.pas
+  s_f0357621f14725::t_ed4ec6b21b3963 71
+CryptoLib.Tests/src/Crypto/DHTests.pas
+  s_f0357621f14725::t_bace8f300d1cb9 68
+CryptoLib.Tests/src/Crypto/DSATests.pas
+  s_f0357621f14725::t_61a0e34dd255f0 65
+CryptoLib.Tests/src/Crypto/EaxTests.pas
+  s_f0357621f14725::t_57bdd03b5846d5 47
+CryptoLib.Tests/src/Crypto/GCMTests.pas
+  s_f0357621f14725::t_5bb90cfe457b28 54
+CryptoLib.Tests/src/Crypto/GMacTests.pas
+  s_f0357621f14725::t_db5ef0f8a77349 43
+CryptoLib.Tests/src/Crypto/GcmSivTests.pas
+  s_f0357621f14725::t_e08cf0be64b15c 44
+CryptoLib.Tests/src/Crypto/Kdf1GeneratorTests.pas
+  s_f0357621f14725::t_dc0357b9cf6b9e 40
+CryptoLib.Tests/src/Crypto/Kdf2GeneratorTests.pas
+  s_f0357621f14725::t_3d4c2e4b208ee4 40
+CryptoLib.Tests/src/Crypto/MlKemTests.pas
+  s_f0357621f14725::t_b60a9d7fe4d0f4 45-46
+CryptoLib.Tests/src/Crypto/OaepTests.pas
+  s_f0357621f14725::t_f4ffe80f103a96 53
+CryptoLib.Tests/src/Crypto/OcbTests.pas
+  s_f0357621f14725::t_f08fdbf93dc533 45
+CryptoLib.Tests/src/Crypto/PaddingTests.pas
+  s_f0357621f14725::t_4e4be31f779319 59
+CryptoLib.Tests/src/Crypto/Poly1305Tests.pas
+  s_f0357621f14725::t_2f334dd87a3011 51
+CryptoLib.Tests/src/Crypto/RSABlindedTests.pas
+  s_f0357621f14725::t_4702d6bc7d8d9b 32
+CryptoLib.Tests/src/Crypto/RSATests.pas
+  s_f0357621f14725::t_63760d2ca362b8 52
+CryptoLib.Tests/src/Crypto/Salsa20Tests.pas
+  s_f0357621f14725::t_3d2840db74919a 41
+CryptoLib.Tests/src/Crypto/XChaCha20Poly1305Tests.pas
+  s_f0357621f14725::t_60b07d13fb23e5 57
+CryptoLib.Tests/src/Crypto/XChaCha20Tests.pas
+  s_f0357621f14725::t_ad90e4a987c03d 48
+CryptoLib.Tests/src/Math/BigIntegerTests.pas
+  s_f0357621f14725::t_3abc27b2c563a4 38
+CryptoLib.Tests/src/Math/ECIESTests.pas
+  s_f0357621f14725::t_459ade52917e8f 68
+CryptoLib.Tests/src/Math/ECNRTests.pas
+  s_f0357621f14725::t_b2a9d52613b9f7 59
+CryptoLib.Tests/src/Math/ECPointTests.pas
+  s_f0357621f14725::t_32be1208da4ecc 39
+CryptoLib.Tests/src/Math/PrimesTests.pas
+  s_f0357621f14725::t_304e33fd1cfda5 41
+CryptoLib.Tests/src/Ocsp/OcspTests.pas
+  s_f0357621f14725::t_be8bf7c48d5c46 73
+CryptoLib.Tests/src/Others/CertTests.pas
+  s_f0357621f14725::t_49772826554114 74
+CryptoLib.Tests/src/Others/Curve25519KeyUtilitiesTests.pas
+  s_f0357621f14725::t_f3eaca5396d8cf 44
+CryptoLib.Tests/src/Others/Curve448KeyUtilitiesTests.pas
+  s_f0357621f14725::t_f3586c3191e5eb 44
+CryptoLib.Tests/src/Others/ECTests.pas
+  s_f0357621f14725::t_b6634736eecc7f 60
+CryptoLib.Tests/src/Others/ShortenedDigestTests.pas
+  s_f0357621f14725::t_80c3756e5190c5 36
+CryptoLib.Tests/src/Pkcs/Pkcs12StoreTests.pas
+  s_f0357621f14725::t_80dc3da06a10fa 53
+CryptoLib.Tests/src/Pkcs/PkcsEncryptedPrivateKeyInfoTests.pas
+  s_f0357621f14725::t_7d2f5ca07b6e2a 53
+CryptoLib.Tests/src/Pkix/CertPathTests.pas
+  s_f0357621f14725::t_faa3e3277f332f 47
+CryptoLib.Tests/src/Pkix/CertPathValidatorTests.pas
+  s_f0357621f14725::t_51e8a2aa224d43 54
+CryptoLib.Tests/src/Pkix/PkitsTestBase.pas
+  s_f0357621f14725::t_9f511186cf9fd7 42
+CryptoLib.Tests/src/Pkix/PkixFoundationTests.pas
+  s_f0357621f14725::t_250ffe39a3ddfc 55
+CryptoLib.Tests/src/Pkix/PkixNameConstraintTests.pas
+  s_f0357621f14725::t_69aa60d14a61ca 42
+CryptoLib.Tests/src/Pkix/PkixPolicyMappingTests.pas
+  s_f0357621f14725::t_a046cd15805b25 58
+CryptoLib.Tests/src/Rngs/Drbg/CtrDrbgTests.pas
+  s_f0357621f14725::t_199c8d965b7a12 34
+CryptoLib.Tests/src/Rngs/Drbg/HMacDrbgTests.pas
+  s_f0357621f14725::t_11ce1a4b887fc2 34
+CryptoLib.Tests/src/Rngs/Drbg/HashDrbgTests.pas
+  s_f0357621f14725::t_24fcef5f19269a 34
+CryptoLib.Tests/src/Security/DigestUtilitiesTests.pas
+  s_f0357621f14725::t_b89a81815cb6b5 43
+CryptoLib.Tests/src/Security/ParameterUtilitiesTests.pas
+  s_f0357621f14725::t_f398346d535c38 48
+CryptoLib.Tests/src/Utils/FixedSecureRandom.pas
+  s_f0357621f14725::t_e6f22a14acd784 30
+CryptoLib.Tests/src/Utils/Pem/PemReaderTests.pas
+  s_f0357621f14725::t_b31aaae8028433 48
+CryptoLib.Tests/src/Utils/ShortenedDigest.pas
+  s_f0357621f14725::t_4398a680923477 31-32
+CryptoLib/src/Asn1/ClpAsn1Core.pas
+  s_f0357621f14725::t_4561a6ee71d029 29
+CryptoLib/src/Asn1/ClpAsn1Encodings.pas
+  s_f0357621f14725::t_d11c35a8f400b4 28
+CryptoLib/src/Asn1/ClpAsn1Generators.pas
+  s_f0357621f14725::t_4c28b917dbf008 26
+CryptoLib/src/Asn1/ClpAsn1Objects.pas
+  s_f0357621f14725::t_dca332cbfa9507 31
+CryptoLib/src/Asn1/ClpAsn1Parsers.pas
+  s_f0357621f14725::t_68382671f2d94d 28
+CryptoLib/src/Asn1/ClpAsn1Streams.pas
+  s_f0357621f14725::t_07e19a3ad851da 36
+CryptoLib/src/Asn1/ClpAsn1Utilities.pas
+  s_f0357621f14725::t_33316e8ae366c6 31-32
+CryptoLib/src/Asn1/Cms/ClpCmsAsn1Objects.pas
+  s_f0357621f14725::t_d661bbbdc98874 37-38
+CryptoLib/src/Asn1/Cms/ClpCmsECAsn1Objects.pas
+  s_f0357621f14725::t_9b5ae4926bf8e8 33-34
+CryptoLib/src/Asn1/Cms/ClpCmsParsers.pas
+  s_f0357621f14725::t_832ef240610bc3 33
+CryptoLib/src/Asn1/Nist/ClpNistNamedCurves.pas
+  s_f0357621f14725::t_b2595fbf88f664 32
+CryptoLib/src/Asn1/Ocsp/ClpOcspAsn1Objects.pas
+  s_f0357621f14725::t_e7269c6b041fbc 33-34
+CryptoLib/src/Asn1/Pkcs/ClpPkcsAsn1Objects.pas
+  s_f0357621f14725::t_ecf656ae85d734 36
+CryptoLib/src/Asn1/Pkcs/ClpPkcsRsaAsn1Objects.pas
+  s_f0357621f14725::t_e656c5a1b8b8f3 36
+CryptoLib/src/Asn1/Sec/ClpSecECAsn1Objects.pas
+  s_f0357621f14725::t_b765082430fbd6 33
+CryptoLib/src/Asn1/X500/ClpX500Asn1Objects.pas
+  s_f0357621f14725::t_1ee567424303e0 31
+CryptoLib/src/Asn1/X500/Style/ClpIetfUtilities.pas
+  s_f0357621f14725::t_4eb383fd8e6a88 31
+CryptoLib/src/Asn1/X509/ClpX509Asn1Generators.pas
+  s_f0357621f14725::t_4b75b255f22104 36
+CryptoLib/src/Asn1/X509/ClpX509Asn1Objects.pas
+  s_f0357621f14725::t_8b6ea718afea0e 45
+CryptoLib/src/Asn1/X509/ClpX509DefaultEntryConverter.pas
+  s_f0357621f14725::t_29f3462639f766 31
+CryptoLib/src/Asn1/X509/ClpX509Extension.pas
+  s_f0357621f14725::t_98f00c75c78422 30
+CryptoLib/src/Asn1/X509/ClpX509NameTokenizer.pas
+  s_f0357621f14725::t_4ce5b17d5bf3b3 26
+CryptoLib/src/Asn1/X509/ClpX509RsaAsn1Objects.pas
+  s_f0357621f14725::t_091302517ef362 32
+CryptoLib/src/Asn1/X9/ClpX9DHAsn1Objects.pas
+  s_f0357621f14725::t_84b7f3e06b9cae 31
+CryptoLib/src/Asn1/X9/ClpX9ECAsn1Objects.pas
+  s_f0357621f14725::t_79a8607b25f351 39
+CryptoLib/src/Crypto/Agreements/ClpAgreementUtilities.pas
+  s_f0357621f14725::t_bebc22dfe6a594 30
+CryptoLib/src/Crypto/Agreements/ClpDHAgreement.pas
+  s_f0357621f14725::t_43d9bc5531071d 37
+CryptoLib/src/Crypto/Agreements/ClpDHBasicAgreement.pas
+  s_f0357621f14725::t_3bb1537d43c74a 31
+CryptoLib/src/Crypto/Agreements/ClpECDHBasicAgreement.pas
+  s_f0357621f14725::t_ae6d8adab128dd 34
+CryptoLib/src/Crypto/Agreements/ClpECDHCBasicAgreement.pas
+  s_f0357621f14725::t_6076a6a959eaee 34
+CryptoLib/src/Crypto/Agreements/ClpECDHCRawAgreement.pas
+  s_f0357621f14725::t_3bb18161e7423b 31-32
+CryptoLib/src/Crypto/Agreements/ClpECDHCWithKdfBasicAgreement.pas
+  s_f0357621f14725::t_6bab2fbde6f454 33
+CryptoLib/src/Crypto/Agreements/ClpECDHRawAgreement.pas
+  s_f0357621f14725::t_2987fe89a7ee10 31-32
+CryptoLib/src/Crypto/Agreements/ClpECDHWithKdfBasicAgreement.pas
+  s_f0357621f14725::t_36e892e61b6e43 33
+CryptoLib/src/Crypto/Agreements/ClpX25519Agreement.pas
+  s_f0357621f14725::t_a9fad14683a2f9 30-31
+CryptoLib/src/Crypto/Agreements/ClpX448Agreement.pas
+  s_f0357621f14725::t_f473cfe6467d8b 30-31
+CryptoLib/src/Crypto/Bip327/ClpBip327MuSig2KeyAggregation.pas
+  s_f0357621f14725::t_0f9d419fc26218 35-36
+CryptoLib/src/Crypto/Bip340/ClpBip340SchnorrBatchVerifier.pas
+  s_f0357621f14725::t_95e69b57f91029 44-45
+CryptoLib/src/Crypto/Bip340/ClpBip340SchnorrUtilities.pas
+  s_f0357621f14725::t_9c548e088f3637 34-35
+CryptoLib/src/Crypto/ClpAsymmetricCipherKeyPair.pas
+  s_f0357621f14725::t_728c1eab34c4ab 24
+CryptoLib/src/Crypto/ClpBufferedAeadBlockCipher.pas
+  s_f0357621f14725::t_bec98d364b2610 30-31
+CryptoLib/src/Crypto/ClpBufferedAeadCipher.pas
+  s_f0357621f14725::t_f65eb25de7fd2d 30-31
+CryptoLib/src/Crypto/ClpBufferedAsymmetricBlockCipher.pas
+  s_f0357621f14725::t_be2be42b5fdf76 30-31
+CryptoLib/src/Crypto/ClpBufferedBlockCipher.pas
+  s_f0357621f14725::t_2591447ddc0d4e 36-37
+CryptoLib/src/Crypto/ClpBufferedCipherBase.pas
+  s_f0357621f14725::t_2b52e2b32cd115 27-28
+CryptoLib/src/Crypto/ClpBufferedIesCipher.pas
+  s_f0357621f14725::t_1562effddf97a8 30-31
+CryptoLib/src/Crypto/ClpBufferedStreamCipher.pas
+  s_f0357621f14725::t_1c7c71f87f8b23 30-31
+CryptoLib/src/Crypto/ClpCheck.pas
+  s_f0357621f14725::t_43871e70c422ad 24-25
+CryptoLib/src/Crypto/ClpCipherUtilities.pas
+  s_f0357621f14725::t_b08293336f2b85 31
+CryptoLib/src/Crypto/ClpECKeyEncoder.pas
+  s_f0357621f14725::t_17dc849f2958c6 28-29
+CryptoLib/src/Crypto/ClpLib25519.pas
+  s_f0357621f14725::t_6d51cfa23c7517 27
+CryptoLib/src/Crypto/ClpPbeUtilities.pas
+  s_f0357621f14725::t_b1bb9defb7e13a 31
+CryptoLib/src/Crypto/ClpWrapperUtilities.pas
+  s_f0357621f14725::t_41abd7fbdae589 39-40
+CryptoLib/src/Crypto/Digests/ClpDigest.pas
+  s_f0357621f14725::t_73aecd8fa3ae26 29-30
+CryptoLib/src/Crypto/Digests/ClpDigestUtilities.pas
+  s_f0357621f14725::t_04551c7ff850dd 35
+CryptoLib/src/Crypto/Digests/ClpPrehash.pas
+  s_f0357621f14725::t_9a70b07af78e64 30-31
+CryptoLib/src/Crypto/Digests/ClpXof.pas
+  s_f0357621f14725::t_10f56178aef252 31-32
+CryptoLib/src/Crypto/EC/ClpCustomNamedCurves.pas
+  s_f0357621f14725::t_f66eacbc05322e 34
+CryptoLib/src/Crypto/Encodings/ClpISO9796d1Encoding.pas
+  s_f0357621f14725::t_f2b6fc3457f2ce 31-32
+CryptoLib/src/Crypto/Encodings/ClpOaepEncoding.pas
+  s_f0357621f14725::t_002df3aa403ed7 35-36
+CryptoLib/src/Crypto/Encodings/ClpPkcs1Encoding.pas
+  s_f0357621f14725::t_c359332174a2d0 35-36
+CryptoLib/src/Crypto/Engines/ClpAesEngine.pas
+  s_f0357621f14725::t_5fc3ecd6cb7e15 34-35
+CryptoLib/src/Crypto/Engines/ClpAesEngineArm.pas
+  s_f0357621f14725::t_7de2e1d036f027 38
+CryptoLib/src/Crypto/Engines/ClpAesEngineX86.pas
+  s_f0357621f14725::t_1ab2f723c6b0cd 38
+CryptoLib/src/Crypto/Engines/ClpAesLightEngine.pas
+  s_f0357621f14725::t_c15917ffd9b97b 34-35
+CryptoLib/src/Crypto/Engines/ClpBlowfishEngine.pas
+  s_f0357621f14725::t_8723a55cbffe1d 32-33
+CryptoLib/src/Crypto/Engines/ClpChaCha7539Engine.pas
+  s_f0357621f14725::t_1387897a7017b2 28-29
+CryptoLib/src/Crypto/Engines/ClpChaChaEngine.pas
+  s_f0357621f14725::t_a3aad6747076ff 32-33
+CryptoLib/src/Crypto/Engines/ClpIesEngine.pas
+  s_f0357621f14725::t_8f72c4bc2555ac 48-49
+CryptoLib/src/Crypto/Engines/ClpPascalCoinIesEngine.pas
+  s_f0357621f14725::t_84671676d338df 41-42
+CryptoLib/src/Crypto/Engines/ClpRfc3211WrapEngine.pas
+  s_f0357621f14725::t_e9f68f07101fc9 37-38
+CryptoLib/src/Crypto/Engines/ClpRfc3394WrapEngine.pas
+  s_f0357621f14725::t_8df7ac3855f7bb 33-34
+CryptoLib/src/Crypto/Engines/ClpRfc5649WrapEngine.pas
+  s_f0357621f14725::t_4822162151d14e 37-38
+CryptoLib/src/Crypto/Engines/ClpRijndaelEngine.pas
+  s_f0357621f14725::t_eaab0970d4ee8d 32-33
+CryptoLib/src/Crypto/Engines/ClpRsaBlindedEngine.pas
+  s_f0357621f14725::t_7c65eee3852516 36-37
+CryptoLib/src/Crypto/Engines/ClpRsaBlindingEngine.pas
+  s_f0357621f14725::t_9dc5040c199927 34-35
+CryptoLib/src/Crypto/Engines/ClpRsaCoreEngine.pas
+  s_f0357621f14725::t_ade7d37e558b85 32-33
+CryptoLib/src/Crypto/Engines/ClpSalsa20Engine.pas
+  s_f0357621f14725::t_3a1ab432e11b9f 36-37
+CryptoLib/src/Crypto/Engines/ClpSpeckEngine.pas
+  s_f0357621f14725::t_a5496c49efbd7d 32-33
+CryptoLib/src/Crypto/Engines/ClpSpeckLegacyEngine.pas
+  s_f0357621f14725::t_57bb14d081e2e3 32-33
+CryptoLib/src/Crypto/Engines/ClpXChaCha20Engine.pas
+  s_f0357621f14725::t_f3eb941e5ab4f1 29-30
+CryptoLib/src/Crypto/Engines/ClpXSalsa20Engine.pas
+  s_f0357621f14725::t_1609b909ca6405 29-30
+CryptoLib/src/Crypto/Factories/ClpAlgorithmIdentifierFactory.pas
+  s_f0357621f14725::t_b2477b4b1de742 30-31
+CryptoLib/src/Crypto/Factories/ClpCipherFactory.pas
+  s_f0357621f14725::t_206f1bbc85bb1e 43-44
+CryptoLib/src/Crypto/Factories/ClpCipherKeyGeneratorFactory.pas
+  s_f0357621f14725::t_399ecb35652835 31
+CryptoLib/src/Crypto/Generators/ClpArgon2ParametersGenerator.pas
+  s_f0357621f14725::t_79303118e478fb 36-37
+CryptoLib/src/Crypto/Generators/ClpBaseKdfBytesGenerator.pas
+  s_f0357621f14725::t_3ac08eb77e6051 32-33
+CryptoLib/src/Crypto/Generators/ClpCipherKeyGenerator.pas
+  s_f0357621f14725::t_8dfdd802d82fdf 32-33
+CryptoLib/src/Crypto/Generators/ClpConcatenationKdfGenerator.pas
+  s_f0357621f14725::t_c039a4374e58b4 32-33
+CryptoLib/src/Crypto/Generators/ClpDHGenerators.pas
+  s_f0357621f14725::t_2cf7c01b5dd2f5 36-37
+CryptoLib/src/Crypto/Generators/ClpDHKekGenerator.pas
+  s_f0357621f14725::t_1181b32e0a9874 40-41
+CryptoLib/src/Crypto/Generators/ClpDHParametersHelper.pas
+  s_f0357621f14725::t_1dfc3d1cefbba5 28-29
+CryptoLib/src/Crypto/Generators/ClpDsaGenerators.pas
+  s_f0357621f14725::t_57d24cd835ef88 41-42
+CryptoLib/src/Crypto/Generators/ClpECDHKekGenerator.pas
+  s_f0357621f14725::t_1de4bd06cc3954 41-42
+CryptoLib/src/Crypto/Generators/ClpECGenerators.pas
+  s_f0357621f14725::t_7cb054a090022b 27
+CryptoLib/src/Crypto/Generators/ClpGeneratorUtilities.pas
+  s_f0357621f14725::t_202c3ae312959e 29
+CryptoLib/src/Crypto/Generators/ClpHkdfBytesGenerator.pas
+  s_f0357621f14725::t_79759e2ec7a610 35-36
+CryptoLib/src/Crypto/Generators/ClpPascalCoinECIESKdfBytesGenerator.pas
+  s_f0357621f14725::t_9da12aa09d7ac9 30-31
+CryptoLib/src/Crypto/Generators/ClpPkcs5S1ParametersGenerator.pas
+  s_f0357621f14725::t_fb3d296a26361f 33-34
+CryptoLib/src/Crypto/Generators/ClpPkcs5S2ParametersGenerator.pas
+  s_f0357621f14725::t_9aa38106dab69c 38-39
+CryptoLib/src/Crypto/Generators/ClpPoly1305KeyGenerator.pas
+  s_f0357621f14725::t_71913fbfd626e1 28-29
+CryptoLib/src/Crypto/Generators/ClpRsaGenerators.pas
+  s_f0357621f14725::t_f7a2d3e6e4195e 41-42
+CryptoLib/src/Crypto/IO/ClpCipherStream.pas
+  s_f0357621f14725::t_55a8b6ddb226ac 31-32
+CryptoLib/src/Crypto/IO/ClpDigestSink.pas
+  s_f0357621f14725::t_d91cd3fd40373e 27-28
+CryptoLib/src/Crypto/IO/ClpDigestStream.pas
+  s_f0357621f14725::t_3e95470efa8581 29-30
+CryptoLib/src/Crypto/IO/ClpMacSink.pas
+  s_f0357621f14725::t_122d246b675ee1 27-28
+CryptoLib/src/Crypto/IO/ClpMacStream.pas
+  s_f0357621f14725::t_620c3ec28066d6 29-30
+CryptoLib/src/Crypto/IO/ClpSignerSink.pas
+  s_f0357621f14725::t_f97aa0f154d52c 27-28
+CryptoLib/src/Crypto/IO/ClpSignerStream.pas
+  s_f0357621f14725::t_d2473237f4158e 29-30
+CryptoLib/src/Crypto/Kems/ClpKemUtilities.pas
+  s_f0357621f14725::t_65a685b7a51796 29
+CryptoLib/src/Crypto/Kems/ClpMlKemDecapsulator.pas
+  s_f0357621f14725::t_a3563ca7f56311 32-33
+CryptoLib/src/Crypto/Kems/ClpMlKemEncapsulator.pas
+  s_f0357621f14725::t_1a44238dffb533 36-37
+CryptoLib/src/Crypto/Kems/MlKem/ClpMlKemEngine.pas
+  s_f0357621f14725::t_4d4550b3aad7fc 35-36
+CryptoLib/src/Crypto/Macs/ClpCMac.pas
+  s_f0357621f14725::t_007e5497cc2018 38-39
+CryptoLib/src/Crypto/Macs/ClpCbcBlockCipherMac.pas
+  s_f0357621f14725::t_6484bbebc0dbaa 33-34
+CryptoLib/src/Crypto/Macs/ClpCfbBlockCipherMac.pas
+  s_f0357621f14725::t_ed43d1a06709d2 34-35
+CryptoLib/src/Crypto/Macs/ClpGMac.pas
+  s_f0357621f14725::t_862dd2df286cd7 34-35
+CryptoLib/src/Crypto/Macs/ClpHMac.pas
+  s_f0357621f14725::t_9bb1f46b3e1e7c 35-36
+CryptoLib/src/Crypto/Macs/ClpKMac.pas
+  s_f0357621f14725::t_0900b83bcf62fe 32-33
+CryptoLib/src/Crypto/Macs/ClpMacUtilities.pas
+  s_f0357621f14725::t_e4cc548d101ec2 31
+CryptoLib/src/Crypto/Macs/ClpPoly1305.pas
+  s_f0357621f14725::t_258f263209d4e8 39-40
+CryptoLib/src/Crypto/Macs/ClpSipHashMac.pas
+  s_f0357621f14725::t_a43c90dc64b423 34-35
+CryptoLib/src/Crypto/Modes/ClpCbcBlockCipher.pas
+  s_f0357621f14725::t_6463981d49d9e8 38-39
+CryptoLib/src/Crypto/Modes/ClpCcmBlockCipher.pas
+  s_f0357621f14725::t_cf8242a4b184c9 49-50
+CryptoLib/src/Crypto/Modes/ClpCfbBlockCipher.pas
+  s_f0357621f14725::t_81414d69b5a82a 35-36
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_f0357621f14725::t_23cf362dae442b 44-45
+CryptoLib/src/Crypto/Modes/ClpCtsBlockCipher.pas
+  s_f0357621f14725::t_6b6173b609a3d3 33-34
+CryptoLib/src/Crypto/Modes/ClpEaxBlockCipher.pas
+  s_f0357621f14725::t_726ea99bc93ecf 48-49
+CryptoLib/src/Crypto/Modes/ClpEcbBlockCipher.pas
+  s_f0357621f14725::t_cbb31c17752880 32-33
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_f0357621f14725::t_8101021e0a57b1 51-52
+CryptoLib/src/Crypto/Modes/ClpGcmSivBlockCipher.pas
+  s_f0357621f14725::t_20a2158d0f9af6 52-53
+CryptoLib/src/Crypto/Modes/ClpOcbBlockCipher.pas
+  s_f0357621f14725::t_79ef52404a556c 43-44
+CryptoLib/src/Crypto/Modes/ClpOfbBlockCipher.pas
+  s_f0357621f14725::t_739acb42c7f478 30-31
+CryptoLib/src/Crypto/Modes/ClpSicBlockCipher.pas
+  s_f0357621f14725::t_25ff12f0718a13 39-40
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmUtilities.pas
+  s_f0357621f14725::t_7b33a99cdddfcc 31
+CryptoLib/src/Crypto/Operators/ClpAsn1CipherBuilderWithKey.pas
+  s_f0357621f14725::t_23a033af5b5c31 46
+CryptoLib/src/Crypto/Operators/ClpAsn1SignatureFactory.pas
+  s_f0357621f14725::t_5e7e0e8bff496f 34-35
+CryptoLib/src/Crypto/Operators/ClpAsn1VerifierFactory.pas
+  s_f0357621f14725::t_ca0e5096c4a7f9 33
+CryptoLib/src/Crypto/Operators/ClpAsn1VerifierFactoryProvider.pas
+  s_f0357621f14725::t_4196c164fbe22e 31-32
+CryptoLib/src/Crypto/Operators/ClpDefaultDigestAlgorithmFinder.pas
+  s_f0357621f14725::t_6a85c0eb6cf9f8 50
+CryptoLib/src/Crypto/Operators/ClpDefaultSignatureAlgorithmFinder.pas
+  s_f0357621f14725::t_2629b83f311d6b 53
+CryptoLib/src/Crypto/Paddings/ClpISO10126d2Padding.pas
+  s_f0357621f14725::t_3e39d280a223b6 28-29
+CryptoLib/src/Crypto/Paddings/ClpISO7816d4Padding.pas
+  s_f0357621f14725::t_65fb4b4199fc1a 27-28
+CryptoLib/src/Crypto/Paddings/ClpPaddedBufferedBlockCipher.pas
+  s_f0357621f14725::t_f7cf1ab6b0d2b1 37-38
+CryptoLib/src/Crypto/Paddings/ClpPkcs7Padding.pas
+  s_f0357621f14725::t_b9ba2cb25a1017 27-28
+CryptoLib/src/Crypto/Paddings/ClpX923Padding.pas
+  s_f0357621f14725::t_9300b5456572b5 27-28
+CryptoLib/src/Crypto/Parameters/ClpAeadParameters.pas
+  s_f0357621f14725::t_8d55b5b1901694 27-28
+CryptoLib/src/Crypto/Parameters/ClpBip340SchnorrParameters.pas
+  s_f0357621f14725::t_fcdc5819bcaf48 38-39
+CryptoLib/src/Crypto/Parameters/ClpCurve25519KeyUtilities.pas
+  s_f0357621f14725::t_9c78eb60fdc027 31-32
+CryptoLib/src/Crypto/Parameters/ClpCurve448KeyUtilities.pas
+  s_f0357621f14725::t_fb152d1d2e815a 32-33
+CryptoLib/src/Crypto/Parameters/ClpDHParameters.pas
+  s_f0357621f14725::t_85e2a4c2166239 37-38
+CryptoLib/src/Crypto/Parameters/ClpDsaParameters.pas
+  s_f0357621f14725::t_edcdf09183167a 32-33
+CryptoLib/src/Crypto/Parameters/ClpECParameters.pas
+  s_f0357621f14725::t_9268cd16288604 39-40
+CryptoLib/src/Crypto/Parameters/ClpEd25519Parameters.pas
+  s_f0357621f14725::t_f3fe01c704777e 32-33
+CryptoLib/src/Crypto/Parameters/ClpEd448Parameters.pas
+  s_f0357621f14725::t_07e9eadbad18c6 32-33
+CryptoLib/src/Crypto/Parameters/ClpHkdfParameters.pas
+  s_f0357621f14725::t_a76d23c3415d35 26-27
+CryptoLib/src/Crypto/Parameters/ClpKeyGenerationParameters.pas
+  s_f0357621f14725::t_2fc050a4b37aeb 25
+CryptoLib/src/Crypto/Parameters/ClpKeyParameter.pas
+  s_f0357621f14725::t_705aa74e0de3ff 27-28
+CryptoLib/src/Crypto/Parameters/ClpMlDsaParameters.pas
+  s_f0357621f14725::t_617e612ade8974 36-37
+CryptoLib/src/Crypto/Parameters/ClpMlKemParameters.pas
+  s_f0357621f14725::t_7a1a84a18cd27c 37-38
+CryptoLib/src/Crypto/Parameters/ClpParameterUtilities.pas
+  s_f0357621f14725::t_5e0514dcb573c2 30
+CryptoLib/src/Crypto/Parameters/ClpParametersWithContext.pas
+  s_f0357621f14725::t_5dce95aac4a5f4 27-28
+CryptoLib/src/Crypto/Parameters/ClpParametersWithIV.pas
+  s_f0357621f14725::t_45e1b620fcd03e 27-28
+CryptoLib/src/Crypto/Parameters/ClpParametersWithRandom.pas
+  s_f0357621f14725::t_48c0bea5e5939d 24
+CryptoLib/src/Crypto/Parameters/ClpRsaParameters.pas
+  s_f0357621f14725::t_9a37bd54449c67 34
+CryptoLib/src/Crypto/Parameters/ClpSlhDsaParameters.pas
+  s_f0357621f14725::t_0083c237d30bc5 39-40
+CryptoLib/src/Crypto/Parameters/ClpX25519Parameters.pas
+  s_f0357621f14725::t_cf2f2c2d55207e 32-33
+CryptoLib/src/Crypto/Parameters/ClpX448Parameters.pas
+  s_f0357621f14725::t_83f988c4bae1d8 32-33
+CryptoLib/src/Crypto/Parsers/ClpECIESPublicKeyParser.pas
+  s_f0357621f14725::t_4deaffcdc3bf40 31-32
+CryptoLib/src/Crypto/Randoms/ClpRandom.pas
+  s_f0357621f14725::t_a28949021c4679 26
+CryptoLib/src/Crypto/Randoms/ClpSP800SecureRandomBuilder.pas
+  s_f0357621f14725::t_fe54bcd60ba301 26
+CryptoLib/src/Crypto/Randoms/ClpSecureRandom.pas
+  s_f0357621f14725::t_9957e4cdcc8483 28
+CryptoLib/src/Crypto/Signers/ClpBip340SchnorrSigner.pas
+  s_f0357621f14725::t_5d59b09a084e18 44-45
+CryptoLib/src/Crypto/Signers/ClpDsaDigestSigner.pas
+  s_f0357621f14725::t_213dff8aa60fc5 29
+CryptoLib/src/Crypto/Signers/ClpDsaSigner.pas
+  s_f0357621f14725::t_3433b10a297998 37-38
+CryptoLib/src/Crypto/Signers/ClpECDsaSigner.pas
+  s_f0357621f14725::t_6699c427ad7c06 33
+CryptoLib/src/Crypto/Signers/ClpECNRSigner.pas
+  s_f0357621f14725::t_7361da5c463adf 40-41
+CryptoLib/src/Crypto/Signers/ClpEd25519CtxSigner.pas
+  s_f0357621f14725::t_0088c331ff9f7c 32-33
+CryptoLib/src/Crypto/Signers/ClpEd25519PhSigner.pas
+  s_f0357621f14725::t_32903eb1c56536 31-32
+CryptoLib/src/Crypto/Signers/ClpEd25519Signer.pas
+  s_f0357621f14725::t_cd50f787f2d017 32-33
+CryptoLib/src/Crypto/Signers/ClpEd448PhSigner.pas
+  s_f0357621f14725::t_eba1dbb89c527f 31-32
+CryptoLib/src/Crypto/Signers/ClpEd448Signer.pas
+  s_f0357621f14725::t_95857111ce321a 32-33
+CryptoLib/src/Crypto/Signers/ClpGenericSigner.pas
+  s_f0357621f14725::t_0d028d9fbb2ded 34-35
+CryptoLib/src/Crypto/Signers/ClpHashMlDsaSigner.pas
+  s_f0357621f14725::t_b29475c0fbaf77 37-38
+CryptoLib/src/Crypto/Signers/ClpHashSlhDsaSigner.pas
+  s_f0357621f14725::t_a2cbb313cb5217 38-39
+CryptoLib/src/Crypto/Signers/ClpIsoTrailers.pas
+  s_f0357621f14725::t_08f119e84a483b 27
+CryptoLib/src/Crypto/Signers/ClpMlDsaSigner.pas
+  s_f0357621f14725::t_e65dadaa1a92a1 35-36
+CryptoLib/src/Crypto/Signers/ClpPssSigner.pas
+  s_f0357621f14725::t_6047146e53d33b 38-39
+CryptoLib/src/Crypto/Signers/ClpRsaDigestSigner.pas
+  s_f0357621f14725::t_f7bf4c3bc6c9bc 48-49
+CryptoLib/src/Crypto/Signers/ClpSignerUtilities.pas
+  s_f0357621f14725::t_3a7bf71852b239 83
+CryptoLib/src/Crypto/Signers/ClpSlhDsaSigner.pas
+  s_f0357621f14725::t_69d5eaec5d76fe 36-37
+CryptoLib/src/Crypto/Signers/ClpX931Signer.pas
+  s_f0357621f14725::t_eabe8ab5aa88ba 36-37
+CryptoLib/src/Crypto/Signers/MlDsa/ClpMlDsaCore.pas
+  s_f0357621f14725::t_c773357fa281d5 32-33
+CryptoLib/src/Crypto/Signers/MlDsa/ClpMlDsaEngine.pas
+  s_f0357621f14725::t_25df11e5556cf5 36-37
+CryptoLib/src/Crypto/Signers/SignerCalculators/ClpHMacDsaKCalculator.pas
+  s_f0357621f14725::t_8ad3a3bab615e6 36-37
+CryptoLib/src/Crypto/Signers/SignerCalculators/ClpRandomDsaKCalculator.pas
+  s_f0357621f14725::t_a1319c8c9484e8 25
+CryptoLib/src/Crypto/Signers/SignerEncodings/ClpPlainDsaEncoding.pas
+  s_f0357621f14725::t_f0bd99311051be 30-31
+CryptoLib/src/Crypto/Signers/SignerEncodings/ClpStandardDsaEncoding.pas
+  s_f0357621f14725::t_cc860e8c2c1378 31-32
+CryptoLib/src/Crypto/Signers/SlhDsa/ClpSlhDsaCore.pas
+  s_f0357621f14725::t_b6e4d7a46b32b7 30-31
+CryptoLib/src/Crypto/Signers/SlhDsa/ClpSlhDsaEngine.pas
+  s_f0357621f14725::t_1d17ca7c581473 37-38
+CryptoLib/src/Factories/ClpEncryptedPrivateKeyInfoFactory.pas
+  s_f0357621f14725::t_07980beba26fdf 42-43
+CryptoLib/src/Factories/ClpPrivateKeyFactory.pas
+  s_f0357621f14725::t_e2c12d9492d129 71
+CryptoLib/src/Factories/ClpPrivateKeyInfoFactory.pas
+  s_f0357621f14725::t_a2c3c2c2f7ba9c 65
+CryptoLib/src/Factories/ClpPublicKeyFactory.pas
+  s_f0357621f14725::t_c3626cf76c1320 69-70
+CryptoLib/src/Factories/ClpSubjectPublicKeyInfoFactory.pas
+  s_f0357621f14725::t_0a531c50925563 54-55
+CryptoLib/src/GeneralUtilities/ClpArrayUtilities.pas
+  s_f0357621f14725::t_c108a7b1e0c30c 26-27
+CryptoLib/src/GeneralUtilities/ClpDateTimeUtilities.pas
+  s_f0357621f14725::t_d9fe8732bfd6bb 26-27
+CryptoLib/src/IO/ClpStreamUtilities.pas
+  s_f0357621f14725::t_23666dd2489cdd 27
+CryptoLib/src/IO/ClpStreams.pas
+  s_f0357621f14725::t_24102d63aaba2e 26-27
+CryptoLib/src/Math/ClpBigInteger.pas
+  s_f0357621f14725::t_c971e877cc659a 27
+CryptoLib/src/Math/ClpBigIntegerUtilities.pas
+  s_f0357621f14725::t_3a98715be4cb5a 32-33
+CryptoLib/src/Math/ClpPrimes.pas
+  s_f0357621f14725::t_959d414660ea0b 33-34
+CryptoLib/src/Math/EC/Abc/ClpSimpleBigDecimal.pas
+  s_f0357621f14725::t_6d5a1687eb8868 26
+CryptoLib/src/Math/EC/Abc/ClpTnaf.pas
+  s_f0357621f14725::t_eb2ac80b19f914 35-36
+CryptoLib/src/Math/EC/ClpECAlgorithms.pas
+  s_f0357621f14725::t_580a2f02c17e84 37-38
+CryptoLib/src/Math/EC/ClpECCurve.pas
+  s_f0357621f14725::t_0821aec150d9a3 48-49
+CryptoLib/src/Math/EC/ClpECFieldElement.pas
+  s_f0357621f14725::t_c862b5765646e4 35-36
+CryptoLib/src/Math/EC/ClpECLookupTables.pas
+  s_f0357621f14725::t_f974c250c7f965 26-27
+CryptoLib/src/Math/EC/ClpECPoint.pas
+  s_f0357621f14725::t_09a17ed8be9639 40-41
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256K1Custom.pas
+  s_f0357621f14725::t_d56ea21c753712 42-43
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_f0357621f14725::t_e038209dd9cad8 42-43
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP384R1Custom.pas
+  s_f0357621f14725::t_0d72a5e4d4b94a 42-43
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP521R1Custom.pas
+  s_f0357621f14725::t_9189d48ad6fcc7 42-43
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecT283K1Custom.pas
+  s_f0357621f14725::t_c4b5bd81dcd97a 41-42
+CryptoLib/src/Math/EC/Endo/ClpEndoUtilities.pas
+  s_f0357621f14725::t_c8ee2e258a1b26 32-33
+CryptoLib/src/Math/EC/Endo/ClpScalarSplitParameters.pas
+  s_f0357621f14725::t_f459970549fb9a 26-27
+CryptoLib/src/Math/EC/Multiplier/ClpMultipliers.pas
+  s_f0357621f14725::t_9d0677cebfa15b 44-45
+CryptoLib/src/Math/EC/Multiplier/ClpWNafUtilities.pas
+  s_f0357621f14725::t_d8fd427b099b40 37-38
+CryptoLib/src/Math/EC/Rfc7748/ClpX25519.pas
+  s_f0357621f14725::t_a8c7045187e4d3 27
+CryptoLib/src/Math/EC/Rfc7748/ClpX448.pas
+  s_f0357621f14725::t_c16a641d0dab6d 27
+CryptoLib/src/Math/EC/Rfc8032/ClpEd25519.pas
+  s_f0357621f14725::t_0d59fe832a9853 35-36
+CryptoLib/src/Math/EC/Rfc8032/ClpEd448.pas
+  s_f0357621f14725::t_42da5d56b96000 34-35
+CryptoLib/src/Math/Field/ClpFiniteFields.pas
+  s_f0357621f14725::t_be97742cc17099 27
+CryptoLib/src/Math/Raw/ClpMod.pas
+  s_f0357621f14725::t_3f3f861ec26e0e 31-32
+CryptoLib/src/Math/Raw/ClpNat.pas
+  s_f0357621f14725::t_0d6f0370d983d9 31-32
+CryptoLib/src/Misc/ClpConverters.pas
+  s_f0357621f14725::t_2118e38fdaccac 25-26
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_f0357621f14725::t_4b448f6f3a07fb 25
+CryptoLib/src/Misc/ClpPack.pas
+  s_f0357621f14725::t_78104f8c460f63 26-27
+CryptoLib/src/Ocsp/ClpOcspGenerators.pas
+  s_f0357621f14725::t_62de1144df7d8e 46-47
+CryptoLib/src/Ocsp/ClpOcspProtocolObjects.pas
+  s_f0357621f14725::t_6e29db61cb3dc1 52-53
+CryptoLib/src/OpenSsl/ClpOpenSslMiscPemGenerator.pas
+  s_f0357621f14725::t_fb8bd977b138da 61
+CryptoLib/src/OpenSsl/ClpOpenSslPemReader.pas
+  s_f0357621f14725::t_a75125e97a89cb 74-75
+CryptoLib/src/OpenSsl/ClpOpenSslPemUtilities.pas
+  s_f0357621f14725::t_6f128398f65db5 35-36
+CryptoLib/src/OpenSsl/ClpOpenSslPemWriter.pas
+  s_f0357621f14725::t_e64ec5a08c84c8 32-33
+CryptoLib/src/OpenSsl/ClpOpenSslPkcs8Generator.pas
+  s_f0357621f14725::t_dc9a4748bdcf9c 35-36
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_f0357621f14725::t_8d7ba56f9db3e3 280-282
+CryptoLib/src/Pem/ClpPemParser.pas
+  s_f0357621f14725::t_763da3c9599b4b 34-35
+CryptoLib/src/Pem/ClpPemReader.pas
+  s_f0357621f14725::t_5c671678923454 33
+CryptoLib/src/Pem/ClpPemWriter.pas
+  s_f0357621f14725::t_1ff27cfaa58651 30
+CryptoLib/src/Pkcs/ClpAsymmetricKeyEntry.pas
+  s_f0357621f14725::t_e509b2ecb22c39 32
+CryptoLib/src/Pkcs/ClpPkcs10CertificationRequest.pas
+  s_f0357621f14725::t_5a07148186f892 61-62
+CryptoLib/src/Pkcs/ClpPkcs10CertificationRequestBuilder.pas
+  s_f0357621f14725::t_3cca5a7e98edfc 44-45
+CryptoLib/src/Pkcs/ClpPkcs12Store.pas
+  s_f0357621f14725::t_684c828afc4c9f 63
+CryptoLib/src/Pkcs/ClpPkcs12Utilities.pas
+  s_f0357621f14725::t_4b47721b66f874 34-35
+CryptoLib/src/Pkcs/ClpPkcs8EncryptedPrivateKeyInfo.pas
+  s_f0357621f14725::t_070f5fa2958b5d 33-34
+CryptoLib/src/Pkcs/ClpPkcs8EncryptedPrivateKeyInfoBuilder.pas
+  s_f0357621f14725::t_daa361c020ab26 36-37
+CryptoLib/src/Pkcs/ClpX509CertificateEntry.pas
+  s_f0357621f14725::t_a6a5da48049844 32
+CryptoLib/src/Pkix/ClpNameConstraintIP.pas
+  s_f0357621f14725::t_03334f8f0245cb 32-33
+CryptoLib/src/Pkix/ClpNameConstraintTypes.pas
+  s_f0357621f14725::t_391101f808fe4c 32
+CryptoLib/src/Pkix/ClpPkixAttrCertPathBuilder.pas
+  s_f0357621f14725::t_bb62475ce9fc2b 39-40
+CryptoLib/src/Pkix/ClpPkixAttrCertPathValidator.pas
+  s_f0357621f14725::t_79eeeab59de123 32-33
+CryptoLib/src/Pkix/ClpPkixBuilderParameters.pas
+  s_f0357621f14725::t_0051dc56f5cea9 30-31
+CryptoLib/src/Pkix/ClpPkixCertPath.pas
+  s_f0357621f14725::t_456700cfc1ef35 43-44
+CryptoLib/src/Pkix/ClpPkixCertPathBuilder.pas
+  s_f0357621f14725::t_7c9dec5963aec5 35-36
+CryptoLib/src/Pkix/ClpPkixCertPathValidator.pas
+  s_f0357621f14725::t_75919960cd3278 39-40
+CryptoLib/src/Pkix/ClpPkixCertPathValidatorResult.pas
+  s_f0357621f14725::t_d08b22d7941011 28
+CryptoLib/src/Pkix/ClpPkixCertPathValidatorUtilities.pas
+  s_f0357621f14725::t_27b36173ffa57a 50-51
+CryptoLib/src/Pkix/ClpPkixCrlRevocationChecker.pas
+  s_f0357621f14725::t_ab6d5bded36389 29-30
+CryptoLib/src/Pkix/ClpPkixCrlUtilities.pas
+  s_f0357621f14725::t_21de960a464644 31-32
+CryptoLib/src/Pkix/ClpPkixNameConstraintValidator.pas
+  s_f0357621f14725::t_900a5893283a8d 38-39
+CryptoLib/src/Pkix/ClpPkixOcspRevocationChecker.pas
+  s_f0357621f14725::t_d38e01a976b859 33-34
+CryptoLib/src/Pkix/ClpPkixParameters.pas
+  s_f0357621f14725::t_e927fae3531a44 31-32
+CryptoLib/src/Pkix/ClpPkixRevocationChecker.pas
+  s_f0357621f14725::t_617b2191087c43 31-32
+CryptoLib/src/Pkix/ClpRfc3280CertPathUtilities.pas
+  s_f0357621f14725::t_fb0518b004b35a 53-54
+CryptoLib/src/Pkix/ClpRfc3281CertPathUtilities.pas
+  s_f0357621f14725::t_ae52571d2df999 48-49
+CryptoLib/src/Pkix/ClpTrustAnchor.pas
+  s_f0357621f14725::t_f5aa3cc3921759 30-31
+CryptoLib/src/Rngs/ClpBasicEntropySourceProvider.pas
+  s_f0357621f14725::t_11ca73168e04e1 26
+CryptoLib/src/Rngs/ClpCryptoApiEntropySourceProvider.pas
+  s_f0357621f14725::t_bdd0f93871a657 26
+CryptoLib/src/Rngs/ClpCryptoApiRandomGenerator.pas
+  s_f0357621f14725::t_8f104d370a7827 28-29
+CryptoLib/src/Rngs/ClpRandomNumberGenerator.pas
+  s_f0357621f14725::t_b572cccb3b0ff4 25
+CryptoLib/src/Rngs/Drbg/ClpCtrSP800Drbg.pas
+  s_f0357621f14725::t_890557759e2ba2 26
+CryptoLib/src/Rngs/Drbg/ClpHMacSP800Drbg.pas
+  s_f0357621f14725::t_a7cbbbaa598e27 26
+CryptoLib/src/Rngs/Drbg/ClpHashSP800Drbg.pas
+  s_f0357621f14725::t_a63f82ddfd57a5 27
+CryptoLib/src/Rngs/Providers/ClpAesRandomProvider.pas
+  s_f0357621f14725::t_8c1b86977006a3 34-35
+CryptoLib/src/Rngs/Providers/ClpAndroidRandomProvider.pas
+  s_f0357621f14725::t_e60250d2f34d30 30
+CryptoLib/src/Rngs/Providers/ClpBsdRandomProvider.pas
+  s_f0357621f14725::t_927d525fa9b938 30
+CryptoLib/src/Rngs/Providers/ClpIOSRandomProvider.pas
+  s_f0357621f14725::t_0ad5591fee8f39 30
+CryptoLib/src/Rngs/Providers/ClpLinuxRandomProvider.pas
+  s_f0357621f14725::t_c2553abb1fbab9 30
+CryptoLib/src/Rngs/Providers/ClpMacOSRandomProvider.pas
+  s_f0357621f14725::t_9671acf2c9862f 35
+CryptoLib/src/Rngs/Providers/ClpSolarisRandomProvider.pas
+  s_f0357621f14725::t_6d3ceb3bdaaea5 30
+CryptoLib/src/Rngs/Providers/ClpUnixLikeRandomProvider.pas
+  s_f0357621f14725::t_32b74812c0a3da 27
+CryptoLib/src/Rngs/Providers/ClpWindowsRandomProvider.pas
+  s_f0357621f14725::t_4344aed4303be5 28
+CryptoLib/src/Simd/Backend/ClpChaChaArmBackend.pas
+  s_f0357621f14725::t_c33b1afc573825 26
+CryptoLib/src/Simd/Backend/ClpChaChaX86Backend.pas
+  s_f0357621f14725::t_3d5e7387abb956 27
+CryptoLib/src/Simd/Facade/ClpBinPolySimd.pas
+  s_f0357621f14725::t_060fe83e4707f0 29
+CryptoLib/src/X509/ClpAttributeCertificateIssuer.pas
+  s_f0357621f14725::t_d1216036e41871 32-33
+CryptoLib/src/X509/ClpDeltaCertificateTool.pas
+  s_f0357621f14725::t_1aab45b582a594 33-34
+CryptoLib/src/X509/ClpX509AttrCertParser.pas
+  s_f0357621f14725::t_7d84aa5e299ce6 40
+CryptoLib/src/X509/ClpX509Certificate.pas
+  s_f0357621f14725::t_22000ecb134bff 53
+CryptoLib/src/X509/ClpX509CertificatePair.pas
+  s_f0357621f14725::t_8c12499ce021a4 32-33
+CryptoLib/src/X509/ClpX509CertificatePairParser.pas
+  s_f0357621f14725::t_196b470ad963b0 37-38
+CryptoLib/src/X509/ClpX509CertificateParser.pas
+  s_f0357621f14725::t_3c9a4759b48a08 39
+CryptoLib/src/X509/ClpX509Crl.pas
+  s_f0357621f14725::t_ec1a1afe08492c 51-52
+CryptoLib/src/X509/ClpX509CrlEntry.pas
+  s_f0357621f14725::t_bfc921876396ff 36-37
+CryptoLib/src/X509/ClpX509CrlParser.pas
+  s_f0357621f14725::t_83c8ff2f94321e 43-44
+CryptoLib/src/X509/ClpX509Generators.pas
+  s_f0357621f14725::t_eb1956ea376d5b 42
+CryptoLib/src/X509/ClpX509NameBuilder.pas
+  s_f0357621f14725::t_958e10f9c11e68 31
+CryptoLib/src/X509/ClpX509V2AttributeCertificate.pas
+  s_f0357621f14725::t_3dd5ce7fdae829 47-48
+CryptoLib/src/X509/Store/ClpX509StoreSelectors.pas
+  s_f0357621f14725::t_20e342859beb5a 42-43
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_f0357621f14725::t_d2950c43d19871 72
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_f0357621f14725::t_9b7eac3108ab75 91
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_f0357621f14725::t_7b9487532d35cd 68
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_f0357621f14725::t_ccecc4b970d723 411
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_f0357621f14725::t_790210c10c686b 87
+CryptoLib.Tests/src/Crypto/Bip327MuSig2Tests.pas
+  s_f0357621f14725::t_20ceae0fe2cc56 59,69,123,206,279,387,429,486,521
+CryptoLib/src/Crypto/Bip327/ClpBip327MuSig2.pas
+  s_f0357621f14725::t_b39e243e468e4f 39-40,251,258-259,294,520
+CryptoLib/src/Crypto/Bip327/ClpBip327MuSig2Utilities.pas
+  s_f0357621f14725::t_f2a54231e8c437 31-32,123,130
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_f0357621f14725::t_d278f8b133266b 96
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_f0357621f14725::t_5034d4b2ad323e 34,3460-3463
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "271093427c123d3dc594f4940f9b6d687371a3df",
+  "prompts": {},
+  "sessions": {
+    "s_f0357621f14725": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "3d6c591f-073e-4c2e-ac2f-7738c45c05b3",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
