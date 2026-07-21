@@ -88,11 +88,13 @@ begin
     Fail('zero encoding wrong');
   end;
 
+  // nil is indistinguishable from empty in Pascal, so (nil, 1) is empty data with a non-zero
+  // pad-bit count, rejected as that violation rather than as a nil-data error
   try
     TDerBitString.Create(nil, 1);
     Fail('exception not thrown');
   except
-    on E: EArgumentNilCryptoLibException do
+    on E: EArgumentCryptoLibException do
     begin
       // Expected
     end;

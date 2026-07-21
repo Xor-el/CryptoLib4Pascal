@@ -112,6 +112,11 @@ type
     procedure TestTaggedPrimitiveWithEmptyContentsDecodes;
     procedure TestImplicitNullRoundTrips;
     procedure TestOctetStringContentsNilIsEmptyNotAnError;
+    procedure TestOctetStringFromContentsNilIsEmptyNotAnError;
+    procedure TestSequenceAndSetFromNilGenericArrayAreEmpty;
+    procedure TestBmpStringAndAddAllAcceptEmpty;
+    procedure TestEmptyStringTypesAreAccepted;
+    procedure TestBitStringEmptyDataWithZeroPadBitsIsAccepted;
   end;
 
 implementation
@@ -511,6 +516,146 @@ begin
 
   CheckNull(TDerOctetString.WithContentsOptional(nil),
     'the optional form must still report absence as nil');
+end;
+
+// An empty OCTET STRING (04 00) is legal, and Pascal cannot tell an empty array from nil, so the
+// non-optional FromContents/WithContents builders must accept nil as the empty octet string rather
+// than rejecting it. Only the Optional forms carry absence.
+procedure TAsn1StreamReadTest.TestOctetStringFromContentsNilIsEmptyNotAnError;
+var
+  LDer: IDerOctetString;
+  LBer: IBerOctetString;
+begin
+  LDer := TDerOctetString.FromContents(nil);
+  CheckNotNull(LDer, 'DER FromContents(nil) must give the empty octet string, not an error');
+  CheckEquals(0, System.Length(LDer.GetOctets()), 'the DER octet string must be empty');
+
+  LBer := TBerOctetString.WithContents(nil);
+  CheckNotNull(LBer, 'BER WithContents(nil) must give the empty octet string, not an error');
+  CheckEquals(0, System.Length(LBer.GetOctets()), 'the BER octet string must be empty');
+
+  LBer := TBerOctetString.FromContents(nil);
+  CheckNotNull(LBer, 'BER FromContents(nil) must give the empty octet string, not an error');
+  CheckEquals(0, System.Length(LBer.GetOctets()), 'the BER octet string must be empty');
+
+  CheckNull(TDerOctetString.FromContentsOptional(nil),
+    'the DER optional form must still report absence as nil');
+  CheckNull(TBerOctetString.WithContentsOptional(nil),
+    'the BER optional form must still report absence as nil');
+  CheckNull(TBerOctetString.FromContentsOptional(nil),
+    'the BER optional form must still report absence as nil');
+end;
+
+// An empty SEQUENCE (30 00) and SET (31 00) are legal. The generic-array constructors must accept a
+// nil/empty element array as the empty container rather than rejecting it.
+procedure TAsn1StreamReadTest.TestSequenceAndSetFromNilGenericArrayAreEmpty;
+var
+  LNilElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LSeq: IDerSequence;
+  LSet: IDerSet;
+  LEncoded: TCryptoLibByteArray;
+begin
+  LSeq := TDerSequence.Create(LNilElements);
+  CheckNotNull(LSeq, 'an empty element array must give the empty SEQUENCE, not an error');
+  CheckEquals(0, LSeq.Count, 'the SEQUENCE must have no elements');
+  LEncoded := LSeq.GetEncoded();
+  CheckEquals(2, System.Length(LEncoded), 'the empty SEQUENCE must encode to two bytes');
+  CheckEquals(Int32($30), Int32(LEncoded[0]), 'the SEQUENCE tag octet');
+  CheckEquals(Int32($00), Int32(LEncoded[1]), 'the SEQUENCE length octet must be zero');
+
+  LSet := TDerSet.Create(LNilElements);
+  CheckNotNull(LSet, 'an empty element array must give the empty SET, not an error');
+  CheckEquals(0, LSet.Count, 'the SET must have no elements');
+  LEncoded := LSet.GetEncoded();
+  CheckEquals(2, System.Length(LEncoded), 'the empty SET must encode to two bytes');
+  CheckEquals(Int32($31), Int32(LEncoded[0]), 'the SET tag octet');
+  CheckEquals(Int32($00), Int32(LEncoded[1]), 'the SET length octet must be zero');
+end;
+
+// An empty BMPString is legal (a zero-length string), and adding an empty array to a vector is a
+// legal no-op. Neither may be rejected because Pascal cannot tell an empty array from nil.
+procedure TAsn1StreamReadTest.TestBmpStringAndAddAllAcceptEmpty;
+var
+  LNilBytes: TCryptoLibByteArray;
+  LNilElements: TCryptoLibGenericArray<IAsn1Encodable>;
+  LBmp: IDerBmpString;
+  LVector: IAsn1EncodableVector;
+begin
+  LBmp := TDerBmpString.Create(LNilBytes);
+  CheckNotNull(LBmp, 'empty BMPString contents must give the empty string, not an error');
+  CheckEquals('', LBmp.GetString(), 'the BMPString must be empty');
+
+  LVector := TAsn1EncodableVector.Create();
+  LVector.AddAll(LNilElements);
+  CheckEquals(0, LVector.Count, 'AddAll of an empty array must be a no-op');
+end;
+
+// A zero-length string is legal for every ASN.1 string type, and Pascal's empty string is the
+// closest thing to nil, so the string constructors must accept '' rather than rejecting it.
+procedure TAsn1StreamReadTest.TestEmptyStringTypesAreAccepted;
+var
+  LBmp: IDerBmpString;
+  LGen: IDerGeneralString;
+  LIA5: IDerIA5String;
+  LNum: IDerNumericString;
+  LPrn: IDerPrintableString;
+  LT61: IDerT61String;
+  LVis: IDerVisibleString;
+begin
+  LBmp := TDerBmpString.Create('');
+  CheckNotNull(LBmp, 'empty BMPString must be accepted');
+  CheckEquals('', LBmp.GetString(), 'BMPString must be empty');
+
+  LGen := TDerGeneralString.Create('');
+  CheckNotNull(LGen, 'empty GeneralString must be accepted');
+  CheckEquals('', LGen.GetString(), 'GeneralString must be empty');
+
+  LIA5 := TDerIA5String.Create('');
+  CheckNotNull(LIA5, 'empty IA5String must be accepted');
+  CheckEquals('', LIA5.GetString(), 'IA5String must be empty');
+
+  LNum := TDerNumericString.Create('');
+  CheckNotNull(LNum, 'empty NumericString must be accepted');
+  CheckEquals('', LNum.GetString(), 'NumericString must be empty');
+
+  LPrn := TDerPrintableString.Create('');
+  CheckNotNull(LPrn, 'empty PrintableString must be accepted');
+  CheckEquals('', LPrn.GetString(), 'PrintableString must be empty');
+
+  LT61 := TDerT61String.Create('');
+  CheckNotNull(LT61, 'empty T61String must be accepted');
+  CheckEquals('', LT61.GetString(), 'T61String must be empty');
+
+  LVis := TDerVisibleString.Create('');
+  CheckNotNull(LVis, 'empty VisibleString must be accepted');
+  CheckEquals('', LVis.GetString(), 'VisibleString must be empty');
+end;
+
+// The empty BIT STRING (03 01 00) is legal: empty bit data with a zero pad-bit count. The
+// data+padBits constructor must accept it, while still rejecting empty data with non-zero pad bits.
+procedure TAsn1StreamReadTest.TestBitStringEmptyDataWithZeroPadBitsIsAccepted;
+var
+  LNilData: TCryptoLibByteArray;
+  LBits: IDerBitString;
+  LEncoded: TCryptoLibByteArray;
+  LRaised: Boolean;
+begin
+  LBits := TDerBitString.Create(LNilData, 0);
+  CheckNotNull(LBits, 'empty bit data with zero pad bits must be accepted');
+  LEncoded := LBits.GetEncoded();
+  CheckEquals(3, System.Length(LEncoded), 'the empty BIT STRING must encode to three bytes');
+  CheckEquals(Int32($03), Int32(LEncoded[0]), 'the BIT STRING tag octet');
+  CheckEquals(Int32($01), Int32(LEncoded[1]), 'the length octet must be one');
+  CheckEquals(Int32($00), Int32(LEncoded[2]), 'the single content octet is the zero pad-bit count');
+
+  LRaised := False;
+  try
+    TDerBitString.Create(LNilData, 3);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'empty bit data with non-zero pad bits must still be rejected');
 end;
 
 initialization

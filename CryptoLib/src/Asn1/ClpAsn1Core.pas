@@ -35,7 +35,6 @@ uses
 resourcestring
   SInitialCapacityMustNotBeNegative = 'initial capacity must not be negative';
   SElementNil = 'element cannot be nil';
-  SEncodableArrayNil = 'encodable array cannot be nil';
   SOtherVectorNil = 'vector cannot be nil';
   SExtraDataFoundAfterObject = 'extra data found after object';
   SIndexOutOfRange = 'index %d out of range (element count %d)';
@@ -506,9 +505,6 @@ procedure TAsn1EncodableVector.AddAll(const AE: TCryptoLibGenericArray<IAsn1Enco
 var
   LI: Int32;
 begin
-  if AE = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SEncodableArrayNil);
-
   for LI := 0 to System.Length(AE) - 1 do
     Add(AE[LI]);
 end;
