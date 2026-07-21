@@ -42,7 +42,6 @@ uses
   ClpPkixBuilderParameters,
   ClpPkixCertPathValidator,
   ClpPkixCertPathChecker,
-  ClpPkixNameConstraintValidator,
   ClpIX509Certificate,
   ClpIX509Crl,
   ClpIX509CertificateParser,

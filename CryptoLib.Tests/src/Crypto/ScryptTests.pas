@@ -35,7 +35,7 @@ uses
   ClpIScryptParametersGenerator,
   ClpConverters,
   ClpEncoders,
-  HlpHashLibTypes,
+  HlpHashLibExceptions,
   CsvVectorParser,
   CryptoLibTestBase,
   ClpCryptoLibTypes;

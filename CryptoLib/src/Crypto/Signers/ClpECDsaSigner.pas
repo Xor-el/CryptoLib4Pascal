@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpCryptoServicesRegistrar,
   ClpECAlgorithms,
   ClpIECCommon,
@@ -203,7 +204,7 @@ begin
       LR := LP.AffineXCoord.ToBigInteger().&Mod(LN);
     until (not(LR.SignValue = 0));
 
-    LS := LK.ModInverse(LN).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
+    LS := TBigIntegerUtilities.ModOddInverse(LN, LK).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
 
   until (not(LS.SignValue = 0));
 
@@ -307,7 +308,7 @@ begin
   end;
 
   LE := CalculateE(LN, AMessage);
-  LC := &AS.ModInverse(LN);
+  LC := TBigIntegerUtilities.ModOddInverseVar(LN, &AS);
 
   LU1 := LE.Multiply(LC).&Mod(LN);
   LU2 := LSmallR.Multiply(LC).&Mod(LN);

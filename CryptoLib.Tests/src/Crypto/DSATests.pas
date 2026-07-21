@@ -59,6 +59,12 @@ uses
   ClpIX509DsaAsn1Objects,
   ClpISecureRandom,
   ClpSecureRandom,
+  ClpBigIntegerUtilities,
+  ClpSecNamedCurves,
+  ClpCustomNamedCurves,
+  ClpIX9ECAsn1Objects,
+  ClpECDsaSigner,
+  ClpIDsa,
   FixedSecureRandom,
   ClpConverters,
   ClpCryptoLibTypes,
@@ -101,6 +107,8 @@ type
     procedure RunEcdsaSignVerifyVector(const AVector: TEcdsaVectorRow);
     procedure RunEcdsaDigestBinaryVector(const AVector: TEcdsaVectorRow;
       const AOid: IDerObjectIdentifier);
+    procedure RunEcdsaRoundtrip(const ADomain: IECDomainParameters;
+      const ALabel: string);
 
     procedure DoCheckMessage(const sgr: ISigner;
       const sKey: IECPrivateKeyParameters; const vKey: IECPublicKeyParameters;
@@ -131,6 +139,20 @@ type
     procedure TestKeyGenerationAll;
     procedure TestParameters;
     procedure TestModulusSizeBound;
+
+    /// <summary>
+    /// The safegcd ModOddInverse / ModOddInverseVar used by the signers must
+    /// return the same value as the legacy ModInverse for every in-range
+    /// operand (guards the constant-time-inverse swap against drift).
+    /// </summary>
+    procedure TestModOddInverseEquivalence;
+
+    /// <summary>
+    /// ECDSA sign/verify roundtrips over both curve implementations
+    /// (TCustomNamedCurves Nat and TSecNamedCurves generic) for
+    /// secp256r1/384r1/521r1.
+    /// </summary>
+    procedure TestECDsaBothCurveModesRoundtrip;
 
     /// <summary>
     /// <para>
@@ -1026,6 +1048,102 @@ begin
   except
     on E: EArgumentCryptoLibException do
       CheckEquals('DSA modulus out of range', E.Message);
+  end;
+end;
+
+procedure TTestDSA.TestModOddInverseEquivalence;
+const
+  Iterations = 100;
+var
+  LOrders: TCryptoLibGenericArray<TBigInteger>;
+  LOrderIdx, LI: Int32;
+  LN, LK, LOne: TBigInteger;
+  LRand: ISecureRandom;
+begin
+  LOne := TBigInteger.One;
+  LRand := TSecureRandom.Create();
+  LOrders := TCryptoLibGenericArray<TBigInteger>.Create
+    (TSecNamedCurves.GetByName('secp256r1').N,
+    TSecNamedCurves.GetByName('secp384r1').N,
+    TSecNamedCurves.GetByName('secp521r1').N);
+
+  for LOrderIdx := 0 to High(LOrders) do
+  begin
+    LN := LOrders[LOrderIdx];
+    for LI := 1 to Iterations do
+    begin
+      LK := TBigIntegerUtilities.CreateRandomInRange(LOne, LN.Subtract(LOne),
+        LRand);
+
+      if (not TBigIntegerUtilities.ModOddInverse(LN, LK)
+        .Equals(LK.ModInverse(LN))) then
+        Fail('ModOddInverse disagrees with ModInverse');
+
+      if (not TBigIntegerUtilities.ModOddInverseVar(LN, LK)
+        .Equals(LK.ModInverse(LN))) then
+        Fail('ModOddInverseVar disagrees with ModInverse');
+    end;
+  end;
+end;
+
+procedure TTestDSA.RunEcdsaRoundtrip(const ADomain: IECDomainParameters;
+  const ALabel: string);
+const
+  Iterations = 25;
+var
+  LRand: ISecureRandom;
+  LGen: IAsymmetricCipherKeyPairGenerator;
+  LKp: IAsymmetricCipherKeyPair;
+  LSKey: IECPrivateKeyParameters;
+  LVKey: IECPublicKeyParameters;
+  LSigner: IDsa;
+  LM: TBytes;
+  LRS: TCryptoLibGenericArray<TBigInteger>;
+  LI: Int32;
+begin
+  LRand := TSecureRandom.Create();
+
+  LGen := TGeneratorUtilities.GetKeyPairGenerator('ECDSA');
+  LGen.Init(TECKeyGenerationParameters.Create(ADomain, LRand)
+    as IECKeyGenerationParameters);
+  LKp := LGen.GenerateKeyPair();
+  LSKey := LKp.Private as IECPrivateKeyParameters;
+  LVKey := LKp.Public as IECPublicKeyParameters;
+
+  LM := Nil;
+  for LI := 1 to Iterations do
+  begin
+    System.SetLength(LM, 32);
+    LRand.NextBytes(LM);
+
+    LSigner := TECDsaSigner.Create() as IDsa;
+    LSigner.Init(true, TParametersWithRandom.Create(LSKey, LRand)
+      as IParametersWithRandom);
+    LRS := LSigner.GenerateSignature(LM);
+
+    LSigner.Init(false, LVKey);
+    if (not LSigner.VerifySignature(LM, LRS[0], LRS[1])) then
+      Fail(Format('ECDSA sign/verify roundtrip failed on %s (iteration %d)',
+        [ALabel, LI]));
+  end;
+end;
+
+procedure TTestDSA.TestECDsaBothCurveModesRoundtrip;
+const
+  Curves: array [0 .. 2] of string = ('secp256r1', 'secp384r1', 'secp521r1');
+var
+  LI: Int32;
+  LX9: IX9ECParameters;
+begin
+  for LI := 0 to High(Curves) do
+  begin
+    LX9 := TCustomNamedCurves.GetByName(Curves[LI]);
+    RunEcdsaRoundtrip(TECDomainParameters.Create(LX9.Curve, LX9.G, LX9.N),
+      Curves[LI] + ' (custom)');
+
+    LX9 := TSecNamedCurves.GetByName(Curves[LI]);
+    RunEcdsaRoundtrip(TECDomainParameters.Create(LX9.Curve, LX9.G, LX9.N),
+      Curves[LI] + ' (sec)');
   end;
 end;
 

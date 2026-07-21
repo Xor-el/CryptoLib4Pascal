@@ -35,7 +35,6 @@ uses
   ClpISigner,
   ClpRsaDigestSigner,
   ClpIRsaDigestSigner,
-  ClpRsaParameters,
   ClpIRsaParameters,
   ClpIAsn1Objects,
   ClpAsn1Objects,

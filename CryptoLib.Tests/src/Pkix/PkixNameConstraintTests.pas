@@ -32,7 +32,6 @@ uses
 {$ENDIF FPC}
   ClpIPkixTypes,
   ClpPkixNameConstraintValidator,
-  ClpNameConstraintIP,
   ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpAsn1Objects,

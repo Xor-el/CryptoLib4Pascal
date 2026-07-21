@@ -34,6 +34,7 @@ uses
   ClpRandomDsaKCalculator,
   ClpBitOperations,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -154,7 +155,7 @@ begin
 
   LR := LParameters.G.ModPow(LK, LParameters.P).&Mod(LQ);
 
-  LK := LK.ModInverse(LQ).Multiply(LM.Add(LX.Multiply(LR)));
+  LK := TBigIntegerUtilities.ModOddInverse(LQ, LK).Multiply(LM.Add(LX.Multiply(LR)));
 
   LS := LK.&Mod(LQ);
 
@@ -232,7 +233,7 @@ begin
     Exit;
   end;
 
-  LW := &AS.ModInverse(LQ);
+  LW := TBigIntegerUtilities.ModOddInverseVar(LQ, &AS);
 
   LU1 := LM.Multiply(LW).&Mod(LQ);
   LU2 := AR.Multiply(LW).&Mod(LQ);

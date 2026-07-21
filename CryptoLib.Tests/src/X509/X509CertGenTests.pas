@@ -41,7 +41,6 @@ uses
   ClpIX509Generators,
   ClpAsn1SignatureFactory,
   ClpISignatureFactory,
-  ClpRsaParameters,
   ClpIRsaParameters,
   ClpIDsaParameters,
   ClpIECParameters,
