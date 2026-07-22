@@ -605,88 +605,92 @@ begin
     end;
   end;
 
-  LNk := LKeyLen shr 2;
-  LNkf := (FRounds + 1) shl 2;
+  try
+    LNk := LKeyLen shr 2;
+    LNkf := (FRounds + 1) shl 2;
 
-  LTmp := 0;
-  for LI := 0 to LNk - 1 do
-  begin
-    LTmp := TPack.LE_To_UInt32(AKey, LI shl 2);
-    LSkey32[LI] := LTmp;
-  end;
-
-  LJ := 0;
-  LK := 0;
-  for LI := LNk to LNkf - 1 do
-  begin
-    if LJ = 0 then
+    LTmp := 0;
+    for LI := 0 to LNk - 1 do
     begin
-      LTmp := TBitOperations.RotateLeft32(LTmp, 24);
-      LTmp := SubWord(LTmp) xor RCon[LK];
-    end
-    else if (LNk > 6) and (LJ = 4) then
-    begin
-      LTmp := SubWord(LTmp);
+      LTmp := TPack.LE_To_UInt32(AKey, LI shl 2);
+      LSkey32[LI] := LTmp;
     end;
-    LTmp := LTmp xor LSkey32[LI - LNk];
-    LSkey32[LI] := LTmp;
-    System.Inc(LJ);
-    if LJ = LNk then
+
+    LJ := 0;
+    LK := 0;
+    for LI := LNk to LNkf - 1 do
     begin
-      LJ := 0;
-      System.Inc(LK);
+      if LJ = 0 then
+      begin
+        LTmp := TBitOperations.RotateLeft32(LTmp, 24);
+        LTmp := SubWord(LTmp) xor RCon[LK];
+      end
+      else if (LNk > 6) and (LJ = 4) then
+      begin
+        LTmp := SubWord(LTmp);
+      end;
+      LTmp := LTmp xor LSkey32[LI - LNk];
+      LSkey32[LI] := LTmp;
+      System.Inc(LJ);
+      if LJ = LNk then
+      begin
+        LJ := 0;
+        System.Inc(LK);
+      end;
     end;
-  end;
 
-  // Compress round keys into two words per round key (one bit per nibble).
-  System.SetLength(LCompSkey, (FRounds + 1) * 2);
-  LI := 0;
-  LJ := 0;
-  while LI < LNkf do
-  begin
-    InterleaveIn(LSkey32[LI], LSkey32[LI + 1], LSkey32[LI + 2],
-      LSkey32[LI + 3], LQ[0], LQ[4]);
-    LQ[1] := LQ[0];
-    LQ[2] := LQ[0];
-    LQ[3] := LQ[0];
-    LQ[5] := LQ[4];
-    LQ[6] := LQ[4];
-    LQ[7] := LQ[4];
-    Ortho(LQ);
-    LCompSkey[LJ + 0] := (LQ[0] and M1) or (LQ[1] and M2) or (LQ[2] and M4)
-      or (LQ[3] and M8);
-    LCompSkey[LJ + 1] := (LQ[4] and M1) or (LQ[5] and M2) or (LQ[6] and M4)
-      or (LQ[7] and M8);
-    System.Inc(LI, 4);
-    System.Inc(LJ, 2);
-  end;
+    // Compress round keys into two words per round key (one bit per nibble).
+    System.SetLength(LCompSkey, (FRounds + 1) * 2);
+    LI := 0;
+    LJ := 0;
+    while LI < LNkf do
+    begin
+      InterleaveIn(LSkey32[LI], LSkey32[LI + 1], LSkey32[LI + 2],
+        LSkey32[LI + 3], LQ[0], LQ[4]);
+      LQ[1] := LQ[0];
+      LQ[2] := LQ[0];
+      LQ[3] := LQ[0];
+      LQ[5] := LQ[4];
+      LQ[6] := LQ[4];
+      LQ[7] := LQ[4];
+      Ortho(LQ);
+      LCompSkey[LJ + 0] := (LQ[0] and M1) or (LQ[1] and M2) or (LQ[2] and M4)
+        or (LQ[3] and M8);
+      LCompSkey[LJ + 1] := (LQ[4] and M1) or (LQ[5] and M2) or (LQ[6] and M4)
+        or (LQ[7] and M8);
+      System.Inc(LI, 4);
+      System.Inc(LJ, 2);
+    end;
 
-  // Expand the compressed round keys to the full bit-sliced form.
-  TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
-  System.SetLength(FSkey, (FRounds + 1) * 8);
-  LN := (FRounds + 1) * 2;
-  LV := 0;
-  for LI := 0 to LN - 1 do
-  begin
-    LX0 := LCompSkey[LI];
-    LX1 := LX0;
-    LX2 := LX0;
-    LX3 := LX0;
-    LX0 := LX0 and M1;
-    LX1 := LX1 and M2;
-    LX2 := LX2 and M4;
-    LX3 := LX3 and M8;
-    LX1 := LX1 shr 1;
-    LX2 := LX2 shr 2;
-    LX3 := LX3 shr 3;
-    FSkey[LV + 0] := (LX0 shl 4) - LX0;
-    FSkey[LV + 1] := (LX1 shl 4) - LX1;
-    FSkey[LV + 2] := (LX2 shl 4) - LX2;
-    FSkey[LV + 3] := (LX3 shl 4) - LX3;
-    System.Inc(LV, 4);
+    // Expand the compressed round keys to the full bit-sliced form.
+    TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
+    System.SetLength(FSkey, (FRounds + 1) * 8);
+    LN := (FRounds + 1) * 2;
+    LV := 0;
+    for LI := 0 to LN - 1 do
+    begin
+      LX0 := LCompSkey[LI];
+      LX1 := LX0;
+      LX2 := LX0;
+      LX3 := LX0;
+      LX0 := LX0 and M1;
+      LX1 := LX1 and M2;
+      LX2 := LX2 and M4;
+      LX3 := LX3 and M8;
+      LX1 := LX1 shr 1;
+      LX2 := LX2 shr 2;
+      LX3 := LX3 shr 3;
+      FSkey[LV + 0] := (LX0 shl 4) - LX0;
+      FSkey[LV + 1] := (LX1 shl 4) - LX1;
+      FSkey[LV + 2] := (LX2 shl 4) - LX2;
+      FSkey[LV + 3] := (LX3 shl 4) - LX3;
+      System.Inc(LV, 4);
+    end;
+  finally
+    TArrayUtilities.Fill(LCompSkey, 0, System.Length(LCompSkey), UInt64(0));
+    System.FillChar(LSkey32, System.SizeOf(LSkey32), 0);
+    System.FillChar(LQ, System.SizeOf(LQ), 0);
   end;
-
-  TArrayUtilities.Fill(AKey, 0, System.Length(AKey), Byte(0));
 end;
 
 procedure TAesBitSlicedEngine.BitsliceEncrypt(var AQ: TBitSliceState);
