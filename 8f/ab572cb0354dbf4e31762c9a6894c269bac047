@@ -1,0 +1,49 @@
+CryptoLib/src/Interfaces/Math/EC/Multiplier/ClpIFpFieldOps.pas
+  s_1ebcaae05d990f::t_0e58350497ce8a 1-58
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_1ebcaae05d990f::t_54de925bc6aca7 392
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_1ebcaae05d990f::t_3aa034f2741ae4 409
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_1ebcaae05d990f::t_e4e30925ab3e9c 386
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_1ebcaae05d990f::t_3dad9badb93614 729
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_1ebcaae05d990f::t_cb664fcb23488a 405
+CryptoLib.Tests/src/Crypto/ECDHConstantTimeTests.pas
+  s_1ebcaae05d990f::t_40517ee1754ebe 41,72,75-76,110,113,115,117,119,136,152,272
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256K1Custom.pas
+  s_1ebcaae05d990f::t_fad187c1bc5958 39,203,1085,1088,1092,1094,1110,1115,1120,1125,1130,1135,1140,1145,1150,1155,1160,1165,1171,1177,1182
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_1ebcaae05d990f::t_f69e346e766e52 39,204,1241,1244,1248,1250,1266,1271,1276,1281,1286,1291,1296,1301,1306,1311,1316,1321,1327,1333,1338
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP384R1Custom.pas
+  s_1ebcaae05d990f::t_3f0ed3c0733503 39,203,1244,1247,1251,1253,1269,1274,1279,1284,1289,1294,1299,1304,1309,1314,1319,1324,1330,1336,1341
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP521R1Custom.pas
+  s_1ebcaae05d990f::t_b9bb291b3da6f3 39,200,1078,1081,1085,1087,1103,1108,1113,1118,1123,1128,1133,1138,1143,1148,1153,1158,1164,1170,1175
+CryptoLib/src/Math/EC/Multiplier/ClpFixedWindowCTMultiplier.pas
+  s_1ebcaae05d990f::t_d7f11c2c4cc0d6 30,54,63-64,74,80
+CryptoLib/src/Math/EC/Multiplier/ClpHomogeneousPoint.pas
+  s_1ebcaae05d990f::t_57e00d4fd90073 25,44-45,47,49-51,59,74,90,104,164,214
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_1ebcaae05d990f::t_edc44126b3d0a5 400
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_1ebcaae05d990f::t_ce5117d8eb1c5c 3477-3478
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_1ebcaae05d990f::t_98ff9eeeafcdf8 283
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "8fab572cb0354dbf4e31762c9a6894c269bac047",
+  "prompts": {},
+  "sessions": {
+    "s_1ebcaae05d990f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b623c24-4bc5-4a38-ab2f-05c425473568",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
