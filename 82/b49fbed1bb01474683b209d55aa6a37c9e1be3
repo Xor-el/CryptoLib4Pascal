@@ -1,0 +1,19 @@
+CryptoLib/src/Math/EC/Multiplier/ClpFixedWindowCTMultiplier.pas
+  s_1ebcaae05d990f::t_19858496233472 41-45
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "82b49fbed1bb01474683b209d55aa6a37c9e1be3",
+  "prompts": {},
+  "sessions": {
+    "s_1ebcaae05d990f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b623c24-4bc5-4a38-ab2f-05c425473568",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
