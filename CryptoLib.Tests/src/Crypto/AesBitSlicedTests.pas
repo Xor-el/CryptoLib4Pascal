@@ -79,6 +79,7 @@ type
     procedure TestAesGcmEndToEnd;
     procedure TestInvalidKeyLength;
     procedure TestResetAndReInit;
+    procedure TestReInitDifferentKeySize;
   end;
 
 implementation
@@ -442,6 +443,27 @@ begin
   LEngine.ProcessBlock(LBlock, 0, LThird, 0);
   if not AreEqual(LFirst, LThird) then
     Fail('ProcessBlock after re-Init produced a different result');
+end;
+
+procedure TTestAesBitSliced.TestReInitDifferentKeySize;
+var
+  LBlock, LOut: TBytes;
+  LEngine: IBlockCipher;
+begin
+  LBlock := DecodeHex(KAT_PLAIN);
+  System.SetLength(LOut, 16);
+  LEngine := TAesBitSlicedEngine.Create();
+
+  LEngine.Init(True, TKeyParameter.Create(DecodeHex(KAT_KEY_128)) as ICipherParameters);
+  LEngine.ProcessBlock(LBlock, 0, LOut, 0);
+  if not AreEqual(LOut, DecodeHex(KAT_CIPHER_128)) then
+    Fail('AES-128 encrypt wrong before re-key');
+
+  // Re-Init the same instance with a larger key: exercises the FSkey pre-wipe + realloc.
+  LEngine.Init(True, TKeyParameter.Create(DecodeHex(KAT_KEY_256)) as ICipherParameters);
+  LEngine.ProcessBlock(LBlock, 0, LOut, 0);
+  if not AreEqual(LOut, DecodeHex(KAT_CIPHER_256)) then
+    Fail('AES-256 encrypt wrong after cross-key-size re-Init');
 end;
 
 initialization

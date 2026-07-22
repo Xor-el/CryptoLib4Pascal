@@ -87,6 +87,7 @@ type
     procedure TestExceptionalFormulas;
     procedure TestECDHAgreement;
     procedure TestScalarRangeGuard;
+    procedure TestBlindBitsValidation;
   end;
 
 implementation
@@ -384,6 +385,35 @@ begin
     CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits + 1)),
       'k = 2^(orderbits+1) not rejected for ' + LNames[LI]);
   end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestBlindBitsValidation;
+var
+  LX9: IX9ECParameters;
+  LFO: IFpFieldOps;
+
+  function Rejects(ABlindBits: Int32): Boolean;
+  var
+    LMul: IECMultiplier;
+  begin
+    Result := False;
+    try
+      LMul := TFixedWindowCTMultiplier.Create(LFO, ABlindBits) as IECMultiplier;
+    except
+      on E: EArgumentCryptoLibException do
+        Result := True;
+    end;
+  end;
+
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp256r1');
+  LFO := MakeFieldOps('secp256r1', LX9.Curve);
+  CheckTrue(Rejects(0), '0 accepted');
+  CheckTrue(Rejects(32), '32 (below floor) accepted');
+  CheckTrue(Rejects(48), '48 (non-multiple of 32) accepted');
+  CheckTrue(Rejects(544), '544 (above cap) accepted');
+  CheckFalse(Rejects(64), '64 rejected');
+  CheckFalse(Rejects(128), '128 rejected');
 end;
 
 initialization

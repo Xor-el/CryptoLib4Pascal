@@ -50,6 +50,7 @@ type
     WINDOW_BITS = Int32(4);
     TABLE_SIZE = Int32(16);
     DEFAULT_BLIND_BITS = Int32(64);
+    MAX_BLIND_BITS = Int32(512);
   var
     FFieldOps: IFpFieldOps;
     FRandom: ISecureRandom;
@@ -72,7 +73,7 @@ implementation
 resourcestring
   SPointNotOnCurve = 'point is not a valid point on the curve for constant-time multiplication';
   SScalarTooLarge = 'scalar is larger than the curve order';
-  SInvalidBlindBits = 'blinding length must be a positive multiple of 32';
+  SInvalidBlindBits = 'blinding length must be a multiple of 32 between 64 and 512';
 
 { TFixedWindowCTMultiplier }
 
@@ -80,7 +81,8 @@ constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps;
   ABlindBits: Int32);
 begin
   Inherited Create;
-  if (ABlindBits <= 0) or ((ABlindBits and 31) <> 0) then
+  if (ABlindBits < DEFAULT_BLIND_BITS) or (ABlindBits > MAX_BLIND_BITS)
+    or ((ABlindBits and 31) <> 0) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
   FBlindBits := ABlindBits;
@@ -90,7 +92,8 @@ constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps;
   const ARandom: ISecureRandom; ABlindBits: Int32);
 begin
   Inherited Create;
-  if (ABlindBits <= 0) or ((ABlindBits and 31) <> 0) then
+  if (ABlindBits < DEFAULT_BLIND_BITS) or (ABlindBits > MAX_BLIND_BITS)
+    or ((ABlindBits and 31) <> 0) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
   FRandom := ARandom;

@@ -662,6 +662,7 @@ begin
   end;
 
   // Expand the compressed round keys to the full bit-sliced form.
+  TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
   System.SetLength(FSkey, (FRounds + 1) * 8);
   LN := (FRounds + 1) * 2;
   LV := 0;
