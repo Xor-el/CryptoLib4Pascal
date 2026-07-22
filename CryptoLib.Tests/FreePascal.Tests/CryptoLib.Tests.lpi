@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="206">
+    <Units Count="207">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -902,9 +902,13 @@
         <IsPartOfProject Value="True"/>
       </Unit204>
       <Unit205>
-        <Filename Value="..\src\Crypto\ECDHConstantTimeTests.pas"/>
+        <Filename Value="..\src\Crypto\ECDHPrimeConstantTimeTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit205>
+      <Unit206>
+        <Filename Value="..\src\Crypto\ECDHBinaryConstantTimeTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit206>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

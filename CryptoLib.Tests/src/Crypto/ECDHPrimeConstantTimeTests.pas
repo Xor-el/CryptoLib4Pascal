@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ECDHConstantTimeTests;
+unit ECDHPrimeConstantTimeTests;
 
 interface
 
@@ -62,7 +62,7 @@ uses
   CryptoLibTestBase;
 
 type
-  TTestECDHConstantTime = class(TCryptoLibAlgorithmTestCase)
+  TTestECDHPrimeConstantTime = class(TCryptoLibAlgorithmTestCase)
   private
   const
     TestsPerCurve = Int32(16);
@@ -89,24 +89,24 @@ type
 
 implementation
 
-{ TTestECDHConstantTime }
+{ TTestECDHPrimeConstantTime }
 
-procedure TTestECDHConstantTime.SetUp;
+procedure TTestECDHPrimeConstantTime.SetUp;
 begin
   FRandom := TSecureRandom.Create();
 end;
 
-procedure TTestECDHConstantTime.TearDown;
+procedure TTestECDHPrimeConstantTime.TearDown;
 begin
   inherited;
 end;
 
-function TTestECDHConstantTime.CurveNames: TCryptoLibStringArray;
+function TTestECDHPrimeConstantTime.CurveNames: TCryptoLibStringArray;
 begin
   Result := TCryptoLibStringArray.Create('secp256r1', 'secp384r1', 'secp521r1', 'secp256k1');
 end;
 
-function TTestECDHConstantTime.MakeFieldOps(const AName: String;
+function TTestECDHPrimeConstantTime.MakeFieldOps(const AName: String;
   const ACurve: IECCurve): IFpFieldOps;
 begin
   if AName = 'secp256r1' then
@@ -119,21 +119,21 @@ begin
     Result := TSecP256K1FpFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order);
 end;
 
-function TTestECDHConstantTime.RandomScalar(const AN: TBigInteger): TBigInteger;
+function TTestECDHPrimeConstantTime.RandomScalar(const AN: TBigInteger): TBigInteger;
 begin
   Result := TBigInteger.Create(AN.BitLength, FRandom).&Mod(AN);
   if Result.SignValue = 0 then
     Result := TBigInteger.One;
 end;
 
-procedure TTestECDHConstantTime.AssertPointsEqual(const AMsg: String;
+procedure TTestECDHPrimeConstantTime.AssertPointsEqual(const AMsg: String;
   const AA, AB: IECPoint);
 begin
   CheckEquals(True, AA.Equals(AB), AMsg);
   CheckEquals(True, AB.Equals(AA), AMsg);
 end;
 
-function TTestECDHConstantTime.HomogFromAffine(const AFO: IFpFieldOps;
+function TTestECDHPrimeConstantTime.HomogFromAffine(const AFO: IFpFieldOps;
   const AP: IECPoint): TCTHomogPoint;
 var
   LN: Int32;
@@ -149,7 +149,7 @@ begin
   Result := TCTHomogeneousMath.FromAffine(AFO, LX, LY);
 end;
 
-function TTestECDHConstantTime.HomogToPoint(const AFO: IFpFieldOps;
+function TTestECDHPrimeConstantTime.HomogToPoint(const AFO: IFpFieldOps;
   const ACurve: IECCurve; const AP: TCTHomogPoint): IECPoint;
 var
   LX, LY: TCryptoLibUInt32Array;
@@ -162,7 +162,7 @@ begin
     Result := ACurve.CreateRawPoint(AFO.CreateFieldElement(LX), AFO.CreateFieldElement(LY));
 end;
 
-procedure TTestECDHConstantTime.TestDefaultMultiplierIsConstantTime;
+procedure TTestECDHPrimeConstantTime.TestDefaultMultiplierIsConstantTime;
 var
   LNames: TCryptoLibStringArray;
   LI: Int32;
@@ -180,7 +180,7 @@ begin
   end;
 end;
 
-procedure TTestECDHConstantTime.TestParityWithWNaf;
+procedure TTestECDHPrimeConstantTime.TestParityWithWNaf;
 var
   LNames: TCryptoLibStringArray;
   LI, LJ: Int32;
@@ -210,7 +210,7 @@ begin
   end;
 end;
 
-procedure TTestECDHConstantTime.TestEdgeScalars;
+procedure TTestECDHPrimeConstantTime.TestEdgeScalars;
 var
   LNames: TCryptoLibStringArray;
   LI, LJ: Int32;
@@ -244,7 +244,7 @@ begin
   end;
 end;
 
-procedure TTestECDHConstantTime.TestBlindingTransparency;
+procedure TTestECDHPrimeConstantTime.TestBlindingTransparency;
 var
   LX9: IX9ECParameters;
   LCT: IECMultiplier;
@@ -265,7 +265,7 @@ begin
   end;
 end;
 
-procedure TTestECDHConstantTime.TestExceptionalFormulas;
+procedure TTestECDHPrimeConstantTime.TestExceptionalFormulas;
 var
   LX9: IX9ECParameters;
   LCurve: IECCurve;
@@ -315,7 +315,7 @@ begin
     TCTHomogeneousMath.Add(LFO, LInf, LInf)).IsInfinity, 'O+O=O');
 end;
 
-procedure TTestECDHConstantTime.TestECDHAgreement;
+procedure TTestECDHPrimeConstantTime.TestECDHAgreement;
 var
   LNames: TCryptoLibStringArray;
   LI: Int32;
@@ -350,9 +350,9 @@ end;
 initialization
 
 {$IFDEF FPC}
-  RegisterTest(TTestECDHConstantTime);
+  RegisterTest(TTestECDHPrimeConstantTime);
 {$ELSE}
-  RegisterTest(TTestECDHConstantTime.Suite);
+  RegisterTest(TTestECDHPrimeConstantTime.Suite);
 {$ENDIF FPC}
 
 end.

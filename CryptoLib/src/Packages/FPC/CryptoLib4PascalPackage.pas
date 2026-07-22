@@ -280,7 +280,8 @@ uses
   ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities, 
   ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder, 
   ClpCryptoLibExceptions, ClpAesBitSlicedEngine, ClpHomogeneousPoint, 
-  ClpFixedWindowCTMultiplier, ClpIFpFieldOps;
+  ClpFixedWindowCTMultiplier, ClpIFpFieldOps, ClpIF2mFieldOps, 
+  ClpLopezDahabLadder, ClpF2mMontgomeryLadderCTMultiplier;
 
 implementation
 

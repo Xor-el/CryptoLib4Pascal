@@ -257,13 +257,18 @@ var
   LQ: IECPoint;
   LF2mCurve: IAbstractF2mCurve;
   LGlv: IGlvEndomorphism;
+  LTau: IECMultiplier;
 begin
   LCurve := AP.Curve;
   LQ := ImportPoint(LCurve, AQ);
 
+  // Point multiplication for Koblitz curves (using WTNAF) beats Shamir's trick
   if Supports(LCurve, IAbstractF2mCurve, LF2mCurve) and LF2mCurve.IsKoblitz then
   begin
-    Result := ImplCheckResult(AP.Multiply(AK).Add(LQ.Multiply(AL)));
+    //Result := ImplCheckResult(AP.Multiply(AK).Add(LQ.Multiply(AL)));
+    // name tau-NAF explicitly so it is not routed through the (constant-time) curve default
+    LTau := TWTauNafMultiplier.Create();
+    Result := ImplCheckResult(LTau.Multiply(AP, AK).Add(LTau.Multiply(LQ, AL)));
     Exit;
   end;
   if Supports(LCurve.GetEndomorphism(), IGlvEndomorphism, LGlv) then

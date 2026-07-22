@@ -64,6 +64,8 @@ type
     class function CAdd(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32; static;
     class function CAddTo(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32; static;
     class procedure CMov(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32); static;
+    class procedure CMov64(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array); static;
+    class procedure CSwap64(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt64Array; const AZ: TCryptoLibUInt64Array); static;
     class function Compare(ALen: Int32; const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array): Int32; overload; static;
     class function Compare(ALen: Int32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32): Int32; overload; static;
     class function Copy(ALen: Int32; const AX: TCryptoLibUInt32Array): TCryptoLibUInt32Array; overload; static;
@@ -620,6 +622,34 @@ begin
     LDiff := LZI xor AX[AXOff + LI];
     LZI := LZI xor (LDiff and LMASK);
     AZ[AZOff + LI] := LZI;
+  end;
+end;
+
+class procedure TNat.CMov64(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt64Array; AZ: TCryptoLibUInt64Array);
+var
+  LMASK, LZI, LDiff: UInt64;
+  LI: Int32;
+begin
+  LMASK := UInt64(-Int64(AMask and 1));
+  for LI := 0 to ALen - 1 do
+  begin
+    LZI := AZ[LI];
+    LDiff := LZI xor AX[LI];
+    AZ[LI] := LZI xor (LDiff and LMASK);
+  end;
+end;
+
+class procedure TNat.CSwap64(ALen: Int32; AMask: Int32; const AX: TCryptoLibUInt64Array; const AZ: TCryptoLibUInt64Array);
+var
+  LMASK, LT: UInt64;
+  LI: Int32;
+begin
+  LMASK := UInt64(-Int64(AMask and 1));
+  for LI := 0 to ALen - 1 do
+  begin
+    LT := LMASK and (AX[LI] xor AZ[LI]);
+    AX[LI] := AX[LI] xor LT;
+    AZ[LI] := AZ[LI] xor LT;
   end;
 end;
 
