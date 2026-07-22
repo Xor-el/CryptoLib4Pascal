@@ -38,11 +38,11 @@ uses
 
 type
   /// <summary>
-  /// Constant-time single-scalar variable-point multiplier for prime-order
-  /// NIST curves (P-256/384/521). Unsigned fixed window over homogeneous
-  /// complete formulas, masked table lookups only, one unconditional addition
-  /// per window; scalar blinding, randomized projective coordinates and a fixed
-  /// processing length as countermeasures.
+  /// Constant-time single-scalar variable-point multiplier for prime-field (Fp)
+  /// short-Weierstrass curves, driven by an IFpFieldOps adapter. Unsigned fixed
+  /// window over homogeneous complete formulas, masked table lookups only, one
+  /// unconditional addition per window; scalar blinding, randomized projective
+  /// coordinates and a fixed processing length as countermeasures.
   /// </summary>
   TFixedWindowCTMultiplier = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict private
