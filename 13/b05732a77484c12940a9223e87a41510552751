@@ -1,0 +1,21 @@
+CryptoLib.Tests/src/Crypto/AesBitSlicedTests.pas
+  s_1ebcaae05d990f::t_cf9ff23d24102d 83,470-499
+CryptoLib/src/Crypto/Engines/ClpAesBitSlicedEngine.pas
+  s_1ebcaae05d990f::t_d1ed54baafbace 608-610,612-613,615-616,618-621,623-639,642-663,665-692
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "13b05732a77484c12940a9223e87a41510552751",
+  "prompts": {},
+  "sessions": {
+    "s_1ebcaae05d990f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6b623c24-4bc5-4a38-ab2f-05c425473568",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
