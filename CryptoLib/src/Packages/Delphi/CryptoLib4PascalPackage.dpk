@@ -37,6 +37,7 @@ requires
 
 contains
   ClpAesEngine in '..\..\Crypto\Engines\ClpAesEngine.pas',
+  ClpAesBitSlicedEngine in '..\..\Crypto\Engines\ClpAesBitSlicedEngine.pas',
   ClpIAesHardwareEngine in '..\..\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas',
   ClpIAesEngineX86 in '..\..\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',
   ClpAesEngineX86 in '..\..\Crypto\Engines\ClpAesEngineX86.pas',

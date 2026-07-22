@@ -279,7 +279,7 @@ uses
   ClpPkixCrlRevocationChecker, ClpPkixRevocationChecker, 
   ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities, 
   ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder, 
-  ClpCryptoLibExceptions;
+  ClpCryptoLibExceptions, ClpAesBitSlicedEngine;
 
 implementation
 
