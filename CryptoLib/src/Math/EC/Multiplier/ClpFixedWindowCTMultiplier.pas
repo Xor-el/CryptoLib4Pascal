@@ -27,7 +27,7 @@ uses
   ClpPack,
   ClpBitOperations,
   ClpMultipliers,
-  ClpICTFieldOps,
+  ClpIFpFieldOps,
   ClpHomogeneousPoint,
   ClpISecureRandom,
   ClpSecureRandom,
@@ -51,7 +51,7 @@ type
     TABLE_SIZE = Int32(16);
     BLIND_BITS = Int32(64);
   var
-    FFieldOps: ICTFieldOps;
+    FFieldOps: IFpFieldOps;
     FRandom: ISecureRandom;
     function GetRandom: ISecureRandom;
     procedure GenerateBlind(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
@@ -60,8 +60,8 @@ type
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
-    constructor Create(const AFieldOps: ICTFieldOps); overload;
-    constructor Create(const AFieldOps: ICTFieldOps; const ARandom: ISecureRandom); overload;
+    constructor Create(const AFieldOps: IFpFieldOps); overload;
+    constructor Create(const AFieldOps: IFpFieldOps; const ARandom: ISecureRandom); overload;
   end;
 
 implementation
@@ -71,13 +71,13 @@ resourcestring
 
 { TFixedWindowCTMultiplier }
 
-constructor TFixedWindowCTMultiplier.Create(const AFieldOps: ICTFieldOps);
+constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps);
 begin
   Inherited Create;
   FFieldOps := AFieldOps;
 end;
 
-constructor TFixedWindowCTMultiplier.Create(const AFieldOps: ICTFieldOps;
+constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps;
   const ARandom: ISecureRandom);
 begin
   Inherited Create;

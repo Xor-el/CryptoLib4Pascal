@@ -3474,8 +3474,8 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpFixedWindowCTMultiplier"/>
       </Item860>
       <Item861>
-        <Filename Value="..\..\Interfaces\Math\EC\Multiplier\ClpICTFieldOps.pas"/>
-        <UnitName Value="ClpICTFieldOps"/>
+        <Filename Value="..\..\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas"/>
+        <UnitName Value="ClpIFpFieldOps"/>
       </Item861>
     </Files>
     <CompatibilityMode Value="True"/>

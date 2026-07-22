@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpICTFieldOps;
+unit ClpIFpFieldOps;
 
 {$I ..\..\..\..\Include\CryptoLib.inc}
 
@@ -32,7 +32,7 @@ type
   /// curve, exposing only what the homogeneous complete-formula layer needs. Each
   /// curve supplies an adapter over its existing (constant-time) Nat field.
   /// </summary>
-  ICTFieldOps = interface(IInterface)
+  IFpFieldOps = interface(IInterface)
     ['{6F1B2A34-5C8D-4E90-B1A2-7C3D4E5F6A7B}']
     function GetFieldInts: Int32;
     function GetOrderBits: Int32;

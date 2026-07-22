@@ -38,7 +38,7 @@ uses
   ClpIX9ECAsn1Objects,
   ClpMultipliers,
   ClpECAlgorithms,
-  ClpICTFieldOps,
+  ClpIFpFieldOps,
   ClpHomogeneousPoint,
   ClpFixedWindowCTMultiplier,
   ClpSecP256R1Custom,
@@ -69,11 +69,11 @@ type
   var
     FRandom: ISecureRandom;
     function CurveNames: TCryptoLibStringArray;
-    function MakeFieldOps(const AName: String; const ACurve: IECCurve): ICTFieldOps;
+    function MakeFieldOps(const AName: String; const ACurve: IECCurve): IFpFieldOps;
     function RandomScalar(const AN: TBigInteger): TBigInteger;
     procedure AssertPointsEqual(const AMsg: String; const AA, AB: IECPoint);
-    function HomogFromAffine(const AFO: ICTFieldOps; const AP: IECPoint): TCTHomogPoint;
-    function HomogToPoint(const AFO: ICTFieldOps; const ACurve: IECCurve;
+    function HomogFromAffine(const AFO: IFpFieldOps; const AP: IECPoint): TCTHomogPoint;
+    function HomogToPoint(const AFO: IFpFieldOps; const ACurve: IECCurve;
       const AP: TCTHomogPoint): IECPoint;
   protected
     procedure SetUp; override;
@@ -107,16 +107,16 @@ begin
 end;
 
 function TTestECDHConstantTime.MakeFieldOps(const AName: String;
-  const ACurve: IECCurve): ICTFieldOps;
+  const ACurve: IECCurve): IFpFieldOps;
 begin
   if AName = 'secp256r1' then
-    Result := TSecP256R1CTFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
+    Result := TSecP256R1FpFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
   else if AName = 'secp384r1' then
-    Result := TSecP384R1CTFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
+    Result := TSecP384R1FpFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
   else if AName = 'secp521r1' then
-    Result := TSecP521R1CTFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
+    Result := TSecP521R1FpFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order)
   else
-    Result := TSecP256K1CTFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order);
+    Result := TSecP256K1FpFieldOps.Create(ACurve.A, ACurve.B, ACurve.Order);
 end;
 
 function TTestECDHConstantTime.RandomScalar(const AN: TBigInteger): TBigInteger;
@@ -133,7 +133,7 @@ begin
   CheckEquals(True, AB.Equals(AA), AMsg);
 end;
 
-function TTestECDHConstantTime.HomogFromAffine(const AFO: ICTFieldOps;
+function TTestECDHConstantTime.HomogFromAffine(const AFO: IFpFieldOps;
   const AP: IECPoint): TCTHomogPoint;
 var
   LN: Int32;
@@ -149,7 +149,7 @@ begin
   Result := TCTHomogeneousMath.FromAffine(AFO, LX, LY);
 end;
 
-function TTestECDHConstantTime.HomogToPoint(const AFO: ICTFieldOps;
+function TTestECDHConstantTime.HomogToPoint(const AFO: IFpFieldOps;
   const ACurve: IECCurve; const AP: TCTHomogPoint): IECPoint;
 var
   LX, LY: TCryptoLibUInt32Array;
@@ -269,7 +269,7 @@ procedure TTestECDHConstantTime.TestExceptionalFormulas;
 var
   LX9: IX9ECParameters;
   LCurve: IECCurve;
-  LFO: ICTFieldOps;
+  LFO: IFpFieldOps;
   LWNaf: IECMultiplier;
   LN: Int32;
   LP, LDbl, LNeg, LSum, LInf: TCTHomogPoint;

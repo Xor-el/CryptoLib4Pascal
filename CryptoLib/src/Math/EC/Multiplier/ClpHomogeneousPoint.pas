@@ -22,7 +22,7 @@ interface
 
 uses
   ClpNat,
-  ClpICTFieldOps,
+  ClpIFpFieldOps,
   ClpCryptoLibTypes;
 
 type
@@ -41,14 +41,14 @@ type
   /// </summary>
   TCTHomogeneousMath = class sealed(TObject)
   public
-    class function Infinity(const AFO: ICTFieldOps): TCTHomogPoint; static;
-    class function FromAffine(const AFO: ICTFieldOps;
+    class function Infinity(const AFO: IFpFieldOps): TCTHomogPoint; static;
+    class function FromAffine(const AFO: IFpFieldOps;
       const AX, AY: TCryptoLibUInt32Array): TCTHomogPoint; static;
-    class function ScaleRandom(const AFO: ICTFieldOps; const AP: TCTHomogPoint;
+    class function ScaleRandom(const AFO: IFpFieldOps; const AP: TCTHomogPoint;
       const ALambda: TCryptoLibUInt32Array): TCTHomogPoint; static;
-    class function Add(const AFO: ICTFieldOps; const AP, AQ: TCTHomogPoint): TCTHomogPoint; static;
-    class function Double(const AFO: ICTFieldOps; const AP: TCTHomogPoint): TCTHomogPoint; static;
-    class procedure ToAffine(const AFO: ICTFieldOps; const AP: TCTHomogPoint;
+    class function Add(const AFO: IFpFieldOps; const AP, AQ: TCTHomogPoint): TCTHomogPoint; static;
+    class function Double(const AFO: IFpFieldOps; const AP: TCTHomogPoint): TCTHomogPoint; static;
+    class procedure ToAffine(const AFO: IFpFieldOps; const AP: TCTHomogPoint;
       out AX, AY: TCryptoLibUInt32Array; out AIsInfinity: Boolean); static;
   end;
 
@@ -56,7 +56,7 @@ implementation
 
 { TCTHomogeneousMath }
 
-class function TCTHomogeneousMath.Infinity(const AFO: ICTFieldOps): TCTHomogPoint;
+class function TCTHomogeneousMath.Infinity(const AFO: IFpFieldOps): TCTHomogPoint;
 var
   LN: Int32;
   LX, LY, LZ: TCryptoLibUInt32Array;
@@ -71,7 +71,7 @@ begin
   Result.Z := LZ;
 end;
 
-class function TCTHomogeneousMath.FromAffine(const AFO: ICTFieldOps;
+class function TCTHomogeneousMath.FromAffine(const AFO: IFpFieldOps;
   const AX, AY: TCryptoLibUInt32Array): TCTHomogPoint;
 var
   LN: Int32;
@@ -87,7 +87,7 @@ begin
   Result.Z := LZ;
 end;
 
-class function TCTHomogeneousMath.ScaleRandom(const AFO: ICTFieldOps;
+class function TCTHomogeneousMath.ScaleRandom(const AFO: IFpFieldOps;
   const AP: TCTHomogPoint; const ALambda: TCryptoLibUInt32Array): TCTHomogPoint;
 var
   LN: Int32;
@@ -101,7 +101,7 @@ begin
   AFO.Mul(AP.Z, ALambda, Result.Z);
 end;
 
-class function TCTHomogeneousMath.Add(const AFO: ICTFieldOps;
+class function TCTHomogeneousMath.Add(const AFO: IFpFieldOps;
   const AP, AQ: TCTHomogPoint): TCTHomogPoint;
 var
   LN: Int32;
@@ -161,7 +161,7 @@ begin
   Result.X := LX3; Result.Y := LY3; Result.Z := LZ3;
 end;
 
-class function TCTHomogeneousMath.Double(const AFO: ICTFieldOps;
+class function TCTHomogeneousMath.Double(const AFO: IFpFieldOps;
   const AP: TCTHomogPoint): TCTHomogPoint;
 var
   LN: Int32;
@@ -211,7 +211,7 @@ begin
   Result.X := LX3; Result.Y := LY3; Result.Z := LZ3;
 end;
 
-class procedure TCTHomogeneousMath.ToAffine(const AFO: ICTFieldOps;
+class procedure TCTHomogeneousMath.ToAffine(const AFO: IFpFieldOps;
   const AP: TCTHomogPoint; out AX, AY: TCryptoLibUInt32Array; out AIsInfinity: Boolean);
 var
   LN: Int32;

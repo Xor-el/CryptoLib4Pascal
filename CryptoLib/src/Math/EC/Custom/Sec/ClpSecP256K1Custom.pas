@@ -36,7 +36,7 @@ uses
   ClpECFieldElement,
   ClpECPoint,
   ClpECLookupTables,
-  ClpICTFieldOps,
+  ClpIFpFieldOps,
   ClpFixedWindowCTMultiplier,
   ClpIECCommon,
   ClpIECFieldElement,
@@ -200,7 +200,7 @@ type
   end;
 
 type
-  TSecP256K1CTFieldOps = class sealed(TInterfacedObject, ICTFieldOps)
+  TSecP256K1FpFieldOps = class sealed(TInterfacedObject, IFpFieldOps)
   strict private
   const
     FE_INTS = Int32(8);
@@ -1082,16 +1082,16 @@ end;
 function TSecP256K1Curve.CreateDefaultMultiplier: IECMultiplier;
 var
   LCurve: IECCurve;
-  LFieldOps: ICTFieldOps;
+  LFieldOps: IFpFieldOps;
 begin
   LCurve := Self as IECCurve;
-  LFieldOps := TSecP256K1CTFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
+  LFieldOps := TSecP256K1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
   Result := TFixedWindowCTMultiplier.Create(LFieldOps) as IECMultiplier;
 end;
 
-{ TSecP256K1CTFieldOps }
+{ TSecP256K1FpFieldOps }
 
-constructor TSecP256K1CTFieldOps.Create(const AA, AB: IECFieldElement; const AOrder: TBigInteger);
+constructor TSecP256K1FpFieldOps.Create(const AA, AB: IECFieldElement; const AOrder: TBigInteger);
 var
   LB, LB3: TCryptoLibUInt32Array;
 begin
@@ -1107,79 +1107,79 @@ begin
   FB3 := LB3;
 end;
 
-function TSecP256K1CTFieldOps.GetFieldInts: Int32;
+function TSecP256K1FpFieldOps.GetFieldInts: Int32;
 begin
   Result := FE_INTS;
 end;
 
-function TSecP256K1CTFieldOps.GetOrderBits: Int32;
+function TSecP256K1FpFieldOps.GetOrderBits: Int32;
 begin
   Result := FOrderBits;
 end;
 
-procedure TSecP256K1CTFieldOps.GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+procedure TSecP256K1FpFieldOps.GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
 begin
   TNat.Copy(FE_INTS, FN, 0, AZ, 0);
 end;
 
-procedure TSecP256K1CTFieldOps.Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Multiply(AX, AY, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.Square(const AX, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.Square(const AX, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Square(AX, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Add(AX, AY, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Subtract(AX, AY, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.MulByB3(const AX, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.MulByB3(const AX, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Multiply(AX, FB3, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.MulByA(const AX, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.MulByA(const AX, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Multiply(AX, FA, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.Inv(const AX, AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.Inv(const AX, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.Inv(AX, AZ);
 end;
 
-function TSecP256K1CTFieldOps.IsZero(const AX: TCryptoLibUInt32Array): Boolean;
+function TSecP256K1FpFieldOps.IsZero(const AX: TCryptoLibUInt32Array): Boolean;
 begin
   Result := TSecP256K1Field.IsZero(AX) <> 0;
 end;
 
-procedure TSecP256K1CTFieldOps.RandomMult(const ARandom: ISecureRandom;
+procedure TSecP256K1FpFieldOps.RandomMult(const ARandom: ISecureRandom;
   const AZ: TCryptoLibUInt32Array);
 begin
   TSecP256K1Field.RandomMult(ARandom, AZ);
 end;
 
-procedure TSecP256K1CTFieldOps.FieldFromBigInteger(const AX: TBigInteger;
+procedure TSecP256K1FpFieldOps.FieldFromBigInteger(const AX: TBigInteger;
   const AZ: TCryptoLibUInt32Array);
 begin
   TNat.Copy(FE_INTS, TSecP256K1Field.FromBigInteger(AX), 0, AZ, 0);
 end;
 
-function TSecP256K1CTFieldOps.CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
+function TSecP256K1FpFieldOps.CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
 begin
   Result := TSecP256K1FieldElement.Create(AX) as IECFieldElement;
 end;
 
-procedure TSecP256K1CTFieldOps.FieldOne(const AZ: TCryptoLibUInt32Array);
+procedure TSecP256K1FpFieldOps.FieldOne(const AZ: TCryptoLibUInt32Array);
 begin
   TNat.Copy(FE_INTS, FOne, 0, AZ, 0);
 end;

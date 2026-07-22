@@ -389,7 +389,7 @@ uses
   ClpMacUtilities in '..\..\CryptoLib\src\Crypto\Macs\ClpMacUtilities.pas',
   ClpMiscObjectIdentifiers in '..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas',
   ClpMultipliers in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas',
-  ClpICTFieldOps in '..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpICTFieldOps.pas',
+  ClpIFpFieldOps in '..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas',
   ClpHomogeneousPoint in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpHomogeneousPoint.pas',
   ClpFixedWindowCTMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedWindowCTMultiplier.pas',
   ClpNistNamedCurves in '..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas',
