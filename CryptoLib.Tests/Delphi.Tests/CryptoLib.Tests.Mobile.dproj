@@ -352,6 +352,7 @@
         </DCCReference>
         <DCCReference Include="Mobile\MobileTestRunner.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesBitSlicedEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas"/>
@@ -1266,6 +1267,7 @@
         <DCCReference Include="..\src\Rngs\Drbg\HMacDrbgTests.pas"/>
         <DCCReference Include="..\src\Rngs\Drbg\CtrDrbgTests.pas"/>
         <DCCReference Include="..\src\Crypto\AESTests.pas"/>
+        <DCCReference Include="..\src\Crypto\AesBitSlicedTests.pas"/>
         <DCCReference Include="..\src\Crypto\BlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesBlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesLightTests.pas"/>

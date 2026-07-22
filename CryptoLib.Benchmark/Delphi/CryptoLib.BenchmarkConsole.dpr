@@ -13,6 +13,7 @@ uses
   PerformanceBenchmark in '..\src\Core\PerformanceBenchmark.pas',
   SignerPerformanceBenchmark in '..\src\Core\SignerPerformanceBenchmark.pas',
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
+  ClpAesBitSlicedEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesBitSlicedEngine.pas',
   ClpIAesHardwareEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas',
   ClpIAesEngineX86 in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineX86.pas',
   ClpAesEngineX86 in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineX86.pas',

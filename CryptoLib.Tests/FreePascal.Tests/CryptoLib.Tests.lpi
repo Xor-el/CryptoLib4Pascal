@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="204">
+    <Units Count="205">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -897,6 +897,10 @@
         <Filename Value="..\src\Pkix\AttrCertPathTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit203>
+      <Unit204>
+        <Filename Value="..\src\Crypto\AesBitSlicedTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit204>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
