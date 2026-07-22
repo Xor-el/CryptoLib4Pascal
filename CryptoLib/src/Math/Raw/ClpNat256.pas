@@ -363,24 +363,28 @@ end;
 
 class function TNat256.Create(): TCryptoLibUInt32Array;
 begin
+  Result := nil;
   SetLength(Result, 8);
   Exit;
 end;
 
 class function TNat256.Create64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 4);
   Exit;
 end;
 
 class function TNat256.CreateExt(): TCryptoLibUInt32Array;
 begin
+  Result := nil;
   SetLength(Result, 16);
   Exit;
 end;
 
 class function TNat256.CreateExt64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 8);
   Exit;
 end;

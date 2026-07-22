@@ -279,7 +279,9 @@ uses
   ClpPkixCrlRevocationChecker, ClpPkixRevocationChecker, 
   ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities, 
   ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder, 
-  ClpCryptoLibExceptions, ClpAesBitSlicedEngine;
+  ClpCryptoLibExceptions, ClpAesBitSlicedEngine, ClpHomogeneousPoint, 
+  ClpFixedWindowCTMultiplier, ClpIFpFieldOps, ClpIF2mFieldOps, 
+  ClpLopezDahabLadder, ClpF2mMontgomeryLadderCTMultiplier;
 
 implementation
 

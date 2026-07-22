@@ -36,6 +36,8 @@ uses
   ClpECFieldElement,
   ClpECPoint,
   ClpECLookupTables,
+  ClpIFpFieldOps,
+  ClpFixedWindowCTMultiplier,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpISecP384R1Custom,
@@ -191,9 +193,37 @@ type
     function RandomFieldElement(const ARandom: ISecureRandom): IECFieldElement; override;
     function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
+    function CreateDefaultMultiplier: IECMultiplier; override;
 
     class property Q: TBigInteger read FQ;
     class property SecP384R1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP384R1AffineZs;
+  end;
+
+type
+  TSecP384R1FpFieldOps = class sealed(TInterfacedObject, IFpFieldOps)
+  strict private
+  const
+    FE_INTS = Int32(12);
+  var
+    FA, FB3, FOne, FN: TCryptoLibUInt32Array;
+    FOrderBits: Int32;
+  public
+    constructor Create(const AA, AB: IECFieldElement; const AOrder: TBigInteger);
+    function GetFieldInts: Int32;
+    function GetOrderBits: Int32;
+    procedure GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+    procedure Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
+    procedure Square(const AX, AZ: TCryptoLibUInt32Array);
+    procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array);
+    procedure Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
+    procedure MulByB3(const AX, AZ: TCryptoLibUInt32Array);
+    procedure MulByA(const AX, AZ: TCryptoLibUInt32Array);
+    procedure Inv(const AX, AZ: TCryptoLibUInt32Array);
+    function IsZero(const AX: TCryptoLibUInt32Array): Boolean;
+    procedure RandomMult(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
+    procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt32Array);
+    function CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
+    procedure FieldOne(const AZ: TCryptoLibUInt32Array);
   end;
 
 implementation
@@ -1206,6 +1236,111 @@ begin
   else
     Result := False;
   end;
+end;
+
+function TSecP384R1Curve.CreateDefaultMultiplier: IECMultiplier;
+var
+  LCurve: IECCurve;
+  LFieldOps: IFpFieldOps;
+begin
+  LCurve := Self as IECCurve;
+  LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
+  Result := TFixedWindowCTMultiplier.Create(LFieldOps) as IECMultiplier;
+end;
+
+{ TSecP384R1FpFieldOps }
+
+constructor TSecP384R1FpFieldOps.Create(const AA, AB: IECFieldElement; const AOrder: TBigInteger);
+var
+  LB, LB3: TCryptoLibUInt32Array;
+begin
+  Inherited Create;
+  FOrderBits := AOrder.BitLength;
+  FN := TNat.FromBigInteger(FE_INTS * 32, AOrder);
+  FOne := TSecP384R1Field.FromBigInteger(TBigInteger.One);
+  FA := TNat.Copy(FE_INTS, (AA as ISecP384R1FieldElement).X);
+  LB := (AB as ISecP384R1FieldElement).X;
+  LB3 := TNat.Create(FE_INTS);
+  TSecP384R1Field.Add(LB, LB, LB3);
+  TSecP384R1Field.Add(LB3, LB, LB3);
+  FB3 := LB3;
+end;
+
+function TSecP384R1FpFieldOps.GetFieldInts: Int32;
+begin
+  Result := FE_INTS;
+end;
+
+function TSecP384R1FpFieldOps.GetOrderBits: Int32;
+begin
+  Result := FOrderBits;
+end;
+
+procedure TSecP384R1FpFieldOps.GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+begin
+  TNat.Copy(FE_INTS, FN, 0, AZ, 0);
+end;
+
+procedure TSecP384R1FpFieldOps.Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Multiply(AX, AY, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.Square(const AX, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Square(AX, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Add(AX, AY, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Subtract(AX, AY, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.MulByB3(const AX, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Multiply(AX, FB3, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.MulByA(const AX, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Multiply(AX, FA, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.Inv(const AX, AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.Inv(AX, AZ);
+end;
+
+function TSecP384R1FpFieldOps.IsZero(const AX: TCryptoLibUInt32Array): Boolean;
+begin
+  Result := TSecP384R1Field.IsZero(AX) <> 0;
+end;
+
+procedure TSecP384R1FpFieldOps.RandomMult(const ARandom: ISecureRandom;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  TSecP384R1Field.RandomMult(ARandom, AZ);
+end;
+
+procedure TSecP384R1FpFieldOps.FieldFromBigInteger(const AX: TBigInteger;
+  const AZ: TCryptoLibUInt32Array);
+begin
+  TNat.Copy(FE_INTS, TSecP384R1Field.FromBigInteger(AX), 0, AZ, 0);
+end;
+
+function TSecP384R1FpFieldOps.CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
+begin
+  Result := TSecP384R1FieldElement.Create(AX) as IECFieldElement;
+end;
+
+procedure TSecP384R1FpFieldOps.FieldOne(const AZ: TCryptoLibUInt32Array);
+begin
+  TNat.Copy(FE_INTS, FOne, 0, AZ, 0);
 end;
 
 end.

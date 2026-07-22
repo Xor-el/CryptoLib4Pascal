@@ -26,6 +26,7 @@ uses
   ClpBitOperations,
   ClpNat,
   ClpNat320,
+  ClpPack,
   ClpInterleave,
   ClpEncoders,
   ClpECCurve,
@@ -34,6 +35,9 @@ uses
   ClpECPoint,
   ClpECLookupTables,
   ClpMultipliers,
+  ClpIF2mFieldOps,
+  ClpF2mMontgomeryLadderCTMultiplier,
+  ClpISecureRandom,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpISecT283K1Custom,
@@ -61,6 +65,8 @@ type
   class procedure ImplMultiply(const AX, AY, AZZ: TCryptoLibUInt64Array); static;
   class procedure ImplSquare(const AX, AZZ: TCryptoLibUInt64Array); static;
   class constructor Create;
+  private
+    class procedure InvertCT(const AX, AZ: TCryptoLibUInt64Array); static;
   public
     class procedure Add(const AX, AY, AZ: TCryptoLibUInt64Array); static;
     class procedure AddBothTo(const AX, AY, AZ: TCryptoLibUInt64Array); static;
@@ -202,6 +208,31 @@ type
     function GetK3: Int32;
 
     class property SecT283K1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecT283K1AffineZs;
+  end;
+
+type
+  TSecT283K1F2mFieldOps = class sealed(TInterfacedObject, IF2mFieldOps)
+  strict private
+  const
+    FE_LONGS = Int32(5);
+    M27 = UInt64($7FFFFFF);
+  var
+    FCard: TCryptoLibUInt32Array;
+    FCardLongs, FCardBits: Int32;
+  public
+    constructor Create(const AOrder, ACofactor: TBigInteger);
+    function GetFieldLongs: Int32;
+    function GetCardinalityBits: Int32;
+    procedure GetCardinality(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+    procedure Mul(const AX, AY, AZ: TCryptoLibUInt64Array);
+    procedure Square(const AX, AZ: TCryptoLibUInt64Array);
+    procedure Add(const AX, AY, AZ: TCryptoLibUInt64Array);
+    procedure MulByB(const AX, AZ: TCryptoLibUInt64Array);
+    procedure Inv(const AX, AZ: TCryptoLibUInt64Array);
+    function IsZeroMask(const AX: TCryptoLibUInt64Array): UInt64;
+    procedure RandomNonZero(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt64Array);
+    procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt64Array);
+    function CreateFieldElement(const AX: TCryptoLibUInt64Array): IECFieldElement;
   end;
 
 implementation
@@ -472,11 +503,17 @@ begin
 end;
 
 class procedure TSecT283Field.Invert(const AX, AZ: TCryptoLibUInt64Array);
-var
-  LT0, LT1: TCryptoLibUInt64Array;
 begin
   if TNat320.IsZero64(AX) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SDivisionByZeroInFieldInversion);
+  InvertCT(AX, AZ);
+end;
+
+class procedure TSecT283Field.InvertCT(const AX, AZ: TCryptoLibUInt64Array);
+var
+  LT0, LT1: TCryptoLibUInt64Array;
+begin
+  // guard-free Itoh-Tsujii chain a^(2^283 - 2); 0 is a fixed point so InvertCT(0)=0
   SetLength(LT0, 5);
   SetLength(LT1, 5);
   Square(AX, LT0);
@@ -1226,8 +1263,13 @@ begin
 end;
 
 function TSecT283K1Curve.CreateDefaultMultiplier: IECMultiplier;
+var
+  LCurve: IECCurve;
+  LFieldOps: IF2mFieldOps;
 begin
-  Result := TWTauNafMultiplier.Create() as IECMultiplier;
+  LCurve := Self as IECCurve;
+  LFieldOps := TSecT283K1F2mFieldOps.Create(LCurve.Order, LCurve.Cofactor);
+  Result := TF2mMontgomeryLadderCTMultiplier.Create(LFieldOps) as IECMultiplier;
 end;
 
 function TSecT283K1Curve.CloneCurve: IECCurve;
@@ -1309,6 +1351,92 @@ end;
 function TSecT283K1Curve.GetK3: Int32;
 begin
   Result := 12;
+end;
+
+{ TSecT283K1F2mFieldOps }
+
+constructor TSecT283K1F2mFieldOps.Create(const AOrder, ACofactor: TBigInteger);
+var
+  LCard: TBigInteger;
+begin
+  Inherited Create;
+  LCard := AOrder.Multiply(ACofactor);
+  FCardBits := LCard.BitLength;
+  FCardLongs := TNat.GetLengthForBits(FCardBits);
+  FCard := TNat.FromBigInteger(FCardBits, LCard);
+end;
+
+function TSecT283K1F2mFieldOps.GetFieldLongs: Int32;
+begin
+  Result := FE_LONGS;
+end;
+
+function TSecT283K1F2mFieldOps.GetCardinalityBits: Int32;
+begin
+  Result := FCardBits;
+end;
+
+procedure TSecT283K1F2mFieldOps.GetCardinality(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+begin
+  TNat.Copy(FCardLongs, FCard, 0, AZ, 0);
+end;
+
+procedure TSecT283K1F2mFieldOps.Mul(const AX, AY, AZ: TCryptoLibUInt64Array);
+begin
+  TSecT283Field.Multiply(AX, AY, AZ);
+end;
+
+procedure TSecT283K1F2mFieldOps.Square(const AX, AZ: TCryptoLibUInt64Array);
+begin
+  TSecT283Field.Square(AX, AZ);
+end;
+
+procedure TSecT283K1F2mFieldOps.Add(const AX, AY, AZ: TCryptoLibUInt64Array);
+begin
+  TSecT283Field.Add(AX, AY, AZ);
+end;
+
+procedure TSecT283K1F2mFieldOps.MulByB(const AX, AZ: TCryptoLibUInt64Array);
+begin
+  // sect283k1 has b = 1: z := x
+  TNat.Copy64(FE_LONGS, AX, 0, AZ, 0);
+end;
+
+procedure TSecT283K1F2mFieldOps.Inv(const AX, AZ: TCryptoLibUInt64Array);
+begin
+  TSecT283Field.InvertCT(AX, AZ);
+end;
+
+function TSecT283K1F2mFieldOps.IsZeroMask(const AX: TCryptoLibUInt64Array): UInt64;
+var
+  LV: UInt64;
+begin
+  LV := AX[0] or AX[1] or AX[2] or AX[3] or AX[4];
+  Result := not UInt64(TBitOperations.Asr64(Int64(LV or (UInt64(0) - LV)), 63));
+end;
+
+procedure TSecT283K1F2mFieldOps.RandomNonZero(const ARandom: ISecureRandom;
+  const AZ: TCryptoLibUInt64Array);
+var
+  LBytes: TCryptoLibByteArray;
+begin
+  System.SetLength(LBytes, FE_LONGS * 8);
+  repeat
+    ARandom.NextBytes(LBytes);
+    TPack.LE_To_UInt64(LBytes, 0, AZ, 0, FE_LONGS);
+    AZ[FE_LONGS - 1] := AZ[FE_LONGS - 1] and M27;
+  until IsZeroMask(AZ) = 0;
+end;
+
+procedure TSecT283K1F2mFieldOps.FieldFromBigInteger(const AX: TBigInteger;
+  const AZ: TCryptoLibUInt64Array);
+begin
+  TNat.Copy64(FE_LONGS, TSecT283Field.FromBigInteger(AX), 0, AZ, 0);
+end;
+
+function TSecT283K1F2mFieldOps.CreateFieldElement(const AX: TCryptoLibUInt64Array): IECFieldElement;
+begin
+  Result := TSecT283FieldElement.Create(AX) as IECFieldElement;
 end;
 
 end.

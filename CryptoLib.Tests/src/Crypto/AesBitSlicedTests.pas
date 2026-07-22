@@ -79,6 +79,8 @@ type
     procedure TestAesGcmEndToEnd;
     procedure TestInvalidKeyLength;
     procedure TestResetAndReInit;
+    procedure TestReInitDifferentKeySize;
+    procedure TestCallerKeyPreserved;
   end;
 
 implementation
@@ -442,6 +444,57 @@ begin
   LEngine.ProcessBlock(LBlock, 0, LThird, 0);
   if not AreEqual(LFirst, LThird) then
     Fail('ProcessBlock after re-Init produced a different result');
+end;
+
+procedure TTestAesBitSliced.TestReInitDifferentKeySize;
+var
+  LBlock, LOut: TBytes;
+  LEngine: IBlockCipher;
+begin
+  LBlock := DecodeHex(KAT_PLAIN);
+  System.SetLength(LOut, 16);
+  LEngine := TAesBitSlicedEngine.Create();
+
+  LEngine.Init(True, TKeyParameter.Create(DecodeHex(KAT_KEY_128)) as ICipherParameters);
+  LEngine.ProcessBlock(LBlock, 0, LOut, 0);
+  if not AreEqual(LOut, DecodeHex(KAT_CIPHER_128)) then
+    Fail('AES-128 encrypt wrong before re-key');
+
+  // Re-Init the same instance with a larger key: exercises the FSkey pre-wipe + realloc.
+  LEngine.Init(True, TKeyParameter.Create(DecodeHex(KAT_KEY_256)) as ICipherParameters);
+  LEngine.ProcessBlock(LBlock, 0, LOut, 0);
+  if not AreEqual(LOut, DecodeHex(KAT_CIPHER_256)) then
+    Fail('AES-256 encrypt wrong after cross-key-size re-Init');
+end;
+
+procedure TTestAesBitSliced.TestCallerKeyPreserved;
+var
+  LKey, LKeyBefore, LBad: TBytes;
+  LEngine: IBlockCipher;
+  LI: Int32;
+  LRaised: Boolean;
+begin
+  // A successful Init must not mutate the caller's key bytes.
+  LKey := DecodeHex(KAT_KEY_128);
+  LKeyBefore := System.Copy(LKey);
+  LEngine := TAesBitSlicedEngine.Create();
+  LEngine.Init(True, TKeyParameter.Create(LKey) as ICipherParameters);
+  if not AreEqual(LKey, LKeyBefore) then
+    Fail('caller key buffer was mutated on a successful Init');
+
+  // An invalid key length must raise (matching TAesEngine).
+  System.SetLength(LBad, 20);
+  for LI := 0 to System.Length(LBad) - 1 do
+    LBad[LI] := Byte($AA);
+  LRaised := False;
+  try
+    LEngine := TAesBitSlicedEngine.Create();
+    LEngine.Init(True, TKeyParameter.Create(LBad) as ICipherParameters);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'invalid key length did not raise');
 end;
 
 initialization
