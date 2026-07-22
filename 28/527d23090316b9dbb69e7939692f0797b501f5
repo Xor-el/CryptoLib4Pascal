@@ -1,0 +1,62 @@
+CryptoLib/src/Crypto/Engines/ClpAesBitSlicedEngine.pas
+  s_2f5e16fcff4f2a::t_ddc94bf3073262 56
+  s_2f5e16fcff4f2a::t_0c438aaa7e2346 1-30,32-55,57-478,480-494,503-526,535-623,625-715,717,719-720,722-802
+  s_2f5e16fcff4f2a::t_93daaafae9dc66 31
+  s_2f5e16fcff4f2a::t_72163a3770b68d 479
+  s_2f5e16fcff4f2a::t_550edabd9f50c1 495-502,527-534
+  s_2f5e16fcff4f2a::t_0df93c67b12066 624
+  s_2f5e16fcff4f2a::t_1862cd8c8664e0 716,718,721
+CryptoLib.Tests/src/Crypto/AesBitSlicedTests.pas
+  s_2f5e16fcff4f2a::t_9f3c5e3e0c19e0 96-100,102-111
+  s_2f5e16fcff4f2a::t_decc7f60d606d6 417,427-430,435
+  s_2f5e16fcff4f2a::t_c727841df53a93 1-53,57-59,64-95,101,112-416,418-426,431-434,436-455
+  s_2f5e16fcff4f2a::t_f6553aa874be52 54-56,60-63
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_2f5e16fcff4f2a::t_89249fde494186 282
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_2f5e16fcff4f2a::t_255774bc4fe2bf 16
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_2f5e16fcff4f2a::t_b8bcbaa680de07 35
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_2f5e16fcff4f2a::t_5147acc95acff1 12,931
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_2f5e16fcff4f2a::t_0428365c7c5bf4 355,1270
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_2f5e16fcff4f2a::t_b7803112864fe4 31,952
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_3bb9e34946d0c8::t_3af3d5eb0faf44 82,900-903
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_3bb9e34946d0c8::t_b03e924033b3c6 43-45
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_2f5e16fcff4f2a::t_68a8f0b6472c1e 42,859-862
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_2f5e16fcff4f2a::t_0ddbb54b4736de 44-60
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_2f5e16fcff4f2a::t_6416d5049384c0 40
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_2f5e16fcff4f2a::t_e1d0a716641750 34,3464-3467
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "28527d23090316b9dbb69e7939692f0797b501f5",
+  "prompts": {},
+  "sessions": {
+    "s_2f5e16fcff4f2a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "117ff67d-0651-4592-af3c-ed7c8dff3f8d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_3bb9e34946d0c8": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "35fdc8b7-c18d-42aa-a7b4-c8af87e3f9af",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
