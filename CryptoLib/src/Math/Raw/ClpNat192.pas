@@ -238,24 +238,28 @@ end;
 
 class function TNat192.Create(): TCryptoLibUInt32Array;
 begin
+  Result := nil;
   SetLength(Result, 6);
   Exit;
 end;
 
 class function TNat192.Create64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 3);
   Exit;
 end;
 
 class function TNat192.CreateExt(): TCryptoLibUInt32Array;
 begin
+  Result := nil;
   SetLength(Result, 12);
   Exit;
 end;
 
 class function TNat192.CreateExt64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 6);
   Exit;
 end;

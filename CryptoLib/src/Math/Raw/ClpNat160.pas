@@ -243,11 +243,13 @@ end;
 
 class function TNat160.Create: TCryptoLibUInt32Array;
 begin
+  Result := nil;
   System.SetLength(Result, 5);
 end;
 
 class function TNat160.CreateExt: TCryptoLibUInt32Array;
 begin
+  Result := nil;
   System.SetLength(Result, 10);
 end;
 

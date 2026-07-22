@@ -55,11 +55,13 @@ end;
 
 class function TNat576.Create64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   System.SetLength(Result, 9);
 end;
 
 class function TNat576.CreateExt64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   System.SetLength(Result, 18);
 end;
 

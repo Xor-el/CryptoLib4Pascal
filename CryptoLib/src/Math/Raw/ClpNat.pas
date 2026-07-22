@@ -672,12 +672,10 @@ begin
 end;
 
 class function TNat.Copy(ALen: Int32; const AX: TCryptoLibUInt32Array): TCryptoLibUInt32Array;
-var
-  LZ: TCryptoLibUInt32Array;
 begin
-  SetLength(LZ, ALen);
-  System.Move(AX[0], LZ[0], ALen * System.SizeOf(UInt32));
-  Result := LZ;
+  Result := nil;
+  SetLength(Result, ALen);
+  System.Move(AX[0], Result[0], ALen * System.SizeOf(UInt32));
 end;
 
 class procedure TNat.Copy(ALen: Int32; const AX: TCryptoLibUInt32Array; const AZ: TCryptoLibUInt32Array);
@@ -691,12 +689,10 @@ begin
 end;
 
 class function TNat.Copy64(ALen: Int32; const AX: TCryptoLibUInt64Array): TCryptoLibUInt64Array;
-var
-  LZ: TCryptoLibUInt64Array;
 begin
-  SetLength(LZ, ALen);
-  System.Move(AX[0], LZ[0], ALen * System.SizeOf(UInt64));
-  Result := LZ;
+  Result := nil;
+  SetLength(Result, ALen);
+  System.Move(AX[0], Result[0], ALen * System.SizeOf(UInt64));
 end;
 
 class procedure TNat.Copy64(ALen: Int32; const AX: TCryptoLibUInt64Array; const AZ: TCryptoLibUInt64Array);
@@ -711,12 +707,14 @@ end;
 
 class function TNat.Create(ALen: Int32): TCryptoLibUInt32Array;
 begin
+  Result := nil;
   SetLength(Result, ALen);
   Exit;
 end;
 
 class function TNat.Create64(ALen: Int32): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, ALen);
   Exit;
 end;
@@ -1021,39 +1019,35 @@ end;
 class function TNat.FromBigInteger(ABits: Int32; AX: TBigInteger): TCryptoLibUInt32Array;
 var
   LLen: Int32;
-  LZ: TCryptoLibUInt32Array;
   LI: Int32;
 begin
   LLen := GetLengthForBits(ABits);
-  LZ := Create(LLen);
+  Result := Create(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
-  LZ[0] := UInt32(AX.Int32Value);
+  Result[0] := UInt32(AX.Int32Value);
   for LI := 1 to LLen - 1 do
   begin
     AX := AX.ShiftRight(32);
-    LZ[LI] := UInt32(AX.Int32Value);
+    Result[LI] := UInt32(AX.Int32Value);
   end;
-  Result := LZ;
 end;
 
 class function TNat.FromBigInteger64(ABits: Int32; AX: TBigInteger): TCryptoLibUInt64Array;
 var
   LLen: Int32;
-  LZ: TCryptoLibUInt64Array;
   LI: Int32;
 begin
   LLen := GetLengthForBits64(ABits);
-  LZ := Create64(LLen);
+  Result := Create64(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
-  LZ[0] := UInt64(AX.Int64Value);
+  Result[0] := UInt64(AX.Int64Value);
   for LI := 1 to LLen - 1 do
   begin
     AX := AX.ShiftRight(64);
-    LZ[LI] := UInt64(AX.Int64Value);
+    Result[LI] := UInt64(AX.Int64Value);
   end;
-  Result := LZ;
 end;
 
 class function TNat.GetBit(const AX: TCryptoLibUInt32Array; ABit: Int32): UInt32;

@@ -57,7 +57,8 @@ uses
   OpenSslVectors, PkcsVectors, CertVectors, PkitsVectors, PqcSampleCredentials,
   CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
   Argon2Vectors, PqcTestVectors, DrbgTestVectors, Int32Tests, Int64Tests,
-  ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests;
+  ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests,
+  ECDHConstantTimeTests;
 
 type
 

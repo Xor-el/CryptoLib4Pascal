@@ -54,12 +54,14 @@ end;
 
 class function TNat320.Create64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 5);
   Exit;
 end;
 
 class function TNat320.CreateExt64(): TCryptoLibUInt64Array;
 begin
+  Result := nil;
   SetLength(Result, 10);
   Exit;
 end;

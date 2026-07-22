@@ -726,6 +726,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpMacUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpICTFieldOps.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpHomogeneousPoint.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedWindowCTMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Nist\ClpNistNamedCurves.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Nist\ClpNistObjectIdentifiers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Digests\ClpNoOpDigest.pas"/>
@@ -1268,6 +1271,7 @@
         <DCCReference Include="..\src\Rngs\Drbg\CtrDrbgTests.pas"/>
         <DCCReference Include="..\src\Crypto\AESTests.pas"/>
         <DCCReference Include="..\src\Crypto\AesBitSlicedTests.pas"/>
+        <DCCReference Include="..\src\Crypto\ECDHConstantTimeTests.pas"/>
         <DCCReference Include="..\src\Crypto\BlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesBlockCipherTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AesLightTests.pas"/>

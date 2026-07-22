@@ -247,21 +247,25 @@ end;
 
 class function TNat128.Create: TCryptoLibUInt32Array;
 begin
+  Result := nil;
   System.SetLength(Result, 4);
 end;
 
 class function TNat128.Create64: TCryptoLibUInt64Array;
 begin
+  Result := nil;
   System.SetLength(Result, 2);
 end;
 
 class function TNat128.CreateExt: TCryptoLibUInt32Array;
 begin
+  Result := nil;
   System.SetLength(Result, 8);
 end;
 
 class function TNat128.CreateExt64: TCryptoLibUInt64Array;
 begin
+  Result := nil;
   System.SetLength(Result, 4);
 end;
 
