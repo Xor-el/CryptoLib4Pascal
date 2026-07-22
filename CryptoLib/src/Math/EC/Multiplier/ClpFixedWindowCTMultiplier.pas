@@ -49,10 +49,11 @@ type
   const
     WINDOW_BITS = Int32(4);
     TABLE_SIZE = Int32(16);
-    BLIND_BITS = Int32(64);
+    DEFAULT_BLIND_BITS = Int32(64);
   var
     FFieldOps: IFpFieldOps;
     FRandom: ISecureRandom;
+    FBlindBits: Int32;
     function GetRandom: ISecureRandom;
     procedure GenerateBlind(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
     function SelectEntry(const ATable: TCryptoLibGenericArray<TCTHomogPoint>;
@@ -60,29 +61,40 @@ type
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
-    constructor Create(const AFieldOps: IFpFieldOps); overload;
-    constructor Create(const AFieldOps: IFpFieldOps; const ARandom: ISecureRandom); overload;
+    constructor Create(const AFieldOps: IFpFieldOps;
+      ABlindBits: Int32 = DEFAULT_BLIND_BITS); overload;
+    constructor Create(const AFieldOps: IFpFieldOps; const ARandom: ISecureRandom;
+      ABlindBits: Int32 = DEFAULT_BLIND_BITS); overload;
   end;
 
 implementation
 
 resourcestring
   SPointNotOnCurve = 'point is not a valid point on the curve for constant-time multiplication';
+  SScalarTooLarge = 'scalar is larger than the curve order';
+  SInvalidBlindBits = 'blinding length must be a positive multiple of 32';
 
 { TFixedWindowCTMultiplier }
 
-constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps);
+constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps;
+  ABlindBits: Int32);
 begin
   Inherited Create;
+  if (ABlindBits <= 0) or ((ABlindBits and 31) <> 0) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
+  FBlindBits := ABlindBits;
 end;
 
 constructor TFixedWindowCTMultiplier.Create(const AFieldOps: IFpFieldOps;
-  const ARandom: ISecureRandom);
+  const ARandom: ISecureRandom; ABlindBits: Int32);
 begin
   Inherited Create;
+  if (ABlindBits <= 0) or ((ABlindBits and 31) <> 0) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
   FRandom := ARandom;
+  FBlindBits := ABlindBits;
 end;
 
 function TFixedWindowCTMultiplier.GetRandom: ISecureRandom;
@@ -97,10 +109,10 @@ procedure TFixedWindowCTMultiplier.GenerateBlind(const ARandom: ISecureRandom;
 var
   LBytes: TCryptoLibByteArray;
 begin
-  // BLIND_BITS of fresh randomness in the low limbs of AZ
-  System.SetLength(LBytes, BLIND_BITS div 8);
+  // FBlindBits of fresh randomness in the low limbs of AZ
+  System.SetLength(LBytes, FBlindBits div 8);
   ARandom.NextBytes(LBytes);
-  TPack.LE_To_UInt32(LBytes, 0, AZ, 0, BLIND_BITS div 32);
+  TPack.LE_To_UInt32(LBytes, 0, AZ, 0, FBlindBits div 32);
 end;
 
 function TFixedWindowCTMultiplier.SelectEntry(
@@ -140,6 +152,10 @@ begin
   if not AP.IsValid then
     raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
 
+  // reject scalars wider than the group order (the fixed-width buffer holds up to that)
+  if AK.BitLength > FFieldOps.GetOrderBits then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SScalarTooLarge);
+
   LFieldInts := FFieldOps.GetFieldInts;
   LRandom := GetRandom;
 
@@ -164,7 +180,7 @@ begin
     LTable[LI] := TCTHomogeneousMath.Add(FFieldOps, LTable[LI - 1], LBase);
 
   // --- scalar blinding in fixed-width Nat: k' = k + r*n ---
-  LScalarBits := FFieldOps.GetOrderBits + BLIND_BITS + 1;
+  LScalarBits := FFieldOps.GetOrderBits + FBlindBits + 1;
   LScalarInts := TNat.GetLengthForBits(LScalarBits) + 1;
   LN := TNat.Create(LScalarInts);
   LR := TNat.Create(LScalarInts);
@@ -207,6 +223,25 @@ begin
     TNat.Zero(LScalarInts, LK);
     TNat.Zero(LScalarInts, LR);
     TNat.Zero(LScalarInts * 2, LProd);
+    TNat.Zero(LFieldInts, LLambda);
+    for LI := 0 to TABLE_SIZE - 1 do
+    begin
+      TNat.Zero(LFieldInts, LTable[LI].X);
+      TNat.Zero(LFieldInts, LTable[LI].Y);
+      TNat.Zero(LFieldInts, LTable[LI].Z);
+    end;
+    if LAcc.X <> nil then
+    begin
+      TNat.Zero(LFieldInts, LAcc.X);
+      TNat.Zero(LFieldInts, LAcc.Y);
+      TNat.Zero(LFieldInts, LAcc.Z);
+    end;
+    if LSel.X <> nil then
+    begin
+      TNat.Zero(LFieldInts, LSel.X);
+      TNat.Zero(LFieldInts, LSel.Y);
+      TNat.Zero(LFieldInts, LSel.Z);
+    end;
   end;
 end;
 

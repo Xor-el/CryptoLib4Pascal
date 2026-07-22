@@ -59,6 +59,7 @@ uses
   ClpIECFieldElement,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type
@@ -85,6 +86,7 @@ type
     procedure TestBlindingTransparency;
     procedure TestExceptionalFormulas;
     procedure TestECDHAgreement;
+    procedure TestScalarRangeGuard;
   end;
 
 implementation
@@ -344,6 +346,43 @@ begin
     LK1 := LE1.CalculateAgreement(LP2.Public as ICipherParameters);
     LK2 := LE2.CalculateAgreement(LP1.Public as ICipherParameters);
     CheckEquals(True, LK1.Equals(LK2), 'ECDH agreement mismatch ' + LNames[LI]);
+  end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestScalarRangeGuard;
+var
+  LNames: TCryptoLibStringArray;
+  LI, LOrderBits: Int32;
+  LX9: IX9ECParameters;
+  LMul: IECMultiplier;
+  LN: TBigInteger;
+
+  function Raises(const AK: TBigInteger): Boolean;
+  begin
+    Result := False;
+    try
+      LMul.Multiply(LX9.G, AK);
+    except
+      on E: EInvalidOperationCryptoLibException do
+        Result := True;
+    end;
+  end;
+
+begin
+  LNames := CurveNames;
+  for LI := 0 to System.Length(LNames) - 1 do
+  begin
+    LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
+    LMul := LX9.Curve.Multiplier;
+    LN := LX9.N;
+    LOrderBits := LN.BitLength;
+    // k = n (BitLength = order bits) is in range and must not raise
+    CheckFalse(Raises(LN), 'k = n unexpectedly rejected for ' + LNames[LI]);
+    // scalars wider than the order must raise
+    CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits)),
+      'k = 2^orderbits not rejected for ' + LNames[LI]);
+    CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits + 1)),
+      'k = 2^(orderbits+1) not rejected for ' + LNames[LI]);
   end;
 end;
 

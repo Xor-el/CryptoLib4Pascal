@@ -133,6 +133,9 @@ type
     /// <summary>Reset the cipher back to its post-Init state.</summary>
     procedure Reset(); virtual;
 
+    /// <summary>Zeroize the expanded round-key schedule on teardown.</summary>
+    destructor Destroy; override;
+
     /// <summary>The cipher name (<c>AES[BitSliced]</c>).</summary>
     property AlgorithmName: String read GetAlgorithmName;
   end;
@@ -747,6 +750,12 @@ end;
 procedure TAesBitSlicedEngine.Reset;
 begin
   // The bit-sliced engine keeps no per-block chaining state; nothing to reset.
+end;
+
+destructor TAesBitSlicedEngine.Destroy;
+begin
+  TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
+  inherited Destroy;
 end;
 
 function TAesBitSlicedEngine.ProcessBlock(const AInput: TCryptoLibByteArray;
