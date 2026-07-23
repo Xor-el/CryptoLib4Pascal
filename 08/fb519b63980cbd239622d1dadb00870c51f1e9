@@ -1,0 +1,55 @@
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmUtilities.pas
+  s_5f8f0987777047::t_b0979a27b2e44e 62-70
+  s_5f8f0987777047::t_2aaf3632c4d58d 71-73
+  s_5f8f0987777047::t_283b1f5955b98b 74-77,161-171,188-198,200-205,207-216,218-233
+CryptoLib.Tests/src/Crypto/EaxTests.pas
+  s_5f8f0987777047::t_e51147dc0eb7a5 100-104
+  s_5f8f0987777047::t_203b0e3fe7cf83 112,598-700
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_5f8f0987777047::t_0a6d88665ad044 148-152
+  s_5f8f0987777047::t_b6b775df4f7254 278-293,316-318,327-328,472-474,491,511-517,598-600,866-876,991-1001,1165-1183,1250,1253-1256,1258-1261,1263-1266,1290,1293-1296,1298-1301,1303-1306,1518-1537,1663-1664,1667-1669,1674,1676-1677,1732-1801,1815-1816,1819-1820,1826-1827
+CryptoLib.Tests/src/Crypto/GCMTests.pas
+  s_5f8f0987777047::t_626469cc7ddbd8 92-96,109
+  s_5f8f0987777047::t_6d497b856fd266 740-845
+CryptoLib/src/Crypto/Engines/ClpAesBitSlicedEngine.pas
+  s_5f8f0987777047::t_22b7f0b5168432 27,32,69-70,113-117
+  s_5f8f0987777047::t_34f9a5db167661 137-151,839-939
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_x86_64.inc
+  s_5f8f0987777047::t_1d674f872efe66 11-16
+  s_5f8f0987777047::t_89337560e88781 40,168-176,178,206,232,258,284,310,336,362
+CryptoLib.Tests/src/Crypto/AesBitSlicedTests.pas
+  s_5f8f0987777047::t_c0af96a78d9ca2 40-41,48,51,56,79
+  s_5f8f0987777047::t_3092faf80ad392 80-85,96-102
+  s_5f8f0987777047::t_35f3ba6a0e7a51 519-989
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_i386.inc
+  s_5f8f0987777047::t_70f0f62bd29640 11-16
+  s_5f8f0987777047::t_9e99fc5d79216b 44-46,98-106,144,171,197,223,366,392,418,444
+CryptoLib/src/Include/Simd/Aes/Gcm/AesGcmFusedCtrGhashEight_aarch64.inc
+  s_5f8f0987777047::t_46987a6deec560 10-15,117-118,491-492,898-899
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesCryptoExtGcmKernel.pas
+  s_5f8f0987777047::t_91cc3334d754b2 31,60,140-146
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiGcmKernel.pas
+  s_5f8f0987777047::t_2255d5c257e65a 32,67,177-183
+CryptoLib/src/Crypto/Modes/ClpEaxBlockCipher.pas
+  s_5f8f0987777047::t_ae60449e66ff30 690-692,696,718-721,724
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Block/ClpIGcmKernel.pas
+  s_5f8f0987777047::t_d07ed7c1b1b566 48-54
+CryptoLib/src/Math/Raw/ClpBits.pas
+  s_5f8f0987777047::t_563b230616b37c 29-30,32-33,35-36
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.15",
+  "base_commit_sha": "08fb519b63980cbd239622d1dadb00870c51f1e9",
+  "prompts": {},
+  "sessions": {
+    "s_5f8f0987777047": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "55f06773-5bd0-48be-abbf-7a63aa166354",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
