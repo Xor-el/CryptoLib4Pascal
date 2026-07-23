@@ -28,6 +28,7 @@ uses
   ClpIGcmKernel,
   ClpCipherKernelFactoryBase,
   ClpCipherKernelRegistry,
+  ClpArrayUtilities,
   ClpAesFusedAeadSimd,
   ClpAesCryptoExtFusedArmBackend,
   ClpCryptoLibTypes;
@@ -56,6 +57,7 @@ type
   public
     constructor Create(const AEngine: IAesEngineArm; AKeys: Pointer;
       ARounds: Int32; AHPow128: Pointer);
+    destructor Destroy; override;
     function MinimumBlockCount: Int32;
     function ProcessCtrGhashBatches(AInPtr, AOutPtr, APrevInit, AGhashState,
       AJ0Template: Pointer; ACounter32: UInt32; ABatchCount: NativeInt;
@@ -133,6 +135,13 @@ begin
   System.SetLength(FHPowShifted, 128);
   System.Move(AHPow128^, FHPowShifted[0], 128);
   FHPow128 := @FHPowShifted[0];
+end;
+
+destructor TAesCryptoExtGcmKernel.Destroy;
+begin
+  // Zeroize the kernel-owned H-power table (key-derived; enough to forge tags).
+  TArrayUtilities.Fill(FHPowShifted, 0, System.Length(FHPowShifted), Byte(0));
+  inherited Destroy;
 end;
 
 function TAesCryptoExtGcmKernel.MinimumBlockCount: Int32;

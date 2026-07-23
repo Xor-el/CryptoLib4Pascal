@@ -26,14 +26,14 @@ uses
 type
   TBits = class sealed
   public
-    class function BitPermuteStep(AX: UInt32; AM: UInt32; &AS: Int32): UInt32; overload; static;
-    class function BitPermuteStep(AX: UInt64; AM: UInt64; &AS: Int32): UInt64; overload; static;
+    class function BitPermuteStep(AX: UInt32; AM: UInt32; &AS: Int32): UInt32; overload; static; inline;
+    class function BitPermuteStep(AX: UInt64; AM: UInt64; &AS: Int32): UInt64; overload; static; inline;
 
-    class procedure BitPermuteStep2(var AHi: UInt32; var ALo: UInt32; AM: UInt32; &AS: Int32); overload; static;
-    class procedure BitPermuteStep2(var AHi: UInt64; var ALo: UInt64; AM: UInt64; &AS: Int32); overload; static;
+    class procedure BitPermuteStep2(var AHi: UInt32; var ALo: UInt32; AM: UInt32; &AS: Int32); overload; static; inline;
+    class procedure BitPermuteStep2(var AHi: UInt64; var ALo: UInt64; AM: UInt64; &AS: Int32); overload; static; inline;
 
-    class function BitPermuteStepSimple(AX: UInt32; AM: UInt32; &AS: Int32): UInt32; overload; static;
-    class function BitPermuteStepSimple(AX: UInt64; AM: UInt64; &AS: Int32): UInt64; overload; static;
+    class function BitPermuteStepSimple(AX: UInt32; AM: UInt32; &AS: Int32): UInt32; overload; static; inline;
+    class function BitPermuteStepSimple(AX: UInt64; AM: UInt64; &AS: Int32): UInt64; overload; static; inline;
   end;
 
 implementation

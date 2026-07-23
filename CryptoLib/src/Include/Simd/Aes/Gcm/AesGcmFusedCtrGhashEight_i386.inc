@@ -8,11 +8,12 @@
 // Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
 // counter blocks (generated in-register from Counter32 + PJ0Template) to
 // produce a keystream, XORs it with PXorIn to produce POut, and concurrently
-// GHASHes the PREVIOUS batch's 8 ciphertext blocks into the running
-// authentication state (the pipeline lags by one batch). AES inside GCM is
-// always CTR keystream construction; GhashFromOutput picks which buffer feeds
-// GHASH (output on encrypt, input on decrypt). The mode primes batch 0 and
-// drains the last.
+// GHASHes 8 ciphertext blocks into the running authentication state. AES
+// inside GCM is always CTR keystream construction; GhashFromOutput selects the
+// GHASH source: encrypt folds the PREVIOUS batch's output ciphertext (the
+// pipeline lags by one batch, so the mode primes batch 0 and drains the last);
+// decrypt folds THIS batch's input ciphertext, read before the XOR overwrites
+// it (no lag, no prime/drain, and PXorIn/POut may alias for in-place decrypt).
 //
 // PHPow128 holds the kernel-owned H^8..H^1 table PRE-MULTIPLIED BY x in the
 // reflected representation, so the batch product reduces with two
@@ -40,9 +41,9 @@
 //   [ebx + 32]  PJ0Template                      [ebx + 36]  BatchCount
 //   [ebx + 40]  GhashFromOutput (1 = encrypt)
 //
-// GPR: ebx=PCtx, edi=Keys (pinned), ebp=HPow (pinned), esi=PPrevCipher
-//   (rotates per batch), ecx=counter32 (in-register across the call),
-//   eax/edx=scratch.
+// GPR: ebx=PCtx, edi=Keys (pinned), ebp=HPow (pinned), esi=GHASH source
+//   (previous output on encrypt, this batch's input on decrypt; set per
+//   batch), ecx=counter32 (in-register across the call), eax/edx=scratch.
 //
 // XMM: xmm0..xmm3 = 4 AES keystream lanes (per half); xmm4 = GHASH block;
 //   xmm5 = H-power limb; xmm6/xmm7 = pclmul product scratch.
@@ -94,6 +95,15 @@
   movdqa    [esp + 16], xmm0                   // Z1 = 0
   movdqa    [esp + 32], xmm0                   // Z2 = 0
 
+  // --- GHASH source for this batch: encrypt keeps the lagged esi (the
+  //     previous batch's output, set by the advance below); decrypt points
+  //     esi at this batch's own input so it is read before the post-AES XOR
+  //     overwrites it (safe when input and output alias). ---
+  cmp       dword ptr [ebx + 40], 0             // GHASH-from-output flag
+  jne       @@GcmGhashSrcSet                     // encrypt: keep lagged esi
+  mov       esi, [ebx + 0]                       // decrypt: esi = this input
+@@GcmGhashSrcSet:
+
   // --- Build 4 counter blocks for HALF 1 (blocks 0..3): J0[0..11] ||
   //     BE(counter32+1..+4); the counter holds the last-used value. ---
   mov       eax, [ebx + 32]                     // PJ0Template
@@ -131,7 +141,7 @@
   db $66, $0F, $38, $DC, $57, $10               // aesenc xmm2, [edi+0x10]
   db $66, $0F, $38, $DC, $5F, $10               // aesenc xmm3, [edi+0x10]
 
-  movdqu    xmm4, [esi + 0]                   // prev cipher block 0
+  movdqu    xmm4, [esi + 0]                   // GHASH source block 0
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   pxor      xmm4, [esp + 48]                  // fold carried state
   movdqu    xmm5, [ebp + 0]                   // H^8 (x-shifted)
@@ -158,7 +168,7 @@
   db $66, $0F, $38, $DC, $57, $20               // aesenc xmm2, [edi+0x20]
   db $66, $0F, $38, $DC, $5F, $20               // aesenc xmm3, [edi+0x20]
 
-  movdqu    xmm4, [esi + 16]                   // prev cipher block 1
+  movdqu    xmm4, [esi + 16]                   // GHASH source block 1
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 16]                   // H^7 (x-shifted)
 
@@ -184,7 +194,7 @@
   db $66, $0F, $38, $DC, $57, $30               // aesenc xmm2, [edi+0x30]
   db $66, $0F, $38, $DC, $5F, $30               // aesenc xmm3, [edi+0x30]
 
-  movdqu    xmm4, [esi + 32]                   // prev cipher block 2
+  movdqu    xmm4, [esi + 32]                   // GHASH source block 2
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 32]                   // H^6 (x-shifted)
 
@@ -210,7 +220,7 @@
   db $66, $0F, $38, $DC, $57, $40               // aesenc xmm2, [edi+0x40]
   db $66, $0F, $38, $DC, $5F, $40               // aesenc xmm3, [edi+0x40]
 
-  movdqu    xmm4, [esi + 48]                   // prev cipher block 3
+  movdqu    xmm4, [esi + 48]                   // GHASH source block 3
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 48]                   // H^5 (x-shifted)
 
@@ -353,7 +363,7 @@
   db $66, $0F, $38, $DC, $57, $10               // aesenc xmm2, [edi+0x10]
   db $66, $0F, $38, $DC, $5F, $10               // aesenc xmm3, [edi+0x10]
 
-  movdqu    xmm4, [esi + 64]                   // prev cipher block 4
+  movdqu    xmm4, [esi + 64]                   // GHASH source block 4
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 64]                   // H^4 (x-shifted)
 
@@ -379,7 +389,7 @@
   db $66, $0F, $38, $DC, $57, $20               // aesenc xmm2, [edi+0x20]
   db $66, $0F, $38, $DC, $5F, $20               // aesenc xmm3, [edi+0x20]
 
-  movdqu    xmm4, [esi + 80]                   // prev cipher block 5
+  movdqu    xmm4, [esi + 80]                   // GHASH source block 5
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 80]                   // H^3 (x-shifted)
 
@@ -405,7 +415,7 @@
   db $66, $0F, $38, $DC, $57, $30               // aesenc xmm2, [edi+0x30]
   db $66, $0F, $38, $DC, $5F, $30               // aesenc xmm3, [edi+0x30]
 
-  movdqu    xmm4, [esi + 96]                   // prev cipher block 6
+  movdqu    xmm4, [esi + 96]                   // GHASH source block 6
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 96]                   // H^2 (x-shifted)
 
@@ -431,7 +441,7 @@
   db $66, $0F, $38, $DC, $57, $40               // aesenc xmm2, [edi+0x40]
   db $66, $0F, $38, $DC, $5F, $40               // aesenc xmm3, [edi+0x40]
 
-  movdqu    xmm4, [esi + 112]                   // prev cipher block 7
+  movdqu    xmm4, [esi + 112]                   // GHASH source block 7
   db $66, $0F, $38, $00, $64, $24, $40          // pshufb xmm4, [esp+64] (byte-reverse)
   movdqu    xmm5, [ebp + 112]                   // H^1 (x-shifted)
 

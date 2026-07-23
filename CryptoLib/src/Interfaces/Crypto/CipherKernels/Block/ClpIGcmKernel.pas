@@ -45,12 +45,13 @@ type
     ///   Process ABatchCount consecutive 8-block batches in one call: generate
     ///   the GCM keystream (32-bit counter starting at ACounter32, J0 upper 96
     ///   bits from AJ0Template), XOR AInPtr into AOutPtr, and fold each batch's
-    ///   ciphertext into the running GHASH state (AGhashState). APrevInit is the
-    ///   ciphertext of the batch immediately before this run (the prime batch);
-    ///   the pipeline GHASHes it first and lags by one, leaving the final batch
-    ///   for the caller's drain. AForEncrypt selects whether the GHASHed
-    ///   ciphertext is the output (encrypt) or the input (decrypt). Returns the
-    ///   advanced 32-bit counter (ACounter32 + 8*ABatchCount).
+    ///   ciphertext into the running GHASH state (AGhashState). AForEncrypt
+    ///   selects the GHASH source: encrypt folds the previous batch's OUTPUT
+    ///   ciphertext (the pipeline lags by one batch, so APrevInit seeds the first
+    ///   fold and the caller primes batch 0 / drains the last); decrypt folds
+    ///   each batch's own INPUT ciphertext (no lag, APrevInit unused, and AInPtr
+    ///   may alias AOutPtr). Returns the advanced 32-bit counter
+    ///   (ACounter32 + 8*ABatchCount).
     /// </summary>
     function ProcessCtrGhashBatches(AInPtr, AOutPtr, APrevInit, AGhashState,
       AJ0Template: Pointer; ACounter32: UInt32; ABatchCount: NativeInt;

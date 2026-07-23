@@ -24,10 +24,12 @@ uses
   SysUtils,
   ClpIAesEngine,
   ClpIBlockCipher,
+  ClpIBulkBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpCheck,
   ClpPack,
+  ClpBinaryPrimitives,
   ClpBitOperations,
   ClpArrayUtilities,
   ClpPlatformUtilities,
@@ -64,7 +66,8 @@ type
   /// Intended use is constant-time software AES on hosts without hardware AES.
   /// </para>
   /// </remarks>
-  TAesBitSlicedEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher)
+  TAesBitSlicedEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher,
+    IBulkBlockCipher)
 
   strict private
   const
@@ -107,6 +110,11 @@ type
     procedure BitsliceEncrypt(var AQ: TBitSliceState);
     procedure BitsliceDecrypt(var AQ: TBitSliceState);
 
+    // Transform 1..4 consecutive blocks in one bit-sliced pass: block i occupies
+    // lane (AQ[i], AQ[i+4]); unused lanes are zeroed. Pointers must be identical
+    // or fully disjoint. Reads all inputs before any write, so in-place is safe.
+    procedure ProcessLaneGroup(AInput, AOutput: PByte; ACount: Int32);
+
   strict protected
     function GetAlgorithmName: String; virtual;
 
@@ -125,6 +133,21 @@ type
     /// <exception cref="EDataLengthCryptoLibException">If the input or output buffer range is too short.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+
+    // ===== IBulkBlockCipher =====
+    // Batch multiple blocks per call, four at a time (the aes_ct64 lane width),
+    // with a 1..3-block tail. Output is byte-identical to ABlockCount sequential
+    // ProcessBlock calls. Aliasing per IBulkBlockCipher: AInput/AOutput identical
+    // (in-place) or fully disjoint; partial overlap is not supported.
+    /// <summary>Transform ABlockCount consecutive 16-byte blocks.</summary>
+    /// <returns>Bytes processed (ABlockCount * 16).</returns>
+    function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+      AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+      AOutOff: Int32): Int32; overload;
+    /// <summary>Pointer overload of ProcessBlocks for mode-internal buffers.</summary>
+    /// <returns>Bytes processed (ABlockCount * 16).</returns>
+    function ProcessBlocks(AInput, AOutput: PByte;
+      ABlockCount: Int32): Int32; overload;
 
     /// <summary>Return the AES block size.</summary>
     /// <returns>16 (fixed AES block size in bytes).</returns>
@@ -811,6 +834,107 @@ begin
   TPack.UInt32_To_LE(LW3, AOutput, AOutOff + 12);
 
   Result := BLOCK_SIZE;
+end;
+
+procedure TAesBitSlicedEngine.ProcessLaneGroup(AInput, AOutput: PByte;
+  ACount: Int32);
+var
+  LQ: TBitSliceState;
+  LW: array [0 .. 3] of UInt32;
+  LI, LBase: Int32;
+begin
+  System.FillChar(LQ, System.SizeOf(LQ), 0);
+
+  for LI := 0 to ACount - 1 do
+  begin
+    LBase := LI * 16;
+    LW[0] := TBinaryPrimitives.ReadUInt32LittleEndian(AInput, LBase);
+    LW[1] := TBinaryPrimitives.ReadUInt32LittleEndian(AInput, LBase + 4);
+    LW[2] := TBinaryPrimitives.ReadUInt32LittleEndian(AInput, LBase + 8);
+    LW[3] := TBinaryPrimitives.ReadUInt32LittleEndian(AInput, LBase + 12);
+    InterleaveIn(LW[0], LW[1], LW[2], LW[3], LQ[LI], LQ[LI + 4]);
+  end;
+
+  Ortho(LQ);
+  if FForEncryption then
+    BitsliceEncrypt(LQ)
+  else
+    BitsliceDecrypt(LQ);
+  Ortho(LQ);
+
+  for LI := 0 to ACount - 1 do
+  begin
+    InterleaveOut(LW[0], LW[1], LW[2], LW[3], LQ[LI], LQ[LI + 4]);
+    LBase := LI * 16;
+    TBinaryPrimitives.WriteUInt32LittleEndian(AOutput, LBase, LW[0]);
+    TBinaryPrimitives.WriteUInt32LittleEndian(AOutput, LBase + 4, LW[1]);
+    TBinaryPrimitives.WriteUInt32LittleEndian(AOutput, LBase + 8, LW[2]);
+    TBinaryPrimitives.WriteUInt32LittleEndian(AOutput, LBase + 12, LW[3]);
+  end;
+
+  System.FillChar(LQ, System.SizeOf(LQ), 0);
+end;
+
+function TAesBitSlicedEngine.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
+  AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LBytes: Int64;
+begin
+  if ABlockCount <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if FSkey = nil then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateRes
+      (@SAesEngineNotInitialized);
+  end;
+
+  // Int64 so a very large ABlockCount cannot wrap the byte count negative and
+  // slip past the range checks.
+  LBytes := Int64(ABlockCount) * BLOCK_SIZE;
+  if (AInOff < 0) or ((AInOff + LBytes) > System.Length(AInBuf)) then
+    raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
+  if (AOutOff < 0) or ((AOutOff + LBytes) > System.Length(AOutBuf)) then
+    raise EOutputLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
+
+  Result := ProcessBlocks(@AInBuf[AInOff], @AOutBuf[AOutOff], ABlockCount);
+end;
+
+function TAesBitSlicedEngine.ProcessBlocks(AInput, AOutput: PByte;
+  ABlockCount: Int32): Int32;
+var
+  LBytes: Int64;
+begin
+  if ABlockCount <= 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  if FSkey = nil then
+  begin
+    raise EInvalidOperationCryptoLibException.CreateRes
+      (@SAesEngineNotInitialized);
+  end;
+
+  LBytes := Int64(ABlockCount) * BLOCK_SIZE;
+
+  while ABlockCount >= 4 do
+  begin
+    ProcessLaneGroup(AInput, AOutput, 4);
+    System.Inc(AInput, 64);
+    System.Inc(AOutput, 64);
+    System.Dec(ABlockCount, 4);
+  end;
+
+  if ABlockCount > 0 then
+    ProcessLaneGroup(AInput, AOutput, ABlockCount);
+
+  Result := Int32(LBytes);
 end;
 
 end.

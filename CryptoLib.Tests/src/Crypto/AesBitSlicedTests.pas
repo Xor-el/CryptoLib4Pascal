@@ -37,18 +37,23 @@ uses
   ClpAesEngine,
   ClpAesBitSlicedEngine,
   ClpIBlockCipher,
+  ClpIBulkBlockCipher,
+  ClpIBulkBlockCipherMode,
   ClpIAeadCipher,
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpAeadParameters,
   ClpGcmBlockCipher,
+  ClpGcmUtilities,
   ClpBasicGcmMultiplier,
   ClpIGcmMultiplier,
+  ClpSicBlockCipher,
   ClpCbcBlockCipher,
   ClpBufferedBlockCipher,
   ClpIBufferedCipher,
   ClpICipherParameters,
+  ClpPack,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase,
@@ -71,6 +76,13 @@ type
     procedure DoGcmTest(const AKeyHex, ANonceHex, AAadHex, APlainHex,
       ACipherHex, ATagHex: String);
     function NewBitSlicedGcm(): IAeadCipher;
+    // Part A: ProcessBlocks (batched, incl. in-place) vs N sequential ProcessBlock.
+    procedure DoProcessBlocksParity(AKeyLen: Int32; AForEnc: Boolean; ACount: Int32);
+    // Parts B+C: GCM through bit-sliced (soft-bulk) vs table (per-block) engine.
+    procedure DoGcmParity(APlainLen, AKeyLen: Int32; const AAad: TBytes);
+    // In-place GCM (output buffer aliases input) round-trip + valid tag.
+    // Returns '' on success, else a description of the failing length/direction.
+    function DoGcmInPlace(APlainLen: Int32; const AAad: TBytes): String;
   published
     procedure TestFips197Kat;
     procedure TestParityWithTableEngine;
@@ -81,6 +93,13 @@ type
     procedure TestResetAndReInit;
     procedure TestReInitDifferentKeySize;
     procedure TestCallerKeyPreserved;
+    procedure TestProcessBlocksParity;
+    procedure TestProcessBlocksOverflowGuard;
+    procedure TestCtrBatchedVsSingle;
+    procedure TestGcmBatchedVsSingle;
+    procedure TestAggregatedGhashParity;
+    procedure TestChunkedStreamingParity;
+    procedure TestGcmInPlaceStreaming;
   end;
 
 implementation
@@ -495,6 +514,477 @@ begin
       LRaised := True;
   end;
   CheckTrue(LRaised, 'invalid key length did not raise');
+end;
+
+procedure TTestAesBitSliced.DoProcessBlocksParity(AKeyLen: Int32;
+  AForEnc: Boolean; ACount: Int32);
+var
+  LKey, LInput, LSeq, LBulkOut, LInPlace: TBytes;
+  LKeyParam: IKeyParameter;
+  LSeqEng, LBulkEng: IBlockCipher;
+  LBulk: IBulkBlockCipher;
+  LI: Int32;
+begin
+  System.SetLength(LKey, AKeyLen);
+  for LI := 0 to AKeyLen - 1 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LInput, ACount * 16);
+  for LI := 0 to System.Length(LInput) - 1 do
+    LInput[LI] := Byte(Random(256));
+  LKeyParam := TKeyParameter.Create(LKey);
+
+  // Sequential reference: ACount separate ProcessBlock calls.
+  System.SetLength(LSeq, ACount * 16);
+  LSeqEng := TAesBitSlicedEngine.Create();
+  LSeqEng.Init(AForEnc, LKeyParam as ICipherParameters);
+  for LI := 0 to ACount - 1 do
+    LSeqEng.ProcessBlock(LInput, LI * 16, LSeq, LI * 16);
+
+  // Bulk (disjoint buffers).
+  LBulkEng := TAesBitSlicedEngine.Create();
+  LBulkEng.Init(AForEnc, LKeyParam as ICipherParameters);
+  if not Supports(LBulkEng, IBulkBlockCipher, LBulk) then
+    Fail('TAesBitSlicedEngine does not expose IBulkBlockCipher');
+  System.SetLength(LBulkOut, ACount * 16);
+  LBulk.ProcessBlocks(LInput, 0, ACount, LBulkOut, 0);
+  if not AreEqual(LSeq, LBulkOut) then
+    Fail(Format('ProcessBlocks parity (disjoint) failed (%d-bit, %s, %d blocks)',
+      [AKeyLen * 8, SysUtils.BoolToStr(AForEnc, True), ACount]));
+
+  // Bulk (in-place: identical pointers, the aliasing shape SIC/GCM use).
+  LInPlace := System.Copy(LInput);
+  LBulk.ProcessBlocks(LInPlace, 0, ACount, LInPlace, 0);
+  if not AreEqual(LSeq, LInPlace) then
+    Fail(Format('ProcessBlocks parity (in-place) failed (%d-bit, %s, %d blocks)',
+      [AKeyLen * 8, SysUtils.BoolToStr(AForEnc, True), ACount]));
+end;
+
+procedure TTestAesBitSliced.TestProcessBlocksParity;
+const
+  CCounts: array [0 .. 8] of Int32 = (1, 2, 3, 4, 5, 7, 8, 13, 16);
+var
+  LKeyLens: array [0 .. 2] of Int32;
+  LKL, LDir, LC: Int32;
+begin
+  RandSeed := 424242;
+  LKeyLens[0] := 16;
+  LKeyLens[1] := 24;
+  LKeyLens[2] := 32;
+  for LKL := 0 to High(LKeyLens) do
+    for LDir := 0 to 1 do
+      for LC := 0 to High(CCounts) do
+        DoProcessBlocksParity(LKeyLens[LKL], LDir = 0, CCounts[LC]);
+end;
+
+procedure TTestAesBitSliced.TestProcessBlocksOverflowGuard;
+var
+  LBuf: TBytes;
+  LEng: IBlockCipher;
+  LBulk: IBulkBlockCipher;
+  LRaised: Boolean;
+begin
+  // A block count whose byte total (*16) would wrap Int32 must be rejected by
+  // the range check, not overflow it into an out-of-bounds transform.
+  System.SetLength(LBuf, 16);
+  LEng := TAesBitSlicedEngine.Create();
+  LEng.Init(True, TKeyParameter.Create(DecodeHex(KAT_KEY_128))
+    as ICipherParameters);
+  if not Supports(LEng, IBulkBlockCipher, LBulk) then
+    Fail('TAesBitSlicedEngine does not expose IBulkBlockCipher');
+  LRaised := False;
+  try
+    LBulk.ProcessBlocks(LBuf, 0, Int32($08000000), LBuf, 0);
+  except
+    on E: EDataLengthCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'oversized block count must raise, not overflow the check');
+end;
+
+procedure TTestAesBitSliced.TestCtrBatchedVsSingle;
+var
+  LKey, LIv, LInput, LBatched, LPerBlock, LSplit: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: ICipherParameters;
+  LSlicedMode, LTableMode, LSplitMode: IBulkBlockCipherMode;
+  LCount, LI: Int32;
+begin
+  RandSeed := 13371337;
+  LCount := 20; // 8 + 8 + 4-ish batching in SIC, plus a non-multiple-of-8 residue
+  System.SetLength(LKey, 16);
+  for LI := 0 to 15 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LIv, 16);
+  for LI := 0 to 15 do
+    LIv[LI] := Byte(Random(256));
+  System.SetLength(LInput, LCount * 16);
+  for LI := 0 to System.Length(LInput) - 1 do
+    LInput[LI] := Byte(Random(256));
+
+  LKeyParam := TKeyParameter.Create(LKey);
+  LParams := TParametersWithIV.Create(LKeyParam, LIv) as ICipherParameters;
+
+  // Batched: the bit-sliced engine exposes IBulkBlockCipher, so SIC batches.
+  LSlicedMode := TSicBlockCipher.Create(TAesBitSlicedEngine.Create()
+    as IBlockCipher) as IBulkBlockCipherMode;
+  LSlicedMode.Init(True, LParams);
+  System.SetLength(LBatched, LCount * 16);
+  LSlicedMode.ProcessBlocks(LInput, 0, LCount, LBatched, 0);
+
+  // Per-block reference: the table engine lacks IBulkBlockCipher, so SIC loops.
+  LTableMode := TSicBlockCipher.Create(TAesEngine.Create() as IBlockCipher)
+    as IBulkBlockCipherMode;
+  LTableMode.Init(True, LParams);
+  System.SetLength(LPerBlock, LCount * 16);
+  LTableMode.ProcessBlocks(LInput, 0, LCount, LPerBlock, 0);
+
+  if not AreEqual(LBatched, LPerBlock) then
+    Fail('AES-CTR batched (bit-sliced) != per-block (table) keystream');
+
+  // Two bulk calls split at a non-multiple-of-8 must equal one call: the
+  // internal counter must carry across the batch boundary.
+  LSplitMode := TSicBlockCipher.Create(TAesBitSlicedEngine.Create()
+    as IBlockCipher) as IBulkBlockCipherMode;
+  LSplitMode.Init(True, LParams);
+  System.SetLength(LSplit, LCount * 16);
+  LSplitMode.ProcessBlocks(LInput, 0, 5, LSplit, 0);
+  LSplitMode.ProcessBlocks(LInput, 5 * 16, LCount - 5, LSplit, 5 * 16);
+  if not AreEqual(LSplit, LBatched) then
+    Fail('AES-CTR split bulk calls != single bulk call');
+end;
+
+procedure TTestAesBitSliced.DoGcmParity(APlainLen, AKeyLen: Int32;
+  const AAad: TBytes);
+var
+  LKey, LNonce, LPlain, LRef, LTest, LDec: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: ICipherParameters;
+  LRefGcm, LTestGcm, LDecGcm: IAeadCipher;
+  LI, LLen: Int32;
+begin
+  System.SetLength(LKey, AKeyLen);
+  for LI := 0 to AKeyLen - 1 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LNonce, 12);
+  for LI := 0 to 11 do
+    LNonce[LI] := Byte(Random(256));
+  System.SetLength(LPlain, APlainLen);
+  for LI := 0 to APlainLen - 1 do
+    LPlain[LI] := Byte(Random(256));
+
+  LKeyParam := TKeyParameter.Create(LKey);
+  LParams := TAeadParameters.Create(LKeyParam, 128, LNonce, AAad)
+    as ICipherParameters;
+
+  // Reference: table engine + software multiplier -> per-block GHASH path.
+  LRefGcm := TGcmBlockCipher.Create(TAesEngine.Create() as IBlockCipher,
+    TBasicGcmMultiplier.Create() as IGcmMultiplier) as IAeadCipher;
+  LRefGcm.Init(True, LParams);
+  System.SetLength(LRef, LRefGcm.GetOutputSize(APlainLen));
+  LLen := LRefGcm.ProcessBytes(LPlain, 0, APlainLen, LRef, 0);
+  LLen := LLen + LRefGcm.DoFinal(LRef, LLen);
+  System.SetLength(LRef, LLen);
+
+  // Test: bit-sliced engine -> software-bulk aggregated GHASH path.
+  LTestGcm := NewBitSlicedGcm();
+  LTestGcm.Init(True, LParams);
+  System.SetLength(LTest, LTestGcm.GetOutputSize(APlainLen));
+  LLen := LTestGcm.ProcessBytes(LPlain, 0, APlainLen, LTest, 0);
+  LLen := LLen + LTestGcm.DoFinal(LTest, LLen);
+  System.SetLength(LTest, LLen);
+
+  if not AreEqual(LRef, LTest) then
+    Fail(Format('GCM batched vs per-block mismatch (plainlen=%d, key=%d, aadlen=%d)',
+      [APlainLen, AKeyLen * 8, System.Length(AAad)]));
+
+  // Decrypt through the bit-sliced stack; recover plaintext and verify the tag.
+  LDecGcm := NewBitSlicedGcm();
+  LDecGcm.Init(False, LParams);
+  System.SetLength(LDec, LDecGcm.GetOutputSize(System.Length(LTest)));
+  LLen := LDecGcm.ProcessBytes(LTest, 0, System.Length(LTest), LDec, 0);
+  LLen := LLen + LDecGcm.DoFinal(LDec, LLen);
+  System.SetLength(LDec, LLen);
+  if not AreEqual(LDec, LPlain) then
+    Fail(Format('GCM bit-sliced decrypt mismatch (plainlen=%d)', [APlainLen]));
+end;
+
+procedure TTestAesBitSliced.TestGcmBatchedVsSingle;
+const
+  CBlk: array [0 .. 7] of Int32 = (0, 1, 15, 16, 17, 63, 64, 65);
+var
+  LI: Int32;
+  LAad: TBytes;
+begin
+  RandSeed := 55667788;
+  System.SetLength(LAad, 20);
+  for LI := 0 to 19 do
+    LAad[LI] := Byte(LI * 7 + 1);
+  for LI := 0 to High(CBlk) do
+  begin
+    DoGcmParity(CBlk[LI] * 16, 16, nil);  // whole blocks, no AAD, AES-128
+    DoGcmParity(CBlk[LI] * 16, 32, LAad); // whole blocks, AAD, AES-256
+  end;
+  // Partial tails exercise ProcessPartial after the 4-block bulk path.
+  DoGcmParity(16 * 4 + 7, 16, nil);
+  DoGcmParity(16 * 17 + 9, 32, LAad);
+  DoGcmParity(16 * 65 + 15, 24, LAad);
+end;
+
+procedure TTestAesBitSliced.TestAggregatedGhashParity;
+var
+  LH, LY1, LY2: TBytes;
+  LMult: IGcmMultiplier;
+  LH1, LH2, LH3, LH4, LYf, LX1, LX2, LX3, LX4, LTmp, LHc: TFieldElement;
+  LTrial, LI, LNumBlocks, LBlk, LGroups, LTail, LOff: Int32;
+  LBlocks: TBytes;
+begin
+  RandSeed := 909090;
+  for LTrial := 0 to 40 do
+  begin
+    System.SetLength(LH, 16);
+    for LI := 0 to 15 do
+      LH[LI] := Byte(Random(256));
+    LNumBlocks := LTrial mod 11; // 0..10 blocks: groups of 4 plus a 0..2 tail
+    System.SetLength(LBlocks, LNumBlocks * 16);
+    for LI := 0 to System.Length(LBlocks) - 1 do
+      LBlocks[LI] := Byte(Random(256));
+
+    LMult := TBasicGcmMultiplier.Create() as IGcmMultiplier;
+    LMult.Init(LH);
+
+    // Reference: per-block Y := (Y xor B) * H.
+    System.SetLength(LY1, 16);
+    System.FillChar(LY1[0], 16, 0);
+    for LBlk := 0 to LNumBlocks - 1 do
+    begin
+      for LI := 0 to 15 do
+        LY1[LI] := LY1[LI] xor LBlocks[LBlk * 16 + LI];
+      LMult.MultiplyH(LY1);
+    end;
+
+    // Aggregated: groups of 4 via AggregateGhash4, tail per-block via Multiply.
+    TGcmUtilities.ComputePowers1To4(LH, LH1, LH2, LH3, LH4);
+    LYf.N0 := 0;
+    LYf.N1 := 0;
+    LGroups := LNumBlocks div 4;
+    for LBlk := 0 to LGroups - 1 do
+    begin
+      LOff := LBlk * 64;
+      LX1.N0 := TPack.BE_To_UInt64(LBlocks, LOff);
+      LX1.N1 := TPack.BE_To_UInt64(LBlocks, LOff + 8);
+      LX2.N0 := TPack.BE_To_UInt64(LBlocks, LOff + 16);
+      LX2.N1 := TPack.BE_To_UInt64(LBlocks, LOff + 24);
+      LX3.N0 := TPack.BE_To_UInt64(LBlocks, LOff + 32);
+      LX3.N1 := TPack.BE_To_UInt64(LBlocks, LOff + 40);
+      LX4.N0 := TPack.BE_To_UInt64(LBlocks, LOff + 48);
+      LX4.N1 := TPack.BE_To_UInt64(LBlocks, LOff + 56);
+      TGcmUtilities.AggregateGhash4(LYf, LX1, LX2, LX3, LX4, LH1, LH2, LH3, LH4);
+    end;
+    LTail := LNumBlocks mod 4;
+    for LBlk := 0 to LTail - 1 do
+    begin
+      LOff := (LGroups * 4 + LBlk) * 16;
+      LTmp.N0 := TPack.BE_To_UInt64(LBlocks, LOff);
+      LTmp.N1 := TPack.BE_To_UInt64(LBlocks, LOff + 8);
+      LYf.N0 := LYf.N0 xor LTmp.N0;
+      LYf.N1 := LYf.N1 xor LTmp.N1;
+      LHc := LH1;
+      TGcmUtilities.Multiply(LYf, LHc);
+    end;
+    System.SetLength(LY2, 16);
+    TGcmUtilities.AsBytes(LYf, LY2);
+
+    if not AreEqual(LY1, LY2) then
+      Fail(Format('Aggregated GHASH parity failed at trial %d (%d blocks)',
+        [LTrial, LNumBlocks]));
+  end;
+end;
+
+procedure TTestAesBitSliced.TestChunkedStreamingParity;
+const
+  CFrags: array [0 .. 8] of Int32 = (1, 7, 64, 3, 15, 128, 2, 100, 5);
+var
+  LKey, LNonce, LAad, LPlain, LOneShot, LChunked, LDec: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: ICipherParameters;
+  LGcm: IAeadCipher;
+  LTotal, LI, LOff, LFragIdx, LChunk, LOutOff, LLen: Int32;
+begin
+  RandSeed := 246810;
+  LTotal := 777; // not block-aligned, spans several 4-block batches
+  System.SetLength(LKey, 16);
+  for LI := 0 to 15 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LNonce, 12);
+  for LI := 0 to 11 do
+    LNonce[LI] := Byte(Random(256));
+  System.SetLength(LAad, 20);
+  for LI := 0 to 19 do
+    LAad[LI] := Byte(Random(256));
+  System.SetLength(LPlain, LTotal);
+  for LI := 0 to LTotal - 1 do
+    LPlain[LI] := Byte(Random(256));
+  LKeyParam := TKeyParameter.Create(LKey);
+  LParams := TAeadParameters.Create(LKeyParam, 128, LNonce, LAad)
+    as ICipherParameters;
+
+  // One-shot ciphertext + tag.
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  System.SetLength(LOneShot, LGcm.GetOutputSize(LTotal));
+  LLen := LGcm.ProcessBytes(LPlain, 0, LTotal, LOneShot, 0);
+  LLen := LLen + LGcm.DoFinal(LOneShot, LLen);
+  System.SetLength(LOneShot, LLen);
+
+  // Chunked feed with pathological fragment sizes (some straddle batch edges).
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  System.SetLength(LChunked, LGcm.GetOutputSize(LTotal));
+  LOff := 0;
+  LFragIdx := 0;
+  LOutOff := 0;
+  while LOff < LTotal do
+  begin
+    LChunk := CFrags[LFragIdx mod System.Length(CFrags)];
+    if LChunk > LTotal - LOff then
+      LChunk := LTotal - LOff;
+    LOutOff := LOutOff + LGcm.ProcessBytes(LPlain, LOff, LChunk, LChunked, LOutOff);
+    LOff := LOff + LChunk;
+    System.Inc(LFragIdx);
+  end;
+  LOutOff := LOutOff + LGcm.DoFinal(LChunked, LOutOff);
+  System.SetLength(LChunked, LOutOff);
+
+  if not AreEqual(LOneShot, LChunked) then
+    Fail('GCM chunked-feed ciphertext/tag != one-shot');
+
+  // Decrypt the chunked ciphertext with the same fragment pattern.
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(False, LParams);
+  System.SetLength(LDec, LGcm.GetOutputSize(System.Length(LChunked)));
+  LOff := 0;
+  LFragIdx := 0;
+  LOutOff := 0;
+  while LOff < System.Length(LChunked) do
+  begin
+    LChunk := CFrags[LFragIdx mod System.Length(CFrags)];
+    if LChunk > System.Length(LChunked) - LOff then
+      LChunk := System.Length(LChunked) - LOff;
+    LOutOff := LOutOff + LGcm.ProcessBytes(LChunked, LOff, LChunk, LDec, LOutOff);
+    LOff := LOff + LChunk;
+    System.Inc(LFragIdx);
+  end;
+  LOutOff := LOutOff + LGcm.DoFinal(LDec, LOutOff);
+  System.SetLength(LDec, LOutOff);
+  if not AreEqual(LDec, LPlain) then
+    Fail('GCM chunked-feed decrypt != original plaintext');
+end;
+
+function TTestAesBitSliced.DoGcmInPlace(APlainLen: Int32;
+  const AAad: TBytes): String;
+var
+  LKey, LNonce, LPlain, LRefCT, LBuf: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: ICipherParameters;
+  LGcm: IAeadCipher;
+  LI, LLen, LTotal: Int32;
+begin
+  Result := '';
+  System.SetLength(LKey, 16);
+  for LI := 0 to 15 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LNonce, 12);
+  for LI := 0 to 11 do
+    LNonce[LI] := Byte(Random(256));
+  System.SetLength(LPlain, APlainLen);
+  for LI := 0 to APlainLen - 1 do
+    LPlain[LI] := Byte(Random(256));
+
+  LKeyParam := TKeyParameter.Create(LKey);
+  LParams := TAeadParameters.Create(LKeyParam, 128, LNonce, AAad)
+    as ICipherParameters;
+
+  // Reference ciphertext||tag, produced out of place.
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  System.SetLength(LRefCT, LGcm.GetOutputSize(APlainLen));
+  LLen := LGcm.ProcessBytes(LPlain, 0, APlainLen, LRefCT, 0);
+  LLen := LLen + LGcm.DoFinal(LRefCT, LLen);
+  System.SetLength(LRefCT, LLen);
+  LTotal := LLen;
+
+  // In-place encrypt: the buffer starts as plaintext and is encrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  System.Move(LPlain[0], LBuf[0], APlainLen);
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  try
+    LLen := LGcm.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
+    LLen := LLen + LGcm.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[len=%d enc-exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if (LLen <> LTotal) or (not AreEqual(LBuf, LRefCT)) then
+  begin
+    Result := Format('[len=%d enc-mismatch] ', [APlainLen]);
+    Exit;
+  end;
+
+  // In-place decrypt: the buffer starts as ciphertext||tag, decrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  System.Move(LRefCT[0], LBuf[0], LTotal);
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(False, LParams);
+  try
+    LLen := LGcm.ProcessBytes(LBuf, 0, LTotal, LBuf, 0);
+    LLen := LLen + LGcm.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[len=%d dec-exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if LLen <> APlainLen then
+  begin
+    Result := Format('[len=%d dec-len %d] ', [APlainLen, LLen]);
+    Exit;
+  end;
+  System.SetLength(LBuf, LLen);
+  if not AreEqual(LBuf, LPlain) then
+    Result := Format('[len=%d dec-mismatch] ', [APlainLen]);
+end;
+
+procedure TTestAesBitSliced.TestGcmInPlaceStreaming;
+var
+  LAad: TBytes;
+  LI: Int32;
+  LFails: String;
+  LLens: array [0 .. 7] of Int32;
+begin
+  RandSeed := 20260723;
+  System.SetLength(LAad, 20);
+  for LI := 0 to 19 do
+    LAad[LI] := Byte(LI * 5 + 3);
+  LLens[0] := 16;
+  LLens[1] := 48;
+  LLens[2] := 64;
+  LLens[3] := 4 * 16 + 7;
+  LLens[4] := 17 * 16 + 9;
+  LLens[5] := 22 * 16;
+  LLens[6] := 65 * 16;      // 8-way pipelined/fused GHASH (SIMD) or soft-bulk (scalar)
+  LLens[7] := 100 * 16 + 3;
+  LFails := '';
+  for LI := 0 to High(LLens) do
+    LFails := LFails + DoGcmInPlace(LLens[LI], nil);
+  for LI := 0 to High(LLens) do
+    LFails := LFails + DoGcmInPlace(LLens[LI], LAad);
+  if LFails <> '' then
+    Fail('in-place GCM: ' + LFails);
 end;
 
 initialization

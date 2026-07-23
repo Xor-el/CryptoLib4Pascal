@@ -8,11 +8,12 @@
 // Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
 // counter blocks (generated in-register from Counter32 + PJ0Template) to
 // produce a keystream, XORs it with PXorIn to produce POut, and concurrently
-// GHASHes the PREVIOUS batch's 8 ciphertext blocks into the running
-// authentication state (the pipeline lags by one batch). AES inside GCM is
-// always CTR keystream construction; GhashFromOutput picks which buffer feeds
-// GHASH (output on encrypt, input on decrypt). The mode primes batch 0 and
-// drains the last.
+// GHASHes 8 ciphertext blocks into the running authentication state. AES
+// inside GCM is always CTR keystream construction; GhashFromOutput selects the
+// GHASH source: encrypt folds the PREVIOUS batch's output ciphertext (the
+// pipeline lags by one batch, so the mode primes batch 0 and drains the last);
+// decrypt folds THIS batch's input ciphertext, read before the XOR overwrites
+// it (no lag, no prime/drain, and PXorIn/POut may alias for in-place decrypt).
 //
 // PHPow128 holds the kernel-owned H^8..H^1 table PRE-MULTIPLIED BY x in the
 // reflected representation, so the batch product reduces with two
@@ -36,6 +37,7 @@
 // All loop-carried state lives in registers - no context memory is
 // touched inside the batch loop:
 //   rsi/rdi = PXorIn/POut (advance)   r10 = PPrevCipher (rotates)
+//   r9 = GHASH source base (r10 on encrypt, rsi on decrypt; set per batch)
 //   rdx = PRoundKeys   r11 = PHPow128   r8d = counter32
 //   rbx = batch count   ebp = GHASH-from-output flag   rax = scratch
 //
@@ -163,8 +165,17 @@
   db $66, $45, $0F, $EF, $D2                    // pxor xmm10, xmm10   (Z1=0)
   db $66, $45, $0F, $EF, $DB                    // pxor xmm11, xmm11   (Z2=0)
 
+  // --- GHASH source pointer for this batch: r10 (previous output,
+  //     encrypt lags by one batch) or rsi (this batch's input, decrypt
+  //     reads the input before the post-AES XOR overwrites it). ---
+  mov       r9, rsi
+  test      ebp, ebp                            // GHASH-from-output flag
+  jz        @@GcmGhashSrcSet                     // decrypt: source = input
+  mov       r9, r10                              // encrypt: source = prev output
+@@GcmGhashSrcSet:
+
   // --- Round 1 + GHASH iter 0 (with carried-state fold). ---
-  movdqu    xmm12, [r10 + 0]                 // prev cipher block 0
+  movdqu    xmm12, [r9 + 0]                  // GHASH source block 0
   pshufb    xmm12, xmm15                       // byte-reverse
   db $66, $45, $0F, $EF, $E1                    // pxor xmm12, xmm9 (fold carried state)
   db $66, $45, $0F, $EF, $C9                    // pxor xmm9, xmm9  (Z0=0)
@@ -192,7 +203,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 2 + GHASH iter 1. ---
-  movdqu    xmm12, [r10 + 16]                 // prev cipher block 1
+  movdqu    xmm12, [r9 + 16]                  // GHASH source block 1
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 16]                 // H^7 (x-shifted)
 
@@ -218,7 +229,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 3 + GHASH iter 2. ---
-  movdqu    xmm12, [r10 + 32]                 // prev cipher block 2
+  movdqu    xmm12, [r9 + 32]                  // GHASH source block 2
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 32]                 // H^6 (x-shifted)
 
@@ -244,7 +255,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 4 + GHASH iter 3. ---
-  movdqu    xmm12, [r10 + 48]                 // prev cipher block 3
+  movdqu    xmm12, [r9 + 48]                  // GHASH source block 3
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 48]                 // H^5 (x-shifted)
 
@@ -270,7 +281,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 5 + GHASH iter 4. ---
-  movdqu    xmm12, [r10 + 64]                 // prev cipher block 4
+  movdqu    xmm12, [r9 + 64]                  // GHASH source block 4
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 64]                 // H^4 (x-shifted)
 
@@ -296,7 +307,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 6 + GHASH iter 5. ---
-  movdqu    xmm12, [r10 + 80]                 // prev cipher block 5
+  movdqu    xmm12, [r9 + 80]                  // GHASH source block 5
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 80]                 // H^3 (x-shifted)
 
@@ -322,7 +333,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 7 + GHASH iter 6. ---
-  movdqu    xmm12, [r10 + 96]                 // prev cipher block 6
+  movdqu    xmm12, [r9 + 96]                  // GHASH source block 6
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 96]                 // H^2 (x-shifted)
 
@@ -348,7 +359,7 @@
   db $66, $45, $0F, $EF, $DE                    // pxor xmm11, xmm14  (Z2 +=)
 
   // --- Round 8 + GHASH iter 7. ---
-  movdqu    xmm12, [r10 + 112]                 // prev cipher block 7
+  movdqu    xmm12, [r9 + 112]                  // GHASH source block 7
   pshufb    xmm12, xmm15                       // byte-reverse
   movdqu    xmm13, [r11 + 112]                 // H^1 (x-shifted)
 

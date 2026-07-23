@@ -59,6 +59,22 @@ type
     class procedure Multiply(const AX, AY: TCryptoLibByteArray); overload; static;
     class procedure Multiply(var AX: TFieldElement; var AY: TFieldElement); overload; static;
 
+    /// <summary>Unreduced 256-bit carry-less product of AX and AY (four 64-bit
+    /// limbs), before the field reduction. Same primitives as Multiply.</summary>
+    class procedure MultiplyNoReduce(const AX, AY: TFieldElement;
+      out AZ0, AZ1, AZ2, AZ3: UInt64); static;
+    /// <summary>Reduce a four-limb unreduced product to a 128-bit field element.</summary>
+    class procedure ReduceProduct(AZ0, AZ1, AZ2, AZ3: UInt64;
+      out AX: TFieldElement); static;
+    /// <summary>H^1..H^4 as field elements from the 16-byte hash subkey.</summary>
+    class procedure ComputePowers1To4(const AH: TCryptoLibByteArray;
+      out AH1, AH2, AH3, AH4: TFieldElement); static;
+    /// <summary>Advance GHASH state AY over four blocks in one reduction:
+    /// AY := (AY xor AX1)*H4 xor AX2*H3 xor AX3*H2 xor AX4*H1. AX1 is the oldest
+    /// block. Result equals four sequential (AY xor Xi)*H1 steps.</summary>
+    class procedure AggregateGhash4(var AY: TFieldElement;
+      const AX1, AX2, AX3, AX4, AH1, AH2, AH3, AH4: TFieldElement); static;
+
     class procedure MultiplyP7(var AX: TFieldElement); static;
     class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); static;
 
@@ -137,14 +153,22 @@ end;
 
 class procedure TGcmUtilities.Multiply(var AX: TFieldElement; var AY: TFieldElement);
 var
-  LX0, LX1, LY0, LY1: UInt64;
-  LX0R, LX1R, LY0R, LY1R: UInt64;
   LZ0, LZ1, LZ2, LZ3: UInt64;
-  LH0, LH1, LH2, LH3, LH4, LH5: UInt64;
 begin
   if TGhashSimd.TryMultiply(@AX, @AY) then
     Exit;
 
+  MultiplyNoReduce(AX, AY, LZ0, LZ1, LZ2, LZ3);
+  ReduceProduct(LZ0, LZ1, LZ2, LZ3, AX);
+end;
+
+class procedure TGcmUtilities.MultiplyNoReduce(const AX, AY: TFieldElement;
+  out AZ0, AZ1, AZ2, AZ3: UInt64);
+var
+  LX0, LX1, LY0, LY1: UInt64;
+  LX0R, LX1R, LY0R, LY1R: UInt64;
+  LH0, LH1, LH2, LH3, LH4, LH5: UInt64;
+begin
   LX0 := AX.N0;
   LX1 := AX.N1;
   LY0 := AY.N0;
@@ -161,19 +185,52 @@ begin
   LH4 := TInt64Utilities.Reverse(ImplMul64(LX0R xor LX1R, LY0R xor LY1R));
   LH5 := ImplMul64(LX0 xor LX1, LY0 xor LY1) shl 1;
 
-  LZ0 := LH0;
-  LZ1 := LH1 xor LH0 xor LH2 xor LH4;
-  LZ2 := LH2 xor LH1 xor LH3 xor LH5;
-  LZ3 := LH3;
+  AZ0 := LH0;
+  AZ1 := LH1 xor LH0 xor LH2 xor LH4;
+  AZ2 := LH2 xor LH1 xor LH3 xor LH5;
+  AZ3 := LH3;
+end;
 
-  LZ1 := LZ1 xor LZ3 xor (LZ3 shr 1) xor (LZ3 shr 2) xor (LZ3 shr 7);
-  LZ2 := LZ2 xor (LZ3 shl 62) xor (LZ3 shl 57);
+class procedure TGcmUtilities.ReduceProduct(AZ0, AZ1, AZ2, AZ3: UInt64;
+  out AX: TFieldElement);
+begin
+  AZ1 := AZ1 xor AZ3 xor (AZ3 shr 1) xor (AZ3 shr 2) xor (AZ3 shr 7);
+  AZ2 := AZ2 xor (AZ3 shl 62) xor (AZ3 shl 57);
 
-  LZ0 := LZ0 xor LZ2 xor (LZ2 shr 1) xor (LZ2 shr 2) xor (LZ2 shr 7);
-  LZ1 := LZ1 xor (LZ2 shl 63) xor (LZ2 shl 62) xor (LZ2 shl 57);
+  AZ0 := AZ0 xor AZ2 xor (AZ2 shr 1) xor (AZ2 shr 2) xor (AZ2 shr 7);
+  AZ1 := AZ1 xor (AZ2 shl 63) xor (AZ2 shl 62) xor (AZ2 shl 57);
 
-  AX.N0 := LZ0;
-  AX.N1 := LZ1;
+  AX.N0 := AZ0;
+  AX.N1 := AZ1;
+end;
+
+class procedure TGcmUtilities.ComputePowers1To4(const AH: TCryptoLibByteArray;
+  out AH1, AH2, AH3, AH4: TFieldElement);
+var
+  LT, LY: TFieldElement;
+begin
+  AsFieldElement(AH, AH1);
+  LT := AH1; LY := AH1; Multiply(LT, LY); AH2 := LT;
+  LT := AH2; LY := AH1; Multiply(LT, LY); AH3 := LT;
+  LT := AH2; LY := AH2; Multiply(LT, LY); AH4 := LT;
+end;
+
+class procedure TGcmUtilities.AggregateGhash4(var AY: TFieldElement;
+  const AX1, AX2, AX3, AX4, AH1, AH2, AH3, AH4: TFieldElement);
+var
+  LT: TFieldElement;
+  LZ0, LZ1, LZ2, LZ3, LW0, LW1, LW2, LW3: UInt64;
+begin
+  LT.N0 := AY.N0 xor AX1.N0;
+  LT.N1 := AY.N1 xor AX1.N1;
+  MultiplyNoReduce(LT, AH4, LZ0, LZ1, LZ2, LZ3);
+  MultiplyNoReduce(AX2, AH3, LW0, LW1, LW2, LW3);
+  LZ0 := LZ0 xor LW0; LZ1 := LZ1 xor LW1; LZ2 := LZ2 xor LW2; LZ3 := LZ3 xor LW3;
+  MultiplyNoReduce(AX3, AH2, LW0, LW1, LW2, LW3);
+  LZ0 := LZ0 xor LW0; LZ1 := LZ1 xor LW1; LZ2 := LZ2 xor LW2; LZ3 := LZ3 xor LW3;
+  MultiplyNoReduce(AX4, AH1, LW0, LW1, LW2, LW3);
+  LZ0 := LZ0 xor LW0; LZ1 := LZ1 xor LW1; LZ2 := LZ2 xor LW2; LZ3 := LZ3 xor LW3;
+  ReduceProduct(LZ0, LZ1, LZ2, LZ3, AY);
 end;
 
 class procedure TGcmUtilities.MultiplyP7(var AX: TFieldElement);
