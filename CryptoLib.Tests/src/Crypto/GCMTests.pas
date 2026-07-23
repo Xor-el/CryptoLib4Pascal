@@ -89,6 +89,11 @@ type
     procedure DoTestExceptionsWrapper;
     procedure DoTestFourBlockFusedGcmPath;
     procedure DoTestEightBlockFusedGcmPath;
+    procedure DoTestInPlace;
+    // In-place (AOutput aliases AInput) round-trip at one length; returns '' on
+    // success or a short description of the failing direction.
+    function InPlaceCase(const ARandom: ISecureRandom; APlainLen, AKeyLen: Int32;
+      const AAad: TBytes): String;
 
   protected
     procedure SetUp; override;
@@ -101,6 +106,7 @@ type
     procedure TestExceptions;
     procedure TestFourBlockFusedGcmPath;
     procedure TestEightBlockFusedGcmPath;
+    procedure TestInPlace;
 
   end;
 
@@ -729,6 +735,112 @@ begin
       if LP[LJ] <> LDec[LJ] then
         Fail('eight-block GCM round-trip mismatch');
   end;
+end;
+
+function TTestGcm.InPlaceCase(const ARandom: ISecureRandom;
+  APlainLen, AKeyLen: Int32; const AAad: TBytes): String;
+var
+  LK, LIV, LP, LRef, LBuf: TBytes;
+  LParams: IAeadParameters;
+  LCipher: IGcmBlockCipher;
+  LLen, LTotal: Int32;
+begin
+  Result := '';
+  System.SetLength(LK, AKeyLen);
+  ARandom.NextBytes(LK);
+  System.SetLength(LIV, 12);
+  ARandom.NextBytes(LIV);
+  System.SetLength(LP, APlainLen);
+  if APlainLen > 0 then
+    ARandom.NextBytes(LP);
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    16 * 8, LIV, AAad);
+
+  // Reference ciphertext||tag, produced out of place.
+  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+    TBasicGcmMultiplier.Create() as IGcmMultiplier);
+  LCipher.Init(True, LParams as ICipherParameters);
+  System.SetLength(LRef, LCipher.GetOutputSize(APlainLen));
+  LLen := LCipher.ProcessBytes(LP, 0, APlainLen, LRef, 0);
+  LLen := LLen + LCipher.DoFinal(LRef, LLen);
+  System.SetLength(LRef, LLen);
+  LTotal := LLen;
+
+  // In-place encrypt: the buffer starts as plaintext and is encrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  if APlainLen > 0 then
+    System.Move(LP[0], LBuf[0], APlainLen);
+  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+    TBasicGcmMultiplier.Create() as IGcmMultiplier);
+  LCipher.Init(True, LParams as ICipherParameters);
+  try
+    LLen := LCipher.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
+    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[enc len=%d exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if (LLen <> LTotal) or (not AreEqual(LBuf, LRef)) then
+  begin
+    Result := Format('[enc len=%d mismatch] ', [APlainLen]);
+    Exit;
+  end;
+
+  // In-place decrypt: the buffer starts as ciphertext||tag, decrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  System.Move(LRef[0], LBuf[0], LTotal);
+  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
+    TBasicGcmMultiplier.Create() as IGcmMultiplier);
+  LCipher.Init(False, LParams as ICipherParameters);
+  try
+    LLen := LCipher.ProcessBytes(LBuf, 0, LTotal, LBuf, 0);
+    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[dec len=%d exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if LLen <> APlainLen then
+  begin
+    Result := Format('[dec len=%d got %d] ', [APlainLen, LLen]);
+    Exit;
+  end;
+  System.SetLength(LBuf, LLen);
+  if (APlainLen > 0) and (not AreEqual(LBuf, LP)) then
+    Result := Format('[dec len=%d mismatch] ', [APlainLen]);
+end;
+
+procedure TTestGcm.DoTestInPlace;
+const
+  CLens: array [0 .. 10] of Int32 = (0, 16, 48, 64, 4 * 16 + 7, 17 * 16 + 9,
+    22 * 16, 24 * 16, 33 * 16, 65 * 16, 100 * 16 + 3);
+var
+  LRnd: ISecureRandom;
+  LFails: String;
+  LI: Int32;
+  LAad: TBytes;
+begin
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(TDateTimeUtilities.CurrentUnixMs);
+  System.SetLength(LAad, 20);
+  LRnd.NextBytes(LAad);
+  LFails := '';
+  for LI := 0 to High(CLens) do
+    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 16, nil);
+  for LI := 0 to High(CLens) do
+    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 32, LAad);
+  if LFails <> '' then
+    Fail('in-place GCM: ' + LFails);
+end;
+
+procedure TTestGcm.TestInPlace;
+begin
+  RunWithCipherKernelToggle(DoTestInPlace);
 end;
 
 initialization

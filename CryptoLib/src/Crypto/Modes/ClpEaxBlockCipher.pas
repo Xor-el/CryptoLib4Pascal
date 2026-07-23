@@ -687,11 +687,13 @@ begin
           @FCtrBlock[0], @FOmacState[0], LMiddleBlocks);
 
         // Scalar block LBulkBlocks - 1 (new lookahead, so DoFinal can
-        // choose subkey B or P on the final block).
+        // choose subkey B or P on the final block). Capture the ciphertext
+        // into the lookahead before CtrEncryptBlock overwrites the input, so
+        // the in-place case (AOutput aliases AInput) keeps the OMAC correct.
         LLastInOff := AInOff + (LBulkBlocks - 1) * FBlockSize - FMacSize;
         LLastOutOff := AOutOff + LResultLen + (LBulkBlocks - 1) * FBlockSize;
-        CtrEncryptBlock(@AInput[LLastInOff], @AOutput[LLastOutOff]);
         System.Move(AInput[LLastInOff], FOmacLookahead[0], FBlockSize);
+        CtrEncryptBlock(@AInput[LLastInOff], @AOutput[LLastOutOff]);
         FHasOmacLookahead := True;
       end
       else
@@ -713,9 +715,13 @@ begin
         begin
           LLastInOff := AInOff + LI * FBlockSize - FMacSize;
           LLastOutOff := AOutOff + LResultLen + LI * FBlockSize;
+          // Capture the ciphertext into scratch before CtrEncryptBlock
+          // overwrites the input, so the in-place case (AOutput aliases
+          // AInput) still feeds the OMAC lookahead the ciphertext.
+          System.Move(AInput[LLastInOff], LScratch[0], FBlockSize);
           CtrEncryptBlock(@AInput[LLastInOff], @AOutput[LLastOutOff]);
           FlushOmacLookahead();
-          System.Move(AInput[LLastInOff], FOmacLookahead[0], FBlockSize);
+          System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
           FHasOmacLookahead := True;
         end;
       end;

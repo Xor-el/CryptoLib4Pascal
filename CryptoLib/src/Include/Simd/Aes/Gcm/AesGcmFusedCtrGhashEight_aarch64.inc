@@ -7,11 +7,12 @@
 // Loops over BatchCount pipelined batches. Each batch AES-encrypts eight
 // counter blocks (generated in-register from Counter32 + PJ0Template) to
 // produce a keystream, XORs it with PXorIn to produce POut, and concurrently
-// GHASHes the PREVIOUS batch's 8 ciphertext blocks into the running
-// authentication state (the pipeline lags by one batch). AES inside GCM is
-// always CTR keystream construction; GhashFromOutput picks which buffer feeds
-// GHASH (output on encrypt, input on decrypt). The mode primes batch 0 and
-// drains the last.
+// GHASHes 8 ciphertext blocks into the running authentication state. AES inside
+// GCM is always CTR keystream construction; GhashFromOutput selects the GHASH
+// source: encrypt folds the PREVIOUS batch's output ciphertext (the pipeline
+// lags by one batch, so the mode primes batch 0 and drains the last); decrypt
+// folds THIS batch's input ciphertext, read before the XOR overwrites it (no
+// lag, no prime/drain, and PXorIn/POut may alias for in-place decrypt).
 //
 // PHPow128 holds the kernel-owned H^8..H^1 table PRE-MULTIPLIED BY x in the
 // reflected representation, so the batch product reduces with two
@@ -113,6 +114,8 @@
   add w6, w6, #8
   mov x10, x1
   mov x11, x2
+  cmp x9, #0
+  .long 0x9a8a1084                    // csel x4, x4, x10, ne
   .long 0x4e284a00                    // aese v0.16b, v16.16b
   .long 0x3dc0008b                    // ldr q11, [x4]
   .long 0x4e286800                    // aesmc v0.16b, v0.16b
@@ -485,6 +488,8 @@
   add w6, w6, #8
   mov x10, x1
   mov x11, x2
+  cmp x9, #0
+  .long 0x9a8a1084                    // csel x4, x4, x10, ne
   .long 0x4e284a00                    // aese v0.16b, v16.16b
   .long 0x3dc0008b                    // ldr q11, [x4]
   .long 0x4e286800                    // aesmc v0.16b, v0.16b
@@ -890,6 +895,8 @@
   add w6, w6, #8
   mov x10, x1
   mov x11, x2
+  cmp x9, #0
+  .long 0x9a8a1084                    // csel x4, x4, x10, ne
   .long 0x4e284a00                    // aese v0.16b, v16.16b
   .long 0x4e286800                    // aesmc v0.16b, v0.16b
   .long 0x3dc0008b                    // ldr q11, [x4]

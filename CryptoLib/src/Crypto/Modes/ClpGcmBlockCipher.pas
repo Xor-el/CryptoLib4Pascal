@@ -145,6 +145,11 @@ type
     FWorkCtr: TCryptoLibByteArray;
     /// <summary>Second 128-byte keystream buffer for the pipeline-by-one path (look-ahead batch). nil if fused paths are off.</summary>
     FWorkCtrAhead: TCryptoLibByteArray;
+    /// <summary>True when the underlying cipher is bulk-capable but SIMD GHASH is unavailable:
+    /// drives the software-GHASH 4-block batch path (bulk AES + scalar aggregated GHASH).</summary>
+    FSoftBulk: Boolean;
+    /// <summary>H^1..H^4 as field elements for the scalar aggregated 4-block GHASH; set when FSoftBulk.</summary>
+    FGhH1, FGhH2, FGhH3, FGhH4: TFieldElement;
 
     // ---------------------------------------------------------------------
     // GHASH primitives and scalar triple-XOR helpers.
@@ -271,6 +276,22 @@ type
       ALimit: Int32);
 
     // ---------------------------------------------------------------------
+    // Software-GHASH 4-block batch path: bulk AES keystream (FBulkCipher) plus
+    // the scalar aggregated 4-way GHASH. Used when the cipher is bulk-capable
+    // but SIMD GHASH is unavailable (FSoftBulk). Counter keystream comes from
+    // GetNextCtrBlocks4 (GCM inc32); do NOT substitute SIC's 128-bit counter.
+    // ---------------------------------------------------------------------
+    procedure SoftAggregateGhash4(const ABuf: TCryptoLibByteArray; AOff: Int32);
+    procedure ProcessSoftBulk4(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32; AForEncrypt: Boolean);
+    procedure EncryptBlocksSoftBulk4(const AInBuf: TCryptoLibByteArray;
+      var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+      var AOutOff: Int32);
+    procedure DecryptBlocksSoftBulk4(const AInBuf: TCryptoLibByteArray;
+      var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+      var AOutOff: Int32; ALimit: Int32);
+
+    // ---------------------------------------------------------------------
     // CTR keystream generation helpers (scalar + 4-way + 8-way).
     // ---------------------------------------------------------------------
     procedure GetNextCtrBlock(const ABlock: TCryptoLibByteArray);
@@ -292,6 +313,9 @@ type
     // ---------------------------------------------------------------------
     procedure CheckStatus();
     procedure DoReset(AClearMac: Boolean);
+    /// <summary>Zeroize the hash subkey, H-power tables, keystream buffers, and
+    /// aggregated GHASH powers. Not called from Reset (same-key re-Init reuses them).</summary>
+    procedure WipeKeyMaterial();
 
   strict protected
     function GetAlgorithmName: String; virtual;
@@ -300,6 +324,8 @@ type
   public
     constructor Create(const ACipher: IBlockCipher); overload;
     constructor Create(const ACipher: IBlockCipher; const AMultiplier: IGcmMultiplier); overload;
+    /// <summary>Zeroize key-derived material (H, H-power tables, keystream buffers, last key).</summary>
+    destructor Destroy; override;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
     function GetBlockSize(): Int32; virtual;
@@ -443,6 +469,9 @@ end;
 
 procedure TGcmBlockCipher.InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
 begin
+  // Zeroize any prior key-derived material before this rekey overwrites it.
+  WipeKeyMaterial();
+
   FCipher.Init(True, AKeyParam as ICipherParameters);
 
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
@@ -459,6 +488,7 @@ begin
   FHPow := nil;
   FWorkCtr := nil;
   FWorkCtrAhead := nil;
+  FSoftBulk := False;
   if TGcmBlockCipher.IsFourWaySupported then
   begin
     System.SetLength(FHPow, 128);
@@ -478,6 +508,13 @@ begin
         FGcmKernelMinBlocks := 0;
       end;
     end;
+  end
+  else if FBulkCipher <> nil then
+  begin
+    FSoftBulk := True;
+    System.SetLength(FWorkCtr, BlockSize * 4);
+    TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
+    TGcmUtilities.ComputePowers1To4(FH, FGhH1, FGhH2, FGhH3, FGhH4);
   end;
 end;
 
@@ -558,6 +595,9 @@ begin
     // re-Init with the same key (fresh nonce per message) keeps them all.
     LSameKey := (FH <> nil) and (FLastKey <> nil) and
       LKeyParam.FixedTimeEquals(FLastKey);
+    // Zeroize the previous key copy before replacing it (the comparison above
+    // has already consumed it); Fill is a no-op on the first Init (nil).
+    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
     FLastKey := LKeyParam.GetKey();
     if not LSameKey then
       InitCipherAndHashSubKey(LKeyParam);
@@ -823,6 +863,17 @@ begin
         AOutOff := AOutOff + (BlockSize * 2);
       end;
     end
+    else if FSoftBulk and (ALen >= BlockSize * 4) then
+    begin
+      EncryptBlocksSoftBulk4(AInput, AInOff, ALen, AOutput, AOutOff);
+      if ALen >= BlockSize * 2 then
+      begin
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
+        AInOff := AInOff + (BlockSize * 2);
+        ALen := ALen - (BlockSize * 2);
+        AOutOff := AOutOff + (BlockSize * 2);
+      end;
+    end
     else
     begin
       while ALen >= BlockSize * 2 do
@@ -929,6 +980,17 @@ begin
     else if TGcmBlockCipher.IsFourWaySupported and (ALen >= LThresh4) then
     begin
       DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
+      if ALen >= LThresh2 then
+      begin
+        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
+        AInOff := AInOff + (BlockSize * 2);
+        ALen := ALen - (BlockSize * 2);
+        AOutOff := AOutOff + (BlockSize * 2);
+      end;
+    end
+    else if FSoftBulk and (ALen >= LThresh4) then
+    begin
+      DecryptBlocksSoftBulk4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
       if ALen >= LThresh2 then
       begin
         CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
@@ -1100,6 +1162,25 @@ begin
   end;
 end;
 
+procedure TGcmBlockCipher.WipeKeyMaterial();
+begin
+  TArrayUtilities.Fill(FH, 0, System.Length(FH), Byte(0));
+  TArrayUtilities.Fill(FHPow, 0, System.Length(FHPow), Byte(0));
+  TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
+  TArrayUtilities.Fill(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
+  FGhH1.N0 := 0; FGhH1.N1 := 0;
+  FGhH2.N0 := 0; FGhH2.N1 := 0;
+  FGhH3.N0 := 0; FGhH3.N1 := 0;
+  FGhH4.N0 := 0; FGhH4.N1 := 0;
+end;
+
+destructor TGcmBlockCipher.Destroy;
+begin
+  WipeKeyMaterial();
+  TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
+  inherited Destroy;
+end;
+
 // =======================================================================
 // Byte-reverse primitive and shuffled-block GHASH kernels used by the
 // fused / pipelined batch routines below. The 64-byte / 128-byte triple-
@@ -1166,15 +1247,23 @@ procedure TGcmBlockCipher.ProcessBlocks4Fused(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
 var
-  LPHash: PByte;
+  LPIn, LPOut: PByte;
 begin
   GetNextCtrBlocks4(FWorkCtr);
-  TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr), PByte(AOutBuf) + AOutOff);
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
+  // Decrypt hashes the input ciphertext, read before the XOR overwrites it
+  // (the in-place case aliases input and output).
   if AForEncrypt then
-    LPHash := PByte(AOutBuf) + AOutOff
+  begin
+    TByteUtilities.&Xor(64, LPIn, PByte(FWorkCtr), LPOut);
+    GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
+  end
   else
-    LPHash := PByte(AInBuf) + AInOff;
-  GhashFourShuffledBlocks(LPHash, LPHash + 16, LPHash + 32, LPHash + 48);
+  begin
+    GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
+    TByteUtilities.&Xor(64, LPIn, PByte(FWorkCtr), LPOut);
+  end;
 end;
 
 procedure TGcmBlockCipher.GhashEightShuffledBlocks(PBase: PByte);
@@ -1198,15 +1287,23 @@ procedure TGcmBlockCipher.ProcessBlocks8Fused(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
 var
-  LPHash: PByte;
+  LPIn, LPOut: PByte;
 begin
   GetNextCtrBlocks8(FWorkCtr);
-  TByteUtilities.&Xor(128, PByte(AInBuf) + AInOff, PByte(FWorkCtr), PByte(AOutBuf) + AOutOff);
+  LPIn := PByte(AInBuf) + AInOff;
+  LPOut := PByte(AOutBuf) + AOutOff;
+  // Decrypt hashes the input ciphertext, read before the XOR overwrites it
+  // (the in-place case aliases input and output).
   if AForEncrypt then
-    LPHash := PByte(AOutBuf) + AOutOff
+  begin
+    TByteUtilities.&Xor(128, LPIn, PByte(FWorkCtr), LPOut);
+    GhashEightShuffledBlocks(LPOut);
+  end
   else
-    LPHash := PByte(AInBuf) + AInOff;
-  GhashEightShuffledBlocks(LPHash);
+  begin
+    GhashEightShuffledBlocks(LPIn);
+    TByteUtilities.&Xor(128, LPIn, PByte(FWorkCtr), LPOut);
+  end;
 end;
 
 // Pipeline-by-one fused four-block step. Requires ALen >= ALimit + BlockSize*4*2
@@ -1418,6 +1515,26 @@ begin
   if ALen < ALimit + (BlockSize * 8) * 2 then
     Exit;
 
+  // Non-lagged decrypt: the kernel GHASHes each batch's own input ciphertext
+  // (read before its XOR), so there is no prime batch to seed and no trailing
+  // batch to drain, and input/output may alias. Process every full batch that
+  // clears the tail hold-back and let the caller's per-batch loop mop up.
+  if not AForEncrypt then
+  begin
+    LBatches := (ALen - ALimit) div (BlockSize * 8);
+    if LBatches > 0 then
+    begin
+      LPIn := PByte(AInBuf) + AInOff;
+      LPOut := PByte(AOutBuf) + AOutOff;
+      FCounter32 := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPIn,
+        @FS[0], @FJ0[0], FCounter32, LBatches, False);
+      AInOff := AInOff + LBatches * (BlockSize * 8);
+      AOutOff := AOutOff + LBatches * (BlockSize * 8);
+      ALen := ALen - LBatches * (BlockSize * 8);
+    end;
+    Exit;
+  end;
+
   LCurrCtrs := FWorkCtr;
 
   // Prime batch 0: regular 8-wide keystream into LCurrCtrs (now holds keystream),
@@ -1543,19 +1660,21 @@ begin
   LCtrBlock := nil;
   System.SetLength(LCtrBlock, BlockSize);
   GetNextCtrBlock(LCtrBlock);
-  // Encrypt: C := keystream xor In; FS := FS xor C; Out := C.
-  // Decrypt: FS := FS xor In (= ciphertext); Out := In xor keystream.
+  // Read the input block through the three-operand XOR before it can be
+  // overwritten, so the in-place case (Out aliases In) stays correct.
   if AForEncrypt then
   begin
-    System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-    TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]));
+    // Out := In xor keystream (ciphertext); FS := FS xor Out.
+    TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
+      PByte(@AOutBuf[AOutOff]));
     TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
   end
   else
   begin
-    System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-    TByteUtilities.XorTo(BlockSize, PByte(@LCtrBlock[0]), PByte(@AOutBuf[AOutOff]));
+    // FS := FS xor In (ciphertext) first; then Out := In xor keystream.
     TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
+    TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
+      PByte(@AOutBuf[AOutOff]));
   end;
   FMultiplier.MultiplyH(FS);
 end;
@@ -1610,6 +1729,76 @@ begin
   end;
 end;
 
+// Scalar aggregated 4-way GHASH over four consecutive 16-byte blocks at
+// ABuf[AOff..AOff+63], folding them into the running state FS in one reduction.
+procedure TGcmBlockCipher.SoftAggregateGhash4(const ABuf: TCryptoLibByteArray;
+  AOff: Int32);
+var
+  LY, LX1, LX2, LX3, LX4: TFieldElement;
+begin
+  TGcmUtilities.AsFieldElement(FS, LY);
+  LX1.N0 := TPack.BE_To_UInt64(ABuf, AOff);
+  LX1.N1 := TPack.BE_To_UInt64(ABuf, AOff + 8);
+  LX2.N0 := TPack.BE_To_UInt64(ABuf, AOff + 16);
+  LX2.N1 := TPack.BE_To_UInt64(ABuf, AOff + 24);
+  LX3.N0 := TPack.BE_To_UInt64(ABuf, AOff + 32);
+  LX3.N1 := TPack.BE_To_UInt64(ABuf, AOff + 40);
+  LX4.N0 := TPack.BE_To_UInt64(ABuf, AOff + 48);
+  LX4.N1 := TPack.BE_To_UInt64(ABuf, AOff + 56);
+  TGcmUtilities.AggregateGhash4(LY, LX1, LX2, LX3, LX4,
+    FGhH1, FGhH2, FGhH3, FGhH4);
+  TGcmUtilities.AsBytes(LY, FS);
+end;
+
+// Single software-bulk 4-way step: bulk AES keystream via FBulkCipher, XOR,
+// then aggregated GHASH. AForEncrypt hashes the output (encrypt) or input (decrypt).
+procedure TGcmBlockCipher.ProcessSoftBulk4(const AInBuf: TCryptoLibByteArray;
+  AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
+  AForEncrypt: Boolean);
+begin
+  GetNextCtrBlocks4(FWorkCtr);
+  // Decrypt hashes the input ciphertext, which must be read before the XOR
+  // overwrites it (the in-place case aliases input and output).
+  if AForEncrypt then
+  begin
+    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr),
+      PByte(AOutBuf) + AOutOff);
+    SoftAggregateGhash4(AOutBuf, AOutOff);
+  end
+  else
+  begin
+    SoftAggregateGhash4(AInBuf, AInOff);
+    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr),
+      PByte(AOutBuf) + AOutOff);
+  end;
+end;
+
+procedure TGcmBlockCipher.EncryptBlocksSoftBulk4(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32);
+begin
+  while ALen >= BlockSize * 4 do
+  begin
+    ProcessSoftBulk4(AInBuf, AInOff, AOutBuf, AOutOff, True);
+    AInOff := AInOff + (BlockSize * 4);
+    ALen := ALen - (BlockSize * 4);
+    AOutOff := AOutOff + (BlockSize * 4);
+  end;
+end;
+
+procedure TGcmBlockCipher.DecryptBlocksSoftBulk4(const AInBuf: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
+  var AOutOff: Int32; ALimit: Int32);
+begin
+  while ALen >= ALimit do
+  begin
+    ProcessSoftBulk4(AInBuf, AInOff, AOutBuf, AOutOff, False);
+    AInOff := AInOff + (BlockSize * 4);
+    ALen := ALen - (BlockSize * 4);
+    AOutOff := AOutOff + (BlockSize * 4);
+  end;
+end;
+
 procedure TGcmBlockCipher.CipherBlocks2(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
@@ -1623,17 +1812,19 @@ begin
   for LB := 0 to 1 do
   begin
     GetNextCtrBlock(LCtrBlock);
+    // Read the input block through the three-operand XOR before it can be
+    // overwritten, so the in-place case (Out aliases In) stays correct.
     if AForEncrypt then
     begin
-      System.Move(LCtrBlock[0], AOutBuf[AOutOff], BlockSize);
-      TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@AOutBuf[AOutOff]));
+      TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
+        PByte(@AOutBuf[AOutOff]));
       TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
     end
     else
     begin
-      System.Move(AInBuf[AInOff], AOutBuf[AOutOff], BlockSize);
-      TByteUtilities.XorTo(BlockSize, PByte(@LCtrBlock[0]), PByte(@AOutBuf[AOutOff]));
       TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
+      TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
+        PByte(@AOutBuf[AOutOff]));
     end;
     FMultiplier.MultiplyH(FS);
     AInOff := AInOff + BlockSize;

@@ -97,6 +97,11 @@ type
     procedure DoTestExceptionsAndRandomised;
     procedure DoTestInvalidTagLength;
     procedure DoTestValidTagLength;
+    procedure DoTestInPlace;
+    // In-place (AOutput aliases AInput) round-trip at one length; returns '' on
+    // success or a short description of the failing direction.
+    function InPlaceCase(const ARandom: ISecureRandom; APlainLen, AKeyLen: Int32;
+      const AAad: TBytes): String;
 
   published
     procedure TestVectors;
@@ -104,6 +109,7 @@ type
     procedure TestExceptionsAndRandomised;
     procedure TestInvalidTagLength;
     procedure TestValidTagLength;
+    procedure TestInPlace;
 
   end;
 
@@ -587,6 +593,109 @@ end;
 procedure TTestEax.TestValidTagLength;
 begin
   RunWithCipherKernelToggle(DoTestValidTagLength);
+end;
+
+function TTestEax.InPlaceCase(const ARandom: ISecureRandom;
+  APlainLen, AKeyLen: Int32; const AAad: TBytes): String;
+var
+  LK, LIV, LP, LRef, LBuf: TBytes;
+  LParams: IAeadParameters;
+  LCipher: IEaxBlockCipher;
+  LLen, LTotal: Int32;
+begin
+  Result := '';
+  System.SetLength(LK, AKeyLen);
+  ARandom.NextBytes(LK);
+  System.SetLength(LIV, 12);
+  ARandom.NextBytes(LIV);
+  System.SetLength(LP, APlainLen);
+  if APlainLen > 0 then
+    ARandom.NextBytes(LP);
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    16 * 8, LIV, AAad);
+
+  // Reference ciphertext||tag, produced out of place.
+  LCipher := TEaxBlockCipher.Create(CreateEngine) as IEaxBlockCipher;
+  LCipher.Init(True, LParams as ICipherParameters);
+  System.SetLength(LRef, LCipher.GetOutputSize(APlainLen));
+  LLen := LCipher.ProcessBytes(LP, 0, APlainLen, LRef, 0);
+  LLen := LLen + LCipher.DoFinal(LRef, LLen);
+  System.SetLength(LRef, LLen);
+  LTotal := LLen;
+
+  // In-place encrypt: the buffer starts as plaintext and is encrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  if APlainLen > 0 then
+    System.Move(LP[0], LBuf[0], APlainLen);
+  LCipher := TEaxBlockCipher.Create(CreateEngine) as IEaxBlockCipher;
+  LCipher.Init(True, LParams as ICipherParameters);
+  try
+    LLen := LCipher.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
+    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[enc len=%d exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if (LLen <> LTotal) or (not AreEqual(LBuf, LRef)) then
+  begin
+    Result := Format('[enc len=%d mismatch] ', [APlainLen]);
+    Exit;
+  end;
+
+  // In-place decrypt: the buffer starts as ciphertext||tag, decrypted over itself.
+  System.SetLength(LBuf, LTotal);
+  System.Move(LRef[0], LBuf[0], LTotal);
+  LCipher := TEaxBlockCipher.Create(CreateEngine) as IEaxBlockCipher;
+  LCipher.Init(False, LParams as ICipherParameters);
+  try
+    LLen := LCipher.ProcessBytes(LBuf, 0, LTotal, LBuf, 0);
+    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
+  except
+    on E: Exception do
+    begin
+      Result := Format('[dec len=%d exc %s] ', [APlainLen, E.Message]);
+      Exit;
+    end;
+  end;
+  if LLen <> APlainLen then
+  begin
+    Result := Format('[dec len=%d got %d] ', [APlainLen, LLen]);
+    Exit;
+  end;
+  System.SetLength(LBuf, LLen);
+  if (APlainLen > 0) and (not AreEqual(LBuf, LP)) then
+    Result := Format('[dec len=%d mismatch] ', [APlainLen]);
+end;
+
+procedure TTestEax.DoTestInPlace;
+const
+  CLens: array [0 .. 10] of Int32 = (0, 16, 48, 4 * 16 + 7, 10 * 16, 17 * 16 + 9,
+    32 * 16, 33 * 16, 65 * 16, 80 * 16 + 5, 100 * 16 + 3);
+var
+  LRnd: ISecureRandom;
+  LFails: String;
+  LI: Int32;
+  LAad: TBytes;
+begin
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(Int64(20260723));
+  System.SetLength(LAad, 20);
+  LRnd.NextBytes(LAad);
+  LFails := '';
+  for LI := 0 to High(CLens) do
+    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 16, nil);
+  for LI := 0 to High(CLens) do
+    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 32, LAad);
+  if LFails <> '' then
+    Fail('in-place EAX: ' + LFails);
+end;
+
+procedure TTestEax.TestInPlace;
+begin
+  RunWithCipherKernelToggle(DoTestInPlace);
 end;
 
 initialization
