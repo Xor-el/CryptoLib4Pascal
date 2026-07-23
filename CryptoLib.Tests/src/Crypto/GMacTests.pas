@@ -50,7 +50,7 @@ type
   private
     procedure TestSingleByte(const AMac: IMac; const AName: string;
       const AAd, ATag: TBytes);
-    procedure TestMultibyte(const AMac: IMac; const AName: string;
+    procedure TestMultiByte(const AMac: IMac; const AName: string;
       const AAd, ATag: TBytes);
     procedure CheckMac(const AMac: IMac; const AName: string;
       const ATag: TBytes);
@@ -92,7 +92,7 @@ begin
   CheckMac(AMac, AName, ATag);
 end;
 
-procedure TTestGMac.TestMultibyte(const AMac: IMac; const AName: string;
+procedure TTestGMac.TestMultiByte(const AMac: IMac; const AName: string;
   const AAd, ATag: TBytes);
 begin
   AMac.BlockUpdate(AAd, 0, System.Length(AAd));
@@ -170,7 +170,7 @@ begin
         as IGcmBlockCipher,
       System.Length(LTag) * 8) as IMac;
     LMac.Init(TParametersWithIV.Create(LKeyParam, LIv) as ICipherParameters);
-    TestMultibyte(LMac, LRow.Name, LAd, LTag);
+    TestMultiByte(LMac, LRow.Name, LAd, LTag);
   end;
 end;
 
