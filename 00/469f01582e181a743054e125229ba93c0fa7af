@@ -1,0 +1,52 @@
+CryptoLib/src/Asn1/ClpAsn1Utilities.pas
+  s_a664f450ccb9fa::t_02516adc8c02f9 122-133
+  s_a664f450ccb9fa::t_ebefa98d974730 595-597,599,602-604,612,615-617,619,622-624,631
+  s_a664f450ccb9fa::t_5ec3b1e4b35b7b 84,86,88,90,92,400,436,459,481,500
+CryptoLib/src/X509/ClpX509CertificateParser.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 69,95
+  s_a664f450ccb9fa::t_1a7d609d0177ba 125
+CryptoLib/src/Asn1/X509/ClpX509Asn1Objects.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 379-380,1210-1211,1350-1351,2163-2164,2291-2292,2636-2637,3337,3342,4985,4990,7555,7560,9321,9326,10105,10110,10438,10443
+CryptoLib/src/Asn1/Ocsp/ClpOcspAsn1Objects.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 437-438,533-534,1575,1580,1814,1819
+CryptoLib/src/Asn1/X9/ClpX9ECAsn1Objects.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 71-72,972,977
+CryptoLib/src/Asn1/Cms/ClpCmsAsn1Objects.pas
+  s_a664f450ccb9fa::t_1a7d609d0177ba 831
+  s_a664f450ccb9fa::t_e91d2967d4d75f 249-251,737,742,747
+CryptoLib/src/Asn1/X500/ClpX500Asn1Objects.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 135-136,398,403
+CryptoLib/src/X509/ClpX509CrlParser.pas
+  s_a664f450ccb9fa::t_e91d2967d4d75f 63,89
+  s_a664f450ccb9fa::t_1a7d609d0177ba 119
+CryptoLib/src/X509/Extension/ClpX509ExtensionUtilities.pas
+  s_a664f450ccb9fa::t_f74e5db2bdd90b 312
+  s_a664f450ccb9fa::t_7f148131936393 41-43
+  s_a664f450ccb9fa::t_c6fd1076c41c95 306
+  s_a664f450ccb9fa::t_725559a293edf2 142
+  s_a664f450ccb9fa::t_ecc2da369d7566 333
+CryptoLib/src/X509/ClpX509Certificate.pas
+  s_a664f450ccb9fa::t_27ee20597c4a7e 255
+  s_a664f450ccb9fa::t_4c062910c868a3 265
+  s_a664f450ccb9fa::t_f99a37a3d58f15 492
+  s_a664f450ccb9fa::t_44c5a091558ec7 432
+CryptoLib/src/X509/ClpX509AttrCertParser.pas
+  s_a664f450ccb9fa::t_1a7d609d0177ba 132,173
+  s_a664f450ccb9fa::t_e91d2967d4d75f 70-71,97,102
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "00469f01582e181a743054e125229ba93c0fa7af",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
