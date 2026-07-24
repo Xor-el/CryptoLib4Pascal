@@ -44,7 +44,6 @@ uses
   ClpTables4kGcmMultiplier,
   ClpTables8kGcmMultiplier,
   ClpTables64kGcmMultiplier,
-  ClpAesUtilities,
   ClpBlowfishEngine,
   ClpSecureRandom,
   ClpISecureRandom,
@@ -54,12 +53,13 @@ uses
   ClpCryptoLibExceptions,
   CipherKernelToggle,
   AeadTestUtilities,
+  AeadModeTestBase,
   CryptoLibTestBase,
   SymmetricBlockVectors;
 
 type
 
-  TTestGcm = class(TCryptoLibAlgorithmTestCase)
+  TTestGcm = class(TAeadModeTestBase)
   private
     function CreateAesEngine: IBlockCipher;
     function InitCipher(const AM: IGcmMultiplier; AForEncryption: Boolean;
@@ -80,22 +80,25 @@ type
       const AM: IGcmMultiplier);
     procedure OutputSizeTests;
     procedure DoTestExceptions;
-    function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
+    // One canonical encrypt/decrypt of a McGrew-Viega row on the current engine
+    // (default multiplier, full tag) - pins each engine's output to the vector.
+    procedure CheckCanonicalVector(const ARow: TAeadGcmRow);
 
     // Workers run twice via RunWithCipherKernelToggle (cipher kernel on / off).
     procedure DoTestRfcVectors;
+    // Lighter vector pass (default multiplier only) rerun per extra engine.
+    procedure DoTestVectorsPerEngine;
     procedure DoTestRandomised;
     procedure DoTestOutputSizes;
     procedure DoTestExceptionsWrapper;
     procedure DoTestFourBlockFusedGcmPath;
     procedure DoTestEightBlockFusedGcmPath;
     procedure DoTestInPlace;
-    // In-place (AOutput aliases AInput) round-trip at one length; returns '' on
-    // success or a short description of the failing direction.
-    function InPlaceCase(const ARandom: ISecureRandom; APlainLen, AKeyLen: Int32;
-      const AAad: TBytes): String;
 
   protected
+    function CreateAeadCipher: IAeadCipher; override;
+    function ModeLabel: String; override;
+
     procedure SetUp; override;
     procedure TearDown; override;
 
@@ -126,7 +129,18 @@ end;
 
 function TTestGcm.CreateAesEngine: IBlockCipher;
 begin
-  Result := TAesUtilities.CreateEngine();
+  Result := CurrentEngine;
+end;
+
+function TTestGcm.CreateAeadCipher: IAeadCipher;
+begin
+  Result := TGcmBlockCipher.Create(CurrentEngine,
+    TBasicGcmMultiplier.Create() as IGcmMultiplier) as IAeadCipher;
+end;
+
+function TTestGcm.ModeLabel: String;
+begin
+  Result := 'GCM';
 end;
 
 function TTestGcm.InitCipher(const AM: IGcmMultiplier;
@@ -135,26 +149,6 @@ function TTestGcm.InitCipher(const AM: IGcmMultiplier;
 begin
   Result := TGcmBlockCipher.Create(CreateAesEngine(), AM);
   Result.Init(AForEncryption, AParameters as ICipherParameters);
-end;
-
-function TTestGcm.NextInt32(const ARandom: ISecureRandom;
-  AN: Int32): Int32;
-var
-  LBits, LValue: Int32;
-begin
-  if (AN and -AN) = AN then
-  begin
-    Result := Int32((UInt32(AN) *
-      UInt64(UInt32(ARandom.NextInt32()) shr 1)) shr 31);
-    Exit;
-  end;
-
-  repeat
-    LBits := Int32(UInt32(ARandom.NextInt32()) shr 1);
-    LValue := LBits mod AN;
-  until not ((LBits - LValue + (AN - 1)) < 0);
-
-  Result := LValue;
 end;
 
 procedure TTestGcm.RunTestCase(const ARow: TAeadGcmRow);
@@ -241,16 +235,8 @@ begin
 
   // Key reuse
   LKeyReuseParams := TAeadTestUtilities.ReuseKey(LParameters);
-  try
-    LEncCipher.Init(True, LKeyReuseParams as ICipherParameters);
-    Fail('no exception');
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      if E.Message <> 'cannot reuse nonce for GCM encryption' then
-        Fail('wrong message');
-    end;
-  end;
+  TAeadTestUtilities.AssertNonceReuseRejected(LEncCipher as IAeadCipher,
+    LKeyReuseParams as ICipherParameters, 'cannot reuse nonce for GCM encryption');
 end;
 
 procedure TTestGcm.CheckTestCase(
@@ -443,7 +429,7 @@ begin
   LCipher.Init(False, LKeyReuseParams as ICipherParameters);
   System.SetLength(LDecP, LCipher.GetOutputSize(System.Length(LC)));
 
-  LSplit := NextInt32(ARandom, System.Length(LSA) + 1);
+  LSplit := TAeadTestUtilities.NextInt32(ARandom, System.Length(LSA) + 1);
   LCipher.ProcessAadBytes(LSA, 0, LSplit);
   LLen := LCipher.ProcessBytes(LC, 0, System.Length(LC), LDecP, 0);
   LCipher.ProcessAadBytes(LSA, LSplit, System.Length(LSA) - LSplit);
@@ -570,21 +556,15 @@ begin
     end;
   end;
 
-  try
-    LC.Init(True, LAeadParams as ICipherParameters);
-    Fail('no exception on reuse');
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      if E.Message <> 'cannot reuse nonce for GCM encryption' then
-        Fail('wrong message');
-    end;
-  end;
+  TAeadTestUtilities.AssertNonceReuseRejected(LC as IAeadCipher,
+    LAeadParams as ICipherParameters, 'cannot reuse nonce for GCM encryption');
 end;
 
 procedure TTestGcm.TestRfcVectors;
 begin
   RunWithCipherKernelToggle(DoTestRfcVectors);
+  // Pin the canonical vectors on the bit-sliced (and scalar) engines too.
+  ForEachExtraEngine(DoTestVectorsPerEngine);
 end;
 
 procedure TTestGcm.TestRandomised;
@@ -612,6 +592,48 @@ begin
   RunWithCipherKernelToggle(DoTestEightBlockFusedGcmPath);
 end;
 
+procedure TTestGcm.CheckCanonicalVector(const ARow: TAeadGcmRow);
+var
+  LCipher: IAeadCipher;
+  LParams: IAeadParameters;
+  LK, LP, LA, LIV, LC, LT, LExpected, LOut, LDec: TBytes;
+  LLen: Int32;
+begin
+  LK := DecodeHex(ARow.Key);
+  LP := DecodeHex(ARow.Plaintext);
+  LA := DecodeHex(ARow.Aad);
+  LIV := DecodeHex(ARow.Iv);
+  LC := DecodeHex(ARow.Ciphertext);
+  LT := DecodeHex(ARow.Tag);
+  LExpected := System.Copy(LC);
+  LExpected := LExpected + LT;
+
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    System.Length(LT) * 8, LIV, LA);
+
+  // Encrypt: output must equal ciphertext || tag on this engine.
+  LCipher := CreateAeadCipher;
+  LCipher.Init(True, LParams as ICipherParameters);
+  System.SetLength(LOut, LCipher.GetOutputSize(System.Length(LP)));
+  LLen := LCipher.ProcessBytes(LP, 0, System.Length(LP), LOut, 0);
+  LLen := LLen + LCipher.DoFinal(LOut, LLen);
+  System.SetLength(LOut, LLen);
+  if not AreEqual(LOut, LExpected) then
+    Fail(Format('[%s] GCM vector %s encrypt mismatch',
+      [FCurrentEngineLabel, ARow.Name]));
+
+  // Decrypt recovers the plaintext.
+  LCipher := CreateAeadCipher;
+  LCipher.Init(False, LParams as ICipherParameters);
+  System.SetLength(LDec, LCipher.GetOutputSize(System.Length(LOut)));
+  LLen := LCipher.ProcessBytes(LOut, 0, System.Length(LOut), LDec, 0);
+  LLen := LLen + LCipher.DoFinal(LDec, LLen);
+  System.SetLength(LDec, LLen);
+  if not AreEqual(LDec, LP) then
+    Fail(Format('[%s] GCM vector %s decrypt mismatch',
+      [FCurrentEngineLabel, ARow.Name]));
+end;
+
 procedure TTestGcm.DoTestRfcVectors;
 var
   LRows: TCryptoLibGenericArray<TAeadGcmRow>;
@@ -620,6 +642,16 @@ begin
   LRows := TGcmVectors.GetMcGrewViegaRows;
   for LI := 0 to High(LRows) do
     RunTestCase(LRows[LI]);
+end;
+
+procedure TTestGcm.DoTestVectorsPerEngine;
+var
+  LRows: TCryptoLibGenericArray<TAeadGcmRow>;
+  LI: Int32;
+begin
+  LRows := TGcmVectors.GetMcGrewViegaRows;
+  for LI := 0 to High(LRows) do
+    CheckCanonicalVector(LRows[LI]);
 end;
 
 procedure TTestGcm.DoTestRandomised;
@@ -653,12 +685,12 @@ begin
 
   for LI := 0 to 39 do
   begin
-    LKeyLen := 16 + 8 * NextInt32(LRnd, 3);
+    LKeyLen := 16 + 8 * TAeadTestUtilities.NextInt32(LRnd, 3);
     System.SetLength(LK, LKeyLen);
     LRnd.NextBytes(LK);
     System.SetLength(LIV, 12);
     LRnd.NextBytes(LIV);
-    LPLen := 64 + NextInt32(LRnd, 16) * 64;
+    LPLen := 64 + TAeadTestUtilities.NextInt32(LRnd, 16) * 64;
     System.SetLength(LP, LPLen);
     LRnd.NextBytes(LP);
 
@@ -703,12 +735,12 @@ begin
 
   for LI := 0 to 39 do
   begin
-    LKeyLen := 16 + 8 * NextInt32(LRnd, 3);
+    LKeyLen := 16 + 8 * TAeadTestUtilities.NextInt32(LRnd, 3);
     System.SetLength(LK, LKeyLen);
     LRnd.NextBytes(LK);
     System.SetLength(LIV, 12);
     LRnd.NextBytes(LIV);
-    LPLen := 128 + NextInt32(LRnd, 8) * 128;
+    LPLen := 128 + TAeadTestUtilities.NextInt32(LRnd, 8) * 128;
     System.SetLength(LP, LPLen);
     LRnd.NextBytes(LP);
 
@@ -737,110 +769,20 @@ begin
   end;
 end;
 
-function TTestGcm.InPlaceCase(const ARandom: ISecureRandom;
-  APlainLen, AKeyLen: Int32; const AAad: TBytes): String;
-var
-  LK, LIV, LP, LRef, LBuf: TBytes;
-  LParams: IAeadParameters;
-  LCipher: IGcmBlockCipher;
-  LLen, LTotal: Int32;
-begin
-  Result := '';
-  System.SetLength(LK, AKeyLen);
-  ARandom.NextBytes(LK);
-  System.SetLength(LIV, 12);
-  ARandom.NextBytes(LIV);
-  System.SetLength(LP, APlainLen);
-  if APlainLen > 0 then
-    ARandom.NextBytes(LP);
-  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
-    16 * 8, LIV, AAad);
-
-  // Reference ciphertext||tag, produced out of place.
-  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
-    TBasicGcmMultiplier.Create() as IGcmMultiplier);
-  LCipher.Init(True, LParams as ICipherParameters);
-  System.SetLength(LRef, LCipher.GetOutputSize(APlainLen));
-  LLen := LCipher.ProcessBytes(LP, 0, APlainLen, LRef, 0);
-  LLen := LLen + LCipher.DoFinal(LRef, LLen);
-  System.SetLength(LRef, LLen);
-  LTotal := LLen;
-
-  // In-place encrypt: the buffer starts as plaintext and is encrypted over itself.
-  System.SetLength(LBuf, LTotal);
-  if APlainLen > 0 then
-    System.Move(LP[0], LBuf[0], APlainLen);
-  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
-    TBasicGcmMultiplier.Create() as IGcmMultiplier);
-  LCipher.Init(True, LParams as ICipherParameters);
-  try
-    LLen := LCipher.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
-    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
-  except
-    on E: Exception do
-    begin
-      Result := Format('[enc len=%d exc %s] ', [APlainLen, E.Message]);
-      Exit;
-    end;
-  end;
-  if (LLen <> LTotal) or (not AreEqual(LBuf, LRef)) then
-  begin
-    Result := Format('[enc len=%d mismatch] ', [APlainLen]);
-    Exit;
-  end;
-
-  // In-place decrypt: the buffer starts as ciphertext||tag, decrypted over itself.
-  System.SetLength(LBuf, LTotal);
-  System.Move(LRef[0], LBuf[0], LTotal);
-  LCipher := TGcmBlockCipher.Create(CreateAesEngine(),
-    TBasicGcmMultiplier.Create() as IGcmMultiplier);
-  LCipher.Init(False, LParams as ICipherParameters);
-  try
-    LLen := LCipher.ProcessBytes(LBuf, 0, LTotal, LBuf, 0);
-    LLen := LLen + LCipher.DoFinal(LBuf, LLen);
-  except
-    on E: Exception do
-    begin
-      Result := Format('[dec len=%d exc %s] ', [APlainLen, E.Message]);
-      Exit;
-    end;
-  end;
-  if LLen <> APlainLen then
-  begin
-    Result := Format('[dec len=%d got %d] ', [APlainLen, LLen]);
-    Exit;
-  end;
-  System.SetLength(LBuf, LLen);
-  if (APlainLen > 0) and (not AreEqual(LBuf, LP)) then
-    Result := Format('[dec len=%d mismatch] ', [APlainLen]);
-end;
-
 procedure TTestGcm.DoTestInPlace;
 const
   CLens: array [0 .. 10] of Int32 = (0, 16, 48, 64, 4 * 16 + 7, 17 * 16 + 9,
     22 * 16, 24 * 16, 33 * 16, 65 * 16, 100 * 16 + 3);
-var
-  LRnd: ISecureRandom;
-  LFails: String;
-  LI: Int32;
-  LAad: TBytes;
 begin
-  LRnd := TSecureRandom.Create();
-  LRnd.SetSeed(TDateTimeUtilities.CurrentUnixMs);
-  System.SetLength(LAad, 20);
-  LRnd.NextBytes(LAad);
-  LFails := '';
-  for LI := 0 to High(CLens) do
-    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 16, nil);
-  for LI := 0 to High(CLens) do
-    LFails := LFails + InPlaceCase(LRnd, CLens[LI], 32, LAad);
-  if LFails <> '' then
-    Fail('in-place GCM: ' + LFails);
+  DoInPlaceSweep(CLens, Int64(20260724));
 end;
 
 procedure TTestGcm.TestInPlace;
 begin
+  // Default engine under the kernel toggle (SIMD + scalar-fallback GHASH),
+  // then the bit-sliced engine (and explicit scalar on hardware hosts).
   RunWithCipherKernelToggle(DoTestInPlace);
+  ForEachExtraEngine(DoTestInPlace);
 end;
 
 initialization

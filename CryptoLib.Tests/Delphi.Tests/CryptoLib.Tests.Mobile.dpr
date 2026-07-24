@@ -879,6 +879,7 @@ uses
   ClpValueHelper in '..\..\CryptoLib\src\Helpers\ClpValueHelper.pas',
   FixedSecureRandom in '..\src\Utils\FixedSecureRandom.pas',
   ShortenedDigest in '..\src\Utils\ShortenedDigest.pas',
+  AeadModeTestBase in '..\src\Crypto\AeadModeTestBase.pas',
   AeadTestUtilities in '..\src\Crypto\AeadTestUtilities.pas',
   CertTestUtilities in '..\src\Utils\CertTestUtilities.pas',
   CryptoTestKeys in '..\src\Utils\CryptoTestKeys.pas',

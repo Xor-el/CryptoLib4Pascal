@@ -37,7 +37,7 @@ uses
   RSABlindedTests, RSADigestSignerTests, X931SignerTests, CryptoIOStreamTests,
   CryptoIOSinkTests, OaepTests, RijndaelTests, BlowfishTests, Poly1305Tests,
   MacTests, ChaCha20Poly1305Tests, OcbTests, CcmTests, EaxTests, CMacTests,
-  AeadTestUtilities, GcmReorderTests, GCMTests, GcmSivTests, GMacTests,
+  AeadModeTestBase, AeadTestUtilities, GcmReorderTests, GCMTests, GcmSivTests, GMacTests,
   Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
   MlKemTests, MlDsaTests, PqcPkcsTests, SlhDsaTests, Lib25519Tests,
   Asn1CipherBuilderWithKeyTests, AesBitSlicedTests, ECDHPrimeConstantTimeTests,

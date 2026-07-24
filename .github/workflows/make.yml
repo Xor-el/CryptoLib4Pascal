@@ -113,6 +113,49 @@ jobs:
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_tarball_target }}
         run: bash .github/workflows/ci/native-build.sh
 
+  # Scalar-dispatch legs: same native targets, but MAKE_DEFINES forces
+  # CRYPTOLIB_FORCE_SCALAR so the SIMD-bearing arches (x86_64 AES-NI/PCLMUL/AVX,
+  # AArch64 NEON/PMULL) exercise the scalar / table-free fallbacks instead.
+  linux-x64-scalar:
+    name: "Native: Linux x86_64 (FORCE_SCALAR)"
+    runs-on: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].runner }}
+    timeout-minutes: 120
+    needs: setup
+    if: contains(format(',{0},', needs.setup.outputs.enabled_targets), ',linux-x64-scalar,')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Build
+        shell: bash
+        env:
+          FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_target }}
+          FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_tarball_target }}
+          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+        run: bash .github/workflows/ci/native-build.sh
+
+  linux-arm64-scalar:
+    name: "Native: Linux AArch64 (FORCE_SCALAR)"
+    runs-on: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].runner }}
+    timeout-minutes: 120
+    needs: setup
+    if: contains(format(',{0},', needs.setup.outputs.enabled_targets), ',linux-arm64-scalar,')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          submodules: true
+
+      - name: Build
+        shell: bash
+        env:
+          FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_target }}
+          FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_tarball_target }}
+          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+        run: bash .github/workflows/ci/native-build.sh
+
   windows-x64:
     name: "Native: Windows x86_64"
     runs-on: ${{ fromJSON(needs.setup.outputs.target_map)['windows-x64'].runner }}

@@ -29,6 +29,7 @@ uses
   ClpICipherParameters,
   ClpIAeadParameters,
   ClpAeadParameters,
+  ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -60,6 +61,19 @@ type
 
     class function ReuseKey(const AParameters: IAeadParameters)
       : IAeadParameters; static;
+
+    /// <summary>
+    /// Bounded uniform random in [0, AN). Shared by the AEAD mode suites.
+    /// </summary>
+    class function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32; static;
+
+    /// <summary>
+    /// Assert that re-initialising ACipher for encryption with a reused
+    /// key+nonce is rejected with AExpectedMessage. Raises on any deviation.
+    /// </summary>
+    class procedure AssertNonceReuseRejected(const ACipher: IAeadCipher;
+      const AReuseParameters: ICipherParameters;
+      const AExpectedMessage: String); static;
   end;
 
 implementation
@@ -138,6 +152,43 @@ class function TAeadTestUtilities.ReuseKey(const AParameters: IAeadParameters)
 begin
   Result := TAeadParameters.Create(nil, AParameters.MacSize,
     AParameters.GetNonce, AParameters.GetAssociatedText);
+end;
+
+class function TAeadTestUtilities.NextInt32(const ARandom: ISecureRandom;
+  AN: Int32): Int32;
+var
+  LBits, LValue: Int32;
+begin
+  if (AN and -AN) = AN then
+  begin
+    Result := Int32((UInt32(AN) *
+      UInt64(UInt32(ARandom.NextInt32()) shr 1)) shr 31);
+    Exit;
+  end;
+
+  repeat
+    LBits := Int32(UInt32(ARandom.NextInt32()) shr 1);
+    LValue := LBits mod AN;
+  until not ((LBits - LValue + (AN - 1)) < 0);
+
+  Result := LValue;
+end;
+
+class procedure TAeadTestUtilities.AssertNonceReuseRejected(
+  const ACipher: IAeadCipher; const AReuseParameters: ICipherParameters;
+  const AExpectedMessage: String);
+begin
+  try
+    ACipher.Init(True, AReuseParameters);
+    raise Exception.Create(
+      'nonce reuse not detected on re-init for encryption');
+  except
+    on E: EArgumentCryptoLibException do
+    begin
+      if E.Message <> AExpectedMessage then
+        raise Exception.Create('wrong nonce-reuse message: ' + E.Message);
+    end;
+  end;
 end;
 
 class procedure TAeadTestUtilities.Crypt(const ACipher: IAeadCipher;

@@ -1222,6 +1222,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Helpers\ClpValueHelper.pas"/>
         <DCCReference Include="..\src\Utils\FixedSecureRandom.pas"/>
         <DCCReference Include="..\src\Utils\ShortenedDigest.pas"/>
+        <DCCReference Include="..\src\Crypto\AeadModeTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\AeadTestUtilities.pas"/>
         <DCCReference Include="..\src\Utils\CertTestUtilities.pas"/>
         <DCCReference Include="..\src\Utils\CryptoTestKeys.pas"/>

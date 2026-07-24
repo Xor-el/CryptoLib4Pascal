@@ -16,10 +16,6 @@
 
 unit AesBitSlicedTests;
 
-{ Correctness tests for TAesBitSlicedEngine, the constant-time table-free AES.
-  These MUST run with CRYPTOLIB_FORCE_SCALAR (CryptoLib.inc) so the AES-GCM leg
-  exercises the software ImplMul64 GHASH path rather than hardware PCLMUL/PMULL. }
-
 interface
 
 {$IFDEF FPC}
@@ -80,9 +76,6 @@ type
     procedure DoProcessBlocksParity(AKeyLen: Int32; AForEnc: Boolean; ACount: Int32);
     // Parts B+C: GCM through bit-sliced (soft-bulk) vs table (per-block) engine.
     procedure DoGcmParity(APlainLen, AKeyLen: Int32; const AAad: TBytes);
-    // In-place GCM (output buffer aliases input) round-trip + valid tag.
-    // Returns '' on success, else a description of the failing length/direction.
-    function DoGcmInPlace(APlainLen: Int32; const AAad: TBytes): String;
   published
     procedure TestFips197Kat;
     procedure TestParityWithTableEngine;
@@ -99,7 +92,6 @@ type
     procedure TestGcmBatchedVsSingle;
     procedure TestAggregatedGhashParity;
     procedure TestChunkedStreamingParity;
-    procedure TestGcmInPlaceStreaming;
   end;
 
 implementation
@@ -878,113 +870,6 @@ begin
   System.SetLength(LDec, LOutOff);
   if not AreEqual(LDec, LPlain) then
     Fail('GCM chunked-feed decrypt != original plaintext');
-end;
-
-function TTestAesBitSliced.DoGcmInPlace(APlainLen: Int32;
-  const AAad: TBytes): String;
-var
-  LKey, LNonce, LPlain, LRefCT, LBuf: TBytes;
-  LKeyParam: IKeyParameter;
-  LParams: ICipherParameters;
-  LGcm: IAeadCipher;
-  LI, LLen, LTotal: Int32;
-begin
-  Result := '';
-  System.SetLength(LKey, 16);
-  for LI := 0 to 15 do
-    LKey[LI] := Byte(Random(256));
-  System.SetLength(LNonce, 12);
-  for LI := 0 to 11 do
-    LNonce[LI] := Byte(Random(256));
-  System.SetLength(LPlain, APlainLen);
-  for LI := 0 to APlainLen - 1 do
-    LPlain[LI] := Byte(Random(256));
-
-  LKeyParam := TKeyParameter.Create(LKey);
-  LParams := TAeadParameters.Create(LKeyParam, 128, LNonce, AAad)
-    as ICipherParameters;
-
-  // Reference ciphertext||tag, produced out of place.
-  LGcm := NewBitSlicedGcm();
-  LGcm.Init(True, LParams);
-  System.SetLength(LRefCT, LGcm.GetOutputSize(APlainLen));
-  LLen := LGcm.ProcessBytes(LPlain, 0, APlainLen, LRefCT, 0);
-  LLen := LLen + LGcm.DoFinal(LRefCT, LLen);
-  System.SetLength(LRefCT, LLen);
-  LTotal := LLen;
-
-  // In-place encrypt: the buffer starts as plaintext and is encrypted over itself.
-  System.SetLength(LBuf, LTotal);
-  System.Move(LPlain[0], LBuf[0], APlainLen);
-  LGcm := NewBitSlicedGcm();
-  LGcm.Init(True, LParams);
-  try
-    LLen := LGcm.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
-    LLen := LLen + LGcm.DoFinal(LBuf, LLen);
-  except
-    on E: Exception do
-    begin
-      Result := Format('[len=%d enc-exc %s] ', [APlainLen, E.Message]);
-      Exit;
-    end;
-  end;
-  if (LLen <> LTotal) or (not AreEqual(LBuf, LRefCT)) then
-  begin
-    Result := Format('[len=%d enc-mismatch] ', [APlainLen]);
-    Exit;
-  end;
-
-  // In-place decrypt: the buffer starts as ciphertext||tag, decrypted over itself.
-  System.SetLength(LBuf, LTotal);
-  System.Move(LRefCT[0], LBuf[0], LTotal);
-  LGcm := NewBitSlicedGcm();
-  LGcm.Init(False, LParams);
-  try
-    LLen := LGcm.ProcessBytes(LBuf, 0, LTotal, LBuf, 0);
-    LLen := LLen + LGcm.DoFinal(LBuf, LLen);
-  except
-    on E: Exception do
-    begin
-      Result := Format('[len=%d dec-exc %s] ', [APlainLen, E.Message]);
-      Exit;
-    end;
-  end;
-  if LLen <> APlainLen then
-  begin
-    Result := Format('[len=%d dec-len %d] ', [APlainLen, LLen]);
-    Exit;
-  end;
-  System.SetLength(LBuf, LLen);
-  if not AreEqual(LBuf, LPlain) then
-    Result := Format('[len=%d dec-mismatch] ', [APlainLen]);
-end;
-
-procedure TTestAesBitSliced.TestGcmInPlaceStreaming;
-var
-  LAad: TBytes;
-  LI: Int32;
-  LFails: String;
-  LLens: array [0 .. 7] of Int32;
-begin
-  RandSeed := 20260723;
-  System.SetLength(LAad, 20);
-  for LI := 0 to 19 do
-    LAad[LI] := Byte(LI * 5 + 3);
-  LLens[0] := 16;
-  LLens[1] := 48;
-  LLens[2] := 64;
-  LLens[3] := 4 * 16 + 7;
-  LLens[4] := 17 * 16 + 9;
-  LLens[5] := 22 * 16;
-  LLens[6] := 65 * 16;      // 8-way pipelined/fused GHASH (SIMD) or soft-bulk (scalar)
-  LLens[7] := 100 * 16 + 3;
-  LFails := '';
-  for LI := 0 to High(LLens) do
-    LFails := LFails + DoGcmInPlace(LLens[LI], nil);
-  for LI := 0 to High(LLens) do
-    LFails := LFails + DoGcmInPlace(LLens[LI], LAad);
-  if LFails <> '' then
-    Fail('in-place GCM: ' + LFails);
 end;
 
 initialization

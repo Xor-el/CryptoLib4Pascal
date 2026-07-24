@@ -42,19 +42,19 @@ uses
   ClpICcmBlockCipher,
   ClpBlowfishEngine,
   ClpIBlowfishEngine,
-  ClpAesUtilities,
   ClpConverters,
   ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibExceptions,
   ClpIAeadCipher,
   AeadTestUtilities,
+  AeadModeTestBase,
   CipherKernelToggle,
   CryptoLibTestBase;
 
 type
 
-  TTestCcm = class(TCryptoLibAlgorithmTestCase)
+  TTestCcm = class(TAeadModeTestBase)
   strict private
     var
       FK1, FN1, FA1, FP1, FC1, FT1: TBytes;
@@ -78,11 +78,16 @@ type
     procedure RandomisedRoundTrip(const ARandom: ISecureRandom);
 
   protected
+    function CreateAeadCipher: IAeadCipher; override;
+    function ModeLabel: String; override;
+
     procedure SetUp; override;
     procedure TearDown; override;
 
     // Workers run twice via RunWithCipherKernelToggle (cipher kernel on / off).
     procedure DoTestNistVectorsAndLongData;
+    // Short NIST KAT vectors only, rerun per extra engine.
+    procedure DoTestNistVectorsPerEngine;
     procedure DoTestCcmIvParameters;
     procedure DoTestOffsets;
     procedure DoTestRandomised;
@@ -109,7 +114,17 @@ implementation
 
 function TTestCcm.CreateCcmCipher: ICcmBlockCipher;
 begin
-  Result := TCcmBlockCipher.Create(TAesUtilities.CreateEngine());
+  Result := TCcmBlockCipher.Create(CurrentEngine);
+end;
+
+function TTestCcm.CreateAeadCipher: IAeadCipher;
+begin
+  Result := CreateCcmCipher as IAeadCipher;
+end;
+
+function TTestCcm.ModeLabel: String;
+begin
+  Result := 'CCM';
 end;
 
 procedure TTestCcm.CheckVectors(ACount: Int32;
@@ -503,9 +518,20 @@ begin
   RandomisedRoundTrip(LRandom);
 end;
 
+procedure TTestCcm.DoTestNistVectorsPerEngine;
+begin
+  // Short NIST KAT vectors only; the 64 KiB long-AAD stress case is engine-
+  // independent mode logic, so it stays on the default engine.
+  CheckVectors(0, FK1, 32, FN1, FA1, FP1, FT1, FC1);
+  CheckVectors(1, FK2, 48, FN2, FA2, FP2, FT2, FC2);
+  CheckVectors(2, FK3, 64, FN3, FA3, FP3, FT3, FC3);
+end;
+
 procedure TTestCcm.TestNistVectorsAndLongData;
 begin
   RunWithCipherKernelToggle(DoTestNistVectorsAndLongData);
+  // Pin the NIST KAT vectors on the bit-sliced (and scalar) engines too.
+  ForEachExtraEngine(DoTestNistVectorsPerEngine);
 end;
 
 procedure TTestCcm.TestCcmIvParameters;
@@ -521,6 +547,8 @@ end;
 procedure TTestCcm.TestRandomised;
 begin
   RunWithCipherKernelToggle(DoTestRandomised);
+  // Also exercise the round-trip over the bit-sliced (and scalar) engines.
+  ForEachExtraEngine(DoTestRandomised);
 end;
 
 procedure TTestCcm.TestExceptions;
