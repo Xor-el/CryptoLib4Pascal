@@ -29,7 +29,9 @@ type
   TPqcTestVectors = class sealed(TObject)
   public
     class procedure RunVectors(const ARelativePath: string;
-      ACallback: TRspTxtVectorCallback); static;
+      ACallback: TRspTxtVectorCallback); overload; static;
+    class procedure RunVectors(const ARelativePath: string;
+      const AHandler: TRspTxtVectorHandler); overload; static;
   end;
 
 implementation
@@ -40,6 +42,12 @@ class procedure TPqcTestVectors.RunVectors(const ARelativePath: string;
   ACallback: TRspTxtVectorCallback);
 begin
   TRspTxtVectorParser.RunVectors(ARelativePath, ACallback);
+end;
+
+class procedure TPqcTestVectors.RunVectors(const ARelativePath: string;
+  const AHandler: TRspTxtVectorHandler);
+begin
+  TRspTxtVectorParser.RunVectors(ARelativePath, AHandler);
 end;
 
 end.

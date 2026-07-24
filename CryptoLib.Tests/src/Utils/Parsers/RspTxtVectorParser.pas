@@ -37,15 +37,47 @@ type
       abstract;
   end;
 
+  /// <summary>
+  /// Per-vector handler as a method pointer, so a suite can pass one of its own
+  /// methods directly instead of a hand-written TRspTxtVectorCallback subclass.
+  /// </summary>
+  TRspTxtVectorHandler = procedure(const AName: string;
+    const AData: TRspTxtRecord) of object;
+
   TRspTxtVectorParser = class sealed(TObject)
   public
     class procedure RunVectors(const ARelativePath1, ARelativePath2: string;
       ACallback: TRspTxtVectorCallback); overload; static;
     class procedure RunVectors(const ARelativePath: string;
       ACallback: TRspTxtVectorCallback); overload; static;
+    class procedure RunVectors(const ARelativePath: string;
+      const AHandler: TRspTxtVectorHandler); overload; static;
   end;
 
 implementation
+
+type
+  // Adapts a method-pointer handler to the abstract-callback contract.
+  TRspTxtVectorHandlerAdapter = class(TRspTxtVectorCallback)
+  strict private
+    FHandler: TRspTxtVectorHandler;
+  public
+    constructor Create(const AHandler: TRspTxtVectorHandler);
+    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
+  end;
+
+constructor TRspTxtVectorHandlerAdapter.Create(const AHandler: TRspTxtVectorHandler);
+begin
+  inherited Create();
+  FHandler := AHandler;
+end;
+
+procedure TRspTxtVectorHandlerAdapter.OnVector(const AName: string;
+  const AData: TRspTxtRecord);
+begin
+  if Assigned(FHandler) then
+    FHandler(AName, AData);
+end;
 
 { TRspTxtVectorParser }
 
@@ -127,6 +159,19 @@ begin
   finally
     LData.Free;
     LReader.Free;
+  end;
+end;
+
+class procedure TRspTxtVectorParser.RunVectors(const ARelativePath: string;
+  const AHandler: TRspTxtVectorHandler);
+var
+  LAdapter: TRspTxtVectorHandlerAdapter;
+begin
+  LAdapter := TRspTxtVectorHandlerAdapter.Create(AHandler);
+  try
+    RunVectors(ARelativePath, LAdapter as TRspTxtVectorCallback);
+  finally
+    LAdapter.Free;
   end;
 end;
 

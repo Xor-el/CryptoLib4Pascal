@@ -42,13 +42,15 @@ uses
   ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
+  ClpIAeadCipher,
+  AeadModeTestBase,
   CipherKernelToggle,
   CryptoLibTestBase,
   SymmetricBlockVectors;
 
 type
 
-  TTestGcmSiv = class(TCryptoLibAlgorithmTestCase)
+  TTestGcmSiv = class(TAeadModeTestBase)
   private
     procedure TestSivCipher(const AKey, ANonce, AAEAD, AData,
       AExpected: string);
@@ -57,6 +59,9 @@ type
     procedure RandomisedRoundTrip(const ARandom: ISecureRandom);
 
   protected
+    function CreateAeadCipher: IAeadCipher; override;
+    function ModeLabel: String; override;
+
     procedure SetUp; override;
     procedure TearDown; override;
 
@@ -86,6 +91,16 @@ implementation
 
 { TTestGcmSiv }
 
+function TTestGcmSiv.CreateAeadCipher: IAeadCipher;
+begin
+  Result := TGcmSivBlockCipher.Create(CurrentEngine) as IAeadCipher;
+end;
+
+function TTestGcmSiv.ModeLabel: String;
+begin
+  Result := 'GCM-SIV';
+end;
+
 procedure TTestGcmSiv.SetUp;
 begin
   inherited;
@@ -113,7 +128,7 @@ begin
 
     LParams := TAeadParameters.Create(LKey, 128, LNonce, LAead);
 
-    LCipher := TGcmSivBlockCipher.Create() as IGcmSivBlockCipher;
+    LCipher := TGcmSivBlockCipher.Create(CurrentEngine) as IGcmSivBlockCipher;
     LCipher.Init(True, LParams as ICipherParameters);
 
     System.SetLength(LOutput, LCipher.GetOutputSize(System.Length(LData)));
@@ -260,7 +275,7 @@ begin
     LParams := TAeadParameters.Create(TKeyParameter.Create(LKey)
       as IKeyParameter, 128, LNonce, LAad);
 
-    LCipher := TGcmSivBlockCipher.Create() as IGcmSivBlockCipher;
+    LCipher := TGcmSivBlockCipher.Create(CurrentEngine) as IGcmSivBlockCipher;
     LCipher.Init(True, LParams as ICipherParameters);
     SetLength(LEnc, LCipher.GetOutputSize(LPlainLen));
     LLen := LCipher.ProcessBytes(LPlain, 0, LPlainLen, nil, 0);
@@ -297,41 +312,51 @@ end;
 procedure TTestGcmSiv.TestAesGcmSiv128Set1;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv128Set1);
+  // Pin the KAT set on the bit-sliced (and scalar) engines too.
+  ForEachExtraEngine(DoTestAesGcmSiv128Set1);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv128Set2;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv128Set2);
+  ForEachExtraEngine(DoTestAesGcmSiv128Set2);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv128Set3;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv128Set3);
+  ForEachExtraEngine(DoTestAesGcmSiv128Set3);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set1;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv256Set1);
+  ForEachExtraEngine(DoTestAesGcmSiv256Set1);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set2;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv256Set2);
+  ForEachExtraEngine(DoTestAesGcmSiv256Set2);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set3;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv256Set3);
+  ForEachExtraEngine(DoTestAesGcmSiv256Set3);
 end;
 
 procedure TTestGcmSiv.TestAesGcmSiv256Set4;
 begin
   RunWithCipherKernelToggle(DoTestAesGcmSiv256Set4);
+  ForEachExtraEngine(DoTestAesGcmSiv256Set4);
 end;
 
 procedure TTestGcmSiv.TestRandomised;
 begin
   RunWithCipherKernelToggle(DoTestRandomised);
+  // Also exercise the round-trip over the bit-sliced (and scalar) engines.
+  ForEachExtraEngine(DoTestRandomised);
 end;
 
 initialization

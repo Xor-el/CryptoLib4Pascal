@@ -56,7 +56,6 @@ type
 
   TTestPoly1305 = class(TCryptoLibAlgorithmTestCase)
   private
-    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
     procedure CheckVector(const AKeyMaterial, AInput, ATag: TBytes);
     procedure RunCase(ACaseIndex: Int32);
 
@@ -79,16 +78,6 @@ type
 implementation
 
 { TTestPoly1305 }
-
-procedure TTestPoly1305.CheckEqual(const AName: string; const AExpected,
-  AActual: TBytes);
-begin
-  if not AreEqual(AExpected, AActual) then
-  begin
-    Fail(Format('%s Failed - expected %s got %s',
-      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
-  end;
-end;
 
 procedure TTestPoly1305.CheckVector(const AKeyMaterial, AInput, ATag: TBytes);
 var

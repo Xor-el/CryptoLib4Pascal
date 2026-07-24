@@ -43,15 +43,15 @@ uses
   ClpDateTimeUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
-  ClpAesUtilities,
   ClpOcbBlockCipher,
   CipherKernelToggle,
-  CryptoLibTestBase,
-  AeadTestUtilities;
+  AeadTestUtilities,
+  AeadModeTestBase,
+  CryptoLibTestBase;
 
 type
 
-  TTestOcb = class(TCryptoLibAlgorithmTestCase)
+  TTestOcb = class(TAeadModeTestBase)
   strict private
     const
       CKey128 = '000102030405060708090A0B0C0D0E0F';
@@ -87,9 +87,11 @@ type
       : Int32;
 
     procedure RandomTest(const ARandom: ISecureRandom);
-    function NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
 
   protected
+    function CreateAeadCipher: IAeadCipher; override;
+    function ModeLabel: String; override;
+
     procedure SetUp; override;
     procedure TearDown; override;
 
@@ -99,6 +101,7 @@ type
     procedure DoTestRfcVectors96;
     procedure DoTestOcbLongForm;
     procedure DoTestRandomised;
+    procedure DoTestInPlace;
 
   published
     procedure TestRfcVectors128;
@@ -107,6 +110,7 @@ type
     procedure TestRandomised;
     procedure TestOutputSizes;
     procedure TestExceptions;
+    procedure TestInPlace;
 
   end;
 
@@ -212,7 +216,17 @@ end;
 
 function TTestOcb.CreateUnderlyingCipher: IBlockCipher;
 begin
-  Result := TAesUtilities.CreateEngine();
+  Result := CurrentEngine;
+end;
+
+function TTestOcb.CreateAeadCipher: IAeadCipher;
+begin
+  Result := CreateOcbCipher as IAeadCipher;
+end;
+
+function TTestOcb.ModeLabel: String;
+begin
+  Result := 'OCB';
 end;
 
 function TTestOcb.CreateOcbCipher: IAeadBlockCipher;
@@ -323,16 +337,8 @@ begin
 
   // Key reuse: re-init for encryption with the same key+nonce is rejected.
   LKeyReuseParams := TAeadTestUtilities.ReuseKey(LParams);
-  try
-    LEnc.Init(True, LKeyReuseParams as ICipherParameters);
-    Fail('OCB nonce reuse not detected on re-init for encryption: ' + ATestName);
-  except
-    on E: EArgumentCryptoLibException do
-    begin
-      if E.Message <> 'cannot reuse nonce for OCB encryption' then
-        Fail('wrong OCB nonce-reuse message: ' + E.Message);
-    end;
-  end;
+  TAeadTestUtilities.AssertNonceReuseRejected(LEnc as IAeadCipher,
+    LKeyReuseParams as ICipherParameters, 'cannot reuse nonce for OCB encryption');
   LDec.Init(False, LKeyReuseParams as ICipherParameters);
 end;
 
@@ -462,7 +468,7 @@ begin
   SetLength(LSA, LSaLen);
   ARandom.NextBytes(LSA);
 
-  LIvLen := 1 + NextInt32(ARandom, 15);
+  LIvLen := 1 + TAeadTestUtilities.NextInt32(ARandom, 15);
   SetLength(LIV, LIvLen);
   ARandom.NextBytes(LIV);
 
@@ -473,7 +479,7 @@ begin
   SetLength(LC, LCipher.GetOutputSize(LPLen));
   LPredicted := LCipher.GetUpdateOutputSize(LPLen);
 
-  LSplit := NextInt32(ARandom, LSaLen + 1);
+  LSplit := TAeadTestUtilities.NextInt32(ARandom, LSaLen + 1);
   LCipher.ProcessAadBytes(LSA, 0, LSplit);
   LLen := LCipher.ProcessBytes(LP, 0, LPLen, LC, 0);
   LCipher.ProcessAadBytes(LSA, LSplit, LSaLen - LSplit);
@@ -506,7 +512,7 @@ begin
   SetLength(LDecP, LCipher.GetOutputSize(Length(LC)));
   LPredicted := LCipher.GetUpdateOutputSize(Length(LC));
 
-  LSplit := NextInt32(ARandom, LSaLen + 1);
+  LSplit := TAeadTestUtilities.NextInt32(ARandom, LSaLen + 1);
   LCipher.ProcessAadBytes(LSA, 0, LSplit);
   LLen := LCipher.ProcessBytes(LC, 0, Length(LC), LDecP, 0);
   LCipher.ProcessAadBytes(LSA, LSplit, LSaLen - LSplit);
@@ -533,7 +539,7 @@ begin
   LCipher.Init(False, TAeadTestUtilities.ReuseKey(LParams) as ICipherParameters);
   SetLength(LDecP, LCipher.GetOutputSize(Length(LC)));
 
-  LSplit := NextInt32(ARandom, LSaLen + 1);
+  LSplit := TAeadTestUtilities.NextInt32(ARandom, LSaLen + 1);
   LCipher.ProcessAadBytes(LSA, 0, LSplit);
   LLen := LCipher.ProcessBytes(LC, 0, Length(LC), LDecP, 0);
   LCipher.ProcessAadBytes(LSA, LSplit, LSaLen - LSplit);
@@ -552,24 +558,6 @@ begin
   end;
 end;
 
-function TTestOcb.NextInt32(const ARandom: ISecureRandom; AN: Int32): Int32;
-var
-  LBits, LValue: Int32;
-begin
-  if (AN and -AN) = AN then
-  begin
-    Result := Int32((UInt32(AN) * UInt64(UInt32(ARandom.NextInt32()) shr 1)) shr 31);
-    Exit;
-  end;
-
-  repeat
-    LBits := Int32(UInt32(ARandom.NextInt32()) shr 1);
-    LValue := LBits mod AN;
-  until (LBits - LValue + (AN - 1)) >= 0;
-
-  Result := LValue;
-end;
-
 procedure TTestOcb.SetUp;
 begin
   inherited;
@@ -583,11 +571,14 @@ end;
 procedure TTestOcb.TestRfcVectors128;
 begin
   RunWithCipherKernelToggle(DoTestRfcVectors128);
+  // Pin the RFC 7253 vectors on the bit-sliced (and scalar) engines too.
+  ForEachExtraEngine(DoTestRfcVectors128);
 end;
 
 procedure TTestOcb.TestRfcVectors96;
 begin
   RunWithCipherKernelToggle(DoTestRfcVectors96);
+  ForEachExtraEngine(DoTestRfcVectors96);
 end;
 
 procedure TTestOcb.TestOcbLongForm;
@@ -598,6 +589,20 @@ end;
 procedure TTestOcb.TestRandomised;
 begin
   RunWithCipherKernelToggle(DoTestRandomised);
+end;
+
+procedure TTestOcb.TestInPlace;
+begin
+  RunWithCipherKernelToggle(DoTestInPlace);
+  ForEachExtraEngine(DoTestInPlace);
+end;
+
+procedure TTestOcb.DoTestInPlace;
+const
+  CLens: array [0 .. 10] of Int32 = (0, 16, 48, 4 * 16 + 7, 10 * 16, 17 * 16 + 9,
+    32 * 16, 33 * 16, 65 * 16, 80 * 16 + 5, 100 * 16 + 3);
+begin
+  DoInPlaceSweep(CLens, Int64(20260725));
 end;
 
 procedure TTestOcb.DoTestRfcVectors128;

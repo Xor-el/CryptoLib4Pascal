@@ -54,10 +54,8 @@ type
 
   TTestChaCha20Poly1305 = class(TCryptoLibAlgorithmTestCase)
   strict private
-    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
     function InitCipher(AForEncryption: Boolean;
       const AParams: IAeadParameters): IChaCha20Poly1305;
-    function NextInt(const ARandom: ISecureRandom; AN: Int32): Int32;
 
   protected
     procedure SetUp; override;
@@ -75,36 +73,6 @@ type
 implementation
 
 { TTestChaCha20Poly1305 }
-
-procedure TTestChaCha20Poly1305.CheckEqual(const AName: string;
-  const AExpected, AActual: TBytes);
-begin
-  if not AreEqual(AExpected, AActual) then
-  begin
-    Fail(Format('%s Failed - expected %s got %s',
-      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
-  end;
-end;
-
-function TTestChaCha20Poly1305.NextInt(const ARandom: ISecureRandom;
-  AN: Int32): Int32;
-var
-  LBits, LValue: Int32;
-begin
-  if (AN and -AN) = AN then
-  begin
-    // i.e., n is a power of 2
-    Result := Int32((UInt32(AN) * UInt64(UInt32(ARandom.NextInt32()) shr 1)) shr 31);
-    Exit;
-  end;
-
-  repeat
-    LBits := Int32(UInt32(ARandom.NextInt32()) shr 1);
-    LValue := LBits mod AN;
-  until (LBits - LValue + (AN - 1)) >= 0;
-
-  Result := LValue;
-end;
 
 function TTestChaCha20Poly1305.InitCipher(AForEncryption: Boolean;
   const AParams: IAeadParameters): IChaCha20Poly1305;
@@ -256,7 +224,7 @@ begin
       System.Move(LSA[0], LEnc[0], LSaLen);
     end;
 
-    LSplit := NextInt(LRandom, LSaLen + 1);
+    LSplit := TAeadTestUtilities.NextInt32(LRandom, LSaLen + 1);
     LCipher.ProcessAadBytes(LEnc, 0, LSplit);
     LCipher.ProcessAadBytes(LEnc, LSplit, LSaLen - LSplit);
 
@@ -286,7 +254,7 @@ begin
     LPTail := LRandom.Next(256);
     SetLength(LDec, LPHead + LPLen + LPTail);
 
-    LSplit := NextInt(LRandom, LSaLen + 1);
+    LSplit := TAeadTestUtilities.NextInt32(LRandom, LSaLen + 1);
     LCipher.ProcessAadBytes(LEnc, 0, LSplit);
     LCipher.ProcessAadBytes(LEnc, LSplit, LSaLen - LSplit);
 
@@ -314,7 +282,7 @@ begin
     LPTail := LRandom.Next(256);
     SetLength(LDec, LPHead + LPLen + LPTail);
 
-    LSplit := NextInt(LRandom, LSaLen + 1);
+    LSplit := TAeadTestUtilities.NextInt32(LRandom, LSaLen + 1);
     LCipher.ProcessAadBytes(LEnc, 0, LSplit);
     LCipher.ProcessAadBytes(LEnc, LSplit, LSaLen - LSplit);
 

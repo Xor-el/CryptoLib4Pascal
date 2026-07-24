@@ -62,6 +62,11 @@ uses
   ClpCryptoLibTypes;
 
 type
+  // SLH-DSA vector worker: (name, record, parameters). The adapter supplies the
+  // parameters, either a fixed set or one derived from the record.
+  TSlhDsaVectorImpl = procedure(const AName: string; const AData: TRspTxtRecord;
+    const AParameters: ISlhDsaParameters) of object;
+
   TTestSlhDsa = class(TCryptoLibAlgorithmTestCase)
   protected
   const
@@ -89,6 +94,11 @@ type
       ADeterministic: Boolean): ISigner;
     procedure RunSignerKat(const ARelativePath: string);
     procedure ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
+    // Run a vector file through AImpl. AParameters nil => derive per record;
+    // ASampleOnly => skip vectors the sampler rejects.
+    procedure RunParamVectors(const ARelativePath: string;
+      AImpl: TSlhDsaVectorImpl; const AParameters: ISlhDsaParameters;
+      ASampleOnly: Boolean);
   public
     procedure SetUp; override;
   end;
@@ -174,130 +184,33 @@ type
     procedure Test99KeyGen;
   end;
 
-  TSlhDsaSignerKatVectorCallback = class(TRspTxtVectorCallback)
+  // One adapter for every parameterised SLH-DSA vector file: forwards each
+  // record to FImpl with the fixed FParameters or, when that is nil, the set
+  // named by 'parameterSet'. ASampleOnly skips sampler-rejected rows.
+  TSlhDsaParamVectorAdapter = class(TRspTxtVectorCallback)
   strict private
     FTest: TTestSlhDsa;
-  public
-    constructor Create(ATest: TTestSlhDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaKeyGenFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-  public
-    constructor Create(ATest: TTestSlhDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaKeyGenVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-    FParameters: ISlhDsaParameters;
-  public
-    constructor Create(ATest: TTestSlhDsa; const AParameters: ISlhDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaContextVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
+    FImpl: TSlhDsaVectorImpl;
     FParameters: ISlhDsaParameters;
     FSampler: TPqcTestSampler;
     FSampleOnly: Boolean;
   public
-    constructor Create(ATest: TTestSlhDsa; const AParameters: ISlhDsaParameters;
-      ASampleOnly: Boolean);
+    constructor Create(ATest: TTestSlhDsa; AImpl: TSlhDsaVectorImpl;
+      const AParameters: ISlhDsaParameters; ASampleOnly: Boolean);
     destructor Destroy; override;
     procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
   end;
-
-  TSlhDsaSigGenFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-  public
-    constructor Create(ATest: TTestSlhDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaSigGenVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-    FParameters: ISlhDsaParameters;
-  public
-    constructor Create(ATest: TTestSlhDsa; const AParameters: ISlhDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaSigVerFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-  public
-    constructor Create(ATest: TTestSlhDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSlhDsaSigVerVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestSlhDsa;
-    FParameters: ISlhDsaParameters;
-  public
-    constructor Create(ATest: TTestSlhDsa; const AParameters: ISlhDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
 implementation
 
-{ TSlhDsaSignerKatVectorCallback }
+{ TSlhDsaParamVectorAdapter }
 
-constructor TSlhDsaSignerKatVectorCallback.Create(ATest: TTestSlhDsa);
+constructor TSlhDsaParamVectorAdapter.Create(ATest: TTestSlhDsa;
+  AImpl: TSlhDsaVectorImpl; const AParameters: ISlhDsaParameters;
+  ASampleOnly: Boolean);
 begin
-  inherited Create;
+  inherited Create();
   FTest := ATest;
-end;
-
-procedure TSlhDsaSignerKatVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSignerKat(AName, AData);
-end;
-
-{ TSlhDsaKeyGenFileCallback }
-
-constructor TSlhDsaKeyGenFileCallback.Create(ATest: TTestSlhDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSlhDsaKeyGenFileCallback.OnVector(const AName: string; const AData: TRspTxtRecord);
-begin
-  FTest.ImplKeyGen(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TSlhDsaKeyGenVectorCallback }
-
-constructor TSlhDsaKeyGenVectorCallback.Create(ATest: TTestSlhDsa;
-  const AParameters: ISlhDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TSlhDsaKeyGenVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplKeyGen(AName, AData, FParameters);
-end;
-
-{ TSlhDsaContextVectorCallback }
-
-constructor TSlhDsaContextVectorCallback.Create(ATest: TTestSlhDsa;
-  const AParameters: ISlhDsaParameters; ASampleOnly: Boolean);
-begin
-  inherited Create;
-  FTest := ATest;
+  FImpl := AImpl;
   FParameters := AParameters;
   FSampleOnly := ASampleOnly;
   if ASampleOnly then
@@ -306,76 +219,24 @@ begin
     FSampler := nil;
 end;
 
-destructor TSlhDsaContextVectorCallback.Destroy;
+destructor TSlhDsaParamVectorAdapter.Destroy;
 begin
   FSampler.Free;
   inherited;
 end;
 
-procedure TSlhDsaContextVectorCallback.OnVector(const AName: string;
+procedure TSlhDsaParamVectorAdapter.OnVector(const AName: string;
   const AData: TRspTxtRecord);
+var
+  LParameters: ISlhDsaParameters;
 begin
   if FSampleOnly and FSampler.SkipTest(AData['count']) then
     Exit;
-  FTest.ImplContext(AName, AData, FParameters);
-end;
-
-{ TSlhDsaSigGenFileCallback }
-
-constructor TSlhDsaSigGenFileCallback.Create(ATest: TTestSlhDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSlhDsaSigGenFileCallback.OnVector(const AName: string; const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigGen(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TSlhDsaSigGenVectorCallback }
-
-constructor TSlhDsaSigGenVectorCallback.Create(ATest: TTestSlhDsa;
-  const AParameters: ISlhDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TSlhDsaSigGenVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigGen(AName, AData, FParameters);
-end;
-
-{ TSlhDsaSigVerFileCallback }
-
-constructor TSlhDsaSigVerFileCallback.Create(ATest: TTestSlhDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSlhDsaSigVerFileCallback.OnVector(const AName: string; const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigVer(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TSlhDsaSigVerVectorCallback }
-
-constructor TSlhDsaSigVerVectorCallback.Create(ATest: TTestSlhDsa;
-  const AParameters: ISlhDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TSlhDsaSigVerVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigVer(AName, AData, FParameters);
+  if Assigned(FParameters) then
+    LParameters := FParameters
+  else
+    LParameters := FTest.GetParameters(AData['parameterSet']);
+  FImpl(AName, AData, LParameters);
 end;
 
 { TTestSlhDsa }
@@ -395,68 +256,51 @@ end;
 function TTestSlhDsa.CreateSigner(const AParameters: ISlhDsaParameters;
   ADeterministic: Boolean): ISigner;
 begin
-  if AParameters.GetIsPreHash then
+  if AParameters.IsPreHash then
     Result := THashSlhDsaSigner.Create(AParameters, ADeterministic)
   else
     Result := TSlhDsaSigner.Create(AParameters, ADeterministic);
 end;
 
+procedure TTestSlhDsa.RunParamVectors(const ARelativePath: string;
+  AImpl: TSlhDsaVectorImpl; const AParameters: ISlhDsaParameters;
+  ASampleOnly: Boolean);
+var
+  LAdapter: TSlhDsaParamVectorAdapter;
+begin
+  LAdapter := TSlhDsaParamVectorAdapter.Create(Self, AImpl, AParameters, ASampleOnly);
+  try
+    TPqcTestVectors.RunVectors(ARelativePath, LAdapter);
+  finally
+    LAdapter.Free;
+  end;
+end;
+
 procedure TTestSlhDsa.RunContextVectors(const ARelativePath: string;
   const AParameters: ISlhDsaParameters; ASampleOnly: Boolean);
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  LCallback := TSlhDsaContextVectorCallback.Create(Self, AParameters, ASampleOnly);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/SlhDsa/' + ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/SlhDsa/' + ARelativePath, ImplContext, AParameters,
+    ASampleOnly);
 end;
 
 procedure TTestSlhDsa.RunKeyGenAcvp(const ARelativePath: string;
   const AParameters: ISlhDsaParameters);
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  LCallback := TSlhDsaKeyGenVectorCallback.Create(Self, AParameters);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/SlhDsa/Acvp/' + ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/SlhDsa/Acvp/' + ARelativePath, ImplKeyGen,
+    AParameters, False);
 end;
 
 procedure TTestSlhDsa.RunSigGen(const ARelativePath: string;
   const AParameters: ISlhDsaParameters);
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  if AParameters <> nil then
-    LCallback := TSlhDsaSigGenVectorCallback.Create(Self, AParameters)
-  else
-    LCallback := TSlhDsaSigGenFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors(ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  // AParameters nil => the adapter derives the set from each record.
+  RunParamVectors(ARelativePath, ImplSigGen, AParameters, False);
 end;
 
 procedure TTestSlhDsa.RunSigVer(const ARelativePath: string;
   const AParameters: ISlhDsaParameters);
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  if AParameters <> nil then
-    LCallback := TSlhDsaSigVerVectorCallback.Create(Self, AParameters)
-  else
-    LCallback := TSlhDsaSigVerFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors(ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors(ARelativePath, ImplSigVer, AParameters, False);
 end;
 
 procedure TTestSlhDsa.ImplConsistency(const AParameters: ISlhDsaParameters);
@@ -947,15 +791,8 @@ begin
 end;
 
 procedure TTestSlhDsaSlow.Test99KeyGen;
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  LCallback := TSlhDsaKeyGenFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/SlhDsa/SLH-DSA-keyGen.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/SlhDsa/SLH-DSA-keyGen.txt', ImplKeyGen, nil, False);
 end;
 
 procedure TTestSlhDsa.ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
@@ -1021,15 +858,8 @@ begin
 end;
 
 procedure TTestSlhDsa.RunSignerKat(const ARelativePath: string);
-var
-  LCallback: TRspTxtVectorCallback;
 begin
-  LCallback := TSlhDsaSignerKatVectorCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors(ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  TPqcTestVectors.RunVectors(ARelativePath, ImplSignerKat);
 end;
 
 procedure TTestSlhDsaFast.TestHashSlhDsaKatSigSha2;

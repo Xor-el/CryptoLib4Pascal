@@ -31,22 +31,17 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIBlockCipher,
-  ClpICipherParameters,
   ClpBlowfishEngine,
-  ClpIBlowfishEngine,
-  ClpKeyParameter,
-  ClpIKeyParameter,
-  ClpBufferedBlockCipher,
-  ClpIBufferedBlockCipher,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  BlockCipherTestBase;
 
 type
 
   /// <summary>
   /// Blowfish tester - vectors from http://www.counterpane.com/vectors.txt
   /// </summary>
-  TTestBlowfish = class(TCryptoLibAlgorithmTestCase)
+  TTestBlowfish = class(TBlockCipherTestBase)
   strict private
   class var
 
@@ -54,11 +49,6 @@ type
     FBlockCipherVectorOutputs: TCryptoLibStringArray;
 
     class constructor CreateTestVectors();
-
-  private
-
-    procedure DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-      const AParam: ICipherParameters; const AInput, AOutput: String);
 
   protected
     procedure SetUp; override;
@@ -94,44 +84,9 @@ begin
     '59C68245EB05282B', 'B1B8CC0B250F09A0');
 end;
 
-procedure TTestBlowfish.DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-  const AParam: ICipherParameters; const AInput, AOutput: String);
-var
-  LCipher: IBufferedBlockCipher;
-  LLen1, LLen2: Int32;
-  LInput, LOutput, LOutBytes: TBytes;
+function CreateBlowfishEngine: IBlockCipher;
 begin
-  LInput := DecodeHex(AInput);
-  LOutput := DecodeHex(AOutput);
-
-  LCipher := TBufferedBlockCipher.Create(AEngine);
-
-  LCipher.Init(True, AParam);
-
-  System.SetLength(LOutBytes, System.Length(LInput));
-
-  LLen1 := LCipher.ProcessBytes(LInput, 0, System.Length(LInput), LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen1);
-
-  if (not AreEqual(LOutBytes, LOutput)) then
-  begin
-    Fail(Format('Encryption Failed - Expected %s but got %s',
-      [EncodeHex(LOutput), EncodeHex(LOutBytes)]));
-  end;
-
-  LCipher.Init(False, AParam);
-
-  LLen2 := LCipher.ProcessBytes(LOutput, 0, System.Length(LOutput),
-    LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen2);
-
-  if (not AreEqual(LInput, LOutBytes)) then
-  begin
-    Fail(Format('Decryption Failed - Expected %s but got %s',
-      [EncodeHex(LInput), EncodeHex(LOutBytes)]));
-  end;
+  Result := TBlowfishEngine.Create();
 end;
 
 procedure TTestBlowfish.SetUp;
@@ -145,17 +100,9 @@ begin
 end;
 
 procedure TTestBlowfish.TestBlockCipherVector;
-var
-  LI: Int32;
 begin
-  for LI := System.Low(FBlockCipherVectorKeys)
-    to System.High(FBlockCipherVectorKeys) do
-  begin
-    DoBlockCipherVectorTest(TBlowfishEngine.Create() as IBlowfishEngine,
-      TKeyParameter.Create(DecodeHex(FBlockCipherVectorKeys[LI]))
-      as IKeyParameter, FBlockCipherVectorInputs[LI],
-      FBlockCipherVectorOutputs[LI]);
-  end;
+  RunBlockCipherVectorTests(CreateBlowfishEngine, 'Blowfish',
+    FBlockCipherVectorKeys, FBlockCipherVectorInputs, FBlockCipherVectorOutputs);
 end;
 
 initialization

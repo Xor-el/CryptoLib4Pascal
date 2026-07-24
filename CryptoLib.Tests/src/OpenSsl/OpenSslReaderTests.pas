@@ -65,14 +65,6 @@ uses
 
 type
 
-  TTestOpenSslPassword = class(TInterfacedObject, IOpenSslPasswordFinder)
-  strict private
-    FPassword: TCryptoLibCharArray;
-  public
-    constructor Create(const APassword: String);
-    function GetPassword(): TCryptoLibCharArray;
-  end;
-
   TOpenSslReaderTest = class(TCryptoLibAlgorithmTestCase)
   strict private
 
@@ -102,19 +94,6 @@ type
   end;
 
 implementation
-
-{ TTestOpenSslPassword }
-
-constructor TTestOpenSslPassword.Create(const APassword: String);
-begin
-  inherited Create();
-  FPassword := TConverters.ConvertStringToCharArray(APassword);
-end;
-
-function TTestOpenSslPassword.GetPassword(): TCryptoLibCharArray;
-begin
-  Result := System.Copy(FPassword);
-end;
 
 { TOpenSslReaderTest }
 
@@ -389,7 +368,7 @@ var
 begin
   LStream := TStringStream.Create(APemData, TEncoding.ASCII);
   try
-    LReader := TOpenSslPemReader.Create(LStream, TTestOpenSslPassword.Create(APassword) as IOpenSslPasswordFinder);
+    LReader := TOpenSslPemReader.Create(LStream, TOpenSslPasswordFinder.Create(APassword) as IOpenSslPasswordFinder);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return key');
     Check(LVal.TryGetAsType<IAsymmetricCipherKeyPair>(LKp), 'Should be key pair');
@@ -515,7 +494,7 @@ var
 begin
   LStream := TStringStream.Create(TOpenSslVectors.LoadPemString('EncKey'), TEncoding.ASCII);
   try
-    LReader := TOpenSslPemReader.Create(LStream, TTestOpenSslPassword.Create(TOpenSslVectors.GetPassword('EncKey')) as IOpenSslPasswordFinder);
+    LReader := TOpenSslPemReader.Create(LStream, TOpenSslPasswordFinder.Create(TOpenSslVectors.GetPassword('EncKey')) as IOpenSslPasswordFinder);
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'ReadObject should return key');
     Check(LVal.TryGetAsType<IAsymmetricKeyParameter>(LPrivKey), 'Should be IAsymmetricKeyParameter');
@@ -542,7 +521,7 @@ begin
   LStream := TStringStream.Create(LPemData, TEncoding.ASCII);
   try
     LReader := TOpenSslPemReader.Create(LStream,
-      TTestOpenSslPassword.Create(TOpenSslVectors.GetPassword('Pkcs8Aes256Encrypted')) as IOpenSslPasswordFinder);
+      TOpenSslPasswordFinder.Create(TOpenSslVectors.GetPassword('Pkcs8Aes256Encrypted')) as IOpenSslPasswordFinder);
 
     LVal := LReader.ReadObject();
     Check(not LVal.IsEmpty, 'First ReadObject should return key');

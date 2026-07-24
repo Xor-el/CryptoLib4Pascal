@@ -31,11 +31,14 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIBlockCipher,
+  ClpIBulkBlockCipher,
   ClpIKeyParameter,
   ClpKeyParameter,
   ClpICipherParameters,
   ClpIBufferedBlockCipher,
   ClpBufferedBlockCipher,
+  ClpSecureRandom,
+  ClpISecureRandom,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
   BlockCipherTestBase;
@@ -64,10 +67,18 @@ type
 
     procedure RunBlockCipherMonteCarloTests(const ACreateEngine
       : TBlockCipherFactory; const AEngineLabel: String);
+    // Single-block ProcessBlock with the output buffer aliasing the input.
+    procedure DoInPlaceBlockTest(const ACreateEngine: TBlockCipherFactory;
+      const AEngineLabel: String);
+    // Bulk ProcessBlocks in place; skipped when the engine has no bulk path.
+    procedure DoInPlaceBulkBlocksTest(const ACreateEngine: TBlockCipherFactory;
+      const AEngineLabel: String);
   published
     procedure TestBlockCipherVector;
     procedure TestMonteCarloAES;
     procedure TestBadParameters;
+    procedure TestInPlaceBlock;
+    procedure TestInPlaceBulkBlocks;
   end;
 
 implementation
@@ -247,6 +258,109 @@ begin
       as IKeyParameter, FBlockCipherMonteCarloInputs[LI],
       FBlockCipherMonteCarloOutputs[LI], LPreface);
   end;
+end;
+
+procedure TAesBlockCipherTestBase.DoInPlaceBlockTest(
+  const ACreateEngine: TBlockCipherFactory; const AEngineLabel: String);
+var
+  LEngine: IBlockCipher;
+  LRnd: ISecureRandom;
+  LKeyParam: IKeyParameter;
+  LKey, LPlain, LRef, LBuf: TBytes;
+  LBlockSize: Int32;
+begin
+  LEngine := ACreateEngine();
+  LBlockSize := LEngine.GetBlockSize();
+
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(Int64(20260726));
+  System.SetLength(LKey, 16);
+  LRnd.NextBytes(LKey);
+  System.SetLength(LPlain, LBlockSize);
+  LRnd.NextBytes(LPlain);
+  LKeyParam := TKeyParameter.Create(LKey) as IKeyParameter;
+
+  // Reference ciphertext, produced out of place.
+  LEngine.Init(True, LKeyParam as ICipherParameters);
+  System.SetLength(LRef, LBlockSize);
+  LEngine.ProcessBlock(LPlain, 0, LRef, 0);
+
+  // In-place encrypt: the block is transformed over itself.
+  LEngine.Init(True, LKeyParam as ICipherParameters);
+  System.SetLength(LBuf, LBlockSize);
+  System.Move(LPlain[0], LBuf[0], LBlockSize);
+  LEngine.ProcessBlock(LBuf, 0, LBuf, 0);
+  if not AreEqual(LBuf, LRef) then
+    Fail(Format('[%s] in-place ProcessBlock encrypt mismatch', [AEngineLabel]));
+
+  // In-place decrypt recovers the plaintext.
+  LEngine.Init(False, LKeyParam as ICipherParameters);
+  LEngine.ProcessBlock(LBuf, 0, LBuf, 0);
+  if not AreEqual(LBuf, LPlain) then
+    Fail(Format('[%s] in-place ProcessBlock decrypt mismatch', [AEngineLabel]));
+end;
+
+procedure TAesBlockCipherTestBase.DoInPlaceBulkBlocksTest(
+  const ACreateEngine: TBlockCipherFactory; const AEngineLabel: String);
+const
+  CCount = 8;
+var
+  LEngine: IBlockCipher;
+  LBulk: IBulkBlockCipher;
+  LRnd: ISecureRandom;
+  LKeyParam: IKeyParameter;
+  LKey, LPlain, LRef, LBuf: TBytes;
+  LBlockSize, LTotal, LI: Int32;
+begin
+  LEngine := ACreateEngine();
+  // Engines with no bulk path are already covered by DoInPlaceBlockTest.
+  if not Supports(LEngine, IBulkBlockCipher, LBulk) then
+    Exit;
+
+  LBlockSize := LEngine.GetBlockSize();
+  LTotal := LBlockSize * CCount;
+
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(Int64(20260727));
+  System.SetLength(LKey, 16);
+  LRnd.NextBytes(LKey);
+  System.SetLength(LPlain, LTotal);
+  LRnd.NextBytes(LPlain);
+  LKeyParam := TKeyParameter.Create(LKey) as IKeyParameter;
+
+  // Reference: per-block ProcessBlock, out of place.
+  LEngine.Init(True, LKeyParam as ICipherParameters);
+  System.SetLength(LRef, LTotal);
+  for LI := 0 to CCount - 1 do
+    LEngine.ProcessBlock(LPlain, LI * LBlockSize, LRef, LI * LBlockSize);
+
+  // In-place bulk encrypt must match the per-block reference.
+  LBulk.Init(True, LKeyParam as ICipherParameters);
+  System.SetLength(LBuf, LTotal);
+  System.Move(LPlain[0], LBuf[0], LTotal);
+  LBulk.ProcessBlocks(LBuf, 0, CCount, LBuf, 0);
+  if not AreEqual(LBuf, LRef) then
+    Fail(Format('[%s] in-place ProcessBlocks encrypt mismatch', [AEngineLabel]));
+
+  // In-place bulk decrypt recovers the plaintext.
+  LBulk.Init(False, LKeyParam as ICipherParameters);
+  LBulk.ProcessBlocks(LBuf, 0, CCount, LBuf, 0);
+  if not AreEqual(LBuf, LPlain) then
+    Fail(Format('[%s] in-place ProcessBlocks decrypt mismatch', [AEngineLabel]));
+end;
+
+procedure TAesBlockCipherTestBase.TestInPlaceBlock;
+begin
+  if not EngineSupported then
+    Exit;
+  DoInPlaceBlockTest(GetEngineFactory(), EngineLabel);
+end;
+
+procedure TAesBlockCipherTestBase.TestInPlaceBulkBlocks;
+begin
+  if not EngineSupported then
+    Exit;
+  DoInPlaceBulkBlocksTest(GetEngineFactory(), EngineLabel);
 end;
 
 end.

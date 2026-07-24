@@ -58,7 +58,6 @@ type
 
   private
     function CreateCipherEngine(): IBlockCipher;
-    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
 
   protected
     procedure SetUp; override;
@@ -99,16 +98,6 @@ begin
   FOutput4 := THexEncoder.Decode('36736dd41cfc49d4');
   FOutput5 := THexEncoder.Decode('0376f977de2166d1');
   FOutput6 := THexEncoder.Decode('f338ed02ba54413f');
-end;
-
-procedure TTestMac.CheckEqual(const AName: string; const AExpected,
-  AActual: TBytes);
-begin
-  if not AreEqual(AExpected, AActual) then
-  begin
-    Fail(Format('%s Failed - expected %s got %s',
-      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
-  end;
 end;
 
 procedure TTestMac.SetUp;

@@ -564,7 +564,7 @@ end;
 
 function TTestAesX86.GetEngineFactory: TBlockCipherFactory;
 begin
-  Result := @CreateAesX86Engine;
+  Result := CreateAesX86Engine;
 end;
 
 {$ENDIF CRYPTOLIB_X86_SIMD}
@@ -595,7 +595,7 @@ end;
 
 function TTestAesArm.GetEngineFactory: TBlockCipherFactory;
 begin
-  Result := @CreateAesArmEngine;
+  Result := CreateAesArmEngine;
 end;
 
 {$ENDIF CRYPTOLIB_AARCH64_ASM}
