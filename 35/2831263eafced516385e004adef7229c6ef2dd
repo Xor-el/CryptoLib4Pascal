@@ -1,0 +1,19 @@
+CryptoLib/src/Crypto/Modes/Gcm/ClpGcmUtilities.pas
+  s_a664f450ccb9fa::t_d3f1993ca4a1cb 274-275,280-281,286-287,293-294
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "352831263eafced516385e004adef7229c6ef2dd",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
