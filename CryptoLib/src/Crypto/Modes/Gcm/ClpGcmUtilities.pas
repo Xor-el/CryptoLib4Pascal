@@ -270,50 +270,28 @@ begin
 end;
 
 class procedure TGcmUtilities.&Xor(const AX, AY: TCryptoLibByteArray);
-var
-  LI: Int32;
 begin
-  LI := 0;
-  repeat
-    AX[LI] := AX[LI] xor AY[LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[LI]; System.Inc(LI);
-  until LI >= 16;
+  // In-place AX := AX xor AY over one 16-byte block.
+  TByteUtilities.XorTo(16, AY, AX);
 end;
 
 class procedure TGcmUtilities.&Xor(const AX, AY: TCryptoLibByteArray; AYOff: Int32);
-var
-  LI: Int32;
 begin
-  LI := 0;
-  repeat
-    AX[LI] := AX[LI] xor AY[AYOff + LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[AYOff + LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[AYOff + LI]; System.Inc(LI);
-    AX[LI] := AX[LI] xor AY[AYOff + LI]; System.Inc(LI);
-  until LI >= 16;
+  // In-place AX := AX xor AY[AYOff..] over one 16-byte block.
+  TByteUtilities.XorTo(16, AY, AYOff, AX, 0);
 end;
 
 class procedure TGcmUtilities.&Xor(const AX, AY: TCryptoLibByteArray; AYOff, AYLen: Int32);
 begin
-  System.Dec(AYLen);
-  while AYLen >= 0 do
-  begin
-    AX[AYLen] := AX[AYLen] xor AY[AYOff + AYLen];
-    System.Dec(AYLen);
-  end;
+  // In-place AX := AX xor AY[AYOff..AYOff+AYLen).
+  TByteUtilities.XorTo(AYLen, AY, AYOff, AX, 0);
 end;
 
 class procedure TGcmUtilities.&Xor(const AX: TCryptoLibByteArray; AXOff: Int32;
   const AY: TCryptoLibByteArray; AYOff, ALen: Int32);
 begin
-  System.Dec(ALen);
-  while ALen >= 0 do
-  begin
-    AX[AXOff + ALen] := AX[AXOff + ALen] xor AY[AYOff + ALen];
-    System.Dec(ALen);
-  end;
+  // In-place AX[AXOff..] := AX[AXOff..] xor AY[AYOff..] over ALen bytes.
+  TByteUtilities.XorTo(ALen, AY, AYOff, AX, AXOff);
 end;
 
 class procedure TGcmUtilities.&Xor(var AX: TFieldElement; var AY: TFieldElement);
