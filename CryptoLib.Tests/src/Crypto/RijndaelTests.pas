@@ -39,7 +39,8 @@ uses
   ClpBufferedBlockCipher,
   ClpIBufferedBlockCipher,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  CryptoLibTestBase,
+  BlockCipherTestBase;
 
 type
 
@@ -47,7 +48,7 @@ type
   /// Test vectors from the NIST standard tests and Brian Gladman's vector set
   /// http://fp.gladman.plus.com/cryptography_technology/rijndael
   /// </summary>
-  TTestRijndael = class(TCryptoLibAlgorithmTestCase)
+  TTestRijndael = class(TBlockCipherTestBase)
   strict private
   class var
 
@@ -60,9 +61,6 @@ type
     class constructor CreateTestVectors();
 
   private
-
-    procedure DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-      const AParam: ICipherParameters; const AInput, AOutput: String);
 
     procedure DoBlockCipherMonteCarloTest(const AIteration: String;
       const AEngine: IBlockCipher; const AParam: ICipherParameters;
@@ -146,46 +144,6 @@ begin
     'ACC863637868E3E068D2FD6E3508454A',
     '77BA00ED5412DFF27C8ED91F3C376172',
     'E58B82BFBA53C0040DC610C642121168');
-end;
-
-procedure TTestRijndael.DoBlockCipherVectorTest(const AEngine: IBlockCipher;
-  const AParam: ICipherParameters; const AInput, AOutput: String);
-var
-  LCipher: IBufferedBlockCipher;
-  LLen1, LLen2: Int32;
-  LInput, LOutput, LOutBytes: TBytes;
-begin
-  LInput := DecodeHex(AInput);
-  LOutput := DecodeHex(AOutput);
-
-  LCipher := TBufferedBlockCipher.Create(AEngine);
-
-  LCipher.Init(True, AParam);
-
-  System.SetLength(LOutBytes, System.Length(LInput));
-
-  LLen1 := LCipher.ProcessBytes(LInput, 0, System.Length(LInput), LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen1);
-
-  if (not AreEqual(LOutBytes, LOutput)) then
-  begin
-    Fail(Format('Encryption Failed - Expected %s but got %s',
-      [EncodeHex(LOutput), EncodeHex(LOutBytes)]));
-  end;
-
-  LCipher.Init(False, AParam);
-
-  LLen2 := LCipher.ProcessBytes(LOutput, 0, System.Length(LOutput),
-    LOutBytes, 0);
-
-  LCipher.DoFinal(LOutBytes, LLen2);
-
-  if (not AreEqual(LInput, LOutBytes)) then
-  begin
-    Fail(Format('Decryption Failed - Expected %s but got %s',
-      [EncodeHex(LInput), EncodeHex(LOutBytes)]));
-  end;
 end;
 
 procedure TTestRijndael.DoBlockCipherMonteCarloTest(const AIteration: String;

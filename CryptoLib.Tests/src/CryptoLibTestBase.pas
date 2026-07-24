@@ -42,6 +42,8 @@ type
     function LoadTestResource(const ARelativePath: string): string;
     function LoadTestResourceBytes(const ARelativePath: string): TBytes;
     function TestResourcePath(const ACategory, AFileName: string): string;
+    // Fail with a hex diff unless AActual equals AExpected.
+    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
 
   end;
 
@@ -103,6 +105,14 @@ end;
 function TCryptoLibAlgorithmTestCase.TestResourcePath(const ACategory, AFileName: string): string;
 begin
   Result := ACategory + '/' + AFileName;
+end;
+
+procedure TCryptoLibAlgorithmTestCase.CheckEqual(const AName: string;
+  const AExpected, AActual: TBytes);
+begin
+  if not AreEqual(AExpected, AActual) then
+    Fail(Format('%s Failed - expected %s got %s',
+      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
 end;
 
 end.

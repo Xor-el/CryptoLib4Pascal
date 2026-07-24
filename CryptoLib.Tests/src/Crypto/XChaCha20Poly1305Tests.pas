@@ -61,7 +61,6 @@ uses
 type
   TTestXChaCha20Poly1305 = class(TCryptoLibAlgorithmTestCase)
   strict private
-    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
     procedure DeterministicFill(var AState: UInt32;
       const ADest: TCryptoLibByteArray; ALen: Int32); inline;
     function InitCipher(AForEncryption: Boolean;
@@ -85,14 +84,6 @@ type
 implementation
 
 { TTestXChaCha20Poly1305 }
-
-procedure TTestXChaCha20Poly1305.CheckEqual(const AName: string;
-  const AExpected, AActual: TBytes);
-begin
-  if not AreEqual(AExpected, AActual) then
-    Fail(Format('%s Failed - expected %s got %s',
-      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
-end;
 
 procedure TTestXChaCha20Poly1305.DeterministicFill(var AState: UInt32;
   const ADest: TCryptoLibByteArray; ALen: Int32);

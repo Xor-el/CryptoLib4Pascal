@@ -64,17 +64,10 @@ uses
   ClpECParameters,
   ClpCryptoLibTypes,
   CryptoLibTestBase,
-  CryptoTestKeys;
+  CryptoTestKeys,
+  OpenSslVectors;
 
 type
-
-  TTestOpenSslWritePassword = class(TInterfacedObject, IOpenSslPasswordFinder)
-  strict private
-    FPassword: TCryptoLibCharArray;
-  public
-    constructor Create(const APassword: String);
-    function GetPassword(): TCryptoLibCharArray;
-  end;
 
   TOpenSslWriterTest = class(TCryptoLibAlgorithmTestCase)
   strict private
@@ -103,19 +96,6 @@ type
   end;
 
 implementation
-
-{ TTestOpenSslWritePassword }
-
-constructor TTestOpenSslWritePassword.Create(const APassword: String);
-begin
-  inherited Create();
-  FPassword := TConverters.ConvertStringToCharArray(APassword);
-end;
-
-function TTestOpenSslWritePassword.GetPassword(): TCryptoLibCharArray;
-begin
-  Result := System.Copy(FPassword);
-end;
 
 { TOpenSslWriterTest }
 
@@ -170,7 +150,7 @@ var
   LRandom: ISecureRandom;
   LPasswordFinder: IOpenSslPasswordFinder;
 begin
-  LPasswordFinder := TTestOpenSslWritePassword.Create(TestPassword);
+  LPasswordFinder := TOpenSslPasswordFinder.Create(TestPassword);
   LPassword := LPasswordFinder.GetPassword();
   LRandom := TCryptoServicesRegistrar.GetSecureRandom();
   LStream := TStringStream.Create('', TEncoding.ASCII);
@@ -179,7 +159,7 @@ begin
     LWriter.WriteObject(TValue.From<IAsymmetricKeyParameter>(APrivateKey),
       AAlgorithm, LPassword, LRandom);
     LStream.Position := 0;
-    LPasswordFinder := TTestOpenSslWritePassword.Create(TestPassword);
+    LPasswordFinder := TOpenSslPasswordFinder.Create(TestPassword);
     LReader := TOpenSslPemReader.Create(LStream, LPasswordFinder);
     LReadVal := LReader.ReadObject();
     Check(not LReadVal.IsEmpty, 'ReadObject should return key for ' + AAlgorithm);

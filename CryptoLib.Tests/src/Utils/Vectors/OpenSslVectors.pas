@@ -25,6 +25,8 @@ interface
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpConverters,
+  ClpIOpenSslPasswordFinder,
   CsvVectorParser,
   CsvVectorLoaderBase,
   PemDerCodec;
@@ -39,6 +41,17 @@ type
     class function LoadPemString(const AVectorId: string): string; static;
     class function GetPassword(const AVectorId: string): string; static;
     class constructor Create;
+  end;
+
+  /// <summary>
+  /// Shared IOpenSslPasswordFinder used by the OpenSSL reader and writer tests.
+  /// </summary>
+  TOpenSslPasswordFinder = class(TInterfacedObject, IOpenSslPasswordFinder)
+  strict private
+    FPassword: TCryptoLibCharArray;
+  public
+    constructor Create(const APassword: String);
+    function GetPassword(): TCryptoLibCharArray;
   end;
 
 implementation
@@ -65,6 +78,19 @@ end;
 class constructor TOpenSslVectors.Create;
 begin
   TCsvVectorLoaderBase.LoadCachedTable(FReaderTable, 'OpenSsl/Reader/Manifest.csv');
+end;
+
+{ TOpenSslPasswordFinder }
+
+constructor TOpenSslPasswordFinder.Create(const APassword: String);
+begin
+  inherited Create();
+  FPassword := TConverters.ConvertStringToCharArray(APassword);
+end;
+
+function TOpenSslPasswordFinder.GetPassword(): TCryptoLibCharArray;
+begin
+  Result := System.Copy(FPassword);
 end;
 
 end.

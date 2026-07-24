@@ -59,7 +59,6 @@ type
     class constructor CreateTestCMac;
 
   private
-    procedure CheckEqual(const AName: string; const AExpected, AActual: TBytes);
 
   protected
     procedure SetUp; override;
@@ -128,16 +127,6 @@ begin
   FOutput_k256_m64 := THexEncoder.Decode('e1992190549f6ed5696a2c056c315410');
 
   FOutputDesEde := THexEncoder.Decode('1ca670dea381d37c');
-end;
-
-procedure TTestCMac.CheckEqual(const AName: string; const AExpected,
-  AActual: TBytes);
-begin
-  if not AreEqual(AExpected, AActual) then
-  begin
-    Fail(Format('%s Failed - expected %s got %s',
-      [AName, EncodeHex(AExpected), EncodeHex(AActual)]));
-  end;
 end;
 
 procedure TTestCMac.SetUp;
