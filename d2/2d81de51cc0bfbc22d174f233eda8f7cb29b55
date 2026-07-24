@@ -1,0 +1,40 @@
+CryptoLib.Tests/src/Crypto/SlhDsaTests.pas
+  s_a664f450ccb9fa::t_65bba88cf07aa4 65-69,284-285
+  s_a664f450ccb9fa::t_09c78653200fb4 862
+  s_a664f450ccb9fa::t_e7302ef2036a1b 795
+  s_a664f450ccb9fa::t_39ecec1c6eee6c 97-101
+  s_a664f450ccb9fa::t_334b491616b672 265-267,269,271,273,275,279-283
+  s_a664f450ccb9fa::t_c12136bc611240 187-190,193,198-199,205,207-209,211,213,222,228,230-231,235-239
+  s_a664f450ccb9fa::t_db95386906ea21 289-290,296-297,303
+  s_a664f450ccb9fa::t_38c0cacf0dd45e 259
+CryptoLib.Tests/src/Crypto/MlDsaTests.pas
+  s_a664f450ccb9fa::t_1be9eac07ef33a 69-73,91-93,126-129,132,135-136,142,144-145,147,149,153,155-156,158-162
+  s_a664f450ccb9fa::t_48f49372c941db 188-200,398,403,408,413,418,423,428,433,438,443,448,453,458,463,468,473,478,483
+  s_a664f450ccb9fa::t_8c8725588d2b7b 588
+CryptoLib.Tests/src/Crypto/MlKemTests.pas
+  s_a664f450ccb9fa::t_fc2e2c7a2a5366 49-53
+  s_a664f450ccb9fa::t_202cf6c9f28628 72-77
+  s_a664f450ccb9fa::t_b8b8298a787458 161-182
+  s_a664f450ccb9fa::t_3769730b4b77a0 108-111,114,117-118,124,126-127,129,131,135,140-141,143-144
+  s_a664f450ccb9fa::t_8c1aeddc98df77 362,367,372,377,382,387,392,397,402,407,412,417,422,427
+CryptoLib.Tests/src/Utils/Parsers/RspTxtVectorParser.pas
+  s_a664f450ccb9fa::t_9945fba6568849 40-46,53-54,59-81,165-177
+CryptoLib.Tests/src/Utils/Vectors/PqcTestVectors.pas
+  s_a664f450ccb9fa::t_b6e0c59d6f7e61 32-34,47-52
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "d22d81de51cc0bfbc22d174f233eda8f7cb29b55",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
