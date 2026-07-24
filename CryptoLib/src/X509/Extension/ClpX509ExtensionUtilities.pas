@@ -38,15 +38,15 @@ uses
   ClpArrayUtilities;
 
 type
+  // constructor callback for parsing a raw extension octet-string
+  TX509ExtensionConstructor<TExtension> = function(const AEncoded: TCryptoLibByteArray): TExtension;
+
   /// <summary>
   /// Utility class for X509 extension operations.
   /// </summary>
   TX509ExtensionUtilities = class sealed(TObject)
 
   strict private
-    class function CreateAuthorityKeyIdentifierFromOctets(AOctets: TCryptoLibByteArray): IAuthorityKeyIdentifier; static;
-    class function CreateSubjectKeyIdentifierFromOctets(AOctets: TCryptoLibByteArray): ISubjectKeyIdentifier; static;
-
     class function CalculateSha1(const AData: TCryptoLibByteArray): TCryptoLibByteArray; overload; static;
     class function CalculateSha1(const ASpki: ISubjectPublicKeyInfo): TCryptoLibByteArray; overload; static;
 
@@ -139,23 +139,13 @@ type
     /// </summary>
     class function GetExtension<TExtension>(const AExtensions: IX509Extensions;
       const AOid: IDerObjectIdentifier;
-      const AConstructor: TCryptoLibFunc<TCryptoLibByteArray, TExtension>): TExtension; static;
+      const AConstructor: TX509ExtensionConstructor<TExtension>): TExtension; static;
 
   end;
 
 implementation
 
 { TX509ExtensionUtilities }
-
-class function TX509ExtensionUtilities.CreateAuthorityKeyIdentifierFromOctets(AOctets: TCryptoLibByteArray): IAuthorityKeyIdentifier;
-begin
-  Result := TAuthorityKeyIdentifier.GetInstance(AOctets);
-end;
-
-class function TX509ExtensionUtilities.CreateSubjectKeyIdentifierFromOctets(AOctets: TCryptoLibByteArray): ISubjectKeyIdentifier;
-begin
-  Result := TSubjectKeyIdentifier.GetInstance(AOctets);
-end;
 
 class function TX509ExtensionUtilities.CalculateSha1(const AData: TCryptoLibByteArray): TCryptoLibByteArray;
 begin
@@ -313,13 +303,13 @@ end;
 class function TX509ExtensionUtilities.GetAuthorityKeyIdentifier(const AExtensions: IX509Extensions): IAuthorityKeyIdentifier;
 begin
   Result := GetExtension<IAuthorityKeyIdentifier>(AExtensions, TX509Extensions.AuthorityKeyIdentifier,
-    CreateAuthorityKeyIdentifierFromOctets);
+    TAuthorityKeyIdentifier.GetInstance);
 end;
 
 class function TX509ExtensionUtilities.GetSubjectKeyIdentifier(const AExtensions: IX509Extensions): ISubjectKeyIdentifier;
 begin
   Result := GetExtension<ISubjectKeyIdentifier>(AExtensions, TX509Extensions.SubjectKeyIdentifier,
-    CreateSubjectKeyIdentifierFromOctets);
+    TSubjectKeyIdentifier.GetInstance);
 end;
 
 class function TX509ExtensionUtilities.FromExtensionValue(const AExtensionValue: IAsn1OctetString): IAsn1Object;
@@ -340,7 +330,7 @@ end;
 
 class function TX509ExtensionUtilities.GetExtension<TExtension>(const AExtensions: IX509Extensions;
   const AOid: IDerObjectIdentifier;
-  const AConstructor: TCryptoLibFunc<TCryptoLibByteArray, TExtension>): TExtension;
+  const AConstructor: TX509ExtensionConstructor<TExtension>): TExtension;
 var
   LExtensionValue: IAsn1OctetString;
 begin

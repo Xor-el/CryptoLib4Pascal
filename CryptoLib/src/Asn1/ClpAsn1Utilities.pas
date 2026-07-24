@@ -81,15 +81,15 @@ type
 
     // Choice methods
     class function GetInstanceChoice<TChoice>(AObj: TObject;
-      const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; overload; static;
+      const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice; overload; static;
     class function GetInstanceChoice<TChoice>(const AObj: IAsn1Object;
-      const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; overload; static;
+      const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice; overload; static;
     class function GetInstanceChoice<TChoice>(const ABytes: TCryptoLibByteArray;
-      const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; overload; static;
+      const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice; overload; static;
     class function GetInstanceChoice<TChoice>(const ATaggedObject: IAsn1TaggedObject;
-      ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; overload; static;
+      ADeclaredExplicit: Boolean; const AConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice; overload; static;
     class function GetTaggedChoice<TChoice>(const ATaggedObject: IAsn1TaggedObject;
-      ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice; static;
+      ADeclaredExplicit: Boolean; const AConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice; static;
 
     // Cursor callback: [n] EXPLICIT base object
     class function GetTaggedExplicitBaseObject(const ATaggedObject: IAsn1TaggedObject;
@@ -119,18 +119,18 @@ type
       ATagNo: Int32; out ABaseObject: IAsn1Encodable): Boolean; overload; static;
 
     // Optional tagged methods
-    class function GetOptionalContextTagged<TState, TResult>(const AElement: IAsn1Encodable;
-      ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function GetOptionalTagged<TState, TResult>(const AElement: IAsn1Encodable;
-      ATagClass, ATagNo: Int32; const AState: TState;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult; static;
-    class function TryGetOptionalContextTagged<TState, TResult>(const AElement: IAsn1Encodable;
-      ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
-    class function TryGetOptionalTagged<TState, TResult>(const AElement: IAsn1Encodable;
-      ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-      const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean; static;
+    class function GetOptionalContextTagged<TResult>(const AElement: IAsn1Encodable;
+      ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function GetOptionalTagged<TResult>(const AElement: IAsn1Encodable;
+      ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): TResult; static;
+    class function TryGetOptionalContextTagged<TResult>(const AElement: IAsn1Encodable;
+      ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean; static;
+    class function TryGetOptionalTagged<TResult>(const AElement: IAsn1Encodable;
+      ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+      const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean; static;
 
     // Explicit base tagged methods
     class function GetExplicitBaseTagged(const ATaggedObject: IAsn1TaggedObject;
@@ -397,7 +397,7 @@ end;
 // Choice methods
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(AObj: TObject;
-  const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice;
+  const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice;
 var
   LAsn1Object: IAsn1Object;
   LElement: IAsn1Encodable;
@@ -433,7 +433,7 @@ begin
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const AObj: IAsn1Object;
-  const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice;
+  const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice;
 var
   LResult: TChoice;
   LResultPtr: Pointer;
@@ -456,7 +456,7 @@ begin
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const ABytes: TCryptoLibByteArray;
-  const AOptionalConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice;
+  const AOptionalConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice;
 var
   LObj: IAsn1Object;
   LChoiceName: String;
@@ -478,7 +478,7 @@ begin
 end;
 
 class function TAsn1Utilities.GetInstanceChoice<TChoice>(const ATaggedObject: IAsn1TaggedObject;
-  ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice;
+  ADeclaredExplicit: Boolean; const AConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice;
 var
   LChoiceName: String;
   LMsg: String;
@@ -497,7 +497,7 @@ begin
 end;
 
 class function TAsn1Utilities.GetTaggedChoice<TChoice>(const ATaggedObject: IAsn1TaggedObject;
-  ADeclaredExplicit: Boolean; const AConstructor: TCryptoLibFunc<IAsn1Encodable, TChoice>): TChoice;
+  ADeclaredExplicit: Boolean; const AConstructor: TAsn1Constructor<IAsn1Encodable, TChoice>): TChoice;
 var
   LChoiceName: String;
   LMsg: String;
@@ -592,16 +592,16 @@ end;
 
 // Optional tagged methods
 
-class function TAsn1Utilities.GetOptionalContextTagged<TState, TResult>(const AElement: IAsn1Encodable;
-  ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.GetOptionalContextTagged<TResult>(const AElement: IAsn1Encodable;
+  ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 begin
-  Result := GetOptionalTagged<TState, TResult>(AElement, TAsn1Tags.ContextSpecific, ATagNo, AState, AConstructor);
+  Result := GetOptionalTagged<TResult>(AElement, TAsn1Tags.ContextSpecific, ATagNo, ADeclaredExplicit, AConstructor);
 end;
 
-class function TAsn1Utilities.GetOptionalTagged<TState, TResult>(const AElement: IAsn1Encodable;
-  ATagClass, ATagNo: Int32; const AState: TState;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): TResult;
+class function TAsn1Utilities.GetOptionalTagged<TResult>(const AElement: IAsn1Encodable;
+  ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): TResult;
 var
   LTaggedObject: IAsn1TaggedObject;
 begin
@@ -609,26 +609,26 @@ begin
   if LTaggedObject = nil then
     Result := Default(TResult)
   else
-    Result := AConstructor(LTaggedObject, AState);
+    Result := AConstructor(LTaggedObject, ADeclaredExplicit);
 end;
 
-class function TAsn1Utilities.TryGetOptionalContextTagged<TState, TResult>(const AElement: IAsn1Encodable;
-  ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+class function TAsn1Utilities.TryGetOptionalContextTagged<TResult>(const AElement: IAsn1Encodable;
+  ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean;
 begin
-  Result := TryGetOptionalTagged<TState, TResult>(AElement, TAsn1Tags.ContextSpecific, ATagNo, AState, AResult, AConstructor);
+  Result := TryGetOptionalTagged<TResult>(AElement, TAsn1Tags.ContextSpecific, ATagNo, ADeclaredExplicit, AResult, AConstructor);
 end;
 
-class function TAsn1Utilities.TryGetOptionalTagged<TState, TResult>(const AElement: IAsn1Encodable;
-  ATagClass, ATagNo: Int32; const AState: TState; out AResult: TResult;
-  const AConstructor: TCryptoLibFunc<IAsn1TaggedObject, TState, TResult>): Boolean;
+class function TAsn1Utilities.TryGetOptionalTagged<TResult>(const AElement: IAsn1Encodable;
+  ATagClass, ATagNo: Int32; ADeclaredExplicit: Boolean; out AResult: TResult;
+  const AConstructor: TAsn1TaggedConstructor<TResult>): Boolean;
 var
   LTaggedObject: IAsn1TaggedObject;
 begin
   LTaggedObject := TAsn1TaggedObject.GetOptional(AElement, ATagClass, ATagNo);
   if LTaggedObject <> nil then
   begin
-    AResult := AConstructor(LTaggedObject, AState);
+    AResult := AConstructor(LTaggedObject, ADeclaredExplicit);
     Result := True;
   end
   else

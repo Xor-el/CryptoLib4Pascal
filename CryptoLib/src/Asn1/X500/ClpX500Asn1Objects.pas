@@ -132,8 +132,8 @@ type
   var
     FStr: IDerStringBase;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IDirectoryString; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IDirectoryString; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IDirectoryString; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IDirectoryString; static;
     class function GetOptionalInnerObject(const AElement: IAsn1Encodable): IDerStringBase; static;
 
   strict protected
@@ -395,12 +395,12 @@ end;
 
 { TDirectoryString }
 
-class function TDirectoryString.ChoiceGetOptional(AElement: IAsn1Encodable): IDirectoryString;
+class function TDirectoryString.ChoiceGetOptional(const AElement: IAsn1Encodable): IDirectoryString;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TDirectoryString.ChoiceGetInstance(AElement: IAsn1Encodable): IDirectoryString;
+class function TDirectoryString.ChoiceGetInstance(const AElement: IAsn1Encodable): IDirectoryString;
 begin
   Result := GetInstance(AElement);
 end;

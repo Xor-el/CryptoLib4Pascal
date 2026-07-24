@@ -116,11 +116,6 @@ type
     function CreatePublicKey(const ACert: IX509CertificateStructure): IAsymmetricKeyParameter;
     function IPAddressToString(const AAddrBytes: TCryptoLibByteArray): String;
 
-    class function CreateBasicConstraintsFromOctets(AOctets: TCryptoLibByteArray): IBasicConstraints; static;
-    class function CreateKeyUsageBitStringFromOctets(AOctets: TCryptoLibByteArray): IDerBitString; static;
-    class function CreateAsn1SequenceFromOctets(AOctets: TCryptoLibByteArray): IAsn1Sequence; static;
-    class function CreateGeneralNamesFromOctets(AOctets: TCryptoLibByteArray): IGeneralNames; static;
-
   strict protected
     function GetX509Extensions: IX509Extensions; override;
     function GetAlternativeNameExtension(const AOid: IDerObjectIdentifier): IGeneralNames; virtual;
@@ -225,26 +220,6 @@ end;
 
 { TX509Certificate }
 
-class function TX509Certificate.CreateBasicConstraintsFromOctets(AOctets: TCryptoLibByteArray): IBasicConstraints;
-begin
-  Result := TBasicConstraints.GetInstance(AOctets);
-end;
-
-class function TX509Certificate.CreateKeyUsageBitStringFromOctets(AOctets: TCryptoLibByteArray): IDerBitString;
-begin
-  Result := TDerBitString.GetInstance(AOctets);
-end;
-
-class function TX509Certificate.CreateAsn1SequenceFromOctets(AOctets: TCryptoLibByteArray): IAsn1Sequence;
-begin
-  Result := TAsn1Sequence.GetInstance(AOctets);
-end;
-
-class function TX509Certificate.CreateGeneralNamesFromOctets(AOctets: TCryptoLibByteArray): IGeneralNames;
-begin
-  Result := TGeneralNames.GetInstance(TAsn1Object.FromByteArray(AOctets));
-end;
-
 constructor TX509Certificate.Create(const ACertData: TCryptoLibByteArray);
 begin
   Create(TX509CertificateStructure.GetInstance(ACertData));
@@ -277,7 +252,7 @@ begin
   try
     FBasicConstraints := TX509ExtensionUtilities.GetExtension<IBasicConstraints>(ACertificate.Extensions,
       TX509Extensions.BasicConstraints,
-      CreateBasicConstraintsFromOctets
+      TBasicConstraints.GetInstance
     );
   except
     on E: Exception do
@@ -287,7 +262,7 @@ begin
   try
     LKeyUsageBits := TX509ExtensionUtilities.GetExtension<IDerBitString>(ACertificate.Extensions,
       TX509Extensions.KeyUsage,
-      CreateKeyUsageBitStringFromOctets);
+      TDerBitString.GetInstance);
     if LKeyUsageBits <> nil then
     begin
       LKeyUsageBytes := LKeyUsageBits.GetBytes();
@@ -454,7 +429,7 @@ begin
   try
     LSeq := TX509ExtensionUtilities.GetExtension<IAsn1Sequence>(GetX509Extensions(),
       TX509Extensions.ExtendedKeyUsage,
-      CreateAsn1SequenceFromOctets);
+      TAsn1Sequence.GetInstance);
     if LSeq = nil then
     begin
       Result := nil;
@@ -514,7 +489,7 @@ end;
 function TX509Certificate.GetAlternativeNameExtension(const AOid: IDerObjectIdentifier): IGeneralNames;
 begin
   Result := TX509ExtensionUtilities.GetExtension<IGeneralNames>(GetX509Extensions(), AOid,
-    CreateGeneralNamesFromOctets);
+    TGeneralNames.GetInstance);
 end;
 
 function TX509Certificate.GetAlternativeNames(const AOid: IDerObjectIdentifier): TCryptoLibMatrixGenericArray<TValue>;

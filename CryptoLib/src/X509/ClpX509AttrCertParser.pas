@@ -67,8 +67,8 @@ type
     FCurrentStream: TStream;
 
     class constructor Create();
-    class function GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
-    class function GetTaggedAttributeCertificate(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate; static;
+    class function GetTaggedPkcsSignedData(const ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData; static;
+    class function GetTaggedAttributeCertificate(const ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate; static;
 
     function ReadDerCertificate(const ADIn: TAsn1InputStream): IX509V2AttributeCertificate;
     function ReadPemCertificate(const AInStream: TStream): IX509V2AttributeCertificate;
@@ -94,12 +94,12 @@ begin
   FPemAttrCertParser := TPemParser.Create('ATTRIBUTE CERTIFICATE');
 end;
 
-class function TX509AttrCertParser.GetTaggedPkcsSignedData(ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData;
+class function TX509AttrCertParser.GetTaggedPkcsSignedData(const ATagged: IAsn1TaggedObject; AState: Boolean): IPkcsSignedData;
 begin
   Result := TPkcsSignedData.GetTagged(ATagged, AState);
 end;
 
-class function TX509AttrCertParser.GetTaggedAttributeCertificate(ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate;
+class function TX509AttrCertParser.GetTaggedAttributeCertificate(const ATagged: IAsn1TaggedObject; AState: Boolean): IAttributeCertificate;
 begin
   Result := TAttributeCertificate.GetTagged(ATagged, AState);
 end;
@@ -129,7 +129,7 @@ begin
   begin
     if LContentType.Equals(TPkcsObjectIdentifiers.SignedData) then
     begin
-      if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IPkcsSignedData>(
+      if TAsn1Utilities.TryGetOptionalContextTagged<IPkcsSignedData>(
         LSeq[1], 0, True, LSignedData,
         GetTaggedPkcsSignedData) then
       begin
@@ -170,7 +170,7 @@ begin
     begin
       LElement := FSData[FSDataObjectCount];
       System.Inc(FSDataObjectCount);
-      if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IAttributeCertificate>(
+      if TAsn1Utilities.TryGetOptionalContextTagged<IAttributeCertificate>(
         LElement, 2, False, LAttributeCertificate,
         GetTaggedAttributeCertificate) then
       begin

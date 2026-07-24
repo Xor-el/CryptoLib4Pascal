@@ -376,8 +376,8 @@ type
     FName: IAsn1Encodable;
 
   strict private
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IGeneralName; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IGeneralName; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IGeneralName; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IGeneralName; static;
     class function ToGeneralNameEncoding(const AIp: String): TCryptoLibByteArray; static;
     class procedure CopyInts(const AParsedIp: TCryptoLibInt32Array; var AAddr: TCryptoLibByteArray; AOffset: Int32); static;
     class procedure ParseIPv4(const AIp: String; var AAddr: TCryptoLibByteArray; AOffset: Int32); static;
@@ -1207,8 +1207,8 @@ type
     class procedure SetDefaultReverse(const AValue: Boolean); static;
     class constructor Create;
     class destructor Destroy;
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IX509Name; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IX509Name; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IX509Name; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IX509Name; static;
     class function IdentityOid(AElement: IDerObjectIdentifier): IDerObjectIdentifier; static;
 
   strict protected
@@ -1347,8 +1347,8 @@ type
   var
     FTimeObject: IAsn1Object;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): ITime; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): ITime; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): ITime; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): ITime; static;
 
   strict protected
     function GetTimeObject: IAsn1Object;
@@ -2160,8 +2160,8 @@ type
     FTargetName: IGeneralName;
     FTargetGroup: IGeneralName;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): ITarget; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): ITarget; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): ITarget; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): ITarget; static;
 
   public
     const
@@ -2288,8 +2288,8 @@ type
     FType: Int32;
     FName: IAsn1Encodable;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IDistributionPointName; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IDistributionPointName; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IDistributionPointName; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IDistributionPointName; static;
 
   public
     const
@@ -2633,8 +2633,8 @@ type
     FObj: IAsn1Encodable;
     FChoiceObj: IAsn1Object;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IAttCertIssuer; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IAttCertIssuer; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IAttCertIssuer; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IAttCertIssuer; static;
 
   strict protected
     function GetIssuer: IAsn1Encodable;
@@ -3334,12 +3334,12 @@ end;
 
 { TTime }
 
-class function TTime.ChoiceGetOptional(AElement: IAsn1Encodable): ITime;
+class function TTime.ChoiceGetOptional(const AElement: IAsn1Encodable): ITime;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TTime.ChoiceGetInstance(AElement: IAsn1Encodable): ITime;
+class function TTime.ChoiceGetInstance(const AElement: IAsn1Encodable): ITime;
 begin
   Result := GetInstance(AElement);
 end;
@@ -4982,12 +4982,12 @@ begin
   Result := TAsn1Utilities.GetTaggedChoice<IGeneralName>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
 end;
 
-class function TGeneralName.ChoiceGetOptional(AElement: IAsn1Encodable): IGeneralName;
+class function TGeneralName.ChoiceGetOptional(const AElement: IAsn1Encodable): IGeneralName;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TGeneralName.ChoiceGetInstance(AElement: IAsn1Encodable): IGeneralName;
+class function TGeneralName.ChoiceGetInstance(const AElement: IAsn1Encodable): IGeneralName;
 begin
   Result := GetInstance(AElement);
 end;
@@ -7552,12 +7552,12 @@ begin
   Result := TAsn1Utilities.GetTaggedChoice<IX509Name>(ATaggedObject, ADeclaredExplicit, ChoiceGetOptional);
 end;
 
-class function TX509Name.ChoiceGetOptional(AElement: IAsn1Encodable): IX509Name;
+class function TX509Name.ChoiceGetOptional(const AElement: IAsn1Encodable): IX509Name;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TX509Name.ChoiceGetInstance(AElement: IAsn1Encodable): IX509Name;
+class function TX509Name.ChoiceGetInstance(const AElement: IAsn1Encodable): IX509Name;
 begin
   Result := GetInstance(AElement);
 end;
@@ -9318,12 +9318,12 @@ begin
   Result := TAsn1Utilities.GetTaggedChoice<ITarget>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
 end;
 
-class function TTarget.ChoiceGetOptional(AElement: IAsn1Encodable): ITarget;
+class function TTarget.ChoiceGetOptional(const AElement: IAsn1Encodable): ITarget;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TTarget.ChoiceGetInstance(AElement: IAsn1Encodable): ITarget;
+class function TTarget.ChoiceGetInstance(const AElement: IAsn1Encodable): ITarget;
 begin
   Result := GetInstance(AElement);
 end;
@@ -10102,12 +10102,12 @@ begin
   Result := TAsn1Utilities.GetTaggedChoice<IDistributionPointName>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
 end;
 
-class function TDistributionPointName.ChoiceGetOptional(AElement: IAsn1Encodable): IDistributionPointName;
+class function TDistributionPointName.ChoiceGetOptional(const AElement: IAsn1Encodable): IDistributionPointName;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TDistributionPointName.ChoiceGetInstance(AElement: IAsn1Encodable): IDistributionPointName;
+class function TDistributionPointName.ChoiceGetInstance(const AElement: IAsn1Encodable): IDistributionPointName;
 begin
   Result := GetInstance(AElement);
 end;
@@ -10435,12 +10435,12 @@ begin
   Result := TAsn1Utilities.GetTaggedChoice<IAttCertIssuer>(ATaggedObject, ADeclaredExplicit, ChoiceGetInstance);
 end;
 
-class function TAttCertIssuer.ChoiceGetOptional(AElement: IAsn1Encodable): IAttCertIssuer;
+class function TAttCertIssuer.ChoiceGetOptional(const AElement: IAsn1Encodable): IAttCertIssuer;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TAttCertIssuer.ChoiceGetInstance(AElement: IAsn1Encodable): IAttCertIssuer;
+class function TAttCertIssuer.ChoiceGetInstance(const AElement: IAsn1Encodable): IAttCertIssuer;
 begin
   Result := GetInstance(AElement);
 end;

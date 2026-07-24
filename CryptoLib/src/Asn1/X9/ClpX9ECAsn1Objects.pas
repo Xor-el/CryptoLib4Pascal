@@ -68,8 +68,8 @@ type
   var
     FParameters: IAsn1Object;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IX962Parameters; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IX962Parameters; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IX962Parameters; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IX962Parameters; static;
 
   strict protected
     function GetParameters: IAsn1Object;
@@ -969,12 +969,12 @@ end;
 
 { TX962Parameters }
 
-class function TX962Parameters.ChoiceGetOptional(AElement: IAsn1Encodable): IX962Parameters;
+class function TX962Parameters.ChoiceGetOptional(const AElement: IAsn1Encodable): IX962Parameters;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TX962Parameters.ChoiceGetInstance(AElement: IAsn1Encodable): IX962Parameters;
+class function TX962Parameters.ChoiceGetInstance(const AElement: IAsn1Encodable): IX962Parameters;
 begin
   Result := GetInstance(AElement);
 end;

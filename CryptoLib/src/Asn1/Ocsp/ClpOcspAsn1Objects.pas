@@ -434,8 +434,8 @@ type
   var
     FId: IAsn1Encodable;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IResponderID; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IResponderID; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IResponderID; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IResponderID; static;
 
   strict protected
     function GetName: IX509Name;
@@ -530,8 +530,8 @@ type
     FTagNo: Int32;
     FValue: IAsn1Encodable;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): IOcspCertStatus; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): IOcspCertStatus; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): IOcspCertStatus; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): IOcspCertStatus; static;
     class function GetOptionalBaseObject(const ATaggedObject: IAsn1TaggedObject): IAsn1Encodable; static;
 
   strict protected
@@ -1572,12 +1572,12 @@ end;
 
 { TResponderID }
 
-class function TResponderID.ChoiceGetOptional(AElement: IAsn1Encodable): IResponderID;
+class function TResponderID.ChoiceGetOptional(const AElement: IAsn1Encodable): IResponderID;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TResponderID.ChoiceGetInstance(AElement: IAsn1Encodable): IResponderID;
+class function TResponderID.ChoiceGetInstance(const AElement: IAsn1Encodable): IResponderID;
 begin
   Result := GetInstance(AElement);
 end;
@@ -1811,12 +1811,12 @@ end;
 
 { TOcspCertStatus }
 
-class function TOcspCertStatus.ChoiceGetOptional(AElement: IAsn1Encodable): IOcspCertStatus;
+class function TOcspCertStatus.ChoiceGetOptional(const AElement: IAsn1Encodable): IOcspCertStatus;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TOcspCertStatus.ChoiceGetInstance(AElement: IAsn1Encodable): IOcspCertStatus;
+class function TOcspCertStatus.ChoiceGetInstance(const AElement: IAsn1Encodable): IOcspCertStatus;
 begin
   Result := GetInstance(AElement);
 end;

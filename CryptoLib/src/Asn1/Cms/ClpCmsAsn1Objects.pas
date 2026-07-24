@@ -246,9 +246,9 @@ type
   var
     FId: IAsn1Encodable;
 
-    class function ChoiceGetOptional(AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
-    class function ChoiceGetInstance(AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
-    class function GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable; static;
+    class function ChoiceGetOptional(const AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
+    class function ChoiceGetInstance(const AElement: IAsn1Encodable): ICmsSignerIdentifier; static;
+    class function GetTaggedAsn1OctetString(const ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable; static;
 
   strict protected
     function GetIsTagged: Boolean;
@@ -734,17 +734,17 @@ end;
 
 { TCmsSignerIdentifier }
 
-class function TCmsSignerIdentifier.ChoiceGetOptional(AElement: IAsn1Encodable): ICmsSignerIdentifier;
+class function TCmsSignerIdentifier.ChoiceGetOptional(const AElement: IAsn1Encodable): ICmsSignerIdentifier;
 begin
   Result := GetOptional(AElement);
 end;
 
-class function TCmsSignerIdentifier.ChoiceGetInstance(AElement: IAsn1Encodable): ICmsSignerIdentifier;
+class function TCmsSignerIdentifier.ChoiceGetInstance(const AElement: IAsn1Encodable): ICmsSignerIdentifier;
 begin
   Result := GetInstance(AElement);
 end;
 
-class function TCmsSignerIdentifier.GetTaggedAsn1OctetString(ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable;
+class function TCmsSignerIdentifier.GetTaggedAsn1OctetString(const ATagged: IAsn1TaggedObject; AState: Boolean): IAsn1Encodable;
 begin
   Result := TAsn1OctetString.GetTagged(ATagged, AState);
 end;
@@ -828,7 +828,7 @@ function TCmsSignerIdentifier.GetID: IAsn1Encodable;
 var
   LResult: IAsn1Encodable;
 begin
-  if TAsn1Utilities.TryGetOptionalContextTagged<Boolean, IAsn1Encodable>(FId, 0, False, LResult,
+  if TAsn1Utilities.TryGetOptionalContextTagged<IAsn1Encodable>(FId, 0, False, LResult,
     GetTaggedAsn1OctetString) then
     Result := LResult
   else
