@@ -66,6 +66,11 @@ uses
   NistSecureRandom;
 
 type
+  // ML-DSA vector implementation: (name, record, parameters). The adapter
+  // supplies the parameters (fixed, or derived from the record's parameterSet).
+  TMlDsaVectorImpl = procedure(const AName: string; const AData: TRspTxtRecord;
+    const AParameters: IMlDsaParameters) of object;
+
   TTestMlDsa = class(TCryptoLibAlgorithmTestCase)
   private
     FRandom: ISecureRandom;
@@ -83,6 +88,9 @@ type
       ADeterministic: Boolean): ISigner;
     procedure RunSignerKat(const ARelativePath: string);
     procedure ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
+    // Run a vector file through AImpl. AParameters nil => derive per record.
+    procedure RunParamVectors(const ARelativePath: string;
+      AImpl: TMlDsaVectorImpl; const AParameters: IMlDsaParameters);
   published
     procedure TestConsistency44;
     procedure TestConsistency65;
@@ -115,194 +123,43 @@ type
     procedure SetUp; override;
   end;
 
-  TSignerKatVectorCallback = class(TRspTxtVectorCallback)
+  // One adapter for every parameterised ML-DSA vector file: forwards each
+  // record to FImpl with either the fixed FParameters or, when that is nil,
+  // the parameter set named by the record's 'parameterSet' field.
+  TMlDsaParamVectorAdapter = class(TRspTxtVectorCallback)
   strict private
     FTest: TTestMlDsa;
-  public
-    constructor Create(ATest: TTestMlDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TKeyGenVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
+    FImpl: TMlDsaVectorImpl;
     FParameters: IMlDsaParameters;
   public
-    constructor Create(ATest: TTestMlDsa; const AParameters: IMlDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TKeyGenFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-  public
-    constructor Create(ATest: TTestMlDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TContextVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-    FParameters: IMlDsaParameters;
-  public
-    constructor Create(ATest: TTestMlDsa; const AParameters: IMlDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSigGenVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-    FParameters: IMlDsaParameters;
-  public
-    constructor Create(ATest: TTestMlDsa; const AParameters: IMlDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSigGenFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-  public
-    constructor Create(ATest: TTestMlDsa);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSigVerVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-    FParameters: IMlDsaParameters;
-  public
-    constructor Create(ATest: TTestMlDsa; const AParameters: IMlDsaParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TSigVerFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlDsa;
-  public
-    constructor Create(ATest: TTestMlDsa);
+    constructor Create(ATest: TTestMlDsa; AImpl: TMlDsaVectorImpl;
+      const AParameters: IMlDsaParameters);
     procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
   end;
 
 implementation
 
-{ TKeyGenVectorCallback }
+{ TMlDsaParamVectorAdapter }
 
-constructor TKeyGenVectorCallback.Create(ATest: TTestMlDsa;
-  const AParameters: IMlDsaParameters);
+constructor TMlDsaParamVectorAdapter.Create(ATest: TTestMlDsa;
+  AImpl: TMlDsaVectorImpl; const AParameters: IMlDsaParameters);
 begin
-  inherited Create;
+  inherited Create();
   FTest := ATest;
+  FImpl := AImpl;
   FParameters := AParameters;
 end;
 
-procedure TKeyGenVectorCallback.OnVector(const AName: string;
+procedure TMlDsaParamVectorAdapter.OnVector(const AName: string;
   const AData: TRspTxtRecord);
+var
+  LParameters: IMlDsaParameters;
 begin
-  FTest.ImplKeyGen(AName, AData, FParameters);
-end;
-
-{ TKeyGenFileCallback }
-
-constructor TKeyGenFileCallback.Create(ATest: TTestMlDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TKeyGenFileCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplKeyGen(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TContextVectorCallback }
-
-constructor TContextVectorCallback.Create(ATest: TTestMlDsa;
-  const AParameters: IMlDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TContextVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplContext(AName, AData, FParameters);
-end;
-
-{ TSigGenVectorCallback }
-
-constructor TSigGenVectorCallback.Create(ATest: TTestMlDsa;
-  const AParameters: IMlDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TSigGenVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigGen(AName, AData, FParameters);
-end;
-
-{ TSigGenFileCallback }
-
-constructor TSigGenFileCallback.Create(ATest: TTestMlDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSigGenFileCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigGen(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TSigVerVectorCallback }
-
-constructor TSigVerVectorCallback.Create(ATest: TTestMlDsa;
-  const AParameters: IMlDsaParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TSigVerVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigVer(AName, AData, FParameters);
-end;
-
-{ TSigVerFileCallback }
-
-constructor TSigVerFileCallback.Create(ATest: TTestMlDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSigVerFileCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSigVer(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TSignerKatVectorCallback }
-
-constructor TSignerKatVectorCallback.Create(ATest: TTestMlDsa);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TSignerKatVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplSignerKat(AName, AData);
+  if Assigned(FParameters) then
+    LParameters := FParameters
+  else
+    LParameters := FTest.GetParameters(AData['parameterSet']);
+  FImpl(AName, AData, LParameters);
 end;
 
 { TTestMlDsa }
@@ -326,6 +183,19 @@ begin
     Result := THashMlDsaSigner.Create(AParameters, ADeterministic)
   else
     Result := TMlDsaSigner.Create(AParameters, ADeterministic);
+end;
+
+procedure TTestMlDsa.RunParamVectors(const ARelativePath: string;
+  AImpl: TMlDsaVectorImpl; const AParameters: IMlDsaParameters);
+var
+  LAdapter: TMlDsaParamVectorAdapter;
+begin
+  LAdapter := TMlDsaParamVectorAdapter.Create(Self, AImpl, AParameters);
+  try
+    TPqcTestVectors.RunVectors(ARelativePath, LAdapter);
+  finally
+    LAdapter.Free;
+  end;
 end;
 
 procedure TTestMlDsa.ImplConsistency(const AParameters: IMlDsaParameters);
@@ -524,219 +394,93 @@ begin
 end;
 
 procedure TTestMlDsa.TestKeyGen;
-var
-  LCallback: TKeyGenFileCallback;
 begin
-  LCallback := TKeyGenFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/ML-DSA-keyGen.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/ML-DSA-keyGen.txt', ImplKeyGen, nil);
 end;
 
 procedure TTestMlDsa.TestKeyGenAcvp44;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa44);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-44.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-44.txt', ImplKeyGen, TMlDsaParameters.MlDsa44);
 end;
 
 procedure TTestMlDsa.TestKeyGenAcvp65;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa65);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-65.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-65.txt', ImplKeyGen, TMlDsaParameters.MlDsa65);
 end;
 
 procedure TTestMlDsa.TestKeyGenAcvp87;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa87);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-87.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/keyGen_ML-DSA-87.txt', ImplKeyGen, TMlDsaParameters.MlDsa87);
 end;
 
 procedure TTestMlDsa.TestContext44;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa44);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa44.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa44.rsp', ImplContext, TMlDsaParameters.MlDsa44);
 end;
 
 procedure TTestMlDsa.TestContext65;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa65);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa65.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa65.rsp', ImplContext, TMlDsaParameters.MlDsa65);
 end;
 
 procedure TTestMlDsa.TestContext87;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa87);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa87.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa87.rsp', ImplContext, TMlDsaParameters.MlDsa87);
 end;
 
 procedure TTestMlDsa.TestContext44Sha512;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa44WithSha512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa44sha512.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa44sha512.rsp', ImplContext, TMlDsaParameters.MlDsa44WithSha512);
 end;
 
 procedure TTestMlDsa.TestContext65Sha512;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa65WithSha512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa65sha512.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa65sha512.rsp', ImplContext, TMlDsaParameters.MlDsa65WithSha512);
 end;
 
 procedure TTestMlDsa.TestContext87Sha512;
-var
-  LCallback: TContextVectorCallback;
 begin
-  LCallback := TContextVectorCallback.Create(Self, TMlDsaParameters.MlDsa87WithSha512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/mldsa87sha512.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/mldsa87sha512.rsp', ImplContext, TMlDsaParameters.MlDsa87WithSha512);
 end;
 
 procedure TTestMlDsa.TestSigGen;
-var
-  LCallback: TSigGenFileCallback;
 begin
-  LCallback := TSigGenFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/ML-DSA-sigGen.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/ML-DSA-sigGen.txt', ImplSigGen, nil);
 end;
 
 procedure TTestMlDsa.TestSigGenAcvp44;
-var
-  LCallback: TSigGenVectorCallback;
 begin
-  LCallback := TSigGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa44);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-44.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-44.txt', ImplSigGen, TMlDsaParameters.MlDsa44);
 end;
 
 procedure TTestMlDsa.TestSigGenAcvp65;
-var
-  LCallback: TSigGenVectorCallback;
 begin
-  LCallback := TSigGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa65);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-65.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-65.txt', ImplSigGen, TMlDsaParameters.MlDsa65);
 end;
 
 procedure TTestMlDsa.TestSigGenAcvp87;
-var
-  LCallback: TSigGenVectorCallback;
 begin
-  LCallback := TSigGenVectorCallback.Create(Self, TMlDsaParameters.MlDsa87);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-87.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigGen_ML-DSA-87.txt', ImplSigGen, TMlDsaParameters.MlDsa87);
 end;
 
 procedure TTestMlDsa.TestSigVer;
-var
-  LCallback: TSigVerFileCallback;
 begin
-  LCallback := TSigVerFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/ML-DSA-sigVer.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/ML-DSA-sigVer.txt', ImplSigVer, nil);
 end;
 
 procedure TTestMlDsa.TestSigVerAcvp44;
-var
-  LCallback: TSigVerVectorCallback;
 begin
-  LCallback := TSigVerVectorCallback.Create(Self, TMlDsaParameters.MlDsa44);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-44.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-44.txt', ImplSigVer, TMlDsaParameters.MlDsa44);
 end;
 
 procedure TTestMlDsa.TestSigVerAcvp65;
-var
-  LCallback: TSigVerVectorCallback;
 begin
-  LCallback := TSigVerVectorCallback.Create(Self, TMlDsaParameters.MlDsa65);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-65.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-65.txt', ImplSigVer, TMlDsaParameters.MlDsa65);
 end;
 
 procedure TTestMlDsa.TestSigVerAcvp87;
-var
-  LCallback: TSigVerVectorCallback;
 begin
-  LCallback := TSigVerVectorCallback.Create(Self, TMlDsaParameters.MlDsa87);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-87.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlDsa/Acvp/sigVer_ML-DSA-87.txt', ImplSigVer, TMlDsaParameters.MlDsa87);
 end;
 
 procedure TTestMlDsa.ImplSignerKat(const AName: string; const AData: TRspTxtRecord);
@@ -840,15 +584,8 @@ begin
 end;
 
 procedure TTestMlDsa.RunSignerKat(const ARelativePath: string);
-var
-  LCallback: TSignerKatVectorCallback;
 begin
-  LCallback := TSignerKatVectorCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors(ARelativePath, LCallback);
-  finally
-    LCallback.Free;
-  end;
+  TPqcTestVectors.RunVectors(ARelativePath, ImplSignerKat);
 end;
 
 procedure TTestMlDsa.TestHashMlDsaKatSig;

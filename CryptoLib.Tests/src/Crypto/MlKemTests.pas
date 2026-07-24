@@ -46,6 +46,11 @@ uses
   ClpCryptoLibExceptions;
 
 type
+  // ML-KEM vector worker: (name, record, parameters). The adapter supplies the
+  // parameters, either a fixed set or one derived from the record.
+  TMlKemVectorImpl = procedure(const AName: string; const AData: TRspTxtRecord;
+    const AParameters: IMlKemParameters) of object;
+
   TTestMlKem = class(TCryptoLibAlgorithmTestCase)
   private
     FRandom: ISecureRandom;
@@ -64,6 +69,12 @@ type
       const AParameters: IMlKemParameters);
     function GetParameters(const AName: string): IMlKemParameters;
     function LoadHexTestResource(const ARelativePath: string): TCryptoLibByteArray;
+    // Dispatch a combined encap/decap record by its 'function' field.
+    procedure ImplEncapDecap(const AName: string; const AData: TRspTxtRecord;
+      const AParameters: IMlKemParameters);
+    // Run a vector file through AImpl. AParameters nil => derive per record.
+    procedure RunParamVectors(const ARelativePath: string;
+      AImpl: TMlKemVectorImpl; const AParameters: IMlKemParameters);
   published
     procedure TestConsistency512;
     procedure TestConsistency768;
@@ -94,158 +105,43 @@ type
     procedure SetUp; override;
   end;
 
-  TKeyGenVectorCallback = class(TRspTxtVectorCallback)
+  // One adapter for every parameterised ML-KEM vector file: forwards each
+  // record to FImpl with either the fixed FParameters or, when that is nil,
+  // the parameter set named by the record's 'parameterSet' field.
+  TMlKemParamVectorAdapter = class(TRspTxtVectorCallback)
   strict private
     FTest: TTestMlKem;
+    FImpl: TMlKemVectorImpl;
     FParameters: IMlKemParameters;
   public
-    constructor Create(ATest: TTestMlKem; const AParameters: IMlKemParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TDecapVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlKem;
-    FParameters: IMlKemParameters;
-  public
-    constructor Create(ATest: TTestMlKem; const AParameters: IMlKemParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TEncapVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlKem;
-    FParameters: IMlKemParameters;
-  public
-    constructor Create(ATest: TTestMlKem; const AParameters: IMlKemParameters);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TEncapDecapVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlKem;
-  public
-    constructor Create(ATest: TTestMlKem);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TKeyGenFileCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlKem;
-  public
-    constructor Create(ATest: TTestMlKem);
-    procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
-  end;
-
-  TRspKatVectorCallback = class(TRspTxtVectorCallback)
-  strict private
-    FTest: TTestMlKem;
-    FParameters: IMlKemParameters;
-  public
-    constructor Create(ATest: TTestMlKem; const AParameters: IMlKemParameters);
+    constructor Create(ATest: TTestMlKem; AImpl: TMlKemVectorImpl;
+      const AParameters: IMlKemParameters);
     procedure OnVector(const AName: string; const AData: TRspTxtRecord); override;
   end;
 
 implementation
 
-{ TKeyGenVectorCallback }
+{ TMlKemParamVectorAdapter }
 
-constructor TKeyGenVectorCallback.Create(ATest: TTestMlKem;
-  const AParameters: IMlKemParameters);
+constructor TMlKemParamVectorAdapter.Create(ATest: TTestMlKem;
+  AImpl: TMlKemVectorImpl; const AParameters: IMlKemParameters);
 begin
-  inherited Create;
+  inherited Create();
   FTest := ATest;
+  FImpl := AImpl;
   FParameters := AParameters;
 end;
 
-procedure TKeyGenVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplKeyGen(AName, AData, FParameters);
-end;
-
-{ TDecapVectorCallback }
-
-constructor TDecapVectorCallback.Create(ATest: TTestMlKem;
-  const AParameters: IMlKemParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TDecapVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplDecap(AName, AData, FParameters);
-end;
-
-{ TEncapVectorCallback }
-
-constructor TEncapVectorCallback.Create(ATest: TTestMlKem;
-  const AParameters: IMlKemParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TEncapVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplEncap(AName, AData, FParameters);
-end;
-
-{ TEncapDecapVectorCallback }
-
-constructor TEncapDecapVectorCallback.Create(ATest: TTestMlKem);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TEncapDecapVectorCallback.OnVector(const AName: string;
+procedure TMlKemParamVectorAdapter.OnVector(const AName: string;
   const AData: TRspTxtRecord);
 var
   LParameters: IMlKemParameters;
-  LFunctionName: string;
 begin
-  LParameters := FTest.GetParameters(AData['parameterSet']);
-  LFunctionName := AData['function'];
-  if LFunctionName = 'encapsulation' then
-    FTest.ImplEncap(AName, AData, LParameters)
+  if Assigned(FParameters) then
+    LParameters := FParameters
   else
-    FTest.ImplDecap(AName, AData, LParameters);
-end;
-
-{ TKeyGenFileCallback }
-
-constructor TKeyGenFileCallback.Create(ATest: TTestMlKem);
-begin
-  inherited Create;
-  FTest := ATest;
-end;
-
-procedure TKeyGenFileCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplKeyGen(AName, AData, FTest.GetParameters(AData['parameterSet']));
-end;
-
-{ TRspKatVectorCallback }
-
-constructor TRspKatVectorCallback.Create(ATest: TTestMlKem;
-  const AParameters: IMlKemParameters);
-begin
-  inherited Create;
-  FTest := ATest;
-  FParameters := AParameters;
-end;
-
-procedure TRspKatVectorCallback.OnVector(const AName: string;
-  const AData: TRspTxtRecord);
-begin
-  FTest.ImplKatRsp(AName, AData, FParameters);
+    LParameters := FTest.GetParameters(AData['parameterSet']);
+  FImpl(AName, AData, LParameters);
 end;
 
 { TTestMlKem }
@@ -260,6 +156,28 @@ function TTestMlKem.GetParameters(const AName: string): IMlKemParameters;
 begin
   Result := TMlKemParameters.GetByName(AName);
   CheckNotNull(Result, 'unknown parameter set: ' + AName);
+end;
+
+procedure TTestMlKem.RunParamVectors(const ARelativePath: string;
+  AImpl: TMlKemVectorImpl; const AParameters: IMlKemParameters);
+var
+  LAdapter: TMlKemParamVectorAdapter;
+begin
+  LAdapter := TMlKemParamVectorAdapter.Create(Self, AImpl, AParameters);
+  try
+    TPqcTestVectors.RunVectors(ARelativePath, LAdapter);
+  finally
+    LAdapter.Free;
+  end;
+end;
+
+procedure TTestMlKem.ImplEncapDecap(const AName: string;
+  const AData: TRspTxtRecord; const AParameters: IMlKemParameters);
+begin
+  if AData['function'] = 'encapsulation' then
+    ImplEncap(AName, AData, AParameters)
+  else
+    ImplDecap(AName, AData, AParameters);
 end;
 
 procedure TTestMlKem.ImplConsistency(const AParameters: IMlKemParameters);
@@ -440,171 +358,73 @@ begin
 end;
 
 procedure TTestMlKem.TestKat512;
-var
-  LCallback: TRspKatVectorCallback;
 begin
-  LCallback := TRspKatVectorCallback.Create(Self, TMlKemParameters.MlKem512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/mlkem512.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/mlkem512.rsp', ImplKatRsp, TMlKemParameters.MlKem512);
 end;
 
 procedure TTestMlKem.TestKat768;
-var
-  LCallback: TRspKatVectorCallback;
 begin
-  LCallback := TRspKatVectorCallback.Create(Self, TMlKemParameters.MlKem768);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/mlkem768.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/mlkem768.rsp', ImplKatRsp, TMlKemParameters.MlKem768);
 end;
 
 procedure TTestMlKem.TestKat1024;
-var
-  LCallback: TRspKatVectorCallback;
 begin
-  LCallback := TRspKatVectorCallback.Create(Self, TMlKemParameters.MlKem1024);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/mlkem1024.rsp', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/mlkem1024.rsp', ImplKatRsp, TMlKemParameters.MlKem1024);
 end;
 
 procedure TTestMlKem.TestKeyGen;
-var
-  LCallback: TKeyGenFileCallback;
 begin
-  LCallback := TKeyGenFileCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/ML-KEM-keyGen.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/ML-KEM-keyGen.txt', ImplKeyGen, nil);
 end;
 
 procedure TTestMlKem.TestKeyGenAcvp512;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlKemParameters.MlKem512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-512.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-512.txt', ImplKeyGen, TMlKemParameters.MlKem512);
 end;
 
 procedure TTestMlKem.TestKeyGenAcvp768;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlKemParameters.MlKem768);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-768.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-768.txt', ImplKeyGen, TMlKemParameters.MlKem768);
 end;
 
 procedure TTestMlKem.TestKeyGenAcvp1024;
-var
-  LCallback: TKeyGenVectorCallback;
 begin
-  LCallback := TKeyGenVectorCallback.Create(Self, TMlKemParameters.MlKem1024);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-1024.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/keyGen_ML-KEM-1024.txt', ImplKeyGen, TMlKemParameters.MlKem1024);
 end;
 
 procedure TTestMlKem.TestDecapAcvp512;
-var
-  LCallback: TDecapVectorCallback;
 begin
-  LCallback := TDecapVectorCallback.Create(Self, TMlKemParameters.MlKem512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-512.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-512.txt', ImplDecap, TMlKemParameters.MlKem512);
 end;
 
 procedure TTestMlKem.TestDecapAcvp768;
-var
-  LCallback: TDecapVectorCallback;
 begin
-  LCallback := TDecapVectorCallback.Create(Self, TMlKemParameters.MlKem768);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-768.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-768.txt', ImplDecap, TMlKemParameters.MlKem768);
 end;
 
 procedure TTestMlKem.TestDecapAcvp1024;
-var
-  LCallback: TDecapVectorCallback;
 begin
-  LCallback := TDecapVectorCallback.Create(Self, TMlKemParameters.MlKem1024);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-1024.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_decapsulation_ML-KEM-1024.txt', ImplDecap, TMlKemParameters.MlKem1024);
 end;
 
 procedure TTestMlKem.TestEncapAcvp512;
-var
-  LCallback: TEncapVectorCallback;
 begin
-  LCallback := TEncapVectorCallback.Create(Self, TMlKemParameters.MlKem512);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-512.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-512.txt', ImplEncap, TMlKemParameters.MlKem512);
 end;
 
 procedure TTestMlKem.TestEncapAcvp768;
-var
-  LCallback: TEncapVectorCallback;
 begin
-  LCallback := TEncapVectorCallback.Create(Self, TMlKemParameters.MlKem768);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-768.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-768.txt', ImplEncap, TMlKemParameters.MlKem768);
 end;
 
 procedure TTestMlKem.TestEncapAcvp1024;
-var
-  LCallback: TEncapVectorCallback;
 begin
-  LCallback := TEncapVectorCallback.Create(Self, TMlKemParameters.MlKem1024);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-1024.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/Acvp/encapDecap_encapsulation_ML-KEM-1024.txt', ImplEncap, TMlKemParameters.MlKem1024);
 end;
 
 procedure TTestMlKem.TestEncapDecap;
-var
-  LCallback: TEncapDecapVectorCallback;
 begin
-  LCallback := TEncapDecapVectorCallback.Create(Self);
-  try
-    TPqcTestVectors.RunVectors('Crypto/Pqc/MlKem/ML-KEM-encapDecap.txt', LCallback);
-  finally
-    LCallback.Free;
-  end;
+  RunParamVectors('Crypto/Pqc/MlKem/ML-KEM-encapDecap.txt', ImplEncapDecap, nil);
 end;
 
 procedure TTestMlKem.TestModulus512;
