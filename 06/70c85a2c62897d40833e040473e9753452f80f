@@ -1,0 +1,101 @@
+CryptoLib.Tests/src/Crypto/OcbTests.pas
+  s_a664f450ccb9fa::t_857ca4b5f3ecfa 594-596,598-607
+  s_a664f450ccb9fa::t_193d4577836a83 597
+  s_a664f450ccb9fa::t_abc0ec7488c6d1 48-50
+  s_a664f450ccb9fa::t_d3bc6063a9f62f 574-575,581
+  s_a664f450ccb9fa::t_e72f3b3afb6042 471,482,515,542
+  s_a664f450ccb9fa::t_edc49862a001be 54
+  s_a664f450ccb9fa::t_26cad7eaf8b0a6 92-94,104,113
+  s_a664f450ccb9fa::t_55d23c080f9114 219-229
+  s_a664f450ccb9fa::t_0b31e4acf93d1d 340-341
+CryptoLib.Tests/src/Crypto/AeadModeTestBase.pas
+  s_a664f450ccb9fa::t_9e99559b9628ab 90-101,110-133
+  s_a664f450ccb9fa::t_189793d2266bd0 1-36,39-50,54-58,61-64,72-89,102-109,134-228,235-237
+  s_a664f450ccb9fa::t_99614901df3cae 229-234
+  s_a664f450ccb9fa::t_4561bb8842bacd 37-38
+  s_a664f450ccb9fa::t_f6c5a4221f8d22 51-53,59-60,65-71
+CryptoLib.Tests/src/Crypto/AesBlockCipherTestBase.pas
+  s_a664f450ccb9fa::t_ecbf92fdb688b6 70-75,80-81
+  s_a664f450ccb9fa::t_fc971c16f56fc1 263-365
+  s_a664f450ccb9fa::t_0f0321aa99df38 34,40-41
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_a664f450ccb9fa::t_9b1086b23e2f4b 42
+  s_a664f450ccb9fa::t_3b903eeee9203b 871-874
+.github/workflows/ci/targets.json
+  s_a664f450ccb9fa::t_d503b9e5af20e2 6-7
+CryptoLib.Tests/src/Crypto/AeadTestUtilities.pas
+  s_a664f450ccb9fa::t_91b99110c0dded 158-193
+  s_a664f450ccb9fa::t_2314ac9fcfd87e 32,157
+  s_a664f450ccb9fa::t_93ad63a88798de 64-76
+CryptoLib.Tests/src/Crypto/EaxTests.pas
+  s_a664f450ccb9fa::t_b06bb104f28295 611
+  s_a664f450ccb9fa::t_044d3bf3f2f190 605
+  s_a664f450ccb9fa::t_369b2576e74b06 208,216-223
+  s_a664f450ccb9fa::t_716d50a8626a70 91-93
+  s_a664f450ccb9fa::t_f6d11c6ff025cc 50,224-225
+  s_a664f450ccb9fa::t_115e69ca9149fd 576-577
+  s_a664f450ccb9fa::t_ddd3ea84d73cb7 269-270
+  s_a664f450ccb9fa::t_5cc8fcea904653 56
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_a664f450ccb9fa::t_c1769ca1775022 40
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_a664f450ccb9fa::t_805996a1fd4b6f 882
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_a664f450ccb9fa::t_98357d3ae3b532 912-915
+  s_a664f450ccb9fa::t_9dad42c4426a75 82
+.github/workflows/make.yml
+  s_a664f450ccb9fa::t_2d6dd683049945 116-158
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_a664f450ccb9fa::t_31ae33d19913ed 41
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_a664f450ccb9fa::t_0d9a9d07554e60 903
+CryptoLib.Tests/src/Crypto/CcmTests.pas
+  s_a664f450ccb9fa::t_c7731ceb0d903c 57
+  s_a664f450ccb9fa::t_1bb9d625fbfd8a 117-127
+  s_a664f450ccb9fa::t_5137c416bb093b 89-90
+  s_a664f450ccb9fa::t_b893f754cf3fee 521-529,533-534
+  s_a664f450ccb9fa::t_ffdbe31170485a 550-551
+  s_a664f450ccb9fa::t_1f06e80fbf2d10 51
+  s_a664f450ccb9fa::t_4a345ffeba5395 81-83
+CryptoLib.Tests/src/Crypto/GCMTests.pas
+  s_a664f450ccb9fa::t_8339ce038b7d28 56
+  s_a664f450ccb9fa::t_7aa2f221791271 559-560
+  s_a664f450ccb9fa::t_475db32a37f400 595-636,647-654
+  s_a664f450ccb9fa::t_7629e60f3fbc3a 777
+  s_a664f450ccb9fa::t_f1fdc8eca8a79d 83-85,89-90
+  s_a664f450ccb9fa::t_a872ed51c3d420 782-783,785
+  s_a664f450ccb9fa::t_6defc014ae4cd4 99-101
+  s_a664f450ccb9fa::t_2bf7efc2721303 62
+  s_a664f450ccb9fa::t_990ee50e841bd5 566-567
+  s_a664f450ccb9fa::t_cd216dda3ac9f1 132-143
+  s_a664f450ccb9fa::t_a23b9dd7875b1c 238-239
+  s_a664f450ccb9fa::t_6df768058a94b7 432
+  s_a664f450ccb9fa::t_a4247a4b685c23 655-656
+  s_a664f450ccb9fa::t_7e70c9c063ec54 688,693,738,743
+CryptoLib.Tests/src/Crypto/GcmSivTests.pas
+  s_a664f450ccb9fa::t_61ce89a6911050 94-103
+  s_a664f450ccb9fa::t_21e4dcd7e0682e 358-359
+  s_a664f450ccb9fa::t_ef3f5fa8468768 131,278
+  s_a664f450ccb9fa::t_bd21a1cb2f3e86 62-64
+  s_a664f450ccb9fa::t_850c7648aa2f1b 315-316,322,328,334,340,346,352
+  s_a664f450ccb9fa::t_ebc35d1595f886 53
+  s_a664f450ccb9fa::t_225d0b095d42d8 45-46
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_a664f450ccb9fa::t_c4efc4af205057 1225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "0670c85a2c62897d40833e040473e9753452f80f",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
