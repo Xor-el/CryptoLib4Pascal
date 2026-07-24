@@ -1174,10 +1174,6 @@ type
     class function ConcatenateElements(const ASequences: TCryptoLibGenericArray<IAsn1Sequence>): TCryptoLibGenericArray<IAsn1Encodable>; static;
   public
     /// <summary>
-    /// Map elements using a function.
-    /// </summary>
-    function MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
-    /// <summary>
     /// Get a cloned array of elements.
     /// </summary>
     function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>; virtual;
@@ -1252,8 +1248,6 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDerSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IDerSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence; static;
     /// <summary>
     /// Get encoding length for a given contents length.
@@ -1288,8 +1282,6 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IDLSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IDLSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence; static;
 
     constructor Create(); overload;
@@ -1373,10 +1365,6 @@ type
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
     /// <summary>
-    /// Map elements using a function.
-    /// </summary>
-    function MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
-    /// <summary>
     /// Get a cloned array of elements.
     /// </summary>
     function ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
@@ -1442,7 +1430,6 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDerSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IDerSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDerSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -1471,7 +1458,6 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IDLSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IDLSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IDLSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -1504,8 +1490,6 @@ type
     class function FromElementsOptional(const AElements: array of IAsn1Encodable): IBerSequence; static;
     class function FromSequence(const ASequence: IAsn1Sequence): IBerSequence; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSequence; static;
-    class function Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence; overload; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSequence; overload; static;
     class function Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence; static;
 
     constructor Create(); overload;
@@ -1539,7 +1523,6 @@ type
     class function FromCollection(const AC: TCryptoLibGenericArray<IAsn1Encodable>): IBerSet; static;
     class function FromElement(const AElement: IAsn1Encodable): IBerSet; static;
     class function FromVector(const AElementVector: IAsn1EncodableVector): IBerSet; static;
-    class function Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSet; static;
 
     constructor Create(); overload;
     constructor Create(const AElement: IAsn1Encodable); overload;
@@ -4416,11 +4399,6 @@ begin
   end;
 end;
 
-function TAsn1Sequence.MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
-begin
-  Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
-end;
-
 class function TAsn1Sequence.GetInstance(const AObj: TObject): IAsn1Sequence;
 var
   LAsn1Obj: IAsn1Object;
@@ -4656,32 +4634,6 @@ begin
   Result := WithElements(ASequence.Elements);
 end;
 
-class function TDerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDerSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ASequence = nil) or (ASequence.Count < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
-  Result := WithElements(LMapped);
-end;
-
-class function TDerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := WithElements(LMapped);
-end;
-
 class function TDerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDerSequence;
 var
   LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
@@ -4869,32 +4821,6 @@ begin
     Exit;
   end;
   Result := WithElements(ASequence.Elements);
-end;
-
-class function TDLSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IDLSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ASequence = nil) or (ASequence.Count < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
-  Result := WithElements(LMapped);
-end;
-
-class function TDLSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := WithElements(LMapped);
 end;
 
 class function TDLSequence.Concatenate(const ASequences: array of IAsn1Sequence): IDLSequence;
@@ -5138,11 +5064,6 @@ begin
     TAsn1OutputStream.GetContentsEncodings(AEncoding, Elements));
 end;
 
-function TAsn1Set.MapElements<TResult>(const AFunc: TCryptoLibFunc<IAsn1Encodable, TResult>): TCryptoLibGenericArray<TResult>;
-begin
-  Result := TArrayUtilities.Map<IAsn1Encodable, TResult>(FElements, AFunc);
-end;
-
 function TAsn1Set.ToArray(): TCryptoLibGenericArray<IAsn1Encodable>;
 begin
   Result := TAsn1EncodableVector.CloneElements(FElements);
@@ -5357,20 +5278,6 @@ begin
     Result := TDerSet.Create(AElementVector);
 end;
 
-class function TDerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDerSet;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := TDerSet.Create(LMapped);
-end;
-
-
 function TDerSet.GetSortedDerEncodings(): TCryptoLibGenericArray<IDerEncoding>;
 begin
   if FSortedDerEncodings = nil then
@@ -5479,19 +5386,6 @@ begin
     Result := GetEmpty()
   else
     Result := TDLSet.Create(AElementVector);
-end;
-
-class function TDLSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IDLSet;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := TDLSet.Create(False, LMapped); // isSorted = False, need to sort
 end;
 
 constructor TDLSet.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
@@ -5649,32 +5543,6 @@ begin
     Result := TBerSequence.Create(AElementVector);
 end;
 
-class function TBerSequence.Map(const ASequence: IAsn1Sequence; const AFunc: TCryptoLibFunc<IAsn1Encodable, IAsn1Encodable>): IBerSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ASequence = nil) or (ASequence.Count < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<IAsn1Encodable, IAsn1Encodable>(ASequence.Elements, AFunc);
-  Result := WithElements(LMapped);
-end;
-
-class function TBerSequence.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSequence;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := WithElements(LMapped);
-end;
-
 class function TBerSequence.Concatenate(const ASequences: array of IAsn1Sequence): IBerSequence;
 var
   LSequences: TCryptoLibGenericArray<IAsn1Sequence>;
@@ -5805,19 +5673,6 @@ begin
     Result := GetEmpty()
   else
     Result := TBerSet.Create(AElementVector);
-end;
-
-class function TBerSet.Map<T>(const ATs: TCryptoLibGenericArray<T>; const AFunc: TCryptoLibFunc<T, IAsn1Encodable>): IBerSet;
-var
-  LMapped: TCryptoLibGenericArray<IAsn1Encodable>;
-begin
-  if (ATs = nil) or (System.Length(ATs) < 1) then
-  begin
-    Result := GetEmpty();
-    Exit;
-  end;
-  LMapped := TArrayUtilities.Map<T, IAsn1Encodable>(ATs, AFunc);
-  Result := TBerSet.Create(False, LMapped); // isSorted = False
 end;
 
 constructor TBerSet.Create(const AC: TCryptoLibGenericArray<IAsn1Encodable>);
