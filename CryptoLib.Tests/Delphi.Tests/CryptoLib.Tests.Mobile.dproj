@@ -1285,6 +1285,7 @@
         <DCCReference Include="..\src\Math\IESCipherTests.pas"/>
         <DCCReference Include="..\src\Crypto\AESSICTests.pas"/>
         <DCCReference Include="..\src\Crypto\SicBulkParityTests.pas"/>
+        <DCCReference Include="..\src\Crypto\BulkParityTestBase.pas"/>
         <DCCReference Include="..\src\Crypto\EcbBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\CbcBulkParityTests.pas"/>
         <DCCReference Include="..\src\Crypto\GcmSivBulkParityTests.pas"/>
@@ -1298,6 +1299,7 @@
         <DCCReference Include="..\src\Crypto\PaddingTests.pas"/>
         <DCCReference Include="..\src\Crypto\DeterministicDsaTests.pas"/>
         <DCCReference Include="..\src\Crypto\HMacTests.pas"/>
+        <DCCReference Include="..\src\Math\EC\Custom\Sec\SecPFieldTestBase.pas"/>
         <DCCReference Include="..\src\Math\EC\Custom\Sec\SecP256R1FieldTests.pas"/>
         <DCCReference Include="..\src\Crypto\Salsa20Tests.pas"/>
         <DCCReference Include="..\src\Crypto\ChaChaTests.pas"/>

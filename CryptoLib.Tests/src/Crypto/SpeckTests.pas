@@ -164,35 +164,35 @@ end;
 
 procedure TTestSpeck.TestBlockCipherVectorSpeck32;
 begin
-  RunBlockCipherVectorTests(@CreateSpeck32Engine, 'TSpeck32Engine',
+  RunBlockCipherVectorTests(CreateSpeck32Engine, 'TSpeck32Engine',
     FSpeck32BlockCipherVectorKeys, FSpeck32BlockCipherVectorInputs,
     FSpeck32BlockCipherVectorOutputs);
 end;
 
 procedure TTestSpeck.TestBlockCipherVectorSpeck48;
 begin
-  RunBlockCipherVectorTests(@CreateSpeck48Engine, 'TSpeck48Engine',
+  RunBlockCipherVectorTests(CreateSpeck48Engine, 'TSpeck48Engine',
     FSpeck48BlockCipherVectorKeys, FSpeck48BlockCipherVectorInputs,
     FSpeck48BlockCipherVectorOutputs);
 end;
 
 procedure TTestSpeck.TestBlockCipherVectorSpeck64;
 begin
-  RunBlockCipherVectorTests(@CreateSpeck64Engine, 'TSpeck64Engine',
+  RunBlockCipherVectorTests(CreateSpeck64Engine, 'TSpeck64Engine',
     FSpeck64BlockCipherVectorKeys, FSpeck64BlockCipherVectorInputs,
     FSpeck64BlockCipherVectorOutputs);
 end;
 
 procedure TTestSpeck.TestBlockCipherVectorSpeck96;
 begin
-  RunBlockCipherVectorTests(@CreateSpeck96Engine, 'TSpeck96Engine',
+  RunBlockCipherVectorTests(CreateSpeck96Engine, 'TSpeck96Engine',
     FSpeck96BlockCipherVectorKeys, FSpeck96BlockCipherVectorInputs,
     FSpeck96BlockCipherVectorOutputs);
 end;
 
 procedure TTestSpeck.TestBlockCipherVectorSpeck128;
 begin
-  RunBlockCipherVectorTests(@CreateSpeck128Engine, 'TSpeck128Engine',
+  RunBlockCipherVectorTests(CreateSpeck128Engine, 'TSpeck128Engine',
     FSpeck128BlockCipherVectorKeys, FSpeck128BlockCipherVectorInputs,
     FSpeck128BlockCipherVectorOutputs);
 end;

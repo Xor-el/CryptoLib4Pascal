@@ -115,7 +115,7 @@ end;
 
 function TTestAesBitSliced.GetEngineFactory: TBlockCipherFactory;
 begin
-  Result := @CreateBitSlicedEngine;
+  Result := CreateBitSlicedEngine;
 end;
 
 function TTestAesBitSliced.EngineLabel: String;

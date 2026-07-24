@@ -452,7 +452,7 @@ end;
 
 function TTestAES.GetEngineFactory: TBlockCipherFactory;
 begin
-  Result := @CreateAesEngine;
+  Result := CreateAesEngine;
 end;
 
 function TTestAES.EngineLabel: String;

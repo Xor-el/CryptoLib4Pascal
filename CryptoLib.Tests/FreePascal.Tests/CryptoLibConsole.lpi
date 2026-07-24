@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="208">
+    <Units Count="210">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -872,6 +872,14 @@
         <Filename Value="..\src\Crypto\AeadModeTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit207>
+      <Unit208>
+        <Filename Value="..\src\Crypto\BulkParityTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit208>
+      <Unit209>
+        <Filename Value="..\src\Math\EC\Custom\Sec\SecPFieldTestBase.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit209>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

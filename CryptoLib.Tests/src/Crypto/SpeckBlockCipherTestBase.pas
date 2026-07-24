@@ -169,32 +169,32 @@ end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64EcbTests;
 begin
-  RunCryptoPPSpeckModeTests('Ecb64', False, @CreateSpeck64EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Ecb64', False, CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128EcbTests;
 begin
-  RunCryptoPPSpeckModeTests('Ecb128', False, @CreateSpeck128EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Ecb128', False, CreateSpeck128EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64CbcTests;
 begin
-  RunCryptoPPSpeckModeTests('Cbc64', True, @CreateSpeck64EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Cbc64', True, CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128CbcTests;
 begin
-  RunCryptoPPSpeckModeTests('Cbc128', True, @CreateSpeck128EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Cbc128', True, CreateSpeck128EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck64CtrTests;
 begin
-  RunCryptoPPSpeckModeTests('Ctr64', True, @CreateSpeck64EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Ctr64', True, CreateSpeck64EngineForCryptoPP);
 end;
 
 procedure TSpeckBlockCipherTestBase.RunCryptoPPSpeck128CtrTests;
 begin
-  RunCryptoPPSpeckModeTests('Ctr128', True, @CreateSpeck128EngineForCryptoPP);
+  RunCryptoPPSpeckModeTests('Ctr128', True, CreateSpeck128EngineForCryptoPP);
 end;
 
 end.

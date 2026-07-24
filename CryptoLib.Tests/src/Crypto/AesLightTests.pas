@@ -53,7 +53,7 @@ end;
 
 function TTestAesLight.GetEngineFactory: TBlockCipherFactory;
 begin
-  Result := @CreateAesLightEngine;
+  Result := CreateAesLightEngine;
 end;
 
 function TTestAesLight.EngineLabel: String;

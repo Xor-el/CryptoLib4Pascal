@@ -117,13 +117,13 @@ begin
   LSavedFactory := FEngineFactory;
   LSavedLabel := FCurrentEngineLabel;
   try
-    FEngineFactory := @AeadEngineBitSliced;
+    FEngineFactory := AeadEngineBitSliced;
     FCurrentEngineLabel := 'bit-sliced';
     AProc();
 
     if TAesUtilities.IsHardwareAccelerated() then
     begin
-      FEngineFactory := @AeadEngineScalar;
+      FEngineFactory := AeadEngineScalar;
       FCurrentEngineLabel := 'scalar';
       AProc();
     end;

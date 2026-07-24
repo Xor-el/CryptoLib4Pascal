@@ -23,51 +23,30 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpSecureRandom,
+  ClpIAsn1Objects,
   ClpISecureRandom,
-  ClpIX9ECAsn1Objects,
   ClpSecObjectIdentifiers,
-  ClpPack,
-  ClpCustomNamedCurves,
-  ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,
   ClpCryptoLibTypes,
-  CryptoLibTestBase;
+  SecPFieldTestBase;
 
 type
 
-  TTestSecP256R1Field = class(TCryptoLibAlgorithmTestCase)
-  private
-  var
-    FRandom: ISecureRandom;
-    FDP: IX9ECParameters;
-    FQ: TBigInteger;
-
-    procedure AssertAreBigIntegersEqual(const a, b: TBigInteger);
-    function FE(const x: TBigInteger): IECFieldElement;
-    function GenerateMultiplyInput_Random(): IECFieldElement;
+  TTestSecP256R1Field = class(TSecPFieldTestBase)
+  strict protected
+    function GetCurveOid: IDerObjectIdentifier; override;
+  strict private
     function GenerateSquareInput_OpenSSLBug(): IECFieldElement;
     function GenerateMultiplyInputA_OpenSSLBug(): IECFieldElement;
     function GenerateMultiplyInputB_OpenSSLBug(): IECFieldElement;
-    function Nat256_Create(): TCryptoLibUInt32Array;
-    function Nat256_ToBigInteger(const x: TCryptoLibUInt32Array): TBigInteger;
-
-  protected
-    procedure SetUp; override;
-    procedure TearDown; override;
   published
-    procedure TestMultiply1();
-    procedure TestMultiply2();
-    procedure TestSquare();
-
     /// <summary>
     /// <para>
     /// Test squaring with specifically selected values that triggered a
@@ -95,194 +74,51 @@ type
     /// </para>
     /// </summary>
     procedure TestMultiply_OpenSSLBug();
-
   end;
 
 implementation
 
 { TTestSecP256R1Field }
 
-procedure TTestSecP256R1Field.AssertAreBigIntegersEqual(const a,
-  b: TBigInteger);
+function TTestSecP256R1Field.GetCurveOid: IDerObjectIdentifier;
 begin
-  CheckEquals(True, a.Equals(b));
-end;
-
-function TTestSecP256R1Field.FE(const x: TBigInteger): IECFieldElement;
-begin
-  result := FDP.Curve.FromBigInteger(x);
+  result := TSecObjectIdentifiers.SecP256r1;
 end;
 
 function TTestSecP256R1Field.GenerateMultiplyInputA_OpenSSLBug: IECFieldElement;
 var
   x: TCryptoLibUInt32Array;
 begin
-  x := Nat256_Create();
+  x := Nat_Create(8);
   x[0] := UInt32(FRandom.NextInt32()) shr 1;
   x[4] := 3;
   x[7] := $FFFFFFFF;
 
-  result := FE(Nat256_ToBigInteger(x));
+  result := FE(Nat_ToBigInteger(8, x));
 end;
 
 function TTestSecP256R1Field.GenerateMultiplyInputB_OpenSSLBug: IECFieldElement;
 var
   x: TCryptoLibUInt32Array;
 begin
-  x := Nat256_Create();
+  x := Nat_Create(8);
   x[0] := UInt32(FRandom.NextInt32()) shr 1;
   x[3] := 1;
   x[7] := $FFFFFFFF;
 
-  result := FE(Nat256_ToBigInteger(x));
-end;
-
-function TTestSecP256R1Field.GenerateMultiplyInput_Random: IECFieldElement;
-begin
-  result := FE(TBigInteger.Create(FDP.Curve.FieldSize + 32, FRandom).&Mod(FQ));
+  result := FE(Nat_ToBigInteger(8, x));
 end;
 
 function TTestSecP256R1Field.GenerateSquareInput_OpenSSLBug: IECFieldElement;
 var
   x: TCryptoLibUInt32Array;
 begin
-  x := Nat256_Create();
+  x := Nat_Create(8);
   x[0] := UInt32(FRandom.NextInt32()) shr 1;
   x[4] := 2;
   x[7] := $FFFFFFFF;
 
-  result := FE(Nat256_ToBigInteger(x));
-end;
-
-function TTestSecP256R1Field.Nat256_Create(): TCryptoLibUInt32Array;
-begin
-  System.SetLength(result, 8);
-end;
-
-function TTestSecP256R1Field.Nat256_ToBigInteger(const x: TCryptoLibUInt32Array)
-  : TBigInteger;
-var
-  bs, temp: TBytes;
-  i: Int32;
-  x_i: UInt32;
-begin
-  System.SetLength(bs, 32);
-  for i := 0 to System.Pred(8) do
-
-  begin
-    x_i := x[i];
-    if (x_i <> 0) then
-    begin
-      temp := TPack.UInt32_To_BE(x_i);
-      System.Move(temp[0], bs[(7 - i) shl 2], System.Length(temp) *
-        SizeOf(Byte));
-
-    end;
-  end;
-  result := TBigInteger.Create(1, bs);
-end;
-
-procedure TTestSecP256R1Field.SetUp;
-begin
-  inherited;
-  FRandom := TSecureRandom.Create();
-  FDP := TCustomNamedCurves.GetByOid(TSecObjectIdentifiers.SecP256r1);
-
-  FQ := FDP.Curve.Field.Characteristic;
-end;
-
-procedure TTestSecP256R1Field.TearDown;
-begin
-  inherited;
-
-end;
-
-procedure TTestSecP256R1Field.TestMultiply1;
-var
-  Count, i: Int32;
-  x, y, z: IECFieldElement;
-  bigX, bigY, bigR, bigZ: TBigInteger;
-begin
-  Count := 1000;
-
-  i := 0;
-
-  while i < Count do
-  begin
-
-    x := GenerateMultiplyInput_Random();
-    y := GenerateMultiplyInput_Random();
-
-    bigX := x.ToBigInteger();
-    bigY := y.ToBigInteger();
-    bigR := bigX.Multiply(bigY).&Mod(FQ);
-
-    z := x.Multiply(y);
-    bigZ := z.ToBigInteger();
-
-    AssertAreBigIntegersEqual(bigR, bigZ);
-
-    System.Inc(i);
-  end;
-
-end;
-
-procedure TTestSecP256R1Field.TestMultiply2;
-var
-  Count, i, J, K: Int32;
-  ecFieldElements: TCryptoLibGenericArray<IECFieldElement>;
-  bigIntegers: TCryptoLibGenericArray<TBigInteger>;
-  bigR, bigZ: TBigInteger;
-  z: IECFieldElement;
-begin
-  Count := 100;
-  System.SetLength(ecFieldElements, Count);
-  System.SetLength(bigIntegers, Count);
-
-  for i := 0 to System.Pred(System.Length(ecFieldElements)) do
-
-  begin
-    ecFieldElements[i] := GenerateMultiplyInput_Random();
-    bigIntegers[i] := ecFieldElements[i].ToBigInteger();
-  end;
-
-  for J := 0 to System.Pred(System.Length(ecFieldElements)) do
-  begin
-    for K := 0 to System.Pred(System.Length(ecFieldElements)) do
-    begin
-      bigR := bigIntegers[J].Multiply(bigIntegers[K]).&Mod(FQ);
-
-      z := ecFieldElements[J].Multiply(ecFieldElements[K]);
-      bigZ := z.ToBigInteger();
-
-      AssertAreBigIntegersEqual(bigR, bigZ);
-    end;
-  end;
-end;
-
-procedure TTestSecP256R1Field.TestSquare;
-var
-  Count, i: Int32;
-  x, z: IECFieldElement;
-  bigX, bigY, bigZ: TBigInteger;
-begin
-  Count := 1000;
-  i := 0;
-
-  while i < Count do
-
-  begin
-    x := GenerateMultiplyInput_Random();
-
-    bigX := x.ToBigInteger();
-    bigY := bigX.Multiply(bigX).&Mod(FQ);
-
-    z := x.Square();
-    bigZ := z.ToBigInteger();
-
-    AssertAreBigIntegersEqual(bigY, bigZ);
-    System.Inc(i);
-  end;
+  result := FE(Nat_ToBigInteger(8, x));
 end;
 
 procedure TTestSecP256R1Field.TestSquare_OpenSSLBug;
@@ -295,7 +131,6 @@ begin
   i := 0;
 
   while i < Count do
-
   begin
     x := GenerateSquareInput_OpenSSLBug();
 
@@ -316,7 +151,6 @@ var
   bigR, bigX, bigY, bigZ: TBigInteger;
   Count, i: Int32;
 begin
-
   Count := 100;
   i := 0;
 
@@ -335,7 +169,6 @@ begin
     AssertAreBigIntegersEqual(bigR, bigZ);
     System.Inc(i);
   end;
-
 end;
 
 initialization

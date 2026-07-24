@@ -101,7 +101,7 @@ end;
 
 procedure TTestBlowfish.TestBlockCipherVector;
 begin
-  RunBlockCipherVectorTests(@CreateBlowfishEngine, 'Blowfish',
+  RunBlockCipherVectorTests(CreateBlowfishEngine, 'Blowfish',
     FBlockCipherVectorKeys, FBlockCipherVectorInputs, FBlockCipherVectorOutputs);
 end;
 
