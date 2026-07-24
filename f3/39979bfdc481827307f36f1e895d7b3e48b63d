@@ -1,0 +1,38 @@
+CryptoLib.Tests/src/CryptoLibTestBase.pas
+  s_a664f450ccb9fa::t_15a95a818070ff 45-46
+  s_a664f450ccb9fa::t_b5c3c6a58ed0f4 110-117
+CryptoLib.Tests/src/Utils/Vectors/OpenSslVectors.pas
+  s_a664f450ccb9fa::t_f77fe999aac8b6 28-29,46-56
+  s_a664f450ccb9fa::t_3ed251a6d65db7 83-95
+CryptoLib.Tests/src/OpenSsl/OpenSslReaderTests.pas
+  s_a664f450ccb9fa::t_ed22111eb8cf51 371,497,524
+CryptoLib.Tests/src/Crypto/ChaCha20Poly1305Tests.pas
+  s_a664f450ccb9fa::t_33a434463f9f42 227,257,285
+CryptoLib.Tests/src/OpenSsl/OpenSslWriterTests.pas
+  s_a664f450ccb9fa::t_6e616173ff76c0 67-68
+  s_a664f450ccb9fa::t_080e694acaeda0 153,162
+CryptoLib.Tests/src/Crypto/RijndaelTests.pas
+  s_a664f450ccb9fa::t_e5fb1aaee86427 42-43
+  s_a664f450ccb9fa::t_d6b48c9d281f76 51
+CryptoLib.Tests/src/Crypto/BlowfishTests.pas
+  s_a664f450ccb9fa::t_f759526e6b16bd 87,89
+  s_a664f450ccb9fa::t_51774e5e1fd9e4 104-105
+  s_a664f450ccb9fa::t_30a359bd437c50 44
+  s_a664f450ccb9fa::t_4715def725dbf2 36-37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "f339979bfdc481827307f36f1e895d7b3e48b63d",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
