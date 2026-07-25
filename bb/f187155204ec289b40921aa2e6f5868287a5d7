@@ -1,0 +1,33 @@
+.github/workflows/make.yml
+  h_878efc035442cc 36,136,156
+.github/workflows/ci/native-build.sh
+  s_a664f450ccb9fa::t_37eef5bedd9919 9
+.github/workflows/make.pas
+  s_a664f450ccb9fa::t_a498f3c5b4eade 2437-2452
+  s_a664f450ccb9fa::t_35ca0735732501 248
+  s_a664f450ccb9fa::t_01306051fc886d 2498
+  s_a664f450ccb9fa::t_80972fa22c7b66 2462
+.github/workflows/ci/shared/common.sh
+  s_a664f450ccb9fa::t_8dbf7698066119 169-181
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "bbf187155204ec289b40921aa2e6f5868287a5d7",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
