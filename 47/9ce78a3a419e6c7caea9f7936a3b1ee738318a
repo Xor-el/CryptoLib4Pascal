@@ -1,0 +1,14 @@
+.github/workflows/make.yml
+  h_878efc035442cc 97,119
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "479ce78a3a419e6c7caea9f7936a3b1ee738318a",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
