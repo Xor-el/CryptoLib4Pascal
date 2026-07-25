@@ -92,6 +92,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64'].fpc_tarball_target }}
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   linux-arm64:
@@ -111,6 +112,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_tarball_target }}
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   # Scalar-dispatch legs: same native targets, but MAKE_DEFINES forces
@@ -134,6 +136,7 @@ jobs:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_tarball_target }}
           MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   linux-arm64-scalar:
@@ -154,6 +157,7 @@ jobs:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_tarball_target }}
           MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   windows-x64:
