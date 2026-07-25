@@ -1,0 +1,30 @@
+.github/workflows/make.pas
+  s_a664f450ccb9fa::t_bbee66deb46a93 1865,1867,1869
+  s_a664f450ccb9fa::t_200fbc589916ad 1365
+  s_a664f450ccb9fa::t_33c7a89d9bb0cf 235
+  s_a664f450ccb9fa::t_b5f0f91b57323c 1864,1866,1868
+  s_a664f450ccb9fa::t_a5a00e47d14483 2450-2455,2461
+  s_a664f450ccb9fa::t_701e244a595c9e 230-234
+.github/workflows/make.yml
+  s_a664f450ccb9fa::t_e28ff4f606826b 321,344,367
+  s_a664f450ccb9fa::t_758d90bec8beb5 248
+  s_a664f450ccb9fa::t_df5244e6f0ced8 297
+  s_a664f450ccb9fa::t_9f425d06cbdca9 275
+  s_a664f450ccb9fa::t_908304c96653ee 41-43,51-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "d60fa8089a684927d49bb7bac9ce5c0df9f7e5f8",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
