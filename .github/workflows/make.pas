@@ -227,6 +227,12 @@ type
     // builds and runs console benchmark projects under BenchmarkTargetFolder
     // after the test suite completes.
     FRunBenchmark: Boolean;
+    // Selected via MAKE_LAZBUILD_GUI (defaults to True). Only meaningful under
+    // the lazbuild backend - the fpc backend never builds GUI projects (it has
+    // no widgetset). When False, LCL/GUI projects are skipped even under
+    // lazbuild, letting a run opt out of the per-platform widgetset toolchain
+    // the GUI link needs.
+    FBuildGuiProjects: Boolean;
     FGraph: TPackageGraph;
     // Non-empty while a MAKE_DEFINES block is appended to this fpc.cfg (lazbuild
     // backend only); RestoreFpcConfig strips it back out.
@@ -1356,6 +1362,7 @@ begin
   FPackageScope := TPackageScope.Required;
   FErrorCount := 0;
   FRunBenchmark := False;
+  FBuildGuiProjects := True;
   // Honor the NO_COLOR convention (https://no-color.org): any value disables
   // ANSI colors. GitHub Actions renders ANSI in its log viewer, so default on.
   FUseColor := GetEnvironmentVariable('NO_COLOR') = '';
@@ -1854,6 +1861,12 @@ begin
     Log(CSI_Yellow, 'run benchmark: true')
   else
     Log(CSI_Yellow, 'run benchmark: false');
+
+  FBuildGuiProjects := ParseBoolEnv('MAKE_LAZBUILD_GUI', True);
+  if FBuildGuiProjects then
+    Log(CSI_Yellow, 'build GUI projects (lazbuild): true')
+  else
+    Log(CSI_Yellow, 'build GUI projects (lazbuild): false');
 end;
 
 procedure TMakeRunner.UpdateSubmodules;
@@ -2434,17 +2447,18 @@ begin
     Log(CSI_Green, 'built GUI project (not run) ' + BinaryPath);
 end;
 
-// Handle a GUI (LCL) project: under the lazbuild backend, build it (compile-check
-// only - GUI apps are never run, they need a display); under the fpc backend
-// (no widgetset) skip it. Returns True if ALpiPath was a GUI project, so the
-// caller stops its normal processing for it. ASkipLabel is the log prefix used
-// when skipping (e.g. 'skip GUI project ').
+// Handle a GUI (LCL) project: build it (compile-check only - GUI apps are never
+// run, they need a display) when the lazbuild backend is active AND GUI building
+// is enabled (MAKE_LAZBUILD_GUI); otherwise skip it - the fpc backend has no
+// widgetset, and MAKE_LAZBUILD_GUI=false opts lazbuild out too. Returns True if
+// ALpiPath was a GUI project, so the caller stops its normal processing for it.
+// ASkipLabel is the log prefix used when skipping (e.g. 'skip GUI project ').
 function TMakeRunner.TryHandleGuiProject(const ALpiPath, ASkipLabel: string): Boolean;
 begin
   Result := IsGUIProject(ALpiPath);
   if not Result then
     Exit;
-  if LclSupported then
+  if LclSupported and FBuildGuiProjects then
     BuildGuiProject(ALpiPath)
   else
     Log(CSI_Yellow, ASkipLabel + ALpiPath);
