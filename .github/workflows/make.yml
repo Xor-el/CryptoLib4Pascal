@@ -52,7 +52,7 @@ env:
   # the lazbuild backend - the fpc backend has no widgetset and always skips them.
   # Set false to opt out of the per-platform GUI widgetset toolchain (GTK2/X11 on
   # Unix, cocoa on macOS). Override per job below, like MAKE_BUILD_BACKEND.
-  MAKE_LAZBUILD_GUI: true
+  MAKE_LAZBUILD_GUI: false
   # Set by the workflow_dispatch "debug" toggle; '1' enables `set -x` tracing in
   # install-fpc-lazarus.sh, '0' otherwise. Forwarded into the sandboxed jobs below.
   CI_DEBUG: ${{ github.event.inputs.debug == 'true' && '1' || '0' }}
