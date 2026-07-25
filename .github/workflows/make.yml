@@ -33,7 +33,7 @@ env:
   FPC_VERSION: 3.2.2
   LAZARUS_BRANCH: lazarus_4_4
   LAZARUS_REPO: https://github.com/fpc/Lazarus.git
-  MAKE_BUILD_BACKEND: fpc
+  MAKE_BUILD_BACKEND: lazbuild
   # make.pas package build scope: 'all' compiles every discovered package (catches
   # a package that fails on the target even if unused); 'required' only compiles
   # the projects' dependency closure. Override per job below, like MAKE_BUILD_BACKEND.
@@ -92,9 +92,6 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64'].fpc_tarball_target }}
-          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
-          MAKE_RUN_BENCHMARK: true
-          MAKE_BUILD_BACKEND: lazbuild
         run: bash .github/workflows/ci/native-build.sh
 
   linux-arm64:
@@ -114,9 +111,6 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_tarball_target }}
-          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
-          MAKE_RUN_BENCHMARK: true
-          MAKE_BUILD_BACKEND: lazbuild
         run: bash .github/workflows/ci/native-build.sh
 
   # Scalar-dispatch legs: same native targets, but MAKE_DEFINES
@@ -139,7 +133,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_tarball_target }}
-          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
         run: bash .github/workflows/ci/native-build.sh
 
   linux-arm64-scalar:
@@ -159,7 +153,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_tarball_target }}
-          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR'
+          MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
         run: bash .github/workflows/ci/native-build.sh
 
   windows-x64:

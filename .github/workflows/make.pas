@@ -245,6 +245,7 @@ type
     procedure BuildAllProjects;
     procedure RunBenchmarkProjects;
     procedure BuildGuiProject(const ALpiPath: string);
+    function TryHandleGuiProject(const ALpiPath, ASkipLabel: string): Boolean;
     function BuildProject(const ALpiPath: string): string;
     function BuildProjectWithLazbuild(const APath: string): string;
     function BuildProjectWithFpc(const APath: string): string;
@@ -2433,6 +2434,22 @@ begin
     Log(CSI_Green, 'built GUI project (not run) ' + BinaryPath);
 end;
 
+// Handle a GUI (LCL) project: under the lazbuild backend, build it (compile-check
+// only - GUI apps are never run, they need a display); under the fpc backend
+// (no widgetset) skip it. Returns True if ALpiPath was a GUI project, so the
+// caller stops its normal processing for it. ASkipLabel is the log prefix used
+// when skipping (e.g. 'skip GUI project ').
+function TMakeRunner.TryHandleGuiProject(const ALpiPath, ASkipLabel: string): Boolean;
+begin
+  Result := IsGUIProject(ALpiPath);
+  if not Result then
+    Exit;
+  if LclSupported then
+    BuildGuiProject(ALpiPath)
+  else
+    Log(CSI_Yellow, ASkipLabel + ALpiPath);
+end;
+
 procedure TMakeRunner.BuildAllProjects;
 var
   List: TStringList;
@@ -2442,18 +2459,8 @@ begin
   try
     for Each in List do
     begin
-      if IsGUIProject(Each) then
-      begin
-        if not LclSupported then
-        begin
-          Log(CSI_Yellow, 'skip GUI project ' + Each);
-          Continue;
-        end;
-        // lazbuild backend: the full LCL is present, so compile the GUI project
-        // to verify it builds. It is not run because GUI apps need a display.
-        BuildGuiProject(Each);
+      if TryHandleGuiProject(Each, 'skip GUI project ') then
         Continue;
-      end;
 
       if IsTestProject(Each) then
         RunTestProject(Each)
@@ -2488,16 +2495,8 @@ begin
   try
     for Each in List do
     begin
-      if IsGUIProject(Each) then
-      begin
-        if not LclSupported then
-        begin
-          Log(CSI_Yellow, 'skip GUI benchmark project ' + Each);
-          Continue;
-        end;
-        BuildGuiProject(Each);
+      if TryHandleGuiProject(Each, 'skip GUI benchmark project ') then
         Continue;
-      end;
 
       if not IsBenchmarkProject(Each) then
       begin
