@@ -43,6 +43,8 @@ resourcestring
   SV2PreTbsCertListSignatureMustNotBeSet = 'signature should not be set in PreTBSCertList generator';
   SExtensionAlreadyAdded = 'extension %s already added';
   SExtensionNotPresent = 'extension %s not present';
+  SIssuerEmptyDN = 'issuer is an empty distinguished name';
+  SAttrCertIssuerEmpty = 'issuer is empty';
 
 type
   /// <summary>
@@ -294,6 +296,9 @@ begin
      (FSubject = nil) or (FSubjectPublicKeyInfo = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V1 TBSCertificate']);
 
+  if FIssuer.IsEmpty then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SIssuerEmptyDN);
+
   if FValidity <> nil then
     LValidity := FValidity
   else
@@ -397,6 +402,9 @@ begin
      ((FSubject = nil) and (not FAltNamePresentAndCritical)) or (FSubjectPublicKeyInfo = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V3 TBSCertificate']);
 
+  if FIssuer.IsEmpty then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SIssuerEmptyDN);
+
   if FValidity <> nil then
     LValidity := FValidity
   else
@@ -429,6 +437,9 @@ begin
      ((FValidity = nil) and ((FStartDate = nil) or (FEndDate = nil))) or
      ((FSubject = nil) and (not FAltNamePresentAndCritical)) or (FSubjectPublicKeyInfo = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V3 TBSCertificate']);
+
+  if FIssuer.IsEmpty then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SIssuerEmptyDN);
 
   if FValidity <> nil then
     LValidity := FValidity
@@ -572,6 +583,9 @@ begin
   if (FIssuer = nil) or (FThisUpdate = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 PreTBSCertList']);
 
+  if FIssuer.IsEmpty then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SIssuerEmptyDN);
+
   Result := GenerateTbsCertificateStructure;
 end;
 
@@ -579,6 +593,9 @@ function TV2TbsCertListGenerator.GenerateTbsCertList: ITbsCertificateList;
 begin
   if (FSignature = nil) or (FIssuer = nil) or (FThisUpdate = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 TBSCertList']);
+
+  if FIssuer.IsEmpty then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SIssuerEmptyDN);
 
   Result := TTbsCertificateList.GetInstance(GenerateTbsCertificateStructure);
 end;
@@ -675,6 +692,9 @@ begin
   if (FSerialNumber = nil) or (FSignature = nil) or (FIssuer = nil) or
      (FStartDate = nil) or (FEndDate = nil) or (FHolder = nil) or (FAttributes = nil) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SMandatoryFieldsNotSet, ['V2 AttributeCertificateInfo']);
+
+  if TAttributeCertificateInfo.IsEmptyIssuer(FIssuer) then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SAttrCertIssuerEmpty);
 
   LV := TAsn1EncodableVector.Create([FVersion, FHolder, FIssuer, FSignature, FSerialNumber]);
   LV.Add(TAttCertValidityPeriod.Create(FStartDate, FEndDate));

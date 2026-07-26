@@ -1343,6 +1343,9 @@
         <DCCReference Include="..\src\Asn1\X509\X509AltTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\X509ExtensionsTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\X509NameTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\TbsCertificateIssuerTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\TbsCertListTests.pas"/>
+        <DCCReference Include="..\src\Asn1\X509\AttributeCertificateInfoIssuerTests.pas"/>
         <DCCReference Include="..\src\Asn1\Pkcs\Pkcs10CertRequestTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\DeltaCertificateTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\RelatedCertificateTests.pas"/>

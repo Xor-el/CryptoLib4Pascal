@@ -124,6 +124,7 @@ type
     procedure SetDateAndTime(const AValue: TNullable<TDateTime>);
     function GetIssuers: TCryptoLibGenericArray<IX509Name>;
     procedure SetIssuers(const AValue: TCryptoLibGenericArray<IX509Name>);
+    procedure AddIssuer(const AIssuer: IX509Name);
     function GetMaxCrlNumber: TBigInteger;
     procedure SetMaxCrlNumber(const AValue: TBigInteger);
     function GetMinCrlNumber: TBigInteger;
