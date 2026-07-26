@@ -137,6 +137,9 @@ resourcestring
   STargetsCannotBeNilOrEmpty = 'targets cannot be nil or empty';
   STargetsCannotContainNil = 'targets cannot contain nil';
   STargetsNil = 'targets cannot be nil';
+  SAttributeCertificateIssuerEmpty = 'attribute certificate issuer is empty';
+  SCrlIssuerEmptyDN = 'CRL issuer is an empty distinguished name';
+  SCertificateIssuerEmptyDN = 'certificate issuer is an empty distinguished name';
 
 type
   /// <summary>
@@ -1217,6 +1220,7 @@ type
     function GetValueList: TCryptoLibStringArray; overload;
     function GetValue(const AOid: IDerObjectIdentifier): String;
     function GetValues(const AOid: IDerObjectIdentifier): TCryptoLibStringArray; overload;
+    function GetIsEmpty: Boolean;
 
   public
     // OID constants
@@ -1314,6 +1318,7 @@ type
 
     property Oids: TCryptoLibGenericArray<IDerObjectIdentifier> read GetOids;
     property Values: TCryptoLibStringArray read GetValues;
+    property IsEmpty: Boolean read GetIsEmpty;
 
   private
     class function CreateDefaultConverter: IX509NameEntryConverter; static;
@@ -2790,6 +2795,13 @@ type
       AIsExplicit: Boolean): IAttributeCertificateInfo; overload; static;
     class function GetTagged(const ATaggedObject: IAsn1TaggedObject;
       ADeclaredExplicit: Boolean): IAttributeCertificateInfo; static;
+
+    /// <summary>
+    /// Return true when the AttCertIssuer carries no identifying information: an empty v1 GeneralNames
+    /// sequence, or a v2 V2Form whose issuerName, baseCertificateID and objectDigestInfo are all absent
+    /// (or whose issuerName, when present, is itself empty).
+    /// </summary>
+    class function IsEmptyIssuer(const AIssuer: IAttCertIssuer): Boolean; static;
 
     constructor Create(const ASeq: IAsn1Sequence); overload;
 
@@ -4403,6 +4415,11 @@ begin
   end;
 
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+
+  // RFC 5280 sec. 4.1.2.4: certificate issuer MUST be a non-empty DN.
+  if FIssuer.IsEmpty then
+    raise EArgumentCryptoLibException.CreateRes(@SCertificateIssuerEmptyDN);
+
   FSeq := ASeq;
 end;
 
@@ -4441,6 +4458,11 @@ begin
   FIssuerUniqueID := AIssuerUniqueID;
   FSubjectUniqueID := ASubjectUniqueID;
   FExtensions := AExtensions;
+
+  // RFC 5280 sec. 4.1.2.4: certificate issuer MUST be a non-empty DN.
+  if FIssuer.IsEmpty then
+    raise EArgumentCryptoLibException.CreateRes(@SCertificateIssuerEmptyDN);
+
   FSeq := nil;
 end;
 
@@ -8006,6 +8028,14 @@ begin
   Result := GetValue(AOid);
 end;
 
+function TX509Name.GetIsEmpty: Boolean;
+begin
+  if FSeq <> nil then
+    Result := FSeq.Count < 1
+  else
+    Result := System.Length(FOids) < 1;
+end;
+
 function TX509Name.ToAsn1Object: IAsn1Object;
 var
   LVec, LSVec: IAsn1EncodableVector;
@@ -8023,6 +8053,14 @@ begin
   if FConverter = nil then
   begin
     FConverter := CreateDefaultConverter();
+  end;
+
+  // an empty name encodes as an empty RDNSequence, not SEQUENCE { SET {} }
+  if System.Length(FOids) < 1 then
+  begin
+    FSeq := TDerSequence.Empty;
+    Result := FSeq;
+    Exit;
   end;
 
   LVec := TAsn1EncodableVector.Create();
@@ -10300,6 +10338,11 @@ begin
     TX509Extensions.GetTagged);
 
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+
+  // RFC 5280 sec. 5.1.2.3: the CRL issuer field MUST contain a non-empty distinguished name.
+  if FIssuer.IsEmpty then
+    raise EArgumentCryptoLibException.CreateRes(@SCrlIssuerEmptyDN);
+
   FSeq := ASeq;
 end;
 
@@ -10791,6 +10834,41 @@ begin
   FIssuerUniqueID := TAsn1Utilities.ReadOptional<IDerBitString>(ASeq, LPos, TDerBitString.GetOptional);
   FExtensions := TAsn1Utilities.ReadOptional<IX509Extensions>(ASeq, LPos, TX509Extensions.GetOptional);
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
+
+  // RFC 3281 sec. 4.2.3: the attribute certificate issuer MUST identify the issuer; an empty
+  // AttCertIssuer is not a valid identifier.
+  if IsEmptyIssuer(FIssuer) then
+    raise EArgumentCryptoLibException.CreateRes(@SAttributeCertificateIssuerEmpty);
+end;
+
+class function TAttributeCertificateInfo.IsEmptyIssuer(const AIssuer: IAttCertIssuer): Boolean;
+var
+  LInner: IAsn1Encodable;
+  LGeneralNames, LIssuerName: IGeneralNames;
+  LV2: IV2Form;
+begin
+  LInner := AIssuer.Issuer;
+
+  if Supports(LInner, IGeneralNames, LGeneralNames) then
+  begin
+    Result := System.Length(LGeneralNames.GetNames) = 0;
+    Exit;
+  end;
+
+  if Supports(LInner, IV2Form, LV2) then
+  begin
+    LIssuerName := LV2.IssuerName;
+    if LIssuerName <> nil then
+    begin
+      Result := System.Length(LIssuerName.GetNames) = 0;
+      Exit;
+    end;
+
+    Result := (LV2.BaseCertificateID = nil) and (LV2.ObjectDigestInfo = nil);
+    Exit;
+  end;
+
+  Result := False;
 end;
 
 function TAttributeCertificateInfo.GetVersion: IDerInteger;

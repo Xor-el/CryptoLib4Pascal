@@ -540,9 +540,11 @@ type
     function GetValues(const AOid: IDerObjectIdentifier): TCryptoLibStringArray; overload;
     function GetValueList(const AOid: IDerObjectIdentifier): TCryptoLibStringArray; overload;
     function Equivalent(const AOther: IX509Name; AInOrder: Boolean = False): Boolean;
+    function GetIsEmpty: Boolean;
 
     property Oids: TCryptoLibGenericArray<IDerObjectIdentifier> read GetOids;
     property Values: TCryptoLibStringArray read GetValues;
+    property IsEmpty: Boolean read GetIsEmpty;
   end;
 
   /// <summary>

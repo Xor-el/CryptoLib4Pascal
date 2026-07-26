@@ -843,14 +843,11 @@ var
   LParsed: IAsn1Object;
   LCompleteCrlNumber: TBigInteger;
   LIdp: TCryptoLibByteArray;
-  LIssuers: TCryptoLibGenericArray<IX509Name>;
 begin
   LDeltaSelect := TX509CrlStoreSelector.Create() as IX509CrlStoreSelector;
 
   // RFC 5280 5.2.4 (a)
-  System.SetLength(LIssuers, 1);
-  LIssuers[0] := ACompleteCrl.IssuerDN;
-  LDeltaSelect.Issuers := LIssuers;
+  LDeltaSelect.AddIssuer(ACompleteCrl.IssuerDN);
 
   LExtensions := GetCrlExtensions(ACompleteCrl);
 

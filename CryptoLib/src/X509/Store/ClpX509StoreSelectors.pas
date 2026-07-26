@@ -44,6 +44,7 @@ uses
 
 resourcestring
   SBasicConstraintsTooSmall = 'basic constraints cannot be less than -2';
+  SCrlSelectorIssuerNil = 'issuer cannot be nil';
 
 type
   /// <summary>
@@ -174,6 +175,7 @@ type
     procedure SetDateAndTime(const AValue: TNullable<TDateTime>);
     function GetIssuers: TCryptoLibGenericArray<IX509Name>;
     procedure SetIssuers(const AValue: TCryptoLibGenericArray<IX509Name>);
+    procedure AddIssuer(const AIssuer: IX509Name);
     function GetMaxCrlNumber: TBigInteger;
     procedure SetMaxCrlNumber(const AValue: TBigInteger);
     function GetMinCrlNumber: TBigInteger;
@@ -859,6 +861,18 @@ end;
 procedure TX509CrlStoreSelector.SetIssuers(const AValue: TCryptoLibGenericArray<IX509Name>);
 begin
   FIssuers := System.Copy(AValue);
+end;
+
+procedure TX509CrlStoreSelector.AddIssuer(const AIssuer: IX509Name);
+var
+  LCount: Int32;
+begin
+  if AIssuer = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCrlSelectorIssuerNil);
+
+  LCount := System.Length(FIssuers);
+  System.SetLength(FIssuers, LCount + 1);
+  FIssuers[LCount] := AIssuer;
 end;
 
 function TX509CrlStoreSelector.GetMaxCrlNumber: TBigInteger;

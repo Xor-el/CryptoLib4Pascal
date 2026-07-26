@@ -39,7 +39,7 @@
         <PackageName Value="FCL"/>
       </Item2>
     </RequiredPackages>
-    <Units Count="210">
+    <Units Count="213">
       <Unit0>
         <Filename Value="CryptoLibConsole.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -880,6 +880,18 @@
         <Filename Value="..\src\Math\EC\Custom\Sec\SecPFieldTestBase.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit209>
+      <Unit210>
+        <Filename Value="..\src\Asn1\X509\TbsCertificateIssuerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit210>
+      <Unit211>
+        <Filename Value="..\src\Asn1\X509\TbsCertListTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit211>
+      <Unit212>
+        <Filename Value="..\src\Asn1\X509\AttributeCertificateInfoIssuerTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit212>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
