@@ -1,0 +1,74 @@
+CryptoLib/src/Pkix/ClpPkixCertPathValidatorUtilities.pas
+  s_0f1a2e9196b415::t_7f5af1e1e73588 850
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_0f1a2e9196b415::t_118f0dd9181c55 35-37
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_0f1a2e9196b415::t_30c4c327f620c0 36-38
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_0f1a2e9196b415::t_d1c8b0829dee38 1346-1347
+  s_0f1a2e9196b415::t_ab9889ae949e5e 1348
+CryptoLib/src/Interfaces/X509/Store/ClpIX509StoreSelectors.pas
+  s_0f1a2e9196b415::t_e5114a27b550fd 127
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_0f1a2e9196b415::t_ac0b0a45088c2c 883-894
+  s_0f1a2e9196b415::t_3f03cd5c12fdfe 42
+CryptoLib/src/Interfaces/Asn1/X509/ClpIX509Asn1Objects.pas
+  s_0f1a2e9196b415::t_c55f236dc18896 543,547
+CryptoLib/src/X509/Store/ClpX509StoreSelectors.pas
+  s_0f1a2e9196b415::t_228bd11e3d1cbc 47
+  s_0f1a2e9196b415::t_604036108975b8 866-877
+  s_0f1a2e9196b415::t_e3fc15d44fd2b7 178
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_0f1a2e9196b415::t_7c5cde78508916 1008-1010
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_0f1a2e9196b415::t_234fba6570b93b 924-935
+  s_0f1a2e9196b415::t_34b6585f17ad3e 82
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_0f1a2e9196b415::t_afd72a104e8bd8 1029-1031
+CryptoLib.Tests/src/Asn1/X509/TbsCertListTests.pas
+  s_0f1a2e9196b415::t_196854e6a3b8e6 1-32,35-76,78-83,86-138
+  s_0f1a2e9196b415::t_ecaad3de28cd25 77,84-85
+  s_0f1a2e9196b415::t_52633918261340 33-34
+CryptoLib/src/Asn1/X509/ClpX509Asn1Objects.pas
+  s_0f1a2e9196b415::t_713f626052088a 1321
+  s_0f1a2e9196b415::t_d41cfa53e459d7 10341-10345
+  s_0f1a2e9196b415::t_03370fb0c7cdd9 10837-10871
+  s_0f1a2e9196b415::t_c9cfcafcfdf5a7 4418-4422
+  s_0f1a2e9196b415::t_f3001a34d498b1 2799-2805
+  s_0f1a2e9196b415::t_d8fed3f0506679 4461-4465
+  s_0f1a2e9196b415::t_6a399eaa35ed81 8031-8038,8058-8063
+  s_0f1a2e9196b415::t_a08aec028c43f2 1223
+  s_0f1a2e9196b415::t_d2cfa2427c8dbc 140-142,8064-8065
+CryptoLib/src/Asn1/X509/ClpX509Asn1Generators.pas
+  s_0f1a2e9196b415::t_2eb14cad4240e9 441-443
+  s_0f1a2e9196b415::t_51c93c0b85131c 46-47
+  s_0f1a2e9196b415::t_87472aaae3a140 405-407
+  s_0f1a2e9196b415::t_7e848d0d67c2f3 696-698
+  s_0f1a2e9196b415::t_2b975b6f98bee6 586-588
+  s_0f1a2e9196b415::t_61073f5543368f 597-599
+  s_0f1a2e9196b415::t_43098f4d3363f5 299-301
+CryptoLib.Tests/src/Asn1/X509/TbsCertificateIssuerTests.pas
+  s_0f1a2e9196b415::t_718cd9007fd16f 33-34
+  s_0f1a2e9196b415::t_485bd8b7a92f9b 1-32,35-108,110-119,122-196
+  s_0f1a2e9196b415::t_17d36ae78ec517 109,120-121
+CryptoLib.Tests/src/Asn1/X509/AttributeCertificateInfoIssuerTests.pas
+  s_0f1a2e9196b415::t_9ab2b9c0705bf4 77,89-90
+  s_0f1a2e9196b415::t_c661a781e0126c 1-32,35-76,78-88,91-132
+  s_0f1a2e9196b415::t_313f89e9789b2d 33-34
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "a19e2b9eb6452f5085522d8042f332a81497e053",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
