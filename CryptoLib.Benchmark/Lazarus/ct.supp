@@ -1,0 +1,32 @@
+# Valgrind/Memcheck suppressions for the constant-time taint check (CTValgrind).
+#
+# PURPOSE: silence a small number of benign uninitialised-value reports that come
+# from the FPC runtime (RTL), NOT from the crypto under test, so a clean subject
+# run is not drowned in RTL noise.
+#
+# RULES (do not break these):
+#   * Suppress ONLY frames in the FPC RTL / libc startup. NEVER suppress anything
+#     in a Clp* crypto unit - that is exactly what the tool is meant to catch.
+#   * After adding suppressions, re-run the CONTROLS (aes-ttable, ghash-4k) WITH
+#     this file applied and confirm they STILL report an error. If a suppression
+#     silences a control, it is too broad - remove it.
+#
+# HOW TO POPULATE (on first run, on a box where Valgrind starts - see the runbook):
+#   1. Run a clean SUBJECT with generation on:
+#        valgrind --error-exitcode=1 --gen-suppressions=all ./CTValgrind x25519
+#   2. For each reported block that is clearly in the FPC RTL (fpc_*, SYSTEM_*,
+#      FPC_* frames, or the libc/ld startup), paste the generated { ... } block
+#      below and give it a descriptive name.
+#   3. Re-run the controls with --suppressions=ct.supp and confirm they still fire.
+#
+# No suppressions are enabled by default: an empty file masks nothing, so it can
+# never hide a real leak. Fill it in only with verified RTL frames.
+#
+# ---- Example shape (COMMENTED OUT - replace obj/fun with real RTL frames) ----
+# {
+#   fpc-rtl-startup-uninit
+#   Memcheck:Cond
+#   ...
+#   fun:FPC_*
+#   obj:*/CTValgrind
+# }
