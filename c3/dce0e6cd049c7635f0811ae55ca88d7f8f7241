@@ -1,0 +1,71 @@
+.github/workflows/make.yml
+  s_566a08ddb223fd::t_b12290888b29d9 51-54
+  s_566a08ddb223fd::t_8b8eadd50d906b 149-158
+CryptoLib.Benchmark/Lazarus/CTValgrind.lpr
+  s_566a08ddb223fd::t_099fe4b8a530d9 1-153
+CryptoLib.Benchmark/Lazarus/CTValgrind.lpi
+  s_566a08ddb223fd::t_6a453458d4a7b8 1-79,81-83
+  s_566a08ddb223fd::t_e8c9a30dd40c41 80
+CryptoLib.Benchmark/Lazarus/CTLeakDetect.lpr
+  s_566a08ddb223fd::t_eda3857a28f83d 1-256
+CryptoLib.Benchmark/CTLeakDetect.README.md
+  s_566a08ddb223fd::t_359b18bce7989f 140-143,145-155
+  s_566a08ddb223fd::t_1f3c58b8172215 1-139,144,156-165,179-199
+  s_566a08ddb223fd::t_e6aff1b61ab633 166-178
+.github/workflows/ci/valgrind-ct.sh
+  s_566a08ddb223fd::t_e3d87211bce11e 50
+  s_566a08ddb223fd::t_ba5831f50663dc 1-49,51-113
+CryptoLib.Benchmark/Lazarus/CTLeakDetect.lpi
+  s_566a08ddb223fd::t_563f323ed2a884 1-87
+CryptoLib.Benchmark/src/Core/ct_poison.c
+  s_566a08ddb223fd::t_1e66ce18acccb1 1-25
+CryptoLib.Benchmark/src/Core/ClpCtClock.pas
+  s_566a08ddb223fd::t_47b8768f736b78 27
+  s_566a08ddb223fd::t_25b35d3f495e22 1-26,28-227
+CryptoLib.Benchmark/src/Core/ClpDudect.pas
+  s_566a08ddb223fd::t_d0bdec0d2d064e 281
+  s_566a08ddb223fd::t_8e1227dc83a78b 134-139
+  s_566a08ddb223fd::t_b3415fdb3940da 192-222
+  s_566a08ddb223fd::t_aedf4ce3729273 337-341,343-346
+  s_566a08ddb223fd::t_e6e5db3f611464 373,376
+  s_566a08ddb223fd::t_3ffac0c4300b3c 403,438
+  s_566a08ddb223fd::t_2adeb0add865de 50-53
+  s_566a08ddb223fd::t_ba4d1f94588514 56,191
+  s_566a08ddb223fd::t_3a55c1ab5ce16e 1-49,54-55,57-79,96-133,140-190,223-272,274-280,282-336,342,347-372,374-375,377-402,404-437,439-450
+  s_566a08ddb223fd::t_313b868a684ed9 273
+  s_566a08ddb223fd::t_07faf39e7ec126 80-95
+CryptoLib.Benchmark/Lazarus/ct.supp
+  s_566a08ddb223fd::t_61a150a43a53f7 1-32
+CryptoLib.Benchmark/src/Core/ClpCtSubjects.pas
+  s_566a08ddb223fd::t_e379ab076dc78b 224-227
+  s_566a08ddb223fd::t_909db4482238c9 33-51
+  s_566a08ddb223fd::t_699db325f1564d 413-420,427,431-432,446-452,454,460,479,481,483
+  s_566a08ddb223fd::t_4d0b72ddd0f2fa 621-626
+  s_566a08ddb223fd::t_1145959a3a12e4 292-294,296,298
+  s_566a08ddb223fd::t_64317325a8ce1e 380-381,383
+  s_566a08ddb223fd::t_5075b1ad42d72f 275-281
+  s_566a08ddb223fd::t_72bb6d40945e2e 370-375
+  s_566a08ddb223fd::t_6639cb492c8483 161-163,165
+  s_566a08ddb223fd::t_24b15c0d50fdd2 453,456,461,463-469,471,473-474
+  s_566a08ddb223fd::t_7cb8934f292c69 426,428
+  s_566a08ddb223fd::t_9a6e4e63d6007c 615-620
+  s_566a08ddb223fd::t_0fa7a34d5eb86e 153-155
+  s_566a08ddb223fd::t_2de82f799d22e5 1-32,52-99,102-152,156-160,164,166-223,228-274,282-291,295,297,299-369,376-379,382,384-412,421-425,429-430,433-445,455,457-459,462,470,472,475-478,480,482,484-614,627-649
+  s_566a08ddb223fd::t_40aaf0e63bcbf2 100-101
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "c3dce0e6cd049c7635f0811ae55ca88d7f8f7241",
+  "prompts": {},
+  "sessions": {
+    "s_566a08ddb223fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5413c688-0886-4141-a790-c211deb931b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
