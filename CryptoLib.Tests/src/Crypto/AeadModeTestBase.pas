@@ -37,6 +37,7 @@ uses
   ClpAesEngine,
   ClpAesBitSlicedEngine,
   ClpCryptoLibTypes,
+  CipherKernelToggle,
   CryptoLibTestBase,
   BlockCipherTestBase;
 
@@ -83,6 +84,25 @@ type
     // Drive RunInPlaceCase across ALens, once with a 16-byte key and no AAD and
     // once with a 32-byte key and 20 bytes of AAD, from a fixed seed.
     procedure DoInPlaceSweep(const ALens: array of Int32; ASeed: Int64);
+
+    // One streaming-equivalence case at a single plaintext length: feed the
+    // message through ProcessBytes in many chunk sizes and assert, for both
+    // directions and both out-of-place and in-place, that the concatenated
+    // output equals the one-shot result AND the summed per-call Result values
+    // (+ DoFinal) equal the total. Returns '' on success, else a description.
+    function RunStreamingCase(const ARandom: ISecureRandom;
+      APlainLen, AKeyLen: Int32; const AAad: TBytes): String;
+
+    // Drive RunStreamingCase across ALens x {16-byte key/no AAD, 32-byte key/AAD}.
+    procedure DoStreamingSweep(const ALens: array of Int32; ASeed: Int64);
+
+    // Parameterless worker (fixed lengths + seed) for the engine / kernel sweeps.
+    procedure DoTestStreaming;
+  published
+    // Chunk-boundary safety net for ProcessBytes: runs the streaming sweep under
+    // the kernel on/off toggle and across the extra engines (bit-sliced soft-bulk
+    // + scalar), so every dispatch tier is exercised. Inherited by every suite.
+    procedure TestStreamingEquivalence;
   end;
 
 implementation
@@ -232,6 +252,140 @@ begin
     else
       Fail(Format('in-place %s: %s', [ModeLabel, LFails]));
   end;
+end;
+
+function TAeadModeTestBase.RunStreamingCase(const ARandom: ISecureRandom;
+  APlainLen, AKeyLen: Int32; const AAad: TBytes): String;
+const
+  CChunks: array [0 .. 9] of Int32 = (1, 7, 15, 16, 17, 31, 63, 64, 65, 1048576);
+var
+  LK, LIV, LP, LRefCt, LOut: TBytes;
+  LParams: IAeadParameters;
+  LRefLen, LCi, LN, LMode: Int32;
+  LInPlace: Boolean;
+
+  // Stream AInLen bytes of AIn through a fresh cipher (direction AEnc) in
+  // AChunk-sized pieces; return the total produced (summed ProcessBytes Results
+  // + DoFinal), with the truncated output in AOut. AInPlace => a single buffer
+  // holds the input and is written over itself (output cursor trails input).
+  function Stream(AEnc: Boolean; const AIn: TBytes; AInLen, AChunk: Int32;
+    AInPlace: Boolean; out AOut: TBytes): Int32;
+  var
+    LCipher: IAeadCipher;
+    LBuf: TBytes;
+    LOff, LInOff, LCs, LCap: Int32;
+  begin
+    LCipher := CreateAeadCipher;
+    LCipher.Init(AEnc, LParams as ICipherParameters);
+    LCap := LCipher.GetOutputSize(AInLen);
+    // In-place: one buffer must hold BOTH the input and the (possibly larger on
+    // encrypt) output; decrypt output is smaller but the input is bigger.
+    if AInPlace and (AInLen > LCap) then
+      LCap := AInLen;
+    System.SetLength(LBuf, LCap);
+    if AInPlace and (AInLen > 0) then
+      System.Move(AIn[0], LBuf[0], AInLen);
+
+    LOff := 0;
+    LInOff := 0;
+    while LInOff < AInLen do
+    begin
+      LCs := AInLen - LInOff;
+      if LCs > AChunk then
+        LCs := AChunk;
+      if AInPlace then
+        LOff := LOff + LCipher.ProcessBytes(LBuf, LInOff, LCs, LBuf, LOff)
+      else
+        LOff := LOff + LCipher.ProcessBytes(AIn, LInOff, LCs, LBuf, LOff);
+      LInOff := LInOff + LCs;
+    end;
+    LOff := LOff + LCipher.DoFinal(LBuf, LOff);
+    System.SetLength(LBuf, LOff);
+    AOut := LBuf;
+    Result := LOff;
+  end;
+
+begin
+  Result := '';
+  System.SetLength(LK, AKeyLen);
+  ARandom.NextBytes(LK);
+  System.SetLength(LIV, 12);
+  ARandom.NextBytes(LIV);
+  System.SetLength(LP, APlainLen);
+  if APlainLen > 0 then
+    ARandom.NextBytes(LP);
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    16 * 8, LIV, AAad);
+
+  // One-shot reference ciphertext||tag.
+  LRefLen := Stream(True, LP, APlainLen, 1048576, False, LRefCt);
+
+  for LCi := 0 to High(CChunks) do
+    for LMode := 0 to 1 do
+    begin
+      LInPlace := LMode = 1;
+
+      // Encrypt: chunked output+tag must equal the one-shot reference, and the
+      // summed Result values must total the reference length.
+      LN := Stream(True, LP, APlainLen, CChunks[LCi], LInPlace, LOut);
+      if LN <> LRefLen then
+        Exit(Format('[enc len=%d chunk=%d inplace=%d total=%d want=%d] ',
+          [APlainLen, CChunks[LCi], LMode, LN, LRefLen]));
+      if not AreEqual(LOut, LRefCt) then
+        Exit(Format('[enc len=%d chunk=%d inplace=%d ct-mismatch] ',
+          [APlainLen, CChunks[LCi], LMode]));
+
+      // Decrypt: chunked recovery must equal the plaintext, total = APlainLen.
+      LN := Stream(False, LRefCt, LRefLen, CChunks[LCi], LInPlace, LOut);
+      if LN <> APlainLen then
+        Exit(Format('[dec len=%d chunk=%d inplace=%d got=%d] ',
+          [APlainLen, CChunks[LCi], LMode, LN]));
+      if (APlainLen > 0) and (not AreEqual(LOut, LP)) then
+        Exit(Format('[dec len=%d chunk=%d inplace=%d pt-mismatch] ',
+          [APlainLen, CChunks[LCi], LMode]));
+    end;
+end;
+
+procedure TAeadModeTestBase.DoStreamingSweep(const ALens: array of Int32;
+  ASeed: Int64);
+var
+  LRnd: ISecureRandom;
+  LFails: String;
+  LI: Int32;
+  LAad: TBytes;
+begin
+  LRnd := TSecureRandom.Create();
+  LRnd.SetSeed(ASeed);
+  System.SetLength(LAad, 20);
+  LRnd.NextBytes(LAad);
+  LFails := '';
+  for LI := 0 to High(ALens) do
+    LFails := LFails + RunStreamingCase(LRnd, ALens[LI], 16, nil);
+  for LI := 0 to High(ALens) do
+    LFails := LFails + RunStreamingCase(LRnd, ALens[LI], 32, LAad);
+  if LFails <> '' then
+  begin
+    if FCurrentEngineLabel <> '' then
+      Fail(Format('streaming %s [%s]: %s',
+        [ModeLabel, FCurrentEngineLabel, LFails]))
+    else
+      Fail(Format('streaming %s: %s', [ModeLabel, LFails]));
+  end;
+end;
+
+procedure TAeadModeTestBase.DoTestStreaming;
+const
+  CLens: array [0 .. 9] of Int32 = (0, 1, 16, 17, 63, 64, 65, 4 * 16 + 7,
+    17 * 16 + 9, 200);
+begin
+  DoStreamingSweep(CLens, Int64(20260727));
+end;
+
+procedure TAeadModeTestBase.TestStreamingEquivalence;
+begin
+  DoTestStreaming;
+  RunWithCipherKernelToggle(DoTestStreaming);
+  ForEachExtraEngine(DoTestStreaming);
 end;
 
 end.

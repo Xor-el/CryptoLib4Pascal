@@ -65,7 +65,6 @@ resourcestring
   SInvalidNonceOctetLength = 'invalid nonce octet length';
   SInBytesNil = 'input bytes cannot be nil';
   SInvalidOperationState = 'invalid operation state for current cipher state';
-  SOutBytesNil = 'output bytes cannot be nil';
 
 type
   /// <summary>
@@ -572,8 +571,6 @@ function TChaCha20Poly1305.DoFinal(const AOutput: TCryptoLibByteArray;
 var
   LResultLen: Int32;
 begin
-  if (AOutput = nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SOutBytesNil);
   if (AOutOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
 

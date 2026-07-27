@@ -163,6 +163,22 @@ type
     procedure FinalizeBodyOmacPartial(APartialPtr: PByte;
       APartialLen: Int32);
 
+    // ----- Buffer bookkeeping shared across the four ProcessBytes paths. -----
+    /// <summary>Copy up to (ATarget - FBufOff) bytes from AInput into FBufBlock,
+    /// advancing FBufOff / AInOff / ALen; return True once FBufBlock holds
+    /// ATarget bytes.</summary>
+    function DrainInto(const AInput: TCryptoLibByteArray; var AInOff: Int32;
+      var ALen: Int32; ATarget: Int32): Boolean;
+    /// <summary>Stash the trailing (&lt; a full step) bytes into FBufBlock for
+    /// the next call.</summary>
+    procedure StashResidue(const AInput: TCryptoLibByteArray;
+      AInOff, ALen: Int32);
+    /// <summary>Build one confirmed ciphertext block in AScratch by stitching the
+    /// held FMacSize-byte tail of FBufBlock with the leading
+    /// (FBlockSize - FMacSize) bytes of AInput (decrypt bulk block 0).</summary>
+    procedure StitchDecryptBlock0(const AInput: TCryptoLibByteArray;
+      AInOff: Int32; const AScratch: TCryptoLibByteArray);
+
   strict protected
     function GetAlgorithmName: String; override;
     function GetModeName: String; override;
@@ -227,17 +243,11 @@ begin
   TArrayUtilities.Fill(FAssociatedTextMac, 0, System.Length(FAssociatedTextMac),
     Byte(0));
   TArrayUtilities.Fill(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
-  if FOmacState <> nil then
-    TArrayUtilities.Fill(FOmacState, 0, System.Length(FOmacState), Byte(0));
-  if FOmacLookahead <> nil then
-    TArrayUtilities.Fill(FOmacLookahead, 0, System.Length(FOmacLookahead),
-      Byte(0));
-  if FOmacB <> nil then
-    TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
-  if FOmacP <> nil then
-    TArrayUtilities.Fill(FOmacP, 0, System.Length(FOmacP), Byte(0));
-  if FCtrBlock <> nil then
-    TArrayUtilities.Fill(FCtrBlock, 0, System.Length(FCtrBlock), Byte(0));
+  TArrayUtilities.Fill(FOmacState, 0, System.Length(FOmacState), Byte(0));
+  TArrayUtilities.Fill(FOmacLookahead, 0, System.Length(FOmacLookahead), Byte(0));
+  TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
+  TArrayUtilities.Fill(FOmacP, 0, System.Length(FOmacP), Byte(0));
+  TArrayUtilities.Fill(FCtrBlock, 0, System.Length(FCtrBlock), Byte(0));
 end;
 
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
@@ -568,10 +578,43 @@ begin
   Result := Process(AInput, AOutput, AOutOff);
 end;
 
+function TEaxBlockCipher.DrainInto(const AInput: TCryptoLibByteArray;
+  var AInOff: Int32; var ALen: Int32; ATarget: Int32): Boolean;
+var
+  LToFill: Int32;
+begin
+  LToFill := ATarget - FBufOff;
+  if LToFill > ALen then
+    LToFill := ALen;
+  System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
+  FBufOff := FBufOff + LToFill;
+  AInOff := AInOff + LToFill;
+  ALen := ALen - LToFill;
+  Result := FBufOff = ATarget;
+end;
+
+procedure TEaxBlockCipher.StashResidue(const AInput: TCryptoLibByteArray;
+  AInOff, ALen: Int32);
+begin
+  if ALen > 0 then
+  begin
+    System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
+    FBufOff := FBufOff + ALen;
+  end;
+end;
+
+procedure TEaxBlockCipher.StitchDecryptBlock0(const AInput: TCryptoLibByteArray;
+  AInOff: Int32; const AScratch: TCryptoLibByteArray);
+begin
+  System.Move(FBufBlock[0], AScratch[0], FMacSize);
+  if FBlockSize > FMacSize then
+    System.Move(AInput[AInOff], AScratch[FMacSize], FBlockSize - FMacSize);
+end;
+
 function TEaxBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LResultLen, LToFill, LBulkBlocks, LBulkBytes, LKernelBlocks, LLastInOff,
+  LI, LResultLen, LBulkBlocks, LBulkBytes, LKernelBlocks, LLastInOff,
     LLastOutOff, LMiddleBlocks, LMiddleInOff, LMiddleOutOff: Int32;
   LScratch: TCryptoLibByteArray;
 begin
@@ -591,14 +634,7 @@ begin
   // DoFinal's subkey-B-vs-P decision. K < 4 falls through to scalar.
   if FUseFusedBody and (not FForEncryption) and (ALen > 0) then
   begin
-    LToFill := (FBlockSize + FMacSize) - FBufOff;
-    if LToFill > ALen then
-      LToFill := ALen;
-    System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
-    FBufOff := FBufOff + LToFill;
-    AInOff := AInOff + LToFill;
-    ALen := ALen - LToFill;
-    if FBufOff = FBlockSize + FMacSize then
+    if DrainInto(AInput, AInOff, ALen, FBlockSize + FMacSize) then
     begin
       TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
         SOutputBufferTooShort);
@@ -626,10 +662,7 @@ begin
         // previous buffer with the first (FBlockSize - FMacSize) AInput
         // bytes into one confirmed ciphertext block).
         System.SetLength(LScratch, FBlockSize);
-        System.Move(FBufBlock[0], LScratch[0], FMacSize);
-        if FBlockSize > FMacSize then
-          System.Move(AInput[AInOff], LScratch[FMacSize],
-            FBlockSize - FMacSize);
+        StitchDecryptBlock0(AInput, AInOff, LScratch);
         CtrEncryptBlock(@LScratch[0], @AOutput[AOutOff + LResultLen]);
         FlushOmacLookahead();
         System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
@@ -661,10 +694,7 @@ begin
         // directly from AInput. OMAC lookahead is threaded through each
         // block so the last confirmed block is always the lookahead.
         System.SetLength(LScratch, FBlockSize);
-        System.Move(FBufBlock[0], LScratch[0], FMacSize);
-        if FBlockSize > FMacSize then
-          System.Move(AInput[AInOff], LScratch[FMacSize],
-            FBlockSize - FMacSize);
+        StitchDecryptBlock0(AInput, AInOff, LScratch);
         CtrEncryptBlock(@LScratch[0], @AOutput[AOutOff + LResultLen]);
         FlushOmacLookahead();
         System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
@@ -692,11 +722,7 @@ begin
       ALen := ALen - LBulkBytes;
     end;
 
-    if ALen > 0 then
-    begin
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-      FBufOff := FBufOff + ALen;
-    end;
+    StashResidue(AInput, AInOff, ALen);
 
     Result := LResultLen;
     Exit;
@@ -711,14 +737,7 @@ begin
   begin
     if FBufOff > 0 then
     begin
-      LToFill := FBlockSize - FBufOff;
-      if LToFill > ALen then
-        LToFill := ALen;
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
-      FBufOff := FBufOff + LToFill;
-      AInOff := AInOff + LToFill;
-      ALen := ALen - LToFill;
-      if FBufOff = FBlockSize then
+      if DrainInto(AInput, AInOff, ALen, FBlockSize) then
       begin
         TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
           SOutputBufferTooShort);
@@ -772,11 +791,7 @@ begin
       ALen := ALen - LBulkBytes;
     end;
 
-    if ALen > 0 then
-    begin
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-      FBufOff := FBufOff + ALen;
-    end;
+    StashResidue(AInput, AInOff, ALen);
 
     Result := LResultLen;
     Exit;
@@ -797,14 +812,7 @@ begin
       // Process() would.
       if FBufOff > 0 then
       begin
-        LToFill := FBlockSize - FBufOff;
-        if LToFill > ALen then
-          LToFill := ALen;
-        System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
-        FBufOff := FBufOff + LToFill;
-        AInOff := AInOff + LToFill;
-        ALen := ALen - LToFill;
-        if FBufOff = FBlockSize then
+        if DrainInto(AInput, AInOff, ALen, FBlockSize) then
         begin
           TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
             SOutputBufferTooShort);
@@ -834,11 +842,7 @@ begin
 
       // Residue (< FBlockSize bytes) goes into FBufBlock; DoFinal will
       // consume it.
-      if ALen > 0 then
-      begin
-        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-        FBufOff := FBufOff + ALen;
-      end;
+      StashResidue(AInput, AInOff, ALen);
 
       Result := LResultLen;
       Exit;
@@ -856,14 +860,7 @@ begin
       // this step may trigger it. After this step either FBufOff equals
       // FMacSize and ALen may still be > 0, or we ran out of input while
       // filling.
-      LToFill := (FBlockSize + FMacSize) - FBufOff;
-      if LToFill > ALen then
-        LToFill := ALen;
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], LToFill);
-      FBufOff := FBufOff + LToFill;
-      AInOff := AInOff + LToFill;
-      ALen := ALen - LToFill;
-      if FBufOff = FBlockSize + FMacSize then
+      if DrainInto(AInput, AInOff, ALen, FBlockSize + FMacSize) then
       begin
         TCheck.OutputLength(AOutput, AOutOff + LResultLen, FBlockSize,
           SOutputBufferTooShort);
@@ -891,10 +888,7 @@ begin
           SOutputBufferTooShort);
 
         System.SetLength(LScratch, FBlockSize);
-        System.Move(FBufBlock[0], LScratch[0], FMacSize);
-        if FBlockSize > FMacSize then
-          System.Move(AInput[AInOff], LScratch[FMacSize],
-            FBlockSize - FMacSize);
+        StitchDecryptBlock0(AInput, AInOff, LScratch);
         FMac.BlockUpdate(LScratch, 0, FBlockSize);
         FCipher.ProcessBlock(LScratch, 0, AOutput, AOutOff + LResultLen);
 
@@ -917,11 +911,7 @@ begin
       // Pack remaining bytes (strictly less than FBlockSize on this
       // branch) into FBufBlock. No flush is possible with < FBlockSize
       // new bytes: we would not reach FBlockSize + FMacSize total.
-      if ALen > 0 then
-      begin
-        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-        FBufOff := FBufOff + ALen;
-      end;
+      StashResidue(AInput, AInOff, ALen);
 
       Result := LResultLen;
       Exit;

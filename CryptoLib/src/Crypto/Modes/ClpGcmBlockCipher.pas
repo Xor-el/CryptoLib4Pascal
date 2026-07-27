@@ -280,6 +280,16 @@ type
       var AInOff: Int32; var ALen: Int32; const AOutBuf: TCryptoLibByteArray;
       var AOutOff: Int32; ALimit: Int32);
 
+    // Run the whole-block dispatch staircase (widest supported tier down to a
+    // 2-block tail plus a single trailing block) over [AInOff, AInOff+ALen).
+    // AHoldBack is the byte count kept back beyond the last processed block: 0
+    // for encrypt, FMacSize for decrypt (so the trailing tag is never consumed
+    // as payload). Direction selects the encrypt vs decrypt tier methods; the
+    // tier methods themselves are unchanged. Advances AInOff/ALen/AOutOff.
+    procedure RunTieredWholeBlocks(AForEncrypt: Boolean;
+      const AInBuf: TCryptoLibByteArray; var AInOff: Int32; var ALen: Int32;
+      const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32; AHoldBack: Int32);
+
     // ---------------------------------------------------------------------
     // CTR keystream generation helpers (scalar + 4-way + 8-way).
     // ---------------------------------------------------------------------
@@ -698,11 +708,85 @@ begin
   Result := 0;
 end;
 
+procedure TGcmBlockCipher.RunTieredWholeBlocks(AForEncrypt: Boolean;
+  const AInBuf: TCryptoLibByteArray; var AInOff: Int32; var ALen: Int32;
+  const AOutBuf: TCryptoLibByteArray; var AOutOff: Int32; AHoldBack: Int32);
+
+  // Consume every remaining 2-block group above the hold-back. After a 4-tier
+  // drain this iterates at most once (ALen < AHoldBack + 4*BlockSize); in the
+  // scalar case it is the full 2-block loop.
+  procedure RunTwoBlockTail;
+  begin
+    while ALen >= AHoldBack + BlockSize * 2 do
+    begin
+      CipherBlocks2(AInBuf, AInOff, AOutBuf, AOutOff, AForEncrypt);
+      System.Inc(AInOff, BlockSize * 2);
+      System.Dec(ALen, BlockSize * 2);
+      System.Inc(AOutOff, BlockSize * 2);
+    end;
+  end;
+
+begin
+  // Widest supported tier first. Each tier method loops internally over its
+  // stride, so after it the remainder is < that stride; the encrypt/decrypt
+  // pair share the same shape (decrypt just carries the tag hold-back as its
+  // per-tier limit). The 8-way branch runs the 4-way tier without re-checking
+  // IsFourWaySupported because 8-way implies 4-way; FSoftBulk is an exclusive
+  // peer of the hardware tiers, never a fall-through below them.
+  if TGcmBlockCipher.IsEightWaySupported and (ALen >= AHoldBack + BlockSize * 8)
+  then
+  begin
+    if AForEncrypt then
+      EncryptBlocks8(AInBuf, AInOff, ALen, AOutBuf, AOutOff)
+    else
+      DecryptBlocks8(AInBuf, AInOff, ALen, AOutBuf, AOutOff,
+        AHoldBack + BlockSize * 8);
+    if ALen >= AHoldBack + BlockSize * 4 then
+    begin
+      if AForEncrypt then
+        EncryptBlocks4(AInBuf, AInOff, ALen, AOutBuf, AOutOff)
+      else
+        DecryptBlocks4(AInBuf, AInOff, ALen, AOutBuf, AOutOff,
+          AHoldBack + BlockSize * 4);
+    end;
+    RunTwoBlockTail;
+  end
+  else if TGcmBlockCipher.IsFourWaySupported and
+    (ALen >= AHoldBack + BlockSize * 4) then
+  begin
+    if AForEncrypt then
+      EncryptBlocks4(AInBuf, AInOff, ALen, AOutBuf, AOutOff)
+    else
+      DecryptBlocks4(AInBuf, AInOff, ALen, AOutBuf, AOutOff,
+        AHoldBack + BlockSize * 4);
+    RunTwoBlockTail;
+  end
+  else if FSoftBulk and (ALen >= AHoldBack + BlockSize * 4) then
+  begin
+    if AForEncrypt then
+      EncryptBlocksSoftBulk4(AInBuf, AInOff, ALen, AOutBuf, AOutOff)
+    else
+      DecryptBlocksSoftBulk4(AInBuf, AInOff, ALen, AOutBuf, AOutOff,
+        AHoldBack + BlockSize * 4);
+    RunTwoBlockTail;
+  end
+  else
+    RunTwoBlockTail;
+
+  // Trailing single block above the hold-back (encrypt: ALen >= BlockSize;
+  // decrypt: ALen >= BlockSize + FMacSize, i.e. Length(FBufBlock)).
+  if ALen >= AHoldBack + BlockSize then
+  begin
+    CipherBlock(AInBuf, AInOff, AOutBuf, AOutOff, AForEncrypt);
+    System.Inc(AInOff, BlockSize);
+    System.Dec(ALen, BlockSize);
+  end;
+end;
+
 function TGcmBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
   LResultLen, LAvailable: Int32;
-  LBufLen, LThresh2, LThresh4, LThresh8: Int32;
   LBlocksNeeded: UInt32;
 begin
   CheckStatus();
@@ -747,67 +831,7 @@ begin
       AOutOff := AOutOff + BlockSize;
     end;
 
-    if TGcmBlockCipher.IsEightWaySupported and (ALen >= BlockSize * 8) then
-    begin
-      EncryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff);
-      if ALen >= BlockSize * 4 then
-      begin
-        EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
-        if ALen >= BlockSize * 2 then
-        begin
-          CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
-          AInOff := AInOff + (BlockSize * 2);
-          ALen := ALen - (BlockSize * 2);
-          AOutOff := AOutOff + (BlockSize * 2);
-        end;
-      end
-      else if ALen >= BlockSize * 2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else if TGcmBlockCipher.IsFourWaySupported and (ALen >= BlockSize * 4) then
-    begin
-      EncryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff);
-      if ALen >= BlockSize * 2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else if FSoftBulk and (ALen >= BlockSize * 4) then
-    begin
-      EncryptBlocksSoftBulk4(AInput, AInOff, ALen, AOutput, AOutOff);
-      if ALen >= BlockSize * 2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else
-    begin
-      while ALen >= BlockSize * 2 do
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, True);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end;
-
-    if ALen >= BlockSize then
-    begin
-      CipherBlock(AInput, AInOff, AOutput, AOutOff, True);
-      AInOff := AInOff + BlockSize;
-      ALen := ALen - BlockSize;
-    end;
+    RunTieredWholeBlocks(True, AInput, AInOff, ALen, AOutput, AOutOff, 0);
 
     FBufOff := ALen;
     System.Move(AInput[AInOff], FBufBlock[0], FBufOff);
@@ -867,72 +891,11 @@ begin
     CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
     AOutOff := AOutOff + BlockSize;
 
-    LBufLen := System.Length(FBufBlock);
-    LThresh2 := LBufLen + BlockSize;
-    LThresh4 := LBufLen + (BlockSize * 3);
-    LThresh8 := LBufLen + (BlockSize * 7);
-
-    if TGcmBlockCipher.IsEightWaySupported and (ALen >= LThresh8) then
-    begin
-      DecryptBlocks8(AInput, AInOff, ALen, AOutput, AOutOff, LThresh8);
-      if ALen >= LThresh4 then
-      begin
-        DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
-        if ALen >= LThresh2 then
-        begin
-          CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
-          AInOff := AInOff + (BlockSize * 2);
-          ALen := ALen - (BlockSize * 2);
-          AOutOff := AOutOff + (BlockSize * 2);
-        end;
-      end
-      else if ALen >= LThresh2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else if TGcmBlockCipher.IsFourWaySupported and (ALen >= LThresh4) then
-    begin
-      DecryptBlocks4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
-      if ALen >= LThresh2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else if FSoftBulk and (ALen >= LThresh4) then
-    begin
-      DecryptBlocksSoftBulk4(AInput, AInOff, ALen, AOutput, AOutOff, LThresh4);
-      if ALen >= LThresh2 then
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end
-    else
-    begin
-      while ALen >= LThresh2 do
-      begin
-        CipherBlocks2(AInput, AInOff, AOutput, AOutOff, False);
-        AInOff := AInOff + (BlockSize * 2);
-        ALen := ALen - (BlockSize * 2);
-        AOutOff := AOutOff + (BlockSize * 2);
-      end;
-    end;
-
-    if ALen >= LBufLen then
-    begin
-      CipherBlock(AInput, AInOff, AOutput, AOutOff, False);
-      AInOff := AInOff + BlockSize;
-      ALen := ALen - BlockSize;
-    end;
+    // Hold-back = FMacSize (= Length(FBufBlock) - BlockSize on decrypt) so the
+    // trailing tag is never consumed as payload; the thresholds LThreshN in the
+    // former inline staircase equalled AHoldBack + BlockSize*N.
+    RunTieredWholeBlocks(False, AInput, AInOff, ALen, AOutput, AOutOff,
+      System.Length(FBufBlock) - BlockSize);
 
     FBufOff := ALen;
     System.Move(AInput[AInOff], FBufBlock[0], FBufOff);

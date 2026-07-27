@@ -56,6 +56,10 @@ type
   strict private
     function InitCipher(AForEncryption: Boolean;
       const AParams: IAeadParameters): IChaCha20Poly1305;
+    // One streaming-equivalence case: feed the message through ProcessBytes in
+    // many chunk sizes, out-of-place and in-place, both directions, and assert
+    // the concatenated output + summed Result values match the one-shot result.
+    function RunStreamingCase(APlainLen: Int32; AWithAad: Boolean): String;
 
   protected
     procedure SetUp; override;
@@ -67,6 +71,7 @@ type
     procedure TestRandomised;
     procedure TestExceptionsAndTampering;
     procedure TestAeadInputChunking;
+    procedure TestStreamingEquivalence;
 
   end;
 
@@ -82,6 +87,87 @@ begin
   LCipher := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
   LCipher.Init(AForEncryption, AParams as ICipherParameters);
   Result := LCipher;
+end;
+
+function TTestChaCha20Poly1305.RunStreamingCase(APlainLen: Int32;
+  AWithAad: Boolean): String;
+const
+  CChunks: array [0 .. 9] of Int32 = (1, 7, 15, 16, 17, 31, 63, 64, 65, 1048576);
+var
+  LK, LN, LA, LP, LRefCt, LOut: TBytes;
+  LParams: IAeadParameters;
+  LSeed: UInt32;
+  LI, LRefLen, LCi, LMode, LNret: Int32;
+  LInPlace: Boolean;
+
+  function Stream(AEnc: Boolean; const AIn: TBytes; AInLen, AChunk: Int32;
+    AInPlace: Boolean; out AOut: TBytes): Int32;
+  var
+    LCipher: IChaCha20Poly1305;
+    LBuf: TBytes;
+    LOff, LInOff, LCs, LCap: Int32;
+  begin
+    LCipher := InitCipher(AEnc, LParams);
+    LCap := LCipher.GetOutputSize(AInLen);
+    if AInPlace and (AInLen > LCap) then
+      LCap := AInLen;
+    SetLength(LBuf, LCap);
+    if AInPlace and (AInLen > 0) then
+      System.Move(AIn[0], LBuf[0], AInLen);
+    LOff := 0;
+    LInOff := 0;
+    while LInOff < AInLen do
+    begin
+      LCs := AInLen - LInOff;
+      if LCs > AChunk then
+        LCs := AChunk;
+      if AInPlace then
+        LOff := LOff + LCipher.ProcessBytes(LBuf, LInOff, LCs, LBuf, LOff)
+      else
+        LOff := LOff + LCipher.ProcessBytes(AIn, LInOff, LCs, LBuf, LOff);
+      LInOff := LInOff + LCs;
+    end;
+    LOff := LOff + LCipher.DoFinal(LBuf, LOff);
+    SetLength(LBuf, LOff);
+    AOut := LBuf;
+    Result := LOff;
+  end;
+
+begin
+  Result := '';
+  LK := THexEncoder.Decode(
+    '000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f');
+  LN := THexEncoder.Decode('0c0b0a090807060504030201');
+  if AWithAad then
+    LA := THexEncoder.Decode('0201000306050407')
+  else
+    LA := nil;
+  SetLength(LP, APlainLen);
+  LSeed := $C0FEBEEF;
+  for LI := 0 to APlainLen - 1 do
+  begin
+    LSeed := LSeed * 1664525 + 1013904223;
+    LP[LI] := Byte(LSeed shr 9);
+  end;
+  LParams := TAeadParameters.Create(TKeyParameter.Create(LK) as IKeyParameter,
+    16 * 8, LN, LA);
+
+  LRefLen := Stream(True, LP, APlainLen, 1048576, False, LRefCt);
+
+  for LCi := 0 to High(CChunks) do
+    for LMode := 0 to 1 do
+    begin
+      LInPlace := LMode = 1;
+      LNret := Stream(True, LP, APlainLen, CChunks[LCi], LInPlace, LOut);
+      if (LNret <> LRefLen) or (not AreEqual(LOut, LRefCt)) then
+        Exit(Format('[enc len=%d chunk=%d inplace=%d] ',
+          [APlainLen, CChunks[LCi], LMode]));
+      LNret := Stream(False, LRefCt, LRefLen, CChunks[LCi], LInPlace, LOut);
+      if (LNret <> APlainLen) or
+        ((APlainLen > 0) and (not AreEqual(LOut, LP))) then
+        Exit(Format('[dec len=%d chunk=%d inplace=%d] ',
+          [APlainLen, CChunks[LCi], LMode]));
+    end;
 end;
 
 procedure TTestChaCha20Poly1305.SetUp;
@@ -419,6 +505,23 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TTestChaCha20Poly1305.TestStreamingEquivalence;
+const
+  CLens: array [0 .. 9] of Int32 = (0, 1, 63, 64, 65, 127, 128, 129, 200, 600);
+var
+  LFails: String;
+  LI: Int32;
+begin
+  LFails := '';
+  for LI := 0 to High(CLens) do
+  begin
+    LFails := LFails + RunStreamingCase(CLens[LI], False);
+    LFails := LFails + RunStreamingCase(CLens[LI], True);
+  end;
+  if LFails <> '' then
+    Fail('ChaCha20Poly1305 streaming: ' + LFails);
 end;
 
 initialization

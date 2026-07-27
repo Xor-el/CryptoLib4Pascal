@@ -208,8 +208,7 @@ end;
 procedure TCcmBlockCipher.WipeKeyMaterial;
 begin
   TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
-  if FData <> nil then
-    TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
+  TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
 end;
 
 procedure TCcmBlockCipher.Init(AForEncryption: Boolean;

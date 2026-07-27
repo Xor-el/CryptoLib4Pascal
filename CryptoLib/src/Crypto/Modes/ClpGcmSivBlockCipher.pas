@@ -368,10 +368,8 @@ begin
   TArrayUtilities.Fill(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
   TArrayUtilities.Fill(FTheReverse, 0, System.Length(FTheReverse), Byte(0));
   TArrayUtilities.Fill(FHPow128, 0, System.Length(FHPow128), Byte(0));
-  if FThePlain <> nil then
-    TArrayUtilities.Fill(FThePlain, 0, System.Length(FThePlain), Byte(0));
-  if FTheEncData <> nil then
-    TArrayUtilities.Fill(FTheEncData, 0, System.Length(FTheEncData), Byte(0));
+  TArrayUtilities.Fill(FThePlain, 0, System.Length(FThePlain), Byte(0));
+  TArrayUtilities.Fill(FTheEncData, 0, System.Length(FTheEncData), Byte(0));
   TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 end;
 
