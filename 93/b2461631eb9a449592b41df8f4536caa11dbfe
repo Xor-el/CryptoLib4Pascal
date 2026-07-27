@@ -1,0 +1,21 @@
+CryptoLib.Tests/src/Crypto/AesBitSlicedTests.pas
+  s_566a08ddb223fd::t_f42b66adb6d074 728-819
+  s_566a08ddb223fd::t_9184e98b7f846a 79-80
+  s_566a08ddb223fd::t_2a793f4439f4cf 97
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "93b2461631eb9a449592b41df8f4536caa11dbfe",
+  "prompts": {},
+  "sessions": {
+    "s_566a08ddb223fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5413c688-0886-4141-a790-c211deb931b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
