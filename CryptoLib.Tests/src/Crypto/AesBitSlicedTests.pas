@@ -76,6 +76,8 @@ type
     procedure DoProcessBlocksParity(AKeyLen: Int32; AForEnc: Boolean; ACount: Int32);
     // Parts B+C: GCM through bit-sliced (soft-bulk) vs table (per-block) engine.
     procedure DoGcmParity(APlainLen, AKeyLen: Int32; const AAad: TBytes);
+    // In-place GCM (out == in) through the bit-sliced soft-bulk stack.
+    procedure DoGcmInPlace(APlainLen, AKeyLen: Int32; const AAad: TBytes);
   published
     procedure TestFips197Kat;
     procedure TestParityWithTableEngine;
@@ -92,6 +94,7 @@ type
     procedure TestGcmBatchedVsSingle;
     procedure TestAggregatedGhashParity;
     procedure TestChunkedStreamingParity;
+    procedure TestGcmInPlaceRoundTrip;
   end;
 
 implementation
@@ -720,6 +723,98 @@ begin
   DoGcmParity(16 * 4 + 7, 16, nil);
   DoGcmParity(16 * 17 + 9, 32, LAad);
   DoGcmParity(16 * 65 + 15, 24, LAad);
+end;
+
+{ In-place GCM through the bit-sliced stack: the caller passes ONE buffer as both
+  input and output. Exercises ProcessSoftBulk4's hash-before-XOR ordering on
+  decrypt (output aliases the ciphertext input). MUST run under
+  CRYPTOLIB_FORCE_SCALAR, else the SIMD-GHASH path runs instead of the
+  software-bulk path this guards. }
+procedure TTestAesBitSliced.DoGcmInPlace(APlainLen, AKeyLen: Int32;
+  const AAad: TBytes);
+var
+  LKey, LNonce, LPlain, LCipher, LBuf: TBytes;
+  LKeyParam: IKeyParameter;
+  LParams: ICipherParameters;
+  LGcm: IAeadCipher;
+  LI, LLen: Int32;
+begin
+  System.SetLength(LKey, AKeyLen);
+  for LI := 0 to AKeyLen - 1 do
+    LKey[LI] := Byte(Random(256));
+  System.SetLength(LNonce, 12);
+  for LI := 0 to 11 do
+    LNonce[LI] := Byte(Random(256));
+  System.SetLength(LPlain, APlainLen);
+  for LI := 0 to APlainLen - 1 do
+    LPlain[LI] := Byte(Random(256));
+
+  LKeyParam := TKeyParameter.Create(LKey);
+  LParams := TAeadParameters.Create(LKeyParam, 128, LNonce, AAad)
+    as ICipherParameters;
+
+  // Reference ciphertext+tag via disjoint buffers.
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  System.SetLength(LCipher, LGcm.GetOutputSize(APlainLen));
+  LLen := LGcm.ProcessBytes(LPlain, 0, APlainLen, LCipher, 0);
+  LLen := LLen + LGcm.DoFinal(LCipher, LLen);
+  System.SetLength(LCipher, LLen);
+
+  // (1) In-place ENCRYPT: plaintext in a buffer sized for ciphertext+tag,
+  // encrypted in place, must equal the disjoint reference (same nonce).
+  System.SetLength(LBuf, System.Length(LCipher));
+  if APlainLen > 0 then
+    System.Move(LPlain[0], LBuf[0], APlainLen);
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(True, LParams);
+  LLen := LGcm.ProcessBytes(LBuf, 0, APlainLen, LBuf, 0);
+  LLen := LLen + LGcm.DoFinal(LBuf, LLen);
+  if LLen <> System.Length(LCipher) then
+    Fail(Format('in-place encrypt length %d <> %d (plainlen=%d, key=%d)',
+      [LLen, System.Length(LCipher), APlainLen, AKeyLen * 8]));
+  System.SetLength(LBuf, LLen);
+  if not AreEqual(LBuf, LCipher) then
+    Fail(Format('in-place encrypt != reference (plainlen=%d, key=%d)',
+      [APlainLen, AKeyLen * 8]));
+
+  // (2) In-place DECRYPT (the regression target): ciphertext+tag in one buffer,
+  // decrypted in place. A reordering regression (hashing the just-written
+  // plaintext instead of the ciphertext) corrupts GHASH -> DoFinal raises on the
+  // tag, failing here.
+  System.SetLength(LBuf, System.Length(LCipher));
+  System.Move(LCipher[0], LBuf[0], System.Length(LCipher));
+  LGcm := NewBitSlicedGcm();
+  LGcm.Init(False, LParams);
+  LLen := LGcm.ProcessBytes(LBuf, 0, System.Length(LBuf), LBuf, 0);
+  LLen := LLen + LGcm.DoFinal(LBuf, LLen);
+  if LLen <> APlainLen then
+    Fail(Format('in-place decrypt length %d <> %d (plainlen=%d, key=%d)',
+      [LLen, APlainLen, APlainLen, AKeyLen * 8]));
+  System.SetLength(LBuf, LLen);
+  if not AreEqual(LBuf, LPlain) then
+    Fail(Format('in-place decrypt != original plaintext (plainlen=%d, key=%d)',
+      [APlainLen, AKeyLen * 8]));
+end;
+
+procedure TTestAesBitSliced.TestGcmInPlaceRoundTrip;
+const
+  // 16 = single block (no bulk); 64 = exactly one 4-block bulk group;
+  // 71/135/176/255 cross the 4-block soft-bulk boundary with tails.
+  CLens: array [0 .. 5] of Int32 = (16, 64, 71, 135, 176, 255);
+var
+  LAad: TBytes;
+  LI: Int32;
+begin
+  RandSeed := 20260723;
+  System.SetLength(LAad, 20);
+  for LI := 0 to 19 do
+    LAad[LI] := Byte(Random(256));
+  for LI := 0 to System.Length(CLens) - 1 do
+  begin
+    DoGcmInPlace(CLens[LI], 16, LAad);   // AES-128, with AAD
+    DoGcmInPlace(CLens[LI], 32, nil);    // AES-256, no AAD
+  end;
 end;
 
 procedure TTestAesBitSliced.TestAggregatedGhashParity;
