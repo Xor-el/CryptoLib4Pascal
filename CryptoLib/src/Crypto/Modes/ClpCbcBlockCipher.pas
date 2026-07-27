@@ -1,4 +1,4 @@
-﻿{ *********************************************************************************** }
+{ *********************************************************************************** }
 { *                              CryptoLib Library                                  * }
 { *                           Author - Ugochukwu Mmaduekwe                          * }
 { *                 Github Repository <https://github.com/Xor-el>                   * }
@@ -23,12 +23,12 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpAbstractBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpCipherKernelTypes,
   ClpICbcKernel,
@@ -43,7 +43,6 @@ resourcestring
     'initialization vector must be the same length as block size';
   SInvalidChangeState = 'cannot change encrypting state without providing key';
   SInputBufferTooShort = 'input buffer too short';
-  SOutputBufferTooShort = 'output buffer too short';
 
 type
   /// <summary>
@@ -56,15 +55,12 @@ type
   /// the block size. Each <c>ProcessBlock</c> call consumes and produces one block; padding of the
   /// last block is a separate concern.
   /// </remarks>
-  TCbcBlockCipher = class sealed(TInterfacedObject, ICbcBlockCipher,
-    IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
+  TCbcBlockCipher = class sealed(TAbstractBlockCipherMode, ICbcBlockCipher,
+    IBulkBlockCipherMode)
 
   strict private
   var
     FIV, FCbcV, FCbcNextV: TCryptoLibByteArray;
-    FBlockSize: Int32;
-    FCipher: IBlockCipher;
-    FEncrypting: Boolean;
     // Cached on Init. Non-nil only when the underlying engine implements
     // IBulkBlockCipher. CBC decrypt exposes 8 independent inverse
     // transforms per call, which a parallel-capable engine can pipeline;
@@ -72,7 +68,7 @@ type
     // one interface dispatch per block. Any bulk-capable block cipher
     // lights up both paths automatically by implementing the interface.
     FBulkCipher: IBulkBlockCipher;
-    // Cached on Init, direction-matched to FEncrypting. Non-nil when a
+    // Cached on Init, direction-matched to FForEncryption. Non-nil when a
     // registered accelerator claims the underlying cipher. Encrypt runs the
     // whole serial chain C[i] = E(P[i] xor C[i-1]) in one register-held call;
     // decrypt runs P[i] = DEC(C[i]) xor C[i-1] as a single fused pass (parallel
@@ -102,9 +98,7 @@ type
       AOutOff: Int32);
 
   strict protected
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
 
   public
     /// <summary>Construct a CBC wrapper around <paramref name="ACipher" /> (block size taken from it).</summary>
@@ -113,13 +107,11 @@ type
     /// <param name="AForEncryption"><c>True</c> to encrypt, <c>False</c> to decrypt.</param>
     /// <param name="AParameters">Typically <see cref="IParametersWithIV" /> over a <see cref="IKeyParameter"/>.</param>
     /// <exception cref="EArgumentCryptoLibException">If the IV length is wrong or cipher state cannot change without a key.</exception>
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    /// <summary>Return the underlying block size in bytes.</summary>
-    function GetBlockSize(): Int32; inline;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
     /// <summary>Encrypt or decrypt exactly one block (<c>GetBlockSize</c> bytes).</summary>
     /// <exception cref="EDataLengthCryptoLibException">If input or output ranges are shorter than one block.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
     /// <summary>
     /// IBulkBlockCipherMode: process ABlockCount consecutive CBC blocks.
@@ -136,14 +128,7 @@ type
       AOutOff: Int32): Int32;
 
     /// <summary>Reset the chaining vector from the stored IV and clear the next-block buffer used during decrypt.</summary>
-    procedure Reset(); inline;
-
-    /// <summary>Underlying block primitive (AES, DES, …).</summary>
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    /// <summary>Algorithm plus <c>/CBC</c> suffix (e.g. <c>AES/CBC</c>).</summary>
-    property AlgorithmName: String read GetAlgorithmName;
-    /// <summary><c>False</c>: CBC consumes full blocks only.</summary>
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -152,9 +137,7 @@ implementation
 
 constructor TCbcBlockCipher.Create(const ACipher: IBlockCipher);
 begin
-  inherited Create();
-  FCipher := ACipher;
-  FBlockSize := ACipher.GetBlockSize();
+  inherited Create(ACipher);
   System.SetLength(FIV, FBlockSize);
   System.SetLength(FCbcV, FBlockSize);
   System.SetLength(FCbcNextV, FBlockSize);
@@ -306,24 +289,9 @@ begin
   TArrayUtilities.Fill(FCbcNextV, 0, System.Length(FCbcNextV), Byte(0));
 end;
 
-function TCbcBlockCipher.GetAlgorithmName: String;
+function TCbcBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/CBC';
-end;
-
-function TCbcBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FCipher.GetBlockSize();
-end;
-
-function TCbcBlockCipher.GetIsPartialBlockOkay: Boolean;
-begin
-  Result := False;
-end;
-
-function TCbcBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
+  Result := '/CBC';
 end;
 
 procedure TCbcBlockCipher.Init(AForEncryption: Boolean;
@@ -334,8 +302,8 @@ var
   LIv: TCryptoLibByteArray;
   LParameters: ICipherParameters;
 begin
-  LOldEncrypting := FEncrypting;
-  FEncrypting := AForEncryption;
+  LOldEncrypting := FForEncryption;
+  FForEncryption := AForEncryption;
   LParameters := AParameters;
   if Supports(LParameters, IParametersWithIV, LIvParam) then
   begin
@@ -347,8 +315,8 @@ begin
   end;
   Reset();
   if (LParameters <> nil) then
-    FCipher.Init(FEncrypting, LParameters)
-  else if (LOldEncrypting <> FEncrypting) then
+    FCipher.Init(FForEncryption, LParameters)
+  else if (LOldEncrypting <> FForEncryption) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidChangeState);
 
   // Re-probe every Init: a user can re-key the same TCbcBlockCipher with a
@@ -361,7 +329,7 @@ begin
   // Encrypt folds the serial chain into one register-held pass; decrypt folds
   // the chain XOR into the parallel aesdec pass (one pass over memory instead
   // of the bulk-decrypt-then-XOR two passes). nil -> the bulk fallbacks below.
-  if FEncrypting then
+  if FForEncryption then
     TCipherKernelRegistry.TryAcquireCbc(FCipher, TCipherKernelDirection.Encrypt,
       FCbcKernel)
   else
@@ -372,7 +340,7 @@ end;
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if FEncrypting then
+  if FForEncryption then
     Result := EncryptBlock(AInput, AInOff, AOutput, AOutOff)
   else
     Result := DecryptBlock(AInput, AInOff, AOutput, AOutOff);
@@ -384,26 +352,19 @@ function TCbcBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
 var
   LTotalBytes: Int32;
 begin
-  if ABlockCount <= 0 then
+  LTotalBytes := CheckBlockBuffers(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+  if LTotalBytes = 0 then
   begin
     Result := 0;
     Exit;
   end;
-
-  LTotalBytes := ABlockCount * FBlockSize;
-
-  if ((AInOff < 0) or ((AInOff + LTotalBytes) > System.Length(AInBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
-
-  if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
   // Fast path: bulk engine available AND classic 16-byte block size. The
   // block-size guard matches the 16-byte-specific strides inside CbcEncryptBulk
   // (per-byte XOR over 0..15) and CbcDecryptBulk (128-byte stage buffer).
   if (FBulkCipher <> nil) and (FBlockSize = 16) then
   begin
-    if FEncrypting then
+    if FForEncryption then
       CbcEncryptBulk(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff)
     else
       CbcDecryptBulk(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
@@ -411,11 +372,10 @@ begin
     Exit;
   end;
 
-  // Fallback: no bulk capability wired up (or non-16-byte block). Byte-
-  // identical to the pre-bulk implementation by construction.
+  // Fallback: no bulk capability wired up (or non-16-byte block).
   while ABlockCount > 0 do
   begin
-    if FEncrypting then
+    if FForEncryption then
       EncryptBlock(AInBuf, AInOff, AOutBuf, AOutOff)
     else
       DecryptBlock(AInBuf, AInOff, AOutBuf, AOutOff);

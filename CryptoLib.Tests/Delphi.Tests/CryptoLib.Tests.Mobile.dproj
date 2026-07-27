@@ -385,6 +385,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpOfbBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpSicBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpBlockCipherBulkUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpAbstractBlockCipherMode.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpAbstractAeadCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpAbstractAeadBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCipherModeParameterUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpBlowfishEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Bip340\ClpBip340SchnorrUtilities.pas"/>
@@ -1049,7 +1052,6 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpXChaCha20Poly1305.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpEaxBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpOcbBlockCipher.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmSivUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelTypes.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\CipherKernels\ClpICipherKernelFactory.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\CipherKernels\Stream\ClpIChaCha20Poly1305Kernel.pas"/>
@@ -1123,6 +1125,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmExponentiator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpBasicGcmMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpGcmUtilities.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\ClpGaloisFieldUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables1kGcmExponentiator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables4kGcmMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\Gcm\ClpTables8kGcmMultiplier.pas"/>

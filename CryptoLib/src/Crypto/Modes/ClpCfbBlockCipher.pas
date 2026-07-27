@@ -23,13 +23,12 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
   ClpIBulkBlockCipherMode,
   ClpICfbBlockCipher,
   ClpICipherParameters,
-  ClpIParametersWithIV,
-  ClpArrayUtilities,
+  ClpAbstractBlockCipherMode,
+  ClpCipherModeParameterUtilities,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
   ClpCryptoLibTypes,
@@ -47,14 +46,12 @@ type
   /// <see cref="IsPartialBlockOkay"/> is True: the feedback width may be smaller than the cipher block size
   /// (e.g. CFB-8).
   /// </remarks>
-  TCfbBlockCipher = class sealed(TInterfacedObject, ICfbBlockCipher,
-    IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
+  TCfbBlockCipher = class sealed(TAbstractBlockCipherMode, ICfbBlockCipher,
+    IBulkBlockCipherMode)
 
   strict private
   var
     FIV, FCfbV, FCfbOutV: TCryptoLibByteArray;
-    FBlockSize: Int32;
-    FCipher: IBlockCipher;
     // Cached bulk-capable view of FCipher. Populated in the constructor only
     // when the CFB mode's feedback-register width equals the underlying
     // cipher block size (i.e. full-block CFB-N, which is the only shape
@@ -64,7 +61,6 @@ type
     // expose IBulkBlockCipher; ProcessBlocks then falls back to the
     // per-block loop.
     FBulkCipher: IBulkBlockCipher;
-    FEncrypting: Boolean;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -72,9 +68,8 @@ type
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
   strict protected
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
+    function GetIsPartialBlockOkay: Boolean; override;
 
   public
     /// <summary>
@@ -93,26 +88,17 @@ type
     /// (short IV right-aligned).
     /// </remarks>
     /// <exception cref="EArgumentCryptoLibException">If parameters are incompatible.</exception>
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    /// <summary>Return the CFB segment size (feedback width) in bytes, not necessarily the cipher block size.</summary>
-    function GetBlockSize(): Int32; inline;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
     /// <summary>Xor one CFB segment of input into output.</summary>
     /// <exception cref="EDataLengthCryptoLibException">If input/output buffers are too short.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     /// <summary>Process multiple contiguous CFB segments.</summary>
     function ProcessBlocks(const AInBuf: TCryptoLibByteArray;
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32;
     /// <summary>Reset the chaining register to the IV and leave key schedule intact.</summary>
-    procedure Reset(); inline;
-
-    /// <summary>The underlying block cipher (<see cref="IBlockCipher"/>).</summary>
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    /// <summary>Underlying algorithm plus <c>/CFB</c> plus segment size in bits (e.g. <c>AES/CFB128</c>).</summary>
-    property AlgorithmName: String read GetAlgorithmName;
-    /// <summary>Returns True (partial final blocks allowed).</summary>
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -122,8 +108,7 @@ implementation
 constructor TCfbBlockCipher.Create(const ACipher: IBlockCipher;
   ABitBlockSize: Int32);
 begin
-  inherited Create();
-  FCipher := ACipher;
+  inherited Create(ACipher);
   FBlockSize := ABitBlockSize div 8;
 
   System.SetLength(FIV, FCipher.GetBlockSize());
@@ -197,14 +182,9 @@ begin
   System.Move(FIV[0], FCfbV[0], System.Length(FIV));
 end;
 
-function TCfbBlockCipher.GetAlgorithmName: String;
+function TCfbBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/CFB' + IntToStr(FBlockSize * 8);
-end;
-
-function TCfbBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FBlockSize;
+  Result := '/CFB' + IntToStr(FBlockSize * 8);
 end;
 
 function TCfbBlockCipher.GetIsPartialBlockOkay: Boolean;
@@ -212,30 +192,15 @@ begin
   Result := True;
 end;
 
-function TCfbBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
-end;
-
 procedure TCfbBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LIvParam: IParametersWithIV;
-  LIv: TCryptoLibByteArray;
   LParameters: ICipherParameters;
-  LDiff: Int32;
 begin
-  FEncrypting := AForEncryption;
-  LParameters := AParameters;
+  FForEncryption := AForEncryption;
 
-  if Supports(LParameters, IParametersWithIV, LIvParam) then
-  begin
-    LIv := LIvParam.GetIV();
-    LDiff := System.Length(FIV) - System.Length(LIv);
-    System.Move(LIv[0], FIV[LDiff], System.Length(LIv) * System.SizeOf(Byte));
-    TArrayUtilities.Fill(FIV, 0, LDiff, Byte(0));
-    LParameters := LIvParam.Parameters;
-  end;
+  // Right-align / zero-pad a short IV into FIV; overflow-safe for over-long IVs.
+  TCipherModeParameterUtilities.TryUnwrapIv(AParameters, FIV, LParameters);
 
   Reset();
   if (LParameters <> nil) then
@@ -245,7 +210,7 @@ end;
 function TCfbBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 begin
-  if FEncrypting then
+  if FForEncryption then
     Result := EncryptBlock(AInput, AInOff, AOutput, AOutOff)
   else
     Result := DecryptBlock(AInput, AInOff, AOutput, AOutOff);
@@ -258,14 +223,13 @@ var
   LI, LBS, LTotalBytes: Int32;
   LScratch: TCryptoLibByteArray;
 begin
-  LBS := FBlockSize;
-  LTotalBytes := ABlockCount * LBS;
-
-  if (ABlockCount <= 0) then
+  LTotalBytes := CheckBlockBuffers(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+  if LTotalBytes = 0 then
   begin
     Result := 0;
     Exit;
   end;
+  LBS := FBlockSize;
 
   // Fall back to the per-block path when:
   //   * we are encrypting (CFB encrypt has a true serial feedback chain:
@@ -275,7 +239,7 @@ begin
   //     the block size -- both detected at construction time);
   // This keeps byte-for-byte parity with the pre-bulk code in every
   // unsupported configuration.
-  if FEncrypting or (FBulkCipher = nil) then
+  if FForEncryption or (FBulkCipher = nil) then
   begin
     for LI := 0 to ABlockCount - 1 do
       ProcessBlock(AInBuf, AInOff + LI * LBS, AOutBuf, AOutOff + LI * LBS);

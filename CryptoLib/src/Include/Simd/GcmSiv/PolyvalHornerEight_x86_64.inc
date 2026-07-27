@@ -10,7 +10,7 @@
 // Caller preconditions (TGcmSivBlockCipher.DeriveKeys):
 //   * PHPow128 holds H^8..H^1 in GHASH canonical form, precomputed
 //     from the POLYVAL H via TGcmSivBlockCipher.FillReverse followed
-//     by TGcmSivUtilities.MulX and fed through the standard
+//     by TGcmUtilities.MulX and fed through the standard
 //     TGcmUtilities.InitEightWayHPowFromH (i.e.
 //     mulX_GHASH(ByteReverse(H_polyval))).
 //   * PFS (running hash state) is kept in GHASH canonical

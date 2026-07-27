@@ -36,9 +36,12 @@ uses
   ClpIKeyParameter,
   ClpBlockCipherBulkUtilities,
   ClpCipherModeParameterUtilities,
+  ClpAbstractAeadCipher,
+  ClpAbstractAeadBlockCipher,
   ClpCheck,
   ClpBitOperations,
   ClpByteUtilities,
+  ClpGaloisFieldUtilities,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -51,15 +54,12 @@ resourcestring
   SInvalidParameters = 'invalid parameters passed to %s';
   SIVTooLong = 'IV must be no more than 15 bytes';
   SCannotChangeEncState = 'cannot change encrypting state without providing key';
-  SInvalidMacSize = 'invalid value for MAC size: %d';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in %s failed';
   SOutputBufferTooShort = 'output buffer too short';
   SInputBufferTooShort = 'input buffer too short';
-  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
-  TOcbBlockCipher = class(TInterfacedObject, IOcbBlockCipher,
+  TOcbBlockCipher = class(TAbstractAeadBlockCipher, IOcbBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
   strict private
@@ -86,10 +86,6 @@ type
     FHashCipher: IBlockCipher;
     FMainCipher: IBlockCipher;
 
-    FForEncryption: Boolean;
-    FMacSize: Int32;
-    FInitialAssociatedText: TCryptoLibByteArray;
-
     FL: TList<TCryptoLibByteArray>;
     FL_Asterisk, FL_Dollar: TCryptoLibByteArray;
 
@@ -113,10 +109,6 @@ type
     FOffsetMAIN: TCryptoLibByteArray;
     FChecksum: TCryptoLibByteArray;
 
-    FMacBlock: TCryptoLibByteArray;
-    FLastN: TCryptoLibByteArray;
-    FLastKey: TCryptoLibByteArray;
-
     // 8-wide bulk-cipher fast path: cached bulk-capable view of
     // FMainCipher. When the main cipher exposes IBulkBlockCipher,
     // ProcessBytes folds 8 consecutive blocks through a single
@@ -135,9 +127,6 @@ type
     FOcbKernel: IOcbKernel;
     FOcbKernelMinBlocks: Int32;
 
-    procedure CheckNonceReuse(AForEncryption: Boolean;
-      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
-
     procedure ProcessFusedBulk(const AInput: TCryptoLibByteArray;
       AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32;
       ABlockCount: Int32);
@@ -152,7 +141,6 @@ type
     class function OCB_double(const ABlock: TCryptoLibByteArray): TCryptoLibByteArray; static;
     class procedure OCB_extend(const ABlock: TCryptoLibByteArray; APos: Int32); static;
     class function OCB_ntz(AX: Int64): Int32; static; inline;
-    class function ShiftLeft(const ABlock, AOutput: TCryptoLibByteArray): Int32; static;
 
   strict protected
     function ProcessNonce(const AN: TCryptoLibByteArray): Int32; virtual;
@@ -163,32 +151,27 @@ type
     procedure Reset(AClearMac: Boolean); overload; virtual;
     procedure UpdateHASH(const ALSub: TCryptoLibByteArray); virtual;
 
-    function GetAlgorithmName: String; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    function GetBufferedLength(): Int32; override;
+    procedure WipeKeyMaterial(); override;
 
   public
     constructor Create(const AHashCipher, AMainCipher: IBlockCipher);
     destructor Destroy; override;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
-    function GetOutputSize(ALen: Int32): Int32; virtual;
-    procedure Reset(); overload; virtual;
-
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
+    procedure Reset(); overload; override;
   end;
 
 implementation
@@ -213,6 +196,8 @@ begin
 
   FHashCipher := AHashCipher;
   FMainCipher := AMainCipher;
+  FBlockSize := BLOCK_SIZE;
+  FUnderlyingCipher := FMainCipher;
 
   System.SetLength(FStretch, 24);
   System.SetLength(FOffsetMAIN_0, 16);
@@ -223,7 +208,18 @@ begin
 end;
 
 destructor TOcbBlockCipher.Destroy;
+var
+  LI: Int32;
 begin
+  // Wipe the key-derived L-table entries before releasing the list; the base
+  // destructor then wipes the remaining secret arrays (WipeKeyMaterial) and
+  // FLastKey.
+  if FL <> nil then
+  begin
+    for LI := 0 to FL.Count - 1 do
+      if FL[LI] <> nil then
+        TArrayUtilities.Fill(FL[LI], 0, System.Length(FL[LI]), Byte(0));
+  end;
   FL.Free;
   inherited Destroy;
 end;
@@ -238,25 +234,33 @@ begin
   Result := FMainCipher.AlgorithmName + '/OCB';
 end;
 
-function TOcbBlockCipher.GetUnderlyingCipher: IBlockCipher;
+function TOcbBlockCipher.GetModeName: String;
 begin
-  Result := FMainCipher;
+  Result := 'OCB';
 end;
 
-procedure TOcbBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
-  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+function TOcbBlockCipher.GetBufferedLength: Int32;
 begin
-  if not AForEncryption then
-    Exit;
+  Result := FMainBlockPos;
+end;
 
-  if (FLastN = nil) or (not TArrayUtilities.AreEqual(FLastN, ANewNonce)) then
-    Exit;
-
-  if AKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['OCB']);
-
-  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['OCB']);
+procedure TOcbBlockCipher.WipeKeyMaterial;
+begin
+  // FL entries are wiped in the destructor (before the list is freed); here we
+  // clear the remaining key-derived / plaintext-bearing scratch arrays.
+  TArrayUtilities.Fill(FL_Asterisk, 0, System.Length(FL_Asterisk), Byte(0));
+  TArrayUtilities.Fill(FL_Dollar, 0, System.Length(FL_Dollar), Byte(0));
+  TArrayUtilities.Fill(FLTableFlat, 0, System.Length(FLTableFlat), Byte(0));
+  TArrayUtilities.Fill(FStretch, 0, System.Length(FStretch), Byte(0));
+  TArrayUtilities.Fill(FKTopInput, 0, System.Length(FKTopInput), Byte(0));
+  TArrayUtilities.Fill(FOffsetMAIN_0, 0, System.Length(FOffsetMAIN_0), Byte(0));
+  TArrayUtilities.Fill(FOffsetMAIN, 0, System.Length(FOffsetMAIN), Byte(0));
+  TArrayUtilities.Fill(FOffsetHASH, 0, System.Length(FOffsetHASH), Byte(0));
+  TArrayUtilities.Fill(FSum, 0, System.Length(FSum), Byte(0));
+  TArrayUtilities.Fill(FChecksum, 0, System.Length(FChecksum), Byte(0));
+  TArrayUtilities.Fill(FHashBlock, 0, System.Length(FHashBlock), Byte(0));
+  TArrayUtilities.Fill(FMainBlock, 0, System.Length(FMainBlock), Byte(0));
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 end;
 
 procedure TOcbBlockCipher.Init(AForEncryption: Boolean;
@@ -266,7 +270,7 @@ var
   LKeyParameter: IKeyParameter;
   LChoice: TCipherAeadChoice;
   LN: TCryptoLibByteArray;
-  LMacSizeBits, LBottom, LBits, LBytes, LI: Int32;
+  LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
   LFusedDirection: TCipherKernelDirection;
   LPrevKey: TCryptoLibByteArray;
@@ -287,7 +291,7 @@ begin
   LN := LChoice.Nonce;
   CheckNonceReuse(FForEncryption, LN, LChoice.KeyParameter);
   LPrevKey := FLastKey;
-  FLastN := System.Copy(LN);
+  FLastNonce := System.Copy(LN);
   if LChoice.KeyParameter <> nil then
     FLastKey := LChoice.KeyParameter.GetKey();
 
@@ -302,12 +306,7 @@ begin
   LSameKeyDir := LSameKey and (LOldForEncryption = AForEncryption);
 
   if LChoice.IsAead then
-  begin
-    LMacSizeBits := LChoice.MacSizeBits;
-    if (LMacSizeBits < 64) or (LMacSizeBits > 128) or (LMacSizeBits mod 8 <> 0) then
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-    FMacSize := LMacSizeBits div 8;
-  end
+    FMacSize := ValidateAeadMacSizeBits(LChoice.MacSizeBits, 64, 128, 8)
   else
     FMacSize := 16;
 
@@ -454,52 +453,6 @@ begin
   end;
 
   Result := LBottom;
-end;
-
-function TOcbBlockCipher.GetBlockSize: Int32;
-begin
-  Result := BLOCK_SIZE;
-end;
-
-function TOcbBlockCipher.GetMac: TCryptoLibByteArray;
-begin
-  if FMacBlock = nil then
-    System.SetLength(Result, FMacSize)
-  else
-    Result := System.Copy(FMacBlock);
-end;
-
-function TOcbBlockCipher.GetOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FMainBlockPos;
-  if FForEncryption then
-  begin
-    Result := LTotalData + FMacSize;
-    Exit;
-  end;
-  if LTotalData < FMacSize then
-    Result := 0
-  else
-    Result := LTotalData - FMacSize;
-end;
-
-function TOcbBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FMainBlockPos;
-  if (not FForEncryption) then
-  begin
-    if (LTotalData < FMacSize) then
-    begin
-      Result := 0;
-      Exit;
-    end;
-    LTotalData := LTotalData - FMacSize;
-  end;
-  Result := LTotalData - LTotalData mod BLOCK_SIZE;
 end;
 
 procedure TOcbBlockCipher.ProcessAadByte(AInput: Byte);
@@ -860,8 +813,7 @@ begin
   else
   begin
     if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LTag)) then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
-        ['OCB']);
+      RaiseMacCheckFailed();
   end;
 
   Reset(False);
@@ -976,12 +928,9 @@ end;
 
 class function TOcbBlockCipher.OCB_double(
   const ABlock: TCryptoLibByteArray): TCryptoLibByteArray;
-var
-  LCarry: Int32;
 begin
   System.SetLength(Result, 16);
-  LCarry := ShiftLeft(ABlock, Result);
-  Result[15] := Result[15] xor Byte($87 shr ((1 - LCarry) shl 3));
+  TGaloisFieldUtilities.DoubleBlock(ABlock, Result);
 end;
 
 class procedure TOcbBlockCipher.OCB_extend(const ABlock: TCryptoLibByteArray;
@@ -996,22 +945,5 @@ begin
   end;
 end;
 
-class function TOcbBlockCipher.ShiftLeft(const ABlock,
-  AOutput: TCryptoLibByteArray): Int32;
-var
-  LI: Int32;
-  LBit, LB: UInt32;
-begin
-  LI := 16;
-  LBit := 0;
-  while (LI > 0) do
-  begin
-    System.Dec(LI);
-    LB := UInt32(ABlock[LI]);
-    AOutput[LI] := Byte((LB shl 1) or LBit);
-    LBit := (LB shr 7) and 1;
-  end;
-  Result := Int32(LBit);
-end;
 
 end.

@@ -121,6 +121,7 @@ type
     procedure TestAES_OFB_NOPADDING_WITH_IV;
     procedure TestAES_CTR_NOPADDING_WITH_IV;
     procedure TestAES_ECB_NOPADDING_NO_IV;
+    procedure TestAES_OpenPGPCFB_NOPADDING_WITH_IV;
     procedure TestWrap;
     procedure TestWrapRfc3211;
     procedure TestWrapRfc5649;
@@ -568,6 +569,57 @@ begin
 
   RunNist80038A_Vectors(LCipher, 'Ecb', False, False,
     'NIST SP 800-38A AES/ECB NoPadding');
+end;
+
+procedure TTestAES.TestAES_OpenPGPCFB_NOPADDING_WITH_IV;
+const
+  // OpenPGP-CFB has no NIST/published KAT (it is a PGP-layer construction), but
+  // its first block with an all-zero IV reduces to plain CFB, so the ciphertext
+  // is plaintext XOR AES(IV). With key = IV = plaintext = 0^16 that is exactly
+  // AES-128 of a zero block under a zero key -- the widely published constant
+  // below -- giving an independently verifiable anchor. Multi-block round-trips
+  // then exercise the resync at block 1 and the steady-state branch beyond.
+  KAT_KEYIV = '00000000000000000000000000000000';
+  KAT_PLAIN = '00000000000000000000000000000000';
+  KAT_CIPHER = '66e94bd4ef8a2c3b884cfa59ca342b2e';
+  RT_LENGTHS: array [0 .. 4] of Int32 = (16, 32, 48, 64, 128);
+var
+  LCipher: IBufferedCipher;
+  LKeyParam: IKeyParameter;
+  LParam: IParametersWithIV;
+  LI, LN: Int32;
+  LIV, LPlain, LEnc, LDec: TBytes;
+begin
+  // Independent first-block KAT via the CipherUtilities registration path.
+  LCipher := TCipherUtilities.GetCipher('AES/OPENPGPCFB/NoPadding');
+  LParam := TParametersWithIV.Create
+    (TParameterUtilities.CreateKeyParameter('AES', DecodeHex(KAT_KEYIV)),
+    DecodeHex(KAT_KEYIV));
+  DoAESTest(LCipher, LParam as ICipherParameters, KAT_PLAIN, KAT_CIPHER, False,
+    'AES/OpenPGPCFB first-block KAT', -1);
+
+  // Round-trip over several block-aligned lengths.
+  LKeyParam := TParameterUtilities.CreateKeyParameter('AES',
+    DecodeHex('000102030405060708090a0b0c0d0e0f'));
+  LIV := DecodeHex('0f0e0d0c0b0a09080706050403020100');
+  for LI := System.Low(RT_LENGTHS) to System.High(RT_LENGTHS) do
+  begin
+    System.SetLength(LPlain, RT_LENGTHS[LI]);
+    for LN := 0 to RT_LENGTHS[LI] - 1 do
+      LPlain[LN] := Byte(LN and $FF);
+
+    LCipher := TCipherUtilities.GetCipher('AES/OPENPGPCFB/NoPadding');
+    LParam := TParametersWithIV.Create(LKeyParam, LIV);
+    LCipher.Init(True, LParam as ICipherParameters);
+    LEnc := LCipher.DoFinal(LPlain);
+
+    LCipher.Init(False, LParam as ICipherParameters);
+    LDec := LCipher.DoFinal(LEnc);
+
+    if not AreEqual(LPlain, LDec) then
+      Fail(Format('OpenPGPCFB round-trip failed at length %d - expected %s got %s',
+        [RT_LENGTHS[LI], EncodeHex(LPlain), EncodeHex(LDec)]));
+  end;
 end;
 
 procedure TTestAES.TestAES_OFB_NOPADDING_WITH_IV;

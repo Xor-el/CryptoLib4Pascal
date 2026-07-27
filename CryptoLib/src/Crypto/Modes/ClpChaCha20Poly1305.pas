@@ -41,6 +41,7 @@ uses
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
+  ClpAbstractAeadCipher,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -57,7 +58,6 @@ resourcestring
   SInputBufferTooShort = 'input buffer too short';
   SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in %s failed';
   SCannotReuseEncryption = '%s cannot be reused for encryption';
   SNeedsInit = '%s needs to be initialized';
   SLimitExceeded = 'limit exceeded';
@@ -76,7 +76,7 @@ type
   /// recover keystream; assign a fresh random or monotonic nonce for every message and never retry a
   /// (key, nonce) pair in production.
   /// </remarks>
-  TChaCha20Poly1305 = class(TInterfacedObject, IChaCha20Poly1305, IAeadCipher)
+  TChaCha20Poly1305 = class(TAbstractAeadCipher, IChaCha20Poly1305, IAeadCipher)
 
   strict protected
   type
@@ -100,7 +100,9 @@ type
   var
     FState: TState;
 
-    function GetAlgorithmName: String; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    procedure WipeKeyMaterial(); override;
 
   strict private
   const
@@ -124,7 +126,6 @@ type
     FKey: TCryptoLibByteArray;
     FNonce: TCryptoLibByteArray;
     FBuf: TCryptoLibByteArray;
-    FMac: TCryptoLibByteArray;
 
     FInitialAad: TCryptoLibByteArray;
 
@@ -157,24 +158,21 @@ type
     constructor Create(const APoly1305: IMac; const AEngine: IChaCha7539Engine;
       ANonceBytes: Int32); overload;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    function GetOutputSize(ALen: Int32): Int32; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
+    function GetOutputSize(ALen: Int32): Int32; override;
+    function GetUpdateOutputSize(ALen: Int32): Int32; override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    procedure Reset(); overload; virtual;
-
-    property AlgorithmName: String read GetAlgorithmName;
+    procedure Reset(); overload; override;
   end;
 
 implementation
@@ -217,10 +215,11 @@ begin
     FBulkChaCha := nil;
   FNonceBytes := ANonceBytes;
 
+  FMacSize := MacSize;
   System.SetLength(FKey, KeySize);
   System.SetLength(FNonce, FNonceBytes);
   System.SetLength(FBuf, BufSize + MacSize);
-  System.SetLength(FMac, MacSize);
+  System.SetLength(FMacBlock, MacSize);
 
   FState := TState.Uninitialized;
 end;
@@ -228,6 +227,21 @@ end;
 function TChaCha20Poly1305.GetAlgorithmName: String;
 begin
   Result := 'ChaCha20Poly1305';
+end;
+
+function TChaCha20Poly1305.GetModeName: String;
+begin
+  // Used only for the unified "mac check in %s failed" message; delegating to
+  // the (virtual) algorithm name keeps XChaCha20Poly1305's message correct.
+  Result := GetAlgorithmName;
+end;
+
+procedure TChaCha20Poly1305.WipeKeyMaterial;
+begin
+  TArrayUtilities.Fill(FKey, 0, System.Length(FKey), Byte(0));
+  TArrayUtilities.Fill(FNonce, 0, System.Length(FNonce), Byte(0));
+  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 end;
 
 procedure TChaCha20Poly1305.Init(AForEncryption: Boolean;
@@ -565,7 +579,7 @@ begin
 
   CheckData();
 
-  TArrayUtilities.Fill(FMac, 0, MacSize, Byte(0));
+  TArrayUtilities.Fill(FMacBlock, 0, MacSize, Byte(0));
 
   case FState of
     TState.DecData:
@@ -585,9 +599,8 @@ begin
 
       FinishData(TState.DecFinal);
 
-      if (not TArrayUtilities.FixedTimeEquals(MacSize, FMac, 0, FBuf, LResultLen)) then
-        raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
-          [AlgorithmName]);
+      if (not VerifyMac(FBuf, LResultLen)) then
+        RaiseMacCheckFailed();
     end;
     TState.EncData:
     begin
@@ -603,7 +616,7 @@ begin
 
       FinishData(TState.EncFinal);
 
-      System.Move(FMac[0], AOutput[AOutOff + FBufPos], MacSize);
+      System.Move(FMacBlock[0], AOutput[AOutOff + FBufPos], MacSize);
     end;
   else
     raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
@@ -612,11 +625,6 @@ begin
   Reset(False, True);
 
   Result := LResultLen;
-end;
-
-function TChaCha20Poly1305.GetMac: TCryptoLibByteArray;
-begin
-  Result := System.Copy(FMac);
 end;
 
 procedure TChaCha20Poly1305.Reset;
@@ -673,7 +681,7 @@ begin
   TPack.UInt64_To_LE(FDataCount, LLengths, 8);
   FPoly1305.BlockUpdate(LLengths, 0, 16);
 
-  FPoly1305.DoFinal(FMac, 0);
+  FPoly1305.DoFinal(FMacBlock, 0);
 
   FState := ANextState;
 end;
@@ -747,7 +755,7 @@ begin
 
   if AClearMac then
   begin
-    TArrayUtilities.Fill(FMac, 0, System.Length(FMac), Byte(0));
+    TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   end;
 
   FAadCount := UInt64(0);

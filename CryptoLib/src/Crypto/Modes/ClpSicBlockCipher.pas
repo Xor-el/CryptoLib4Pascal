@@ -24,12 +24,12 @@ uses
   Math,
   SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIBulkBlockCipher,
   ClpICtrKernel,
   ClpCipherKernelTypes,
   ClpCipherKernelRegistry,
   ClpIBulkBlockCipherMode,
+  ClpAbstractBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpByteUtilities,
   ClpISicBlockCipher,
@@ -56,14 +56,12 @@ type
   /// Initialisation requires <see cref="IParametersWithIV"/> containing the nonce/IV fragment;
   /// the nonce is fused into an internal counter with bounds validated against the cipher block size.
   /// </remarks>
-  TSicBlockCipher = class(TInterfacedObject, ISicBlockCipher,
-    IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
+  TSicBlockCipher = class(TAbstractBlockCipherMode, ISicBlockCipher,
+    IBulkBlockCipherMode)
 
   strict private
   var
     FIV, FCounter, FCounterOut: TCryptoLibByteArray;
-    FBlockSize: Int32;
-    FCipher: IBlockCipher;
     // Cached on Init; non-nil when the underlying engine implements the
     // generic multi-block capability (IBulkBlockCipher). The engine owns
     // the 8/4/1 batch ladder internally, so the mode here only ever asks
@@ -95,9 +93,8 @@ type
       AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32);
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
+    function GetIsPartialBlockOkay: Boolean; override;
 
   public
     /// <summary>
@@ -111,12 +108,10 @@ type
     /// <param name="AForEncryption">CTR does not bifurcate encryption/decryption; parameter is retained for uniformity but does not toggle XOR direction logic.</param>
     /// <param name="AParameters">Must expose <see cref="IParametersWithIV"/> satisfying IV length constraints for this cipher block width.</param>
     /// <exception cref="EArgumentCryptoLibException">If IV shape is unsupported or nesting is absent.</exception>
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    /// <summary>Returns the underlying cipher block size in bytes.</summary>
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
     /// <summary>Encrypt/decrypt exactly one counter block-worth of payload.</summary>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     /// <summary>
     /// IBulkBlockCipherMode: process ABlockCount consecutive FBlockSize-byte
     /// blocks. Output is byte-identical to ABlockCount sequential
@@ -130,12 +125,7 @@ type
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32; virtual;
     /// <summary>Reset internal counter seed from the nonce captured during <see cref="Init"/>.</summary>
-    procedure Reset(); virtual;
-
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
-    /// <summary>Returns True (CTR allows partial finals).</summary>
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -144,9 +134,7 @@ implementation
 
 constructor TSicBlockCipher.Create(const ACipher: IBlockCipher);
 begin
-  inherited Create();
-  FCipher := ACipher;
-  FBlockSize := FCipher.GetBlockSize();
+  inherited Create(ACipher);
 
   System.SetLength(FCounter, FBlockSize);
   System.SetLength(FCounterOut, FBlockSize);
@@ -160,24 +148,14 @@ begin
   System.Move(FIV[0], FCounter[0], System.Length(FIV) * System.SizeOf(Byte));
 end;
 
-function TSicBlockCipher.GetAlgorithmName: String;
+function TSicBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/SIC';
-end;
-
-function TSicBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FCipher.GetBlockSize();
+  Result := '/SIC';
 end;
 
 function TSicBlockCipher.GetIsPartialBlockOkay: Boolean;
 begin
   Result := True;
-end;
-
-function TSicBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
 end;
 
 procedure TSicBlockCipher.Init(AForEncryption: Boolean;
@@ -259,19 +237,12 @@ function TSicBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
 var
   LTotalBytes, LDone: Int32;
 begin
-  if ABlockCount <= 0 then
+  LTotalBytes := CheckBlockBuffers(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+  if LTotalBytes = 0 then
   begin
     Result := 0;
     Exit;
   end;
-
-  LTotalBytes := ABlockCount * FBlockSize;
-
-  if ((AInOff < 0) or ((AInOff + LTotalBytes) > System.Length(AInBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
-
-  if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
   // Preferred fast path: the fused CTR kernel does counter generation + AES-NI
   // + XOR in a single pass over the batch-aligned bulk, advancing FCounter in

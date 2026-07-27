@@ -52,7 +52,9 @@ end;
 class procedure TCheck.DataLength(const ABuf: TCryptoLibByteArray;
   AOff, ALen: Int32; const AMsg: String);
 begin
-  if ((AOff + ALen) > System.Length(ABuf)) then
+  // Overflow-safe: (AOff + ALen) could wrap Int32. For valid (non-negative,
+  // non-overflowing) inputs this is identical to AOff + ALen > Length.
+  if (AOff < 0) or (ALen < 0) or (AOff > System.Length(ABuf) - ALen) then
   begin
     raise EDataLengthCryptoLibException.Create(AMsg);
   end;
@@ -61,7 +63,7 @@ end;
 class procedure TCheck.OutputLength(const ABuf: TCryptoLibByteArray;
   AOff, ALen: Int32; const AMsg: String);
 begin
-  if ((AOff + ALen) > System.Length(ABuf)) then
+  if (AOff < 0) or (ALen < 0) or (AOff > System.Length(ABuf) - ALen) then
   begin
     raise EOutputLengthCryptoLibException.Create(AMsg);
   end;
