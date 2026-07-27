@@ -14,7 +14,10 @@ is proven clean by whichever leg attributes cleanly:
 
 * **dudect** proves the control-flow leaks: **wNAF** (P-256), **tau-NAF** (sect283k1)
   and **variable-time Euclid** modular inverse separate by a large mean, so their
-  controls fire; the CT subjects (fixed-window, F2m ladder, safegcd core) stay clean.
+  controls fire; the CT subjects stay clean - fixed-window, F2m ladder, and safegcd
+  measured **both** at the `TMod` core (`mod-inv (core)`) **and** end-to-end through
+  the full `TBigInteger` wrapper the ECDSA signer actually calls, `ModOddInverse(n,k)`
+  (`mod-inv (wrapper)`), so the nonce inverse is measurement-verified end-to-end.
 * **Valgrind** proves the memory-access leaks deterministically: **T-table AES** and
   **4k-table GHASH** index tables by secret-derived bytes and fire; X25519,
   bit-sliced AES and ImplMul64 GHASH stay clean.
@@ -25,6 +28,35 @@ hot-L1 microbenchmark, so they are caught in the Valgrind leg instead. EC and mo
 inverse are **not** taint-checked in Valgrind: byte-poisoning their scalar would flag
 the non-constant-time `TBigInteger` front-end rather than the multiplier/inverter,
 so their controls live in the dudect leg.
+
+## Quick start
+
+The Valgrind leg runs automatically in CI (native x86_64 + AArch64 Linux) - you only
+need local runs for the dudect leg or ad-hoc checks. All commands assume the repo
+root as CWD and FPC/Lazarus on `PATH`; see the sections below for the full detail.
+
+**Both legs first need scalar dispatch on** (else the tools refuse to run): in
+`CryptoLib/src/Include/CryptoLib.inc` uncomment `{$DEFINE CRYPTOLIB_FORCE_SCALAR}`,
+and **re-comment it when done** (rebuild the package back to normal afterwards).
+
+**dudect (Windows x86_64 - swap `win64`->`linux` and run in WSL2 for the Linux cell):**
+```
+lazbuild -B --cpu=x86_64 --os=win64 CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+lazbuild -B --cpu=x86_64 --os=win64 CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect          # expect: GATE: PASS
+#   --quick (fast smoke run) | --row=<substr> (one row, e.g. --row=wrapper)
+```
+
+**ctgrind / Valgrind (Linux; needs `sudo apt-get install valgrind libc6-dbg gcc`):**
+```
+gcc -O2 -c CryptoLib.ConstantTime/src/Core/ct_poison.c -o CryptoLib.ConstantTime/Lazarus/ct_poison.o
+lazbuild -B --cpu=x86_64 --os=linux CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+lazbuild -B --cpu=x86_64 --os=linux CryptoLib.ConstantTime/Lazarus/CTValgrind.lpi
+cd CryptoLib.ConstantTime/Lazarus
+for t in x25519 aes-bitsliced ghash-basic aes-ttable ghash-4k; do \
+  valgrind --error-exitcode=1 --track-origins=yes ./CTValgrind $t; done
+# subjects clean (exit 0), controls aes-ttable/ghash-4k must fire (exit 1)
+```
 
 ## Prerequisite: force scalar dispatch (BOTH legs)
 
@@ -154,17 +186,43 @@ suppress a `Clp*` crypto frame.
       cross compiler. The default `.lpi` builds a dynamic binary (validated to build
       and run); switch to static only for the no-root Valgrind case.
 
-## Coverage measured locally (this machine)
+## Coverage matrix
 
-| Cell | dudect | Valgrind |
-|------|--------|----------|
-| FPC x86_64 Windows | **PASS** (controls fire, subjects clean) | n/a (Valgrind is Linux-only) |
-| FPC x86_64 Linux (WSL2) | **PASS** (controls fire, subjects clean) | built + run-ready; execution blocked only by the stock-WSL2 loader/debuginfo quirk above (root `libc6-dbg` fixes it) |
+| Cell | dudect (timing) | Valgrind (taint) |
+|------|-----------------|-------------------|
+| FPC x86_64 Windows | **PASS** (local) | n/a (Valgrind is Linux-only) |
+| FPC x86_64 Linux | **PASS** (local, WSL2) | **PASS** (CI, `linux-x64-scalar`) |
+| FPC aarch64 Linux | advisory / real-hw (not yet run) | **PASS** (CI, `linux-arm64-scalar`) |
+| FPC aarch64 macOS | not pursued | n/a (Valgrind unsupported on modern macOS) |
 
-Out of local reach: native AArch64 and macOS. AArch64 is covered in CI on a native
-runner (see below); macOS stays fenced to CI/audit. Nothing is run under QEMU here
-(emulation distorts both timing and Valgrind), so the local matrix is logged as
-not-covered rather than implying full-matrix coverage.
+Notes:
+* **PASS = every control fired and every subject stayed clean.** dudect runs
+  locally (statistical + shared-runner noise makes it a poor CI gate); Valgrind is
+  the CI gate.
+* **aarch64 Linux dudect** is the only open cell: it would be *advisory* on the CI
+  runner (log-only, never fails) or a *manual run on real AArch64 hardware* with the
+  frequency-pinning hygiene above. The control-flow leaks (wNAF / tau-NAF / Euclid)
+  are large-signal, so even a noisy AArch64 dudect run shows the controls firing.
+  The higher-value AArch64 memory-access cell (Valgrind) is already live in CI.
+* **aarch64 macOS is not pursued:** Valgrind has no modern-macOS support, so macOS
+  could only add a dudect leg, and the Linux coverage (x86_64 dudect + x86_64 *and*
+  AArch64 Valgrind) is judged sufficient. The residual gap is macOS-specific codegen
+  (Mach-O / Clang-backed FPC on `aarch64-darwin`) - a manual Apple-Silicon run if an
+  auditor wants that cell; it blocks nothing.
+* Nothing is run under QEMU (emulation distorts both timing and Valgrind).
+
+### ECDSA nonce inverse - end-to-end measured
+
+The signer computes `k^-1 mod n` via `TBigIntegerUtilities.ModOddInverse(n, k)`
+(`ClpECDsaSigner`). The `mod-inv (wrapper)` dudect row measures **that exact call**
+- the full `TBigInteger` wrapper (FromBigInteger -> `TMod` core -> ToBigInteger),
+not just the core - with `k` a nonce in `[1, n-1]` and allocation-symmetric setup.
+Result: subject clean on both x86_64 cells (Windows and Linux), var-time control
+fires. So the nonce inverse is **measurement-verified constant-time end-to-end**,
+not merely core-measured + wrapper-CT-by-construction. (Were the subject to fire,
+that would be a real leak - the wrapper's magnitude-dependent marshalling - not a
+harness artifact, and the fix would be to marshal `k` to a fixed-width `Nat` in the
+signer and call the CT core directly.)
 
 **CI wiring (done):** the Valgrind leg runs in **both** the `linux-x64-scalar` and
 `linux-arm64-scalar` jobs via `.github/workflows/ci/valgrind-ct.sh` (step

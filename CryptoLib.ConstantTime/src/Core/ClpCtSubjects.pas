@@ -97,6 +97,7 @@ uses
   SysUtils,
   ClpCryptoLibTypes,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpMod,
   ClpNat,
   ClpCustomNamedCurves,
@@ -483,6 +484,69 @@ begin
     FSinkB := TMod.ModOddInverseVar(FM, FX, FZ);
 end;
 
+{ =============== #7  modular inverse - TBigInteger WRAPPER ================ }
+
+{ Measures the exact ECDSA signer call shape: TBigIntegerUtilities.ModOddInverse
+  (n, k) - see ClpECDsaSigner - the FULL BigInteger wrapper (FromBigInteger ->
+  TMod core -> ToBigInteger), not just the core (#6). This turns "core-measured +
+  wrapper-CT-by-construction" into an end-to-end measurement. k is a nonce strictly
+  in [1, n-1] (as in signing), so the wrapper's magnitude-dependent range-reduction
+  branch stays dead and the fixed-width marshalling is word-count-invariant for
+  crypto-size nonces (a random k mod n is full width with overwhelming probability).
+  Fixed class = n-1 (full width, no word-count artifact vs random; its inverse is
+  n-1, which variable-time Euclid finds in ~2 steps, so the control separates). Prep
+  is allocation-symmetric; the timed RunOp is ONLY the ModOddInverse call. }
+type
+  TModInvWrapperOp = class sealed(TDudectOp)
+  strict private
+    FRnd: TCtRandom;
+    FSafeGcd: Boolean;
+    FModulus, FFixedBig, FK, FResult: TBigInteger;
+    FScalarBytes: TBytes;
+    FScalarByteLen: Int32;
+  public
+    constructor Create(ASafeGcd: Boolean; const AModulus: TBigInteger; ASeed: UInt64);
+    procedure PrepareSecret(AClass: Int32); override;
+    procedure RunOp; override;
+  end;
+
+constructor TModInvWrapperOp.Create(ASafeGcd: Boolean; const AModulus: TBigInteger;
+  ASeed: UInt64);
+begin
+  inherited Create;
+  FRnd := TCtRandom.Create(ASeed);
+  FSafeGcd := ASafeGcd;
+  FModulus := AModulus;
+  FFixedBig := AModulus.Subtract(TBigInteger.One);
+  FScalarByteLen := ((AModulus.BitLength + 7) div 8) + 8;
+  System.SetLength(FScalarBytes, FScalarByteLen);
+end;
+
+procedure TModInvWrapperOp.PrepareSecret(AClass: Int32);
+var
+  LRand: TBigInteger;
+begin
+  // Allocation-symmetric, untimed: both classes draw + build a BigInteger; input
+  // construction stays OUT of the timed region, only the resulting value differs.
+  // (This is the trap the report hit - an asymmetric per-class alloc reads as a
+  // false timing signal because the wrapper allocates internally each call.)
+  FRnd.NextBytes(FScalarBytes, 0, FScalarByteLen);
+  LRand := ScalarFromBytes(FScalarBytes, FModulus); // strictly in [1, n-1]
+  if AClass = 0 then
+    FK := FFixedBig
+  else
+    FK := LRand;
+end;
+
+procedure TModInvWrapperOp.RunOp;
+begin
+  // The exact signer call: k^-1 mod n through the full TBigInteger wrapper.
+  if FSafeGcd then
+    FResult := TBigIntegerUtilities.ModOddInverse(FModulus, FK)
+  else
+    FResult := TBigIntegerUtilities.ModOddInverseVar(FModulus, FK);
+end;
+
 { ============================== factories ================================ }
 
 function MakeX25519(ASeed: UInt64): TDudectOp;
@@ -560,6 +624,16 @@ begin
   Result := TModInvOp.Create(False, P256Order, ASeed);
 end;
 
+function MakeModInvWrapperSafe(ASeed: UInt64): TDudectOp;
+begin
+  Result := TModInvWrapperOp.Create(True, P256Order, ASeed);
+end;
+
+function MakeModInvWrapperVar(ASeed: UInt64): TDudectOp;
+begin
+  Result := TModInvWrapperOp.Create(False, P256Order, ASeed);
+end;
+
 { ============================== registries =============================== }
 
 function ExpensiveCfg(ASeed: UInt64): TDudectConfig;
@@ -605,7 +679,7 @@ end;
 
 function GetDudectRows: TCtRowArray;
 begin
-  System.SetLength(Result, 6);
+  System.SetLength(Result, 7);
   Result[0] := MakeRow('X25519', 'X25519 ladder', '',
     @MakeX25519, nil, MediumCfg(UInt64($0000000000000001)));
   Result[1] := MakeRow('P-256 [d]Q', 'FixedWindow CT', 'wNAF (var-time)',
@@ -624,8 +698,13 @@ begin
   // Valgrind/ctgrind leg (data-dependent table index) instead.
   Result[4] := MakeRow('GHASH', 'ImplMul64 (CT)', '',
     @MakeGhashBasic, nil, CheapCfg(UInt64($0000000000000005)));
-  Result[5] := MakeRow('mod-inverse', 'safegcd (CT)', 'variable-time',
+  // #6 tests the safegcd CORE (TMod.ModOddInverse on fixed-width Nats); #7 tests
+  // the full TBigInteger WRAPPER - the exact ECDSA signer call k^-1 mod n - so the
+  // nonce inverse is measured end-to-end, not just at the core.
+  Result[5] := MakeRow('mod-inv (core)', 'safegcd core (CT)', 'variable-time core',
     @MakeModInvSafe, @MakeModInvVar, MediumCfg(UInt64($0000000000000006)));
+  Result[6] := MakeRow('mod-inv (wrapper)', 'safegcd wrapper (CT)', 'variable-time wrapper',
+    @MakeModInvWrapperSafe, @MakeModInvWrapperVar, MediumCfg(UInt64($0000000000000007)));
 end;
 
 function MakeVg(const AName: string; AMake: TCtOpFactory;
