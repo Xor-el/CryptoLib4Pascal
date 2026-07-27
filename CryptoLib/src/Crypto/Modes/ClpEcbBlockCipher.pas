@@ -28,22 +28,20 @@ uses
   ClpIBulkBlockCipherMode,
   ClpIEcbBlockCipher,
   ClpICipherParameters,
+  ClpAbstractBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
-  SInputBufferTooShort = 'input buffer too short';
-  SOutputBufferTooShort = 'output buffer too short';
   SCipherNil = 'cipher cannot be nil';
 
 type
-  TEcbBlockCipher = class(TInterfacedObject, IEcbBlockCipher,
-    IBlockCipherMode, IBlockCipher, IBulkBlockCipherMode)
+  TEcbBlockCipher = class sealed(TAbstractBlockCipherMode, IEcbBlockCipher,
+    IBulkBlockCipherMode)
 
   strict private
   var
-    FCipher: IBlockCipher;
     // Cached on Init. Non-nil when the underlying engine exposes the
     // IBulkBlockCipher capability (any bulk-capable block cipher lights
     // up automatically by implementing the interface; the mode does not
@@ -53,9 +51,7 @@ type
     FBulkCipher: IBulkBlockCipher;
 
   strict protected
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
 
   public
     class function GetBlockCipherMode(const ABlockCipher: IBlockCipher)
@@ -63,13 +59,11 @@ type
 
     constructor Create(const ACipher: IBlockCipher);
 
-    function GetBlockSize(): Int32;
-
     procedure Init(AForEncryption: Boolean;
-      const AParameters: ICipherParameters);
+      const AParameters: ICipherParameters); override;
 
     function ProcessBlock(const AInBuf: TCryptoLibByteArray; AInOff: Int32;
-      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutBuf: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
     /// <summary>
     /// IBulkBlockCipherMode: process ABlockCount consecutive blocks of
@@ -84,11 +78,7 @@ type
       AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
       AOutOff: Int32): Int32;
 
-    procedure Reset();
-
-    property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -108,31 +98,15 @@ end;
 
 constructor TEcbBlockCipher.Create(const ACipher: IBlockCipher);
 begin
-  inherited Create();
   if ACipher = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SCipherNil);
-  FCipher := ACipher;
+  inherited Create(ACipher);
   FBulkCipher := nil;
 end;
 
-function TEcbBlockCipher.GetAlgorithmName: String;
+function TEcbBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/ECB';
-end;
-
-function TEcbBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FCipher.GetBlockSize();
-end;
-
-function TEcbBlockCipher.GetIsPartialBlockOkay: Boolean;
-begin
-  Result := False;
-end;
-
-function TEcbBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
+  Result := '/ECB';
 end;
 
 procedure TEcbBlockCipher.Init(AForEncryption: Boolean;
@@ -155,23 +129,10 @@ end;
 function TEcbBlockCipher.ProcessBlocks(const AInBuf: TCryptoLibByteArray;
   AInOff, ABlockCount: Int32; const AOutBuf: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
-var
-  LBlockSize, LTotalBytes: Int32;
 begin
-  if ABlockCount <= 0 then
-  begin
-    Result := 0;
+  Result := CheckBlockBuffers(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
+  if Result = 0 then
     Exit;
-  end;
-
-  LBlockSize := FCipher.GetBlockSize();
-  LTotalBytes := ABlockCount * LBlockSize;
-
-  if ((AInOff < 0) or ((AInOff + LTotalBytes) > System.Length(AInBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
-
-  if ((AOutOff < 0) or ((AOutOff + LTotalBytes) > System.Length(AOutBuf))) then
-    raise EDataLengthCryptoLibException.CreateRes(@SOutputBufferTooShort);
 
   // Fast path: engine-owned 8/4/1 ladder. One interface call per bulk
   // request, regardless of ABlockCount; the engine picks the best batch
@@ -179,7 +140,6 @@ begin
   if FBulkCipher <> nil then
   begin
     FBulkCipher.ProcessBlocks(AInBuf, AInOff, ABlockCount, AOutBuf, AOutOff);
-    Result := LTotalBytes;
     Exit;
   end;
 
@@ -188,12 +148,10 @@ begin
   while ABlockCount > 0 do
   begin
     FCipher.ProcessBlock(AInBuf, AInOff, AOutBuf, AOutOff);
-    System.Inc(AInOff, LBlockSize);
-    System.Inc(AOutOff, LBlockSize);
+    System.Inc(AInOff, FBlockSize);
+    System.Inc(AOutOff, FBlockSize);
     System.Dec(ABlockCount);
   end;
-
-  Result := LTotalBytes;
 end;
 
 procedure TEcbBlockCipher.Reset;

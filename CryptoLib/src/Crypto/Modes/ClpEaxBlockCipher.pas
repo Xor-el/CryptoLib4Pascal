@@ -44,31 +44,24 @@ uses
   ClpParametersWithIV,
   ClpCheck,
   ClpArrayUtilities,
-  ClpBitOperations,
+  ClpAbstractAeadCipher,
+  ClpAbstractAeadBlockCipher,
+  ClpGaloisFieldUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
-  SInvalidMacSize = 'invalid value for MAC size: %d';
   SInvalidParameters = 'invalid parameters passed to %s';
   SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in %s failed';
   SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun';
   SInputBufferTooShort = 'input buffer too short';
-  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
-  TEaxBlockCipher = class(TInterfacedObject, IEaxBlockCipher,
+  TEaxBlockCipher = class(TAbstractAeadBlockCipher, IEaxBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
   strict private
-  const
-    // OMAC / CMAC GF(2^128) reduction polynomial constant (x^128 + x^7 +
-    // x^2 + x + 1). Applied to the high bit of the MSB shift when
-    // deriving subkeys B = 2*L and P = 4*L.
-    CMAC_CONSTANT_128 = Byte($87);
-
   type
     TTag = (TagN = 0, TagH = 1, TagC = 2);
   var
@@ -79,19 +72,12 @@ type
     // Supports() call in the constructor keeps us robust against future
     // variants that might opt out.
     FBulkCipher: IBulkBlockCipherMode;
-    FForEncryption: Boolean;
-    FBlockSize: Int32;
     FMac: IMac;
     FNonceMac: TCryptoLibByteArray;
     FAssociatedTextMac: TCryptoLibByteArray;
-    FMacBlock: TCryptoLibByteArray;
-    FMacSize: Int32;
     FBufBlock: TCryptoLibByteArray;
     FBufOff: Int32;
     FCipherInitialized: Boolean;
-    FInitialAssociatedText: TCryptoLibByteArray;
-    FLastNonce: TCryptoLibByteArray;
-    FLastKey: TCryptoLibByteArray;
 
     // Cached once per Init; non-nil when the registry resolved a fused
     // EAX kernel for the underlying cipher and encrypt direction. Decrypt
@@ -124,14 +110,10 @@ type
     FOmacP: TCryptoLibByteArray;
     FCtrBlock: TCryptoLibByteArray;
 
-    procedure CheckNonceReuse(AForEncryption: Boolean;
-      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     procedure InitCipher();
     procedure CalculateMac();
     procedure Reset(AClearMac: Boolean); overload;
     function Process(AB: Byte; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
-    function VerifyMac(const AMac: TCryptoLibByteArray; AOff: Int32): Boolean;
-    class function GetMacSize(ARequestedMacBits, ABlockSize: Int32): Int32; static;
 
     // ----- Fused-body helpers (only touched when FUseFusedBody). -----
     /// <summary>Derive OMAC subkeys B = 2*L and P = 4*L from
@@ -142,7 +124,6 @@ type
 
     /// <summary>GF(2^128) x-times operation on a 16-byte block (BE bit
     /// order, reduction by x^128 + x^7 + x^2 + x + 1).</summary>
-    class procedure DoubleBlock(const ASrc, ADst: TCryptoLibByteArray); static;
 
     /// <summary>Single-block CBC-MAC step: FOmacState :=
     /// AES_K(FOmacState XOR ABlock). Used by the scalar OMAC lookahead
@@ -183,31 +164,26 @@ type
       APartialLen: Int32);
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    function GetBufferedLength(): Int32; override;
+    procedure WipeKeyMaterial(); override;
 
   public
     constructor Create(const ACipher: IBlockCipher);
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
-    function GetOutputSize(ALen: Int32): Int32; virtual;
-    procedure Reset(); overload; virtual;
-
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
+    procedure Reset(); overload; override;
   end;
 
 implementation
@@ -224,6 +200,7 @@ begin
   System.SetLength(FAssociatedTextMac, FMac.GetMacSize());
   System.SetLength(FNonceMac, FMac.GetMacSize());
   FCipher := TSicBlockCipher.Create(ACipher);
+  FUnderlyingCipher := FCipher;
   TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipher, FBulkCipher);
   FUseFusedBody := False;
 end;
@@ -233,30 +210,34 @@ begin
   Result := FCipher.GetUnderlyingCipher().AlgorithmName + '/EAX';
 end;
 
-function TEaxBlockCipher.GetUnderlyingCipher: IBlockCipher;
+function TEaxBlockCipher.GetModeName: String;
 begin
-  Result := FCipher;
+  Result := 'EAX';
 end;
 
-function TEaxBlockCipher.GetBlockSize: Int32;
+function TEaxBlockCipher.GetBufferedLength: Int32;
 begin
-  Result := FCipher.GetBlockSize();
+  Result := FBufOff;
 end;
 
-procedure TEaxBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
-  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+procedure TEaxBlockCipher.WipeKeyMaterial;
 begin
-  if not AForEncryption then
-    Exit;
-
-  if (FLastNonce = nil) or (not TArrayUtilities.AreEqual(FLastNonce, ANewNonce)) then
-    Exit;
-
-  if AKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['EAX']);
-
-  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['EAX']);
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
+  TArrayUtilities.Fill(FNonceMac, 0, System.Length(FNonceMac), Byte(0));
+  TArrayUtilities.Fill(FAssociatedTextMac, 0, System.Length(FAssociatedTextMac),
+    Byte(0));
+  TArrayUtilities.Fill(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
+  if FOmacState <> nil then
+    TArrayUtilities.Fill(FOmacState, 0, System.Length(FOmacState), Byte(0));
+  if FOmacLookahead <> nil then
+    TArrayUtilities.Fill(FOmacLookahead, 0, System.Length(FOmacLookahead),
+      Byte(0));
+  if FOmacB <> nil then
+    TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
+  if FOmacP <> nil then
+    TArrayUtilities.Fill(FOmacP, 0, System.Length(FOmacP), Byte(0));
+  if FCtrBlock <> nil then
+    TArrayUtilities.Fill(FCtrBlock, 0, System.Length(FCtrBlock), Byte(0));
 end;
 
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
@@ -282,9 +263,10 @@ begin
 
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
-    FMacSize := GetMacSize(LChoice.MacSizeBits, FBlockSize)
+    FMacSize := ValidateAeadMacSizeBits(LChoice.MacSizeBits, 32, FBlockSize * 8, 8)
   else
-    FMacSize := GetMacSize((FMac.GetMacSize() div 2) * 8, FBlockSize);
+    FMacSize := ValidateAeadMacSizeBits((FMac.GetMacSize() div 2) * 8, 32,
+      FBlockSize * 8, 8);
 
   if FForEncryption then
     System.SetLength(FBufBlock, FBlockSize)
@@ -339,31 +321,8 @@ begin
   FUnderlyingAes.ProcessBlock(LZeros, 0, LL, 0);
   System.SetLength(FOmacB, FBlockSize);
   System.SetLength(FOmacP, FBlockSize);
-  DoubleBlock(LL, FOmacB);
-  DoubleBlock(FOmacB, FOmacP);
-end;
-
-class procedure TEaxBlockCipher.DoubleBlock(const ASrc,
-  ADst: TCryptoLibByteArray);
-var
-  LI: Int32;
-  LCarry, LB: UInt32;
-begin
-  LCarry := 0;
-  LI := System.Length(ASrc);
-  while LI > 0 do
-  begin
-    System.Dec(LI);
-    LB := ASrc[LI];
-    ADst[LI] := Byte((LB shl 1) or LCarry);
-    LCarry := (LB shr 7) and 1;
-  end;
-  // When the original MSB was 1, reduce by the GF(2^128) polynomial via
-  // conditional XOR of the $87 constant on the LSB. Use the right-shift
-  // arithmetic trick from TCMac to avoid a branch on LCarry.
-  ADst[System.Length(ASrc) - 1] :=
-    ADst[System.Length(ASrc) - 1] xor Byte(TBitOperations.Asr32(Int32(CMAC_CONSTANT_128),
-    (1 - Int32(LCarry)) shl 3));
+  TGaloisFieldUtilities.DoubleBlock(LL, FOmacB);
+  TGaloisFieldUtilities.DoubleBlock(FOmacB, FOmacP);
 end;
 
 procedure TEaxBlockCipher.CbcMacStep(const ABlock: TCryptoLibByteArray;
@@ -1052,54 +1011,12 @@ begin
     CalculateMac();
 
     if (not VerifyMac(FBufBlock, LExtra - FMacSize)) then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
-        ['EAX']);
+      RaiseMacCheckFailed();
 
     Reset(False);
 
     Result := LExtra - FMacSize;
   end;
-end;
-
-function TEaxBlockCipher.GetMac: TCryptoLibByteArray;
-begin
-  System.SetLength(Result, FMacSize);
-  System.Move(FMacBlock[0], Result[0], FMacSize);
-end;
-
-function TEaxBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FBufOff;
-  if (not FForEncryption) then
-  begin
-    if (LTotalData < FMacSize) then
-    begin
-      Result := 0;
-      Exit;
-    end;
-    LTotalData := LTotalData - FMacSize;
-  end;
-  Result := LTotalData - LTotalData mod FBlockSize;
-end;
-
-function TEaxBlockCipher.GetOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FBufOff;
-
-  if FForEncryption then
-  begin
-    Result := LTotalData + FMacSize;
-    Exit;
-  end;
-
-  if LTotalData < FMacSize then
-    Result := 0
-  else
-    Result := LTotalData - FMacSize;
 end;
 
 function TEaxBlockCipher.Process(AB: Byte; const AOutBytes: TCryptoLibByteArray;
@@ -1159,23 +1076,6 @@ begin
   end;
 
   Result := 0;
-end;
-
-class function TEaxBlockCipher.GetMacSize(ARequestedMacBits,
-  ABlockSize: Int32): Int32;
-begin
-  if (ARequestedMacBits < 32) or (ARequestedMacBits > ABlockSize * 8) or
-    (ARequestedMacBits and 7 <> 0) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize,
-      [ARequestedMacBits]);
-
-  Result := ARequestedMacBits shr 3;
-end;
-
-function TEaxBlockCipher.VerifyMac(const AMac: TCryptoLibByteArray;
-  AOff: Int32): Boolean;
-begin
-  Result := TArrayUtilities.FixedTimeEquals(FMacSize, AMac, AOff, FMacBlock, 0);
 end;
 
 end.

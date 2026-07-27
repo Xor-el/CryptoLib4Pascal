@@ -42,6 +42,8 @@ uses
   ClpCbcBlockCipherMac,
   ClpIMac,
   ClpParametersWithIV,
+  ClpAbstractAeadCipher,
+  ClpAbstractAeadBlockCipher,
   ClpCheck,
   ClpArrayUtilities,
   ClpByteUtilities,
@@ -56,11 +58,9 @@ resourcestring
   SCcmUninitialised = 'CCM cipher uninitialized';
   SCcmPacketTooLarge = 'CCM packet too large for choice of q';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in %s failed';
   STagLengthOctets = 'tag length in octets must be one of {4,6,8,10,12,14,16}';
   SInputBufferTooShort = 'input buffer too short';
   SOutputBufferTooShort = 'output buffer too short';
-  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
 
 type
   // Per-packet inputs a body decryptor needs (Dest/DestOff set by RunDecrypt).
@@ -87,7 +87,7 @@ type
     BulkCtr: IBulkBlockCipherMode;
   end;
 
-  TCcmBlockCipher = class(TInterfacedObject, ICcmBlockCipher,
+  TCcmBlockCipher = class(TAbstractAeadBlockCipher, ICcmBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
   strict private
@@ -96,13 +96,7 @@ type
 
   var
     FCipher: IBlockCipher;
-    FMacBlock: TCryptoLibByteArray;
-    FForEncryption: Boolean;
-    FNonce: TCryptoLibByteArray;
-    FInitialAssociatedText: TCryptoLibByteArray;
-    FMacSize: Int32;
     FKeyParam: ICipherParameters;
-    FLastKey: TCryptoLibByteArray;
     // CTR wrapper cached across packets (created once per keyed cipher); each
     // packet re-inits it IV-only, so the AES schedule is never recomputed.
     FCtrCipher: ISicBlockCipher;
@@ -116,18 +110,11 @@ type
     // buffer straight to ProcessPacket, avoiding the readback copy a stream needs.
     FData: TCryptoLibByteArray;
     FDataLen: Int32;
-    // Reused decrypt staging buffer. CCM must not release unverified plaintext,
-    // so decrypt lands here first; the tag is verified, and only on success is
-    // the plaintext copied to the caller's output (which stays untouched on
-    // failure). Grown by doubling and reused across packets, and wiped after
-    // every packet (in a finally) so no recovered plaintext lingers.
     // Cached once per Init; non-nil when the registry resolved a fused
     // CCM kernel for the underlying cipher and current direction.
     FCcmKernel: ICcmKernel;
 
     class function GetMacSize(ARequestedMacBits: Int32): Int32; static;
-    procedure CheckNonceReuse(AForEncryption: Boolean;
-      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     function GetAssociatedTextLength(): Int32;
     function HasAssociatedText(): Boolean;
     function CalculateMac(const AData: TCryptoLibByteArray; ADataOff, ADataLen: Int32;
@@ -149,37 +136,33 @@ type
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Boolean;
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    function GetBufferedLength(): Int32; override;
+    procedure WipeKeyMaterial(); override;
 
   public
     constructor Create(const ACipher: IBlockCipher);
     destructor Destroy; override;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    procedure Reset(); virtual;
+    procedure Reset(); override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
-    function GetOutputSize(ALen: Int32): Int32; virtual;
+    function GetUpdateOutputSize(ALen: Int32): Int32; override;
 
     function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32): TCryptoLibByteArray; overload; virtual;
     function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; overload; virtual;
-
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
   end;
 
 implementation
@@ -190,6 +173,8 @@ constructor TCcmBlockCipher.Create(const ACipher: IBlockCipher);
 begin
   inherited Create();
   FCipher := ACipher;
+  FBlockSize := BlockSize;
+  FUnderlyingCipher := FCipher;
   System.SetLength(FMacBlock, BlockSize);
   FAssociatedText := TMemoryStream.Create;
   FData := nil;
@@ -210,25 +195,21 @@ begin
   Result := FCipher.AlgorithmName + '/CCM';
 end;
 
-function TCcmBlockCipher.GetUnderlyingCipher: IBlockCipher;
+function TCcmBlockCipher.GetModeName: String;
 begin
-  Result := FCipher;
+  Result := 'CCM';
 end;
 
-procedure TCcmBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
-  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
+function TCcmBlockCipher.GetBufferedLength: Int32;
 begin
-  if not AForEncryption then
-    Exit;
+  Result := FDataLen;
+end;
 
-  if (FNonce = nil) or (not TArrayUtilities.AreEqual(FNonce, ANewNonce)) then
-    Exit;
-
-  if AKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['CCM']);
-
-  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['CCM']);
+procedure TCcmBlockCipher.WipeKeyMaterial;
+begin
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
+  if FData <> nil then
+    TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
 end;
 
 procedure TCcmBlockCipher.Init(AForEncryption: Boolean;
@@ -253,7 +234,7 @@ begin
   CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
   LPrevKey := FLastKey;
 
-  FNonce := LChoice.Nonce;
+  FLastNonce := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
     LRequestedMacSizeBits := LChoice.MacSizeBits
@@ -268,7 +249,7 @@ begin
       FLastKey := LChoice.KeyParameter.GetKey();
   end;
 
-  if (System.Length(FNonce) < 7) or (System.Length(FNonce) > 13) then
+  if (System.Length(FLastNonce) < 7) or (System.Length(FLastNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
 
   // Nonce-only rotation is the hot AEAD path: with the key and direction
@@ -302,11 +283,6 @@ begin
     FCcmKernel := nil;
 
   Reset();
-end;
-
-function TCcmBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FCipher.GetBlockSize();
 end;
 
 procedure TCcmBlockCipher.ProcessAadByte(AInput: Byte);
@@ -351,32 +327,9 @@ begin
   FDataLen := 0;
 end;
 
-function TCcmBlockCipher.GetMac: TCryptoLibByteArray;
-begin
-  Result := TArrayUtilities.CopyOfRange<Byte>(FMacBlock, 0, FMacSize);
-end;
-
 function TCcmBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
 begin
   Result := 0;
-end;
-
-function TCcmBlockCipher.GetOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := FDataLen + ALen;
-
-  if FForEncryption then
-  begin
-    Result := LTotalData + FMacSize;
-    Exit;
-  end;
-
-  if LTotalData < FMacSize then
-    Result := 0
-  else
-    Result := LTotalData - FMacSize;
 end;
 
 function TCcmBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
@@ -422,7 +375,7 @@ begin
   if (FKeyParam = nil) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SCcmUninitialised);
 
-  LN := System.Length(FNonce);
+  LN := System.Length(FLastNonce);
   LQ := 15 - LN;
   if (LQ < 4) then
   begin
@@ -441,7 +394,7 @@ begin
 
   System.SetLength(LIV, BlockSize);
   LIV[0] := Byte((LQ - 1) and $7);
-  System.Move(FNonce[0], LIV[1], LN);
+  System.Move(FLastNonce[0], LIV[1], LN);
 
   // IV-only re-init of the cached CTR wrapper: the inner parameters are nil,
   // so the (unchanged) AES schedule is not recomputed per packet.
@@ -515,9 +468,9 @@ begin
 
   LB0[0] := LB0[0] or Byte((((LCMac.GetMacSize() - 2) div 2) and $7) shl 3);
 
-  LB0[0] := LB0[0] or Byte(((15 - System.Length(FNonce)) - 1) and $7);
+  LB0[0] := LB0[0] or Byte(((15 - System.Length(FLastNonce)) - 1) and $7);
 
-  System.Move(FNonce[0], LB0[1], System.Length(FNonce));
+  System.Move(FLastNonce[0], LB0[1], System.Length(FLastNonce));
 
   LQ := ADataLen;
   LCount := 1;
@@ -609,7 +562,7 @@ var
   LOffset, LI, LTextLength, LExtra, LNonceLen, LQ, LTmp, LHeaderLen,
     LInitLen, LRuntimeLen: Int32;
 begin
-  LNonceLen := System.Length(FNonce);
+  LNonceLen := System.Length(FLastNonce);
   LQ := 15 - LNonceLen;
 
   if HasAssociatedText() then
@@ -636,7 +589,7 @@ begin
     LHeader[0] := LHeader[0] or $40;
   LHeader[0] := LHeader[0] or Byte((((FMacSize - 2) div 2) and $7) shl 3);
   LHeader[0] := LHeader[0] or Byte((LQ - 1) and $7);
-  System.Move(FNonce[0], LHeader[1], LNonceLen);
+  System.Move(FLastNonce[0], LHeader[1], LNonceLen);
   LTmp := AInLen;
   LI := 1;
   while LTmp > 0 do
@@ -893,7 +846,7 @@ begin
   if not LOk then
   begin
     TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + ACtx.OutputLen, Byte(0));
-    raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed, ['CCM']);
+    RaiseMacCheckFailed();
   end;
   Result := True;
 end;

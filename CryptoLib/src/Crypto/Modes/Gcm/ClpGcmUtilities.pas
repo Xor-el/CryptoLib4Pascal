@@ -78,6 +78,12 @@ type
     class procedure MultiplyP7(var AX: TFieldElement); static;
     class procedure MultiplyP8(var AX: TFieldElement; out AY: TFieldElement); static;
 
+    /// <summary>In-place POLYVAL/GCM-SIV MulX (multiply by x in the byte-reflected
+    /// representation) over GF(2^128) with the x^128+x^7+x^2+x+1 polynomial, on a
+    /// 16-byte big-endian buffer. Right-shift with $E1 reduction. Branchless (no
+    /// key-dependent branch). Distinct from GfDoubleBlock (the $87 left-shift double).</summary>
+    class procedure MulX(const AValue: TCryptoLibByteArray); static;
+
     class procedure Square(var AX: TFieldElement); static;
 
     /// <summary>Carryless multiply: three 128-bit limbs (48 bytes). Operands 16 bytes each as two little-endian UInt64 halves.</summary>
@@ -253,6 +259,23 @@ begin
   LC := LX1 shl 56;
   AY.N0 := (LX0 shr 8) xor LC xor (LC shr 1) xor (LC shr 2) xor (LC shr 7);
   AY.N1 := (LX1 shr 8) or (LX0 shl 56);
+end;
+
+class procedure TGcmUtilities.MulX(const AValue: TCryptoLibByteArray);
+var
+  LMask, LValue: Byte;
+  LI: Int32;
+begin
+  LMask := 0;
+  for LI := 0 to 15 do
+  begin
+    LValue := AValue[LI];
+    AValue[LI] := Byte(((LValue shr 1) and Byte($7F)) or LMask);
+    // Branchless carry: LSB of this byte becomes the top bit of the next.
+    LMask := Byte((LValue and 1) shl 7);
+  end;
+  // Branchless reduction: XOR $E1 into byte 0 iff the final LSB carried out.
+  AValue[0] := AValue[0] xor Byte($E1 * (LMask shr 7));
 end;
 
 class procedure TGcmUtilities.Square(var AX: TFieldElement);

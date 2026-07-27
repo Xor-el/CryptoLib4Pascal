@@ -48,15 +48,15 @@ uses
   ClpCheck,
   ClpBasicGcmMultiplier,
   ClpArrayUtilities,
+  ClpAbstractAeadCipher,
+  ClpAbstractAeadBlockCipher,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
   SCipherBlockSizeRequired = 'cipher required with a block size of %d';
   SInvalidParameters = 'invalid parameters passed to %s';
-  SInvalidMacSize = 'invalid value for MAC size: %d';
   SIVMustBeAtLeastOneByte = 'IV must be at least 1 byte';
-  SCannotReuseNonce = 'cannot reuse nonce for %s encryption';
   SKeyMustBeSpecified = 'key must be specified in initial init';
   STooManyBlocks = 'attempt to process too many blocks';
   SGcmCannotReuse = 'GCM cipher cannot be reused for encryption';
@@ -64,7 +64,6 @@ resourcestring
   SOutputBufferTooShort = 'output buffer too short';
   SInputBufferTooShort = 'input buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check in %s failed';
   SGcmBlockPathNotSupported = 'GCM %s-block path is not available on this platform';
   SGcmBlockHStateMissing = 'GCM fused %s-block multiplier state is not initialized';
   SGcmDecryptBadLimit = 'invalid limit for GCM %s-block decrypt';
@@ -80,7 +79,7 @@ type
   /// RNG or a strictly monotonic counter (the construction enforces several runtime checks, but
   /// correct protocol design is mandatory).
   /// </remarks>
-  TGcmBlockCipher = class(TInterfacedObject, IGcmBlockCipher,
+  TGcmBlockCipher = class(TAbstractAeadBlockCipher, IGcmBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
   strict private
@@ -116,17 +115,11 @@ type
     FMultiplier: IGcmMultiplier;
     FExp: IGcmExponentiator;
 
-    FForEncryption: Boolean;
     FInitialised: Boolean;
-    FMacSize: Int32;
-    FLastKey: TCryptoLibByteArray;
-    FNonce: TCryptoLibByteArray;
-    FInitialAssociatedText: TCryptoLibByteArray;
     FH: TCryptoLibByteArray;
     FJ0: TCryptoLibByteArray;
 
     FBufBlock: TCryptoLibByteArray;
-    FMacBlock: TCryptoLibByteArray;
     FS: TCryptoLibByteArray;
     FS_at: TCryptoLibByteArray;
     FS_atPre: TCryptoLibByteArray;
@@ -234,16 +227,12 @@ type
     /// Raises on unsupported parameter types or invalid MAC sizes.</summary>
     procedure ResolveInitParameters(const AParameters: ICipherParameters;
       out ANewNonce: TCryptoLibByteArray; out AKeyParam: IKeyParameter);
-    /// <summary>Encrypt-only guard that forbids reusing the same (nonce, key) pair.
-    /// No-op on decrypt. Must be called before FNonce/FLastKey are updated.</summary>
-    procedure CheckNonceReuse(AForEncryption: Boolean;
-      const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
     /// <summary>Rekey path: initialize the underlying block cipher, compute the hash
     /// subkey H, cache the bulk-capable cipher engine (when available), and (re)allocate the
     /// 8-way SIMD buffers (FHPow / FWorkCtr / FWorkCtrAhead) on capable hardware.
     /// Called only when a new key is supplied.</summary>
     procedure InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
-    /// <summary>Compute the pre-counter J0 from FNonce per NIST SP 800-38D
+    /// <summary>Compute the pre-counter J0 from FLastNonce per NIST SP 800-38D
     /// (fast path for 96-bit IV, GHASH fallback otherwise).</summary>
     procedure ComputeJ0();
     /// <summary>Zero and (re)allocate all per-message transient state:
@@ -315,38 +304,29 @@ type
     procedure DoReset(AClearMac: Boolean);
     /// <summary>Zeroize the hash subkey, H-power tables, keystream buffers, and
     /// aggregated GHASH powers. Not called from Reset (same-key re-Init reuses them).</summary>
-    procedure WipeKeyMaterial();
+    procedure WipeKeyMaterial(); override;
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    function GetBufferedLength(): Int32; override;
 
   public
     constructor Create(const ACipher: IBlockCipher); overload;
     constructor Create(const ACipher: IBlockCipher; const AMultiplier: IGcmMultiplier); overload;
-    /// <summary>Zeroize key-derived material (H, H-power tables, keystream buffers, last key).</summary>
-    destructor Destroy; override;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    function GetOutputSize(ALen: Int32): Int32; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
-
-    procedure Reset(); virtual;
-
-    property AlgorithmName: String read GetAlgorithmName;
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -401,6 +381,8 @@ begin
     FMultiplier := CreateGcmMultiplier();
 
   FCipher := ACipher;
+  FBlockSize := BlockSize;
+  FUnderlyingCipher := FCipher;
 end;
 
 function TGcmBlockCipher.GetAlgorithmName: String;
@@ -408,14 +390,14 @@ begin
   Result := FCipher.AlgorithmName + '/GCM';
 end;
 
-function TGcmBlockCipher.GetUnderlyingCipher: IBlockCipher;
+function TGcmBlockCipher.GetModeName: String;
 begin
-  Result := FCipher;
+  Result := 'GCM';
 end;
 
-function TGcmBlockCipher.GetBlockSize: Int32;
+function TGcmBlockCipher.GetBufferedLength: Int32;
 begin
-  Result := BlockSize;
+  Result := FBufOff;
 end;
 
 procedure TGcmBlockCipher.ResolveInitParameters(const AParameters: ICipherParameters;
@@ -431,10 +413,7 @@ begin
     FInitialAssociatedText := LAeadParameters.GetAssociatedText();
 
     LMacSizeBits := LAeadParameters.MacSize;
-    if (LMacSizeBits < 32) or (LMacSizeBits > 128) or (LMacSizeBits mod 8 <> 0) then
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-
-    FMacSize := LMacSizeBits div 8;
+    FMacSize := ValidateAeadMacSizeBits(LMacSizeBits, 32, 128, 8);
     AKeyParam := LAeadParameters.Key;
   end
   else if Supports(AParameters, IParametersWithIV, LParametersWithIV) then
@@ -449,22 +428,6 @@ begin
   begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['GCM']);
   end;
-end;
-
-procedure TGcmBlockCipher.CheckNonceReuse(AForEncryption: Boolean;
-  const ANewNonce: TCryptoLibByteArray; const AKeyParam: IKeyParameter);
-begin
-  if not AForEncryption then
-    Exit;
-
-  if (FNonce = nil) or (not TArrayUtilities.AreEqual(FNonce, ANewNonce)) then
-    Exit;
-
-  if AKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['GCM']);
-
-  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce, ['GCM']);
 end;
 
 procedure TGcmBlockCipher.InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
@@ -524,16 +487,16 @@ var
 begin
   System.SetLength(FJ0, BlockSize);
 
-  if System.Length(FNonce) = 12 then
+  if System.Length(FLastNonce) = 12 then
   begin
-    System.Move(FNonce[0], FJ0[0], System.Length(FNonce));
+    System.Move(FLastNonce[0], FJ0[0], System.Length(FLastNonce));
     FJ0[BlockSize - 1] := $01;
   end
   else
   begin
-    GHASH(FJ0, FNonce, System.Length(FNonce));
+    GHASH(FJ0, FLastNonce, System.Length(FLastNonce));
     System.SetLength(LX, BlockSize);
-    TPack.UInt64_To_BE(UInt64(System.Length(FNonce)) * UInt64(8), LX, 8);
+    TPack.UInt64_To_BE(UInt64(System.Length(FLastNonce)) * UInt64(8), LX, 8);
     GHASHBlock(FJ0, LX);
   end;
 end;
@@ -586,7 +549,7 @@ begin
 
   CheckNonceReuse(FForEncryption, LNewNonce, LKeyParam);
 
-  FNonce := LNewNonce;
+  FLastNonce := LNewNonce;
 
   if LKeyParam <> nil then
   begin
@@ -612,52 +575,6 @@ begin
 
   if FInitialAssociatedText <> nil then
     ProcessAadBytes(FInitialAssociatedText, 0, System.Length(FInitialAssociatedText));
-end;
-
-function TGcmBlockCipher.GetMac: TCryptoLibByteArray;
-begin
-  if FMacBlock = nil then
-  begin
-    System.SetLength(Result, FMacSize);
-  end
-  else
-  begin
-    Result := System.Copy(FMacBlock);
-  end;
-end;
-
-function TGcmBlockCipher.GetOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FBufOff;
-
-  if FForEncryption then
-    Result := LTotalData + FMacSize
-  else
-  begin
-    if LTotalData < FMacSize then
-      Result := 0
-    else
-      Result := LTotalData - FMacSize;
-  end;
-end;
-
-function TGcmBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
-var
-  LTotalData: Int32;
-begin
-  LTotalData := ALen + FBufOff;
-  if not FForEncryption then
-  begin
-    if LTotalData < FMacSize then
-    begin
-      Result := 0;
-      Exit;
-    end;
-    LTotalData := LTotalData - FMacSize;
-  end;
-  Result := LTotalData - (LTotalData mod BlockSize);
 end;
 
 procedure TGcmBlockCipher.ProcessAadByte(AInput: Byte);
@@ -1117,8 +1034,7 @@ begin
     System.SetLength(LMsgMac, FMacSize);
     System.Move(FBufBlock[LExtra], LMsgMac[0], FMacSize);
     if not TArrayUtilities.FixedTimeEquals(FMacBlock, LMsgMac) then
-      raise EInvalidCipherTextCryptoLibException.CreateResFmt(@SMacCheckFailed,
-        ['GCM']);
+      RaiseMacCheckFailed();
   end;
 
   DoReset(False);
@@ -1172,13 +1088,6 @@ begin
   FGhH2.N0 := 0; FGhH2.N1 := 0;
   FGhH3.N0 := 0; FGhH3.N1 := 0;
   FGhH4.N0 := 0; FGhH4.N1 := 0;
-end;
-
-destructor TGcmBlockCipher.Destroy;
-begin
-  WipeKeyMaterial();
-  TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
-  inherited Destroy;
 end;
 
 // =======================================================================

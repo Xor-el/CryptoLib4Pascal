@@ -33,7 +33,7 @@ uses
   ClpISO7816d4Padding,
   ClpIISO7816d4Padding,
   ClpArrayUtilities,
-  ClpBitOperations,
+  ClpGaloisFieldUtilities,
   ClpByteUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -49,10 +49,6 @@ type
   TCMac = class sealed(TMac, ICMac, IMac)
 
   strict private
-  const
-    CONSTANT_128 = Byte($87);
-    CONSTANT_64 = Byte($1B);
-
   var
     FZeroes: TCryptoLibByteArray;
     FMac: TCryptoLibByteArray;
@@ -62,8 +58,6 @@ type
     FMacSize: Int32;
     FL, FLu, FLu2: TCryptoLibByteArray;
 
-    class function ShiftLeft(const ABlock: TCryptoLibByteArray;
-      const AOutput: TCryptoLibByteArray): Int32; static;
     class function DoubleLu(const AInput: TCryptoLibByteArray)
       : TCryptoLibByteArray; static;
 
@@ -128,38 +122,11 @@ begin
   Result := FCipherMode.AlgorithmName;
 end;
 
-class function TCMac.ShiftLeft(const ABlock: TCryptoLibByteArray;
-  const AOutput: TCryptoLibByteArray): Int32;
-var
-  LI: Int32;
-  LBit, LB: UInt32;
-begin
-  LI := System.Length(ABlock);
-  LBit := 0;
-  while LI > 0 do
-  begin
-    System.Dec(LI);
-    LB := ABlock[LI];
-    AOutput[LI] := Byte((LB shl 1) or LBit);
-    LBit := (LB shr 7) and 1;
-  end;
-  Result := Int32(LBit);
-end;
-
 class function TCMac.DoubleLu(const AInput: TCryptoLibByteArray)
   : TCryptoLibByteArray;
-var
-  LCarry, LXorVal: Int32;
 begin
   System.SetLength(Result, System.Length(AInput));
-  LCarry := ShiftLeft(AInput, Result);
-  if System.Length(AInput) = 16 then
-    LXorVal := CONSTANT_128
-  else
-    LXorVal := CONSTANT_64;
-
-  Result[System.Length(AInput) - 1] :=
-    Result[System.Length(AInput) - 1] xor Byte(TBitOperations.Asr32(LXorVal, (1 - LCarry) shl 3));
+  TGaloisFieldUtilities.DoubleBlock(AInput, Result);
 end;
 
 procedure TCMac.Init(const AParameters: ICipherParameters);

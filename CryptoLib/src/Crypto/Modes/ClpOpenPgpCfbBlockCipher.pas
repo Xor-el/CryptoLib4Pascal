@@ -21,11 +21,10 @@ unit ClpOpenPgpCfbBlockCipher;
 interface
 
 uses
-  SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIOpenPgpCfbBlockCipher,
   ClpICipherParameters,
+  ClpAbstractBlockCipherMode,
   ClpCipherModeParameterUtilities,
   ClpCheck,
   ClpCryptoLibTypes;
@@ -35,16 +34,13 @@ resourcestring
   SOutputBufferTooShort = 'output buffer too short';
 
 type
-  TOpenPgpCfbBlockCipher = class sealed(TInterfacedObject,
-    IOpenPgpCfbBlockCipher, IBlockCipherMode, IBlockCipher)
+  TOpenPgpCfbBlockCipher = class sealed(TAbstractBlockCipherMode,
+    IOpenPgpCfbBlockCipher)
 
   strict private
   var
     FIV, FFR, FFRE: TCryptoLibByteArray;
-    FBlockSize: Int32;
-    FCipher: IBlockCipher;
     FCount: Int32;
-    FForEncryption: Boolean;
 
     function EncryptByte(AData: Byte; ABlockOff: Int32): Byte; inline;
 
@@ -54,22 +50,16 @@ type
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetIsPartialBlockOkay: Boolean; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
+    function GetIsPartialBlockOkay: Boolean; override;
 
   public
     constructor Create(const ACipher: IBlockCipher);
     procedure Init(AForEncryption: Boolean;
-      const AParameters: ICipherParameters);
-    function GetBlockSize(): Int32; inline;
+      const AParameters: ICipherParameters); override;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
-    procedure Reset(); inline;
-
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -78,9 +68,7 @@ implementation
 
 constructor TOpenPgpCfbBlockCipher.Create(const ACipher: IBlockCipher);
 begin
-  inherited Create();
-  FCipher := ACipher;
-  FBlockSize := ACipher.GetBlockSize();
+  inherited Create(ACipher);
 
   System.SetLength(FIV, FBlockSize);
   System.SetLength(FFR, FBlockSize);
@@ -230,24 +218,14 @@ begin
   System.Move(FIV[0], FFR[0], System.Length(FFR) * System.SizeOf(Byte));
 end;
 
-function TOpenPgpCfbBlockCipher.GetAlgorithmName: String;
+function TOpenPgpCfbBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/OpenPGPCFB';
-end;
-
-function TOpenPgpCfbBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FCipher.GetBlockSize();
+  Result := '/OpenPGPCFB';
 end;
 
 function TOpenPgpCfbBlockCipher.GetIsPartialBlockOkay: Boolean;
 begin
   Result := True;
-end;
-
-function TOpenPgpCfbBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
 end;
 
 procedure TOpenPgpCfbBlockCipher.Init(AForEncryption: Boolean;

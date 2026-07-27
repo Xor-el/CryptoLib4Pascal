@@ -36,7 +36,6 @@ uses
   ClpBlockCipherBulkUtilities,
   ClpGcmBlockCipher,
   ClpGcmUtilities,
-  ClpGcmSivUtilities,
   ClpGcmSivSimd,
   ClpCipherKernelTypes,
   ClpIGcmSivKernel,
@@ -49,6 +48,8 @@ uses
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
+  ClpAbstractAeadCipher,
+  ClpAbstractAeadBlockCipher,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -64,11 +65,9 @@ resourcestring
   SOutputBufferTooShort = 'output buffer too short';
   SInputBufferTooShort = 'input buffer too short';
   SDataTooShort = 'data too short';
-  SMacCheckFailed = 'mac check failed';
-  SMacNotAvailableForCipher = 'MAC is not supported for this cipher';
 
 type
-  TGcmSivBlockCipher = class(TInterfacedObject, IGcmSivBlockCipher,
+  TGcmSivBlockCipher = class(TAbstractAeadBlockCipher, IGcmSivBlockCipher,
     IAeadBlockCipher, IAeadCipher)
 
   strict private
@@ -118,7 +117,6 @@ type
     FThePlainLen: Int32;
     FTheEncData: TCryptoLibByteArray;
     FTheEncDataLen: Int32;
-    FForEncryption: Boolean;
     FTheInitialAEAD: TCryptoLibByteArray;
     FTheNonce: TCryptoLibByteArray;
     FTheFlags: Int32;
@@ -169,8 +167,10 @@ type
     class procedure IncrementCounter(const ACounter: TCryptoLibByteArray); static;
 
   strict protected
-    function GetAlgorithmName: String; virtual;
-    function GetUnderlyingCipher(): IBlockCipher; virtual;
+    function GetAlgorithmName: String; override;
+    function GetModeName: String; override;
+    function GetBufferedLength(): Int32; override;
+    procedure WipeKeyMaterial(); override;
 
   public
     constructor Create(); overload;
@@ -178,26 +178,21 @@ type
     constructor Create(const ACipher: IBlockCipher; const AMultiplier: IGcmMultiplier); overload;
     destructor Destroy; override;
 
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); virtual;
-    function GetBlockSize(): Int32; virtual;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
-    procedure ProcessAadByte(AInput: Byte); virtual;
-    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); virtual;
+    procedure ProcessAadByte(AInput: Byte); override;
+    procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
-    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function ProcessByte(AInput: Byte; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     function ProcessBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; virtual;
+    function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
-    function GetMac(): TCryptoLibByteArray; virtual;
-    function GetOutputSize(ALen: Int32): Int32; virtual;
-    function GetUpdateOutputSize(ALen: Int32): Int32; virtual;
+    function GetOutputSize(ALen: Int32): Int32; override;
+    function GetUpdateOutputSize(ALen: Int32): Int32; override;
 
-    procedure Reset(); virtual;
-
-    property AlgorithmName: String read GetAlgorithmName;
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -323,6 +318,9 @@ begin
     FTheMultiplier := TGcmBlockCipher.CreateGcmMultiplier();
 
   FTheCipher := ACipher;
+  FBlockSize := BUFLEN;
+  FUnderlyingCipher := FTheCipher;
+  FMacSize := BUFLEN;
   // Cache the bulk-capable view of the underlying AES engine so the
   // 8-wide EncryptPlain / DecryptPlain pipeline can dispatch to a single
   // SIMD call per 128-byte batch. Left nil when the engine only exposes
@@ -349,14 +347,32 @@ begin
   Result := FTheCipher.AlgorithmName + '-GCM-SIV';
 end;
 
-function TGcmSivBlockCipher.GetUnderlyingCipher: IBlockCipher;
+function TGcmSivBlockCipher.GetModeName: String;
 begin
-  Result := FTheCipher;
+  Result := 'GCM_SIV';
 end;
 
-function TGcmSivBlockCipher.GetBlockSize: Int32;
+function TGcmSivBlockCipher.GetBufferedLength: Int32;
 begin
-  Result := FTheCipher.GetBlockSize();
+  // GCM-SIV overrides GetOutputSize / GetUpdateOutputSize wholesale, so this
+  // hook is not consulted for its size reporting; return the direction-relevant
+  // accumulator length for completeness.
+  if FForEncryption then
+    Result := FThePlainLen
+  else
+    Result := FTheEncDataLen;
+end;
+
+procedure TGcmSivBlockCipher.WipeKeyMaterial;
+begin
+  TArrayUtilities.Fill(FTheGHash, 0, System.Length(FTheGHash), Byte(0));
+  TArrayUtilities.Fill(FTheReverse, 0, System.Length(FTheReverse), Byte(0));
+  TArrayUtilities.Fill(FHPow128, 0, System.Length(FHPow128), Byte(0));
+  if FThePlain <> nil then
+    TArrayUtilities.Fill(FThePlain, 0, System.Length(FThePlain), Byte(0));
+  if FTheEncData <> nil then
+    TArrayUtilities.Fill(FTheEncData, 0, System.Length(FTheEncData), Byte(0));
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 end;
 
 procedure TGcmSivBlockCipher.Init(AForEncryption: Boolean;
@@ -492,6 +508,7 @@ begin
   if FForEncryption then
   begin
     LMyTag := CalculateTag();
+    FMacBlock := System.Copy(LMyTag);
 
     LMyDataLen := BUFLEN + EncryptPlain(LMyTag, AOutput, AOutOff);
 
@@ -512,11 +529,6 @@ begin
     ResetStreams();
     Result := LMyDataLen;
   end;
-end;
-
-function TGcmSivBlockCipher.GetMac: TCryptoLibByteArray;
-begin
-  raise EInvalidOperationCryptoLibException.CreateRes(@SMacNotAvailableForCipher);
 end;
 
 function TGcmSivBlockCipher.GetUpdateOutputSize(ALen: Int32): Int32;
@@ -720,10 +732,11 @@ begin
   end;
 
   LMyTag := CalculateTag();
+  FMacBlock := System.Copy(LMyTag);
   if not TArrayUtilities.FixedTimeEquals(LMyTag, LMyExpected) then
   begin
     Reset();
-    raise EInvalidCipherTextCryptoLibException.CreateRes(@SMacCheckFailed);
+    RaiseMacCheckFailed();
   end;
 end;
 
@@ -853,7 +866,7 @@ begin
   FTheCipher.Init(True, TKeyParameter.Create(LMyEncKey) as ICipherParameters);
 
   FillReverse(LMyResult, 0, BUFLEN, LMyOut);
-  TGcmSivUtilities.MulX(LMyOut);
+  TGcmUtilities.MulX(LMyOut);
   FTheMultiplier.Init(LMyOut);
 
   // Precompute the POLYVAL H-power table and resolve the fused kernel for

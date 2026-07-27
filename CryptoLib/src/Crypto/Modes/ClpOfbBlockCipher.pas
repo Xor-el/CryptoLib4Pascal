@@ -23,9 +23,9 @@ interface
 uses
   SysUtils,
   ClpIBlockCipher,
-  ClpIBlockCipherMode,
   ClpIOfbBlockCipher,
   ClpICipherParameters,
+  ClpAbstractBlockCipherMode,
   ClpCipherModeParameterUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -43,19 +43,15 @@ type
   /// <c>AForEncryption</c> on <see cref="Init"/> does not change keystream scheduling; encrypt and decrypt XOR the same keystream,
   /// matching classic OFB semantics.
   /// </remarks>
-  TOfbBlockCipher = class sealed(TInterfacedObject, IOfbBlockCipher,
-    IBlockCipherMode, IBlockCipher)
+  TOfbBlockCipher = class sealed(TAbstractBlockCipherMode, IOfbBlockCipher)
 
   strict private
   var
     FIV, FOfbV, FOfbOutV: TCryptoLibByteArray;
-    FBlockSize: Int32;
-    FCipher: IBlockCipher;
 
   strict protected
-    function GetAlgorithmName: String; inline;
-    function GetIsPartialBlockOkay: Boolean; inline;
-    function GetUnderlyingCipher(): IBlockCipher; inline;
+    function GetModeName: String; override;
+    function GetIsPartialBlockOkay: Boolean; override;
 
   public
     /// <summary>
@@ -69,20 +65,12 @@ type
     /// </summary>
     /// <param name="AForEncryption">Ignored by OFB (included for interface uniformity).</param>
     /// <param name="AParameters">Key wrapped in <see cref="IParametersWithIV"/> for IV extraction; IV is copied into internal state via <see cref="TCipherModeParameterUtilities.TryUnwrapIv"/> (right-aligned / zero padded when shorter than block).</param>
-    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
-    /// <summary>The OFB segment size in bytes.</summary>
-    function GetBlockSize(): Int32; inline;
+    procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
     /// <summary>Xor one OFB segment with the keystream.</summary>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
     /// <summary>Reset keystream pipeline to the captured IV layout.</summary>
-    procedure Reset(); inline;
-
-    /// <summary>The underlying <see cref="IBlockCipher"/>.</summary>
-    property UnderlyingCipher: IBlockCipher read GetUnderlyingCipher;
-    property AlgorithmName: String read GetAlgorithmName;
-    /// <summary>Returns True (partial blocks allowed).</summary>
-    property IsPartialBlockOkay: Boolean read GetIsPartialBlockOkay;
+    procedure Reset(); override;
   end;
 
 implementation
@@ -92,8 +80,7 @@ implementation
 constructor TOfbBlockCipher.Create(const ACipher: IBlockCipher;
   ABlockSize: Int32);
 begin
-  inherited Create();
-  FCipher := ACipher;
+  inherited Create(ACipher);
   FBlockSize := ABlockSize div 8;
 
   System.SetLength(FIV, FCipher.GetBlockSize());
@@ -106,24 +93,14 @@ begin
   System.Move(FIV[0], FOfbV[0], System.Length(FIV));
 end;
 
-function TOfbBlockCipher.GetAlgorithmName: String;
+function TOfbBlockCipher.GetModeName: String;
 begin
-  Result := FCipher.AlgorithmName + '/OFB' + IntToStr(FBlockSize * 8);
-end;
-
-function TOfbBlockCipher.GetBlockSize: Int32;
-begin
-  Result := FBlockSize;
+  Result := '/OFB' + IntToStr(FBlockSize * 8);
 end;
 
 function TOfbBlockCipher.GetIsPartialBlockOkay: Boolean;
 begin
   Result := True;
-end;
-
-function TOfbBlockCipher.GetUnderlyingCipher: IBlockCipher;
-begin
-  Result := FCipher;
 end;
 
 procedure TOfbBlockCipher.Init(AForEncryption: Boolean;
