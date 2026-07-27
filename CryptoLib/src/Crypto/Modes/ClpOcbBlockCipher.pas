@@ -217,8 +217,7 @@ begin
   if FL <> nil then
   begin
     for LI := 0 to FL.Count - 1 do
-      if FL[LI] <> nil then
-        TArrayUtilities.Fill(FL[LI], 0, System.Length(FL[LI]), Byte(0));
+      TArrayUtilities.Fill(FL[LI], 0, System.Length(FL[LI]), Byte(0));
   end;
   FL.Free;
   inherited Destroy;
