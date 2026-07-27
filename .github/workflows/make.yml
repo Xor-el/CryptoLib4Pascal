@@ -48,6 +48,10 @@ env:
   # When true, make.pas builds and runs console benchmarks after the test suite.
   # Override per job below, like MAKE_BUILD_BACKEND.
   MAKE_RUN_BENCHMARK: false
+  # When true (default), the linux-x64-scalar job runs the ctgrind/Valgrind
+  # constant-time gate after its build (subjects clean, leaky controls fire).
+  # Set false to skip it. Read only by that job's valgrind-ct.sh step.
+  MAKE_RUN_CT_VALGRIND: true
   # When true, make.pas builds (never runs) LCL/GUI projects. Only meaningful under
   # the lazbuild backend - the fpc backend has no widgetset and always skips them.
   # Set false to opt out of the per-platform GUI widgetset toolchain (GTK2/X11 on
@@ -142,6 +146,16 @@ jobs:
           MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
         run: bash .github/workflows/ci/native-build.sh
 
+      # Instrumented constant-time gate: compile CTValgrind against the packages
+      # the Build step just produced (scalar) and run the ctgrind/Valgrind leg -
+      # subjects must be clean, the known-leaky controls must fire. Opt out with
+      # MAKE_RUN_CT_VALGRIND=false.
+      - name: Constant-time Valgrind gate
+        shell: bash
+        env:
+          FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-x64-scalar'].fpc_target }}
+        run: bash .github/workflows/ci/valgrind-ct.sh
+
   linux-arm64-scalar:
     name: "Native: Linux AArch64 (FORCE_SCALAR)"
     runs-on: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].runner }}
@@ -161,6 +175,15 @@ jobs:
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_tarball_target }}
           MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
         run: bash .github/workflows/ci/native-build.sh
+
+      # Same constant-time taint gate as the x86_64 leg, on native AArch64 - the
+      # script is architecture-generic (keys off FPC_TARGET). Opt out with
+      # MAKE_RUN_CT_VALGRIND=false.
+      - name: Constant-time Valgrind gate
+        shell: bash
+        env:
+          FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_target }}
+        run: bash .github/workflows/ci/valgrind-ct.sh
 
   windows-x64:
     name: "Native: Windows x86_64"
