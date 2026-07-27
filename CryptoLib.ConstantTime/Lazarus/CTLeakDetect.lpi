@@ -38,15 +38,15 @@
         <IsPartOfProject Value="True"/>
       </Unit0>
       <Unit1>
-        <Filename Value="..\src\Core\ClpCtClock.pas"/>
+        <Filename Value="..\src\Core\CtClock.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
       <Unit2>
-        <Filename Value="..\src\Core\ClpDudect.pas"/>
+        <Filename Value="..\src\Core\CtDudect.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
       <Unit3>
-        <Filename Value="..\src\Core\ClpCtSubjects.pas"/>
+        <Filename Value="..\src\Core\CtSubjects.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
     </Units>

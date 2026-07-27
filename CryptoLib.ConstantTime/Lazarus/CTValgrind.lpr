@@ -30,8 +30,8 @@ program CTValgrind;
 
 uses
   SysUtils,
-  ClpDudect,
-  ClpCtSubjects,
+  CtDudect,
+  CtSubjects,
 {$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
   ClpSimdLevels,
   ClpX86SimdFeatures,

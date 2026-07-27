@@ -28,7 +28,7 @@
               TSC frequency != wall time under frequency scaling / turbo, so it
               sharpens resolution on bare metal only and adds no correctness). }
 
-unit ClpCtClock;
+unit CtClock;
 
 {$IFDEF FPC}
 {$MODE DELPHI}

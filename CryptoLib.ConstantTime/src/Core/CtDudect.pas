@@ -33,7 +33,7 @@
 
   This is a benchmark/diagnostic tool: it measures, it is not part of the library. }
 
-unit ClpDudect;
+unit CtDudect;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -129,7 +129,7 @@ implementation
 
 uses
   Math,
-  ClpCtClock;
+  CtClock;
 
 // Canonical dudect percentile for crop LK of LN crops: 1 - 0.5^(10*(LK+1)/LN),
 // giving a spread of thresholds from about the median to the far tail.

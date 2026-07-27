@@ -252,9 +252,9 @@ constant-time arithmetic is out of scope for Pascal.
 
 ## Files
 
-* `src/Core/ClpCtClock.pas` - portable high-resolution monotonic timer.
-* `src/Core/ClpDudect.pas` - dudect statistical core (Welford, percentile crops, Welch t).
-* `src/Core/ClpCtSubjects.pas` - the paired subject/control registry.
+* `src/Core/CtClock.pas` - portable high-resolution monotonic timer.
+* `src/Core/CtDudect.pas` - dudect statistical core (Welford, percentile crops, Welch t).
+* `src/Core/CtSubjects.pas` - the paired subject/control registry.
 * `Lazarus/CTLeakDetect.lpr` / `.lpi` - dudect gate program.
 * `src/Core/ct_poison.c` - Valgrind taint shim.
 * `Lazarus/CTValgrind.lpr` / `.lpi` - ctgrind/Valgrind program.

@@ -22,9 +22,9 @@ program CTLeakDetect;
 
 uses
   SysUtils,
-  ClpCtClock,
-  ClpDudect,
-  ClpCtSubjects,
+  CtClock,
+  CtDudect,
+  CtSubjects,
 {$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
   ClpSimdLevels,
   ClpX86SimdFeatures,

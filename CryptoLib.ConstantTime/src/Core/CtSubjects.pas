@@ -50,7 +50,7 @@
       (a known ctgrind limitation), which is exactly why their controls live in the
       dudect leg. }
 
-unit ClpCtSubjects;
+unit CtSubjects;
 
 {$IFDEF FPC}
 {$MODE DELPHI}
@@ -60,7 +60,7 @@ unit ClpCtSubjects;
 interface
 
 uses
-  ClpDudect;
+  CtDudect;
 
 type
   TCtOpFactory = function(ASeed: UInt64): TDudectOp;
