@@ -1,0 +1,34 @@
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
+  s_566a08ddb223fd::t_8f112cf0b06f63 35
+CryptoLib.ConstantTime/README.md
+  s_566a08ddb223fd::t_d8696e0cbdbc8b 129
+  s_566a08ddb223fd::t_1f163f18381193 50-51
+  s_566a08ddb223fd::t_13c3bca5bd2a44 164-167,169-177
+  s_566a08ddb223fd::t_3896c2c354df63 1-9,11-49,52-128,130-163,168,178-203
+  s_566a08ddb223fd::t_d0c95a92c78179 10
+.github/workflows/ci/valgrind-ct.sh
+  s_566a08ddb223fd::t_d569a72b6b2d11 2-4,6-8
+  s_566a08ddb223fd::t_8e28e0c228d29f 33-35,42,66,68-69,71
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpr
+  s_566a08ddb223fd::t_0b5e4837d23673 183
+  s_566a08ddb223fd::t_b4ab2ce344a573 34-69,73,75,89,91,93,104-106,109-110,113,115,122,125,137,141,143,151,154,157,166,168,178
+  s_566a08ddb223fd::t_c2f4fcd46cd3a1 70
+.github/workflows/make.yml
+  s_566a08ddb223fd::t_a4cec573e4bbfa 179-187
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "2f09f92ad06c585b8ab9203e107d5da97b3de777",
+  "prompts": {},
+  "sessions": {
+    "s_566a08ddb223fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5413c688-0886-4141-a790-c211deb931b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
