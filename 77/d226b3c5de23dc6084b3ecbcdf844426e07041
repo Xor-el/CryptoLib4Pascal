@@ -1,0 +1,33 @@
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
+  s_566a08ddb223fd::t_e67bc14389aa42 41,45,49
+CryptoLib.ConstantTime/src/Core/CtClock.pas
+  s_566a08ddb223fd::t_e67bc14389aa42 1-227
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpr
+  s_566a08ddb223fd::t_e67bc14389aa42 25-27
+CryptoLib.ConstantTime/Lazarus/CTValgrind.lpi
+  s_566a08ddb223fd::t_e67bc14389aa42 41,45,49
+CryptoLib.ConstantTime/README.md
+  s_566a08ddb223fd::t_e67bc14389aa42 255-257
+CryptoLib.ConstantTime/src/Core/CtSubjects.pas
+  s_566a08ddb223fd::t_e67bc14389aa42 1-728
+CryptoLib.ConstantTime/Lazarus/CTValgrind.lpr
+  s_566a08ddb223fd::t_e67bc14389aa42 33-34
+CryptoLib.ConstantTime/src/Core/CtDudect.pas
+  s_566a08ddb223fd::t_e67bc14389aa42 1-450
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "77d226b3c5de23dc6084b3ecbcdf844426e07041",
+  "prompts": {},
+  "sessions": {
+    "s_566a08ddb223fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5413c688-0886-4141-a790-c211deb931b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
