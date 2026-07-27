@@ -176,6 +176,15 @@ jobs:
           MAKE_DEFINES: 'CRYPTOLIB_FORCE_SCALAR HASHLIB_FORCE_SCALAR'
         run: bash .github/workflows/ci/native-build.sh
 
+      # Same constant-time taint gate as the x86_64 leg, on native AArch64 - the
+      # script is architecture-generic (keys off FPC_TARGET). Opt out with
+      # MAKE_RUN_CT_VALGRIND=false.
+      - name: Constant-time Valgrind gate
+        shell: bash
+        env:
+          FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64-scalar'].fpc_target }}
+        run: bash .github/workflows/ci/valgrind-ct.sh
+
   windows-x64:
     name: "Native: Windows x86_64"
     runs-on: ${{ fromJSON(needs.setup.outputs.target_map)['windows-x64'].runner }}

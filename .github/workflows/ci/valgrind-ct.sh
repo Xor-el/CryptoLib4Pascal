@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Constant-time taint gate (ctgrind / Valgrind), Linux x86_64 FORCE_SCALAR leg.
+# Constant-time taint gate (ctgrind / Valgrind), Linux FORCE_SCALAR legs.
+# Architecture-generic: keys off FPC_TARGET, so the same script serves the
+# linux-x64-scalar (x86_64-linux) and linux-arm64-scalar (aarch64-linux) jobs.
 #
-# Runs AFTER the standard build step of the linux-x64-scalar job, so the CryptoLib
-# / HashLib / SimpleBase packages are already compiled (with CRYPTOLIB_FORCE_SCALAR)
-# into their lib/<target> unit dirs. We compile CTValgrind against those prebuilt
+# Runs AFTER that job's standard build step, so the CryptoLib / HashLib /
+# SimpleBase packages are already compiled (with CRYPTOLIB_FORCE_SCALAR) into
+# their lib/<target> unit dirs. We compile CTValgrind against those prebuilt
 # .ppu (no from-source rebuild), poison each primitive's secret, and assert:
 #   * every constant-time SUBJECT runs clean under Memcheck, and
 #   * every known-leaky CONTROL makes Memcheck report an error (a non-firing
@@ -28,16 +30,16 @@ fi
 CPU="${FPC_TARGET%-*}"
 OS="${FPC_TARGET#*-}"
 
-BENCH_LAZ="$REPO_ROOT/CryptoLib.Benchmark/Lazarus"
-BENCH_CORE="$REPO_ROOT/CryptoLib.Benchmark/src/Core"
-SUPP="$BENCH_LAZ/ct.supp"
+CT_LAZ="$REPO_ROOT/CryptoLib.ConstantTime/Lazarus"
+CT_CORE="$REPO_ROOT/CryptoLib.ConstantTime/src/Core"
+SUPP="$CT_LAZ/ct.supp"
 
 echo "==> installing valgrind + glibc debug symbols"
 sudo apt-get update
 sudo apt-get install -y valgrind libc6-dbg gcc
 
 echo "==> building the taint shim (ct_poison.o)"
-gcc -O2 -c "$BENCH_CORE/ct_poison.c" -o "$BENCH_LAZ/ct_poison.o"
+gcc -O2 -c "$CT_CORE/ct_poison.c" -o "$CT_LAZ/ct_poison.o"
 
 # Locate the prebuilt package unit dirs (each package outputs to <pkg>/lib/<target>).
 # Discover by a known .ppu so we do not hard-code layout that varies per package.
@@ -61,12 +63,12 @@ done
 
 echo "==> compiling CTValgrind against the prebuilt scalar packages"
 BUILD_DIR="$(mktemp -d)"
-( cd "$BENCH_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 \
+( cd "$CT_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 \
     -dCRYPTOLIB_FORCE_SCALAR -dHASHLIB_FORCE_SCALAR \
-    -Fu"$CRYPTO_UNITS" -Fu"$HASH_UNITS" -Fu"$SB_UNITS" -Fu"$BENCH_CORE" \
-    -Fl"$BENCH_LAZ" -FU"$BUILD_DIR" -oCTValgrind \
+    -Fu"$CRYPTO_UNITS" -Fu"$HASH_UNITS" -Fu"$SB_UNITS" -Fu"$CT_CORE" \
+    -Fl"$CT_LAZ" -FU"$BUILD_DIR" -oCTValgrind \
     CTValgrind.lpr )
-BIN="$BENCH_LAZ/CTValgrind"
+BIN="$CT_LAZ/CTValgrind"
 chmod +x "$BIN"
 
 # ct.supp starts empty (masks nothing). Only pass it if it has real entries.

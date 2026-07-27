@@ -7,7 +7,7 @@ detector is proven to fire on a real leak before any subject is trusted.
 | Leg | What it does | Where it runs | Kind of leak it catches |
 |-----|--------------|---------------|--------------------------|
 | **dudect** (`CTLeakDetect`) | fix-vs-random timing test, Welch's t-test, `|t|>4.5` | Windows x86_64, Linux x86_64 (WSL2) | control-flow / iteration-count (mean-separating) |
-| **ctgrind / Valgrind** (`CTValgrind`) | marks the secret "undefined", reports any secret-dependent branch or memory index | Linux x86_64 (WSL2) | data-dependent memory access / branch (deterministic) |
+| **ctgrind / Valgrind** (`CTValgrind`) | marks the secret "undefined", reports any secret-dependent branch or memory index | native Linux x86_64 + AArch64 (CI gate) | data-dependent memory access / branch (deterministic) |
 
 The two legs split the leaky controls by leak *type* and each constant-time subject
 is proven clean by whichever leg attributes cleanly:
@@ -46,9 +46,9 @@ to run** if hardware kernels are live.
 
 ```
 lazbuild -B --cpu=x86_64 --os=win64 CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
-lazbuild -B --cpu=x86_64 --os=win64 CryptoLib.Benchmark/Lazarus/CTLeakDetect.lpi
-CryptoLib.Benchmark\Lazarus\CTLeakDetect.exe            # full run
-CryptoLib.Benchmark\Lazarus\CTLeakDetect.exe --quick    # fast smoke run
+lazbuild -B --cpu=x86_64 --os=win64 CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
+CryptoLib.ConstantTime\Lazarus\CTLeakDetect.exe            # full run
+CryptoLib.ConstantTime\Lazarus\CTLeakDetect.exe --quick    # fast smoke run
 ```
 
 For the sharpest signal: close background apps, fix the CPU frequency
@@ -61,9 +61,9 @@ Valgrind needed for this leg):
 
 ```
 "C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
-"C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib.Benchmark/Lazarus/CTLeakDetect.lpi
+"C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
 # in WSL2:
-cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.Benchmark/Lazarus
+cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.ConstantTime/Lazarus
 chmod +x CTLeakDetect
 taskset -c 2 ./CTLeakDetect          # optional core pin; WSL2 adds VM jitter
 ```
@@ -91,12 +91,12 @@ program is cross-built from Windows and links it:
 
 ```
 # 1) in WSL2 - build the C shim (needs valgrind headers; see setup below):
-cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.Benchmark/Lazarus
+cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.ConstantTime/Lazarus
 gcc -O2 -c ../src/Core/ct_poison.c -I <valgrind-include> -o ct_poison.o
 
 # 2) from Windows - cross-build the linux ELF (links ct_poison.o):
 "C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
-"C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib.Benchmark/Lazarus/CTValgrind.lpi
+"C:/LazFPCWithCrossCompiler/lazarus/lazbuild.exe" -B --cpu=x86_64 --os=linux CryptoLib.ConstantTime/Lazarus/CTValgrind.lpi
 ```
 
 (A Windows compile-check of the Pascal is available with `-dCT_VALGRIND_STUB`, which
@@ -105,7 +105,7 @@ stubs the poison calls to no-ops.)
 ### Run (WSL2)
 
 ```
-cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.Benchmark/Lazarus
+cd /mnt/c/Repos/Personal/CryptoLib4Pascal/CryptoLib.ConstantTime/Lazarus
 chmod +x CTValgrind
 for t in x25519 aes-bitsliced aes-ttable ghash-basic ghash-4k; do
   echo "== $t =="
@@ -126,7 +126,7 @@ suppress a `Clp*` crypto frame.
 ### Valgrind setup
 
 * **Normal (root):** `sudo apt-get install valgrind libc6-dbg gcc`. This is the
-  path used in CI (`linux-x64-scalar`).
+  path used in CI (the `linux-x64-scalar` and `linux-arm64-scalar` jobs).
 * **No-root (deb extract):**
   ```
   cd ~ && mkdir -p ctvg && cd ctvg
@@ -161,16 +161,20 @@ suppress a `Clp*` crypto frame.
 | FPC x86_64 Windows | **PASS** (controls fire, subjects clean) | n/a (Valgrind is Linux-only) |
 | FPC x86_64 Linux (WSL2) | **PASS** (controls fire, subjects clean) | built + run-ready; execution blocked only by the stock-WSL2 loader/debuginfo quirk above (root `libc6-dbg` fixes it) |
 
-Out of local reach (fenced to CI / audit): native AArch64 and macOS. Emulation
-distorts both timing and Valgrind, so those are **not** run under QEMU here and are
-logged as not-covered-locally rather than implying full-matrix coverage.
+Out of local reach: native AArch64 and macOS. AArch64 is covered in CI on a native
+runner (see below); macOS stays fenced to CI/audit. Nothing is run under QEMU here
+(emulation distorts both timing and Valgrind), so the local matrix is logged as
+not-covered rather than implying full-matrix coverage.
 
-**CI wiring (done):** the Valgrind leg runs in the `linux-x64-scalar` job via
-`.github/workflows/ci/valgrind-ct.sh` (step "Constant-time Valgrind gate"). It
-`apt-get install`s `valgrind` + `libc6-dbg` (root on the runner), compiles
-`CTValgrind` against the scalar packages the build step just produced, then asserts
-the subjects run clean AND the leaky controls (`aes-ttable`, `ghash-4k`) fire - a
-non-firing control fails the job as INVALID. Opt out with `MAKE_RUN_CT_VALGRIND=false`.
+**CI wiring (done):** the Valgrind leg runs in **both** the `linux-x64-scalar` and
+`linux-arm64-scalar` jobs via `.github/workflows/ci/valgrind-ct.sh` (step
+"Constant-time Valgrind gate"). Both are **native** runners (`ubuntu-latest` /
+`ubuntu-24.04-arm`) - no emulation - and the script is architecture-generic (keys
+off `FPC_TARGET`). It `apt-get install`s `valgrind` + `libc6-dbg` (root on the
+runner), compiles `CTValgrind` against the scalar packages the build step just
+produced, then asserts the subjects run clean AND the leaky controls (`aes-ttable`,
+`ghash-4k`) fire - a non-firing control fails the job as INVALID. Opt out with
+`MAKE_RUN_CT_VALGRIND=false` (applies to both jobs).
 `ct.supp` starts empty; if a subject trips over FPC-RTL uninitialised-value noise on
 the first run, the step prints the offending frames and the `--gen-suppressions=all`
 command - add the RTL-only frames to `ct.supp` (never a `Clp*` frame) and re-run.

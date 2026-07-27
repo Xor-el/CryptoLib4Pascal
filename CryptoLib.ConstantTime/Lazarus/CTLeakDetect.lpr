@@ -25,7 +25,6 @@ uses
   ClpCtClock,
   ClpDudect,
   ClpCtSubjects,
-  ClpCryptoLibTypes,
 {$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
   ClpSimdLevels,
   ClpX86SimdFeatures,
@@ -33,12 +32,41 @@ uses
   ClpSimdLevels,
   ClpArmSimdFeatures,
 {$ENDIF}
-  BenchmarkCommon;
+  ClpCryptoLibTypes;
 
 var
   GQuick: Boolean = False;
   GRowFilter: string = '';
   GCurLabel: string = '';
+
+// OS/CPU/compiler line for the run banner (kept local so this diagnostic tool
+// carries no dependency on the benchmark tree).
+function PlatformInfo: string;
+var
+  LOS, LCPU: string;
+begin
+{$IF DEFINED(MSWINDOWS)}
+  LOS := 'Windows';
+{$ELSEIF DEFINED(LINUX)}
+  LOS := 'Linux';
+{$ELSEIF DEFINED(DARWIN)}
+  LOS := 'macOS';
+{$ELSE}
+  LOS := 'Unknown OS';
+{$ENDIF}
+{$IF DEFINED(CPUX86_64)}
+  LCPU := 'x86_64';
+{$ELSEIF DEFINED(CPUI386)}
+  LCPU := 'i386';
+{$ELSEIF DEFINED(CPUAARCH64)}
+  LCPU := 'AArch64';
+{$ELSEIF DEFINED(CPUARM)}
+  LCPU := 'ARM';
+{$ELSE}
+  LCPU := 'Unknown CPU';
+{$ENDIF}
+  Result := Format('Platform: %s %s, FPC %s', [LOS, LCPU, {$I %FPCVERSION%}]);
+end;
 
 function DispatchDescription(out AIsScalar: Boolean): string;
 {$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
@@ -152,7 +180,7 @@ begin
 
   Writeln('Constant-time leak detector (dudect)');
   Writeln('====================================');
-  Writeln(TBenchmarkReport.GetPlatformInfo);
+  Writeln(PlatformInfo);
   Writeln('Clock : ', TCtClock.SourceName);
 
   LDesc := DispatchDescription(LIsScalar);

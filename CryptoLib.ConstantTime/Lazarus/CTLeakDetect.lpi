@@ -32,7 +32,7 @@
         <PackageName Value="CryptoLib4PascalPackage"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="5">
+    <Units Count="4">
       <Unit0>
         <Filename Value="CTLeakDetect.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -49,10 +49,6 @@
         <Filename Value="..\src\Core\ClpCtSubjects.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
-      <Unit4>
-        <Filename Value="..\src\Core\BenchmarkCommon.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit4>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
