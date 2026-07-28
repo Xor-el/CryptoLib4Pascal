@@ -1,0 +1,19 @@
+CryptoLib.Tests/src/Crypto/BulkParityTestBase.pas
+  s_a664f450ccb9fa::t_c43f64c43f4ec7 134,162,205,209-210
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "9f4f9223663b8064bed66a078f6fc35432207f47",
+  "prompts": {},
+  "sessions": {
+    "s_a664f450ccb9fa": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "683e7e50-9487-49e9-99be-f2b6d3e2b434",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
