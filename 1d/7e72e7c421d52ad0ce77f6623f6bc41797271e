@@ -1,0 +1,39 @@
+CryptoLib/src/Crypto/Modes/ClpCtsBlockCipher.pas
+  s_566a08ddb223fd::t_4f3c74d847af0e 136
+  s_566a08ddb223fd::t_9e1fb58a142570 157
+  s_566a08ddb223fd::t_81045036293dfb 33
+CryptoLib/src/Crypto/Modes/ClpEaxBlockCipher.pas
+  s_566a08ddb223fd::t_40dcb048cba256 343
+  s_566a08ddb223fd::t_4640159490a5fd 396-397
+  s_566a08ddb223fd::t_965f04e0c0f86a 472-473
+  s_566a08ddb223fd::t_1ce12efde1ac61 421-422
+  s_566a08ddb223fd::t_d2fabaea0ac20e 47
+  s_566a08ddb223fd::t_baf87a078db860 132
+  s_566a08ddb223fd::t_e5c8cb5581dc40 378,388
+  s_566a08ddb223fd::t_e7b6830674bcd2 116
+CryptoLib/src/Crypto/Modes/ClpOfbBlockCipher.pas
+  s_566a08ddb223fd::t_39697d292758d3 122,132
+  s_566a08ddb223fd::t_5a169e43c76cbc 30
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_566a08ddb223fd::t_4e8124bc116235 150
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_566a08ddb223fd::t_378b09b9e9abd7 321-324
+CryptoLib/src/Crypto/Modes/ClpOcbBlockCipher.pas
+  s_566a08ddb223fd::t_d9fa25e7fce939 151
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "1d7e72e7c421d52ad0ce77f6623f6bc41797271e",
+  "prompts": {},
+  "sessions": {
+    "s_566a08ddb223fd": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "5413c688-0886-4141-a790-c211deb931b0",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
