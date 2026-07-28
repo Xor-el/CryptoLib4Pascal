@@ -1,0 +1,21 @@
+CryptoLib.Tests/src/Pkix/PkixFoundationTests.pas
+  s_7777342591ea09::t_fa55ad8643fe33 39
+  s_7777342591ea09::t_7727b50e3ff3ef 88
+  s_7777342591ea09::t_69091fa8349c62 488-529
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.16",
+  "base_commit_sha": "171ad9f7514270bb96dd942c96f04fb6bddaf967",
+  "prompts": {},
+  "sessions": {
+    "s_7777342591ea09": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "217931d2-bd8c-4db4-826f-2d5e31ba53cb",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
