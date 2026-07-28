@@ -36,6 +36,7 @@ uses
   ClpIX509StoreSelectors,
   ClpX509StoreSelectors,
   ClpIPkixTypes,
+  ClpPkixPolicyNode,
   ClpTrustAnchor,
   ClpCertStatus,
   ClpReasonsMask,
@@ -84,6 +85,7 @@ type
     procedure TestPkixParametersCloneAndValidation;
     procedure TestPkixBuilderParameters;
     procedure TestPkixCertPathSortsAndEncodes;
+    procedure TestPolicyNodeCopyReparentsChildren;
 
   end;
 
@@ -481,6 +483,48 @@ begin
 
   CheckTrue(System.Length(LPath.GetEncoded('PKCS7')) > 0, 'the PKCS7 encoding produces bytes');
   CheckTrue(System.Length(LPath.GetEncoded('PEM')) > 0, 'the PEM encoding produces bytes');
+end;
+
+procedure TPkixFoundationTest.TestPolicyNodeCopyReparentsChildren;
+var
+  LRoot, LChild, LGrandChild, LCopy, LChildCopy, LGrandChildCopy: IPkixPolicyNode;
+  LChildren: TCryptoLibGenericArray<IPkixPolicyNode>;
+begin
+  // root -> child -> grandchild, wired through AddChild
+  LRoot := TPkixPolicyNode.Create(nil, 0, TCryptoLibStringArray.Create('2.5.29.32.0'), nil, nil,
+    '2.5.29.32.0', False);
+  LChild := TPkixPolicyNode.Create(nil, 1, TCryptoLibStringArray.Create('1.2.3'), nil, nil, '1.2.3', False);
+  LGrandChild := TPkixPolicyNode.Create(nil, 2, TCryptoLibStringArray.Create('1.2.3.4'), nil, nil,
+    '1.2.3.4', True);
+  LChild.AddChild(LGrandChild);
+  LRoot.AddChild(LChild);
+
+  LCopy := LRoot.Copy();
+
+  // a copied subtree is detached from any parent
+  CheckNull(LCopy.Parent, 'a copied tree is detached from any parent');
+
+  // the copy is a distinct instance that preserves the node data
+  CheckFalse(LCopy = LRoot, 'the copy is a distinct instance from the original');
+  CheckEquals('2.5.29.32.0', LCopy.ValidPolicy, 'the copy keeps the valid policy');
+
+  LChildren := LCopy.Children;
+  CheckEquals(1, System.Length(LChildren), 'the copy keeps its single child');
+
+  LChildCopy := LChildren[0];
+  CheckFalse(LChildCopy = LChild, 'the child is deep-copied, not shared with the original');
+  CheckEquals('1.2.3', LChildCopy.ValidPolicy, 'the child copy keeps the valid policy');
+  // the regression: a cloned child must point back at the copy, never the original parent
+  CheckNotNull(LChildCopy.Parent, 'the cloned child has a parent');
+  CheckTrue(LChildCopy.Parent = LCopy, 'the cloned child is re-parented onto the copy');
+
+  LGrandChildCopy := LChildCopy.Children[0];
+  CheckFalse(LGrandChildCopy = LGrandChild, 'the grandchild is deep-copied too');
+  CheckTrue(LGrandChildCopy.Parent = LChildCopy, 'the cloned grandchild is re-parented onto its copied parent');
+
+  // mutating the original after the copy must not disturb the copied subtree
+  LRoot.RemoveChild(LChild);
+  CheckEquals(1, System.Length(LCopy.Children), 'the copy is independent of the original tree');
 end;
 
 initialization
