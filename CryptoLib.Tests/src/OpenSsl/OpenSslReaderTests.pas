@@ -35,7 +35,6 @@ uses
 {$ENDIF FPC}
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
-  ClpConverters,
   ClpIOpenSslPemReader,
   ClpOpenSslPemReader,
   ClpIOpenSslPasswordFinder,

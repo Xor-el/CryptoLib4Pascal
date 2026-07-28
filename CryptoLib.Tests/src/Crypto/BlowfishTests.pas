@@ -33,7 +33,6 @@ uses
   ClpIBlockCipher,
   ClpBlowfishEngine,
   ClpCryptoLibTypes,
-  CryptoLibTestBase,
   BlockCipherTestBase;
 
 type

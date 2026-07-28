@@ -32,7 +32,6 @@ uses
   ClpIBulkBlockCipherMode,
   ClpIKeyParameter,
   ClpKeyParameter,
-  ClpIParametersWithIV,
   ClpParametersWithIV,
   ClpICipherParameters,
   ClpAesEngine,
@@ -132,7 +131,7 @@ const
   IterationsPerCount: Int32 = 3;
 var
   LRnd: ISecureRandom;
-  LKey, LIV, LPlain, LOutRef, LOutBulk, LRoundTrip, LInplace: TBytes;
+  LKey, LIV, LPlain, LOutRef, LOutBulk, LRoundTrip, LInPlace: TBytes;
   LKeyParam: IKeyParameter;
   LParams: ICipherParameters;
   LRef, LBulk: IBlockCipher;
@@ -160,7 +159,7 @@ begin
     System.SetLength(LOutBulk, LTotalBytes);
     System.SetLength(LRoundTrip, LTotalBytes);
     if AWithInPlace then
-      System.SetLength(LInplace, LTotalBytes);
+      System.SetLength(LInPlace, LTotalBytes);
 
     for LJ := 0 to IterationsPerCount - 1 do
     begin
@@ -203,12 +202,12 @@ begin
         // In-place bulk (output buffer aliases input) must also match.
         if AWithInPlace then
         begin
-          System.Move(LPlain[0], LInplace[0], LTotalBytes);
+          System.Move(LPlain[0], LInPlace[0], LTotalBytes);
           LBulk := AMakeMode(AEngineFactory);
           LBulk.Init(LDir, LParams);
           Supports(LBulk, IBulkBlockCipherMode, LBulkMode);
-          LBulkMode.ProcessBlocks(LInplace, 0, LBlockCount, LInplace, 0);
-          if not AreEqual(LOutRef, LInplace) then
+          LBulkMode.ProcessBlocks(LInPlace, 0, LBlockCount, LInPlace, 0);
+          if not AreEqual(LOutRef, LInPlace) then
             Fail(Format('%s %s in-place bulk mismatch: dir=%s blocks=%d iter=%d',
               [ALabel, AModeName, SysUtils.BoolToStr(LDir, True), LBlockCount, LJ]));
         end;
