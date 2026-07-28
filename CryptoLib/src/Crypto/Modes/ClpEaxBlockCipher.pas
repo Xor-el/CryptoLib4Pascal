@@ -44,6 +44,7 @@ uses
   ClpParametersWithIV,
   ClpCheck,
   ClpArrayUtilities,
+  ClpByteUtilities,
   ClpAbstractAeadCipher,
   ClpAbstractAeadBlockCipher,
   ClpGaloisFieldUtilities,
@@ -112,7 +113,7 @@ type
 
     procedure InitCipher();
     procedure CalculateMac();
-    procedure Reset(AClearMac: Boolean); overload;
+    procedure Reset(AClearMac: Boolean); reintroduce; overload;
     function Process(AB: Byte; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
     // ----- Fused-body helpers (only touched when FUseFusedBody). -----
@@ -128,9 +129,7 @@ type
     /// <summary>Single-block CBC-MAC step: FOmacState :=
     /// AES_K(FOmacState XOR ABlock). Used by the scalar OMAC lookahead
     /// flush.</summary>
-    procedure CbcMacStep(const ABlock: TCryptoLibByteArray;
-      AOff: Int32); overload;
-    procedure CbcMacStep(ABlockPtr: PByte); overload;
+    procedure CbcMacStep(const ABlock: TCryptoLibByteArray; AOff: Int32);
 
     /// <summary>If FHasOmacLookahead, absorb FOmacLookahead into
     /// FOmacState as a normal CBC-MAC step and clear the flag.</summary>
@@ -338,28 +337,10 @@ end;
 procedure TEaxBlockCipher.CbcMacStep(const ABlock: TCryptoLibByteArray;
   AOff: Int32);
 var
-  LI: Int32;
   LTmp: TCryptoLibByteArray;
 begin
   System.SetLength(LTmp, FBlockSize);
-  for LI := 0 to System.Pred(FBlockSize) do
-    LTmp[LI] := Byte(FOmacState[LI] xor ABlock[AOff + LI]);
-  FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
-end;
-
-procedure TEaxBlockCipher.CbcMacStep(ABlockPtr: PByte);
-var
-  LI: Int32;
-  LTmp: TCryptoLibByteArray;
-  LPSrc: PByte;
-begin
-  System.SetLength(LTmp, FBlockSize);
-  LPSrc := ABlockPtr;
-  for LI := 0 to System.Pred(FBlockSize) do
-  begin
-    LTmp[LI] := Byte(FOmacState[LI] xor LPSrc^);
-    System.Inc(LPSrc);
-  end;
+  TByteUtilities.&Xor(FBlockSize, FOmacState, 0, ABlock, AOff, LTmp, 0);
   FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
 end;
 
@@ -390,49 +371,30 @@ end;
 
 procedure TEaxBlockCipher.CtrEncryptBlock(AInPtr, AOutPtr: PByte);
 var
-  LI: Int32;
   LKeystream: TCryptoLibByteArray;
-  LPIn, LPOut: PByte;
 begin
   System.SetLength(LKeystream, FBlockSize);
   FUnderlyingAes.ProcessBlock(FCtrBlock, 0, LKeystream, 0);
-  LPIn := AInPtr;
-  LPOut := AOutPtr;
-  for LI := 0 to System.Pred(FBlockSize) do
-  begin
-    LPOut^ := Byte(LPIn^ xor LKeystream[LI]);
-    System.Inc(LPIn);
-    System.Inc(LPOut);
-  end;
+  TByteUtilities.&Xor(FBlockSize, AInPtr, PByte(LKeystream), AOutPtr);
   IncrementCtrBlock();
 end;
 
 procedure TEaxBlockCipher.CtrEncryptTail(AInPtr, AOutPtr: PByte; ALen: Int32);
 var
-  LI: Int32;
   LKeystream: TCryptoLibByteArray;
-  LPIn, LPOut: PByte;
 begin
   System.SetLength(LKeystream, FBlockSize);
   FUnderlyingAes.ProcessBlock(FCtrBlock, 0, LKeystream, 0);
-  LPIn := AInPtr;
-  LPOut := AOutPtr;
-  for LI := 0 to System.Pred(ALen) do
-  begin
-    LPOut^ := Byte(LPIn^ xor LKeystream[LI]);
-    System.Inc(LPIn);
-    System.Inc(LPOut);
-  end;
+  TByteUtilities.&Xor(ALen, AInPtr, PByte(LKeystream), AOutPtr);
 end;
 
 procedure TEaxBlockCipher.FinalizeBodyOmacFullFromLookahead;
 var
-  LI: Int32;
   LTmp: TCryptoLibByteArray;
 begin
   System.SetLength(LTmp, FBlockSize);
-  for LI := 0 to System.Pred(FBlockSize) do
-    LTmp[LI] := Byte(FOmacState[LI] xor FOmacLookahead[LI] xor FOmacB[LI]);
+  TByteUtilities.&Xor(FBlockSize, FOmacState, FOmacLookahead, LTmp);
+  TByteUtilities.XorTo(FBlockSize, FOmacB, LTmp);
   FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
   FHasOmacLookahead := False;
 end;
@@ -456,8 +418,8 @@ begin
   LPadded[APartialLen] := $80;
 
   System.SetLength(LTmp, FBlockSize);
-  for LI := 0 to System.Pred(FBlockSize) do
-    LTmp[LI] := Byte(FOmacState[LI] xor LPadded[LI] xor FOmacP[LI]);
+  TByteUtilities.&Xor(FBlockSize, FOmacState, LPadded, LTmp);
+  TByteUtilities.XorTo(FBlockSize, FOmacP, LTmp);
   FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
 end;
 
@@ -494,7 +456,6 @@ end;
 procedure TEaxBlockCipher.CalculateMac;
 var
   LOutC: TCryptoLibByteArray;
-  LI: Int32;
 begin
   System.SetLength(LOutC, FBlockSize);
   if FUseFusedBody then
@@ -508,10 +469,8 @@ begin
     FMac.DoFinal(LOutC, 0);
   end;
 
-  for LI := 0 to System.Pred(System.Length(FMacBlock)) do
-  begin
-    FMacBlock[LI] := Byte(FNonceMac[LI] xor FAssociatedTextMac[LI] xor LOutC[LI]);
-  end;
+  TByteUtilities.&Xor(System.Length(FMacBlock), FNonceMac, FAssociatedTextMac, FMacBlock);
+  TByteUtilities.XorTo(System.Length(FMacBlock), LOutC, FMacBlock);
 end;
 
 procedure TEaxBlockCipher.Reset;

@@ -27,6 +27,7 @@ uses
   ClpICipherParameters,
   ClpAbstractBlockCipherMode,
   ClpCipherModeParameterUtilities,
+  ClpByteUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -118,7 +119,7 @@ end;
 function TOfbBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;
   AInOff: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
-  LI, LCount: Int32;
+  LCount: Int32;
 begin
   if ((AInOff + FBlockSize) > System.Length(AInput)) then
     raise EDataLengthCryptoLibException.CreateRes(@SInputBufferTooShort);
@@ -128,8 +129,7 @@ begin
 
   FCipher.ProcessBlock(FOfbV, 0, FOfbOutV, 0);
 
-  for LI := 0 to System.Pred(FBlockSize) do
-    AOutput[AOutOff + LI] := Byte(FOfbOutV[LI] xor AInput[AInOff + LI]);
+  TByteUtilities.&Xor(FBlockSize, FOfbOutV, 0, AInput, AInOff, AOutput, AOutOff);
 
   LCount := (System.Length(FOfbV) - FBlockSize) * System.SizeOf(Byte);
   if LCount > 0 then

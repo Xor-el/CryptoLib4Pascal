@@ -30,6 +30,7 @@ uses
   ClpIEcbBlockCipher,
   ClpEcbBlockCipher,
   ClpBufferedBlockCipher,
+  ClpByteUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -132,12 +133,7 @@ begin
         System.Inc(LI);
       end;
 
-      LI := LBlockSize;
-      while LI <> FBufOff do
-      begin
-        FBuf[LI] := FBuf[LI] xor (LBlock[LI - LBlockSize]);
-        System.Inc(LI);
-      end;
+      TByteUtilities.XorTo(LLen, LBlock, 0, FBuf, LBlockSize);
 
       FCipherMode.UnderlyingCipher.ProcessBlock(FBuf, LBlockSize, AOutput, AOutOff);
 
@@ -158,12 +154,7 @@ begin
     begin
       FCipherMode.UnderlyingCipher.ProcessBlock(FBuf, 0, LBlock, 0);
 
-      LI := LBlockSize;
-      while LI <> FBufOff do
-      begin
-        LLastBlock[LI - LBlockSize] := Byte(LBlock[LI - LBlockSize] xor FBuf[LI]);
-        System.Inc(LI);
-      end;
+      TByteUtilities.&Xor(LLen, LBlock, 0, FBuf, LBlockSize, LLastBlock, 0);
 
       System.Move(FBuf[LBlockSize], LBlock[0], LLen * System.SizeOf(Byte));
       FCipherMode.ProcessBlock(LBlock, 0, AOutput, AOutOff);

@@ -147,7 +147,7 @@ type
       AInOff, ACount: Int32; const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     procedure ProcessData(const AInBytes: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
-    procedure Reset(AClearMac, AResetCipher: Boolean); overload;
+    procedure Reset(AClearMac, AResetCipher: Boolean); reintroduce; overload;
 
     class constructor Create; overload;
 

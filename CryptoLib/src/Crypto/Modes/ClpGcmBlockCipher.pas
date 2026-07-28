@@ -312,14 +312,15 @@ type
     // ---------------------------------------------------------------------
     procedure CheckStatus();
     procedure DoReset(AClearMac: Boolean);
-    /// <summary>Zeroize the hash subkey, H-power tables, keystream buffers, and
-    /// aggregated GHASH powers. Not called from Reset (same-key re-Init reuses them).</summary>
-    procedure WipeKeyMaterial(); override;
 
   strict protected
     function GetAlgorithmName: String; override;
     function GetModeName: String; override;
     function GetBufferedLength(): Int32; override;
+
+    /// <summary>Zeroize the hash subkey, H-power tables, keystream buffers, and
+    /// aggregated GHASH powers. Not called from Reset (same-key re-Init reuses them).</summary>
+    procedure WipeKeyMaterial(); override;
 
   public
     constructor Create(const ACipher: IBlockCipher); overload;

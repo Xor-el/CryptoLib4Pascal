@@ -148,7 +148,7 @@ type
     function GetLSub(AN: Int32): TCryptoLibByteArray; virtual;
     procedure ProcessHashBlock(); virtual;
     procedure ProcessMainBlock(const AOutput: TCryptoLibByteArray; AOutOff: Int32); virtual;
-    procedure Reset(AClearMac: Boolean); overload; virtual;
+    procedure Reset(AClearMac: Boolean); reintroduce; overload; virtual;
     procedure UpdateHASH(const ALSub: TCryptoLibByteArray); virtual;
 
     function GetAlgorithmName: String; override;
