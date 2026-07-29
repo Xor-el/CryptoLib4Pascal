@@ -1206,9 +1206,10 @@ end;
 function TPackageGraph.BuildPackageAt(const AIndex: Integer): Boolean;
 var
   Pkg: TLpkPackage;
-  Args: TStringList;
-  BuildOutput, OutDir, DepPath: string;
-  J: Integer;
+  Args, DepPaths: TStringList;
+  Visited: specialize TList<Integer>;
+  BuildOutput, OutDir: string;
+  J, DepIdx: Integer;
 begin
   Result := True;
   Pkg := GetPackage(AIndex);
@@ -1226,12 +1227,25 @@ begin
     for J := 0 to Pkg.SourceDirs.Count - 1 do
       TLazXml.AppendFuIfMissing(Pkg.SourceDirs[J], Args);
     TLazXml.AppendFuIfMissing(Pkg.PkgDir, Args);
-    for J := 0 to Pkg.RequiredNames.Count - 1 do
-    begin
-      if IsBuiltinPackage(Pkg.RequiredNames[J]) then
-        Continue;
-      DepPath := UnitPathFor(Pkg.RequiredNames[J]);
-      TLazXml.AppendFuIfMissing(DepPath, Args);
+    // A required package's units reference their own dependencies' units, so
+    // the compile needs the transitive closure of dependency output dirs on
+    // -Fu, not just the direct requires (mirrors how projects resolve paths).
+    DepPaths := TStringList.Create;
+    Visited := specialize TList<Integer>.Create;
+    try
+      for J := 0 to Pkg.RequiredNames.Count - 1 do
+      begin
+        if IsBuiltinPackage(Pkg.RequiredNames[J]) then
+          Continue;
+        DepIdx := FindIndexByName(Pkg.RequiredNames[J]);
+        if DepIdx >= 0 then
+          CollectUnitPaths(DepIdx, Visited, DepPaths);
+      end;
+      for J := 0 to DepPaths.Count - 1 do
+        TLazXml.AppendFuIfMissing(DepPaths[J], Args);
+    finally
+      Visited.Free;
+      DepPaths.Free;
     end;
     TLazXml.AppendPackageBuildArgs(Args, ExtractFileName(Pkg.StubPas), OutDir);
 
