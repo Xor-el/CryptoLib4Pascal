@@ -1,0 +1,22 @@
+CryptoLib/src/Asn1/ClpAsn1Objects.pas
+  s_cedb59c545f300::t_3fca310325cf28 7500,7503-7505
+CryptoLib.Tests/src/Asn1/DefiniteLengthAllocationTests.pas
+  s_cedb59c545f300::t_465f336ae3a27e 204-249
+  s_cedb59c545f300::t_97c796187f4591 67
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "b4d1859ea243314f19b474ffd625292063423d6a",
+  "prompts": {},
+  "sessions": {
+    "s_cedb59c545f300": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f37667b7-3b4f-4d12-be67-74992a43d1eb",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
