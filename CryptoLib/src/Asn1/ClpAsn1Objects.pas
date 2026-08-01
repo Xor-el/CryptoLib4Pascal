@@ -85,8 +85,6 @@ resourcestring
   SInputSequenceTooLarge = 'input sequence too large';
   SNoTaggedObjectFoundInSequence = 'no tagged object found in sequence, structure does not seem to be of type External';
   SMalformedBmpStringEncodingEncountered = 'malformed BMPString encoding encountered';
-  SEofEncounteredInMiddleOfBmpString = 'EOF encountered in middle of BMPString';
-  SDerBmpStringLengthMismatch = 'BMP string length mismatch after parsing';
   SEofEncounteredReadingBooleanOctet = 'EOF encountered reading BOOLEAN octet';
   SBooleanValueShouldHaveOneByte = 'BOOLEAN value should have 1 byte';
   SEnumeratedMustBeNonNegative = 'ENUMERATED must be non-negative';
@@ -3330,9 +3328,6 @@ type
   end;
 
 implementation
-
-uses
-  ClpStreamUtilities;
 
 { TAsn1TaggedObject }
 
@@ -7501,51 +7496,13 @@ begin
 end;
 
 class function TDerBmpString.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IDerBmpString;
-var
-  LRemainingBytes, LLength, LStringPos, LBufPos: Int32;
-  LBuf: TCryptoLibByteArray;
-  LStr: TCryptoLibCharArray;
 begin
-  LRemainingBytes := ADefIn.Remaining;
-  if (LRemainingBytes and 1) <> 0 then
+  if (ADefIn.Remaining and 1) <> 0 then
     raise EIOCryptoLibException.CreateRes(@SMalformedBmpStringEncodingEncountered);
 
-  LLength := LRemainingBytes div 2;
-
-  System.SetLength(LStr, LLength);
-  System.SetLength(LBuf, 8);
-  LStringPos := 0;
-
-  while LRemainingBytes >= 8 do
-  begin
-    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, 8) <> 8 then
-      raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredInMiddleOfBmpString);
-
-    LStr[LStringPos    ] := Char((LBuf[0] shl 8) or (LBuf[1] and $FF));
-    LStr[LStringPos + 1] := Char((LBuf[2] shl 8) or (LBuf[3] and $FF));
-    LStr[LStringPos + 2] := Char((LBuf[4] shl 8) or (LBuf[5] and $FF));
-    LStr[LStringPos + 3] := Char((LBuf[6] shl 8) or (LBuf[7] and $FF));
-    LStringPos := LStringPos + 4;
-    LRemainingBytes := LRemainingBytes - 8;
-  end;
-
-  if LRemainingBytes > 0 then
-  begin
-    if TStreamUtilities.ReadFully(ADefIn, LBuf, 0, LRemainingBytes) <> LRemainingBytes then
-      raise EEndOfStreamCryptoLibException.CreateRes(@SEofEncounteredInMiddleOfBmpString);
-
-    LBufPos := 0;
-    repeat
-      LStr[LStringPos] := Char((LBuf[LBufPos] shl 8) or (LBuf[LBufPos + 1] and $FF));
-      System.Inc(LStringPos);
-      LBufPos := LBufPos + 2;
-    until LBufPos >= LRemainingBytes;
-  end;
-
-  if (ADefIn.Remaining <> 0) or (System.Length(LStr) <> LStringPos) then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SDerBmpStringLengthMismatch);
-
-  Result := TDerBmpString.CreatePrimitive(LStr);
+  // read through ToArray, which grows its buffer as bytes actually arrive, so a
+  // crafted (invalid) small header cannot drive a huge allocation up front
+  Result := TDerBmpString.CreatePrimitive(ADefIn.ToArray());
 end;
 
 class function TDerBmpString.GetInstance(const AObj: TObject): IDerBmpString;

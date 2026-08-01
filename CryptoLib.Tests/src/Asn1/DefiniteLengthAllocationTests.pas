@@ -64,6 +64,7 @@ type
   published
     procedure TestDeclaredLengthNotAllocatedUpFront;
     procedure TestTruncatedObjectReportsExpectedMessage;
+    procedure TestHostileBmpStringLengthNotAllocatedUpFront;
   end;
 
 implementation
@@ -185,6 +186,52 @@ begin
       try
         LInputStream.ReadObject();
         Fail('no exception on truncated definite-length object');
+      except
+        on E: EEndOfStreamCryptoLibException do
+          CheckEquals(LExpected, E.Message,
+            Format('unexpected truncation message: %s', [E.Message]));
+        on E: Exception do
+          Fail(Format('unexpected exception: %s', [E.Message]));
+      end;
+    finally
+      LInputStream.Free;
+    end;
+  finally
+    LInStr.Free;
+  end;
+end;
+
+procedure TDefiniteLengthAllocationTest.TestHostileBmpStringLengthNotAllocatedUpFront;
+const
+  DeclaredLength = Int32($7FFFFFFE);
+  BodySupplied = 2;
+var
+  LInput: TCryptoLibByteArray;
+  LInStr: TRecordingStream;
+  LInputStream: TAsn1InputStream;
+  LExpected: String;
+begin
+  // the stream cannot report its size, so the declared length is all the parser has to go on
+  System.SetLength(LInput, 6 + BodySupplied);
+  LInput[0] := $1E;
+  LInput[1] := $84;
+  LInput[2] := $7F;
+  LInput[3] := $FF;
+  LInput[4] := $FF;
+  LInput[5] := $FE;
+  LInput[6] := $00;
+  LInput[7] := $41;
+
+  LExpected := Format('DEF length %d object truncated by %d',
+    [DeclaredLength, DeclaredLength - BodySupplied]);
+
+  LInStr := TRecordingStream.Create(LInput);
+  try
+    LInputStream := TAsn1InputStream.Create(LInStr, True);
+    try
+      try
+        LInputStream.ReadObject();
+        Fail('no exception on hostile BMPString declared length');
       except
         on E: EEndOfStreamCryptoLibException do
           CheckEquals(LExpected, E.Message,
