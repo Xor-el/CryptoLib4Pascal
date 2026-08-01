@@ -123,11 +123,12 @@ type
       const ATwoDigitYearMax: Int32): TDateTime; overload; static;
 
   public
-    /// <summary>Milliseconds since Unix epoch (1 Jan 1970 UTC). Mirrors .NET DateTimeUtilities.DateTimeToUnixMs.</summary>
-    /// <remarks>
-    /// Values from <see cref="UnixMsToDateTime"/> are UTC wall-clock (like .NET <c>DateTimeKind.Utc</c>);
-    /// other values are converted with <see cref="ToUniversalTime"/> first, as in .NET.
-    /// </remarks>
+    /// <summary>
+    /// Milliseconds since the Unix epoch (1 Jan 1970 UTC). The exact inverse of
+    /// <see cref="UnixMsToDateTime" />: ADateTime is taken as a UTC wall-clock value
+    /// and measured directly - no local/UTC guessing (TDateTime carries no kind).
+    /// Convert a local time with <see cref="ToUniversalTime" /> first.
+    /// </summary>
     /// <exception cref="EArgumentOutOfRangeCryptoLibException">ADateTime before epoch.</exception>
     class function DateTimeToUnixMs(const ADateTime: TDateTime): Int64; static;
 
@@ -370,27 +371,12 @@ begin
 end;
 
 class function TDateTimeUtilities.DateTimeToUnixMs(const ADateTime: TDateTime): Int64;
-var
-  LMsSinceEpoch: Int64;
-  LUtcWall: TDateTime;
 begin
-  // .NET: (dateTime.ToUniversalTime().Ticks - UnixEpoch.Ticks) / ms.
-  // UnixMsToDateTime returns Utc kind there, so ToUniversalTime is a no-op. Pascal TDateTime
-  // has no kind; UTC wall-clock values from UnixMsToDateTime must not be re-localized.
-  LMsSinceEpoch := MilliSecondsBetween(ADateTime, UnixEpoch);
-  if (LMsSinceEpoch >= MinUnixMs) and (LMsSinceEpoch <= MaxUnixMs) and
-     (UnixMsToDateTime(LMsSinceEpoch) = ADateTime) then
-  begin
-    if ADateTime < UnixEpoch then
-      raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SDateTimeValueMayNotBeBefore);
-    Exit(LMsSinceEpoch);
-  end;
-
-  LUtcWall := ToUniversalTime(ADateTime);
-  if LUtcWall < UnixEpoch then
+  // ADateTime is an unambiguous UTC instant (TDateTime has no kind), measured
+  // directly - the exact inverse of UnixMsToDateTime, with no local/UTC heuristic
+  if ADateTime < UnixEpoch then
     raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SDateTimeValueMayNotBeBefore);
-
-  Result := MilliSecondsBetween(LUtcWall, UnixEpoch);
+  Result := MilliSecondsBetween(ADateTime, UnixEpoch);
 end;
 
 class function TDateTimeUtilities.UnixMsToDateTime(const AUnixMs: Int64): TDateTime;
