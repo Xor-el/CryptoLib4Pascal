@@ -1,0 +1,26 @@
+CryptoLib/src/GeneralUtilities/ClpDateTimeUtilities.pas
+  s_2ded480132e39e::t_9768214e17f0b2 126
+  h_878efc035442cc 127-131,375-376
+  s_2ded480132e39e::t_65b3f1d7ead210 377,379
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.19",
+  "base_commit_sha": "6ce798025646af1e7ffc7b2c519b6a96a1fbd475",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_2ded480132e39e": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f3273b64-898b-4ebb-9781-4e3f7eed8fed",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
