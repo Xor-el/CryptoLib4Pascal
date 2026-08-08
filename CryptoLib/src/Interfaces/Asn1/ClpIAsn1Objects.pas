@@ -400,6 +400,7 @@ type
     function HasContextTag(ATagNo: Int32): Boolean; overload;
     function HasTag(ATagClass, ATagNo: Int32): Boolean;
     function HasTagClass(ATagClass: Int32): Boolean;
+    function HasTagNo(ATagNo: Int32): Boolean;
     function IsExplicit(): Boolean;
     function IsParsed(): Boolean;
     function GetObject(): IAsn1Object;

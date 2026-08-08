@@ -40,6 +40,7 @@ uses
   ClpIX509Asn1Generators,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
+  ClpCryptoLibConfig,
   CryptoLibTestBase;
 
 type
@@ -54,16 +55,36 @@ type
     function NotAfter: ITime;
     function BuildValidity: IValidity;
     function Spki: ISubjectPublicKeyInfo;
+    function CreateEmptyIssuerTbs: TCryptoLibByteArray;
+    procedure ImplPublicConstructorRejectsEmptyIssuer;
+    procedure ImplV1GeneratorRejectsEmptyIssuer;
+    procedure ImplV3GeneratorRejectsEmptyIssuer;
+  protected
+    procedure SetUp; override;
+    procedure TearDown; override;
   published
     procedure TestParseRejectsEmptyIssuer;
     procedure TestPublicConstructorRejectsEmptyIssuer;
     procedure TestV1GeneratorRejectsEmptyIssuer;
     procedure TestV3GeneratorRejectsEmptyIssuer;
+    procedure TestParseAcceptsEmptyIssuerWhenAllowed;
   end;
 
 implementation
 
 { TTbsCertificateIssuerTest }
+
+procedure TTbsCertificateIssuerTest.SetUp;
+begin
+  inherited SetUp;
+  TCryptoLibConfig.X509.ResetToDefaults();
+end;
+
+procedure TTbsCertificateIssuerTest.TearDown;
+begin
+  TCryptoLibConfig.X509.ResetToDefaults();
+  inherited TearDown;
+end;
 
 function TTbsCertificateIssuerTest.SigAlg: IAlgorithmIdentifier;
 begin
@@ -103,11 +124,10 @@ begin
     TDerBitString.Create(TCryptoLibByteArray.Create(0)) as IDerBitString);
 end;
 
-procedure TTbsCertificateIssuerTest.TestParseRejectsEmptyIssuer;
+function TTbsCertificateIssuerTest.CreateEmptyIssuerTbs: TCryptoLibByteArray;
 var
   LVec: IAsn1EncodableVector;
   LSeq: IDerSequence;
-  LEncoded: TCryptoLibByteArray;
 begin
   // v1 TBSCertificate carrying an empty issuer DN
   LVec := TAsn1EncodableVector.Create();
@@ -118,7 +138,14 @@ begin
   LVec.Add(SubjectName);
   LVec.Add(Spki);
   LSeq := TDerSequence.Create(LVec);
-  LEncoded := LSeq.GetEncoded(TAsn1Encodable.Der);
+  Result := LSeq.GetEncoded(TAsn1Encodable.Der);
+end;
+
+procedure TTbsCertificateIssuerTest.TestParseRejectsEmptyIssuer;
+var
+  LEncoded: TCryptoLibByteArray;
+begin
+  LEncoded := CreateEmptyIssuerTbs;
 
   try
     TTbsCertificateStructure.GetInstance(LEncoded);
@@ -129,7 +156,42 @@ begin
   end;
 end;
 
+procedure TTbsCertificateIssuerTest.TestParseAcceptsEmptyIssuerWhenAllowed;
+var
+  LEncoded: TCryptoLibByteArray;
+  LTbs: ITbsCertificateStructure;
+begin
+  LEncoded := CreateEmptyIssuerTbs;
+
+  TCryptoLibConfig.X509.AllowEmptyIssuerCert := True;
+
+  // the read-side concession: the parse accepts the empty issuer and preserves the encoding
+  LTbs := TTbsCertificateStructure.GetInstance(LEncoded);
+  CheckTrue(LTbs.Issuer.IsEmpty, 'issuer not empty');
+  CheckTrue(AreEqual(LEncoded, LTbs.GetEncoded(TAsn1Encodable.Der)), 'encoding not preserved');
+
+  // generation stays strict regardless of the switch
+  ImplPublicConstructorRejectsEmptyIssuer;
+  ImplV1GeneratorRejectsEmptyIssuer;
+  ImplV3GeneratorRejectsEmptyIssuer;
+end;
+
 procedure TTbsCertificateIssuerTest.TestPublicConstructorRejectsEmptyIssuer;
+begin
+  ImplPublicConstructorRejectsEmptyIssuer;
+end;
+
+procedure TTbsCertificateIssuerTest.TestV1GeneratorRejectsEmptyIssuer;
+begin
+  ImplV1GeneratorRejectsEmptyIssuer;
+end;
+
+procedure TTbsCertificateIssuerTest.TestV3GeneratorRejectsEmptyIssuer;
+begin
+  ImplV3GeneratorRejectsEmptyIssuer;
+end;
+
+procedure TTbsCertificateIssuerTest.ImplPublicConstructorRejectsEmptyIssuer;
 begin
   try
     TTbsCertificateStructure.Create(TDerInteger.Two, TDerInteger.One, SigAlg,
@@ -141,7 +203,7 @@ begin
   end;
 end;
 
-procedure TTbsCertificateIssuerTest.TestV1GeneratorRejectsEmptyIssuer;
+procedure TTbsCertificateIssuerTest.ImplV1GeneratorRejectsEmptyIssuer;
 var
   LGen: IV1TbsCertificateGenerator;
 begin
@@ -163,7 +225,7 @@ begin
   end;
 end;
 
-procedure TTbsCertificateIssuerTest.TestV3GeneratorRejectsEmptyIssuer;
+procedure TTbsCertificateIssuerTest.ImplV3GeneratorRejectsEmptyIssuer;
 var
   LGen: IV3TbsCertificateGenerator;
 begin
