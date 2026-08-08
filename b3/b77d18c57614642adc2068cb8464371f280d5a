@@ -1,0 +1,58 @@
+CryptoLib/src/Interfaces/Asn1/ClpIAsn1Objects.pas
+  s_b54f7f613401d0::t_84a945878c5a53 403
+CryptoLib.Tests/src/Asn1/X509/GeneralNameTests.pas
+  s_b54f7f613401d0::t_00a6d037a132b3 129-130
+  s_b54f7f613401d0::t_c5a473b5e8c9a9 54-55
+  s_b54f7f613401d0::t_ccf04f775fd4f7 88-90
+CryptoLib/src/Asn1/X509/ClpX509Asn1Objects.pas
+  s_b54f7f613401d0::t_ece4ef216f1de3 5421-5422
+  s_b54f7f613401d0::t_e8b9fad507923a 4420
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_b54f7f613401d0::t_d1d340b6f4bbc7 175-176
+  s_b54f7f613401d0::t_f3792c2fda52a9 117
+  s_b54f7f613401d0::t_c77833e9eb5790 129-130
+  s_b54f7f613401d0::t_5023ab87e69783 170-174,177-179
+  s_b54f7f613401d0::t_d2a26b47ac054a 537
+  s_b54f7f613401d0::t_6161a284ce4870 597-606
+CryptoLib.Tests/src/Asn1/X509/TbsCertificateIssuerTests.pas
+  s_b54f7f613401d0::t_0b253e4d161384 127,141-148,159-176,180-194
+  s_b54f7f613401d0::t_e6c6af663cb9a5 43,177-178
+  s_b54f7f613401d0::t_74b4a71587cbfc 77-88
+  s_b54f7f613401d0::t_d2a5daa9f23a3f 228
+  s_b54f7f613401d0::t_b784790d478e31 58-64,70
+  s_b54f7f613401d0::t_eb89f426bbe1fb 206
+CryptoLib/src/Asn1/ClpAsn1Objects.pas
+  s_b54f7f613401d0::t_ee3e94a9bda46d 3554-3558
+  s_b54f7f613401d0::t_e632716da6c35b 971-974
+CryptoLib.Tests/src/Pkcs/Pkcs12StoreTests.pas
+  s_b54f7f613401d0::t_6c17d127b6a2fd 1190-1205,1208,1211,1213-1223,1225-1234
+  s_b54f7f613401d0::t_20d98208e56a69 1212
+  s_b54f7f613401d0::t_5d3a8557494dc1 1206-1207,1209-1210
+  s_b54f7f613401d0::t_c0aa39eaa2c8d7 162
+  s_b54f7f613401d0::t_7e1c0d2481191f 1224
+CryptoLib/src/Math/ClpBigInteger.pas
+  s_b54f7f613401d0::t_19de80626ff951 2636
+  s_b54f7f613401d0::t_0d285e57460d5c 2647
+  s_b54f7f613401d0::t_a1e74077021571 116
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.21",
+  "base_commit_sha": "b3b77d18c57614642adc2068cb8464371f280d5a",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b54f7f613401d0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6a73fefb-1d1d-4155-96c6-27b0bb2d0251",
+        "model": "claude-opus-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
