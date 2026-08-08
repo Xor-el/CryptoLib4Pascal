@@ -968,6 +968,10 @@ type
     /// </summary>
     function HasTagClass(ATagClass: Int32): Boolean; virtual;
     /// <summary>
+    /// Check if this has the specified tag number.
+    /// </summary>
+    function HasTagNo(ATagNo: Int32): Boolean; virtual;
+    /// <summary>
     /// Check if this is explicitly tagged.
     /// </summary>
     function IsExplicit(): Boolean; virtual;
@@ -3545,6 +3549,11 @@ end;
 function TAsn1TaggedObject.HasTagClass(ATagClass: Int32): Boolean;
 begin
   Result := FTagClass = ATagClass;
+end;
+
+function TAsn1TaggedObject.HasTagNo(ATagNo: Int32): Boolean;
+begin
+  Result := FTagNo = ATagNo;
 end;
 
 function TAsn1TaggedObject.ParseBaseUniversal(ADeclaredExplicit: Boolean; ABaseTagNo: Int32): IAsn1Convertible;

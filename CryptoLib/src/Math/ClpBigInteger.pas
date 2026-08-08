@@ -113,7 +113,7 @@ type
     function GetMQuote(): UInt32;
     function CheckProbablePrime(const ACertainty: Int32; const ARandom: IRandom;
       const ARandomlySelected: Boolean): Boolean;
-    function GetLowestSetBitMaskFirst(const AFirstWordMaskX: UInt32): Int32;
+    function GetLowestSetBitMaskFirst(const AFirstWordMask: UInt32): Int32;
     function &Inc(): TBigInteger;
     function AddToMagnitude(const AMagToAdd: TCryptoLibUInt32Array): TBigInteger;
     constructor Create(const ASignum: Int32; const AMag: TCryptoLibUInt32Array; const ACheckMag: Boolean); overload;
@@ -2633,7 +2633,7 @@ begin
   Result := GetLowestSetBitMaskFirst(UInt32.MaxValue);
 end;
 
-function TBigInteger.GetLowestSetBitMaskFirst(const AFirstWordMaskX: UInt32): Int32;
+function TBigInteger.GetLowestSetBitMaskFirst(const AFirstWordMask: UInt32): Int32;
 var
   LW, LOffset: Int32;
   LWord: UInt32;
@@ -2644,7 +2644,7 @@ begin
   System.Assert(FMagnitude[0] <> 0);
 {$ENDIF DEBUG}
   System.Dec(LW);
-  LWord := FMagnitude[LW] and AFirstWordMaskX;
+  LWord := FMagnitude[LW] and AFirstWordMask;
 
   while LWord = 0 do
   begin

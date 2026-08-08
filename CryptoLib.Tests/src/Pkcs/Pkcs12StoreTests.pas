@@ -159,6 +159,7 @@ type
     procedure TestWrongPassword;
     procedure TestEmptyInputRejectedCleanly;
     procedure TestChainCycle;
+    procedure TestPkcs12Store_CertificateAliasConsistency;
   end;
 
 implementation
@@ -1184,6 +1185,51 @@ begin
   else
     raise;
   end;
+end;
+
+procedure TTestPkcs12Store.TestPkcs12Store_CertificateAliasConsistency;
+const
+  CertCount = Int32(16);
+var
+  LKeyPair: IAsymmetricCipherKeyPair;
+  LCerts: TCryptoLibGenericArray<IX509Certificate>;
+  LAbsent: IX509Certificate;
+  LStore, LInStore: IPkcs12Store;
+  LSaved: TBytes;
+  LI: Int32;
+begin
+  LKeyPair := TCertTestUtilities.GenerateRsaKeyPair(1024);
+
+  // enough entries that an alias lookup pairing keys with values by position would go wrong
+  System.SetLength(LCerts, CertCount);
+  for LI := 0 to CertCount - 1 do
+    LCerts[LI] := TCertTestUtilities.GenerateRootCert(LKeyPair,
+      TX509Name.Create('CN=alias-cert-' + IntToStr(LI)) as IX509Name);
+
+  LAbsent := TCertTestUtilities.GenerateRootCert(LKeyPair,
+    TX509Name.Create('CN=alias-cert-absent') as IX509Name);
+
+  LStore := BuildPkcs12Store;
+  for LI := 0 to CertCount - 1 do
+    LStore.SetCertificateEntry('cert-' + IntToStr(LI),
+      TX509CertificateEntry.Create(LCerts[LI]) as IX509CertificateEntry);
+
+  for LI := 0 to CertCount - 1 do
+    CheckEquals('cert-' + IntToStr(LI), LStore.GetCertificateAlias(LCerts[LI]), 'alias mismatch');
+
+  CheckEquals('', LStore.GetCertificateAlias(LAbsent), 'alias found for absent certificate');
+
+  LSaved := SaveStoreToBytes(LStore, FPasswd);
+
+  LInStore := BuildPkcs12Store;
+  LoadStoreFromBytes(LInStore, LSaved, FPasswd);
+
+  for LI := 0 to CertCount - 1 do
+    CheckEquals('cert-' + IntToStr(LI), LInStore.GetCertificateAlias(LCerts[LI]),
+      'alias mismatch after reload');
+
+  CheckEquals('', LInStore.GetCertificateAlias(LAbsent),
+    'alias found for absent certificate after reload');
 end;
 
 initialization

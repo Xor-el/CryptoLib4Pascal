@@ -51,6 +51,8 @@ type
       FIpv6f: TCryptoLibByteArray;
       FIpv6g: TCryptoLibByteArray;
       FIpv6h: TCryptoLibByteArray;
+      FIpv6i: TCryptoLibByteArray;
+      FIpv6j: TCryptoLibByteArray;
 
     procedure SetUpTestData;
     procedure CheckIPAddressEncoding(const AInputIP: String;
@@ -83,6 +85,9 @@ begin
   FIpv6f := DecodeHex('872020010db885a3000000008a2e0a090800ffffffffffff00000000000000000000');
   FIpv6g := DecodeHex('872020010db885a3000000008a2e0a090800ffffffffffffffffffffffffffffffff');
   FIpv6h := DecodeHex('872020010db885a300000000000000000000ffffffffffff00000000000000000000');
+  // prefix lengths that are not a multiple of 16, so the mask ends mid-word
+  FIpv6i := DecodeHex('872020010db885a300000000000000000000fffffffffffe00000000000000000000');
+  FIpv6j := DecodeHex('872020010db885a300000000000000000000ffffffffffff80000000000000000000');
 end;
 
 procedure TGeneralNameTest.SetUp;
@@ -121,6 +126,8 @@ begin
   CheckIPAddressEncoding('2001:0db8:85a3::8a2e:10.9.8.0/ffff:ffff:ffff::0000', FIpv6f, 'ipv6f failed');
   CheckIPAddressEncoding('2001:0db8:85a3::8a2e:10.9.8.0/128', FIpv6g, 'ipv6g failed');
   CheckIPAddressEncoding('2001:0db8:85a3::/48', FIpv6h, 'ipv6h failed');
+  CheckIPAddressEncoding('2001:0db8:85a3::/47', FIpv6i, 'ipv6i failed');
+  CheckIPAddressEncoding('2001:0db8:85a3::/49', FIpv6j, 'ipv6j failed');
 end;
 
 initialization

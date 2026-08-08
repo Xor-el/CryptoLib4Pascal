@@ -4417,7 +4417,7 @@ begin
   TAsn1Utilities.RequireEndOfSequence(ASeq, LPos);
 
   // RFC 5280 sec. 4.1.2.4: certificate issuer MUST be a non-empty DN.
-  if FIssuer.IsEmpty then
+  if FIssuer.IsEmpty and not TCryptoLibConfig.X509.AllowEmptyIssuerCert then
     raise EArgumentCryptoLibException.CreateRes(@SCertificateIssuerEmptyDN);
 
   FSeq := ASeq;
@@ -5418,7 +5418,8 @@ begin
   end;
   if LBits > 0 then
   begin
-    LRes[LResPos] := $FFFF shr (16 - LBits);
+    // the trailing word keeps its leading LBits set, so invert the low (16 - LBits) run
+    LRes[LResPos] := ($FFFF shr LBits) xor $FFFF;
   end;
   Result := LRes;
 end;

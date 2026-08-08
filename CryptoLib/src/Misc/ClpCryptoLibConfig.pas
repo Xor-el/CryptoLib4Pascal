@@ -114,6 +114,7 @@ type
     FAllowLenientRfc822Name: Boolean;
     FAllowLenientIPAddressMask: Boolean;
     FAllowNonDerTbsCertificate: Boolean;
+    FAllowEmptyIssuerCert: Boolean;
 
     class function GetMaxPolicyNodes: Int32; static;
     class procedure SetMaxPolicyNodes(AValue: Int32); static;
@@ -125,6 +126,8 @@ type
     class procedure SetAllowLenientIPAddressMask(AValue: Boolean); static;
     class function GetAllowNonDerTbsCertificate: Boolean; static;
     class procedure SetAllowNonDerTbsCertificate(AValue: Boolean); static;
+    class function GetAllowEmptyIssuerCert: Boolean; static;
+    class procedure SetAllowEmptyIssuerCert(AValue: Boolean); static;
 
   public
     /// <summary>Restores this area's settings to their defaults.</summary>
@@ -164,6 +167,16 @@ type
     /// </summary>
     class property AllowNonDerTbsCertificate: Boolean read GetAllowNonDerTbsCertificate
       write SetAllowNonDerTbsCertificate;
+
+    /// <summary>
+    /// Parses a certificate whose issuer is an empty distinguished name, rather than rejecting it.
+    /// RFC 5280 sec. 4.1.2.4 requires a non-empty issuer, but profiles that use a self-signed
+    /// certificate purely as an identity carrier place no requirement on the field and such
+    /// certificates are in circulation. Generating a certificate still demands a non-empty issuer
+    /// unconditionally. Off by default.
+    /// </summary>
+    class property AllowEmptyIssuerCert: Boolean read GetAllowEmptyIssuerCert
+      write SetAllowEmptyIssuerCert;
   end;
 
   /// <summary>Class reference, so the settings are reachable without an instance.</summary>
@@ -521,6 +534,7 @@ begin
   FAllowLenientRfc822Name := False;
   FAllowLenientIPAddressMask := False;
   FAllowNonDerTbsCertificate := False;
+  FAllowEmptyIssuerCert := False;
 end;
 
 class function TX509Config.GetMaxPolicyNodes: Int32;
@@ -578,6 +592,16 @@ end;
 class procedure TX509Config.SetAllowNonDerTbsCertificate(AValue: Boolean);
 begin
   FAllowNonDerTbsCertificate := AValue;
+end;
+
+class function TX509Config.GetAllowEmptyIssuerCert: Boolean;
+begin
+  Result := FAllowEmptyIssuerCert;
+end;
+
+class procedure TX509Config.SetAllowEmptyIssuerCert(AValue: Boolean);
+begin
+  FAllowEmptyIssuerCert := AValue;
 end;
 
 { TDHConfig }
