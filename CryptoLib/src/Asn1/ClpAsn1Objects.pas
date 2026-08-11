@@ -23,6 +23,7 @@ interface
 uses
   Classes,
   SysUtils,
+  SyncObjs,
   Math,
   DateUtils,
   ClpBitOperations,
@@ -227,6 +228,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -531,6 +533,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -683,6 +686,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1159,6 +1163,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1352,6 +1357,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1707,6 +1713,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1796,6 +1803,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1840,6 +1848,7 @@ type
   strict private
     class var
       FCache: TCryptoLibGenericArray<IDerEnumerated>;
+      FCacheLock: TCriticalSection;
     var
       FContents: TCryptoLibByteArray;
       FStart: Int32;
@@ -1848,6 +1857,7 @@ type
     /// Class constructor to initialize static fields.
     /// </summary>
     class constructor Create;
+    class destructor Destroy;
   strict protected
     function GetValue(): TBigInteger;
     function GetIntValueExact(): Int32;
@@ -1861,6 +1871,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1913,6 +1924,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -1940,6 +1952,7 @@ type
   TDerNull = class(TAsn1Null, IDerNull)
   strict private
     class var FInstance: IDerNull;
+    class constructor Create;
     class function GetInstance: IDerNull; static;
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
@@ -1965,6 +1978,7 @@ type
       LongLimit = Int64((Int64.MaxValue shr 7) - $7F);
     class var
       FCache: TCryptoLibGenericArray<IDerObjectIdentifier>;
+      FCacheLock: TCriticalSection;
     var
       FContents: TCryptoLibByteArray;
       FIdentifier: String;
@@ -1977,6 +1991,7 @@ type
     class function CreatePrimitive(const AContents: TCryptoLibByteArray; AContentsLength: Int32;
       AClone: Boolean): IAsn1Object; overload; static;
     class constructor Create;
+    class destructor Destroy;
   strict protected
     function Asn1Equals(const AAsn1Object: IAsn1Object): Boolean; override;
     function Asn1GetHashCode(): Int32; override;
@@ -1988,6 +2003,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2035,6 +2051,7 @@ type
       LongLimit = Int64((Int64.MaxValue shr 7) - $7F);
     class var
       FCache: TCryptoLibGenericArray<IAsn1RelativeOid>;
+      FCacheLock: TCriticalSection;
     var
       FContents: TCryptoLibByteArray;
       FIdentifier: String;
@@ -2063,6 +2080,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2072,6 +2090,7 @@ type
       end;
   public
     class constructor Create;
+    class destructor Destroy;
     constructor Create(const AIdentifier: String); overload;
     class function FromContents(const AContents: TCryptoLibByteArray): IAsn1RelativeOid; static;
     class function GetInstance(const AObj: TObject): IAsn1RelativeOid; overload; static;
@@ -2128,6 +2147,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2183,6 +2203,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2269,6 +2290,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2317,6 +2339,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2396,6 +2419,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2472,6 +2496,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2575,6 +2600,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2783,6 +2809,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2872,6 +2899,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -2964,6 +2992,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -3043,6 +3072,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -3118,6 +3148,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -3198,6 +3229,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -3271,6 +3303,7 @@ type
       Meta = class sealed(TAsn1UniversalType, IAsn1UniversalType)
       strict private
         class var FInstance: IAsn1UniversalType;
+        class constructor Create;
         class function GetInstance: IAsn1UniversalType; static;
         constructor Create;
       strict protected
@@ -7887,6 +7920,12 @@ end;
 class constructor TDerEnumerated.Create;
 begin
   System.SetLength(FCache, 16);
+  FCacheLock := TCriticalSection.Create;
+end;
+
+class destructor TDerEnumerated.Destroy;
+begin
+  FCacheLock.Free;
 end;
 
 class function TDerEnumerated.GetInstance(const AObj: TObject): IDerEnumerated;
@@ -8152,13 +8191,18 @@ begin
     Exit;
   end;
 
-  LPossibleMatch := FCache[LValue];
-  if LPossibleMatch = nil then
-  begin
-    LPossibleMatch := TDerEnumerated.Create(AContents, AClone);
-    FCache[LValue] := LPossibleMatch;
+  FCacheLock.Enter;
+  try
+    LPossibleMatch := FCache[LValue];
+    if LPossibleMatch = nil then
+    begin
+      LPossibleMatch := TDerEnumerated.Create(AContents, AClone);
+      FCache[LValue] := LPossibleMatch;
+    end;
+    Result := LPossibleMatch;
+  finally
+    FCacheLock.Leave;
   end;
-  Result := LPossibleMatch;
 end;
 
 class function TDerEnumerated.CreatePrimitive(const ADefIn: TAsn1DefiniteLengthInputStream): IAsn1Object;
@@ -8327,10 +8371,13 @@ begin
   inherited Create();
 end;
 
+class constructor TDerNull.Create;
+begin
+  FInstance := TDerNull.Create;
+end;
+
 class function TDerNull.GetInstance: IDerNull;
 begin
-  if FInstance = nil then
-    FInstance := TDerNull.Create;
   Result := FInstance;
 end;
 
@@ -8407,38 +8454,43 @@ begin
   LIndex := LIndex xor (LIndex shr 10);
   LIndex := LIndex and 1023;
 
-  if System.Length(FCache) = 0 then
-    System.SetLength(FCache, 1024);
+  FCacheLock.Enter;
+  try
+    if System.Length(FCache) = 0 then
+      System.SetLength(FCache, 1024);
 
-  LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
-  begin
-    Result := LOriginalEntry;
-    Exit;
-  end;
-
-  if not TAsn1RelativeOid.IsValidContents(AContents, AContentsLength) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidOidContents);
-
-  if AClone or (System.Length(AContents) <> AContentsLength) then
-    LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
-  else
-    LStorage := AContents;
-
-  LNewEntry := TDerObjectIdentifier.Create(LStorage, '');
-
-  LExchangedEntry := FCache[LIndex];
-  if LExchangedEntry <> LOriginalEntry then
-  begin
-    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
+    LOriginalEntry := FCache[LIndex];
+    if (LOriginalEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LOriginalEntry.Contents)) then
     begin
-      Result := LExchangedEntry;
+      Result := LOriginalEntry;
       Exit;
     end;
-  end;
 
-  FCache[LIndex] := LNewEntry;
-  Result := LNewEntry;
+    if not TAsn1RelativeOid.IsValidContents(AContents, AContentsLength) then
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidOidContents);
+
+    if AClone or (System.Length(AContents) <> AContentsLength) then
+      LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
+    else
+      LStorage := AContents;
+
+    LNewEntry := TDerObjectIdentifier.Create(LStorage, '');
+
+    LExchangedEntry := FCache[LIndex];
+    if LExchangedEntry <> LOriginalEntry then
+    begin
+      if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
+      begin
+        Result := LExchangedEntry;
+        Exit;
+      end;
+    end;
+
+    FCache[LIndex] := LNewEntry;
+    Result := LNewEntry;
+  finally
+    FCacheLock.Leave;
+  end;
 end;
 
 class function TDerObjectIdentifier.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
@@ -8477,6 +8529,12 @@ end;
 class constructor TDerObjectIdentifier.Create;
 begin
   System.SetLength(FCache, 1024);
+  FCacheLock := TCriticalSection.Create;
+end;
+
+class destructor TDerObjectIdentifier.Destroy;
+begin
+  FCacheLock.Free;
 end;
 
 constructor TDerObjectIdentifier.Create(const AContents: TCryptoLibByteArray; const AIdentifier: String);
@@ -8988,6 +9046,12 @@ end;
 class constructor TAsn1RelativeOid.Create;
 begin
   System.SetLength(FCache, 64);
+  FCacheLock := TCriticalSection.Create;
+end;
+
+class destructor TAsn1RelativeOid.Destroy;
+begin
+  FCacheLock.Free;
 end;
 
 function TAsn1RelativeOid.GetContents(): TCryptoLibByteArray;
@@ -9403,40 +9467,45 @@ begin
   LIndex := LIndex xor (LIndex shr 6);
   LIndex := LIndex and 63;
 
-  if System.Length(FCache) = 0 then
-    System.SetLength(FCache, 64);
+  FCacheLock.Enter;
+  try
+    if System.Length(FCache) = 0 then
+      System.SetLength(FCache, 64);
 
-  LOriginalEntry := FCache[LIndex];
-  if (LOriginalEntry <> nil) and (System.Length(LOriginalEntry.Contents) = AContentsLength) and
-    ((AContentsLength = 0) or CompareMem(@LOriginalEntry.Contents[0], @AContents[0],
-    AContentsLength * SizeOf(Byte))) then
-  begin
-    Result := LOriginalEntry;
-    Exit;
-  end;
-
-  if not IsValidContents(AContents, AContentsLength) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidRelativeOidContents);
-
-  if AClone or (System.Length(AContents) <> AContentsLength) then
-    LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
-  else
-    LStorage := AContents;
-
-  LNewEntry := TAsn1RelativeOid.Create(LStorage, '');
-
-  LExchangedEntry := FCache[LIndex];
-  if LExchangedEntry <> LOriginalEntry then
-  begin
-    if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
+    LOriginalEntry := FCache[LIndex];
+    if (LOriginalEntry <> nil) and (System.Length(LOriginalEntry.Contents) = AContentsLength) and
+      ((AContentsLength = 0) or CompareMem(@LOriginalEntry.Contents[0], @AContents[0],
+      AContentsLength * SizeOf(Byte))) then
     begin
-      Result := LExchangedEntry;
+      Result := LOriginalEntry;
       Exit;
     end;
-  end;
 
-  FCache[LIndex] := LNewEntry;
-  Result := LNewEntry;
+    if not IsValidContents(AContents, AContentsLength) then
+      raise EArgumentCryptoLibException.CreateRes(@SInvalidRelativeOidContents);
+
+    if AClone or (System.Length(AContents) <> AContentsLength) then
+      LStorage := TArrayUtilities.CopyOfRange<Byte>(AContents, 0, AContentsLength)
+    else
+      LStorage := AContents;
+
+    LNewEntry := TAsn1RelativeOid.Create(LStorage, '');
+
+    LExchangedEntry := FCache[LIndex];
+    if LExchangedEntry <> LOriginalEntry then
+    begin
+      if (LExchangedEntry <> nil) and (TArrayUtilities.AreEqual(AContents, LExchangedEntry.Contents)) then
+      begin
+        Result := LExchangedEntry;
+        Exit;
+      end;
+    end;
+
+    FCache[LIndex] := LNewEntry;
+    Result := LNewEntry;
+  finally
+    FCacheLock.Leave;
+  end;
 end;
 
 class function TAsn1RelativeOid.CreatePrimitive(const AContents: TCryptoLibByteArray; AClone: Boolean): IAsn1Object;
@@ -12873,10 +12942,13 @@ begin
   inherited Create(TDerBoolean, TAsn1Tags.Boolean);
 end;
 
+class constructor TDerBoolean.Meta.Create;
+begin
+  FInstance := TDerBoolean.Meta.Create;
+end;
+
 class function TDerBoolean.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerBoolean.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12892,10 +12964,13 @@ begin
   inherited Create(TDerInteger, TAsn1Tags.Integer);
 end;
 
+class constructor TDerInteger.Meta.Create;
+begin
+  FInstance := TDerInteger.Meta.Create;
+end;
+
 class function TDerInteger.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerInteger.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12911,10 +12986,13 @@ begin
   inherited Create(TAsn1Null, TAsn1Tags.Null);
 end;
 
+class constructor TAsn1Null.Meta.Create;
+begin
+  FInstance := TAsn1Null.Meta.Create;
+end;
+
 class function TAsn1Null.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1Null.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12931,10 +13009,13 @@ begin
   inherited Create(TDerObjectIdentifier, TAsn1Tags.ObjectIdentifier);
 end;
 
+class constructor TDerObjectIdentifier.Meta.Create;
+begin
+  FInstance := TDerObjectIdentifier.Meta.Create;
+end;
+
 class function TDerObjectIdentifier.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerObjectIdentifier.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12950,10 +13031,13 @@ begin
   inherited Create(TDerEnumerated, TAsn1Tags.Enumerated);
 end;
 
+class constructor TDerEnumerated.Meta.Create;
+begin
+  FInstance := TDerEnumerated.Meta.Create;
+end;
+
 class function TDerEnumerated.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerEnumerated.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12969,10 +13053,13 @@ begin
   inherited Create(TAsn1RelativeOid, TAsn1Tags.RelativeOid);
 end;
 
+class constructor TAsn1RelativeOid.Meta.Create;
+begin
+  FInstance := TAsn1RelativeOid.Meta.Create;
+end;
+
 class function TAsn1RelativeOid.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1RelativeOid.Meta.Create;
   Result := FInstance;
 end;
 
@@ -12988,10 +13075,13 @@ begin
   inherited Create(TAsn1OctetString, TAsn1Tags.OctetString);
 end;
 
+class constructor TAsn1OctetString.Meta.Create;
+begin
+  FInstance := TAsn1OctetString.Meta.Create;
+end;
+
 class function TAsn1OctetString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1OctetString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13012,10 +13102,13 @@ begin
   inherited Create(TAsn1Sequence, TAsn1Tags.Sequence);
 end;
 
+class constructor TAsn1Sequence.Meta.Create;
+begin
+  FInstance := TAsn1Sequence.Meta.Create;
+end;
+
 class function TAsn1Sequence.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1Sequence.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13031,10 +13124,13 @@ begin
   inherited Create(TAsn1Set, TAsn1Tags.&Set);
 end;
 
+class constructor TAsn1Set.Meta.Create;
+begin
+  FInstance := TAsn1Set.Meta.Create;
+end;
+
 class function TAsn1Set.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1Set.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13151,10 +13247,13 @@ begin
   inherited Create(TDerBitString, TAsn1Tags.BitString);
 end;
 
+class constructor TDerBitString.Meta.Create;
+begin
+  FInstance := TDerBitString.Meta.Create;
+end;
+
 class function TDerBitString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerBitString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13178,10 +13277,13 @@ begin
   inherited Create(TAsn1GeneralizedTime, TAsn1Tags.GeneralizedTime);
 end;
 
+class constructor TAsn1GeneralizedTime.Meta.Create;
+begin
+  FInstance := TAsn1GeneralizedTime.Meta.Create;
+end;
+
 class function TAsn1GeneralizedTime.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1GeneralizedTime.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13197,10 +13299,13 @@ begin
   inherited Create(TAsn1UtcTime, TAsn1Tags.UtcTime);
 end;
 
+class constructor TAsn1UtcTime.Meta.Create;
+begin
+  FInstance := TAsn1UtcTime.Meta.Create;
+end;
+
 class function TAsn1UtcTime.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1UtcTime.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13216,10 +13321,13 @@ begin
   inherited Create(TAsn1ObjectDescriptor, TAsn1Tags.ObjectDescriptor);
 end;
 
+class constructor TAsn1ObjectDescriptor.Meta.Create;
+begin
+  FInstance := TAsn1ObjectDescriptor.Meta.Create;
+end;
+
 class function TAsn1ObjectDescriptor.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TAsn1ObjectDescriptor.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13243,10 +13351,13 @@ begin
   inherited Create(TDerExternal, TAsn1Tags.External);
 end;
 
+class constructor TDerExternal.Meta.Create;
+begin
+  FInstance := TDerExternal.Meta.Create;
+end;
+
 class function TDerExternal.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerExternal.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13265,10 +13376,13 @@ begin
   inherited Create(TDerUtf8String, TAsn1Tags.Utf8String);
 end;
 
+class constructor TDerUtf8String.Meta.Create;
+begin
+  FInstance := TDerUtf8String.Meta.Create;
+end;
+
 class function TDerUtf8String.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerUtf8String.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13284,10 +13398,13 @@ begin
   inherited Create(TDerNumericString, TAsn1Tags.NumericString);
 end;
 
+class constructor TDerNumericString.Meta.Create;
+begin
+  FInstance := TDerNumericString.Meta.Create;
+end;
+
 class function TDerNumericString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerNumericString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13303,10 +13420,13 @@ begin
   inherited Create(TDerPrintableString, TAsn1Tags.PrintableString);
 end;
 
+class constructor TDerPrintableString.Meta.Create;
+begin
+  FInstance := TDerPrintableString.Meta.Create;
+end;
+
 class function TDerPrintableString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerPrintableString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13322,10 +13442,13 @@ begin
   inherited Create(TDerT61String, TAsn1Tags.T61String);
 end;
 
+class constructor TDerT61String.Meta.Create;
+begin
+  FInstance := TDerT61String.Meta.Create;
+end;
+
 class function TDerT61String.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerT61String.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13341,10 +13464,13 @@ begin
   inherited Create(TDerVideotexString, TAsn1Tags.VideotexString);
 end;
 
+class constructor TDerVideotexString.Meta.Create;
+begin
+  FInstance := TDerVideotexString.Meta.Create;
+end;
+
 class function TDerVideotexString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerVideotexString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13360,10 +13486,13 @@ begin
   inherited Create(TDerIA5String, TAsn1Tags.IA5String);
 end;
 
+class constructor TDerIA5String.Meta.Create;
+begin
+  FInstance := TDerIA5String.Meta.Create;
+end;
+
 class function TDerIA5String.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerIA5String.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13379,10 +13508,13 @@ begin
   inherited Create(TDerGraphicString, TAsn1Tags.GraphicString);
 end;
 
+class constructor TDerGraphicString.Meta.Create;
+begin
+  FInstance := TDerGraphicString.Meta.Create;
+end;
+
 class function TDerGraphicString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerGraphicString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13398,10 +13530,13 @@ begin
   inherited Create(TDerVisibleString, TAsn1Tags.VisibleString);
 end;
 
+class constructor TDerVisibleString.Meta.Create;
+begin
+  FInstance := TDerVisibleString.Meta.Create;
+end;
+
 class function TDerVisibleString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerVisibleString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13417,10 +13552,13 @@ begin
   inherited Create(TDerGeneralString, TAsn1Tags.GeneralString);
 end;
 
+class constructor TDerGeneralString.Meta.Create;
+begin
+  FInstance := TDerGeneralString.Meta.Create;
+end;
+
 class function TDerGeneralString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerGeneralString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13436,10 +13574,13 @@ begin
   inherited Create(TDerUniversalString, TAsn1Tags.UniversalString);
 end;
 
+class constructor TDerUniversalString.Meta.Create;
+begin
+  FInstance := TDerUniversalString.Meta.Create;
+end;
+
 class function TDerUniversalString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerUniversalString.Meta.Create;
   Result := FInstance;
 end;
 
@@ -13455,10 +13596,13 @@ begin
   inherited Create(TDerBmpString, TAsn1Tags.BmpString);
 end;
 
+class constructor TDerBmpString.Meta.Create;
+begin
+  FInstance := TDerBmpString.Meta.Create;
+end;
+
 class function TDerBmpString.Meta.GetInstance: IAsn1UniversalType;
 begin
-  if FInstance = nil then
-    FInstance := TDerBmpString.Meta.Create;
   Result := FInstance;
 end;
 
