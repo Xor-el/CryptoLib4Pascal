@@ -1,0 +1,24 @@
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelRegistry.pas
+  s_895e0f850815c5::t_516ad6f072c310 64-68,83-84
+  s_895e0f850815c5::t_f548591c2dc253 144
+  s_895e0f850815c5::t_0a3de1c036ddbf 203-206,211
+  s_895e0f850815c5::t_264cee99c1d5dc 80-82
+  s_895e0f850815c5::t_e4c20aba2b6b72 134,139,145-156,179,194,196-197
+  s_895e0f850815c5::t_c67faa584b5a98 69-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "f034a2731f64966a61eacf48a01469e9c6ca61f3",
+  "prompts": {},
+  "sessions": {
+    "s_895e0f850815c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2199d312-3700-404a-af2a-6c1ceef5b85f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
