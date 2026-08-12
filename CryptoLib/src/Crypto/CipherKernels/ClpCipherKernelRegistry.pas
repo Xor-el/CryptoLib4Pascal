@@ -61,15 +61,27 @@ type
   ///   family with Supports() and calls its typed TryCreate. An external
   ///   consumer registers its own I&lt;X&gt;KernelFactory and resolves it
   ///   through the public GetSnapshot + a Supports walk - no framework edit and
-  ///   no central enum. Thread-safe: one TCriticalSection guards mutation and
-  ///   snapshotting; TryAcquireX snapshots under the lock then releases it before
-  ///   invoking factory TryCreate, so factory work never serialises other call
-  ///   sites.
+  ///   no central enum.
+  ///
+  ///   Thread-safety / read path: the mutable factory list (FFactories) is guarded
+  ///   by FLock and touched only by Register/Unregister, which after each mutation
+  ///   publish a fresh immutable snapshot array (copy-on-write). TryAcquireX and
+  ///   GetSnapshot read that published array under FLock but do a single reference
+  ///   load only - no per-call allocation - then release the lock before invoking
+  ///   factory TryCreate, so factory work never serialises other call sites and the
+  ///   hot path allocates nothing. The short lock keeps runtime registration safe
+  ///   against concurrent acquisition (registration remains a setup-time operation
+  ///   in practice - every built-in factory registers during unit initialisation).
   /// </summary>
   TCipherKernelRegistry = class sealed(TObject)
   strict private
     class var FLock: TCriticalSection;
     class var FFactories: TList<ICipherKernelFactory>;
+    // Immutable, copy-on-write snapshot published by Register/Unregister. Read by
+    // every acquire path via one reference load (no allocation). Never mutated in
+    // place after publication.
+    class var FSnapshot: TCryptoLibGenericArray<ICipherKernelFactory>;
+    class procedure RebuildSnapshot; static;
     class function Snapshot: TCryptoLibGenericArray<ICipherKernelFactory>; static;
     class constructor Create;
     class destructor Destroy;
@@ -119,12 +131,27 @@ class constructor TCipherKernelRegistry.Create;
 begin
   FLock := TCriticalSection.Create;
   FFactories := TList<ICipherKernelFactory>.Create;
+  FSnapshot := nil;
 end;
 
 class destructor TCipherKernelRegistry.Destroy;
 begin
+  FSnapshot := nil;
   FFactories.Free;
   FLock.Free;
+end;
+
+// Rebuild and publish the immutable snapshot (copy-on-write); caller holds FLock.
+class procedure TCipherKernelRegistry.RebuildSnapshot;
+var
+  LI, LCount: Int32;
+  LNew: TCryptoLibGenericArray<ICipherKernelFactory>;
+begin
+  LCount := FFactories.Count;
+  System.SetLength(LNew, LCount);
+  for LI := 0 to LCount - 1 do
+    LNew[LI] := FFactories[LI];
+  FSnapshot := LNew;
 end;
 
 class procedure TCipherKernelRegistry.Register(const AFactory: ICipherKernelFactory);
@@ -149,6 +176,7 @@ begin
     end;
     if not LInserted then
       FFactories.Add(AFactory);
+    RebuildSnapshot;
   finally
     FLock.Leave;
   end;
@@ -163,22 +191,24 @@ begin
   try
     LIdx := FFactories.IndexOf(AFactory);
     if LIdx >= 0 then
+    begin
       FFactories.Delete(LIdx);
+      RebuildSnapshot;
+    end;
   finally
     FLock.Leave;
   end;
 end;
 
+// Allocation-free read: one reference load of the published immutable snapshot
+// under FLock. The lock is held only for the load (no copy, no factory work), so it
+// stays uncontended, keeps runtime registration safe, and the returned reference
+// keeps that array alive for the caller's iteration after the lock is released.
 class function TCipherKernelRegistry.Snapshot: TCryptoLibGenericArray<ICipherKernelFactory>;
-var
-  LI, LCount: Int32;
 begin
   FLock.Enter;
   try
-    LCount := FFactories.Count;
-    System.SetLength(Result, LCount);
-    for LI := 0 to LCount - 1 do
-      Result[LI] := FFactories[LI];
+    Result := FSnapshot;
   finally
     FLock.Leave;
   end;
