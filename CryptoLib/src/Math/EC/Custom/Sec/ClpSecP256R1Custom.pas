@@ -25,6 +25,10 @@ uses
   ClpBigInteger,
   ClpNat256,
   ClpNat,
+  ClpFpKernelSimd,
+  ClpCTFieldValue,
+  ClpCTFieldOps,
+  ClpFpCTMultiplier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -37,7 +41,6 @@ uses
   ClpECPoint,
   ClpECLookupTables,
   ClpIFpFieldOps,
-  ClpFixedWindowCTMultiplier,
   ClpIECCommon,
   ClpIECFieldElement,
   ClpISecP256R1Custom,
@@ -55,11 +58,17 @@ type
     PExt15 = UInt32($FFFFFFFE);
   class var
     FP, FPExt: TCryptoLibUInt32Array;
-  class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); static;
-  class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); static;
+    FFa, FFb3: TFe; // value-type field reps of a (= -3) and b3 (= 3b), for the CT ladder
+  class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); overload; static;
+  class procedure AddPInvTo(AZ: PUInt32); overload; static;
+  class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); overload; static;
+  class procedure SubPInvFrom(AZ: PUInt32); overload; static;
+  class procedure MulExt(const AX, AY, AZz: TCryptoLibUInt32Array); static; inline;
+  class procedure SqrExt(const AX, AZz: TCryptoLibUInt32Array); static; inline;
   class constructor Create;
   public
-    class procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array); static;
+    class procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Add(const AX, AY: TFe; var AZ: TFe); overload; static;
     class procedure AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
     class procedure AddOne(const AX, AZ: TCryptoLibUInt32Array); static;
     class function FromBigInteger(const AX: TBigInteger): TCryptoLibUInt32Array; static;
@@ -68,19 +77,26 @@ type
     class function IsZero(const AX: TCryptoLibUInt32Array): Int32; static;
     class procedure Multiply(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
     class procedure Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array); overload; static;
+    class procedure Multiply(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); overload; static;
+    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); static;
+    class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); static;
     class procedure MultiplyAddToExt(const AX, AY, AZZ: TCryptoLibUInt32Array); static;
     class procedure Negate(const AX, AZ: TCryptoLibUInt32Array); static;
     class procedure Random(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
     class procedure RandomMult(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
-    class procedure Reduce(const AXX, AZ: TCryptoLibUInt32Array); static;
-    class procedure Reduce32(AX: UInt32; const AZ: TCryptoLibUInt32Array); static;
+    class procedure Reduce(const AXX, AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Reduce(AXX, AZ: PUInt32); overload; static;
+    class procedure Reduce32(AX: UInt32; const AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Reduce32(AX: UInt32; AZ: PUInt32); overload; static;
     class procedure Square(const AX, AZ: TCryptoLibUInt32Array); overload; static;
     class procedure Square(const AX, AZ, ATT: TCryptoLibUInt32Array); overload; static;
+    class procedure Square(const AX: TFe; var AZ: TFe; var ATT: TFeExt); overload; static;
     class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
       const AZ: TCryptoLibUInt32Array); overload; static;
     class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
       const AZ, ATT: TCryptoLibUInt32Array); overload; static;
-    class procedure Subtract(const AX, AY, AZ: TCryptoLibUInt32Array); static;
+    class procedure Subtract(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
+    class procedure Subtract(const AX, AY: TFe; var AZ: TFe); overload; static;
     class procedure SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
     class procedure Twice(const AX, AZ: TCryptoLibUInt32Array); static;
 
@@ -214,11 +230,7 @@ type
     function GetOrderBits: Int32;
     procedure GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
     procedure Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
-    procedure Square(const AX, AZ: TCryptoLibUInt32Array);
-    procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array);
     procedure Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
-    procedure MulByB3(const AX, AZ: TCryptoLibUInt32Array);
-    procedure MulByA(const AX, AZ: TCryptoLibUInt32Array);
     procedure Inv(const AX, AZ: TCryptoLibUInt32Array);
     function IsZero(const AX: TCryptoLibUInt32Array): Boolean;
     procedure RandomMult(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
@@ -227,20 +239,52 @@ type
     procedure FieldOne(const AZ: TCryptoLibUInt32Array);
   end;
 
+type
+  /// <summary>P-256 field ops for the value-type constant-time ladder (the
+  /// <see cref="TFe"/> equivalent of <see cref="TSecP256R1FpFieldOps"/>).</summary>
+  TSecP256R1Ops = class sealed(TCTFieldOpsBase)
+  public
+    class function FieldLimbs: Int32; override;
+    class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    class procedure Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    class procedure Add(const AX, AY: TFe; var AZ: TFe); override;
+    class procedure Sub(const AX, AY: TFe; var AZ: TFe); override;
+    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+  end;
+
 implementation
 
 { TSecP256R1Field }
 
 class constructor TSecP256R1Field.Create;
+var
+  LA, LB, LB3: TCryptoLibUInt32Array;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $00000000,
   $00000000, $00000000, $00000001, $FFFFFFFF);
   FPExt := TCryptoLibUInt32Array.Create($00000001, $00000000, $00000000, $FFFFFFFE,
   $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $00000001, $FFFFFFFE, $00000001, $FFFFFFFE,
   $00000001, $00000001, $FFFFFFFE, $00000002, $FFFFFFFE);
+
+  // Value-type field constants for the CT ladder: a = -3 mod p, b3 = 3b mod p.
+  System.FillChar(FFa, SizeOf(FFa), 0);
+  System.FillChar(FFb3, SizeOf(FFb3), 0);
+  LA := FromBigInteger(TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFC')));
+  System.Move(LA[0], FFa.W[0], 8 * SizeOf(UInt32));
+  LB := FromBigInteger(TBigInteger.Create(1, THexEncoder.Decode('5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B')));
+  LB3 := TNat256.Create;
+  Add(LB, LB, LB3);
+  Add(LB3, LB, LB3);
+  System.Move(LB3[0], FFb3.W[0], 8 * SizeOf(UInt32));
 end;
 
 class procedure TSecP256R1Field.AddPInvTo(const AZ: TCryptoLibUInt32Array);
+begin
+  AddPInvTo(PUInt32(@AZ[0]));
+end;
+
+class procedure TSecP256R1Field.AddPInvTo(AZ: PUInt32);
 var
   LC: Int64;
 begin
@@ -276,6 +320,11 @@ begin
 end;
 
 class procedure TSecP256R1Field.SubPInvFrom(const AZ: TCryptoLibUInt32Array);
+begin
+  SubPInvFrom(PUInt32(@AZ[0]));
+end;
+
+class procedure TSecP256R1Field.SubPInvFrom(AZ: PUInt32);
 var
   LC: Int64;
 begin
@@ -317,6 +366,15 @@ begin
   LC := TNat256.Add(AX, AY, AZ);
   if (LC <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
     AddPInvTo(AZ);
+end;
+
+class procedure TSecP256R1Field.Add(const AX, AY: TFe; var AZ: TFe);
+var
+  LC: UInt32;
+begin
+  LC := TNat256.Add(PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@AZ.W[0]));
+  if (LC <> 0) or ((AZ.W[7] = P7) and TNat256.Gte(PUInt32(@AZ.W[0]), PUInt32(@FP[0]))) then
+    AddPInvTo(PUInt32(@AZ.W[0]));
 end;
 
 class procedure TSecP256R1Field.AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
@@ -370,19 +428,59 @@ begin
   Result := Int32(TNat.EqualToZero(8, AX, 0));
 end;
 
+class procedure TSecP256R1Field.MulExt(const AX, AY, AZz: TCryptoLibUInt32Array);
+begin
+  if not TFpKernelSimd.TryMul(AX, AY, AZz, 8) then
+    TNat256.Mul(AX, AY, AZz);
+end;
+
+class procedure TSecP256R1Field.SqrExt(const AX, AZz: TCryptoLibUInt32Array);
+begin
+  if not TFpKernelSimd.TrySqr(AX, AZz, 8) then
+    TNat256.Square(AX, AZz);
+end;
+
 class procedure TSecP256R1Field.Multiply(const AX, AY, AZ: TCryptoLibUInt32Array);
 var
   LTT: TCryptoLibUInt32Array;
 begin
   LTT := TNat256.CreateExt();
-  TNat256.Mul(AX, AY, LTT);
+  MulExt(AX, AY, LTT);
   Reduce(LTT, AZ);
 end;
 
 class procedure TSecP256R1Field.Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array);
 begin
-  TNat256.Mul(AX, AY, ATT);
+  MulExt(AX, AY, ATT);
   Reduce(ATT, AZ);
+end;
+
+class procedure TSecP256R1Field.Multiply(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
+var
+  LX, LY, LZ: TCryptoLibUInt32Array;
+begin
+  if TFpKernelSimd.TryMul(PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@ATT.W[0]), 8) then
+    Reduce(PUInt32(@ATT.W[0]), PUInt32(@AZ.W[0]))
+  else
+  begin
+    LX := TNat256.Create;
+    LY := TNat256.Create;
+    LZ := TNat256.Create;
+    System.Move(AX.W[0], LX[0], 8 * SizeOf(UInt32));
+    System.Move(AY.W[0], LY[0], 8 * SizeOf(UInt32));
+    Multiply(LX, LY, LZ);
+    System.Move(LZ[0], AZ.W[0], 8 * SizeOf(UInt32));
+  end;
+end;
+
+class procedure TSecP256R1Field.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  Multiply(AX, FFa, AZ, ATT);
+end;
+
+class procedure TSecP256R1Field.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  Multiply(AX, FFb3, AZ, ATT);
 end;
 
 class procedure TSecP256R1Field.MultiplyAddToExt(const AX, AY, AZZ: TCryptoLibUInt32Array);
@@ -421,6 +519,11 @@ begin
 end;
 
 class procedure TSecP256R1Field.Reduce(const AXX, AZ: TCryptoLibUInt32Array);
+begin
+  Reduce(PUInt32(@AXX[0]), PUInt32(@AZ[0]));
+end;
+
+class procedure TSecP256R1Field.Reduce(AXX, AZ: PUInt32);
 var
   LXX08, LXX09, LXX10, LXX11, LXX12, LXX13, LXX14, LXX15: Int64;
   LT0, LT1, LT2, LT3, LT4, LT5, LT6, LT7: Int64;
@@ -481,6 +584,11 @@ begin
 end;
 
 class procedure TSecP256R1Field.Reduce32(AX: UInt32; const AZ: TCryptoLibUInt32Array);
+begin
+  Reduce32(AX, PUInt32(@AZ[0]));
+end;
+
+class procedure TSecP256R1Field.Reduce32(AX: UInt32; AZ: PUInt32);
 var
   LCc: Int64;
   LXX08: Int64;
@@ -527,7 +635,7 @@ begin
     {$ENDIF DEBUG}
   end;
 
-  if (LCc <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, FP)) then
+  if (LCc <> 0) or ((AZ[7] = P7) and TNat256.Gte(AZ, PUInt32(@FP[0]))) then
     AddPInvTo(AZ);
 end;
 
@@ -536,14 +644,30 @@ var
   LTT: TCryptoLibUInt32Array;
 begin
   LTT := TNat256.CreateExt();
-  TNat256.Square(AX, LTT);
+  SqrExt(AX, LTT);
   Reduce(LTT, AZ);
 end;
 
 class procedure TSecP256R1Field.Square(const AX, AZ, ATT: TCryptoLibUInt32Array);
 begin
-  TNat256.Square(AX, ATT);
+  SqrExt(AX, ATT);
   Reduce(ATT, AZ);
+end;
+
+class procedure TSecP256R1Field.Square(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+var
+  LX, LZ: TCryptoLibUInt32Array;
+begin
+  if TFpKernelSimd.TrySqr(PUInt32(@AX.W[0]), PUInt32(@ATT.W[0]), 8) then
+    Reduce(PUInt32(@ATT.W[0]), PUInt32(@AZ.W[0]))
+  else
+  begin
+    LX := TNat256.Create;
+    LZ := TNat256.Create;
+    System.Move(AX.W[0], LX[0], 8 * SizeOf(UInt32));
+    Square(LX, LZ);
+    System.Move(LZ[0], AZ.W[0], 8 * SizeOf(UInt32));
+  end;
 end;
 
 class procedure TSecP256R1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
@@ -555,12 +679,12 @@ begin
   Assert(AN > 0);
   {$ENDIF DEBUG}
   LTT := TNat256.CreateExt();
-  TNat256.Square(AX, LTT);
+  SqrExt(AX, LTT);
   Reduce(LTT, AZ);
   Dec(AN);
   while AN > 0 do
   begin
-    TNat256.Square(AZ, LTT);
+    SqrExt(AZ, LTT);
     Reduce(LTT, AZ);
     Dec(AN);
   end;
@@ -572,12 +696,12 @@ begin
   {$IFDEF DEBUG}
   Assert(AN > 0);
   {$ENDIF DEBUG}
-  TNat256.Square(AX, ATT);
+  SqrExt(AX, ATT);
   Reduce(ATT, AZ);
   Dec(AN);
   while AN > 0 do
   begin
-    TNat256.Square(AZ, ATT);
+    SqrExt(AZ, ATT);
     Reduce(ATT, AZ);
     Dec(AN);
   end;
@@ -590,6 +714,15 @@ begin
   LC := TNat256.Sub(AX, AY, AZ);
   if LC <> 0 then
     SubPInvFrom(AZ);
+end;
+
+class procedure TSecP256R1Field.Subtract(const AX, AY: TFe; var AZ: TFe);
+var
+  LC: Int32;
+begin
+  LC := TNat256.Sub(PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@AZ.W[0]));
+  if LC <> 0 then
+    SubPInvFrom(PUInt32(@AZ.W[0]));
 end;
 
 class procedure TSecP256R1Field.SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
@@ -1242,7 +1375,7 @@ var
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP256R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFixedWindowCTMultiplier.Create(LFieldOps) as IECMultiplier;
+  Result := TFpCTMultiplier<TSecP256R1Ops>.Create(LFieldOps);
 end;
 
 { TSecP256R1FpFieldOps }
@@ -1283,29 +1416,9 @@ begin
   TSecP256R1Field.Multiply(AX, AY, AZ);
 end;
 
-procedure TSecP256R1FpFieldOps.Square(const AX, AZ: TCryptoLibUInt32Array);
-begin
-  TSecP256R1Field.Square(AX, AZ);
-end;
-
-procedure TSecP256R1FpFieldOps.Add(const AX, AY, AZ: TCryptoLibUInt32Array);
-begin
-  TSecP256R1Field.Add(AX, AY, AZ);
-end;
-
 procedure TSecP256R1FpFieldOps.Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
 begin
   TSecP256R1Field.Subtract(AX, AY, AZ);
-end;
-
-procedure TSecP256R1FpFieldOps.MulByB3(const AX, AZ: TCryptoLibUInt32Array);
-begin
-  TSecP256R1Field.Multiply(AX, FB3, AZ);
-end;
-
-procedure TSecP256R1FpFieldOps.MulByA(const AX, AZ: TCryptoLibUInt32Array);
-begin
-  TSecP256R1Field.Multiply(AX, FA, AZ);
 end;
 
 procedure TSecP256R1FpFieldOps.Inv(const AX, AZ: TCryptoLibUInt32Array);
@@ -1338,6 +1451,43 @@ end;
 procedure TSecP256R1FpFieldOps.FieldOne(const AZ: TCryptoLibUInt32Array);
 begin
   TNat.Copy(FE_INTS, FOne, 0, AZ, 0);
+end;
+
+{ TSecP256R1Ops }
+
+class function TSecP256R1Ops.FieldLimbs: Int32;
+begin
+  Result := 8;
+end;
+
+class procedure TSecP256R1Ops.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  TSecP256R1Field.Multiply(AX, AY, AZ, ATT);
+end;
+
+class procedure TSecP256R1Ops.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  TSecP256R1Field.Square(AX, AZ, ATT);
+end;
+
+class procedure TSecP256R1Ops.Add(const AX, AY: TFe; var AZ: TFe);
+begin
+  TSecP256R1Field.Add(AX, AY, AZ);
+end;
+
+class procedure TSecP256R1Ops.Sub(const AX, AY: TFe; var AZ: TFe);
+begin
+  TSecP256R1Field.Subtract(AX, AY, AZ);
+end;
+
+class procedure TSecP256R1Ops.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  TSecP256R1Field.MulByA(AX, AZ, ATT);
+end;
+
+class procedure TSecP256R1Ops.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  TSecP256R1Field.MulByB3(AX, AZ, ATT);
 end;
 
 end.

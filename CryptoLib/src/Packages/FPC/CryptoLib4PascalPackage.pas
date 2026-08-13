@@ -279,10 +279,12 @@ uses
   ClpPkixCrlRevocationChecker, ClpPkixRevocationChecker, 
   ClpPkixAttrCertChecker, ClpRfc3281CertPathUtilities, 
   ClpPkixAttrCertPathValidator, ClpPkixAttrCertPathBuilder, 
-  ClpCryptoLibExceptions, ClpAesBitSlicedEngine, ClpHomogeneousPoint, 
-  ClpFixedWindowCTMultiplier, ClpIFpFieldOps, ClpIF2mFieldOps, 
+  ClpCryptoLibExceptions, ClpAesBitSlicedEngine, 
+  ClpIFpFieldOps, ClpIF2mFieldOps, 
   ClpLopezDahabLadder, ClpGaloisFieldUtilities, ClpAbstractBlockCipherMode, 
-  ClpAbstractAeadCipher, ClpAbstractAeadBlockCipher;
+  ClpAbstractAeadCipher, ClpAbstractAeadBlockCipher, ClpFpKernelX86Backend, 
+  ClpFpKernelSimd, ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldOps, 
+  ClpCTLadder, ClpFpCTMultiplier;
 
 implementation
 

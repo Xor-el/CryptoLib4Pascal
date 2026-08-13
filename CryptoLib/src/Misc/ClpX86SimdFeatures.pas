@@ -32,6 +32,8 @@ type
     FHasPCLMULQDQ: Boolean;
     FHasVPCLMULQDQ: Boolean;
     FHasAESNI: Boolean;
+    FHasBMI2: Boolean;
+    FHasADX: Boolean;
 
   strict private
     class function CPUHasSSE2(): Boolean; static;
@@ -44,6 +46,8 @@ type
     class function CPUHasPCLMULQDQ(): Boolean; static;
     class function CPUHasVPCLMULQDQ(): Boolean; static;
     class function CPUHasAESNI(): Boolean; static;
+    class function CPUHasBMI2(): Boolean; static;
+    class function CPUHasADX(): Boolean; static;
 
     // Clears all the "extra" CPU feature flags (SHA-NI, PCLMULQDQ,
     // VPCLMULQDQ, AES-NI). Used by ApplyBuildOverrides to give every
@@ -66,6 +70,8 @@ type
     class function HasPCLMULQDQ(): Boolean; static;
     class function HasVPCLMULQDQ(): Boolean; static;
     class function HasAESNI(): Boolean; static;
+    class function HasBMI2(): Boolean; static;
+    class function HasADX(): Boolean; static;
 
     // Picks the highest declared tier in ATiers that is <= the cached
     // FActiveSimdLevel. Falls back to TX86SimdLevel.Scalar when no tier
@@ -264,12 +270,44 @@ begin
 {$ENDIF}
 end;
 
+class function TX86SimdFeatures.CPUHasBMI2(): Boolean;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCpuId: TCpuIdResult;
+{$ENDIF}
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  CpuIdQuery(7, 0, LCpuId);
+  // BMI2 (MULX): leaf 7 subleaf 0, EBX bit 8
+  Result := (LCpuId.RegEBX and (1 shl 8)) <> 0;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TX86SimdFeatures.CPUHasADX(): Boolean;
+{$IFDEF CRYPTOLIB_X86_SIMD}
+var
+  LCpuId: TCpuIdResult;
+{$ENDIF}
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  CpuIdQuery(7, 0, LCpuId);
+  // ADX (ADCX/ADOX): leaf 7 subleaf 0, EBX bit 19
+  Result := (LCpuId.RegEBX and (1 shl 19)) <> 0;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
 class procedure TX86SimdFeatures.DisableAllExtraFeatures();
 begin
   FHasSHANI := False;
   FHasPCLMULQDQ := False;
   FHasVPCLMULQDQ := False;
   FHasAESNI := False;
+  FHasBMI2 := False;
+  FHasADX := False;
 end;
 
 class procedure TX86SimdFeatures.ProbeHardwareAndCache();
@@ -305,6 +343,8 @@ begin
   FHasSHANI      := CPUHasSHANI();
   FHasPCLMULQDQ  := CPUHasPCLMULQDQ();
   FHasVPCLMULQDQ := CPUHasVPCLMULQDQ() and LHasAVX2;  // VPCLMULQDQ needs AVX/AVX2 lanes
+  FHasBMI2       := CPUHasBMI2();
+  FHasADX        := CPUHasADX();
 end;
 
 class procedure TX86SimdFeatures.ApplyBuildOverrides();
@@ -388,6 +428,16 @@ end;
 class function TX86SimdFeatures.HasAESNI(): Boolean;
 begin
   Result := FHasAESNI;
+end;
+
+class function TX86SimdFeatures.HasBMI2(): Boolean;
+begin
+  Result := FHasBMI2;
+end;
+
+class function TX86SimdFeatures.HasADX(): Boolean;
+begin
+  Result := FHasADX;
 end;
 
 class function TX86SimdFeatures.SelectSlot(const ATiers
