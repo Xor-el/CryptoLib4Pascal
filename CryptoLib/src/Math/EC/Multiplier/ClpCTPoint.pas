@@ -14,28 +14,36 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpCTLadder;
+unit ClpCTPoint;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
+  ClpNat,
+  ClpBitOperations,
+  ClpIFpFieldOps,
+  ClpIECFieldElement,
   ClpCTFieldValue,
-  ClpCTFieldOps;
+  ClpCTFieldArith,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// Generic constant-time point arithmetic over a per-curve ops class: the
-  /// RCB2016 complete addition (Algorithm 1) and doubling (Algorithm 3) for Fp
-  /// short-Weierstrass curves in homogeneous coordinates. One body serves every
-  /// curve; <c>TOps</c> supplies the field arithmetic via the
-  /// <see cref="TCTFieldOpsBase"/> virtual class methods, so the formulas run
-  /// with no interface dispatch and every temporary is a stack
-  /// <see cref="TFe"/>. The windowed scalar loop that drives these lives in
-  /// <c>TFpCTMultiplier</c>.
+  /// Generic constant-time value-type point operations for Fp short-Weierstrass
+  /// curves in homogeneous coordinates: the RCB2016 complete group law (addition
+  /// = Algorithm 1, doubling = Algorithm 3) plus the representation helpers
+  /// (affine &lt;-&gt; projective conversion and the masked table lookup) that the
+  /// multipliers build on. One body serves every curve; <c>TOps</c> supplies the
+  /// field arithmetic via the <see cref="TCTFieldArithBase"/> virtual class
+  /// methods, so the formulas run with no interface dispatch and every temporary
+  /// is a stack <see cref="TFe"/>. The curve context needed by the conversions
+  /// (field width, one, is-zero, inverse) comes from the <c>IFpFieldOps</c>
+  /// adapter threaded in as a parameter. The windowed/comb scalar loops that
+  /// drive these live in <c>TFpCTMultiplier</c> / <c>TFpCombMultiplier</c>.
   /// </summary>
-  TCTLadder<TOps: TCTFieldOpsBase> = class sealed
+  TCTPoint<TOps: TCTFieldArithBase> = class sealed
   public
     /// <summary>RCB2016 complete addition (Algorithm 1, explicit a and b3).
     /// AR := AP + AQ in homogeneous coordinates; all temporaries are stack
@@ -43,11 +51,23 @@ type
     class procedure PointAdd(const AP, AQ: TFePoint; var AR: TFePoint); static;
     /// <summary>RCB2016 complete doubling (Algorithm 3). AR := 2*AP.</summary>
     class procedure PointDouble(const AP: TFePoint; var AR: TFePoint); static;
+    class procedure OneFe(const AFieldOps: IFpFieldOps; var AZ: TFe); static;
+    class procedure Infinity(const AFieldOps: IFpFieldOps; var AR: TFePoint); static;
+    class procedure FromAffine(const AFieldOps: IFpFieldOps;
+      const AXa, AYa: TCryptoLibUInt32Array; var AR: TFePoint); static;
+    class procedure FromAffineElt(const AFieldOps: IFpFieldOps;
+      const AX, AY: IECFieldElement; var AR: TFePoint); static;
+    class procedure ToAffine(const AFieldOps: IFpFieldOps; const AP: TFePoint;
+      const AXa, AYa: TCryptoLibUInt32Array; out AIsInfinity: Boolean); static;
+    /// <summary>Constant-time masked lookup: AR := ATable[AIndex], scanning all
+    /// ACount entries so the access pattern is scalar-independent.</summary>
+    class procedure SelectEntry(const AFieldOps: IFpFieldOps;
+      const ATable: array of TFePoint; ACount, AIndex: Int32; var AR: TFePoint); static;
   end;
 
 implementation
 
-class procedure TCTLadder<TOps>.PointAdd(const AP, AQ: TFePoint; var AR: TFePoint);
+class procedure TCTPoint<TOps>.PointAdd(const AP, AQ: TFePoint; var AR: TFePoint);
 var
   Lt0, Lt1, Lt2, Lt3, Lt4, Lt5, LX3, LY3, LZ3: TFe;
   LTT: TFeExt;
@@ -97,7 +117,7 @@ begin
   AR.Z := LZ3;
 end;
 
-class procedure TCTLadder<TOps>.PointDouble(const AP: TFePoint; var AR: TFePoint);
+class procedure TCTPoint<TOps>.PointDouble(const AP: TFePoint; var AR: TFePoint);
 var
   Lt0, Lt1, Lt2, Lt3, LX3, LY3, LZ3: TFe;
   LTT: TFeExt;
@@ -136,6 +156,94 @@ begin
   AR.X := LX3;
   AR.Y := LY3;
   AR.Z := LZ3;
+end;
+
+class procedure TCTPoint<TOps>.OneFe(const AFieldOps: IFpFieldOps; var AZ: TFe);
+var
+  LArr: TCryptoLibUInt32Array;
+begin
+  LArr := TNat.Create(AFieldOps.GetFieldInts);
+  AFieldOps.FieldOne(LArr);
+  FillChar(AZ, SizeOf(AZ), 0);
+  Move(LArr[0], AZ.W[0], AFieldOps.GetFieldInts * SizeOf(UInt32));
+end;
+
+class procedure TCTPoint<TOps>.Infinity(const AFieldOps: IFpFieldOps; var AR: TFePoint);
+begin
+  FillChar(AR, SizeOf(AR), 0);
+  OneFe(AFieldOps, AR.Y);
+end;
+
+class procedure TCTPoint<TOps>.FromAffine(const AFieldOps: IFpFieldOps;
+  const AXa, AYa: TCryptoLibUInt32Array; var AR: TFePoint);
+var
+  LN: Int32;
+begin
+  LN := AFieldOps.GetFieldInts;
+  FillChar(AR, SizeOf(AR), 0);
+  Move(AXa[0], AR.X.W[0], LN * SizeOf(UInt32));
+  Move(AYa[0], AR.Y.W[0], LN * SizeOf(UInt32));
+  OneFe(AFieldOps, AR.Z);
+end;
+
+class procedure TCTPoint<TOps>.FromAffineElt(const AFieldOps: IFpFieldOps;
+  const AX, AY: IECFieldElement; var AR: TFePoint);
+var
+  LN: Int32;
+  LXa, LYa: TCryptoLibUInt32Array;
+begin
+  LN := AFieldOps.GetFieldInts;
+  LXa := TNat.Create(LN);
+  LYa := TNat.Create(LN);
+  AFieldOps.FieldFromBigInteger(AX.ToBigInteger(), LXa);
+  AFieldOps.FieldFromBigInteger(AY.ToBigInteger(), LYa);
+  FromAffine(AFieldOps, LXa, LYa, AR);
+end;
+
+class procedure TCTPoint<TOps>.ToAffine(const AFieldOps: IFpFieldOps;
+  const AP: TFePoint; const AXa, AYa: TCryptoLibUInt32Array; out AIsInfinity: Boolean);
+var
+  LN: Int32;
+  LZarr, LZInvArr: TCryptoLibUInt32Array;
+  LZInv, LTmp: TFe;
+  LTT: TFeExt;
+begin
+  LN := AFieldOps.GetFieldInts;
+  LZarr := TNat.Create(LN);
+  Move(AP.Z.W[0], LZarr[0], LN * SizeOf(UInt32));
+  AIsInfinity := AFieldOps.IsZero(LZarr);
+  if AIsInfinity then
+    Exit;
+  LZInvArr := TNat.Create(LN);
+  AFieldOps.Inv(LZarr, LZInvArr);
+  FillChar(LZInv, SizeOf(LZInv), 0);
+  Move(LZInvArr[0], LZInv.W[0], LN * SizeOf(UInt32));
+  TOps.Mul(AP.X, LZInv, LTmp, LTT);
+  Move(LTmp.W[0], AXa[0], LN * SizeOf(UInt32));
+  TOps.Mul(AP.Y, LZInv, LTmp, LTT);
+  Move(LTmp.W[0], AYa[0], LN * SizeOf(UInt32));
+end;
+
+class procedure TCTPoint<TOps>.SelectEntry(const AFieldOps: IFpFieldOps;
+  const ATable: array of TFePoint; ACount, AIndex: Int32; var AR: TFePoint);
+var
+  LN, LI, LJ: Int32;
+  LMask: UInt32;
+  LEntry: TFePoint;
+begin
+  LN := AFieldOps.GetFieldInts;
+  FillChar(AR, SizeOf(AR), 0);
+  for LI := 0 to ACount - 1 do
+  begin
+    LEntry := ATable[LI];
+    LMask := UInt32(TBitOperations.Asr32(((LI xor AIndex) - 1), 31));
+    for LJ := 0 to LN - 1 do
+    begin
+      AR.X.W[LJ] := AR.X.W[LJ] xor (LEntry.X.W[LJ] and LMask);
+      AR.Y.W[LJ] := AR.Y.W[LJ] xor (LEntry.Y.W[LJ] and LMask);
+      AR.Z.W[LJ] := AR.Z.W[LJ] xor (LEntry.Z.W[LJ] and LMask);
+    end;
+  end;
 end;
 
 end.

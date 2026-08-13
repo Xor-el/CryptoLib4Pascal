@@ -734,9 +734,10 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldValue.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldOps.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTLadder.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldArith.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTPoint.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIF2mFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpLopezDahabLadder.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpF2mMontgomeryLadderCTMultiplier.pas"/>

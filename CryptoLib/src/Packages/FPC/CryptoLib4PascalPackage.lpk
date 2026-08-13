@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="872">
+    <Files Count="873">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3510,17 +3510,21 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpCTFieldValue"/>
       </Item869>
       <Item870>
-        <Filename Value="..\..\Math\EC\Multiplier\ClpCTFieldOps.pas"/>
-        <UnitName Value="ClpCTFieldOps"/>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpCTFieldArith.pas"/>
+        <UnitName Value="ClpCTFieldArith"/>
       </Item870>
       <Item871>
-        <Filename Value="..\..\Math\EC\Multiplier\ClpCTLadder.pas"/>
-        <UnitName Value="ClpCTLadder"/>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpCTPoint.pas"/>
+        <UnitName Value="ClpCTPoint"/>
       </Item871>
       <Item872>
         <Filename Value="..\..\Math\EC\Multiplier\ClpFpCTMultiplier.pas"/>
         <UnitName Value="ClpFpCTMultiplier"/>
       </Item872>
+      <Item873>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
+        <UnitName Value="ClpFpCombMultiplier"/>
+      </Item873>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

@@ -27,8 +27,9 @@ uses
   ClpNat,
   ClpFpKernelSimd,
   ClpCTFieldValue,
-  ClpCTFieldOps,
+  ClpCTFieldArith,
   ClpFpCTMultiplier,
+  ClpFpCombMultiplier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -58,7 +59,7 @@ type
     PExt23 = UInt32($FFFFFFFF);
   class var
     FP, FPExt, FPExtInv: TCryptoLibUInt32Array;
-    FFa, FFb3: TFe; // a (= p-3) and b3 (= 3b) field reps for the CT ladder
+    FFb3: TFe; // b3 (= 3b) field rep for the CT ladder (a = -3 folded into MulByA)
   class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); overload; static;
   class procedure AddPInvTo(AZ: PUInt32); overload; static;
   class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); overload; static;
@@ -210,6 +211,7 @@ type
     function RandomFieldElementMult(const ARandom: ISecureRandom): IECFieldElement; override;
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
+    function CreateBasePointMultiplier: IECMultiplier; override;
 
     class property Q: TBigInteger read FQ;
     class property SecP384R1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP384R1AffineZs;
@@ -239,7 +241,7 @@ type
   end;
 
 type
-  TSecP384R1Ops = class sealed(TCTFieldOpsBase)
+  TSecP384R1FieldArith = class sealed(TCTFieldArithBase)
   public
     class function FieldLimbs: Int32; override;
     class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
@@ -256,7 +258,7 @@ implementation
 
 class constructor TSecP384R1Field.Create;
 var
-  LA, LB, LB3: TCryptoLibUInt32Array;
+  LB, LB3: TCryptoLibUInt32Array;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000000, $00000000, $FFFFFFFF,
   $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
@@ -268,11 +270,8 @@ begin
   $FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
   $00000001, $FFFFFFFE, $FFFFFFFF, $00000001, $00000002);
 
-  // Value-type field constants for the CT ladder: a = -3 mod p, b3 = 3b mod p.
-  System.FillChar(FFa, SizeOf(FFa), 0);
+  // Value-type field constant for the CT ladder: b3 = 3b mod p.
   System.FillChar(FFb3, SizeOf(FFb3), 0);
-  LA := FromBigInteger(TBigInteger.Create(1, THexEncoder.Decode('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFFFF0000000000000000FFFFFFFC')));
-  System.Move(LA[0], FFa.W[0], 12 * SizeOf(UInt32));
   LB := FromBigInteger(TBigInteger.Create(1, THexEncoder.Decode('B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF')));
   LB3 := TNat.Create(12);
   Add(LB, LB, LB3);
@@ -458,8 +457,14 @@ begin
 end;
 
 class procedure TSecP384R1Field.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+var
+  Lt, LZero: TFe;
 begin
-  Multiply(AX, FFa, AZ, ATT);
+  // a = -3: -(x+x+x) via field adds, cheaper than a full multiply by FFa.
+  Add(AX, AX, Lt);
+  Add(Lt, AX, Lt);
+  System.FillChar(LZero, SizeOf(LZero), 0);
+  Subtract(LZero, Lt, AZ);
 end;
 
 class procedure TSecP384R1Field.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
@@ -1376,7 +1381,17 @@ var
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCTMultiplier<TSecP384R1Ops>.Create(LFieldOps);
+  Result := TFpCTMultiplier<TSecP384R1FieldArith>.Create(LFieldOps);
+end;
+
+function TSecP384R1Curve.CreateBasePointMultiplier: IECMultiplier;
+var
+  LCurve: IECCurve;
+  LFieldOps: IFpFieldOps;
+begin
+  LCurve := Self as IECCurve;
+  LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
+  Result := TFpCombMultiplier<TSecP384R1FieldArith>.Create(LFieldOps);
 end;
 
 { TSecP384R1FpFieldOps }
@@ -1455,39 +1470,39 @@ begin
 end;
 
 
-{ TSecP384R1Ops }
+{ TSecP384R1FieldArith }
 
-class function TSecP384R1Ops.FieldLimbs: Int32;
+class function TSecP384R1FieldArith.FieldLimbs: Int32;
 begin
   Result := 12;
 end;
 
-class procedure TSecP384R1Ops.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
+class procedure TSecP384R1FieldArith.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   TSecP384R1Field.Multiply(AX, AY, AZ, ATT);
 end;
 
-class procedure TSecP384R1Ops.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+class procedure TSecP384R1FieldArith.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   TSecP384R1Field.Square(AX, AZ, ATT);
 end;
 
-class procedure TSecP384R1Ops.Add(const AX, AY: TFe; var AZ: TFe);
+class procedure TSecP384R1FieldArith.Add(const AX, AY: TFe; var AZ: TFe);
 begin
   TSecP384R1Field.Add(AX, AY, AZ);
 end;
 
-class procedure TSecP384R1Ops.Sub(const AX, AY: TFe; var AZ: TFe);
+class procedure TSecP384R1FieldArith.Sub(const AX, AY: TFe; var AZ: TFe);
 begin
   TSecP384R1Field.Subtract(AX, AY, AZ);
 end;
 
-class procedure TSecP384R1Ops.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+class procedure TSecP384R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   TSecP384R1Field.MulByA(AX, AZ, ATT);
 end;
 
-class procedure TSecP384R1Ops.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+class procedure TSecP384R1FieldArith.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   TSecP384R1Field.MulByB3(AX, AZ, ATT);
 end;

@@ -39,7 +39,7 @@ uses
   ClpMultipliers,
   ClpIFpFieldOps,
   ClpCTFieldValue,
-  ClpCTLadder,
+  ClpCTPoint,
   ClpFpCTMultiplier,
   ClpSecP256R1Custom,
   ClpSecP256K1Custom,
@@ -309,7 +309,7 @@ var
   LNegY, LZeroArr, LYtmp: TCryptoLibUInt32Array;
   LG, LNegG, LRef2G: IECPoint;
 begin
-  // Exercise the LIVE value-type complete-addition formulas (TCTLadder) on the
+  // Exercise the LIVE value-type complete-addition formulas (TCTPoint) on the
   // exceptional inputs the end-to-end [d]Q test does not deterministically hit.
   LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
   LX9 := TCustomNamedCurves.GetByName('secp256r1');
@@ -321,8 +321,8 @@ begin
   LP := FePointFromAffine(LFO, LG);
 
   // complete Add must handle P == Q (doubling): Add(P,P) == Double(P) == 2G
-  TCTLadder<TSecP256R1Ops>.PointDouble(LP, LDbl);
-  TCTLadder<TSecP256R1Ops>.PointAdd(LP, LP, LSum);
+  TCTPoint<TSecP256R1FieldArith>.PointDouble(LP, LDbl);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LP, LSum);
   LRef2G := LWNaf.Multiply(LX9.G, TBigInteger.Two).Normalize();
   AssertPointsEqual('Double(P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LDbl));
   AssertPointsEqual('Add(P,P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LSum));
@@ -335,7 +335,7 @@ begin
   LNegY := TNat.Create(LN);
   LFO.Sub(LZeroArr, LYtmp, LNegY);
   System.Move(LNegY[0], LNeg.Y.W[0], LN * SizeOf(UInt32));
-  TCTLadder<TSecP256R1Ops>.PointAdd(LP, LNeg, LSum);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LNeg, LSum);
   CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'P+(-P)=O');
   // cross-check the affine (-P) really is the curve negation of P
   LNegG := LX9.G.Negate().Normalize();
@@ -343,13 +343,13 @@ begin
 
   // P + O == P and O + P == P
   LInf := FeInfinity(LFO);
-  TCTLadder<TSecP256R1Ops>.PointAdd(LP, LInf, LSum);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LInf, LSum);
   AssertPointsEqual('P+O=P', LG, FePointToPoint(LFO, LCurve, LSum));
-  TCTLadder<TSecP256R1Ops>.PointAdd(LInf, LP, LSum);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LP, LSum);
   AssertPointsEqual('O+P=P', LG, FePointToPoint(LFO, LCurve, LSum));
 
   // O + O == O
-  TCTLadder<TSecP256R1Ops>.PointAdd(LInf, LInf, LSum);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LInf, LSum);
   CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'O+O=O');
 end;
 
@@ -433,7 +433,7 @@ var
   begin
     Result := False;
     try
-      LMul := TFpCTMultiplier<TSecP256R1Ops>.Create(LFO, ABlindBits);
+      LMul := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFO, ABlindBits);
     except
       on E: EArgumentCryptoLibException do
         Result := True;

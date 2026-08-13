@@ -400,6 +400,7 @@ uses
   ClpCTFieldOps in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldOps.pas',
   ClpCTLadder in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTLadder.pas',
   ClpFpCTMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas',
+  ClpFpCombMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCombMultiplier.pas',
   ClpIF2mFieldOps in '..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIF2mFieldOps.pas',
   ClpLopezDahabLadder in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpLopezDahabLadder.pas',
   ClpF2mMontgomeryLadderCTMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpF2mMontgomeryLadderCTMultiplier.pas',

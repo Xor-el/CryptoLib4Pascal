@@ -33,8 +33,8 @@ uses
   ClpIECFieldElement,
   ClpIECCommon,
   ClpCTFieldValue,
-  ClpCTFieldOps,
-  ClpCTLadder,
+  ClpCTFieldArith,
+  ClpCTPoint,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -50,11 +50,11 @@ type
   /// projective coordinates,
   /// fixed processing length, masked table lookups, one unconditional add per
   /// window), but the hot loop runs over stack <see cref="TFePoint"/> records via
-  /// the generic <c>TCTLadder&lt;TOps&gt;</c> — no per-operation heap allocation
+  /// the generic <c>TCTPoint&lt;TOps&gt;</c> — no per-operation heap allocation
   /// and no interface dispatch. The curve context (order, affine conversion,
   /// inverse, field-element boxing) comes from the <c>IFpFieldOps</c> adapter.
   /// </summary>
-  TFpCTMultiplier<TOps: TCTFieldOpsBase> = class sealed(TAbstractECMultiplier, IECMultiplier)
+  TFpCTMultiplier<TOps: TCTFieldArithBase> = class sealed(TAbstractECMultiplier, IECMultiplier)
   strict private
   const
     WINDOW_BITS = Int32(4);
@@ -67,13 +67,7 @@ type
     FBlindBits: Int32;
     function GetRandom: ISecureRandom;
     procedure GenerateBlind(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
-    procedure OneFe(var AZ: TFe);
-    procedure Infinity(var AR: TFePoint);
-    procedure FromAffine(const AXa, AYa: TCryptoLibUInt32Array; var AR: TFePoint);
     procedure ScaleRandom(const AP: TFePoint; const ALambda: TFe; var AR: TFePoint);
-    procedure ToAffine(const AP: TFePoint; const AXa, AYa: TCryptoLibUInt32Array;
-      out AIsInfinity: Boolean);
-    procedure SelectEntry(const ATable: array of TFePoint; AIndex: Int32; var AR: TFePoint);
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
@@ -126,34 +120,6 @@ begin
   TPack.LE_To_UInt32(LBytes, 0, AZ, 0, FBlindBits div 32);
 end;
 
-procedure TFpCTMultiplier<TOps>.OneFe(var AZ: TFe);
-var
-  LArr: TCryptoLibUInt32Array;
-begin
-  LArr := TNat.Create(FFieldOps.GetFieldInts);
-  FFieldOps.FieldOne(LArr);
-  FillChar(AZ, SizeOf(AZ), 0);
-  Move(LArr[0], AZ.W[0], FFieldOps.GetFieldInts * SizeOf(UInt32));
-end;
-
-procedure TFpCTMultiplier<TOps>.Infinity(var AR: TFePoint);
-begin
-  FillChar(AR, SizeOf(AR), 0);
-  OneFe(AR.Y);
-end;
-
-procedure TFpCTMultiplier<TOps>.FromAffine(const AXa, AYa: TCryptoLibUInt32Array;
-  var AR: TFePoint);
-var
-  LN: Int32;
-begin
-  LN := FFieldOps.GetFieldInts;
-  FillChar(AR, SizeOf(AR), 0);
-  Move(AXa[0], AR.X.W[0], LN * SizeOf(UInt32));
-  Move(AYa[0], AR.Y.W[0], LN * SizeOf(UInt32));
-  OneFe(AR.Z);
-end;
-
 procedure TFpCTMultiplier<TOps>.ScaleRandom(const AP: TFePoint; const ALambda: TFe;
   var AR: TFePoint);
 var
@@ -162,52 +128,6 @@ begin
   TOps.Mul(AP.X, ALambda, AR.X, LTT);
   TOps.Mul(AP.Y, ALambda, AR.Y, LTT);
   TOps.Mul(AP.Z, ALambda, AR.Z, LTT);
-end;
-
-procedure TFpCTMultiplier<TOps>.ToAffine(const AP: TFePoint;
-  const AXa, AYa: TCryptoLibUInt32Array; out AIsInfinity: Boolean);
-var
-  LN: Int32;
-  LZarr, LZInvArr: TCryptoLibUInt32Array;
-  LZInv, LTmp: TFe;
-  LTT: TFeExt;
-begin
-  LN := FFieldOps.GetFieldInts;
-  LZarr := TNat.Create(LN);
-  Move(AP.Z.W[0], LZarr[0], LN * SizeOf(UInt32));
-  AIsInfinity := FFieldOps.IsZero(LZarr);
-  if AIsInfinity then
-    Exit;
-  LZInvArr := TNat.Create(LN);
-  FFieldOps.Inv(LZarr, LZInvArr);
-  FillChar(LZInv, SizeOf(LZInv), 0);
-  Move(LZInvArr[0], LZInv.W[0], LN * SizeOf(UInt32));
-  TOps.Mul(AP.X, LZInv, LTmp, LTT);
-  Move(LTmp.W[0], AXa[0], LN * SizeOf(UInt32));
-  TOps.Mul(AP.Y, LZInv, LTmp, LTT);
-  Move(LTmp.W[0], AYa[0], LN * SizeOf(UInt32));
-end;
-
-procedure TFpCTMultiplier<TOps>.SelectEntry(const ATable: array of TFePoint;
-  AIndex: Int32; var AR: TFePoint);
-var
-  LN, LI, LJ: Int32;
-  LMask: UInt32;
-  LEntry: TFePoint;
-begin
-  LN := FFieldOps.GetFieldInts;
-  FillChar(AR, SizeOf(AR), 0);
-  for LI := 0 to TABLE_SIZE - 1 do
-  begin
-    LEntry := ATable[LI];
-    LMask := UInt32(TBitOperations.Asr32(((LI xor AIndex) - 1), 31));
-    for LJ := 0 to LN - 1 do
-    begin
-      AR.X.W[LJ] := AR.X.W[LJ] xor (LEntry.X.W[LJ] and LMask);
-      AR.Y.W[LJ] := AR.Y.W[LJ] xor (LEntry.Y.W[LJ] and LMask);
-      AR.Z.W[LJ] := AR.Z.W[LJ] xor (LEntry.Z.W[LJ] and LMask);
-    end;
-  end;
 end;
 
 function TFpCTMultiplier<TOps>.MultiplyPositive(const AP: IECPoint;
@@ -244,15 +164,15 @@ begin
   FFieldOps.RandomMult(LRandom, LLambdaArr);
   FillChar(LLambda, SizeOf(LLambda), 0);
   Move(LLambdaArr[0], LLambda.W[0], LFieldInts * SizeOf(UInt32));
-  FromAffine(LXa, LYa, LBase);
+  TCTPoint<TOps>.FromAffine(FFieldOps, LXa, LYa, LBase);
   ScaleRandom(LBase, LLambda, LBase);
 
   // projective precomputation table [0]=O, [i]=[i]*base
   SetLength(LTable, TABLE_SIZE);
-  Infinity(LTable[0]);
+  TCTPoint<TOps>.Infinity(FFieldOps, LTable[0]);
   LTable[1] := LBase;
   for LI := 2 to TABLE_SIZE - 1 do
-    TCTLadder<TOps>.PointAdd(LTable[LI - 1], LBase, LTable[LI]);
+    TCTPoint<TOps>.PointAdd(LTable[LI - 1], LBase, LTable[LI]);
 
   // scalar blinding in fixed-width Nat: k' = k + r*n
   LScalarBits := FFieldOps.GetOrderBits + FBlindBits + 1;
@@ -270,11 +190,11 @@ begin
   try
     // fixed-length windowed ladder
     LWindows := (LScalarBits + WINDOW_BITS - 1) div WINDOW_BITS;
-    Infinity(LAcc);
+    TCTPoint<TOps>.Infinity(FFieldOps, LAcc);
     for LI := LWindows - 1 downto 0 do
     begin
       for LJ := 0 to WINDOW_BITS - 1 do
-        TCTLadder<TOps>.PointDouble(LAcc, LAcc);
+        TCTPoint<TOps>.PointDouble(LAcc, LAcc);
 
       // WINDOW_BITS divides 32, so a digit never spans a limb boundary
       LBit := LI * WINDOW_BITS;
@@ -282,11 +202,11 @@ begin
       LShift := LBit and 31;
       LDigit := Int32((LKPrime[LLimb] shr LShift) and UInt32(TABLE_SIZE - 1));
 
-      SelectEntry(LTable, LDigit, LSel);
-      TCTLadder<TOps>.PointAdd(LAcc, LSel, LAcc);
+      TCTPoint<TOps>.SelectEntry(FFieldOps, LTable, TABLE_SIZE, LDigit, LSel);
+      TCTPoint<TOps>.PointAdd(LAcc, LSel, LAcc);
     end;
 
-    ToAffine(LAcc, LXa, LYa, LIsInfinity);
+    TCTPoint<TOps>.ToAffine(FFieldOps, LAcc, LXa, LYa, LIsInfinity);
     if LIsInfinity then
       Exit(AP.Curve.Infinity);
 

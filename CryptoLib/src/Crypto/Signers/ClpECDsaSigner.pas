@@ -160,7 +160,7 @@ end;
 
 function TECDsaSigner.CreateBasePointMultiplier: IECMultiplier;
 begin
-  Result := TFixedPointCombMultiplier.Create();
+  Result := FKey.Parameters.Curve.GetBasePointMultiplier;
 end;
 
 class constructor TECDsaSigner.ECDsaSigner;

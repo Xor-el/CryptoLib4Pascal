@@ -14,7 +14,7 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpCTFieldOps;
+unit ClpCTFieldArith;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
@@ -27,9 +27,9 @@ type
   /// <summary>
   /// Per-curve prime-field arithmetic as a base of <c>virtual; abstract</c>
   /// class methods over <see cref="TFe"/> records; a curve overrides each op
-  /// and the generic <c>TCTLadder&lt;TOps: TCTFieldOpsBase&gt;</c> dispatches to it.
+  /// and the generic <c>TCTPoint&lt;TOps: TCTFieldArithBase&gt;</c> dispatches to it.
   /// </summary>
-  TCTFieldOpsBase = class
+  TCTFieldArithBase = class
   public
     /// <summary>uint32 limb count N for this curve (P-256 = 8).</summary>
     class function FieldLimbs: Int32; virtual; abstract;
