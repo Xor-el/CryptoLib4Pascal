@@ -21,6 +21,7 @@ unit ClpRsaParameters;
 interface
 
 uses
+  SyncObjs,
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
@@ -31,6 +32,7 @@ uses
   ClpKeyGenerationParameters,
   ClpISecureRandom,
   ClpCryptoLibConfig,
+  ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
@@ -50,10 +52,38 @@ type
   TRsaKeyParameters = class(TAsymmetricKeyParameter, IRsaKeyParameters)
 
   strict private
+  type
+    // a bounded set of moduli that already passed validation: a ring buffer that overwrites
+    // the oldest entry when full, so the memory footprint stays fixed. Not self-locking - the
+    // owner serialises access (the Miller-Rabin runs unlocked, only the ring ops are guarded).
+    TValidatedModulusRing = record
+    strict private
+    const
+      // upper bound on remembered moduli; a ring buffer overwrites the oldest entry when
+      // full, so the memory footprint stays fixed under many distinct peers
+      ValidatedModuliCacheSize = 32;
+    var
+      FEntries: TCryptoLibGenericArray<TBigInteger>;
+      FCount: Int32;
+      FNext: Int32;
+    public
+      class function Init: TValidatedModulusRing; static;
+      function Contains(const AModulus: TBigInteger): Boolean;
+      procedure Remember(const AModulus: TBigInteger);
+    end;
+
+  strict private
+    class var
+      FValidated: TValidatedModulusRing;
+      FValidatedLock: TCriticalSection;
     var
     FModulus: TBigInteger;
     FExponent: TBigInteger;
 
+    class constructor Create;
+    class destructor Destroy;
+    class function IsModulusValidated(const AModulus: TBigInteger): Boolean; static;
+    class procedure MarkModulusValidated(const AModulus: TBigInteger); static;
     class function Validate(const AModulus: TBigInteger; AIsInternal: Boolean): TBigInteger; static;
     class function GetEffectiveMaxMRTests(ABits: Int32): Int32; static;
     class function GetMRIterations(ABits: Int32): Int32; static;
@@ -179,7 +209,75 @@ type
 
 implementation
 
+{ TRsaKeyParameters.TValidatedModulusRing }
+
+class function TRsaKeyParameters.TValidatedModulusRing.Init: TValidatedModulusRing;
+begin
+  System.SetLength(Result.FEntries, ValidatedModuliCacheSize);
+  Result.FCount := 0;
+  Result.FNext := 0;
+end;
+
+function TRsaKeyParameters.TValidatedModulusRing.Contains(
+  const AModulus: TBigInteger): Boolean;
+var
+  LI: Int32;
+begin
+  Result := False;
+  for LI := 0 to FCount - 1 do
+    if FEntries[LI].Equals(AModulus) then
+      Exit(True);
+end;
+
+procedure TRsaKeyParameters.TValidatedModulusRing.Remember(
+  const AModulus: TBigInteger);
+var
+  LI: Int32;
+begin
+  // another thread may have remembered the same modulus between the caller's check and now
+  for LI := 0 to FCount - 1 do
+    if FEntries[LI].Equals(AModulus) then
+      Exit;
+  FEntries[FNext] := AModulus;
+  FNext := (FNext + 1) mod System.Length(FEntries);
+  if FCount < System.Length(FEntries) then
+    Inc(FCount);
+end;
+
 { TRsaKeyParameters }
+
+class constructor TRsaKeyParameters.Create;
+begin
+  FValidated := TValidatedModulusRing.Init;
+  FValidatedLock := TCriticalSection.Create;
+end;
+
+class destructor TRsaKeyParameters.Destroy;
+begin
+  FValidatedLock.Free;
+end;
+
+class function TRsaKeyParameters.IsModulusValidated(
+  const AModulus: TBigInteger): Boolean;
+begin
+  FValidatedLock.Enter;
+  try
+    Result := FValidated.Contains(AModulus);
+  finally
+    FValidatedLock.Leave;
+  end;
+end;
+
+class procedure TRsaKeyParameters.MarkModulusValidated(
+  const AModulus: TBigInteger);
+begin
+  FValidatedLock.Enter;
+  try
+    FValidated.Remember(AModulus);
+  finally
+    FValidatedLock.Leave;
+  end;
+end;
 
 class function TRsaKeyParameters.GetEffectiveMaxMRTests(ABits: Int32): Int32;
 begin
@@ -213,25 +311,33 @@ var
   LIterations: Int32;
   LMR: TPrimes.IMROutput;
 begin
-  if not AIsInternal then
-  begin
-    if not AModulus.TestBit(0) then
-      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsEven);
-    if AModulus.BitLength > TCryptoLibConfig.Rsa.MaxSize then
-      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusOutOfRange);
-    if TBigIntegerUtilities.HasAnySmallFactors(AModulus) then
-      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusHasSmallPrimeFactor);
-
-    LIterations := GetEffectiveMaxMRTests(AModulus.BitLength div 2);
-    if LIterations > 0 then
-    begin
-      LMR := TPrimes.EnhancedMRProbablePrimeTest(AModulus,
-        TCryptoServicesRegistrar.GetSecureRandom(), LIterations);
-      if not LMR.IsProvablyComposite then
-        raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsNotComposite);
-    end;
-  end;
   Result := AModulus;
+  if AIsInternal then
+    Exit;
+
+  // the cheap invariants always run: they are microseconds and depend on live config (MaxSize),
+  // so a modulus is still rejected when the limits change even after it was seen before
+  if not AModulus.TestBit(0) then
+    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsEven);
+  if AModulus.BitLength > TCryptoLibConfig.Rsa.MaxSize then
+    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusOutOfRange);
+  if TBigIntegerUtilities.HasAnySmallFactors(AModulus) then
+    raise EArgumentCryptoLibException.CreateRes(@SRsaModulusHasSmallPrimeFactor);
+
+  // only the expensive Miller-Rabin is memoized: a modulus that already passed it does not need
+  // it again - the server's own key across signs, a peer/root certificate across handshakes
+  if IsModulusValidated(AModulus) then
+    Exit;
+
+  LIterations := GetEffectiveMaxMRTests(AModulus.BitLength div 2);
+  if LIterations > 0 then
+  begin
+    LMR := TPrimes.EnhancedMRProbablePrimeTest(AModulus,
+      TCryptoServicesRegistrar.GetSecureRandom(), LIterations);
+    if not LMR.IsProvablyComposite then
+      raise EArgumentCryptoLibException.CreateRes(@SRsaModulusIsNotComposite);
+    MarkModulusValidated(AModulus);
+  end;
 end;
 
 constructor TRsaKeyParameters.Create(AIsPrivate: Boolean;
