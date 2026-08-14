@@ -15,7 +15,7 @@
       </SearchPaths>
       <CodeGeneration>
         <Optimizations>
-          <OptimizationLevel Value="1"/>
+          <OptimizationLevel Value="3"/>
         </Optimizations>
       </CodeGeneration>
       <Other>
