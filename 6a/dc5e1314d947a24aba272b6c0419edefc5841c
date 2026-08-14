@@ -1,0 +1,29 @@
+CryptoLib/src/Crypto/Parameters/ClpRsaParameters.pas
+  s_3957973a090260::t_eedb234fac44a8 61-65
+  s_3957973a090260::t_059605a3023574 24,35,281,331
+  s_3957973a090260::t_f761d1fc088e71 249-250,252-264,266-275,277-280
+  s_3957973a090260::t_07ec748e3686b1 70
+  s_3957973a090260::t_3ea579b101bebd 318-319,326-330,339
+  s_3957973a090260::t_6139170c5dd454 212-213,215,219-246,265,276
+  s_3957973a090260::t_4b7e517a2f0930 214,216-218
+  s_3957973a090260::t_ca2e2c9fd669b9 251
+  s_3957973a090260::t_79352790e0ba83 76,78,83-86
+  s_3957973a090260::t_bf2f8aa7929b0a 314-317,320-325,332-333,335-338
+  s_3957973a090260::t_62c44d13a93ab4 55-60,66-69,71-75,77
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6adc5e1314d947a24aba272b6c0419edefc5841c",
+  "prompts": {},
+  "sessions": {
+    "s_3957973a090260": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6deaf670-7f07-4977-8d0c-c1e8159f395d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
