@@ -92,12 +92,14 @@ type
     FOrder, FCofactor: TBigInteger;
     FCoord: Int32;
     FMultiplier: IECMultiplier;
+    FBasePointMultiplier: IECMultiplier;
     FEndomorphism: IECEndomorphism;
     FPreCompTable: TDictionary<String, IPreCompInfo>;
     FLock: TCriticalSection;
     FTableLock: TCriticalSection;
 
     function CreateDefaultMultiplier(): IECMultiplier; virtual;
+    function CreateBasePointMultiplier(): IECMultiplier; virtual;
     procedure CheckPoint(const APoint: IECPoint); virtual;
     procedure CheckPoints(const APoints: TCryptoLibGenericArray<IECPoint>); overload; virtual;
     procedure CheckPoints(const APoints: TCryptoLibGenericArray<IECPoint>;
@@ -135,6 +137,7 @@ type
     function GetA: IECFieldElement; virtual;
     function GetB: IECFieldElement; virtual;
     function GetMultiplier: IECMultiplier; virtual;
+    function GetBasePointMultiplier: IECMultiplier; virtual;
     function GetEndomorphism: IECEndomorphism; virtual;
 
     function FromBigInteger(const AX: TBigInteger): IECFieldElement; virtual; abstract;
@@ -463,6 +466,11 @@ begin
     Result := TWNafL2RMultiplier.Create() as IECMultiplier;
 end;
 
+function TECCurve.CreateBasePointMultiplier: IECMultiplier;
+begin
+  Result := TFixedPointCombMultiplier.Create() as IECMultiplier;
+end;
+
 procedure TECCurve.CheckPoint(const APoint: IECPoint);
 begin
   if (APoint = nil) or (Self as IECCurve <> APoint.Curve) then
@@ -527,6 +535,13 @@ begin
   if FMultiplier = nil then
     FMultiplier := CreateDefaultMultiplier();
   Result := FMultiplier;
+end;
+
+function TECCurve.GetBasePointMultiplier: IECMultiplier;
+begin
+  if FBasePointMultiplier = nil then
+    FBasePointMultiplier := CreateBasePointMultiplier();
+  Result := FBasePointMultiplier;
 end;
 
 function TECCurve.CreatePoint(const AX, AY: TBigInteger): IECPoint;

@@ -38,8 +38,9 @@ uses
   ClpIX9ECAsn1Objects,
   ClpMultipliers,
   ClpIFpFieldOps,
-  ClpHomogeneousPoint,
-  ClpFixedWindowCTMultiplier,
+  ClpCTFieldValue,
+  ClpCTPoint,
+  ClpFpCTMultiplier,
   ClpSecP256R1Custom,
   ClpSecP256K1Custom,
   ClpSecP384R1Custom,
@@ -70,9 +71,10 @@ type
     function MakeFieldOps(const AName: String; const ACurve: IECCurve): IFpFieldOps;
     function RandomScalar(const AN: TBigInteger): TBigInteger;
     procedure AssertPointsEqual(const AMsg: String; const AA, AB: IECPoint);
-    function HomogFromAffine(const AFO: IFpFieldOps; const AP: IECPoint): TCTHomogPoint;
-    function HomogToPoint(const AFO: IFpFieldOps; const ACurve: IECCurve;
-      const AP: TCTHomogPoint): IECPoint;
+    function FePointFromAffine(const AFO: IFpFieldOps; const AP: IECPoint): TFePoint;
+    function FePointToPoint(const AFO: IFpFieldOps; const ACurve: IECCurve;
+      const AP: TFePoint): IECPoint;
+    function FeInfinity(const AFO: IFpFieldOps): TFePoint;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -133,33 +135,62 @@ begin
   CheckEquals(True, AB.Equals(AA), AMsg);
 end;
 
-function TTestECDHPrimeConstantTime.HomogFromAffine(const AFO: IFpFieldOps;
-  const AP: IECPoint): TCTHomogPoint;
+function TTestECDHPrimeConstantTime.FePointFromAffine(const AFO: IFpFieldOps;
+  const AP: IECPoint): TFePoint;
 var
   LN: Int32;
-  LX, LY: TCryptoLibUInt32Array;
+  LX, LY, LOne: TCryptoLibUInt32Array;
   LQ: IECPoint;
 begin
   LN := AFO.GetFieldInts;
   LQ := AP.Normalize();
   LX := TNat.Create(LN);
   LY := TNat.Create(LN);
+  LOne := TNat.Create(LN);
   AFO.FieldFromBigInteger(LQ.AffineXCoord.ToBigInteger(), LX);
   AFO.FieldFromBigInteger(LQ.AffineYCoord.ToBigInteger(), LY);
-  Result := TCTHomogeneousMath.FromAffine(AFO, LX, LY);
+  AFO.FieldOne(LOne);
+  System.FillChar(Result, SizeOf(Result), 0);
+  System.Move(LX[0], Result.X.W[0], LN * SizeOf(UInt32));
+  System.Move(LY[0], Result.Y.W[0], LN * SizeOf(UInt32));
+  System.Move(LOne[0], Result.Z.W[0], LN * SizeOf(UInt32));
 end;
 
-function TTestECDHPrimeConstantTime.HomogToPoint(const AFO: IFpFieldOps;
-  const ACurve: IECCurve; const AP: TCTHomogPoint): IECPoint;
+function TTestECDHPrimeConstantTime.FeInfinity(const AFO: IFpFieldOps): TFePoint;
 var
-  LX, LY: TCryptoLibUInt32Array;
-  LIsInfinity: Boolean;
+  LN: Int32;
+  LOne: TCryptoLibUInt32Array;
 begin
-  TCTHomogeneousMath.ToAffine(AFO, AP, LX, LY, LIsInfinity);
-  if LIsInfinity then
-    Result := ACurve.Infinity
-  else
-    Result := ACurve.CreateRawPoint(AFO.CreateFieldElement(LX), AFO.CreateFieldElement(LY));
+  // identity in homogeneous coords is (0 : 1 : 0)
+  LN := AFO.GetFieldInts;
+  LOne := TNat.Create(LN);
+  AFO.FieldOne(LOne);
+  System.FillChar(Result, SizeOf(Result), 0);
+  System.Move(LOne[0], Result.Y.W[0], LN * SizeOf(UInt32));
+end;
+
+function TTestECDHPrimeConstantTime.FePointToPoint(const AFO: IFpFieldOps;
+  const ACurve: IECCurve; const AP: TFePoint): IECPoint;
+var
+  LN: Int32;
+  LZ, LZInv, LXtmp, LYtmp, LXa, LYa: TCryptoLibUInt32Array;
+begin
+  LN := AFO.GetFieldInts;
+  LZ := TNat.Create(LN);
+  System.Move(AP.Z.W[0], LZ[0], LN * SizeOf(UInt32));
+  if AFO.IsZero(LZ) then
+    Exit(ACurve.Infinity);
+  LZInv := TNat.Create(LN);
+  LXtmp := TNat.Create(LN);
+  LYtmp := TNat.Create(LN);
+  LXa := TNat.Create(LN);
+  LYa := TNat.Create(LN);
+  System.Move(AP.X.W[0], LXtmp[0], LN * SizeOf(UInt32));
+  System.Move(AP.Y.W[0], LYtmp[0], LN * SizeOf(UInt32));
+  AFO.Inv(LZ, LZInv);
+  AFO.Mul(LXtmp, LZInv, LXa);
+  AFO.Mul(LYtmp, LZInv, LYa);
+  Result := ACurve.CreateRawPoint(AFO.CreateFieldElement(LXa), AFO.CreateFieldElement(LYa));
 end;
 
 procedure TTestECDHPrimeConstantTime.TestDefaultMultiplierIsConstantTime;
@@ -168,6 +199,7 @@ var
   LI: Int32;
   LX9: IX9ECParameters;
   LMul: IECMultiplier;
+  LTypeName: String;
 begin
   LNames := CurveNames;
   for LI := 0 to System.Length(LNames) - 1 do
@@ -175,8 +207,9 @@ begin
     LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
     CheckTrue(LX9 <> nil, LNames[LI] + ' not found');
     LMul := LX9.Curve.Multiplier;
-    CheckEquals('TFixedWindowCTMultiplier', TPlatformUtilities.GetTypeName(LMul as TObject),
-      'default multiplier for ' + LNames[LI] + ' is not constant-time');
+    LTypeName := TPlatformUtilities.GetTypeName(LMul as TObject);
+    CheckTrue(Pos('CTMultiplier', LTypeName) > 0,
+      'default multiplier for ' + LNames[LI] + ' is not constant-time (' + LTypeName + ')');
   end;
 end;
 
@@ -272,10 +305,12 @@ var
   LFO: IFpFieldOps;
   LWNaf: IECMultiplier;
   LN: Int32;
-  LP, LDbl, LNeg, LSum, LInf: TCTHomogPoint;
-  LNegY, LZeroArr: TCryptoLibUInt32Array;
+  LP, LDbl, LNeg, LSum, LInf: TFePoint;
+  LNegY, LZeroArr, LYtmp: TCryptoLibUInt32Array;
   LG, LNegG, LRef2G: IECPoint;
 begin
+  // Exercise the LIVE value-type complete-addition formulas (TCTPoint) on the
+  // exceptional inputs the end-to-end [d]Q test does not deterministically hit.
   LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
   LX9 := TCustomNamedCurves.GetByName('secp256r1');
   LCurve := LX9.Curve;
@@ -283,36 +318,39 @@ begin
   LN := LFO.GetFieldInts;
 
   LG := LX9.G.Normalize();
-  LP := HomogFromAffine(LFO, LG);
+  LP := FePointFromAffine(LFO, LG);
 
   // complete Add must handle P == Q (doubling): Add(P,P) == Double(P) == 2G
-  LDbl := TCTHomogeneousMath.Double(LFO, LP);
-  LSum := TCTHomogeneousMath.Add(LFO, LP, LP);
+  TCTPoint<TSecP256R1FieldArith>.PointDouble(LP, LDbl);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LP, LSum);
   LRef2G := LWNaf.Multiply(LX9.G, TBigInteger.Two).Normalize();
-  AssertPointsEqual('Double(P)=2G', LRef2G, HomogToPoint(LFO, LCurve, LDbl));
-  AssertPointsEqual('Add(P,P)=2G', LRef2G, HomogToPoint(LFO, LCurve, LSum));
+  AssertPointsEqual('Double(P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LDbl));
+  AssertPointsEqual('Add(P,P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LSum));
 
-  // P + (-P) == O
+  // P + (-P) == O   (-P = (X : -Y : Z))
+  LNeg := LP;
+  LYtmp := TNat.Create(LN);
+  System.Move(LP.Y.W[0], LYtmp[0], LN * SizeOf(UInt32));
   LZeroArr := TNat.Create(LN);
   LNegY := TNat.Create(LN);
-  LFO.Sub(LZeroArr, HomogFromAffine(LFO, LG).Y, LNegY);
-  LNeg.X := HomogFromAffine(LFO, LG).X;
-  LNeg.Y := LNegY;
-  LNeg.Z := HomogFromAffine(LFO, LG).Z;
-  LSum := TCTHomogeneousMath.Add(LFO, LP, LNeg);
-  CheckEquals(True, HomogToPoint(LFO, LCurve, LSum).IsInfinity, 'P+(-P)=O');
+  LFO.Sub(LZeroArr, LYtmp, LNegY);
+  System.Move(LNegY[0], LNeg.Y.W[0], LN * SizeOf(UInt32));
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LNeg, LSum);
+  CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'P+(-P)=O');
   // cross-check the affine (-P) really is the curve negation of P
   LNegG := LX9.G.Negate().Normalize();
-  AssertPointsEqual('(-P) affine', LNegG, HomogToPoint(LFO, LCurve, LNeg));
+  AssertPointsEqual('(-P) affine', LNegG, FePointToPoint(LFO, LCurve, LNeg));
 
   // P + O == P and O + P == P
-  LInf := TCTHomogeneousMath.Infinity(LFO);
-  AssertPointsEqual('P+O=P', LG, HomogToPoint(LFO, LCurve, TCTHomogeneousMath.Add(LFO, LP, LInf)));
-  AssertPointsEqual('O+P=P', LG, HomogToPoint(LFO, LCurve, TCTHomogeneousMath.Add(LFO, LInf, LP)));
+  LInf := FeInfinity(LFO);
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LInf, LSum);
+  AssertPointsEqual('P+O=P', LG, FePointToPoint(LFO, LCurve, LSum));
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LP, LSum);
+  AssertPointsEqual('O+P=P', LG, FePointToPoint(LFO, LCurve, LSum));
 
   // O + O == O
-  CheckEquals(True, HomogToPoint(LFO, LCurve,
-    TCTHomogeneousMath.Add(LFO, LInf, LInf)).IsInfinity, 'O+O=O');
+  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LInf, LSum);
+  CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'O+O=O');
 end;
 
 procedure TTestECDHPrimeConstantTime.TestECDHAgreement;
@@ -395,7 +433,7 @@ var
   begin
     Result := False;
     try
-      LMul := TFixedWindowCTMultiplier.Create(LFO, ABlindBits) as IECMultiplier;
+      LMul := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFO, ABlindBits);
     except
       on E: EArgumentCryptoLibException do
         Result := True;

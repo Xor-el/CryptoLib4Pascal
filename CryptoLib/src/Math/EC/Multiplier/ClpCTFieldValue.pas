@@ -14,39 +14,45 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIFpFieldOps;
+unit ClpCTFieldValue;
 
-{$I ..\..\..\..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpBigInteger,
-  ClpISecureRandom,
-  ClpIECFieldElement,
-  ClpCryptoLibTypes;
+const
+  /// <summary>Widest field this value-type layer serves. P-521's 17 real uint32
+  /// limbs are padded to 18 (= 9 uint64) so the even-width Fp kernel can multiply
+  /// it; the 18th limb is kept zero. Smaller curves use W[0..N-1] and leave the
+  /// tail zero.</summary>
+  MAX_CT_FE_LIMBS = 18;
 
 type
   /// <summary>
-  /// Constant-time field arithmetic over a specific prime-field short-Weierstrass
-  /// curve, exposing only what the homogeneous complete-formula layer needs. Each
-  /// curve supplies an adapter over its existing (constant-time) Nat field.
+  /// One prime-field element as a fixed-size, allocation-free stack record (the
+  /// same little-endian 32-bit-limb representation as the heap arrays, just
+  /// inline). Sized for the widest curve; a given curve uses W[0..N-1]. Passed
+  /// <c>const</c>/<c>var</c> only — never returned by value on a secret-bearing
+  /// path (a by-value copy scatters unscrubbable secrets on the stack).
   /// </summary>
-  IFpFieldOps = interface(IInterface)
-    ['{6F1B2A34-5C8D-4E90-B1A2-7C3D4E5F6A7B}']
-    function GetFieldInts: Int32;
-    function GetOrderBits: Int32;
-    procedure GetOrder(const AZ: TCryptoLibUInt32Array; AInts: Int32);
+  TFe = record
+    W: array [0 .. MAX_CT_FE_LIMBS - 1] of UInt32;
+  end;
 
-    procedure Mul(const AX, AY, AZ: TCryptoLibUInt32Array);
-    procedure Sub(const AX, AY, AZ: TCryptoLibUInt32Array);
-    procedure Inv(const AX, AZ: TCryptoLibUInt32Array);
-    function IsZero(const AX: TCryptoLibUInt32Array): Boolean;
+  /// <summary>
+  /// Double-width (2N) multiply/square scratch, stack-resident. Reused across a
+  /// whole point formula rather than allocated per field op.
+  /// </summary>
+  TFeExt = record
+    W: array [0 .. 2 * MAX_CT_FE_LIMBS - 1] of UInt32;
+  end;
 
-    procedure RandomMult(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
-    procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt32Array);
-    function CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
-    procedure FieldOne(const AZ: TCryptoLibUInt32Array);
+  /// <summary>
+  /// A point in homogeneous projective coordinates with inline field-element
+  /// coordinates (no heap). Value aggregate over three <see cref="TFe"/>.
+  /// </summary>
+  TFePoint = record
+    X, Y, Z: TFe;
   end;
 
 implementation

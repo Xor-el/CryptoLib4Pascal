@@ -20,7 +20,7 @@
 
     #  Subject (must stay clean)                Control (must fire)
     1  TX25519 ladder                           (none - clean baseline)
-    2  P-256 default (TFixedWindowCTMultiplier) TWNafL2RMultiplier, same curve
+    2  P-256 default (TFpCTMultiplier value-type) TWNafL2RMultiplier, same curve
     3  sect283k1 default (F2m Montgomery ladder)TWTauNafMultiplier, same curve
     4  TAesBitSlicedEngine block                TAesEngine (T-table) block
     5  TBasicGcmMultiplier (ImplMul64) GHASH    TTables4kGcmMultiplier GHASH
@@ -589,6 +589,80 @@ begin
   Result := BuildEcOp('sect283k1', TWTauNafMultiplier.Create as IECMultiplier, ASeed);
 end;
 
+function MakeSecp256k1CT(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp256k1');
+  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp256k1WNaf(ASeed: UInt64): TDudectOp;
+begin
+  Result := BuildEcOp('secp256k1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
+end;
+
+function MakeSecp384r1CT(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp384r1');
+  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp384r1WNaf(ASeed: UInt64): TDudectOp;
+begin
+  Result := BuildEcOp('secp384r1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
+end;
+
+function MakeSecp521r1CT(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp521r1');
+  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp521r1WNaf(ASeed: UInt64): TDudectOp;
+begin
+  Result := BuildEcOp('secp521r1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
+end;
+
+{ Fixed-base comb subjects: the same TFpPointOps CT primitives as [d]Q, driven
+  through the fixed-base multiplier ([k]G on the reused generator). Paired with
+  the existing wNAF-on-G controls. }
+function MakeSecp256r1Comb(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp256r1');
+  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp256k1Comb(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp256k1');
+  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp384r1Comb(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp384r1');
+  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
+end;
+
+function MakeSecp521r1Comb(ASeed: UInt64): TDudectOp;
+var
+  LX9: IX9ECParameters;
+begin
+  LX9 := TCustomNamedCurves.GetByName('secp521r1');
+  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
+end;
+
 function MakeAesBitsliced(ASeed: UInt64): TDudectOp;
 begin
   Result := TAesOp.Create(TAesBitSlicedEngine.Create as IBlockCipher, 16, ASeed);
@@ -679,10 +753,10 @@ end;
 
 function GetDudectRows: TCtRowArray;
 begin
-  System.SetLength(Result, 7);
+  System.SetLength(Result, 14);
   Result[0] := MakeRow('X25519', 'X25519 ladder', '',
     @MakeX25519, nil, MediumCfg(UInt64($0000000000000001)));
-  Result[1] := MakeRow('P-256 [d]Q', 'FixedWindow CT', 'wNAF (var-time)',
+  Result[1] := MakeRow('P-256 [d]Q', 'value-type CT', 'wNAF (var-time)',
     @MakeP256CT, @MakeP256WNaf, ExpensiveCfg(UInt64($0000000000000002)));
   Result[2] := MakeRow('sect283k1 [d]Q', 'F2m Montgomery CT', 'WTauNAF (var-time)',
     @MakeSect283CT, @MakeSect283WTau, ExpensiveCfg(UInt64($0000000000000003)));
@@ -705,6 +779,24 @@ begin
     @MakeModInvSafe, @MakeModInvVar, MediumCfg(UInt64($0000000000000006)));
   Result[6] := MakeRow('mod-inv (wrapper)', 'safegcd wrapper (CT)', 'variable-time wrapper',
     @MakeModInvWrapperSafe, @MakeModInvWrapperVar, MediumCfg(UInt64($0000000000000007)));
+  // The remaining prime curves also run the value-type CT multiplier; measure each
+  // explicitly against its wNAF (variable-time) control.
+  Result[7] := MakeRow('secp256k1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    @MakeSecp256k1CT, @MakeSecp256k1WNaf, ExpensiveCfg(UInt64($0000000000000008)));
+  Result[8] := MakeRow('secp384r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    @MakeSecp384r1CT, @MakeSecp384r1WNaf, ExpensiveCfg(UInt64($0000000000000009)));
+  Result[9] := MakeRow('secp521r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    @MakeSecp521r1CT, @MakeSecp521r1WNaf, ExpensiveCfg(UInt64($000000000000000A)));
+  // Fixed-base comb [k]G on the reused generator: same CT primitives as [d]Q,
+  // paired against wNAF-on-G (variable-time) controls.
+  Result[10] := MakeRow('secp256r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    @MakeSecp256r1Comb, @MakeP256WNaf, ExpensiveCfg(UInt64($000000000000000B)));
+  Result[11] := MakeRow('secp256k1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    @MakeSecp256k1Comb, @MakeSecp256k1WNaf, ExpensiveCfg(UInt64($000000000000000C)));
+  Result[12] := MakeRow('secp384r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    @MakeSecp384r1Comb, @MakeSecp384r1WNaf, ExpensiveCfg(UInt64($000000000000000D)));
+  Result[13] := MakeRow('secp521r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    @MakeSecp521r1Comb, @MakeSecp521r1WNaf, ExpensiveCfg(UInt64($000000000000000E)));
 end;
 
 function MakeVg(const AName: string; AMake: TCtOpFactory;

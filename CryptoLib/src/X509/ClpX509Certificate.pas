@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   Classes,
+  SyncObjs,
   Rtti,
   Math,
   Generics.Collections,
@@ -111,6 +112,9 @@ type
       FHashValueSet: Boolean;
       FHashValue: Int32;
 
+    class var
+      FLazyLock: TCriticalSection;
+
     function GetCachedEncoding: ICachedEncoding;
     function CreateCachedEncoding(const ACert: IX509CertificateStructure): ICachedEncoding;
     function CreatePublicKey(const ACert: IX509CertificateStructure): IAsymmetricKeyParameter;
@@ -124,6 +128,9 @@ type
     function CheckSignatureValid(const AVerifier: IVerifierFactory): Boolean; virtual;
 
   public
+    class constructor Create;
+    class destructor Destroy;
+
     constructor Create(const ACertData: TCryptoLibByteArray); overload;
     constructor Create(const ACertificate: IX509CertificateStructure); overload;
 
@@ -219,6 +226,16 @@ begin
 end;
 
 { TX509Certificate }
+
+class constructor TX509Certificate.Create;
+begin
+  FLazyLock := TCriticalSection.Create;
+end;
+
+class destructor TX509Certificate.Destroy;
+begin
+  FLazyLock.Free;
+end;
 
 constructor TX509Certificate.Create(const ACertData: TCryptoLibByteArray);
 begin
@@ -367,12 +384,23 @@ begin
 end;
 
 function TX509Certificate.GetSigAlgName: String;
+var
+  LComputed: String;
 begin
-  if FSigAlgName = '' then
-  begin
-    FSigAlgName := TX509SignatureUtilities.GetSignatureName(SignatureAlgorithm);
-  end;
   Result := FSigAlgName;
+  if Result <> '' then
+    Exit;
+
+  LComputed := TX509SignatureUtilities.GetSignatureName(SignatureAlgorithm);
+
+  FLazyLock.Acquire;
+  try
+    if FSigAlgName = '' then
+      FSigAlgName := LComputed;
+    Result := FSigAlgName;
+  finally
+    FLazyLock.Release;
+  end;
 end;
 
 function TX509Certificate.GetIsCritical: Boolean;
@@ -615,13 +643,23 @@ begin
 end;
 
 function TX509Certificate.GetPublicKey: IAsymmetricKeyParameter;
+var
+  LComputed: IAsymmetricKeyParameter;
 begin
-  // Cache the public key to support repeated-use optimizations
-  if FPublicKeyValue = nil then
-  begin
-    FPublicKeyValue := CreatePublicKey(FCertificateStructure);
-  end;
   Result := FPublicKeyValue;
+  if Result <> nil then
+    Exit;
+
+  LComputed := CreatePublicKey(FCertificateStructure);
+
+  FLazyLock.Acquire;
+  try
+    if FPublicKeyValue = nil then
+      FPublicKeyValue := LComputed;
+    Result := FPublicKeyValue;
+  finally
+    FLazyLock.Release;
+  end;
 end;
 
 function TX509Certificate.CreatePublicKey(const ACert: IX509CertificateStructure): IAsymmetricKeyParameter;
@@ -635,12 +673,23 @@ begin
 end;
 
 function TX509Certificate.GetCachedEncoding: ICachedEncoding;
+var
+  LComputed: ICachedEncoding;
 begin
-  if FCachedEncoding = nil then
-  begin
-    FCachedEncoding := CreateCachedEncoding(FCertificateStructure);
-  end;
   Result := FCachedEncoding;
+  if Result <> nil then
+    Exit;
+
+  LComputed := CreateCachedEncoding(FCertificateStructure);
+
+  FLazyLock.Acquire;
+  try
+    if FCachedEncoding = nil then
+      FCachedEncoding := LComputed;
+    Result := FCachedEncoding;
+  finally
+    FLazyLock.Release;
+  end;
 end;
 
 function TX509Certificate.CreateCachedEncoding(const ACert: IX509CertificateStructure): ICachedEncoding;
@@ -667,6 +716,8 @@ var
   LThat: TX509Certificate;
   LThisEncoding, LThatEncoding: TCryptoLibByteArray;
   LSignature: IDerBitString;
+  LThisHashSet, LThatHashSet, LThisNoEncoding, LThatNoEncoding: Boolean;
+  LThisHash, LThatHash: Int32;
 begin
   if (Self AS IX509Certificate) = AOther then
   begin
@@ -682,15 +733,27 @@ begin
 
   LThat := AOther as TX509Certificate;
 
-  if FHashValueSet and LThat.FHashValueSet then
+  FLazyLock.Acquire;
+  try
+    LThisHashSet := FHashValueSet;
+    LThatHashSet := LThat.FHashValueSet;
+    LThisHash := FHashValue;
+    LThatHash := LThat.FHashValue;
+    LThisNoEncoding := FCachedEncoding = nil;
+    LThatNoEncoding := LThat.FCachedEncoding = nil;
+  finally
+    FLazyLock.Release;
+  end;
+
+  if LThisHashSet and LThatHashSet then
   begin
-    if FHashValue <> LThat.FHashValue then
+    if LThisHash <> LThatHash then
     begin
       Result := False;
       Exit;
     end;
   end
-  else if (FCachedEncoding = nil) or (LThat.FCachedEncoding = nil) then
+  else if LThisNoEncoding or LThatNoEncoding then
   begin
     LSignature := FCertificateStructure.Signature;
     if (LSignature <> nil) and (not LSignature.Equals(LThat.FCertificateStructure.Signature)) then
@@ -712,14 +775,33 @@ end;
 function TX509Certificate.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}
 var
   LEncoding: TCryptoLibByteArray;
+  LHash: Int32;
+  LNeedCompute: Boolean;
 begin
-  if not FHashValueSet then
-  begin
-    LEncoding := GetCachedEncoding().GetEncoding();
-    FHashValue := TArrayUtilities.GetArrayHashCode(LEncoding);
-    FHashValueSet := True;
+  FLazyLock.Acquire;
+  try
+    LNeedCompute := not FHashValueSet;
+    Result := FHashValue;
+  finally
+    FLazyLock.Release;
   end;
-  Result := FHashValue;
+  if not LNeedCompute then
+    Exit;
+
+  LEncoding := GetCachedEncoding().GetEncoding();
+  LHash := TArrayUtilities.GetArrayHashCode(LEncoding);
+
+  FLazyLock.Acquire;
+  try
+    if not FHashValueSet then
+    begin
+      FHashValue := LHash;
+      FHashValueSet := True;
+    end;
+    Result := FHashValue;
+  finally
+    FLazyLock.Release;
+  end;
 end;
 
 function TX509Certificate.ToString: String;

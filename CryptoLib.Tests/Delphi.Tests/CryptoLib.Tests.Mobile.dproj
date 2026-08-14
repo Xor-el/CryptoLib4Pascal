@@ -547,6 +547,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpChaChaSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpChaChaX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpChaChaArmBackend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpFpKernelSimd.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpFpKernelX86Backend.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpFpKernelArmBackend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpSalsaSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpSalsaX86Backend.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpSalsaArmBackend.pas"/>
@@ -730,8 +733,11 @@
         <DCCReference Include="..\..\CryptoLib\src\Asn1\Misc\ClpMiscObjectIdentifiers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpMultipliers.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpHomogeneousPoint.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFixedWindowCTMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldValue.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldArith.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTPoint.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIF2mFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpLopezDahabLadder.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpF2mMontgomeryLadderCTMultiplier.pas"/>

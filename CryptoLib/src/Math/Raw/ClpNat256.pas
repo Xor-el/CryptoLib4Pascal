@@ -36,6 +36,7 @@ type
     M: UInt64 = $FFFFFFFF;
   public
     class function Add(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32; overload; static;
+    class function Add(AX, AY, AZ: PUInt32): UInt32; overload; static;
     class function Add(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; overload; static;
     class function AddBothTo(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32; overload; static;
     class function AddBothTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; overload; static;
@@ -55,6 +56,7 @@ type
     class function Eq64(const AX: TCryptoLibUInt64Array; const AY: TCryptoLibUInt64Array): Boolean; static;
     class function GetBit(const AX: TCryptoLibUInt32Array; ABit: Int32): UInt32; static;
     class function Gte(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array): Boolean; overload; static;
+    class function Gte(AX, AY: PUInt32): Boolean; overload; static;
     class function Gte(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32): Boolean; overload; static;
     class function IsOne(const AX: TCryptoLibUInt32Array): Boolean; static;
     class function IsOne64(const AX: TCryptoLibUInt64Array): Boolean; static;
@@ -64,17 +66,21 @@ type
     class procedure Mul128(const AX: TCryptoLibUInt32Array; const AY128: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array); static;
     class function MulAddTo(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array): UInt32; overload; static;
     class function MulAddTo(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZz: TCryptoLibUInt32Array; AZzOff: Int32): UInt32; overload; static;
-    class function Mul33Add(AW: UInt32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt64; static;
+    class function Mul33Add(AW: UInt32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt64; overload; static;
+    class function Mul33Add(AW: UInt32; AX, AY, AZ: PUInt32): UInt64; overload; static;
     class function MulByWord(AX: UInt32; AZ: TCryptoLibUInt32Array): UInt32; static;
     class function MulByWordAddTo(AX: UInt32; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32; static;
     class function MulWordAddTo(AX: UInt32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; static;
-    class function Mul33DWordAdd(AX: UInt32; AY: UInt64; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; static;
-    class function Mul33WordAdd(AX: UInt32; AY: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; static;
+    class function Mul33DWordAdd(AX: UInt32; AY: UInt64; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; overload; static;
+    class function Mul33DWordAdd(AX: UInt32; AY: UInt64; AZ: PUInt32): UInt32; overload; static;
+    class function Mul33WordAdd(AX: UInt32; AY: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; overload; static;
+    class function Mul33WordAdd(AX: UInt32; AY: UInt32; AZ: PUInt32): UInt32; overload; static;
     class function MulWordDwordAdd(AX: UInt32; AY: UInt64; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; static;
     class function MulWord(AX: UInt32; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32; static;
     class procedure Square(const AX: TCryptoLibUInt32Array; AZz: TCryptoLibUInt32Array); overload; static;
     class procedure Square(const AX: TCryptoLibUInt32Array; AXOff: Int32; AZz: TCryptoLibUInt32Array; AZzOff: Int32); overload; static;
     class function Sub(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): Int32; overload; static;
+    class function Sub(AX, AY, AZ: PUInt32): Int32; overload; static;
     class function Sub(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): Int32; overload; static;
     class function SubBothFrom(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): Int32; static;
     class function SubFrom(const AX: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array; ACIn: Int32): Int32; overload; static;
@@ -110,6 +116,11 @@ type
 implementation
 
 class function TNat256.Add(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32;
+begin
+  Result := Add(PUInt32(@AX[0]), PUInt32(@AY[0]), PUInt32(@AZ[0]));
+end;
+
+class function TNat256.Add(AX, AY, AZ: PUInt32): UInt32;
 var
   LC: UInt64;
 begin
@@ -142,35 +153,8 @@ begin
 end;
 
 class function TNat256.Add(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
-var
-  LC: UInt64;
 begin
-  LC := 0;
-  LC := LC + (UInt64(AX[AXOff + 0]) + AY[AYOff + 0]);
-  AZ[AZOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 1]) + AY[AYOff + 1]);
-  AZ[AZOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 2]) + AY[AYOff + 2]);
-  AZ[AZOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 3]) + AY[AYOff + 3]);
-  AZ[AZOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 4]) + AY[AYOff + 4]);
-  AZ[AZOff + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 5]) + AY[AYOff + 5]);
-  AZ[AZOff + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 6]) + AY[AYOff + 6]);
-  AZ[AZOff + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (UInt64(AX[AXOff + 7]) + AY[AYOff + 7]);
-  AZ[AZOff + 7] := UInt32(LC);
-  LC := LC shr 32;
-  Result := UInt32(LC);
+  Result := Add(PUInt32(@AX[AXOff]), PUInt32(@AY[AYOff]), PUInt32(@AZ[AZOff]));
 end;
 
 class function TNat256.AddBothTo(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): UInt32;
@@ -456,6 +440,11 @@ begin
 end;
 
 class function TNat256.Gte(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array): Boolean;
+begin
+  Result := Gte(PUInt32(@AX[0]), PUInt32(@AY[0]));
+end;
+
+class function TNat256.Gte(AX, AY: PUInt32): Boolean;
 var
   LX_i: UInt32;
   LY_i: UInt32;
@@ -480,27 +469,8 @@ begin
 end;
 
 class function TNat256.Gte(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32): Boolean;
-var
-  LX_i: UInt32;
-  LY_i: UInt32;
-  LI: Int32;
 begin
-  for LI := 7 downto 0 do
-  begin
-    LX_i := AX[AXOff + LI];
-    LY_i := AY[AYOff + LI];
-    if LX_i < LY_i then
-    begin
-      Result := False;
-      Exit;
-    end;
-    if LX_i > LY_i then
-    begin
-      Result := True;
-      Exit;
-    end;
-  end;
-  Result := True;
+  Result := Gte(PUInt32(@AX[AXOff]), PUInt32(@AY[AYOff]));
 end;
 
 class function TNat256.IsOne(const AX: TCryptoLibUInt32Array): Boolean;
@@ -931,55 +901,8 @@ begin
 end;
 
 class function TNat256.Mul33Add(AW: UInt32; const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt64;
-var
-  LC: UInt64;
-  LWVal: UInt64;
-  LX0: UInt64;
-  LX1: UInt64;
-  LX2: UInt64;
-  LX3: UInt64;
-  LX4: UInt64;
-  LX5: UInt64;
-  LX6: UInt64;
-  LX7: UInt64;
 begin
-  System.Assert(AW shr 31 = 0);
-  LC := 0;
-  LWVal := AW;
-  LX0 := AX[AXOff + 0];
-  LC := LC + (LWVal * LX0 + AY[AYOff + 0]);
-  AZ[AZOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LX1 := AX[AXOff + 1];
-  LC := LC + (LWVal * LX1 + LX0 + AY[AYOff + 1]);
-  AZ[AZOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LX2 := AX[AXOff + 2];
-  LC := LC + (LWVal * LX2 + LX1 + AY[AYOff + 2]);
-  AZ[AZOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LX3 := AX[AXOff + 3];
-  LC := LC + (LWVal * LX3 + LX2 + AY[AYOff + 3]);
-  AZ[AZOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  LX4 := AX[AXOff + 4];
-  LC := LC + (LWVal * LX4 + LX3 + AY[AYOff + 4]);
-  AZ[AZOff + 4] := UInt32(LC);
-  LC := LC shr 32;
-  LX5 := AX[AXOff + 5];
-  LC := LC + (LWVal * LX5 + LX4 + AY[AYOff + 5]);
-  AZ[AZOff + 5] := UInt32(LC);
-  LC := LC shr 32;
-  LX6 := AX[AXOff + 6];
-  LC := LC + (LWVal * LX6 + LX5 + AY[AYOff + 6]);
-  AZ[AZOff + 6] := UInt32(LC);
-  LC := LC shr 32;
-  LX7 := AX[AXOff + 7];
-  LC := LC + (LWVal * LX7 + LX6 + AY[AYOff + 7]);
-  AZ[AZOff + 7] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LX7);
-  Result := LC;
+  Result := Mul33Add(AW, PUInt32(@AX[AXOff]), PUInt32(@AY[AYOff]), PUInt32(@AZ[AZOff]));
 end;
 
 class function TNat256.MulByWord(AX: UInt32; AZ: TCryptoLibUInt32Array): UInt32;
@@ -1085,70 +1008,21 @@ begin
 end;
 
 class function TNat256.Mul33DWordAdd(AX: UInt32; AY: UInt64; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
-var
-  LC: UInt64;
-  LXVal: UInt64;
-  LY00: UInt64;
-  LY01: UInt64;
 begin
   {$IFDEF DEBUG}
   System.Assert(AX shr 31 = 0);
   System.Assert(AZOff <= 4);
   {$ENDIF}
-  LC := 0;
-  LXVal := AX;
-  LY00 := AY and M;
-  LC := LC + (LXVal * LY00 + AZ[AZOff + 0]);
-  AZ[AZOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LY01 := AY shr 32;
-  LC := LC + (LXVal * LY01 + LY00 + AZ[AZOff + 1]);
-  AZ[AZOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LY01 + AZ[AZOff + 2]);
-  AZ[AZOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (AZ[AZOff + 3]);
-  AZ[AZOff + 3] := UInt32(LC);
-  LC := LC shr 32;
-  if (LC = 0) then
-  begin
-    Result := 0;
-  end
-  else
-  begin
-    Result := TNat.IncAt(8, AZ, AZOff, 4);
-  end;
+  Result := Mul33DWordAdd(AX, AY, PUInt32(@AZ[AZOff]));
 end;
 
 class function TNat256.Mul33WordAdd(AX: UInt32; AY: UInt32; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
-var
-  LC: UInt64;
-  LYVal: UInt64;
 begin
   {$IFDEF DEBUG}
   System.Assert(AX shr 31 = 0);
   System.Assert(AZOff <= 5);
   {$ENDIF}
-  LC := 0;
-  LYVal := AY;
-  LC := LC + (LYVal * AX + AZ[AZOff + 0]);
-  AZ[AZOff + 0] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (LYVal + AZ[AZOff + 1]);
-  AZ[AZOff + 1] := UInt32(LC);
-  LC := LC shr 32;
-  LC := LC + (AZ[AZOff + 2]);
-  AZ[AZOff + 2] := UInt32(LC);
-  LC := LC shr 32;
-  if (LC = 0) then
-  begin
-    Result := 0;
-  end
-  else
-  begin
-    Result := TNat.IncAt(8, AZ, AZOff, 3);
-  end;
+  Result := Mul33WordAdd(AX, AY, PUInt32(@AZ[AZOff]));
 end;
 
 class function TNat256.MulWordDwordAdd(AX: UInt32; AY: UInt64; AZ: TCryptoLibUInt32Array; AZOff: Int32): UInt32;
@@ -1561,6 +1435,11 @@ begin
 end;
 
 class function TNat256.Sub(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): Int32;
+begin
+  Result := Sub(PUInt32(@AX[0]), PUInt32(@AY[0]), PUInt32(@AZ[0]));
+end;
+
+class function TNat256.Sub(AX, AY, AZ: PUInt32): Int32;
 var
   LC: Int64;
 begin
@@ -1593,35 +1472,8 @@ begin
 end;
 
 class function TNat256.Sub(const AX: TCryptoLibUInt32Array; AXOff: Int32; const AY: TCryptoLibUInt32Array; AYOff: Int32; AZ: TCryptoLibUInt32Array; AZOff: Int32): Int32;
-var
-  LC: Int64;
 begin
-  LC := 0;
-  LC := LC + (Int64(AX[AXOff + 0]) - Int64(AY[AYOff + 0]));
-  AZ[AZOff + 0] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 1]) - Int64(AY[AYOff + 1]));
-  AZ[AZOff + 1] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 2]) - Int64(AY[AYOff + 2]));
-  AZ[AZOff + 2] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 3]) - Int64(AY[AYOff + 3]));
-  AZ[AZOff + 3] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 4]) - Int64(AY[AYOff + 4]));
-  AZ[AZOff + 4] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 5]) - Int64(AY[AYOff + 5]));
-  AZ[AZOff + 5] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 6]) - Int64(AY[AYOff + 6]));
-  AZ[AZOff + 6] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  LC := LC + (Int64(AX[AXOff + 7]) - Int64(AY[AYOff + 7]));
-  AZ[AZOff + 7] := UInt32(LC);
-  LC := TBitOperations.Asr64(LC, 32);
-  Result := Int32(LC);
+  Result := Sub(PUInt32(@AX[AXOff]), PUInt32(@AY[AYOff]), PUInt32(@AZ[AZOff]));
 end;
 
 class function TNat256.SubBothFrom(const AX: TCryptoLibUInt32Array; const AY: TCryptoLibUInt32Array; AZ: TCryptoLibUInt32Array): Int32;
@@ -1959,6 +1811,60 @@ end;
 class procedure TNat256.Zero64(AZ: TCryptoLibUInt64Array; AZOff: Int32);
 begin
   TArrayUtilities.Fill(AZ, AZOff, AZOff + 4, UInt64(0));
+end;
+
+
+class function TNat256.Mul33Add(AW: UInt32; AX, AY, AZ: PUInt32): UInt64;
+var
+  LC, LWVal, LX0, LX1, LX2, LX3, LX4, LX5, LX6, LX7: UInt64;
+begin
+  System.Assert(AW shr 31 = 0);
+  LC := 0;
+  LWVal := AW;
+  LX0 := AX[0]; LC := LC + (LWVal * LX0 + AY[0]); AZ[0] := UInt32(LC); LC := LC shr 32;
+  LX1 := AX[1]; LC := LC + (LWVal * LX1 + LX0 + AY[1]); AZ[1] := UInt32(LC); LC := LC shr 32;
+  LX2 := AX[2]; LC := LC + (LWVal * LX2 + LX1 + AY[2]); AZ[2] := UInt32(LC); LC := LC shr 32;
+  LX3 := AX[3]; LC := LC + (LWVal * LX3 + LX2 + AY[3]); AZ[3] := UInt32(LC); LC := LC shr 32;
+  LX4 := AX[4]; LC := LC + (LWVal * LX4 + LX3 + AY[4]); AZ[4] := UInt32(LC); LC := LC shr 32;
+  LX5 := AX[5]; LC := LC + (LWVal * LX5 + LX4 + AY[5]); AZ[5] := UInt32(LC); LC := LC shr 32;
+  LX6 := AX[6]; LC := LC + (LWVal * LX6 + LX5 + AY[6]); AZ[6] := UInt32(LC); LC := LC shr 32;
+  LX7 := AX[7]; LC := LC + (LWVal * LX7 + LX6 + AY[7]); AZ[7] := UInt32(LC); LC := LC shr 32;
+  LC := LC + LX7;
+  Result := LC;
+end;
+
+class function TNat256.Mul33DWordAdd(AX: UInt32; AY: UInt64; AZ: PUInt32): UInt32;
+var
+  LC, LXVal, LY00, LY01: UInt64;
+begin
+  LC := 0;
+  LXVal := AX;
+  LY00 := AY and M;
+  LC := LC + (LXVal * LY00 + AZ[0]); AZ[0] := UInt32(LC); LC := LC shr 32;
+  LY01 := AY shr 32;
+  LC := LC + (LXVal * LY01 + LY00 + AZ[1]); AZ[1] := UInt32(LC); LC := LC shr 32;
+  LC := LC + (LY01 + AZ[2]); AZ[2] := UInt32(LC); LC := LC shr 32;
+  LC := LC + (AZ[3]); AZ[3] := UInt32(LC); LC := LC shr 32;
+  if (LC = 0) then
+    Result := 0
+  else
+    Result := TNat.IncAt(8, AZ, 4);
+end;
+
+
+class function TNat256.Mul33WordAdd(AX: UInt32; AY: UInt32; AZ: PUInt32): UInt32;
+var
+  LC, LYVal: UInt64;
+begin
+  LC := 0;
+  LYVal := AY;
+  LC := LC + (LYVal * AX + AZ[0]); AZ[0] := UInt32(LC); LC := LC shr 32;
+  LC := LC + (LYVal + AZ[1]); AZ[1] := UInt32(LC); LC := LC shr 32;
+  LC := LC + (AZ[2]); AZ[2] := UInt32(LC); LC := LC shr 32;
+  if (LC = 0) then
+    Result := 0
+  else
+    Result := TNat.IncAt(8, AZ, 3);
 end;
 
 end.

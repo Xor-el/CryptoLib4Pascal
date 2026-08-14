@@ -52,6 +52,7 @@ type
     function GetA: IECFieldElement;
     function GetB: IECFieldElement;
     function GetMultiplier: IECMultiplier;
+    function GetBasePointMultiplier: IECMultiplier;
     function Equals(const AOther: IECCurve): Boolean;
     property FieldSize: Int32 read GetFieldSize;
     property FieldElementEncodingLength: Int32 read GetFieldElementEncodingLength;
@@ -63,6 +64,7 @@ type
     property A: IECFieldElement read GetA;
     property B: IECFieldElement read GetB;
     property Multiplier: IECMultiplier read GetMultiplier;
+    property BasePointMultiplier: IECMultiplier read GetBasePointMultiplier;
     function FromBigInteger(const AX: TBigInteger): IECFieldElement;
     function CreatePoint(const AX, AY: TBigInteger): IECPoint;
     function CreateRawPoint(const AX, AY: IECFieldElement): IECPoint; overload;
