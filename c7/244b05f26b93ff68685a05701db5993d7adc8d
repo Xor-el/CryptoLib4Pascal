@@ -1,0 +1,26 @@
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_895e0f850815c5::t_4e9a23d393401d 18
+CryptoLib/src/Include/CryptoLibFPC.inc
+  h_878efc035442cc 147
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c7244b05f26b93ff68685a05701db5993d7adc8d",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_895e0f850815c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2199d312-3700-404a-af2a-6c1ceef5b85f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
