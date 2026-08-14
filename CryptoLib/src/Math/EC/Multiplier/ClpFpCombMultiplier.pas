@@ -28,6 +28,7 @@ uses
   ClpMultipliers,
   ClpFixedPointUtilities,
   ClpIFixedPointPreCompInfo,
+  ClpWeakRef,
   ClpIFpFieldOps,
   ClpIECFieldElement,
   ClpIECCommon,
@@ -55,7 +56,7 @@ type
     IECMultiplier)
   strict private
     FFieldOps: IFpFieldOps;
-    FCachedInfo: IFixedPointPreCompInfo;
+    FCachedInfo: TWeakRef<IFixedPointPreCompInfo>;
     FTable: TCryptoLibGenericArray<TFePoint>;
     FOffset: TFePoint;
   strict protected
@@ -79,7 +80,7 @@ function TFpCombMultiplier<TOps>.MultiplyPositive(const AP: IECPoint;
 var
   LC: IECCurve;
   LSize, LWidth, LD, LFullComb, LN, LI, LJ: Int32;
-  LInfo: IFixedPointPreCompInfo;
+  LInfo, LCachedInfo: IFixedPointPreCompInfo;
   LLookup: IECLookupTable;
   LR, LSel: TFePoint;
   LK, LXa, LYa: TCryptoLibUInt32Array;
@@ -98,7 +99,8 @@ begin
   LD := (LSize + LWidth - 1) div LWidth;
   LFullComb := LD * LWidth;
 
-  if LInfo <> FCachedInfo then
+  LCachedInfo := FCachedInfo;
+  if LInfo <> LCachedInfo then
   begin
     // Build the value-type table once per base point. The precomp info is cached
     // on the point, so this rebuilds only when the base point changes (never for

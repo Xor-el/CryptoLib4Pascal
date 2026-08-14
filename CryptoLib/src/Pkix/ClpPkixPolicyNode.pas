@@ -93,7 +93,7 @@ begin
   end;
   FDepth := ADepth;
   FExpectedPolicies := System.Copy(AExpectedPolicies);
-  FParent.Assign(AParent);
+  FParent := AParent;
   FPolicyQualifiers := System.Copy(APolicyQualifiers);
   FValidPolicy := AValidPolicy;
   FCritical := ACritical;
@@ -158,12 +158,12 @@ end;
 
 function TPkixPolicyNode.GetParent: IPkixPolicyNode;
 begin
-  Result := FParent.Target;
+  Result := FParent;
 end;
 
 procedure TPkixPolicyNode.SetParent(const AValue: IPkixPolicyNode);
 begin
-  FParent.Assign(AValue);
+  FParent := AValue;
 end;
 
 procedure TPkixPolicyNode.AddChild(const AChild: IPkixPolicyNode);
