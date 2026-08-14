@@ -1,0 +1,44 @@
+CryptoLib/src/Pkix/ClpPkixPolicyNode.pas
+  s_895e0f850815c5::t_0e976058345f87 161,166
+  s_895e0f850815c5::t_c10a5719aac040 96
+CryptoLib/src/X509/ClpX509Certificate.pas
+  s_3957973a090260::t_d7717caff8f413 26,787
+  s_3957973a090260::t_86a19313069c42 115-117
+  s_3957973a090260::t_b91a3e9dd0a3c3 646-647,650-662
+  s_3957973a090260::t_c757006bf4b463 676-677,680-692
+  s_3957973a090260::t_d3efb867051948 387-388,391-403
+  s_3957973a090260::t_462d539fb05ee9 736-748,750,756
+  s_3957973a090260::t_6321e7b693b780 131-133
+  s_3957973a090260::t_8d933c24e2beae 778-779,781-786,788-803
+  s_3957973a090260::t_132d5f2b5ad4fa 719-720
+  s_3957973a090260::t_2126f4e973efee 230-239
+CryptoLib/src/Math/EC/Multiplier/ClpFpCombMultiplier.pas
+  s_895e0f850815c5::t_e79c521d4b12d4 83
+  s_895e0f850815c5::t_7b9036529037f7 102-103
+  s_895e0f850815c5::t_ceac80e4c40c37 31
+  s_895e0f850815c5::t_7476bf65689219 59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "071ce38fa630e780cc4a4b47f2bdd5192d1fc70d",
+  "prompts": {},
+  "sessions": {
+    "s_3957973a090260": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6deaf670-7f07-4977-8d0c-c1e8159f395d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_895e0f850815c5": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "2199d312-3700-404a-af2a-6c1ceef5b85f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
