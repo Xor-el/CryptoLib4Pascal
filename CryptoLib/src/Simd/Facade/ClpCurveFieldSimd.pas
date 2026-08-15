@@ -182,7 +182,6 @@ end;
 class function TCurveFieldSimd.TryMulWord25519(const AX: TCryptoLibInt32Array;
   AY: Int32; const AZ: TCryptoLibInt32Array): Boolean;
 begin
-  // MulWord asm on all three arches.
 {$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
   {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TCurveFieldX86Backend.IsSupported then Exit(False);
