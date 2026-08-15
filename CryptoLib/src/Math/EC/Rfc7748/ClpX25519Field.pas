@@ -25,6 +25,7 @@ uses
   ClpNat,
   ClpBitOperations,
   ClpArrayUtilities,
+  ClpCurveFieldSimd,
   ClpCryptoLibTypes;
 
 type
@@ -126,6 +127,8 @@ class procedure TX25519Field.Add(const AX, AY, AZ: TCryptoLibInt32Array);
 var
   LI: Int32;
 begin
+  if TCurveFieldSimd.TryAdd25519(AX, AY, AZ) then
+    Exit;
   LI := 0;
   while LI < Size do
   begin
@@ -149,6 +152,8 @@ var
   LI: Int32;
   LXi, LYi: Int32;
 begin
+  if TCurveFieldSimd.TryApm25519(AX, AY, AZp, AZm) then
+    Exit;
   LI := 0;
   while LI < Size do
   begin
@@ -184,6 +189,8 @@ class procedure TX25519Field.Carry(AZ: TCryptoLibInt32Array);
 var
   Lz0, Lz1, Lz2, Lz3, Lz4, Lz5, Lz6, Lz7, Lz8, Lz9: Int32;
 begin
+  if TCurveFieldSimd.TryCarry25519(AZ) then
+    Exit;
   Lz0 := AZ[0];
   Lz1 := AZ[1];
   Lz2 := AZ[2];
@@ -290,6 +297,8 @@ var
   LI: Int32;
   Lai, Lbi, Ldummy: Int32;
 begin
+  if TCurveFieldSimd.TryCSwap25519(ASwap, AA, AB) then
+    Exit;
   Lmask := 0 - ASwap;
   LI := 0;
   while LI < Size do
@@ -556,6 +565,8 @@ var
   Lx0, Lx1, Lx2, Lx3, Lx4, Lx5, Lx6, Lx7, Lx8, Lx9: Int32;
   Lc0, Lc1, Lc2, Lc3: Int64;
 begin
+  if TCurveFieldSimd.TryMulWord25519(AX, AY, AZ) then
+    Exit;
   Lx0 := AX[0];
   Lx1 := AX[1];
   Lx2 := AX[2];
@@ -613,6 +624,8 @@ var
   Lt: Int64;
   Lz8, Lz9: Int32;
 begin
+  if TCurveFieldSimd.TryMul25519(AX, AY, AZ) then
+    Exit;
   Lx0 := AX[0];
   Ly0 := AY[0];
   Lx1 := AX[1];
@@ -839,6 +852,8 @@ var
   Lt: Int64;
   Lz8, Lz9: Int32;
 begin
+  if TCurveFieldSimd.TrySqr25519(AX, AZ) then
+    Exit;
   Lx0 := AX[0];
   Lx1 := AX[1];
   Lx2 := AX[2];
@@ -989,6 +1004,8 @@ class procedure TX25519Field.Sub(const AX, AY, AZ: TCryptoLibInt32Array);
 var
   LI: Int32;
 begin
+  if TCurveFieldSimd.TrySub25519(AX, AY, AZ) then
+    Exit;
   LI := 0;
   while LI < Size do
   begin

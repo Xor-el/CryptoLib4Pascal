@@ -15,7 +15,7 @@
       </SearchPaths>
       <CodeGeneration>
         <Optimizations>
-          <OptimizationLevel Value="3"/>
+          <OptimizationLevel Value="1"/>
         </Optimizations>
       </CodeGeneration>
       <Other>
@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="873">
+    <Files Count="876">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3525,6 +3525,18 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
         <UnitName Value="ClpFpCombMultiplier"/>
       </Item873>
+      <Item874>
+        <Filename Value="..\..\Simd\Facade\ClpCurveFieldSimd.pas"/>
+        <UnitName Value="ClpCurveFieldSimd"/>
+      </Item874>
+      <Item875>
+        <Filename Value="..\..\Simd\Backend\ClpCurveFieldX86Backend.pas"/>
+        <UnitName Value="ClpCurveFieldX86Backend"/>
+      </Item875>
+      <Item876>
+        <Filename Value="..\..\Simd\Backend\ClpCurveFieldArmBackend.pas"/>
+        <UnitName Value="ClpCurveFieldArmBackend"/>
+      </Item876>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
