@@ -284,7 +284,8 @@ uses
   ClpAbstractBlockCipherMode, ClpAbstractAeadCipher, 
   ClpAbstractAeadBlockCipher, ClpFpKernelX86Backend, ClpFpKernelSimd, 
   ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldArith, ClpCTPoint, 
-  ClpFpCTMultiplier, ClpFpCombMultiplier;
+  ClpFpCTMultiplier, ClpFpCombMultiplier, ClpCurveFieldSimd,
+  ClpCurveFieldX86Backend, ClpCurveFieldArmBackend;
 
 implementation
 
