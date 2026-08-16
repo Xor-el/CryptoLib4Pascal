@@ -99,6 +99,7 @@ type
     procedure DoSignerUtilitiesSha256;
     procedure DoSignerUtilitiesSha384;
     procedure DoSignerUtilitiesSha512;
+    procedure DoSignerUtilitiesExtraPss;
     procedure DoRawSignerTest;
 
   published
@@ -111,6 +112,7 @@ type
     procedure TestSignerUtilitiesSha256;
     procedure TestSignerUtilitiesSha384;
     procedure TestSignerUtilitiesSha512;
+    procedure TestSignerUtilitiesExtraPss;
     procedure TestRawSigner;
 
   end;
@@ -312,7 +314,7 @@ var
 begin
   kpGen := TRsaKeyPairGenerator.Create();
   kpParams := TRsaKeyGenerationParameters.Create(
-    TBigInteger.ValueOf(65537), TSecureRandom.Create(), 2048, 100);
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
@@ -344,7 +346,7 @@ var
 begin
   kpGen := TRsaKeyPairGenerator.Create();
   kpParams := TRsaKeyGenerationParameters.Create(
-    TBigInteger.ValueOf(65537), TSecureRandom.Create(), 2048, 100);
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
@@ -384,7 +386,7 @@ var
 begin
   kpGen := TRsaKeyPairGenerator.Create();
   kpParams := TRsaKeyGenerationParameters.Create(
-    TBigInteger.ValueOf(65537), TSecureRandom.Create(), 2048, 100);
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
@@ -416,7 +418,7 @@ var
 begin
   kpGen := TRsaKeyPairGenerator.Create();
   kpParams := TRsaKeyGenerationParameters.Create(
-    TBigInteger.ValueOf(65537), TSecureRandom.Create(), 2048, 100);
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
@@ -437,6 +439,47 @@ begin
   CheckTrue(verified, 'PSS SHA-512 signature verification failed');
 end;
 
+procedure TTestPss.DoSignerUtilitiesExtraPss;
+const
+  AlgNames: array [0 .. 6] of String = ('RIPEMD128withRSAandMGF1',
+    'RIPEMD160withRSAandMGF1', 'RIPEMD256withRSAandMGF1',
+    'SHA3-224withRSAandMGF1', 'SHA3-256withRSAandMGF1',
+    'SHA3-384withRSAandMGF1', 'SHA3-512withRSAandMGF1');
+var
+  kpGen: IRsaKeyPairGenerator;
+  kpParams: IRsaKeyGenerationParameters;
+  keyPair: IAsymmetricCipherKeyPair;
+  signer: ISigner;
+  &message, signature: TCryptoLibByteArray;
+  i: Integer;
+begin
+  // One 2048-bit key is large enough for every RIPEMD/SHA3 salt length here
+  kpGen := TRsaKeyPairGenerator.Create();
+  kpParams := TRsaKeyGenerationParameters.Create(
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
+  kpGen.Init(kpParams);
+  keyPair := kpGen.GenerateKeyPair();
+
+  &message := TConverters.ConvertStringToBytes('Test PSS RIPEMD/SHA3 signature',
+    TEncoding.UTF8);
+
+  for i := Low(AlgNames) to High(AlgNames) do
+  begin
+    signer := TSignerUtilities.GetSigner(AlgNames[i]);
+    signer.Init(True, keyPair.Private);
+    signer.BlockUpdate(&message, 0, System.Length(&message));
+    signature := signer.GenerateSignature();
+
+    CheckTrue(System.Length(signature) > 0,
+      Format('PSS %s signature is empty', [AlgNames[i]]));
+
+    signer.Init(False, keyPair.Public);
+    signer.BlockUpdate(&message, 0, System.Length(&message));
+    CheckTrue(signer.VerifySignature(signature),
+      Format('PSS %s signature verification failed', [AlgNames[i]]));
+  end;
+end;
+
 procedure TTestPss.DoRawSignerTest;
 var
   kpGen: IRsaKeyPairGenerator;
@@ -449,7 +492,7 @@ var
 begin
   kpGen := TRsaKeyPairGenerator.Create();
   kpParams := TRsaKeyGenerationParameters.Create(
-    TBigInteger.ValueOf(17), TSecureRandom.Create(), 1024, 100);
+    TBigInteger.ValueOf(17), TSecureRandom.Create() as ISecureRandom, 1024, 100);
   kpGen.Init(kpParams);
   keyPair := kpGen.GenerateKeyPair();
 
@@ -529,6 +572,11 @@ end;
 procedure TTestPss.TestSignerUtilitiesSha512;
 begin
   DoSignerUtilitiesSha512;
+end;
+
+procedure TTestPss.TestSignerUtilitiesExtraPss;
+begin
+  DoSignerUtilitiesExtraPss;
 end;
 
 procedure TTestPss.TestRawSigner;

@@ -377,6 +377,15 @@ begin
   FAlgorithmMap.AddOrSetValue('SHA512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
   FAlgorithmMap.AddOrSetValue('SHA-512WITHRSASSA-PSS', 'SHA-512withRSAandMGF1');
 
+  FAlgorithmMap.AddOrSetValue('SHA3-224WITHRSAANDMGF1', 'SHA3-224withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA3-256WITHRSAANDMGF1', 'SHA3-256withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA3-384WITHRSAANDMGF1', 'SHA3-384withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('SHA3-512WITHRSAANDMGF1', 'SHA3-512withRSAandMGF1');
+
+  FAlgorithmMap.AddOrSetValue('RIPEMD128WITHRSAANDMGF1', 'RIPEMD128withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('RIPEMD160WITHRSAANDMGF1', 'RIPEMD160withRSAandMGF1');
+  FAlgorithmMap.AddOrSetValue('RIPEMD256WITHRSAANDMGF1', 'RIPEMD256withRSAandMGF1');
+
   FAlgorithmMap.AddOrSetValue('RIPEMD128WITHRSA', 'RIPEMD128withRSA');
   FAlgorithmMap.AddOrSetValue('RIPEMD128WITHRSAENCRYPTION', 'RIPEMD128withRSA');
   FAlgorithmOidMap.AddOrSetValue(TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128, 'RIPEMD128withRSA');
@@ -678,6 +687,15 @@ begin
   FOids.AddOrSetValue('SHA-256withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FOids.AddOrSetValue('SHA-384withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FOids.AddOrSetValue('SHA-512withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+
+  FOids.AddOrSetValue('SHA3-224withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA3-256withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA3-384withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('SHA3-512withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+
+  FOids.AddOrSetValue('RIPEMD128withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('RIPEMD160withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FOids.AddOrSetValue('RIPEMD256withRSAandMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
 
   FOids.AddOrSetValue('RIPEMD128withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128);
   FOids.AddOrSetValue('RIPEMD160withRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);

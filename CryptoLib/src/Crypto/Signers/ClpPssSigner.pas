@@ -35,6 +35,7 @@ uses
   ClpParameterUtilities,
   ClpBigInteger,
   ClpArrayUtilities,
+  ClpBinaryPrimitives,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -73,7 +74,6 @@ type
     FTrailer: Byte;
 
     procedure ClearBlock(const ABlock: TCryptoLibByteArray);
-    procedure ItoOSP(AI: Int32; const ASP: TCryptoLibByteArray);
     function MaskGeneratorFunction(const AZ: TCryptoLibByteArray;
       AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
     function MaskGeneratorFunction1(const AZ: TCryptoLibByteArray;
@@ -465,14 +465,6 @@ begin
   FContentDigest1.Reset();
 end;
 
-procedure TPssSigner.ItoOSP(AI: Int32; const ASP: TCryptoLibByteArray);
-begin
-  ASP[0] := Byte(UInt32(AI) shr 24);
-  ASP[1] := Byte(UInt32(AI) shr 16);
-  ASP[2] := Byte(UInt32(AI) shr 8);
-  ASP[3] := Byte(UInt32(AI) shr 0);
-end;
-
 function TPssSigner.MaskGeneratorFunction(const AZ: TCryptoLibByteArray;
   AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 var
@@ -496,37 +488,37 @@ function TPssSigner.MaskGeneratorFunction1(const AZ: TCryptoLibByteArray;
   AZOff, AZLen, ALength: Int32): TCryptoLibByteArray;
 var
   LMask, LHashBuf, LC: TCryptoLibByteArray;
-  LCounter: Int32;
+  LCounter, LPos: Int32;
 begin
   SetLength(LMask, ALength);
-  SetLength(LHashBuf, FMgfhLen);
   SetLength(LC, 4);
   LCounter := 0;
+  LPos := 0;
 
   FMgfDigest.Reset();
 
-  while LCounter < (ALength div FMgfhLen) do
+  // full blocks are finalized straight into the mask; only the tail needs a temp buffer
+  while LPos <= ALength - FMgfhLen do
   begin
-    ItoOSP(LCounter, LC);
+    TBinaryPrimitives.WriteUInt32BigEndian(LC, 0, UInt32(LCounter));
+    Inc(LCounter);
 
     FMgfDigest.BlockUpdate(AZ, AZOff, AZLen);
     FMgfDigest.BlockUpdate(LC, 0, System.Length(LC));
-    FMgfDigest.DoFinal(LHashBuf, 0);
-
-    System.Move(LHashBuf[0], LMask[LCounter * FMgfhLen], System.Length(LHashBuf));
-    Inc(LCounter);
+    FMgfDigest.DoFinal(LMask, LPos);
+    Inc(LPos, FMgfhLen);
   end;
 
-  if (LCounter * FMgfhLen) < ALength then
+  if LPos < ALength then
   begin
-    ItoOSP(LCounter, LC);
+    TBinaryPrimitives.WriteUInt32BigEndian(LC, 0, UInt32(LCounter));
 
     FMgfDigest.BlockUpdate(AZ, AZOff, AZLen);
     FMgfDigest.BlockUpdate(LC, 0, System.Length(LC));
-    FMgfDigest.DoFinal(LHashBuf, 0);
 
-    System.Move(LHashBuf[0], LMask[LCounter * FMgfhLen],
-      System.Length(LMask) - (LCounter * FMgfhLen));
+    SetLength(LHashBuf, FMgfhLen);
+    FMgfDigest.DoFinal(LHashBuf, 0);
+    System.Move(LHashBuf[0], LMask[LPos], System.Length(LMask) - LPos);
   end;
 
   Result := LMask;

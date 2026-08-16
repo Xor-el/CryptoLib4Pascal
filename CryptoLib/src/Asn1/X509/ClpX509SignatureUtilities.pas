@@ -85,6 +85,8 @@ implementation
 class constructor TX509SignatureUtilities.Create;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
+  LSha3_224AlgId, LSha3_256AlgId, LSha3_384AlgId, LSha3_512AlgId: IAlgorithmIdentifier;
+  LRipeMD128AlgId, LRipeMD160AlgId, LRipeMD256AlgId: IAlgorithmIdentifier;
   LParams: IMlDsaParameters;
   LSlhParams: ISlhDsaParameters;
 begin
@@ -158,6 +160,13 @@ begin
   FAlgorithms.Add('SHA256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FAlgorithms.Add('SHA384WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FAlgorithms.Add('SHA512WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-224WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-384WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-512WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD128WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD160WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
 
   // RIPEMD algorithms
   FAlgorithms.Add('RIPEMD160WITHRSAENCRYPTION', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);
@@ -265,6 +274,27 @@ begin
   LSha512AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha512, TDerNull.Instance);
   FExParams.Add('SHA512WITHRSAANDMGF1', CreatePssParams(LSha512AlgId, 64));
 
+  LSha3_224AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha3_224, TDerNull.Instance);
+  FExParams.Add('SHA3-224WITHRSAANDMGF1', CreatePssParams(LSha3_224AlgId, 28));
+
+  LSha3_256AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha3_256, TDerNull.Instance);
+  FExParams.Add('SHA3-256WITHRSAANDMGF1', CreatePssParams(LSha3_256AlgId, 32));
+
+  LSha3_384AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha3_384, TDerNull.Instance);
+  FExParams.Add('SHA3-384WITHRSAANDMGF1', CreatePssParams(LSha3_384AlgId, 48));
+
+  LSha3_512AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha3_512, TDerNull.Instance);
+  FExParams.Add('SHA3-512WITHRSAANDMGF1', CreatePssParams(LSha3_512AlgId, 64));
+
+  LRipeMD128AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD128, TDerNull.Instance);
+  FExParams.Add('RIPEMD128WITHRSAANDMGF1', CreatePssParams(LRipeMD128AlgId, 16));
+
+  LRipeMD160AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD160, TDerNull.Instance);
+  FExParams.Add('RIPEMD160WITHRSAANDMGF1', CreatePssParams(LRipeMD160AlgId, 20));
+
+  LRipeMD256AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD256, TDerNull.Instance);
+  FExParams.Add('RIPEMD256WITHRSAANDMGF1', CreatePssParams(LRipeMD256AlgId, 32));
+
   //
   // DSA with SHA3
   //
@@ -333,6 +363,14 @@ begin
     Result := 'SHA512(224)'
   else if TNistObjectIdentifiers.IdSha512_256.Equals(ADigestAlgOid) then
     Result := 'SHA512(256)'
+  else if TNistObjectIdentifiers.IdSha3_224.Equals(ADigestAlgOid) then
+    Result := 'SHA3-224'
+  else if TNistObjectIdentifiers.IdSha3_256.Equals(ADigestAlgOid) then
+    Result := 'SHA3-256'
+  else if TNistObjectIdentifiers.IdSha3_384.Equals(ADigestAlgOid) then
+    Result := 'SHA3-384'
+  else if TNistObjectIdentifiers.IdSha3_512.Equals(ADigestAlgOid) then
+    Result := 'SHA3-512'
   else if TTeleTrusTObjectIdentifiers.RipeMD128.Equals(ADigestAlgOid) then
     Result := 'RIPEMD128'
   else if TTeleTrusTObjectIdentifiers.RipeMD160.Equals(ADigestAlgOid) then
