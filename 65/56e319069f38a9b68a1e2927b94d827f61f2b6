@@ -1,0 +1,55 @@
+CryptoLib/src/X509/ClpX509Utilities.pas
+  s_0f1a2e9196b415::t_af8fbbf0949a78 167-173
+CryptoLib/src/Crypto/Signers/ClpSignerUtilities.pas
+  s_0f1a2e9196b415::t_0d14be7e444025 380-388
+  s_0f1a2e9196b415::t_7dabe76c7f1861 691-699
+CryptoLib.Tests/src/Crypto/PssTests.pas
+  s_0f1a2e9196b415::t_c9f2c269be077e 115
+  s_0f1a2e9196b415::t_0118f4fd8a7210 442-443,445-458,460-465,467,469-473,475-478,480-482
+  s_0f1a2e9196b415::t_8dd11954428f87 444,466,468,474,479
+  s_0f1a2e9196b415::t_f204e6b07c1d66 577-581
+  s_0f1a2e9196b415::t_9e1fb8e0920d51 459
+  s_0f1a2e9196b415::t_9e9fa5b4a0f5b8 102
+  s_0f1a2e9196b415::t_e010e5aeb1f336 495
+  s_0f1a2e9196b415::t_fac0f13434748c 317,349,389,421
+CryptoLib/src/Pkcs/ClpPkcs10CertificationRequest.pas
+  s_0f1a2e9196b415::t_d53711e0ebf253 182-188
+  s_0f1a2e9196b415::t_287314cfb69373 135-136
+  s_0f1a2e9196b415::t_a17f7387e9f1c7 287-300
+CryptoLib/src/Crypto/Operators/ClpDefaultSignatureAlgorithmFinder.pas
+  s_0f1a2e9196b415::t_ee6414a33322aa 158-160
+  s_0f1a2e9196b415::t_e32eeaff729463 102
+  s_0f1a2e9196b415::t_8c7fc38e7f1825 353-361
+CryptoLib/src/Crypto/Signers/ClpPssSigner.pas
+  s_0f1a2e9196b415::t_10b578e365aa15 491,496,500-501,504,508-509,512,519-521
+  s_0f1a2e9196b415::t_4df723107bee5f 503,514
+  s_0f1a2e9196b415::t_932125c772eaf6 38
+CryptoLib.Tests/src/X509/X509CertGenTests.pas
+  s_0f1a2e9196b415::t_04dedc95064e2c 245-246,248-264,266-270,272-280,282-288
+  s_0f1a2e9196b415::t_1f7cbcadb71a7d 247,271,281
+  s_0f1a2e9196b415::t_6fc0fc713be54d 265
+  s_0f1a2e9196b415::t_d21022f4532608 44-48
+  s_0f1a2e9196b415::t_75b883de76e4b7 89
+  s_0f1a2e9196b415::t_4afbab99eed5c0 50
+CryptoLib/src/Asn1/X509/ClpX509SignatureUtilities.pas
+  s_0f1a2e9196b415::t_edf558c5a69038 163-169
+  s_0f1a2e9196b415::t_31cffbffc5b463 88-89
+  s_0f1a2e9196b415::t_ca80b13f112755 277-297
+  s_0f1a2e9196b415::t_191d0f45b457d9 366-373
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "6556e319069f38a9b68a1e2927b94d827f61f2b6",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
