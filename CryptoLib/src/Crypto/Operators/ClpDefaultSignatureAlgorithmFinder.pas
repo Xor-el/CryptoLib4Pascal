@@ -99,6 +99,7 @@ class constructor TDefaultSignatureAlgorithmFinder.Create;
 var
   LSha1AlgId, LSha224AlgId, LSha256AlgId, LSha384AlgId, LSha512AlgId: IAlgorithmIdentifier;
   LSha3_224AlgId, LSha3_256AlgId, LSha3_384AlgId, LSha3_512AlgId: IAlgorithmIdentifier;
+  LRipeMD128AlgId, LRipeMD160AlgId, LRipeMD256AlgId: IAlgorithmIdentifier;
   LParams: IMlDsaParameters;
   LSlhParams: ISlhDsaParameters;
 begin
@@ -154,6 +155,9 @@ begin
   AddAlgorithm('SHA3-256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   AddAlgorithm('SHA3-384WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   AddAlgorithm('SHA3-512WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  AddAlgorithm('RIPEMD128WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  AddAlgorithm('RIPEMD160WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  AddAlgorithm('RIPEMD256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   AddAlgorithm('RIPEMD160WITHRSAENCRYPTION', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);
   AddAlgorithm('RIPEMD160WITHRSA', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);
   AddAlgorithm('RIPEMD128WITHRSAENCRYPTION', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD128);
@@ -345,6 +349,15 @@ begin
 
   LSha3_512AlgId := TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha3_512, TDerNull.Instance);
   AddParameters('SHA3-512WITHRSAANDMGF1', CreatePssParams(LSha3_512AlgId, 64));
+
+  LRipeMD128AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD128, TDerNull.Instance);
+  AddParameters('RIPEMD128WITHRSAANDMGF1', CreatePssParams(LRipeMD128AlgId, 16));
+
+  LRipeMD160AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD160, TDerNull.Instance);
+  AddParameters('RIPEMD160WITHRSAANDMGF1', CreatePssParams(LRipeMD160AlgId, 20));
+
+  LRipeMD256AlgId := TAlgorithmIdentifier.Create(TTeleTrusTObjectIdentifiers.RipeMD256, TDerNull.Instance);
+  AddParameters('RIPEMD256WITHRSAANDMGF1', CreatePssParams(LRipeMD256AlgId, 32));
 
   //
   // digests

@@ -164,6 +164,13 @@ begin
   FAlgorithms.Add('SHA256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FAlgorithms.Add('SHA384WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
   FAlgorithms.Add('SHA512WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-224WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-384WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('SHA3-512WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD128WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD160WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
+  FAlgorithms.Add('RIPEMD256WITHRSAANDMGF1', TPkcsObjectIdentifiers.IdRsassaPss);
 
   // RIPEMD algorithms
   FAlgorithms.Add('RIPEMD160WITHRSAENCRYPTION', TTeleTrusTObjectIdentifiers.RsaSignatureWithRipeMD160);

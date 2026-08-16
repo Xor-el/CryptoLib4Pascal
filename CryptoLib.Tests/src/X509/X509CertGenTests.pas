@@ -41,7 +41,13 @@ uses
   ClpIX509Generators,
   ClpAsn1SignatureFactory,
   ClpISignatureFactory,
+  ClpIRsaGenerators,
+  ClpRsaGenerators,
+  ClpISecureRandom,
+  ClpSecureRandom,
+  ClpIAsymmetricCipherKeyPair,
   ClpIRsaParameters,
+  ClpRsaParameters,
   ClpIDsaParameters,
   ClpIECParameters,
   ClpECParameters,
@@ -80,6 +86,7 @@ type
     procedure TestCreationRSA;
     procedure TestCreationDSA;
     procedure TestCreationECDSA;
+    procedure TestCreationRsaPss;
 
   end;
 
@@ -233,6 +240,50 @@ begin
   LExtOids := LCert.CertificateStructure.Extensions.GetCriticalExtensionOids();
   if System.Length(LExtOids) <> 1 then
     Fail('wrong number of oids');
+end;
+
+procedure TX509CertGenTest.TestCreationRsaPss;
+const
+  AlgNames: array [0 .. 6] of String = ('RIPEMD128withRSAandMGF1',
+    'RIPEMD160withRSAandMGF1', 'RIPEMD256withRSAandMGF1',
+    'SHA3-224withRSAandMGF1', 'SHA3-256withRSAandMGF1',
+    'SHA3-384withRSAandMGF1', 'SHA3-512withRSAandMGF1');
+var
+  LKpGen: IRsaKeyPairGenerator;
+  LKpParams: IRsaKeyGenerationParameters;
+  LKeyPair: IAsymmetricCipherKeyPair;
+  LCertGen: IX509V3CertificateGenerator;
+  LName: IX509Name;
+  LCert: IX509Certificate;
+  LSigner: ISignatureFactory;
+  LUtc: TDateTime;
+  I: Int32;
+begin
+  // 2048-bit key is large enough for every RIPEMD/SHA3 PSS salt length here
+  LKpGen := TRsaKeyPairGenerator.Create();
+  LKpParams := TRsaKeyGenerationParameters.Create(
+    TBigInteger.ValueOf(65537), TSecureRandom.Create() as ISecureRandom, 2048, 100);
+  LKpGen.Init(LKpParams);
+  LKeyPair := LKpGen.GenerateKeyPair();
+  LName := CreateX509Name;
+  LUtc := Now.ToUniversalTime();
+
+  for I := Low(AlgNames) to High(AlgNames) do
+  begin
+    LCertGen := TX509V3CertificateGenerator.Create;
+    LCertGen.SetSerialNumber(TBigInteger.One);
+    LCertGen.SetIssuerDN(LName);
+    LCertGen.SetNotBeforeUtc(IncDay(LUtc, -1));
+    LCertGen.SetNotAfterUtc(IncDay(LUtc, 1));
+    LCertGen.SetSubjectDN(LName);
+    LCertGen.SetPublicKey(LKeyPair.Public);
+
+    LSigner := TAsn1SignatureFactory.Create(AlgNames[I], LKeyPair.Private, nil);
+    LCert := LCertGen.Generate(LSigner);
+
+    LCert.CheckValidity();
+    LCert.Verify(LKeyPair.Public);
+  end;
 end;
 
 initialization
