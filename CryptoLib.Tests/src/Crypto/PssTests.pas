@@ -39,6 +39,7 @@ uses
   ClpRsaGenerators,
   ClpRsaEngine,
   ClpRsaBlindedEngine,
+  ClpIAsymmetricBlockCipher,
   ClpPssSigner,
   ClpIPssSigner,
   ClpDigestUtilities,
@@ -151,7 +152,7 @@ var
   eng: IPssSigner;
   s: TCryptoLibByteArray;
 begin
-  eng := TPssSigner.Create(TRsaEngine.Create(), TDigestUtilities.GetDigest('SHA-1'), 20);
+  eng := TPssSigner.Create(TRsaEngine.Create() as IAsymmetricBlockCipher, TDigestUtilities.GetDigest('SHA-1'), 20);
 
   eng.Init(True, TParametersWithRandom.Create(prv, TFixedRandom.Create(salt) as IFixedRandom) as IParametersWithRandom);
   eng.BlockUpdate(msg, 0, System.Length(msg));
@@ -178,7 +179,7 @@ begin
   LKeyRow := TPssVectors.GetExampleKeyRow('8');
   LPub8 := TPssVectors.CreatePublicKey(LKeyRow);
   LPrv8 := TPssVectors.CreatePrivateCrtKey(LKeyRow);
-  eng := TPssSigner.Create(TRsaEngine.Create(), TDigestUtilities.GetDigest('SHA-1'), 20);
+  eng := TPssSigner.Create(TRsaEngine.Create() as IAsymmetricBlockCipher, TDigestUtilities.GetDigest('SHA-1'), 20);
   failed := 0;
   SetLength(data, 1000);
 
@@ -213,7 +214,7 @@ begin
   LPub8 := TPssVectors.CreatePublicKey(LKeyRow);
   LPrv8 := TPssVectors.CreatePrivateCrtKey(LKeyRow);
   // SHA-256 for content, SHA-1 for MGF
-  eng := TPssSigner.Create(TRsaEngine.Create(),
+  eng := TPssSigner.Create(TRsaEngine.Create() as IAsymmetricBlockCipher,
     TDigestUtilities.GetDigest('SHA-256'),
     TDigestUtilities.GetDigest('SHA-1'), 20);
   failed := 0;
@@ -253,7 +254,7 @@ begin
   wrongSalt := THexEncoder.Decode('beefbeef');
 
   // Create signer with fixed salt
-  eng := TPssSigner.Create(TRsaBlindedEngine.Create(),
+  eng := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
     TDigestUtilities.GetDigest('SHA-256'),
     TDigestUtilities.GetDigest('SHA-1'),
     fixedSalt);
@@ -267,7 +268,7 @@ begin
   CheckTrue(eng.VerifySignature(s), 'Fixed salt verification failed');
 
   // Test failure with wrong salt
-  eng := TPssSigner.Create(TRsaBlindedEngine.Create(),
+  eng := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
     TDigestUtilities.GetDigest('SHA-256'),
     TDigestUtilities.GetDigest('SHA-1'),
     wrongSalt);
@@ -291,7 +292,7 @@ begin
   LPrv1 := TPssVectors.CreatePrivateCrtKey(LRow);
   LMsg1a := TPssVectors.DecodeMsg(LRow);
   // SHA-512 with zero salt length
-  eng := TPssSigner.Create(TRsaEngine.Create(),
+  eng := TPssSigner.Create(TRsaEngine.Create() as IAsymmetricBlockCipher,
     TDigestUtilities.GetDigest('SHA-512'), 0, TPssSigner.TrailerImplicit);
 
   eng.Init(True, LPrv1);
@@ -502,7 +503,7 @@ begin
   hash := TSecureRandom.GetNextBytes(FSecureRandom, digest.GetDigestSize());
 
   // Sign with raw signer
-  signer := TPssSigner.CreateRawSigner(TRsaBlindedEngine.Create(), digest);
+  signer := TPssSigner.CreateRawSigner(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher, digest);
   signer.Init(True, keyPair.Private);
   signer.BlockUpdate(hash, 0, System.Length(hash));
   signature := signer.GenerateSignature();
