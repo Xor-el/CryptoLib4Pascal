@@ -1,0 +1,22 @@
+CryptoLib.Tests/src/Crypto/PssTests.pas
+  s_0f1a2e9196b415::t_5e411f29b687cc 257,271
+  s_0f1a2e9196b415::t_b2837e998e3bea 506
+  s_0f1a2e9196b415::t_4776a18e3c8d18 42
+  s_0f1a2e9196b415::t_cb79f19d5676ce 155,182,217,295
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "51f83dd6ea0e62bb439081a8baebba4b47bb3dcb",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
