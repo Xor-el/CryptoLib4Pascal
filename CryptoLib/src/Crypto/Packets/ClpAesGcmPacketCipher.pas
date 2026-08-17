@@ -1,0 +1,76 @@
+{ *********************************************************************************** }
+{ *                              CryptoLib Library                                  * }
+{ *                           Author - Ugochukwu Mmaduekwe                          * }
+{ *                 Github Repository <https://github.com/Xor-el>                   * }
+{ *                                                                                 * }
+{ *  Distributed under the MIT software license, see the accompanying file LICENSE  * }
+{ *          or visit http://www.opensource.org/licenses/mit-license.php.           * }
+{ *                                                                                 * }
+{ *                              Acknowledgements:                                  * }
+{ *                                                                                 * }
+{ *      Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring     * }
+{ *                         the development of this library                         * }
+{ * ******************************************************************************* * }
+
+(* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
+
+unit ClpAesGcmPacketCipher;
+
+{$I ..\..\Include\CryptoLib.inc}
+
+interface
+
+uses
+  ClpIPacketCipher,
+  ClpIBlockCipher,
+  ClpIAeadCipher,
+  ClpIGcmMultiplier,
+  ClpGcmBlockCipher,
+  ClpAesUtilities,
+  ClpAbstractAeadPacketCipher,
+  ClpCryptoLibTypes;
+
+type
+  /// <summary>
+  /// One-shot / reusable AES-GCM packet cipher (see <see cref="IPacketCipher"/>):
+  /// a per-message seal/open over a single reused <c>TGcmBlockCipher</c>. Holds no
+  /// cryptography of its own; not thread-safe (one instance per thread).
+  /// </summary>
+  TAesGcmPacketCipher = class sealed(TAbstractAeadPacketCipher)
+  public
+    constructor Create(); overload;
+    constructor Create(const AEngine: IBlockCipher); overload;
+    constructor Create(const AEngine: IBlockCipher;
+      const AMultiplier: IGcmMultiplier); overload;
+
+    class function GetInstance(): IPacketCipher; static;
+  end;
+
+implementation
+
+{ TAesGcmPacketCipher }
+
+constructor TAesGcmPacketCipher.Create();
+begin
+  Create(TAesUtilities.CreateEngine());
+end;
+
+constructor TAesGcmPacketCipher.Create(const AEngine: IBlockCipher);
+begin
+  inherited Create();
+  FCipher := TGcmBlockCipher.Create(AEngine) as IAeadCipher;
+end;
+
+constructor TAesGcmPacketCipher.Create(const AEngine: IBlockCipher;
+  const AMultiplier: IGcmMultiplier);
+begin
+  inherited Create();
+  FCipher := TGcmBlockCipher.Create(AEngine, AMultiplier) as IAeadCipher;
+end;
+
+class function TAesGcmPacketCipher.GetInstance(): IPacketCipher;
+begin
+  Result := TAesGcmPacketCipher.Create() as IPacketCipher;
+end;
+
+end.

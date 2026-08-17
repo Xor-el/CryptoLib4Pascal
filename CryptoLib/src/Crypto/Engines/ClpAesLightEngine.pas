@@ -30,6 +30,7 @@ uses
   ClpBitOperations,
   ClpPack,
   ClpArrayUtilities,
+  ClpAbstractAesEngine,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -65,7 +66,7 @@ type
   /// print.
   /// </para>
   /// </summary>
-  TAesLightEngine = class sealed(TInterfacedObject, IAesLightEngine,
+  TAesLightEngine = class sealed(TAbstractAesEngine, IAesLightEngine,
     IBlockCipher)
 
   strict private
@@ -167,6 +168,7 @@ type
 
   strict protected
     function GetAlgorithmName: String; virtual;
+    procedure WipeSchedule; override;
 
   public
     /// <summary>
@@ -634,6 +636,7 @@ procedure TAesLightEngine.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LKeyParameter: IKeyParameter;
+  LKey: TCryptoLibByteArray;
 begin
 
   if not Supports(AParameters, IKeyParameter, LKeyParameter) then
@@ -642,9 +645,29 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
-  FWorkingKey := GenerateWorkingKey(AForEncryption, LKeyParameter.GetKey());
+  LKey := LKeyParameter.GetKey();
+  try
+    // Same-key/direction fast path: keep the existing working key.
+    if CanReuseSchedule(AForEncryption, LKey) then
+      Exit;
 
-  FForEncryption := AForEncryption;
+    // GenerateWorkingKey zeroes the key array it is handed, so give it a
+    // throwaway copy and keep LKey intact to record for future reuse checks.
+    FWorkingKey := GenerateWorkingKey(AForEncryption, System.Copy(LKey));
+
+    FForEncryption := AForEncryption;
+
+    // Last step of a successful rebuild: record (direction, key) for reuse.
+    MarkScheduleBuilt(AForEncryption, LKey);
+  finally
+    TArrayUtilities.Fill(LKey, 0, System.Length(LKey), Byte(0));
+  end;
+end;
+
+procedure TAesLightEngine.WipeSchedule;
+begin
+  if FWorkingKey <> nil then
+    TArrayUtilities.Fill(FWorkingKey, 0, System.Length(FWorkingKey), UInt32(0));
 end;
 
 class procedure TAesLightEngine.PackBlock(const ABytes: TCryptoLibByteArray;

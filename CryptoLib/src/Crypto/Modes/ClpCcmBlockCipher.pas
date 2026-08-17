@@ -39,6 +39,7 @@ uses
   ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
   ClpIKeyParameter,
+  ClpKeyParameter,
   ClpCbcBlockCipherMac,
   ClpIMac,
   ClpParametersWithIV,
@@ -55,6 +56,7 @@ resourcestring
   SCipherRequired = 'cipher required with a block size of %d';
   SInvalidParameters = 'invalid parameters passed to %s';
   SNonceLengthRange = 'nonce must have length from 7 to 13 octets';
+  SKeyMustBeSpecified = 'key must be specified in initial packet';
   SCcmUninitialised = 'CCM cipher uninitialized';
   SCcmPacketTooLarge = 'CCM packet too large for choice of q';
   SDataTooShort = 'data too short';
@@ -102,6 +104,10 @@ type
     FCtrCipher: ISicBlockCipher;
     FBulkCtr: IBulkBlockCipherMode;
     FKernelForEnc: Boolean;
+    // CBC-MAC cached across packets like FCtrCipher; it wraps the shared FCipher,
+    // so a rekey flows through the engine. Rebuilt only on tag-size change.
+    FCbcMac: IMac;
+    FCbcMacSize: Int32;
     FAssociatedText: TMemoryStream;
     // Accumulated body input (plaintext on encrypt, ciphertext+tag on decrypt).
     // CCM needs the total length before processing (B_0 encodes it), so input is
@@ -146,6 +152,8 @@ type
     destructor Destroy; override;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
 
     procedure ProcessAadByte(AInput: Byte); override;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
@@ -280,6 +288,53 @@ begin
   end
   else
     FCcmKernel := nil;
+
+  Reset();
+end;
+
+procedure TCcmBlockCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LDirection: TCipherKernelDirection;
+  LSameKey: Boolean;
+begin
+  FForEncryption := AForEncryption;
+
+  CheckNonceReuseRaw(FForEncryption, ANonce, AKey);
+
+  if (FLastNonce = nil) or (System.Length(FLastNonce) <> System.Length(ANonce)) then
+    System.SetLength(FLastNonce, System.Length(ANonce));
+  System.Move(ANonce[0], FLastNonce[0], System.Length(ANonce));
+
+  FInitialAssociatedText := AAad;
+  FMacSize := GetMacSize(AMacSizeBits);
+
+  if (System.Length(FLastNonce) < 7) or (System.Length(FLastNonce) > 13) then
+    raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
+
+  LSameKey := SameKeyReuseRaw(AKey);
+  if (AKey <> nil) and (not LSameKey) then
+    FKeyParam := TKeyParameter.Create(AKey) as ICipherParameters;
+  if FKeyParam = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+
+  if not LSameKey then
+    FCipher.Init(True, FKeyParam);
+  if (FCcmKernel = nil) or (not LSameKey) or (FKernelForEnc <> AForEncryption) then
+  begin
+    FCcmKernel := nil;
+    if AForEncryption then
+      LDirection := TCipherKernelDirection.Encrypt
+    else
+      LDirection := TCipherKernelDirection.Decrypt;
+    TCipherKernelRegistry.TryAcquireCcm(FCipher, LDirection, FCcmKernel);
+    FKernelForEnc := AForEncryption;
+  end;
+  if FCtrCipher = nil then
+  begin
+    FCtrCipher := TSicBlockCipher.Create(FCipher);
+    TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCtrCipher, FBulkCtr);
+  end;
 
   Reset();
 end;
@@ -455,8 +510,15 @@ var
   LQ, LCount, LExtra, LTextLength, LLen: Int32;
   LInput: TCryptoLibByteArray;
 begin
-  LCMac := TCbcBlockCipherMac.Create(FCipher, FMacSize * 8);
-  LCMac.Init(FKeyParam);
+  if (FCbcMac = nil) or (FCbcMacSize <> FMacSize) then
+  begin
+    FCbcMac := TCbcBlockCipherMac.Create(FCipher, FMacSize * 8) as IMac;
+    FCbcMac.Init(FKeyParam);
+    FCbcMacSize := FMacSize;
+  end
+  else
+    FCbcMac.Reset();
+  LCMac := FCbcMac;
 
   System.SetLength(LB0, 16);
 

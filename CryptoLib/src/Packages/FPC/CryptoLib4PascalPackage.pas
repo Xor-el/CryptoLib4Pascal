@@ -284,8 +284,11 @@ uses
   ClpAbstractBlockCipherMode, ClpAbstractAeadCipher, 
   ClpAbstractAeadBlockCipher, ClpFpKernelX86Backend, ClpFpKernelSimd, 
   ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldArith, ClpCTPoint, 
-  ClpFpCTMultiplier, ClpFpCombMultiplier, ClpCurveFieldSimd,
-  ClpCurveFieldX86Backend, ClpCurveFieldArmBackend;
+  ClpFpCTMultiplier, ClpFpCombMultiplier, ClpCurveFieldSimd, 
+  ClpCurveFieldX86Backend, ClpCurveFieldArmBackend, ClpAbstractAesEngine, 
+  ClpIPacketCipher, ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
+  ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
+  ClpAesOcbPacketCipher, ClpAbstractPacketCipher;
 
 implementation
 

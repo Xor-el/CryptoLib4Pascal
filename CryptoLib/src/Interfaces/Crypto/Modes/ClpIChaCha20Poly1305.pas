@@ -21,7 +21,8 @@ unit ClpIChaCha20Poly1305;
 interface
 
 uses
-  ClpIAeadCipher;
+  ClpIAeadCipher,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>ChaCha20-Poly1305 AEAD (<c>IChaCha20Poly1305</c>): ChaCha20 stream cipher per RFC&nbsp;8439 layout with Poly1305 tag.</summary>

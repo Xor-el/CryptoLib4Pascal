@@ -32,7 +32,6 @@ uses
 
 resourcestring
   SCipherNil = 'cipher instance cannot be nil';
-  SInputNil = 'input cannot be nil';
 
 type
   TBufferedAeadBlockCipher = class(TBufferedCipherBase, IBufferedAeadBlockCipher)
@@ -155,8 +154,6 @@ var
   LOutBytes, LTmp: TCryptoLibByteArray;
   LUpdateSize, LPos: Int32;
 begin
-  if AInput = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   if ALength < 1 then
   begin
     Result := nil;
@@ -221,8 +218,6 @@ var
   LOutBytes, LTmp: TCryptoLibByteArray;
   LOutSize, LPos: Int32;
 begin
-  if AInput = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   LOutSize := FCipher.GetOutputSize(AInLen);
 
   if LOutSize > 0 then

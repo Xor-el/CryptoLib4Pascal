@@ -38,7 +38,6 @@ uses
 
 resourcestring
   SInvalidLength = 'cannot have a negative input length';
-  SInputNil = 'input cannot be nil';
   SCipherModeNil = 'cipher mode cannot be nil';
   SCipherModeInvalidBlockSize = 'cipher mode must have a positive block size';
   SOutputBufferTooSmall = 'output buffer too short';
@@ -286,11 +285,6 @@ var
   LLength, LPos: Int32;
   LOutBytes, LTmp: TCryptoLibByteArray;
 begin
-  if (AInput = nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
-  end;
-
   LLength := GetOutputSize(AInLen);
 
   LOutBytes := nil;
@@ -551,10 +545,6 @@ var
   LOutLength, LPos: Int32;
   LOutBytes, LTmp: TCryptoLibByteArray;
 begin
-  if (AInput = nil) then
-  begin
-    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
-  end;
   if (ALength < 1) then
   begin
     Result := nil;

@@ -42,6 +42,16 @@ type
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
 
+    /// <summary>
+    /// One-shot initialise from raw key, nonce and AAD (the allocation-free
+    /// packet path): equivalent to <c>Init</c> with an AeadParameters built from
+    /// these, but without constructing the parameter objects. <c>AKey</c> may be
+    /// nil to reuse the key from the previous call on this instance; <c>AAad</c>
+    /// may be nil. <c>AMacSizeBits</c> is the tag size in bits.
+    /// </summary>
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+
     procedure ProcessAadByte(AInput: Byte);
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32);
 

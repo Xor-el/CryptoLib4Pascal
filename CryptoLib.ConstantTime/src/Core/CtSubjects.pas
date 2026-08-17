@@ -96,6 +96,7 @@ implementation
 uses
   SysUtils,
   ClpCryptoLibTypes,
+  ClpArrayUtilities,
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpMod,
@@ -117,6 +118,11 @@ uses
 const
   AES_BLOCK = Int32(16);
   GHASH_BLOCK = Int32(16);
+  // Length for the FixedTimeEquals subject. The routine is length-generic (the
+  // AES same-key gate compares 16/32-byte keys); a longer span both gives the
+  // leaky early-exit control a decisive first-vs-last-byte separation and makes
+  // the CT subject's timing less noise-sensitive than a very short op.
+  CMP_LEN = Int32(1024);
 
 { Build a scalar in [1, N-1] from raw bytes (reproducible via the caller's stream). }
 function ScalarFromBytes(const ABytes: TBytes; const AN: TBigInteger): TBigInteger;
@@ -244,6 +250,19 @@ begin
   FResult := FMul.Multiply(FQ, FK).Normalize();
 end;
 
+{ Force a fresh key schedule so a block cipher's same-key Init fast path cannot
+  make the untimed prep asymmetric by class: init a neutral key first, then the
+  real key, so BOTH classes take the (destructive) rebuild path. Without this a
+  constant-key class would skip the rebuild and dudect would measure prep
+  asymmetry, not the timed op (CT-leak-detector methodology trap #5). Shared so
+  any future engine-Init subject can stay class-symmetric the same way. }
+procedure PrimeBlockCipherClassSymmetric(const AEngine: IBlockCipher;
+  AForEncryption: Boolean; const ANeutralKey, AKey: TCryptoLibByteArray);
+begin
+  AEngine.Init(AForEncryption, TKeyParameter.Create(ANeutralKey) as IKeyParameter);
+  AEngine.Init(AForEncryption, TKeyParameter.Create(AKey) as IKeyParameter);
+end;
+
 { =========================== #4  AES block cipher ========================= }
 
 type
@@ -251,7 +270,7 @@ type
   strict private
     FRnd: TCtRandom;
     FEngine: IBlockCipher;
-    FKey, FFixedKey, FIn, FOut: TBytes;
+    FKey, FFixedKey, FNeutralKey, FIn, FOut: TBytes;
     FKeyLen: Int32;
   public
     constructor Create(const AEngine: IBlockCipher; AKeyLen: Int32; ASeed: UInt64);
@@ -280,6 +299,11 @@ begin
   System.SetLength(FFixedKey, FKeyLen);
   for LI := 0 to FKeyLen - 1 do
     FFixedKey[LI] := Byte(LI * 7 + 3);
+  // Neutral key: a constant distinct from both the fixed and (any) random key,
+  // used to force a fresh key schedule per sample (see PrepareSecret).
+  System.SetLength(FNeutralKey, FKeyLen);
+  for LI := 0 to FKeyLen - 1 do
+    FNeutralKey[LI] := Byte(LI * 13 + 7);
   System.SetLength(FIn, AES_BLOCK);
   System.SetLength(FOut, AES_BLOCK);
   for LI := 0 to AES_BLOCK - 1 do
@@ -287,16 +311,14 @@ begin
 end;
 
 procedure TAesOp.PrepareSecret(AClass: Int32);
-var
-  LKp: IKeyParameter;
 begin
   // Class-symmetric preparation (always draw + build a key schedule); overwrite
-  // with the fixed key for class 0. ProcessBlock is the measured op.
+  // with the fixed key for class 0. ProcessBlock is the measured op. The neutral-
+  // key prime keeps prep symmetric against the engine's same-key Init gate.
   FRnd.NextBytes(FKey, 0, FKeyLen);
   if AClass = 0 then
     System.Move(FFixedKey[0], FKey[0], FKeyLen);
-  LKp := TKeyParameter.Create(FKey);
-  FEngine.Init(True, LKp);
+  PrimeBlockCipherClassSymmetric(FEngine, True, FNeutralKey, FKey);
 end;
 
 procedure TAesOp.RunOp;
@@ -547,6 +569,88 @@ begin
     FResult := TBigIntegerUtilities.ModOddInverseVar(FModulus, FK);
 end;
 
+{ =================== #8  FixedTimeEquals (CT byte compare) ================ }
+
+{ Guards the load-bearing constant-time comparison behind the AES engine's
+  same-key Init gate (TArrayUtilities.FixedTimeEquals). Property under test:
+  mismatch-POSITION independence. Both classes are MISSES (candidate <> reference)
+  differing only in WHERE the single differing byte sits - class 0 at the first
+  byte, class 1 at the last. A full-scan CT compare is flat; the leaky control
+  (early-exit) returns after 1 byte for class 0 vs CMP_LEN bytes for class 1, so it
+  separates and fires. This is deliberately NOT a same-vs-different test (that would
+  just confirm the gate skips on a hit, which is by design); it proves the compare
+  cannot be turned into a byte-at-a-time key-recovery oracle. }
+type
+  TCtCompareOp = class sealed(TDudectOp)
+  strict private
+    FVarTime: Boolean;
+    FRef, FCand: TBytes;
+    FLen: Int32;
+    FSink: UInt32;
+    function VarTimeEquals: Boolean;
+  public
+    constructor Create(AVarTime: Boolean; ALen: Int32);
+    procedure PrepareSecret(AClass: Int32); override;
+    procedure RunOp; override;
+  end;
+
+constructor TCtCompareOp.Create(AVarTime: Boolean; ALen: Int32);
+var
+  LI: Int32;
+begin
+  inherited Create;
+  FVarTime := AVarTime;
+  FLen := ALen;
+  // Fixed resident reference; the candidate is its copy with exactly one byte
+  // flipped per sample (position chosen by class in PrepareSecret).
+  System.SetLength(FRef, FLen);
+  for LI := 0 to FLen - 1 do
+    FRef[LI] := Byte(LI * 29 + 11);
+  System.SetLength(FCand, FLen);
+end;
+
+procedure TCtCompareOp.PrepareSecret(AClass: Int32);
+begin
+  // Class-symmetric prep. Both classes copy FRef then store BOTH ends in the SAME
+  // order (head, then tail last), so the store pattern - and thus the timed
+  // compare's entry cache/store-forward state - is identical by class. Only the
+  // VALUES differ: exactly one end is flipped, placing the lone mismatch at the
+  // first byte (class 0) or the last (class 1). Both remain misses; only the
+  // position of the difference (the secret under test) varies.
+  System.Move(FRef[0], FCand[0], FLen);
+  if AClass = 0 then
+  begin
+    FCand[0] := Byte(FRef[0] xor $FF);
+    FCand[FLen - 1] := FRef[FLen - 1];
+  end
+  else
+  begin
+    FCand[0] := FRef[0];
+    FCand[FLen - 1] := Byte(FRef[FLen - 1] xor $FF);
+  end;
+end;
+
+function TCtCompareOp.VarTimeEquals: Boolean;
+var
+  LI: Int32;
+begin
+  // Deliberately leaky twin: early-exit on the first differing byte.
+  for LI := 0 to FLen - 1 do
+    if FRef[LI] <> FCand[LI] then
+      Exit(False);
+  Result := True;
+end;
+
+procedure TCtCompareOp.RunOp;
+begin
+  // Sink the result into a field so the compare cannot be elided.
+  if FVarTime then
+    FSink := FSink xor UInt32(Ord(VarTimeEquals))
+  else
+    FSink := FSink xor
+      UInt32(Ord(TArrayUtilities.FixedTimeEquals(FLen, FRef, 0, FCand, 0)));
+end;
+
 { ============================== factories ================================ }
 
 function MakeX25519(ASeed: UInt64): TDudectOp;
@@ -708,6 +812,18 @@ begin
   Result := TModInvWrapperOp.Create(False, P256Order, ASeed);
 end;
 
+// FixedTimeEquals: data is deterministic, so the op needs no per-run seed (ASeed
+// still drives dudect's own class scheduling via the row Cfg).
+function MakeCtCompareFixed(ASeed: UInt64): TDudectOp;
+begin
+  Result := TCtCompareOp.Create(False, CMP_LEN);
+end;
+
+function MakeCtCompareVar(ASeed: UInt64): TDudectOp;
+begin
+  Result := TCtCompareOp.Create(True, CMP_LEN);
+end;
+
 { ============================== registries =============================== }
 
 function ExpensiveCfg(ASeed: UInt64): TDudectConfig;
@@ -753,7 +869,7 @@ end;
 
 function GetDudectRows: TCtRowArray;
 begin
-  System.SetLength(Result, 14);
+  System.SetLength(Result, 15);
   Result[0] := MakeRow('X25519', 'X25519 ladder', '',
     @MakeX25519, nil, MediumCfg(UInt64($0000000000000001)));
   Result[1] := MakeRow('P-256 [d]Q', 'value-type CT', 'wNAF (var-time)',
@@ -797,6 +913,12 @@ begin
     @MakeSecp384r1Comb, @MakeSecp384r1WNaf, ExpensiveCfg(UInt64($000000000000000D)));
   Result[13] := MakeRow('secp521r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
     @MakeSecp521r1Comb, @MakeSecp521r1WNaf, ExpensiveCfg(UInt64($000000000000000E)));
+  // FixedTimeEquals: the CT byte compare behind the AES same-key Init gate.
+  // Control = early-exit compare (first-vs-last mismatch position separates and
+  // fires); subject = the full-scan FixedTimeEquals (must stay flat).
+  Result[14] := MakeRow('FixedTimeEquals', 'CT compare (position-indep)',
+    'early-exit compare', @MakeCtCompareFixed, @MakeCtCompareVar,
+    CheapCfg(UInt64($000000000000000F)));
 end;
 
 function MakeVg(const AName: string; AMake: TCtOpFactory;

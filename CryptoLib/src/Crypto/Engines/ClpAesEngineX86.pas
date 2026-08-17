@@ -33,6 +33,7 @@ uses
   ClpCpuFeatures,
   ClpCheck,
   ClpArrayUtilities,
+  ClpAbstractAesEngine,
   ClpBitOperations,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
@@ -51,7 +52,7 @@ type
   /// <summary>
   /// AES using AES-NI when supported (see <see cref="IsSupported" />).
   /// </summary>
-  TAesEngineX86 = class sealed(TInterfacedObject, IAesEngineX86, IAesHardwareEngine,
+  TAesEngineX86 = class sealed(TAbstractAesEngine, IAesEngineX86, IAesHardwareEngine,
     IBulkBlockCipher, IBlockCipher)
   strict private
   type
@@ -68,6 +69,7 @@ type
     FAesNiCipherEight: TAesNiCipherProc;
     procedure FreeAlignedKeys;
     procedure AllocAlignedKeys(AKeyBytes: Int32);
+    procedure WipeSchedule; override;
     procedure CreateRoundKeys(AForEncryption: Boolean; const AKey: TCryptoLibByteArray);
     procedure PrepareDecryptRoundKeys;
     procedure BindCipherPointers;
@@ -88,7 +90,6 @@ type
   public
     class function IsSupported: Boolean; static;
     constructor Create();
-    destructor Destroy(); override;
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
     function GetBlockSize(): Int32;
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
@@ -507,10 +508,11 @@ begin
   FAesNiCipherEight := nil;
 end;
 
-destructor TAesEngineX86.Destroy();
+procedure TAesEngineX86.WipeSchedule;
 begin
+  // Single wipe path (called by the base destructor): zero + free the aligned
+  // round-key buffer. Idempotent and nil-safe (FreeAlignedKeys nil-guards).
   FreeAlignedKeys;
-  inherited;
 end;
 
 // =====================================================================
@@ -689,6 +691,11 @@ begin
     if not (LKeyLen in [16, 24, 32]) then
       raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
 
+    // Same-key/direction fast path: keep the existing round-key schedule (the
+    // aligned buffer, FMode and bound cipher pointers are all still valid).
+    if CanReuseSchedule(AForEncryption, LKeyCopy) then
+      Exit;
+
     AllocAlignedKeys((TBitOperations.Asr32(LKeyLen, 2) + 6 + 1) * 16);
 
     case LKeyLen of
@@ -711,6 +718,9 @@ begin
 
     CreateRoundKeys(AForEncryption, LKeyCopy);
     BindCipherPointers;
+
+    // Last step of a successful rebuild: record (direction, key) for reuse.
+    MarkScheduleBuilt(AForEncryption, LKeyCopy);
   finally
     TArrayUtilities.Fill(LKeyCopy, 0, System.Length(LKeyCopy), Byte(0));
   end;
