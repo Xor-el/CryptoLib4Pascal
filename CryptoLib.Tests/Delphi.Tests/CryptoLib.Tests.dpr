@@ -37,6 +37,7 @@ uses
   ClpAesEngineArm in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineArm.pas',
   ClpAesUtilities in '..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas',
   ClpIPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIPacketCipher.pas',
+  ClpIAeadPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas',
   ClpAesGcmPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmPacketCipher.pas',
   ClpChaCha20Poly1305PacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas',
   ClpAbstractAeadPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractAeadPacketCipher.pas',

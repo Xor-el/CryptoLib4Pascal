@@ -37,7 +37,7 @@ uses
   ClpCcmBlockCipher,
   ClpEaxBlockCipher,
   ClpOcbBlockCipher,
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpAesGcmPacketCipher,
   ClpChaCha20Poly1305PacketCipher,
   ClpAesEaxPacketCipher,
@@ -67,13 +67,13 @@ type
       const AKey, ANonce, AAad: TBytes): TBytes;
     procedure CheckMode(const ACipherA, ACipherB: IAeadCipher;
       AKeyLen, ANonceLen: Int32; const AName: String);
-    procedure CheckPacket(const APacket: IPacketCipher; AKeyLen, ANonceLen: Int32;
+    procedure CheckPacket(const APacket: IAeadPacketCipher; AKeyLen, ANonceLen: Int32;
       const AName: String);
     function CreateStream(AMode: Int32): IAeadCipher;
-    function CreatePacket(AMode: Int32): IPacketCipher;
+    function CreatePacket(AMode: Int32): IAeadPacketCipher;
     function StreamSeal(const ACipher: IAeadCipher; AForEncryption: Boolean;
       const AKey, ANonce, AAad, AInput: TBytes): TBytes;
-    function PacketSeal(const APacket: IPacketCipher; AForEncryption: Boolean;
+    function PacketSeal(const APacket: IAeadPacketCipher; AForEncryption: Boolean;
       const AKey, ANonce, AAad, AInput: TBytes): TBytes;
     procedure CheckDifferential(AMode, AKeyLen, ANonceLen: Int32;
       const AName: String);
@@ -154,7 +154,7 @@ begin
     AName + ': empty-input seal must equal the skip-ProcessBytes tag');
 end;
 
-procedure TTestAeadEmptyInput.CheckPacket(const APacket: IPacketCipher;
+procedure TTestAeadEmptyInput.CheckPacket(const APacket: IAeadPacketCipher;
   AKeyLen, ANonceLen: Int32; const AName: String);
 var
   LKey, LNonce, LAad, LCt, LPt: TBytes;
@@ -195,7 +195,7 @@ begin
   end;
 end;
 
-function TTestAeadEmptyInput.CreatePacket(AMode: Int32): IPacketCipher;
+function TTestAeadEmptyInput.CreatePacket(AMode: Int32): IAeadPacketCipher;
 begin
   case AMode of
     0:
@@ -227,7 +227,7 @@ begin
   Result := LOut;
 end;
 
-function TTestAeadEmptyInput.PacketSeal(const APacket: IPacketCipher;
+function TTestAeadEmptyInput.PacketSeal(const APacket: IAeadPacketCipher;
   AForEncryption: Boolean; const AKey, ANonce, AAad, AInput: TBytes): TBytes;
 var
   LOut: TBytes;
@@ -250,7 +250,7 @@ procedure TTestAeadEmptyInput.CheckDifferential(AMode, AKeyLen,
 const
   CSizes: array [0 .. 5] of Int32 = (0, 1, 16, 17, 40, 100);
 var
-  LPacket: IPacketCipher;
+  LPacket: IAeadPacketCipher;
   LKey, LKey2, LNonce, LAad, LPt, LCtP, LCtS, LPt2: TBytes;
   LI: Int32;
 begin

@@ -21,7 +21,7 @@ unit ClpChaCha20Poly1305PacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIAeadCipher,
   ClpChaCha20Poly1305,
   ClpAbstractAeadPacketCipher,
@@ -30,7 +30,7 @@ uses
 type
   /// <summary>
   /// One-shot / reusable ChaCha20-Poly1305 packet cipher (see
-  /// <see cref="IPacketCipher"/>): a per-message seal/open over a single reused
+  /// <see cref="IAeadPacketCipher"/>): a per-message seal/open over a single reused
   /// <c>TChaCha20Poly1305</c>. Holds no cryptography of its own; not thread-safe
   /// (one instance per thread).
   /// </summary>
@@ -38,7 +38,7 @@ type
   public
     constructor Create();
 
-    class function GetInstance(): IPacketCipher; static;
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
@@ -51,9 +51,9 @@ begin
   FCipher := TChaCha20Poly1305.Create() as IAeadCipher;
 end;
 
-class function TChaCha20Poly1305PacketCipher.GetInstance(): IPacketCipher;
+class function TChaCha20Poly1305PacketCipher.GetInstance(): IAeadPacketCipher;
 begin
-  Result := TChaCha20Poly1305PacketCipher.Create() as IPacketCipher;
+  Result := TChaCha20Poly1305PacketCipher.Create() as IAeadPacketCipher;
 end;
 
 end.

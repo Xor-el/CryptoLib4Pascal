@@ -21,7 +21,7 @@ unit ClpAesCcmPacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIBlockCipher,
   ClpICcmBlockCipher,
   ClpCcmBlockCipher,
@@ -31,7 +31,7 @@ uses
 
 type
   /// <summary>
-  /// One-shot / reusable AES-CCM packet cipher (see <see cref="IPacketCipher"/>):
+  /// One-shot / reusable AES-CCM packet cipher (see <see cref="IAeadPacketCipher"/>):
   /// a per-message seal/open over a single reused <c>TCcmBlockCipher</c>. Holds no
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
@@ -41,7 +41,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const AEngine: IBlockCipher); overload;
-    class function GetInstance(): IPacketCipher; static;
+    class function GetInstance(): IAeadPacketCipher; static;
 
     function ProcessPacket(AForEncryption: Boolean;
       const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
@@ -62,11 +62,12 @@ constructor TAesCcmPacketCipher.Create(const AEngine: IBlockCipher);
 begin
   inherited Create();
   FCcm := TCcmBlockCipher.Create(AEngine) as ICcmBlockCipher;
+  FCipher := FCcm; // FCcm is the typed one-shot view of the base FCipher
 end;
 
-class function TAesCcmPacketCipher.GetInstance(): IPacketCipher;
+class function TAesCcmPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
-  Result := TAesCcmPacketCipher.Create() as IPacketCipher;
+  Result := TAesCcmPacketCipher.Create() as IAeadPacketCipher;
 end;
 
 function TAesCcmPacketCipher.ProcessPacket(AForEncryption: Boolean;

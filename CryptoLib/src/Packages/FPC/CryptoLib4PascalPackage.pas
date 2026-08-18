@@ -288,7 +288,7 @@ uses
   ClpCurveFieldX86Backend, ClpCurveFieldArmBackend, ClpAbstractAesEngine, 
   ClpIPacketCipher, ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
   ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
-  ClpAesOcbPacketCipher, ClpAbstractPacketCipher;
+  ClpAesOcbPacketCipher, ClpAbstractPacketCipher, ClpIAeadPacketCipher;
 
 implementation
 

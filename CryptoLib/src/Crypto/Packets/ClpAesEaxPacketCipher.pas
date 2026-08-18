@@ -21,7 +21,7 @@ unit ClpAesEaxPacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIBlockCipher,
   ClpIAeadCipher,
   ClpEaxBlockCipher,
@@ -30,7 +30,7 @@ uses
 
 type
   /// <summary>
-  /// One-shot / reusable AES-EAX packet cipher (see <see cref="IPacketCipher"/>):
+  /// One-shot / reusable AES-EAX packet cipher (see <see cref="IAeadPacketCipher"/>):
   /// a per-message seal/open over a single reused <c>TEaxBlockCipher</c>. Holds no
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
@@ -38,7 +38,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const AEngine: IBlockCipher); overload;
-    class function GetInstance(): IPacketCipher; static;
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
@@ -56,9 +56,9 @@ begin
   FCipher := TEaxBlockCipher.Create(AEngine) as IAeadCipher;
 end;
 
-class function TAesEaxPacketCipher.GetInstance(): IPacketCipher;
+class function TAesEaxPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
-  Result := TAesEaxPacketCipher.Create() as IPacketCipher;
+  Result := TAesEaxPacketCipher.Create() as IAeadPacketCipher;
 end;
 
 end.

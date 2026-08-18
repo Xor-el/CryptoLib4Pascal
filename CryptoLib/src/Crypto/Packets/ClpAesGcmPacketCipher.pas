@@ -21,7 +21,7 @@ unit ClpAesGcmPacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIBlockCipher,
   ClpIAeadCipher,
   ClpIGcmMultiplier,
@@ -32,7 +32,7 @@ uses
 
 type
   /// <summary>
-  /// One-shot / reusable AES-GCM packet cipher (see <see cref="IPacketCipher"/>):
+  /// One-shot / reusable AES-GCM packet cipher (see <see cref="IAeadPacketCipher"/>):
   /// a per-message seal/open over a single reused <c>TGcmBlockCipher</c>. Holds no
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
@@ -43,7 +43,7 @@ type
     constructor Create(const AEngine: IBlockCipher;
       const AMultiplier: IGcmMultiplier); overload;
 
-    class function GetInstance(): IPacketCipher; static;
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
@@ -68,9 +68,9 @@ begin
   FCipher := TGcmBlockCipher.Create(AEngine, AMultiplier) as IAeadCipher;
 end;
 
-class function TAesGcmPacketCipher.GetInstance(): IPacketCipher;
+class function TAesGcmPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
-  Result := TAesGcmPacketCipher.Create() as IPacketCipher;
+  Result := TAesGcmPacketCipher.Create() as IAeadPacketCipher;
 end;
 
 end.

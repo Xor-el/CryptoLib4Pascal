@@ -21,34 +21,83 @@ unit ClpAbstractAeadPacketCipher;
 interface
 
 uses
+  SysUtils,
   ClpAbstractPacketCipher,
+  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIAeadCipher,
-  ClpCryptoLibTypes;
+  ClpIAeadParameters,
+  ClpICipherParameters,
+  ClpCryptoLibTypes,
+  ClpCryptoLibExceptions;
+
+resourcestring
+  SInvalidPacketParameters = 'packet cipher requires AEAD parameters';
 
 type
   /// <summary>
-  /// Base for the AEAD packet ciphers (see <see cref="IPacketCipher"/>). Drives a
-  /// single reused AEAD mode through its <c>InitPacket</c> entry point, so a
+  /// Base for the AEAD packet ciphers (see <see cref="IAeadPacketCipher"/>). Drives
+  /// a single reused AEAD mode through its <c>InitPacket</c> entry point, so a
   /// per-message seal/open pays only the irreducible nonce-dependent work - key
   /// identity is cached inside the mode by its own same-key gate, and a mode with
-  /// a raw <c>InitPacket</c> override skips the parameter objects entirely. The
-  /// concrete facades only construct the mode and assign <c>FCipher</c>; they add
-  /// no cryptography of their own. Not thread-safe: one instance per thread.
+  /// a raw <c>InitPacket</c> override skips the parameter objects entirely. Most
+  /// facades just construct the mode and assign <c>FCipher</c>; a whole-message
+  /// mode (CCM, GCM-SIV) instead overrides <c>ProcessPacket</c> to drive its own
+  /// one-shot path (still assigning <c>FCipher</c>). They add no cryptography of
+  /// their own. Not thread-safe: one instance per thread.
   /// </summary>
-  TAbstractAeadPacketCipher = class abstract(TAbstractPacketCipher)
+  TAbstractAeadPacketCipher = class abstract(TAbstractPacketCipher,
+    IAeadPacketCipher)
   strict protected
   var
     FCipher: IAeadCipher;
   public
+    function GetOutputSize(AForEncryption: Boolean;
+      AInLen, AMacSizeBits: Int32): Int32;
+
+    function ProcessPacket(AForEncryption: Boolean;
+      const AParameters: ICipherParameters; const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; override;
+
     function ProcessPacket(AForEncryption: Boolean;
       const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32)
-      : Int32; overload; override;
+      : Int32; overload; virtual;
   end;
 
 implementation
 
 { TAbstractAeadPacketCipher }
+
+function TAbstractAeadPacketCipher.GetOutputSize(AForEncryption: Boolean;
+  AInLen, AMacSizeBits: Int32): Int32;
+var
+  LMacSize: Int32;
+begin
+  LMacSize := AMacSizeBits shr 3;
+  if AForEncryption then
+    Result := AInLen + LMacSize
+  else
+    Result := AInLen - LMacSize;
+  if Result < 0 then
+    Result := 0;
+end;
+
+function TAbstractAeadPacketCipher.ProcessPacket(AForEncryption: Boolean;
+  const AParameters: ICipherParameters; const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LAead: IAeadParameters;
+begin
+  if not Supports(AParameters, IAeadParameters, LAead) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidPacketParameters);
+
+  Result := ProcessPacket(AForEncryption, LAead.Key.GetKey(), LAead.GetNonce(),
+    LAead.GetAssociatedText(), AInput, AInOff, AInLen, AOutput, AOutOff,
+    LAead.MacSize);
+end;
 
 function TAbstractAeadPacketCipher.ProcessPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;

@@ -14,41 +14,42 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIPacketCipher;
+unit ClpIAeadPacketCipher;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpICipherParameters,
+  ClpIPacketCipher,
   ClpCryptoLibTypes;
 
 type
   /// <summary>
-  /// One-shot, reusable packet cipher (the small-message hot path). A single call
-  /// performs the whole seal/open (init + process + finalize) so it avoids the
-  /// streaming API's per-message parameter-object churn and buffered-wrapper
-  /// layering. Instances are reusable across messages under the same or different
-  /// keys; a per-instance key cache means repeated same-key calls skip the key
-  /// schedule (and, for AEAD modes, the MAC subkey derivation).
-  ///
-  /// This is the family-neutral base: the parameter-object <c>ProcessPacket</c>
-  /// is polymorphic through <c>ICipherParameters</c>, so AEAD and plain
-  /// block-mode ciphers share it. The AEAD raw-span entry points live on
-  /// <see cref="IAeadPacketCipher"/>. Not thread-safe: use one instance per thread.
+  /// One-shot, reusable AEAD packet cipher. Adds the AEAD-shaped entry points to
+  /// <see cref="IPacketCipher"/>: the tag-aware output-size arithmetic and an
+  /// allocation-free raw-span seal/open taking key, nonce and AAD directly. Not
+  /// thread-safe: use one instance per thread.
   /// </summary>
-  IPacketCipher = interface(IInterface)
-    ['{2D3A9874-FAEC-43B6-816F-BAB6D9C654A5}']
+  IAeadPacketCipher = interface(IPacketCipher)
+    ['{19402E21-515F-449F-B5C5-43E20F0C8195}']
+
+    /// <summary>Exact output length for an <c>AInLen</c>-byte packet: on encrypt
+    /// <c>AInLen + macSize</c>, on decrypt <c>AInLen - macSize</c> (>= 0). Pure
+    /// arithmetic; <c>AMacSizeBits</c> is the tag size in bits.</summary>
+    function GetOutputSize(AForEncryption: Boolean;
+      AInLen, AMacSizeBits: Int32): Int32;
 
     /// <summary>
-    /// Parameter-object entry point. Extracts the mode's parameters from
-    /// <c>AParameters</c> and performs the whole seal/open. Returns the number of
-    /// output bytes written at <c>AOutOff</c>.
+    /// Allocation-free per-message seal/open from raw spans. Encrypt writes
+    /// ciphertext followed by the tag; decrypt verifies the trailing tag and
+    /// writes plaintext (raising on tag mismatch). <c>AKey</c> may be nil to
+    /// reuse the key from the previous call on this instance. <c>AAad</c> may be
+    /// nil. Returns the number of output bytes written at <c>AOutOff</c>.
     /// </summary>
     function ProcessPacket(AForEncryption: Boolean;
-      const AParameters: ICipherParameters; const AInput: TCryptoLibByteArray;
-      AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32)
       : Int32; overload;
   end;
 

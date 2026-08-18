@@ -21,7 +21,7 @@ unit ClpAesOcbPacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
+  ClpIAeadPacketCipher,
   ClpIBlockCipher,
   ClpIAeadCipher,
   ClpOcbBlockCipher,
@@ -30,7 +30,7 @@ uses
 
 type
   /// <summary>
-  /// One-shot / reusable AES-OCB packet cipher (see <see cref="IPacketCipher"/>):
+  /// One-shot / reusable AES-OCB packet cipher (see <see cref="IAeadPacketCipher"/>):
   /// a per-message seal/open over a single reused <c>TOcbBlockCipher</c>. Holds no
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
@@ -38,7 +38,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const AHashCipher, AMainCipher: IBlockCipher); overload;
-    class function GetInstance(): IPacketCipher; static;
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
@@ -57,9 +57,9 @@ begin
   FCipher := TOcbBlockCipher.Create(AHashCipher, AMainCipher) as IAeadCipher;
 end;
 
-class function TAesOcbPacketCipher.GetInstance(): IPacketCipher;
+class function TAesOcbPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
-  Result := TAesOcbPacketCipher.Create() as IPacketCipher;
+  Result := TAesOcbPacketCipher.Create() as IAeadPacketCipher;
 end;
 
 end.
