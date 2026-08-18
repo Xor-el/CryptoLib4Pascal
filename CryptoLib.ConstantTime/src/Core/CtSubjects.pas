@@ -266,14 +266,17 @@ end;
 { =========================== #4  AES block cipher ========================= }
 
 type
+  TBlockCipherFactory = function: IBlockCipher;
+
   TAesOp = class sealed(TDudectOp)
   strict private
     FRnd: TCtRandom;
+    FFactory: TBlockCipherFactory;
     FEngine: IBlockCipher;
     FKey, FFixedKey, FNeutralKey, FIn, FOut: TBytes;
     FKeyLen: Int32;
   public
-    constructor Create(const AEngine: IBlockCipher; AKeyLen: Int32; ASeed: UInt64);
+    constructor Create(AFactory: TBlockCipherFactory; AKeyLen: Int32; ASeed: UInt64);
     procedure PrepareSecret(AClass: Int32); override;
     procedure RunOp; override;
     procedure RunPoisonedRoutine; override;
@@ -283,13 +286,14 @@ type
     function OutputLen: Int32; override;
   end;
 
-constructor TAesOp.Create(const AEngine: IBlockCipher; AKeyLen: Int32; ASeed: UInt64);
+constructor TAesOp.Create(AFactory: TBlockCipherFactory; AKeyLen: Int32; ASeed: UInt64);
 var
   LI: Int32;
 begin
   inherited Create;
   FRnd := TCtRandom.Create(ASeed);
-  FEngine := AEngine;
+  FFactory := AFactory;
+  FEngine := AFactory();
   FKeyLen := AKeyLen;
   System.SetLength(FKey, FKeyLen);
   // Fixed key = a NON-extreme constant. The fixed class only needs to be constant
@@ -328,13 +332,22 @@ end;
 
 procedure TAesOp.RunPoisonedRoutine;
 var
+  LEngine: IBlockCipher;
   LKp: IKeyParameter;
 begin
-  // Under taint the whole key-dependent path runs: schedule (S-box indexed by key
-  // bytes in the T-table engine) and the block transform.
+  // Use a FRESH engine so the schedule-reuse gate cannot trigger: on a virgin
+  // engine FScheduleReady is False, so the reuse check short-circuits before the
+  // key compare and the poisoned Init takes the full REBUILD path - key
+  // expansion (S-box indexed by key bytes in the T-table engine) AND the block
+  // transform run under taint, which is the primitive this subject asserts. The
+  // gate's key-change compare is a deliberate one-bit signal (documented on
+  // TAbstractAesEngine) and is intentionally kept out of the taint scope; a
+  // reused schedule would run ProcessBlock on pre-poison round keys and test
+  // nothing.
+  LEngine := FFactory();
   LKp := TKeyParameter.Create(FKey);
-  FEngine.Init(True, LKp);
-  FEngine.ProcessBlock(FIn, 0, FOut, 0);
+  LEngine.Init(True, LKp);
+  LEngine.ProcessBlock(FIn, 0, FOut, 0);
 end;
 
 function TAesOp.SecretPtr: Pointer;
@@ -767,14 +780,24 @@ begin
   Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
 end;
 
+function NewBitslicedEngine: IBlockCipher;
+begin
+  Result := TAesBitSlicedEngine.Create as IBlockCipher;
+end;
+
+function NewTableEngine: IBlockCipher;
+begin
+  Result := TAesEngine.Create as IBlockCipher;
+end;
+
 function MakeAesBitsliced(ASeed: UInt64): TDudectOp;
 begin
-  Result := TAesOp.Create(TAesBitSlicedEngine.Create as IBlockCipher, 16, ASeed);
+  Result := TAesOp.Create(@NewBitslicedEngine, 16, ASeed);
 end;
 
 function MakeAesTable(ASeed: UInt64): TDudectOp;
 begin
-  Result := TAesOp.Create(TAesEngine.Create as IBlockCipher, 16, ASeed);
+  Result := TAesOp.Create(@NewTableEngine, 16, ASeed);
 end;
 
 function MakeGhashBasic(ASeed: UInt64): TDudectOp;
