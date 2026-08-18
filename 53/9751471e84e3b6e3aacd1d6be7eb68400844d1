@@ -1,0 +1,56 @@
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_d73146a41790f9::t_e4df9874e167ea 34
+  s_d73146a41790f9::t_56b150a8839ee4 3584-3599
+CryptoLib/src/Interfaces/Crypto/Packets/ClpIBlockPacketCipher.pas
+  s_d73146a41790f9::t_cf6e4fa39f6754 1-57
+CryptoLib/src/Crypto/Packets/ClpAesCbcPacketCipher.pas
+  s_d73146a41790f9::t_b593283c204e08 1-101
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_d73146a41790f9::t_e01316fcbd828a 53-55
+  s_d73146a41790f9::t_50394b65b83ec6 50
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_d73146a41790f9::t_fdd3e6a94740fc 41
+  s_d73146a41790f9::t_ed4647fed38c0e 44-46
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_d73146a41790f9::t_345b03493276f8 25
+  s_d73146a41790f9::t_8ca6262e1ec704 29-31
+  s_d73146a41790f9::t_b42eea75ef1a0a 26
+  s_d73146a41790f9::t_0abdba79e245b0 28
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_d73146a41790f9::t_454985a116bfeb 292-293
+CryptoLib.Tests/src/Crypto/AeadEmptyInputTests.pas
+  s_d73146a41790f9::t_fb95c47100a887 380-390
+  s_d73146a41790f9::t_bd07a1bcaebb24 97
+  s_d73146a41790f9::t_376a6f5dcb4da0 313-379
+  s_d73146a41790f9::t_8a9dc12f0996e4 48-50
+  s_d73146a41790f9::t_96f83362029a52 85-91
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_d73146a41790f9::t_3be328036cf7a2 22
+  s_d73146a41790f9::t_ae32f3bac065c0 25-27
+CryptoLib/src/Crypto/Packets/ClpAbstractBlockPacketCipher.pas
+  s_d73146a41790f9::t_4cd36833ed91c6 1-120
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_d73146a41790f9::t_b5470fc2f73b82 368-370
+  s_d73146a41790f9::t_a81ac31b9374da 365
+CryptoLib/src/Crypto/Packets/ClpAesCtrPacketCipher.pas
+  s_d73146a41790f9::t_f8db28184f4512 1-112
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_d73146a41790f9::t_06bd2b2d4d997d 45
+  s_d73146a41790f9::t_261bd1ce300f29 48-50
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "539751471e84e3b6e3aacd1d6be7eb68400844d1",
+  "prompts": {},
+  "sessions": {
+    "s_d73146a41790f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9014869-1fdc-43f4-9bbb-f1e1e9e01b78",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
