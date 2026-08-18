@@ -36,6 +36,7 @@ requires
   SimpleBaseLib4PascalPackage;
 
 contains
+  ClpAbstractAesEngine in '..\..\Crypto\Engines\ClpAbstractAesEngine.pas',
   ClpAesEngine in '..\..\Crypto\Engines\ClpAesEngine.pas',
   ClpAesBitSlicedEngine in '..\..\Crypto\Engines\ClpAesBitSlicedEngine.pas',
   ClpIAesHardwareEngine in '..\..\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas',
@@ -44,6 +45,20 @@ contains
   ClpIAesEngineArm in '..\..\Interfaces\Crypto\Engines\ClpIAesEngineArm.pas',
   ClpAesEngineArm in '..\..\Crypto\Engines\ClpAesEngineArm.pas',
   ClpAesUtilities in '..\..\Crypto\ClpAesUtilities.pas',
+  ClpIPacketCipher in '..\..\Interfaces\Crypto\Packets\ClpIPacketCipher.pas',
+  ClpIAeadPacketCipher in '..\..\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas',
+  ClpIBlockPacketCipher in '..\..\Interfaces\Crypto\Packets\ClpIBlockPacketCipher.pas',
+  ClpAesGcmPacketCipher in '..\..\Crypto\Packets\ClpAesGcmPacketCipher.pas',
+  ClpAesGcmSivPacketCipher in '..\..\Crypto\Packets\ClpAesGcmSivPacketCipher.pas',
+  ClpAbstractBlockPacketCipher in '..\..\Crypto\Packets\ClpAbstractBlockPacketCipher.pas',
+  ClpAesCbcPacketCipher in '..\..\Crypto\Packets\ClpAesCbcPacketCipher.pas',
+  ClpAesCtrPacketCipher in '..\..\Crypto\Packets\ClpAesCtrPacketCipher.pas',
+  ClpChaCha20Poly1305PacketCipher in '..\..\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas',
+  ClpAbstractAeadPacketCipher in '..\..\Crypto\Packets\ClpAbstractAeadPacketCipher.pas',
+  ClpAbstractPacketCipher in '..\..\Crypto\Packets\ClpAbstractPacketCipher.pas',
+  ClpAesEaxPacketCipher in '..\..\Crypto\Packets\ClpAesEaxPacketCipher.pas',
+  ClpAesCcmPacketCipher in '..\..\Crypto\Packets\ClpAesCcmPacketCipher.pas',
+  ClpAesOcbPacketCipher in '..\..\Crypto\Packets\ClpAesOcbPacketCipher.pas',
   ClpAesSimd in '..\..\Simd\Facade\ClpAesSimd.pas',
   ClpAesLightEngine in '..\..\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\Crypto\Agreements\ClpAgreementUtilities.pas',

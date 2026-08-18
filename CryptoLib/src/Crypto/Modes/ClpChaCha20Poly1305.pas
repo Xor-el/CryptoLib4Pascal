@@ -63,7 +63,6 @@ resourcestring
   SLimitExceeded = 'limit exceeded';
   SCipherEngine = 'cipher engine';
   SInvalidNonceOctetLength = 'invalid nonce octet length';
-  SInBytesNil = 'input bytes cannot be nil';
   SInvalidOperationState = 'invalid operation state for current cipher state';
 
 type
@@ -116,21 +115,27 @@ type
     // The cipher engine's bulk stream interface when it exposes one (resolved once);
     // enables the 512B/8-way tier. nil => the narrower per-tier path is used.
     FBulkChaCha: IBulkStreamCipher;
-    // A registered ChaCha20-Poly1305 kernel, resolved once at Init.
-    // the two-pass cipher-then-MAC path runs.
+    // A registered ChaCha20-Poly1305 kernel. It binds to the (fixed) engine
+    // instance and a direction, so it is resolved once per direction and cached
+    // across same-object re-Inits (a fresh nonce/key does not invalidate it).
     FChaChaKernel: IChaCha20Poly1305Kernel;
+    FKernelResolved: Boolean;
+    FKernelForEncryption: Boolean;
     FNonceBytes: Int32;
     FPoly1305: IMac;
 
     FKey: TCryptoLibByteArray;
     FNonce: TCryptoLibByteArray;
-    FBuf: TCryptoLibByteArray;
+    FBuffer: TCryptoLibByteArray;
+    // Reused 64-byte block for the per-message Poly1305 key derivation (was a
+    // fresh allocation in InitMac every message).
+    FMacKeyBlock: TCryptoLibByteArray;
 
     FInitialAad: TCryptoLibByteArray;
 
     FAadCount: UInt64;
     FDataCount: UInt64;
-    FBufPos: Int32;
+    FBufferPos: Int32;
 
     procedure CheckAad();
     procedure CheckData();
@@ -158,6 +163,13 @@ type
       ANonceBytes: Int32); overload;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+
+    /// <summary>One-shot / reusable-context init from raw key, nonce and AAD
+    /// spans (no parameter objects). Pass <c>AKey = nil</c> to reuse the
+    /// established key. Backing for TChaCha20Poly1305PacketCipher; ordinary
+    /// callers use Init.</summary>
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
 
     function GetOutputSize(ALen: Int32): Int32; override;
     function GetUpdateOutputSize(ALen: Int32): Int32; override;
@@ -217,8 +229,9 @@ begin
   FMacSize := MacSize;
   System.SetLength(FKey, KeySize);
   System.SetLength(FNonce, FNonceBytes);
-  System.SetLength(FBuf, BufSize + MacSize);
+  System.SetLength(FBuffer, BufSize + MacSize);
   System.SetLength(FMacBlock, MacSize);
+  System.SetLength(FMacKeyBlock, BufSize);
 
   FState := TState.Uninitialized;
 end;
@@ -239,8 +252,9 @@ procedure TChaCha20Poly1305.WipeKeyMaterial;
 begin
   TArrayUtilities.Fill(FKey, 0, System.Length(FKey), Byte(0));
   TArrayUtilities.Fill(FNonce, 0, System.Length(FNonce), Byte(0));
-  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FBuffer, 0, System.Length(FBuffer), Byte(0));
   TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
+  TArrayUtilities.Fill(FMacKeyBlock, 0, System.Length(FMacKeyBlock), Byte(0));
 end;
 
 procedure TChaCha20Poly1305.Init(AForEncryption: Boolean;
@@ -251,6 +265,7 @@ var
   LInitNonce: TCryptoLibByteArray;
   LChaCha20Params: ICipherParameters;
   LMacSizeBits: Int32;
+  LKeyChanged: Boolean;
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
@@ -266,10 +281,7 @@ begin
     LMacSizeBits := LChoice.MacSizeBits;
     if ((MacSize * 8) <> LMacSizeBits) then
       raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize, [LMacSizeBits]);
-    LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce);
-  end
-  else
-    LChaCha20Params := AParameters;
+  end;
 
   if (LInitKeyParam = nil) then
   begin
@@ -294,21 +306,111 @@ begin
         [AlgorithmName]);
   end;
 
-  if (LInitKeyParam <> nil) then
-  begin
+  // Same-key fast path (determined against the old FKey, before it is
+  // overwritten): a re-Init with the same key (fresh nonce) keeps the engine's
+  // expanded key and the resolved kernel; only the nonce and the per-message
+  // Poly1305 key are refreshed. A nil key is the "reuse last key" convention.
+  LKeyChanged := (LInitKeyParam <> nil) and
+    ((TState.Uninitialized = FState) or
+    (not LInitKeyParam.FixedTimeEquals(FKey)));
+
+  if LKeyChanged then
     LInitKeyParam.CopyKeyTo(FKey, 0, KeySize);
-  end;
 
   System.Move(LInitNonce[0], FNonce[0], FNonceBytes);
 
+  // On a key change pass the key (full re-key); otherwise pass a nil key so the
+  // engine only refreshes the IV and keeps the already-expanded key state.
+  if LKeyChanged then
+    LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce)
+  else
+    LChaCha20Params := TParametersWithIV.Create(nil, LInitNonce);
   FChaCha20.Init(True, LChaCha20Params);
 
+  // The kernel binds to the (fixed) engine instance and a direction, so it is
+  // resolved once per direction and reused across same-object re-Inits.
+  if (not FKernelResolved) or (FKernelForEncryption <> AForEncryption) then
+  begin
+    if AForEncryption then
+      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+        TCipherKernelDirection.Encrypt, FChaChaKernel)
+    else
+      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+        TCipherKernelDirection.Decrypt, FChaChaKernel);
+    FKernelForEncryption := AForEncryption;
+    FKernelResolved := True;
+  end;
+
   if AForEncryption then
-    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-      TCipherKernelDirection.Encrypt, FChaChaKernel)
+    FState := TState.EncInit
   else
-    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-      TCipherKernelDirection.Decrypt, FChaChaKernel);
+    FState := TState.DecInit;
+
+  Reset(True, False);
+end;
+
+procedure TChaCha20Poly1305.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LChaCha20Params: ICipherParameters;
+  LKeyChanged: Boolean;
+begin
+  // Raw-span mirror of Init (no TryResolveAeadOrIv, no caller parameter objects).
+  if ((MacSize * 8) <> AMacSizeBits) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidMacSize,
+      [AMacSizeBits]);
+
+  if (AKey = nil) then
+  begin
+    if (TState.Uninitialized = FState) then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+  end
+  else if (KeySize <> System.Length(AKey)) then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeTwoFiftySix);
+
+  if (FNonceBytes <> System.Length(ANonce)) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SNonceMustBeBits,
+      [UInt32(FNonceBytes) shl 3]);
+
+  if (TState.Uninitialized <> FState) and AForEncryption and
+    TArrayUtilities.AreEqual(FNonce, ANonce) then
+  begin
+    if (AKey = nil) or TArrayUtilities.FixedTimeEquals(AKey, FKey) then
+      raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce,
+        [AlgorithmName]);
+  end;
+
+  FInitialAad := AAad;
+
+  LKeyChanged := (AKey <> nil) and
+    ((TState.Uninitialized = FState) or
+    (not TArrayUtilities.FixedTimeEquals(AKey, FKey)));
+
+  if LKeyChanged then
+    System.Move(AKey[0], FKey[0], KeySize);
+
+  System.Move(ANonce[0], FNonce[0], FNonceBytes);
+
+  // Same-key -> nil-key engine re-init (IV only); a fresh TKeyParameter is
+  // created only on an actual rekey.
+  if LKeyChanged then
+    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(AKey)
+      as IKeyParameter, ANonce)
+  else
+    LChaCha20Params := TParametersWithIV.Create(nil, ANonce);
+  FChaCha20.Init(True, LChaCha20Params);
+
+  if (not FKernelResolved) or (FKernelForEncryption <> AForEncryption) then
+  begin
+    if AForEncryption then
+      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+        TCipherKernelDirection.Encrypt, FChaChaKernel)
+    else
+      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
+        TCipherKernelDirection.Decrypt, FChaChaKernel);
+    FKernelForEncryption := AForEncryption;
+    FKernelResolved := True;
+  end;
 
   if AForEncryption then
     FState := TState.EncInit
@@ -328,9 +430,9 @@ begin
     TState.DecInit, TState.DecAad:
       Result := Math.Max(0, LTotal - MacSize);
     TState.DecData, TState.DecFinal:
-      Result := Math.Max(0, LTotal + FBufPos - MacSize);
+      Result := Math.Max(0, LTotal + FBufferPos - MacSize);
     TState.EncData, TState.EncFinal:
-      Result := LTotal + FBufPos + MacSize;
+      Result := LTotal + FBufferPos + MacSize;
   else
     Result := LTotal + MacSize;
   end;
@@ -346,9 +448,9 @@ begin
     TState.DecInit, TState.DecAad:
       LTotal := Math.Max(0, LTotal - MacSize);
     TState.DecData, TState.DecFinal:
-      LTotal := Math.Max(0, LTotal + FBufPos - MacSize);
+      LTotal := Math.Max(0, LTotal + FBufferPos - MacSize);
     TState.EncData, TState.EncFinal:
-      LTotal := LTotal + FBufPos;
+      LTotal := LTotal + FBufferPos;
   else
     ;
   end;
@@ -366,8 +468,6 @@ end;
 procedure TChaCha20Poly1305.ProcessAadBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32);
 begin
-  if (AInput = nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
   if (AInOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
   if (ALen < 0) then
@@ -391,14 +491,14 @@ begin
   case FState of
     TState.DecData:
     begin
-      FBuf[FBufPos] := AInput;
-      System.Inc(FBufPos);
-      if (FBufPos = System.Length(FBuf)) then
+      FBuffer[FBufferPos] := AInput;
+      System.Inc(FBufferPos);
+      if (FBufferPos = System.Length(FBuffer)) then
       begin
-        FPoly1305.BlockUpdate(FBuf, 0, BufSize);
-        ProcessBlock(FBuf, 0, AOutput, AOutOff);
-        System.Move(FBuf[BufSize], FBuf[0], MacSize);
-        FBufPos := MacSize;
+        FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+        ProcessBlock(FBuffer, 0, AOutput, AOutOff);
+        System.Move(FBuffer[BufSize], FBuffer[0], MacSize);
+        FBufferPos := MacSize;
         Result := BufSize;
         Exit;
       end;
@@ -407,13 +507,13 @@ begin
     end;
     TState.EncData:
     begin
-      FBuf[FBufPos] := AInput;
-      System.Inc(FBufPos);
-      if (FBufPos = BufSize) then
+      FBuffer[FBufferPos] := AInput;
+      System.Inc(FBufferPos);
+      if (FBufferPos = BufSize) then
       begin
-        ProcessBlock(FBuf, 0, AOutput, AOutOff);
+        ProcessBlock(FBuffer, 0, AOutput, AOutOff);
         FPoly1305.BlockUpdate(AOutput, AOutOff, BufSize);
-        FBufPos := 0;
+        FBufferPos := 0;
         Result := BufSize;
         Exit;
       end;
@@ -430,8 +530,6 @@ function TChaCha20Poly1305.ProcessBytes(const AInput: TCryptoLibByteArray;
 var
   LResultLen, LAvailable, LInLimit1, LRemBlocks: Int32;
 begin
-  if (AInput = nil) then
-    raise EArgumentNilCryptoLibException.CreateRes(@SInBytesNil);
   if (AInOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
   if (ALen < 0) then
@@ -447,39 +545,39 @@ begin
   case FState of
     TState.DecData:
     begin
-      LAvailable := System.Length(FBuf) - FBufPos;
+      LAvailable := System.Length(FBuffer) - FBufferPos;
       if (ALen < LAvailable) then
       begin
-        System.Move(AInput[AInOff], FBuf[FBufPos], ALen);
-        FBufPos := FBufPos + ALen;
+        System.Move(AInput[AInOff], FBuffer[FBufferPos], ALen);
+        FBufferPos := FBufferPos + ALen;
         Result := 0;
         Exit;
       end;
 
-      if (FBufPos >= BufSize) then
+      if (FBufferPos >= BufSize) then
       begin
-        FPoly1305.BlockUpdate(FBuf, 0, BufSize);
-        ProcessBlock(FBuf, 0, AOutput, AOutOff);
-        FBufPos := FBufPos - BufSize;
-        System.Move(FBuf[BufSize], FBuf[0], FBufPos);
+        FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+        ProcessBlock(FBuffer, 0, AOutput, AOutOff);
+        FBufferPos := FBufferPos - BufSize;
+        System.Move(FBuffer[BufSize], FBuffer[0], FBufferPos);
         LResultLen := BufSize;
 
         LAvailable := LAvailable + BufSize;
         if (ALen < LAvailable) then
         begin
-          System.Move(AInput[AInOff], FBuf[FBufPos], ALen);
-          FBufPos := FBufPos + ALen;
+          System.Move(AInput[AInOff], FBuffer[FBufferPos], ALen);
+          FBufferPos := FBufferPos + ALen;
           Result := LResultLen;
           Exit;
         end;
       end;
 
-      LInLimit1 := AInOff + ALen - System.Length(FBuf);
+      LInLimit1 := AInOff + ALen - System.Length(FBuffer);
 
-      LAvailable := BufSize - FBufPos;
-      System.Move(AInput[AInOff], FBuf[FBufPos], LAvailable);
-      FPoly1305.BlockUpdate(FBuf, 0, BufSize);
-      ProcessBlock(FBuf, 0, AOutput, AOutOff + LResultLen);
+      LAvailable := BufSize - FBufferPos;
+      System.Move(AInput[AInOff], FBuffer[FBufferPos], LAvailable);
+      FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+      ProcessBlock(FBuffer, 0, AOutput, AOutOff + LResultLen);
       AInOff := AInOff + LAvailable;
       LResultLen := LResultLen + BufSize;
 
@@ -508,26 +606,26 @@ begin
         end;
       end;
 
-      FBufPos := System.Length(FBuf) + LInLimit1 - AInOff;
-      System.Move(AInput[AInOff], FBuf[0], FBufPos);
+      FBufferPos := System.Length(FBuffer) + LInLimit1 - AInOff;
+      System.Move(AInput[AInOff], FBuffer[0], FBufferPos);
     end;
     TState.EncData:
     begin
-      LAvailable := BufSize - FBufPos;
+      LAvailable := BufSize - FBufferPos;
       if (ALen < LAvailable) then
       begin
-        System.Move(AInput[AInOff], FBuf[FBufPos], ALen);
-        FBufPos := FBufPos + ALen;
+        System.Move(AInput[AInOff], FBuffer[FBufferPos], ALen);
+        FBufferPos := FBufferPos + ALen;
         Result := 0;
         Exit;
       end;
 
       LInLimit1 := AInOff + ALen - BufSize;
 
-      if (FBufPos > 0) then
+      if (FBufferPos > 0) then
       begin
-        System.Move(AInput[AInOff], FBuf[FBufPos], LAvailable);
-        ProcessBlock(FBuf, 0, AOutput, AOutOff);
+        System.Move(AInput[AInOff], FBuffer[FBufferPos], LAvailable);
+        ProcessBlock(FBuffer, 0, AOutput, AOutOff);
         AInOff := AInOff + LAvailable;
         LResultLen := BufSize;
       end;
@@ -556,8 +654,8 @@ begin
 
       FPoly1305.BlockUpdate(AOutput, AOutOff, LResultLen);
 
-      FBufPos := BufSize + LInLimit1 - AInOff;
-      System.Move(AInput[AInOff], FBuf[0], FBufPos);
+      FBufferPos := BufSize + LInLimit1 - AInOff;
+      System.Move(AInput[AInOff], FBuffer[0], FBufferPos);
     end;
   else
     raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
@@ -581,39 +679,39 @@ begin
   case FState of
     TState.DecData:
     begin
-      if (FBufPos < MacSize) then
+      if (FBufferPos < MacSize) then
         raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShort);
 
-      LResultLen := FBufPos - MacSize;
+      LResultLen := FBufferPos - MacSize;
 
       TCheck.OutputLength(AOutput, AOutOff, LResultLen, SOutputBufferTooShort);
 
       if (LResultLen > 0) then
       begin
-        FPoly1305.BlockUpdate(FBuf, 0, LResultLen);
-        ProcessData(FBuf, 0, LResultLen, AOutput, AOutOff);
+        FPoly1305.BlockUpdate(FBuffer, 0, LResultLen);
+        ProcessData(FBuffer, 0, LResultLen, AOutput, AOutOff);
       end;
 
       FinishData(TState.DecFinal);
 
-      if (not VerifyMac(FBuf, LResultLen)) then
+      if (not VerifyMac(FBuffer, LResultLen)) then
         RaiseMacCheckFailed();
     end;
     TState.EncData:
     begin
-      LResultLen := FBufPos + MacSize;
+      LResultLen := FBufferPos + MacSize;
 
       TCheck.OutputLength(AOutput, AOutOff, LResultLen, SOutputBufferTooShort);
 
-      if (FBufPos > 0) then
+      if (FBufferPos > 0) then
       begin
-        ProcessData(FBuf, 0, FBufPos, AOutput, AOutOff);
-        FPoly1305.BlockUpdate(AOutput, AOutOff, FBufPos);
+        ProcessData(FBuffer, 0, FBufferPos, AOutput, AOutOff);
+        FPoly1305.BlockUpdate(AOutput, AOutOff, FBufferPos);
       end;
 
       FinishData(TState.EncFinal);
 
-      System.Move(FMacBlock[0], AOutput[AOutOff + FBufPos], MacSize);
+      System.Move(FMacBlock[0], AOutput[AOutOff + FBufferPos], MacSize);
     end;
   else
     raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidOperationState);
@@ -693,15 +791,15 @@ begin
 end;
 
 procedure TChaCha20Poly1305.InitMac;
-var
-  LFirstBlock: TCryptoLibByteArray;
 begin
-  System.SetLength(LFirstBlock, 64);
+  // Derive the one-time Poly1305 key from ChaCha block 0 (nonce-dependent, so
+  // this runs every message); FMacKeyBlock is reused instead of reallocated.
+  TArrayUtilities.Fill(FMacKeyBlock, 0, 64, Byte(0));
   try
-    FChaCha20.ProcessBytes(LFirstBlock, 0, 64, LFirstBlock, 0);
-    FPoly1305.Init(TKeyParameter.Create(LFirstBlock, 0, 32) as IKeyParameter);
+    FChaCha20.ProcessBytes(FMacKeyBlock, 0, 64, FMacKeyBlock, 0);
+    FPoly1305.Init(TKeyParameter.Create(FMacKeyBlock, 0, 32) as IKeyParameter);
   finally
-    TArrayUtilities.Fill(LFirstBlock, 0, 64, Byte(0));
+    TArrayUtilities.Fill(FMacKeyBlock, 0, 64, Byte(0));
   end;
 end;
 
@@ -748,7 +846,7 @@ end;
 
 procedure TChaCha20Poly1305.Reset(AClearMac, AResetCipher: Boolean);
 begin
-  TArrayUtilities.Fill(FBuf, 0, System.Length(FBuf), Byte(0));
+  TArrayUtilities.Fill(FBuffer, 0, System.Length(FBuffer), Byte(0));
 
   if AClearMac then
   begin
@@ -757,7 +855,7 @@ begin
 
   FAadCount := UInt64(0);
   FDataCount := UInt64(0);
-  FBufPos := 0;
+  FBufferPos := 0;
 
   case FState of
     TState.DecInit, TState.EncInit:

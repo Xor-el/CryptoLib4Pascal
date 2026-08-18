@@ -34,6 +34,7 @@ uses
   ClpIAeadCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
+  ClpKeyParameter,
   ClpBlockCipherBulkUtilities,
   ClpCipherModeParameterUtilities,
   ClpAbstractAeadCipher,
@@ -54,6 +55,7 @@ resourcestring
   SInvalidParameters = 'invalid parameters passed to %s';
   SIVTooLong = 'IV must be no more than 15 bytes';
   SCannotChangeEncState = 'cannot change encrypting state without providing key';
+  SKeyMustBeSpecified = 'key must be specified in initial packet';
   SDataTooShort = 'data too short';
   SOutputBufferTooShort = 'output buffer too short';
   SInputBufferTooShort = 'input buffer too short';
@@ -161,6 +163,8 @@ type
     destructor Destroy; override;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
 
     procedure ProcessAadByte(AInput: Byte); override;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
@@ -388,6 +392,142 @@ begin
   end;
 
   LBottom := ProcessNonce(LN);
+
+  LBits := LBottom mod 8;
+  LBytes := LBottom div 8;
+  if (LBits = 0) then
+  begin
+    System.Move(FStretch[LBytes], FOffsetMAIN_0[0], 16);
+  end
+  else
+  begin
+    for LI := 0 to 15 do
+    begin
+      LB1 := UInt32(FStretch[LBytes]);
+      System.Inc(LBytes);
+      LB2 := UInt32(FStretch[LBytes]);
+      FOffsetMAIN_0[LI] := Byte((LB1 shl LBits) or (LB2 shr (8 - LBits)));
+    end;
+  end;
+
+  FHashBlockPos := 0;
+  FMainBlockPos := 0;
+
+  FHashBlockCount := 0;
+  FMainBlockCount := 0;
+
+  System.SetLength(FOffsetHASH, 16);
+  TArrayUtilities.Fill(FOffsetHASH, 0, 16, Byte(0));
+  System.SetLength(FSum, 16);
+  TArrayUtilities.Fill(FSum, 0, 16, Byte(0));
+  System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
+  System.SetLength(FChecksum, 16);
+  TArrayUtilities.Fill(FChecksum, 0, 16, Byte(0));
+
+  if (FInitialAssociatedText <> nil) then
+  begin
+    ProcessAadBytes(FInitialAssociatedText, 0, System.Length(FInitialAssociatedText));
+  end;
+end;
+
+procedure TOcbBlockCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LOldForEncryption, LSameKey, LSameKeyDir: Boolean;
+  LKeyParam: IKeyParameter;
+  LMainLen, LBottom, LBits, LBytes, LI: Int32;
+  LB1, LB2: UInt32;
+  LFusedDirection: TCipherKernelDirection;
+begin
+  LOldForEncryption := FForEncryption;
+  FForEncryption := AForEncryption;
+  FMacBlock := nil;
+
+  CheckNonceReuseRaw(FForEncryption, ANonce, AKey);
+
+  if (FLastNonce = nil) or (System.Length(FLastNonce) <> System.Length(ANonce)) then
+    System.SetLength(FLastNonce, System.Length(ANonce));
+  System.Move(ANonce[0], FLastNonce[0], System.Length(ANonce));
+
+  FInitialAssociatedText := AAad;
+
+  LSameKey := SameKeyReuseRaw(AKey);
+  LSameKeyDir := LSameKey and (LOldForEncryption = AForEncryption);
+
+  if (AKey = nil) and (not LSameKey) then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+
+  FMacSize := ValidateAeadMacSizeBits(AMacSizeBits, 64, 128, 8);
+
+  System.SetLength(FHashBlock, 16);
+  TArrayUtilities.Fill(FHashBlock, 0, 16, Byte(0));
+  if FForEncryption then
+    LMainLen := BLOCK_SIZE
+  else
+    LMainLen := BLOCK_SIZE + FMacSize;
+  if (FMainBlock = nil) or (System.Length(FMainBlock) <> LMainLen) then
+    System.SetLength(FMainBlock, LMainLen);
+  TArrayUtilities.Fill(FMainBlock, 0, LMainLen, Byte(0));
+
+  if (System.Length(ANonce) > 15) then
+    raise EArgumentCryptoLibException.CreateRes(@SIVTooLong);
+
+  if (AKey <> nil) and (not LSameKeyDir) then
+    LKeyParam := TKeyParameter.Create(AKey) as IKeyParameter
+  else
+    LKeyParam := nil;
+
+  if (LKeyParam <> nil) then
+  begin
+    if not LSameKey then
+    begin
+      FHashCipher.Init(True, LKeyParam);
+      FKTopInput := nil;
+    end;
+    FMainCipher.Init(AForEncryption, LKeyParam);
+  end
+  else if (LOldForEncryption <> AForEncryption) then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SCannotChangeEncState);
+  end;
+
+  if not LSameKeyDir then
+  begin
+    TBlockCipherBulkUtilities.TryResolveBulkCipher(FMainCipher, FMainBulk);
+
+    FOcbKernel := nil;
+    FOcbKernelMinBlocks := 0;
+    if FForEncryption then
+      LFusedDirection := TCipherKernelDirection.Encrypt
+    else
+      LFusedDirection := TCipherKernelDirection.Decrypt;
+    if TCipherKernelRegistry.TryAcquireOcb(FMainCipher, LFusedDirection,
+      FOcbKernel) and (FOcbKernel <> nil) then
+    begin
+      FOcbKernelMinBlocks := FOcbKernel.MinimumBlockCount;
+      if (FOcbKernelMinBlocks <= 0) or
+        (FUSED_BATCH_BLOCKS mod FOcbKernelMinBlocks <> 0) then
+      begin
+        FOcbKernel := nil;
+        FOcbKernelMinBlocks := 0;
+      end;
+    end;
+  end;
+
+  if not LSameKey then
+  begin
+    System.SetLength(FL_Asterisk, 16);
+    TArrayUtilities.Fill(FL_Asterisk, 0, 16, Byte(0));
+    FHashCipher.ProcessBlock(FL_Asterisk, 0, FL_Asterisk, 0);
+
+    FL_Dollar := OCB_double(FL_Asterisk);
+
+    FL.Clear;
+    FL.Add(OCB_double(FL_Dollar));
+    FLTableFlatCount := 0;
+  end;
+
+  LBottom := ProcessNonce(ANonce);
 
   LBits := LBottom mod 8;
   LBytes := LBottom div 8;

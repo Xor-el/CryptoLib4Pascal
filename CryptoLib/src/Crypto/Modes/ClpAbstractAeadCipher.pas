@@ -24,6 +24,8 @@ uses
   ClpICipherParameters,
   ClpIKeyParameter,
   ClpIAeadCipher,
+  ClpAeadParameters,
+  ClpKeyParameter,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -95,6 +97,34 @@ type
     /// </summary>
     procedure WipeKeyMaterial(); virtual;
 
+    /// <summary>
+    /// Same-key detection + <c>FLastKey</c> maintenance shared by the AEAD
+    /// modes, so a re-Init under the same key does no per-message key copy.
+    /// Honors two "reuse the key" signals: (a) <c>AKeyParam = nil</c> (the
+    /// bc-csharp null-key convention) and (b) <c>AKeyParam</c> holding the same
+    /// bytes as the retained <c>FLastKey</c>. In both cases <c>FLastKey</c> is
+    /// left intact (no realloc/copy) and True is returned. When the key differs,
+    /// the old <c>FLastKey</c> is wiped, a fresh copy is stored, and False is
+    /// returned. Constant-time compare. MUST be called AFTER
+    /// <c>CheckNonceReuse</c> (both read the pre-update <c>FLastKey</c>).
+    /// </summary>
+    function SameKeyReuse(const AKeyParam: IKeyParameter): Boolean;
+
+    /// <summary>
+    /// Raw-key counterpart of <c>SameKeyReuse</c> for the one-shot packet path,
+    /// so the facade never has to wrap the key in an <c>IKeyParameter</c> per
+    /// message. Same contract: True (key retained as-is) when AKey is nil (reuse)
+    /// or matches the stored key; otherwise wipe + store a fresh copy and return
+    /// False. Constant-time compare; call AFTER <c>CheckNonceReuseRaw</c>.
+    /// </summary>
+    function SameKeyReuseRaw(const AKey: TCryptoLibByteArray): Boolean;
+
+    /// <summary>Raw-key/raw-nonce counterpart of <c>CheckNonceReuse</c> for the
+    /// one-shot packet path. Byte-identical guard: on encryption, refuse a
+    /// repeated nonce unless the key has demonstrably changed.</summary>
+    procedure CheckNonceReuseRaw(AForEncryption: Boolean;
+      const ANewNonce, AKey: TCryptoLibByteArray);
+
     function GetAlgorithmName: String; virtual; abstract;
 
   public
@@ -102,6 +132,16 @@ type
 
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters); virtual; abstract;
+
+    /// <summary>
+    /// Default one-shot packet init: builds an AeadParameters and defers to Init.
+    /// This is NOT the zero-allocation path - modes with a small-buffer packet
+    /// cipher override it with a raw InitPacket that skips the parameter objects
+    /// and routes key identity through SameKeyReuseRaw.
+    /// </summary>
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray;
+      AMacSizeBits: Int32); virtual;
 
     procedure ProcessAadByte(AInput: Byte); virtual; abstract;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray;
@@ -141,6 +181,89 @@ end;
 procedure TAbstractAeadCipher.WipeKeyMaterial;
 begin
   // no-op by default; concrete modes override to wipe their own material.
+end;
+
+procedure TAbstractAeadCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LKeyParam: IKeyParameter;
+begin
+  // Compatibility fallback (NOT the zero-allocation path): wrap the raw inputs in
+  // parameter objects and defer to Init. A nil key passes a nil key parameter so
+  // the mode's own reuse convention still applies.
+  if AKey <> nil then
+    LKeyParam := TKeyParameter.Create(AKey) as IKeyParameter
+  else
+    LKeyParam := nil;
+  Init(AForEncryption, TAeadParameters.Create(LKeyParam, AMacSizeBits, ANonce,
+    AAad) as ICipherParameters);
+end;
+
+function TAbstractAeadCipher.SameKeyReuse(const AKeyParam
+  : IKeyParameter): Boolean;
+begin
+  if AKeyParam = nil then
+  begin
+    // null-key convention: reuse only makes sense once a key was established.
+    Result := FLastKey <> nil;
+    Exit;
+  end;
+
+  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
+  begin
+    // Same key bytes: keep FLastKey as-is (no realloc, no copy).
+    Result := True;
+    Exit;
+  end;
+
+  // Key changed: wipe the old copy, retain a fresh one for the reuse guard.
+  if FLastKey <> nil then
+    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
+  FLastKey := AKeyParam.GetKey();
+  Result := False;
+end;
+
+function TAbstractAeadCipher.SameKeyReuseRaw(const AKey
+  : TCryptoLibByteArray): Boolean;
+begin
+  if AKey = nil then
+  begin
+    Result := FLastKey <> nil;
+    Exit;
+  end;
+
+  if (FLastKey <> nil) and
+    (System.Length(FLastKey) = System.Length(AKey)) and
+    TArrayUtilities.FixedTimeEquals(FLastKey, AKey) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  if FLastKey <> nil then
+    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
+  FLastKey := System.Copy(AKey);
+  Result := False;
+end;
+
+procedure TAbstractAeadCipher.CheckNonceReuseRaw(AForEncryption: Boolean;
+  const ANewNonce, AKey: TCryptoLibByteArray);
+begin
+  if not AForEncryption then
+    Exit;
+
+  if (FLastNonce = nil) or (not TArrayUtilities.AreEqual(FLastNonce, ANewNonce))
+  then
+    Exit;
+
+  if AKey = nil then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce,
+      [GetModeName]);
+
+  if (FLastKey <> nil) and (System.Length(FLastKey) = System.Length(AKey)) and
+    TArrayUtilities.FixedTimeEquals(FLastKey, AKey) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SCannotReuseNonce,
+      [GetModeName]);
 end;
 
 procedure TAbstractAeadCipher.CheckNonceReuse(AForEncryption: Boolean;

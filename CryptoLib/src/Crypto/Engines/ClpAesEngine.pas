@@ -30,6 +30,7 @@ uses
   ClpBitOperations,
   ClpPack,
   ClpArrayUtilities,
+  ClpAbstractAesEngine,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -62,7 +63,7 @@ type
   /// extra rotates to derive the omitted table entries.
   /// </para>
   /// </remarks>
-  TAesEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher)
+  TAesEngine = class sealed(TAbstractAesEngine, IAesEngine, IBlockCipher)
 
   strict private
   const
@@ -254,6 +255,7 @@ type
 
   strict protected
     function GetAlgorithmName: String; virtual;
+    procedure WipeSchedule; override;
 
   public
 
@@ -721,6 +723,7 @@ procedure TAesEngine.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LKeyParameter: IKeyParameter;
+  LKey: TCryptoLibByteArray;
 begin
 
   if not Supports(AParameters, IKeyParameter, LKeyParameter) then
@@ -729,20 +732,40 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
-  FWorkingKey := GenerateWorkingKey(AForEncryption, LKeyParameter.GetKey());
+  LKey := LKeyParameter.GetKey();
+  try
+    // Same-key/direction fast path: keep the existing working key + S-box.
+    if CanReuseSchedule(AForEncryption, LKey) then
+      Exit;
 
-  FForEncryption := AForEncryption;
+    // GenerateWorkingKey zeroes the key array it is handed, so give it a
+    // throwaway copy and keep LKey intact to record for future reuse checks.
+    FWorkingKey := GenerateWorkingKey(AForEncryption, System.Copy(LKey));
 
-  if AForEncryption then
-  begin
-    System.Move(S[System.Low(S)], FState[System.Low(FState)], System.SizeOf(S));
-  end
-  else
-  begin
-    System.Move(Si[System.Low(Si)], FState[System.Low(FState)],
-      System.SizeOf(Si));
+    FForEncryption := AForEncryption;
+
+    if AForEncryption then
+    begin
+      System.Move(S[System.Low(S)], FState[System.Low(FState)], System.SizeOf(S));
+    end
+    else
+    begin
+      System.Move(Si[System.Low(Si)], FState[System.Low(FState)],
+        System.SizeOf(Si));
+    end;
+
+    // Last step of a successful rebuild: record (direction, key) for reuse.
+    MarkScheduleBuilt(AForEncryption, LKey);
+  finally
+    TArrayUtilities.Fill(LKey, 0, System.Length(LKey), Byte(0));
   end;
 
+end;
+
+procedure TAesEngine.WipeSchedule;
+begin
+  if FWorkingKey <> nil then
+    TArrayUtilities.Fill(FWorkingKey, 0, System.Length(FWorkingKey), UInt32(0));
 end;
 
 class procedure TAesEngine.PackBlock(const ABytes: TCryptoLibByteArray;

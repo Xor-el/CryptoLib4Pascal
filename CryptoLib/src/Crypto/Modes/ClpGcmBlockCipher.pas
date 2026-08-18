@@ -47,6 +47,7 @@ uses
   ClpPack,
   ClpCheck,
   ClpBasicGcmMultiplier,
+  ClpKeyParameter,
   ClpArrayUtilities,
   ClpAbstractAeadCipher,
   ClpAbstractAeadBlockCipher,
@@ -113,36 +114,43 @@ type
     FGcmKernel: IGcmKernel;
     FGcmKernelMinBlocks: Int32;
     FMultiplier: IGcmMultiplier;
-    FExp: IGcmExponentiator;
+    FExponentiator: IGcmExponentiator;
 
     FInitialised: Boolean;
-    FH: TCryptoLibByteArray;
-    FJ0: TCryptoLibByteArray;
+    FHashSubKey: TCryptoLibByteArray;
+    FPreCounterBlock: TCryptoLibByteArray;
 
-    FBufBlock: TCryptoLibByteArray;
-    FS: TCryptoLibByteArray;
-    FS_at: TCryptoLibByteArray;
-    FS_atPre: TCryptoLibByteArray;
-    FCounter: TCryptoLibByteArray;
-    FCounter32: UInt32;
+    FBufferBlock: TCryptoLibByteArray;
+    // Reusable DoFinal scratch (allocated once, fully overwritten each call):
+    // the length block, the computed tag, the received MAC (decrypt) and the
+    // AAD-length exponent H^c. Avoids four heap allocations per DoFinal.
+    FLengthBlock: TCryptoLibByteArray;
+    FTagBlock: TCryptoLibByteArray;
+    FReceivedMac: TCryptoLibByteArray;
+    FLengthExponent: TCryptoLibByteArray;
+    FGHashState: TCryptoLibByteArray;
+    FAadHashState: TCryptoLibByteArray;
+    FAadHashStatePre: TCryptoLibByteArray;
+    FCounterBlock: TCryptoLibByteArray;
+    FCounterWord: UInt32;
     FBlocksRemaining: UInt32;
-    FBufOff: Int32;
+    FBufferOffset: Int32;
     FTotalLength: UInt64;
-    FAtBlock: TCryptoLibByteArray;
-    FAtBlockPos: Int32;
-    FAtLength: UInt64;
-    FAtLengthPre: UInt64;
+    FAadBlock: TCryptoLibByteArray;
+    FAadBlockPos: Int32;
+    FAadLength: UInt64;
+    FAadLengthPre: UInt64;
     /// <summary>HPow limbs H^8..H^1 (128 bytes) for fused GHASH; indices 64..112 hold H^4..H^1 for the four-block path; nil if path off.</summary>
-    FHPow: TCryptoLibByteArray;
+    FHashSubKeyPowers: TCryptoLibByteArray;
     /// <summary>Reused 128-byte buffer for batched CTR keystream (first 64 bytes used by four-block fused path).</summary>
-    FWorkCtr: TCryptoLibByteArray;
+    FCounterKeystream: TCryptoLibByteArray;
     /// <summary>Second 128-byte keystream buffer for the pipeline-by-one path (look-ahead batch). nil if fused paths are off.</summary>
-    FWorkCtrAhead: TCryptoLibByteArray;
+    FCounterKeystreamAhead: TCryptoLibByteArray;
     /// <summary>True when the underlying cipher is bulk-capable but SIMD GHASH is unavailable:
     /// drives the software-GHASH 4-block batch path (bulk AES + scalar aggregated GHASH).</summary>
-    FSoftBulk: Boolean;
-    /// <summary>H^1..H^4 as field elements for the scalar aggregated 4-block GHASH; set when FSoftBulk.</summary>
-    FGhH1, FGhH2, FGhH3, FGhH4: TFieldElement;
+    FSoftwareBulkGHash: Boolean;
+    /// <summary>H^1..H^4 as field elements for the scalar aggregated 4-block GHASH; set when FSoftwareBulkGHash.</summary>
+    FHashSubKeyPow1, FHashSubKeyPow2, FHashSubKeyPow3, FHashSubKeyPow4: TFieldElement;
 
     // ---------------------------------------------------------------------
     // GHASH primitives and scalar triple-XOR helpers.
@@ -229,14 +237,14 @@ type
       out ANewNonce: TCryptoLibByteArray; out AKeyParam: IKeyParameter);
     /// <summary>Rekey path: initialize the underlying block cipher, compute the hash
     /// subkey H, cache the bulk-capable cipher engine (when available), and (re)allocate the
-    /// 8-way SIMD buffers (FHPow / FWorkCtr / FWorkCtrAhead) on capable hardware.
+    /// 8-way SIMD buffers (FHashSubKeyPowers / FCounterKeystream / FCounterKeystreamAhead) on capable hardware.
     /// Called only when a new key is supplied.</summary>
     procedure InitCipherAndHashSubKey(const AKeyParam: IKeyParameter);
     /// <summary>Compute the pre-counter J0 from FLastNonce per NIST SP 800-38D
     /// (fast path for 96-bit IV, GHASH fallback otherwise).</summary>
     procedure ComputeJ0();
     /// <summary>Zero and (re)allocate all per-message transient state:
-    /// FS, FS_at, FS_atPre, FAtBlock, counters, positions, totals.</summary>
+    /// FGHashState, FAadHashState, FAadHashStatePre, FAadBlock, counters, positions, totals.</summary>
     procedure ResetTransientState();
 
     // ---------------------------------------------------------------------
@@ -267,7 +275,7 @@ type
     // ---------------------------------------------------------------------
     // Software-GHASH 4-block batch path: bulk AES keystream (FBulkCipher) plus
     // the scalar aggregated 4-way GHASH. Used when the cipher is bulk-capable
-    // but SIMD GHASH is unavailable (FSoftBulk). Counter keystream comes from
+    // but SIMD GHASH is unavailable (FSoftwareBulkGHash). Counter keystream comes from
     // GetNextCtrBlocks4 (GCM inc32); do NOT substitute SIC's 128-bit counter.
     // ---------------------------------------------------------------------
     procedure SoftAggregateGhash4(const ABuf: TCryptoLibByteArray; AOff: Int32);
@@ -327,6 +335,17 @@ type
     constructor Create(const ACipher: IBlockCipher; const AMultiplier: IGcmMultiplier); overload;
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+
+    /// <summary>
+    /// One-shot / reusable-context entry point: initialise directly from raw
+    /// key, nonce and AAD spans, with no <c>TKeyParameter</c>/<c>TAeadParameters</c>
+    /// allocation on the per-message (same-key) path. Mirrors <see cref="Init"/>
+    /// exactly (same helpers, same nonce-reuse guard) but skips the parameter
+    /// object parsing. Pass <c>AKey = nil</c> to reuse the established key.
+    /// Used by TAesGcmPacketCipher; ordinary streaming callers use Init.
+    /// </summary>
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
 
     procedure ProcessAadByte(AInput: Byte); override;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
@@ -408,7 +427,7 @@ end;
 
 function TGcmBlockCipher.GetBufferedLength: Int32;
 begin
-  Result := FBufOff;
+  Result := FBufferOffset;
 end;
 
 procedure TGcmBlockCipher.ResolveInitParameters(const AParameters: ICipherParameters;
@@ -453,27 +472,27 @@ begin
   FGcmKernel := nil;
   FGcmKernelMinBlocks := 0;
 
-  FH := nil;
-  System.SetLength(FH, BlockSize);
-  FCipher.ProcessBlock(FH, 0, FH, 0);
+  FHashSubKey := nil;
+  System.SetLength(FHashSubKey, BlockSize);
+  FCipher.ProcessBlock(FHashSubKey, 0, FHashSubKey, 0);
 
-  FMultiplier.Init(FH);
-  FExp := nil;
-  FHPow := nil;
-  FWorkCtr := nil;
-  FWorkCtrAhead := nil;
-  FSoftBulk := False;
+  FMultiplier.Init(FHashSubKey);
+  FExponentiator := nil;
+  FHashSubKeyPowers := nil;
+  FCounterKeystream := nil;
+  FCounterKeystreamAhead := nil;
+  FSoftwareBulkGHash := False;
   if TGcmBlockCipher.IsFourWaySupported then
   begin
-    System.SetLength(FHPow, 128);
-    TGcmUtilities.InitEightWayHPowFromH(FH, FHPow);
-    System.SetLength(FWorkCtr, 128);
-    TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
-    System.SetLength(FWorkCtrAhead, 128);
-    TArrayUtilities.Fill(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
+    System.SetLength(FHashSubKeyPowers, 128);
+    TGcmUtilities.InitEightWayHPowFromH(FHashSubKey, FHashSubKeyPowers);
+    System.SetLength(FCounterKeystream, 128);
+    TArrayUtilities.Fill(FCounterKeystream, 0, System.Length(FCounterKeystream), Byte(0));
+    System.SetLength(FCounterKeystreamAhead, 128);
+    TArrayUtilities.Fill(FCounterKeystreamAhead, 0, System.Length(FCounterKeystreamAhead), Byte(0));
 
     if TCipherKernelRegistry.TryAcquireGcm(FCipher, TCipherKernelDirection.Encrypt,
-      @FHPow[0], FGcmKernel) and (FGcmKernel <> nil) then
+      @FHashSubKeyPowers[0], FGcmKernel) and (FGcmKernel <> nil) then
     begin
       FGcmKernelMinBlocks := FGcmKernel.MinimumBlockCount;
       if FGcmKernelMinBlocks <> 8 then
@@ -485,10 +504,10 @@ begin
   end
   else if FBulkCipher <> nil then
   begin
-    FSoftBulk := True;
-    System.SetLength(FWorkCtr, BlockSize * 4);
-    TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
-    TGcmUtilities.ComputePowers1To4(FH, FGhH1, FGhH2, FGhH3, FGhH4);
+    FSoftwareBulkGHash := True;
+    System.SetLength(FCounterKeystream, BlockSize * 4);
+    TArrayUtilities.Fill(FCounterKeystream, 0, System.Length(FCounterKeystream), Byte(0));
+    TGcmUtilities.ComputePowers1To4(FHashSubKey, FHashSubKeyPow1, FHashSubKeyPow2, FHashSubKeyPow3, FHashSubKeyPow4);
   end;
 end;
 
@@ -496,35 +515,52 @@ procedure TGcmBlockCipher.ComputeJ0();
 var
   LX: TCryptoLibByteArray;
 begin
-  System.SetLength(FJ0, BlockSize);
+  // Reuse FPreCounterBlock across messages; zero it in place. The 12-byte-nonce path relies
+  // on bytes [12..14] being zero, and the GHASH fallback accumulates into a
+  // zeroed FPreCounterBlock -- the Fill guarantees both without a per-message allocation.
+  if FPreCounterBlock = nil then
+    System.SetLength(FPreCounterBlock, BlockSize);
+  TArrayUtilities.Fill(FPreCounterBlock, 0, BlockSize, Byte(0));
 
   if System.Length(FLastNonce) = 12 then
   begin
-    System.Move(FLastNonce[0], FJ0[0], System.Length(FLastNonce));
-    FJ0[BlockSize - 1] := $01;
+    System.Move(FLastNonce[0], FPreCounterBlock[0], System.Length(FLastNonce));
+    FPreCounterBlock[BlockSize - 1] := $01;
   end
   else
   begin
-    GHASH(FJ0, FLastNonce, System.Length(FLastNonce));
+    GHASH(FPreCounterBlock, FLastNonce, System.Length(FLastNonce));
     System.SetLength(LX, BlockSize);
     TPack.UInt64_To_BE(UInt64(System.Length(FLastNonce)) * UInt64(8), LX, 8);
-    GHASHBlock(FJ0, LX);
+    GHASHBlock(FPreCounterBlock, LX);
   end;
 end;
 
 procedure TGcmBlockCipher.ResetTransientState();
 begin
-  System.SetLength(FS, BlockSize);
-  System.SetLength(FS_at, BlockSize);
-  System.SetLength(FS_atPre, BlockSize);
-  System.SetLength(FAtBlock, BlockSize);
-  FAtBlockPos := 0;
-  FAtLength := 0;
-  FAtLengthPre := 0;
-  FCounter := System.Copy(FJ0);
-  FCounter32 := TPack.BE_To_UInt32(FCounter, 12);
+  // Allocate the fixed 16-byte transient buffers once per object lifetime and
+  // zero them in place each message (they were reallocated every Init before).
+  if FGHashState = nil then
+    System.SetLength(FGHashState, BlockSize);
+  TArrayUtilities.Fill(FGHashState, 0, BlockSize, Byte(0));
+  if FAadHashState = nil then
+    System.SetLength(FAadHashState, BlockSize);
+  TArrayUtilities.Fill(FAadHashState, 0, BlockSize, Byte(0));
+  if FAadHashStatePre = nil then
+    System.SetLength(FAadHashStatePre, BlockSize);
+  TArrayUtilities.Fill(FAadHashStatePre, 0, BlockSize, Byte(0));
+  if FAadBlock = nil then
+    System.SetLength(FAadBlock, BlockSize);
+  TArrayUtilities.Fill(FAadBlock, 0, BlockSize, Byte(0));
+  FAadBlockPos := 0;
+  FAadLength := 0;
+  FAadLengthPre := 0;
+  if FCounterBlock = nil then
+    System.SetLength(FCounterBlock, BlockSize);
+  System.Move(FPreCounterBlock[0], FCounterBlock[0], BlockSize);
+  FCounterWord := TPack.BE_To_UInt32(FCounterBlock, 12);
   FBlocksRemaining := UInt32($FFFFFFFF) - 1;
-  FBufOff := 0;
+  FBufferOffset := 0;
   FTotalLength := 0;
 end;
 
@@ -534,17 +570,9 @@ var
   LKeyParam: IKeyParameter;
   LNewNonce: TCryptoLibByteArray;
   LBufLength: Int32;
-  LSameKey: Boolean;
 begin
   FForEncryption := AForEncryption;
   FMacBlock := nil;
-  FBufBlock := nil;
-  FJ0 := nil;
-
-  FS := nil;
-  FS_at := nil;
-  FS_atPre := nil;
-  FAtBlock := nil;
   FInitialised := True;
 
   ResolveInitParameters(AParameters, LNewNonce, LKeyParam);
@@ -553,7 +581,13 @@ begin
     LBufLength := BlockSize
   else
     LBufLength := BlockSize + FMacSize;
-  System.SetLength(FBufBlock, LBufLength);
+  // Reuse FBufferBlock across messages; only (re)allocate when the required length
+  // changes (encrypt vs decrypt, or a different MAC size on decrypt), otherwise
+  // zero it in place. Preserves the "FBufferBlock zeroed after Init" contract.
+  if (FBufferBlock = nil) or (System.Length(FBufferBlock) <> LBufLength) then
+    System.SetLength(FBufferBlock, LBufLength)
+  else
+    TArrayUtilities.Fill(FBufferBlock, 0, LBufLength, Byte(0));
 
   if System.Length(LNewNonce) < 1 then
     raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeastOneByte);
@@ -562,21 +596,70 @@ begin
 
   FLastNonce := LNewNonce;
 
+  // Same-key fast path: the key schedule, hash subkey, multiplier state,
+  // H-power table and fused kernel all depend only on the key, so a re-Init
+  // with the same key (fresh nonce per message) keeps them all -- and, on the
+  // same-key path, SameKeyReuse leaves FLastKey intact (no per-message copy).
+  // A nil key parameter is the bc-csharp "reuse last key" convention.
   if LKeyParam <> nil then
   begin
-    // Same-key fast path: the key schedule, hash subkey, multiplier state,
-    // H-power table and fused kernel all depend only on the key, so a
-    // re-Init with the same key (fresh nonce per message) keeps them all.
-    LSameKey := (FH <> nil) and (FLastKey <> nil) and
-      LKeyParam.FixedTimeEquals(FLastKey);
-    // Zeroize the previous key copy before replacing it (the comparison above
-    // has already consumed it); Fill is a no-op on the first Init (nil).
-    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
-    FLastKey := LKeyParam.GetKey();
-    if not LSameKey then
+    if not SameKeyReuse(LKeyParam) then
       InitCipherAndHashSubKey(LKeyParam);
   end
-  else if FH = nil then
+  else if FHashSubKey = nil then
+  begin
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+  end;
+
+  ComputeJ0();
+  ResetTransientState();
+
+  if FInitialAssociatedText <> nil then
+    ProcessAadBytes(FInitialAssociatedText, 0, System.Length(FInitialAssociatedText));
+end;
+
+procedure TGcmBlockCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LBufLength: Int32;
+begin
+  FForEncryption := AForEncryption;
+  FMacBlock := nil;
+  FInitialised := True;
+
+  // AAD is consumed in place below; store a reference (no clone).
+  FInitialAssociatedText := AAad;
+  FMacSize := ValidateAeadMacSizeBits(AMacSizeBits, 32, 128, 8);
+
+  if FForEncryption then
+    LBufLength := BlockSize
+  else
+    LBufLength := BlockSize + FMacSize;
+  if (FBufferBlock = nil) or (System.Length(FBufferBlock) <> LBufLength) then
+    System.SetLength(FBufferBlock, LBufLength)
+  else
+    TArrayUtilities.Fill(FBufferBlock, 0, LBufLength, Byte(0));
+
+  if System.Length(ANonce) < 1 then
+    raise EArgumentCryptoLibException.CreateRes(@SIVMustBeAtLeastOneByte);
+
+  CheckNonceReuseRaw(FForEncryption, ANonce, AKey);
+
+  // Snapshot the nonce into a reusable owned buffer: the nonce-reuse guard must
+  // compare against a stable previous nonce, and callers routinely reuse one
+  // nonce buffer across messages. One small Move, no alloc on the steady path.
+  if (FLastNonce = nil) or (System.Length(FLastNonce) <> System.Length(ANonce)) then
+    System.SetLength(FLastNonce, System.Length(ANonce));
+  System.Move(ANonce[0], FLastNonce[0], System.Length(ANonce));
+
+  // Same-key fast path (raw): key schedule / H / multiplier / kernel retained;
+  // a fresh TKeyParameter is created only on an actual rekey. nil = reuse key.
+  if AKey <> nil then
+  begin
+    if not SameKeyReuseRaw(AKey) then
+      InitCipherAndHashSubKey(TKeyParameter.Create(AKey) as IKeyParameter);
+  end
+  else if FHashSubKey = nil then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
   end;
@@ -592,13 +675,13 @@ procedure TGcmBlockCipher.ProcessAadByte(AInput: Byte);
 begin
   CheckStatus();
 
-  FAtBlock[FAtBlockPos] := AInput;
-  System.Inc(FAtBlockPos);
-  if FAtBlockPos = BlockSize then
+  FAadBlock[FAadBlockPos] := AInput;
+  System.Inc(FAadBlockPos);
+  if FAadBlockPos = BlockSize then
   begin
-    GHASHBlock(FS_at, FAtBlock);
-    FAtBlockPos := 0;
-    FAtLength := FAtLength + UInt64(BlockSize);
+    GHASHBlock(FAadHashState, FAadBlock);
+    FAadBlockPos := 0;
+    FAadLength := FAadLength + UInt64(BlockSize);
   end;
 end;
 
@@ -609,34 +692,34 @@ var
 begin
   CheckStatus();
 
-  if FAtBlockPos > 0 then
+  if FAadBlockPos > 0 then
   begin
-    LAvailable := BlockSize - FAtBlockPos;
+    LAvailable := BlockSize - FAadBlockPos;
     if ALen < LAvailable then
     begin
-      System.Move(AInput[AInOff], FAtBlock[FAtBlockPos], ALen);
-      FAtBlockPos := FAtBlockPos + ALen;
+      System.Move(AInput[AInOff], FAadBlock[FAadBlockPos], ALen);
+      FAadBlockPos := FAadBlockPos + ALen;
       Exit;
     end;
 
-    System.Move(AInput[AInOff], FAtBlock[FAtBlockPos], LAvailable);
-    GHASHBlock(FS_at, FAtBlock);
-    FAtLength := FAtLength + UInt64(BlockSize);
+    System.Move(AInput[AInOff], FAadBlock[FAadBlockPos], LAvailable);
+    GHASHBlock(FAadHashState, FAadBlock);
+    FAadLength := FAadLength + UInt64(BlockSize);
     AInOff := AInOff + LAvailable;
     ALen := ALen - LAvailable;
   end;
 
   // Bulk fast path: fold whole 128-byte spans through the fused 8-way GHASH
   // kernel in one call; the per-block loop below handles the remainder.
-  if (FHPow <> nil) and (ALen >= 128) then
+  if (FHashSubKeyPowers <> nil) and (ALen >= 128) then
   begin
     LBatches := ALen div 128;
-    if TGhashSimd.TryFusedEightShuffledGhash(@FS_at[0], @AInput[AInOff],
-      @FHPow[0], LBatches) then
+    if TGhashSimd.TryFusedEightShuffledGhash(@FAadHashState[0], @AInput[AInOff],
+      @FHashSubKeyPowers[0], LBatches) then
     begin
       AInOff := AInOff + LBatches * 128;
       ALen := ALen - LBatches * 128;
-      FAtLength := FAtLength + UInt64(LBatches) * 128;
+      FAadLength := FAadLength + UInt64(LBatches) * 128;
     end;
   end;
 
@@ -644,31 +727,31 @@ begin
 
   while AInOff <= LInLimit do
   begin
-    GHASHBlock(FS_at, AInput, AInOff);
-    FAtLength := FAtLength + UInt64(BlockSize);
+    GHASHBlock(FAadHashState, AInput, AInOff);
+    FAadLength := FAadLength + UInt64(BlockSize);
     AInOff := AInOff + BlockSize;
   end;
 
-  FAtBlockPos := BlockSize + LInLimit - AInOff;
-  System.Move(AInput[AInOff], FAtBlock[0], FAtBlockPos);
+  FAadBlockPos := BlockSize + LInLimit - AInOff;
+  System.Move(AInput[AInOff], FAadBlock[0], FAadBlockPos);
 end;
 
 procedure TGcmBlockCipher.InitCipher;
 begin
-  if FAtLength > 0 then
+  if FAadLength > 0 then
   begin
-    System.Move(FS_at[0], FS_atPre[0], BlockSize);
-    FAtLengthPre := FAtLength;
+    System.Move(FAadHashState[0], FAadHashStatePre[0], BlockSize);
+    FAadLengthPre := FAadLength;
   end;
 
-  if FAtBlockPos > 0 then
+  if FAadBlockPos > 0 then
   begin
-    GHASHPartial(FS_atPre, FAtBlock, 0, FAtBlockPos);
-    FAtLengthPre := FAtLengthPre + UInt64(FAtBlockPos);
+    GHASHPartial(FAadHashStatePre, FAadBlock, 0, FAadBlockPos);
+    FAadLengthPre := FAadLengthPre + UInt64(FAadBlockPos);
   end;
 
-  if FAtLengthPre > 0 then
-    System.Move(FS_atPre[0], FS[0], BlockSize);
+  if FAadLengthPre > 0 then
+    System.Move(FAadHashStatePre[0], FGHashState[0], BlockSize);
 end;
 
 function TGcmBlockCipher.ProcessByte(AInput: Byte;
@@ -676,9 +759,9 @@ function TGcmBlockCipher.ProcessByte(AInput: Byte;
 begin
   CheckStatus();
 
-  FBufBlock[FBufOff] := AInput;
-  System.Inc(FBufOff);
-  if FBufOff = System.Length(FBufBlock) then
+  FBufferBlock[FBufferOffset] := AInput;
+  System.Inc(FBufferOffset);
+  if FBufferOffset = System.Length(FBufferBlock) then
   begin
     TCheck.OutputLength(AOutput, AOutOff, BlockSize, SOutputBufferTooShort);
 
@@ -692,14 +775,14 @@ begin
 
     if FForEncryption then
     begin
-      CipherBlock(FBufBlock, 0, AOutput, AOutOff, True);
-      FBufOff := 0;
+      CipherBlock(FBufferBlock, 0, AOutput, AOutOff, True);
+      FBufferOffset := 0;
     end
     else
     begin
-      CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
-      System.Move(FBufBlock[BlockSize], FBufBlock[0], FMacSize);
-      FBufOff := FMacSize;
+      CipherBlock(FBufferBlock, 0, AOutput, AOutOff, False);
+      System.Move(FBufferBlock[BlockSize], FBufferBlock[0], FMacSize);
+      FBufferOffset := FMacSize;
     end;
 
     FTotalLength := FTotalLength + UInt64(BlockSize);
@@ -732,7 +815,7 @@ begin
   // stride, so after it the remainder is < that stride; the encrypt/decrypt
   // pair share the same shape (decrypt just carries the tag hold-back as its
   // per-tier limit). The 8-way branch runs the 4-way tier without re-checking
-  // IsFourWaySupported because 8-way implies 4-way; FSoftBulk is an exclusive
+  // IsFourWaySupported because 8-way implies 4-way; FSoftwareBulkGHash is an exclusive
   // peer of the hardware tiers, never a fall-through below them.
   if TGcmBlockCipher.IsEightWaySupported and (ALen >= AHoldBack + BlockSize * 8)
   then
@@ -762,7 +845,7 @@ begin
         AHoldBack + BlockSize * 4);
     RunTwoBlockTail;
   end
-  else if FSoftBulk and (ALen >= AHoldBack + BlockSize * 4) then
+  else if FSoftwareBulkGHash and (ALen >= AHoldBack + BlockSize * 4) then
   begin
     if AForEncrypt then
       EncryptBlocksSoftBulk4(AInBuf, AInOff, ALen, AOutBuf, AOutOff)
@@ -775,7 +858,7 @@ begin
     RunTwoBlockTail;
 
   // Trailing single block above the hold-back (encrypt: ALen >= BlockSize;
-  // decrypt: ALen >= BlockSize + FMacSize, i.e. Length(FBufBlock)).
+  // decrypt: ALen >= BlockSize + FMacSize, i.e. Length(FBufferBlock)).
   if ALen >= AHoldBack + BlockSize then
   begin
     CipherBlock(AInBuf, AInOff, AOutBuf, AOutOff, AForEncrypt);
@@ -794,7 +877,7 @@ begin
 
   TCheck.DataLength(AInput, AInOff, ALen, SInputBufferTooShort);
 
-  LResultLen := FBufOff + ALen;
+  LResultLen := FBufferOffset + ALen;
 
   if FForEncryption then
   begin
@@ -813,29 +896,29 @@ begin
         InitCipher();
     end;
 
-    if FBufOff > 0 then
+    if FBufferOffset > 0 then
     begin
-      LAvailable := BlockSize - FBufOff;
+      LAvailable := BlockSize - FBufferOffset;
       if ALen < LAvailable then
       begin
-        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-        FBufOff := FBufOff + ALen;
+        System.Move(AInput[AInOff], FBufferBlock[FBufferOffset], ALen);
+        FBufferOffset := FBufferOffset + ALen;
         Result := 0;
         Exit;
       end;
 
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], LAvailable);
+      System.Move(AInput[AInOff], FBufferBlock[FBufferOffset], LAvailable);
       AInOff := AInOff + LAvailable;
       ALen := ALen - LAvailable;
 
-      CipherBlock(FBufBlock, 0, AOutput, AOutOff, True);
+      CipherBlock(FBufferBlock, 0, AOutput, AOutOff, True);
       AOutOff := AOutOff + BlockSize;
     end;
 
     RunTieredWholeBlocks(True, AInput, AInOff, ALen, AOutput, AOutOff, 0);
 
-    FBufOff := ALen;
-    System.Move(AInput[AInOff], FBufBlock[0], FBufOff);
+    FBufferOffset := ALen;
+    System.Move(AInput[AInOff], FBufferBlock[0], FBufferOffset);
   end
   else
   begin
@@ -855,28 +938,28 @@ begin
         InitCipher();
     end;
 
-    LAvailable := System.Length(FBufBlock) - FBufOff;
+    LAvailable := System.Length(FBufferBlock) - FBufferOffset;
     if ALen < LAvailable then
     begin
-      System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-      FBufOff := FBufOff + ALen;
+      System.Move(AInput[AInOff], FBufferBlock[FBufferOffset], ALen);
+      FBufferOffset := FBufferOffset + ALen;
       Result := 0;
       Exit;
     end;
 
-    if FBufOff >= BlockSize then
+    if FBufferOffset >= BlockSize then
     begin
-      CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
+      CipherBlock(FBufferBlock, 0, AOutput, AOutOff, False);
       AOutOff := AOutOff + BlockSize;
 
-      FBufOff := FBufOff - BlockSize;
-      System.Move(FBufBlock[BlockSize], FBufBlock[0], FBufOff);
+      FBufferOffset := FBufferOffset - BlockSize;
+      System.Move(FBufferBlock[BlockSize], FBufferBlock[0], FBufferOffset);
 
       LAvailable := LAvailable + BlockSize;
       if ALen < LAvailable then
       begin
-        System.Move(AInput[AInOff], FBufBlock[FBufOff], ALen);
-        FBufOff := FBufOff + ALen;
+        System.Move(AInput[AInOff], FBufferBlock[FBufferOffset], ALen);
+        FBufferOffset := FBufferOffset + ALen;
 
         FTotalLength := FTotalLength + UInt64(BlockSize);
         Result := BlockSize;
@@ -884,22 +967,22 @@ begin
       end;
     end;
 
-    LAvailable := BlockSize - FBufOff;
-    System.Move(AInput[AInOff], FBufBlock[FBufOff], LAvailable);
+    LAvailable := BlockSize - FBufferOffset;
+    System.Move(AInput[AInOff], FBufferBlock[FBufferOffset], LAvailable);
     AInOff := AInOff + LAvailable;
     ALen := ALen - LAvailable;
 
-    CipherBlock(FBufBlock, 0, AOutput, AOutOff, False);
+    CipherBlock(FBufferBlock, 0, AOutput, AOutOff, False);
     AOutOff := AOutOff + BlockSize;
 
-    // Hold-back = FMacSize (= Length(FBufBlock) - BlockSize on decrypt) so the
+    // Hold-back = FMacSize (= Length(FBufferBlock) - BlockSize on decrypt) so the
     // trailing tag is never consumed as payload; the thresholds LThreshN in the
     // former inline staircase equalled AHoldBack + BlockSize*N.
     RunTieredWholeBlocks(False, AInput, AInOff, ALen, AOutput, AOutOff,
-      System.Length(FBufBlock) - BlockSize);
+      System.Length(FBufferBlock) - BlockSize);
 
-    FBufOff := ALen;
-    System.Move(AInput[AInOff], FBufBlock[0], FBufOff);
+    FBufferOffset := ALen;
+    System.Move(AInput[AInOff], FBufferBlock[0], FBufferOffset);
   end;
 
   FTotalLength := FTotalLength + UInt64(LResultLen);
@@ -911,15 +994,10 @@ function TGcmBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
 var
   LExtra, LResultLen: Int32;
   LC: Int64;
-  LH_c, LX, LTag, LMsgMac: TCryptoLibByteArray;
 begin
   CheckStatus();
-  LH_c := nil;
-  LX := nil;
-  LTag := nil;
-  LMsgMac := nil;
 
-  LExtra := FBufOff;
+  LExtra := FBufferOffset;
 
   if FForEncryption then
   begin
@@ -945,59 +1023,64 @@ begin
 
     System.Dec(FBlocksRemaining);
 
-    ProcessPartial(FBufBlock, 0, LExtra, AOutput, AOutOff);
+    ProcessPartial(FBufferBlock, 0, LExtra, AOutput, AOutOff);
   end;
 
-  FAtLength := FAtLength + UInt64(FAtBlockPos);
+  FAadLength := FAadLength + UInt64(FAadBlockPos);
 
-  if FAtLength > FAtLengthPre then
+  if FAadLength > FAadLengthPre then
   begin
-    if FAtBlockPos > 0 then
-      GHASHPartial(FS_at, FAtBlock, 0, FAtBlockPos);
+    if FAadBlockPos > 0 then
+      GHASHPartial(FAadHashState, FAadBlock, 0, FAadBlockPos);
 
-    if FAtLengthPre > 0 then
-      TGcmUtilities.&Xor(FS_at, FS_atPre);
+    if FAadLengthPre > 0 then
+      TGcmUtilities.&Xor(FAadHashState, FAadHashStatePre);
 
     LC := Int64(((FTotalLength * 8) + 127) shr 7);
 
-    System.SetLength(LH_c, 16);
-    if FExp = nil then
+    if FLengthExponent = nil then
+      System.SetLength(FLengthExponent, 16);
+    if FExponentiator = nil then
     begin
-      FExp := TBasicGcmExponentiator.Create() as IGcmExponentiator;
-      FExp.Init(FH);
+      FExponentiator := TBasicGcmExponentiator.Create() as IGcmExponentiator;
+      FExponentiator.Init(FHashSubKey);
     end;
-    FExp.ExponentiateX(LC, LH_c);
+    FExponentiator.ExponentiateX(LC, FLengthExponent);
 
-    TGcmUtilities.Multiply(FS_at, LH_c);
+    TGcmUtilities.Multiply(FAadHashState, FLengthExponent);
 
-    TGcmUtilities.&Xor(FS, FS_at);
+    TGcmUtilities.&Xor(FGHashState, FAadHashState);
   end;
 
-  System.SetLength(LX, BlockSize);
-  TPack.UInt64_To_BE(FAtLength * UInt64(8), LX, 0);
-  TPack.UInt64_To_BE(FTotalLength * UInt64(8), LX, 8);
+  if FLengthBlock = nil then
+    System.SetLength(FLengthBlock, BlockSize);
+  TPack.UInt64_To_BE(FAadLength * UInt64(8), FLengthBlock, 0);
+  TPack.UInt64_To_BE(FTotalLength * UInt64(8), FLengthBlock, 8);
 
-  GHASHBlock(FS, LX);
+  GHASHBlock(FGHashState, FLengthBlock);
 
-  System.SetLength(LTag, BlockSize);
-  FCipher.ProcessBlock(FJ0, 0, LTag, 0);
-  TGcmUtilities.&Xor(LTag, FS);
+  if FTagBlock = nil then
+    System.SetLength(FTagBlock, BlockSize);
+  FCipher.ProcessBlock(FPreCounterBlock, 0, FTagBlock, 0);
+  TGcmUtilities.&Xor(FTagBlock, FGHashState);
 
   LResultLen := LExtra;
 
-  System.SetLength(FMacBlock, FMacSize);
-  System.Move(LTag[0], FMacBlock[0], FMacSize);
+  if (FMacBlock = nil) or (System.Length(FMacBlock) <> FMacSize) then
+    System.SetLength(FMacBlock, FMacSize);
+  System.Move(FTagBlock[0], FMacBlock[0], FMacSize);
 
   if FForEncryption then
   begin
-    System.Move(FMacBlock[0], AOutput[AOutOff + FBufOff], FMacSize);
+    System.Move(FMacBlock[0], AOutput[AOutOff + FBufferOffset], FMacSize);
     LResultLen := LResultLen + FMacSize;
   end
   else
   begin
-    System.SetLength(LMsgMac, FMacSize);
-    System.Move(FBufBlock[LExtra], LMsgMac[0], FMacSize);
-    if not TArrayUtilities.FixedTimeEquals(FMacBlock, LMsgMac) then
+    if (FReceivedMac = nil) or (System.Length(FReceivedMac) <> FMacSize) then
+      System.SetLength(FReceivedMac, FMacSize);
+    System.Move(FBufferBlock[LExtra], FReceivedMac[0], FMacSize);
+    if not TArrayUtilities.FixedTimeEquals(FMacBlock, FReceivedMac) then
       RaiseMacCheckFailed();
   end;
 
@@ -1013,21 +1096,23 @@ end;
 
 procedure TGcmBlockCipher.DoReset(AClearMac: Boolean);
 begin
-  TArrayUtilities.Fill(FS, 0, System.Length(FS), Byte(0));
-  TArrayUtilities.Fill(FS_at, 0, System.Length(FS_at), Byte(0));
-  TArrayUtilities.Fill(FS_atPre, 0, System.Length(FS_atPre), Byte(0));
-  TArrayUtilities.Fill(FAtBlock, 0, System.Length(FAtBlock), Byte(0));
-  FAtBlockPos := 0;
-  FAtLength := 0;
-  FAtLengthPre := 0;
-  FCounter := System.Copy(FJ0);
-  FCounter32 := TPack.BE_To_UInt32(FCounter, 12);
+  TArrayUtilities.Fill(FGHashState, 0, System.Length(FGHashState), Byte(0));
+  TArrayUtilities.Fill(FAadHashState, 0, System.Length(FAadHashState), Byte(0));
+  TArrayUtilities.Fill(FAadHashStatePre, 0, System.Length(FAadHashStatePre), Byte(0));
+  TArrayUtilities.Fill(FAadBlock, 0, System.Length(FAadBlock), Byte(0));
+  FAadBlockPos := 0;
+  FAadLength := 0;
+  FAadLengthPre := 0;
+  if FCounterBlock = nil then
+    System.SetLength(FCounterBlock, BlockSize);
+  System.Move(FPreCounterBlock[0], FCounterBlock[0], BlockSize);
+  FCounterWord := TPack.BE_To_UInt32(FCounterBlock, 12);
   FBlocksRemaining := UInt32($FFFFFFFF) - 1;
-  FBufOff := 0;
+  FBufferOffset := 0;
   FTotalLength := 0;
 
-  if FBufBlock <> nil then
-    TArrayUtilities.Fill(FBufBlock, 0, System.Length(FBufBlock), Byte(0));
+  if FBufferBlock <> nil then
+    TArrayUtilities.Fill(FBufferBlock, 0, System.Length(FBufferBlock), Byte(0));
 
   if AClearMac then
     FMacBlock := nil;
@@ -1044,14 +1129,14 @@ end;
 
 procedure TGcmBlockCipher.WipeKeyMaterial();
 begin
-  TArrayUtilities.Fill(FH, 0, System.Length(FH), Byte(0));
-  TArrayUtilities.Fill(FHPow, 0, System.Length(FHPow), Byte(0));
-  TArrayUtilities.Fill(FWorkCtr, 0, System.Length(FWorkCtr), Byte(0));
-  TArrayUtilities.Fill(FWorkCtrAhead, 0, System.Length(FWorkCtrAhead), Byte(0));
-  FGhH1.N0 := 0; FGhH1.N1 := 0;
-  FGhH2.N0 := 0; FGhH2.N1 := 0;
-  FGhH3.N0 := 0; FGhH3.N1 := 0;
-  FGhH4.N0 := 0; FGhH4.N1 := 0;
+  TArrayUtilities.Fill(FHashSubKey, 0, System.Length(FHashSubKey), Byte(0));
+  TArrayUtilities.Fill(FHashSubKeyPowers, 0, System.Length(FHashSubKeyPowers), Byte(0));
+  TArrayUtilities.Fill(FCounterKeystream, 0, System.Length(FCounterKeystream), Byte(0));
+  TArrayUtilities.Fill(FCounterKeystreamAhead, 0, System.Length(FCounterKeystreamAhead), Byte(0));
+  FHashSubKeyPow1.N0 := 0; FHashSubKeyPow1.N1 := 0;
+  FHashSubKeyPow2.N0 := 0; FHashSubKeyPow2.N1 := 0;
+  FHashSubKeyPow3.N0 := 0; FHashSubKeyPow3.N1 := 0;
+  FHashSubKeyPow4.N0 := 0; FHashSubKeyPow4.N1 := 0;
 end;
 
 // =======================================================================
@@ -1076,11 +1161,11 @@ var
   LB: Int32;
   LPCiph: PByte;
 begin
-  if TGhashSimd.TryFusedFourShuffledGhash(@FS[0], PC0, @FHPow[64], 1) then
+  if TGhashSimd.TryFusedFourShuffledGhash(@FGHashState[0], PC0, @FHashSubKeyPowers[64], 1) then
     Exit;
   // Unreachable in practice (the caller gates on the same predicate as the
   // kernel); fold per block through the multiplier, which is independent of
-  // the x-pre-multiplied FHPow layout.
+  // the x-pre-multiplied FHashSubKeyPowers layout.
   for LB := 0 to 3 do
   begin
     case LB of
@@ -1093,8 +1178,8 @@ begin
     else
       LPCiph := PC48;
     end;
-    TByteUtilities.&Xor(BlockSize, @FS[0], LPCiph, @FS[0]);
-    FMultiplier.MultiplyH(FS);
+    TByteUtilities.&Xor(BlockSize, @FGHashState[0], LPCiph, @FGHashState[0]);
+    FMultiplier.MultiplyH(FGHashState);
   end;
 end;
 
@@ -1122,20 +1207,20 @@ procedure TGcmBlockCipher.ProcessBlocks4Fused(const AInBuf: TCryptoLibByteArray;
 var
   LPIn, LPOut: PByte;
 begin
-  GetNextCtrBlocks4(FWorkCtr);
+  GetNextCtrBlocks4(FCounterKeystream);
   LPIn := PByte(AInBuf) + AInOff;
   LPOut := PByte(AOutBuf) + AOutOff;
   // Decrypt hashes the input ciphertext, read before the XOR overwrites it
   // (the in-place case aliases input and output).
   if AForEncrypt then
   begin
-    TByteUtilities.&Xor(64, LPIn, PByte(FWorkCtr), LPOut);
+    TByteUtilities.&Xor(64, LPIn, PByte(FCounterKeystream), LPOut);
     GhashFourShuffledBlocks(LPOut, LPOut + 16, LPOut + 32, LPOut + 48);
   end
   else
   begin
     GhashFourShuffledBlocks(LPIn, LPIn + 16, LPIn + 32, LPIn + 48);
-    TByteUtilities.&Xor(64, LPIn, PByte(FWorkCtr), LPOut);
+    TByteUtilities.&Xor(64, LPIn, PByte(FCounterKeystream), LPOut);
   end;
 end;
 
@@ -1143,15 +1228,15 @@ procedure TGcmBlockCipher.GhashEightShuffledBlocks(PBase: PByte);
 var
   LB: Int32;
 begin
-  if TGhashSimd.TryFusedEightShuffledGhash(@FS[0], PBase, @FHPow[0], 1) then
+  if TGhashSimd.TryFusedEightShuffledGhash(@FGHashState[0], PBase, @FHashSubKeyPowers[0], 1) then
     Exit;
   // Unreachable in practice (the caller gates on the same predicate as the
   // kernel); fold per block through the multiplier, which is independent of
-  // the x-pre-multiplied FHPow layout.
+  // the x-pre-multiplied FHashSubKeyPowers layout.
   for LB := 0 to 7 do
   begin
-    TByteUtilities.&Xor(BlockSize, @FS[0], PBase + (LB * BlockSize), @FS[0]);
-    FMultiplier.MultiplyH(FS);
+    TByteUtilities.&Xor(BlockSize, @FGHashState[0], PBase + (LB * BlockSize), @FGHashState[0]);
+    FMultiplier.MultiplyH(FGHashState);
   end;
 end;
 
@@ -1162,20 +1247,20 @@ procedure TGcmBlockCipher.ProcessBlocks8Fused(const AInBuf: TCryptoLibByteArray;
 var
   LPIn, LPOut: PByte;
 begin
-  GetNextCtrBlocks8(FWorkCtr);
+  GetNextCtrBlocks8(FCounterKeystream);
   LPIn := PByte(AInBuf) + AInOff;
   LPOut := PByte(AOutBuf) + AOutOff;
   // Decrypt hashes the input ciphertext, read before the XOR overwrites it
   // (the in-place case aliases input and output).
   if AForEncrypt then
   begin
-    TByteUtilities.&Xor(128, LPIn, PByte(FWorkCtr), LPOut);
+    TByteUtilities.&Xor(128, LPIn, PByte(FCounterKeystream), LPOut);
     GhashEightShuffledBlocks(LPOut);
   end
   else
   begin
     GhashEightShuffledBlocks(LPIn);
-    TByteUtilities.&Xor(128, LPIn, PByte(FWorkCtr), LPOut);
+    TByteUtilities.&Xor(128, LPIn, PByte(FCounterKeystream), LPOut);
   end;
 end;
 
@@ -1199,8 +1284,8 @@ begin
   if ALen < ALimit + (BlockSize * 4) * 2 then
     Exit;
 
-  LCurr := FWorkCtr;
-  LNext := FWorkCtrAhead;
+  LCurr := FCounterKeystream;
+  LNext := FCounterKeystreamAhead;
 
   GetNextCtrBlocks4(LCurr);
 
@@ -1261,8 +1346,8 @@ begin
   if ALen < ALimit + (BlockSize * 8) * 2 then
     Exit;
 
-  LCurr := FWorkCtr;
-  LNext := FWorkCtrAhead;
+  LCurr := FCounterKeystream;
+  LNext := FCounterKeystreamAhead;
 
   GetNextCtrBlocks8(LCurr);
 
@@ -1399,8 +1484,8 @@ begin
     begin
       LPIn := PByte(AInBuf) + AInOff;
       LPOut := PByte(AOutBuf) + AOutOff;
-      FCounter32 := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPIn,
-        @FS[0], @FJ0[0], FCounter32, LBatches, False);
+      FCounterWord := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPIn,
+        @FGHashState[0], @FPreCounterBlock[0], FCounterWord, LBatches, False);
       AInOff := AInOff + LBatches * (BlockSize * 8);
       AOutOff := AOutOff + LBatches * (BlockSize * 8);
       ALen := ALen - LBatches * (BlockSize * 8);
@@ -1408,7 +1493,7 @@ begin
     Exit;
   end;
 
-  LCurrCtrs := FWorkCtr;
+  LCurrCtrs := FCounterKeystream;
 
   // Prime batch 0: regular 8-wide keystream into LCurrCtrs (now holds keystream),
   // XOR with plaintext/ciphertext at LPOut, defer GHASH of batch 0.
@@ -1435,8 +1520,8 @@ begin
   begin
     LPIn := PByte(AInBuf) + AInOff;
     LPOut := PByte(AOutBuf) + AOutOff;
-    FCounter32 := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPrevCipher,
-      @FS[0], @FJ0[0], FCounter32, LBatches, AForEncrypt);
+    FCounterWord := FGcmKernel.ProcessCtrGhashBatches(LPIn, LPOut, LPrevCipher,
+      @FGHashState[0], @FPreCounterBlock[0], FCounterWord, LBatches, AForEncrypt);
     if AForEncrypt then
       LPrevCipher := LPOut + (LBatches - 1) * (BlockSize * 8)
     else
@@ -1481,7 +1566,7 @@ procedure TGcmBlockCipher.EncryptBlocks4(const AInBuf: TCryptoLibByteArray;
 begin
   if not TGcmBlockCipher.IsFourWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
-  if FHPow = nil then
+  if FHashSubKeyPowers = nil then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['four']);
   if ALen >= BlockSize * 8 then
     ProcessBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, 0, True);
@@ -1500,7 +1585,7 @@ procedure TGcmBlockCipher.EncryptBlocks8(const AInBuf: TCryptoLibByteArray;
 begin
   if not TGcmBlockCipher.IsEightWaySupported then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
-  if (FHPow = nil) or (System.Length(FHPow) < 128) then
+  if (FHashSubKeyPowers = nil) or (System.Length(FHashSubKeyPowers) < 128) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= BlockSize * 16 then
   begin
@@ -1537,19 +1622,19 @@ begin
   // overwritten, so the in-place case (Out aliases In) stays correct.
   if AForEncrypt then
   begin
-    // Out := In xor keystream (ciphertext); FS := FS xor Out.
+    // Out := In xor keystream (ciphertext); FGHashState := FGHashState xor Out.
     TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
       PByte(@AOutBuf[AOutOff]));
-    TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
+    TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FGHashState[0]));
   end
   else
   begin
-    // FS := FS xor In (ciphertext) first; then Out := In xor keystream.
-    TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
+    // FGHashState := FGHashState xor In (ciphertext) first; then Out := In xor keystream.
+    TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FGHashState[0]));
     TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
       PByte(@AOutBuf[AOutOff]));
   end;
-  FMultiplier.MultiplyH(FS);
+  FMultiplier.MultiplyH(FGHashState);
 end;
 
 procedure TGcmBlockCipher.DecryptBlocks4(const AInBuf: TCryptoLibByteArray;
@@ -1560,7 +1645,7 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['four']);
   if ALimit < BlockSize * 4 then
     raise EArgumentCryptoLibException.CreateResFmt(@SGcmDecryptBadLimit, ['four']);
-  if FHPow = nil then
+  if FHashSubKeyPowers = nil then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['four']);
   if ALen >= ALimit + (BlockSize * 4) * 2 then
     ProcessBlocks4Pipelined(AInBuf, AInOff, ALen, AOutBuf, AOutOff, ALimit, False);
@@ -1581,7 +1666,7 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockPathNotSupported, ['eight']);
   if ALimit < BlockSize * 8 then
     raise EArgumentCryptoLibException.CreateResFmt(@SGcmDecryptBadLimit, ['eight']);
-  if (FHPow = nil) or (System.Length(FHPow) < 128) then
+  if (FHashSubKeyPowers = nil) or (System.Length(FHashSubKeyPowers) < 128) then
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SGcmBlockHStateMissing, ['eight']);
   if ALen >= ALimit + (BlockSize * 8) * 2 then
   begin
@@ -1603,13 +1688,13 @@ begin
 end;
 
 // Scalar aggregated 4-way GHASH over four consecutive 16-byte blocks at
-// ABuf[AOff..AOff+63], folding them into the running state FS in one reduction.
+// ABuf[AOff..AOff+63], folding them into the running state FGHashState in one reduction.
 procedure TGcmBlockCipher.SoftAggregateGhash4(const ABuf: TCryptoLibByteArray;
   AOff: Int32);
 var
   LY, LX1, LX2, LX3, LX4: TFieldElement;
 begin
-  TGcmUtilities.AsFieldElement(FS, LY);
+  TGcmUtilities.AsFieldElement(FGHashState, LY);
   LX1.N0 := TPack.BE_To_UInt64(ABuf, AOff);
   LX1.N1 := TPack.BE_To_UInt64(ABuf, AOff + 8);
   LX2.N0 := TPack.BE_To_UInt64(ABuf, AOff + 16);
@@ -1619,8 +1704,8 @@ begin
   LX4.N0 := TPack.BE_To_UInt64(ABuf, AOff + 48);
   LX4.N1 := TPack.BE_To_UInt64(ABuf, AOff + 56);
   TGcmUtilities.AggregateGhash4(LY, LX1, LX2, LX3, LX4,
-    FGhH1, FGhH2, FGhH3, FGhH4);
-  TGcmUtilities.AsBytes(LY, FS);
+    FHashSubKeyPow1, FHashSubKeyPow2, FHashSubKeyPow3, FHashSubKeyPow4);
+  TGcmUtilities.AsBytes(LY, FGHashState);
 end;
 
 // Single software-bulk 4-way step: bulk AES keystream via FBulkCipher, XOR,
@@ -1629,19 +1714,19 @@ procedure TGcmBlockCipher.ProcessSoftBulk4(const AInBuf: TCryptoLibByteArray;
   AInOff: Int32; const AOutBuf: TCryptoLibByteArray; AOutOff: Int32;
   AForEncrypt: Boolean);
 begin
-  GetNextCtrBlocks4(FWorkCtr);
+  GetNextCtrBlocks4(FCounterKeystream);
   // Decrypt hashes the input ciphertext, which must be read before the XOR
   // overwrites it (the in-place case aliases input and output).
   if AForEncrypt then
   begin
-    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr),
+    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FCounterKeystream),
       PByte(AOutBuf) + AOutOff);
     SoftAggregateGhash4(AOutBuf, AOutOff);
   end
   else
   begin
     SoftAggregateGhash4(AInBuf, AInOff);
-    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FWorkCtr),
+    TByteUtilities.&Xor(64, PByte(AInBuf) + AInOff, PByte(FCounterKeystream),
       PByte(AOutBuf) + AOutOff);
   end;
 end;
@@ -1691,15 +1776,15 @@ begin
     begin
       TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
         PByte(@AOutBuf[AOutOff]));
-      TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FS[0]));
+      TByteUtilities.XorTo(BlockSize, PByte(@AOutBuf[AOutOff]), PByte(@FGHashState[0]));
     end
     else
     begin
-      TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FS[0]));
+      TByteUtilities.XorTo(BlockSize, PByte(@AInBuf[AInOff]), PByte(@FGHashState[0]));
       TByteUtilities.&Xor(BlockSize, PByte(@AInBuf[AInOff]), PByte(@LCtrBlock[0]),
         PByte(@AOutBuf[AOutOff]));
     end;
-    FMultiplier.MultiplyH(FS);
+    FMultiplier.MultiplyH(FGHashState);
     AInOff := AInOff + BlockSize;
     AOutOff := AOutOff + BlockSize;
   end;
@@ -1711,44 +1796,44 @@ end;
 
 procedure TGcmBlockCipher.GetNextCtrBlock(const ABlock: TCryptoLibByteArray);
 begin
-  System.Inc(FCounter32);
-  TPack.UInt32_To_BE(FCounter32, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlock, 0);
+  System.Inc(FCounterWord);
+  TPack.UInt32_To_BE(FCounterWord, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlock, 0);
 end;
 
 procedure TGcmBlockCipher.GetNextCtrBlocks4(const ABlocks: TCryptoLibByteArray);
 var
   Lc0, Lc1, Lc2, Lc3, Lc4: UInt32;
 begin
-  Lc0 := FCounter32;
+  Lc0 := FCounterWord;
   Lc1 := Lc0 + UInt32(1);
   Lc2 := Lc0 + UInt32(2);
   Lc3 := Lc0 + UInt32(3);
   Lc4 := Lc0 + UInt32(4);
-  FCounter32 := Lc4;
+  FCounterWord := Lc4;
 
   if FBulkCipher <> nil then
   begin
-    System.Move(FCounter[0], ABlocks[0], 16);
-    System.Move(FCounter[0], ABlocks[16], 16);
-    System.Move(FCounter[0], ABlocks[32], 16);
-    TPack.UInt32_To_BE(Lc4, FCounter, 12);
+    System.Move(FCounterBlock[0], ABlocks[0], 16);
+    System.Move(FCounterBlock[0], ABlocks[16], 16);
+    System.Move(FCounterBlock[0], ABlocks[32], 16);
+    TPack.UInt32_To_BE(Lc4, FCounterBlock, 12);
     TPack.UInt32_To_BE(Lc1, ABlocks, 12);
     TPack.UInt32_To_BE(Lc2, ABlocks, 28);
     TPack.UInt32_To_BE(Lc3, ABlocks, 44);
-    System.Move(FCounter[0], ABlocks[48], 16);
+    System.Move(FCounterBlock[0], ABlocks[48], 16);
     FBulkCipher.ProcessBlocks(@ABlocks[0], @ABlocks[0], 4);
     Exit;
   end;
 
-  TPack.UInt32_To_BE(Lc1, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);
-  TPack.UInt32_To_BE(Lc2, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 16);
-  TPack.UInt32_To_BE(Lc3, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 32);
-  TPack.UInt32_To_BE(Lc4, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 48);
+  TPack.UInt32_To_BE(Lc1, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 0);
+  TPack.UInt32_To_BE(Lc2, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 16);
+  TPack.UInt32_To_BE(Lc3, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 32);
+  TPack.UInt32_To_BE(Lc4, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 48);
 end;
 
 procedure TGcmBlockCipher.GetNextCtrBlocks8(const ABlocks: TCryptoLibByteArray);
@@ -1757,12 +1842,12 @@ var
 begin
   if FBulkCipher <> nil then
   begin
-    FillCtr8BlocksRaw(FCounter, FCounter32, ABlocks);
+    FillCtr8BlocksRaw(FCounterBlock, FCounterWord, ABlocks);
     FBulkCipher.ProcessBlocks(@ABlocks[0], @ABlocks[0], 8);
     Exit;
   end;
 
-  Lc0 := FCounter32;
+  Lc0 := FCounterWord;
   Lc1 := Lc0 + UInt32(1);
   Lc2 := Lc0 + UInt32(2);
   Lc3 := Lc0 + UInt32(3);
@@ -1771,24 +1856,24 @@ begin
   Lc6 := Lc0 + UInt32(6);
   Lc7 := Lc0 + UInt32(7);
   Lc8 := Lc0 + UInt32(8);
-  FCounter32 := Lc8;
+  FCounterWord := Lc8;
 
-  TPack.UInt32_To_BE(Lc1, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 0);
-  TPack.UInt32_To_BE(Lc2, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 16);
-  TPack.UInt32_To_BE(Lc3, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 32);
-  TPack.UInt32_To_BE(Lc4, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 48);
-  TPack.UInt32_To_BE(Lc5, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 64);
-  TPack.UInt32_To_BE(Lc6, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 80);
-  TPack.UInt32_To_BE(Lc7, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 96);
-  TPack.UInt32_To_BE(Lc8, FCounter, 12);
-  FCipher.ProcessBlock(FCounter, 0, ABlocks, 112);
+  TPack.UInt32_To_BE(Lc1, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 0);
+  TPack.UInt32_To_BE(Lc2, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 16);
+  TPack.UInt32_To_BE(Lc3, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 32);
+  TPack.UInt32_To_BE(Lc4, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 48);
+  TPack.UInt32_To_BE(Lc5, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 64);
+  TPack.UInt32_To_BE(Lc6, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 80);
+  TPack.UInt32_To_BE(Lc7, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 96);
+  TPack.UInt32_To_BE(Lc8, FCounterBlock, 12);
+  FCipher.ProcessBlock(FCounterBlock, 0, ABlocks, 112);
 end;
 
 // =======================================================================
@@ -1808,11 +1893,11 @@ begin
   if FForEncryption then
   begin
     TGcmUtilities.&Xor(ABuf, AOff, LCtrBlock, 0, ALen);
-    GHASHPartial(FS, ABuf, AOff, ALen);
+    GHASHPartial(FGHashState, ABuf, AOff, ALen);
   end
   else
   begin
-    GHASHPartial(FS, ABuf, AOff, ALen);
+    GHASHPartial(FGHashState, ABuf, AOff, ALen);
     TGcmUtilities.&Xor(ABuf, AOff, LCtrBlock, 0, ALen);
   end;
 

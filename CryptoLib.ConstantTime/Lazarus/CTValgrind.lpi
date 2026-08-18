@@ -32,7 +32,7 @@
         <PackageName Value="CryptoLib4PascalPackage"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="4">
+    <Units Count="6">
       <Unit0>
         <Filename Value="CTValgrind.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -41,6 +41,10 @@
         <Filename Value="..\src\Core\CtClock.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit1>
+      <Unit4>
+        <Filename Value="..\src\Core\CtPlatform.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit4>
       <Unit2>
         <Filename Value="..\src\Core\CtDudect.pas"/>
         <IsPartOfProject Value="True"/>
@@ -49,6 +53,10 @@
         <Filename Value="..\src\Core\CtSubjects.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit3>
+      <Unit5>
+        <Filename Value="..\src\Core\CtOps.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit5>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

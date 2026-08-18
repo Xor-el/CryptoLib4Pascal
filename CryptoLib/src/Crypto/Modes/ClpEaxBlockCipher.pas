@@ -42,6 +42,7 @@ uses
   ClpCMac,
   ClpIMac,
   ClpParametersWithIV,
+  ClpKeyParameter,
   ClpCheck,
   ClpArrayUtilities,
   ClpByteUtilities,
@@ -53,6 +54,7 @@ uses
 
 resourcestring
   SInvalidParameters = 'invalid parameters passed to %s';
+  SKeyMustBeSpecified = 'key must be specified in initial packet';
   SOutputBufferTooShort = 'output buffer too short';
   SDataTooShort = 'data too short';
   SAadAfterProcessing = 'AAD data cannot be added after encryption/decryption processing has begun';
@@ -188,6 +190,8 @@ type
     constructor Create(const ACipher: IBlockCipher);
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
 
     procedure ProcessAadByte(AInput: Byte); override;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
@@ -316,6 +320,70 @@ begin
     System.SetLength(FOmacLookahead, FBlockSize);
     System.SetLength(FCtrBlock, FBlockSize);
     DeriveOmacSubkeys();
+  end;
+
+  Reset(True);
+end;
+
+procedure TEaxBlockCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LTag: TCryptoLibByteArray;
+  LSameKey: Boolean;
+begin
+  FForEncryption := AForEncryption;
+
+  CheckNonceReuseRaw(FForEncryption, ANonce, AKey);
+
+  if (FLastNonce = nil) or (System.Length(FLastNonce) <> System.Length(ANonce)) then
+    System.SetLength(FLastNonce, System.Length(ANonce));
+  System.Move(ANonce[0], FLastNonce[0], System.Length(ANonce));
+
+  FInitialAssociatedText := AAad;
+
+  LSameKey := SameKeyReuseRaw(AKey);
+  if (AKey = nil) and (not LSameKey) then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+
+  FMacSize := ValidateAeadMacSizeBits(AMacSizeBits, 32, FBlockSize * 8, 8);
+
+  if FForEncryption then
+    System.SetLength(FBufBlock, FBlockSize)
+  else
+    System.SetLength(FBufBlock, FBlockSize + FMacSize);
+
+  System.SetLength(LTag, FBlockSize);
+
+  // Key schedule / CMAC subkeys depend only on the key: re-key the CMAC on an
+  // actual rekey, otherwise just clear its running state.
+  if not LSameKey then
+    FMac.Init(TKeyParameter.Create(AKey) as IKeyParameter)
+  else
+    FMac.Reset();
+
+  LTag[FBlockSize - 1] := Byte(Ord(TTag.TagN));
+  FMac.BlockUpdate(LTag, 0, FBlockSize);
+  FMac.BlockUpdate(ANonce, 0, System.Length(ANonce));
+  FMac.DoFinal(FNonceMac, 0);
+
+  FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
+
+  FEaxKernel := nil;
+  if FForEncryption then
+    TCipherKernelRegistry.TryAcquireEax(FCipher,
+      TCipherKernelDirection.Encrypt, FEaxKernel)
+  else
+    TCipherKernelRegistry.TryAcquireEax(FCipher,
+      TCipherKernelDirection.Decrypt, FEaxKernel);
+  FUseFusedBody := FEaxKernel <> nil;
+
+  if FUseFusedBody then
+  begin
+    System.SetLength(FOmacState, FBlockSize);
+    System.SetLength(FOmacLookahead, FBlockSize);
+    System.SetLength(FCtrBlock, FBlockSize);
+    if (not LSameKey) or (FOmacB = nil) then
+      DeriveOmacSubkeys();
   end;
 
   Reset(True);

@@ -32,6 +32,7 @@ uses
   ClpBinaryPrimitives,
   ClpBitOperations,
   ClpArrayUtilities,
+  ClpAbstractAesEngine,
   ClpPlatformUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -66,7 +67,7 @@ type
   /// Intended use is constant-time software AES on hosts without hardware AES.
   /// </para>
   /// </remarks>
-  TAesBitSlicedEngine = class sealed(TInterfacedObject, IAesEngine, IBlockCipher,
+  TAesBitSlicedEngine = class sealed(TAbstractAesEngine, IAesEngine, IBlockCipher,
     IBulkBlockCipher)
 
   strict private
@@ -117,6 +118,7 @@ type
 
   strict protected
     function GetAlgorithmName: String; virtual;
+    procedure WipeSchedule; override;
 
   public
 
@@ -155,9 +157,6 @@ type
 
     /// <summary>Reset the cipher back to its post-Init state.</summary>
     procedure Reset(); virtual;
-
-    /// <summary>Zeroize the expanded round-key schedule on teardown.</summary>
-    destructor Destroy; override;
 
     /// <summary>The cipher name (<c>AES[BitSliced]</c>).</summary>
     property AlgorithmName: String read GetAlgorithmName;
@@ -764,6 +763,7 @@ procedure TAesBitSlicedEngine.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LKeyParameter: IKeyParameter;
+  LKey: TCryptoLibByteArray;
 begin
   if not Supports(AParameters, IKeyParameter, LKeyParameter) then
   begin
@@ -771,8 +771,20 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
-  FForEncryption := AForEncryption;
-  KeySchedule(LKeyParameter.GetKey());
+  LKey := LKeyParameter.GetKey();
+  try
+    // Same-key/direction fast path: keep the existing bit-sliced schedule.
+    if CanReuseSchedule(AForEncryption, LKey) then
+      Exit;
+
+    FForEncryption := AForEncryption;
+    KeySchedule(LKey);
+
+    // Last step of a successful rebuild: record (direction, key) for reuse.
+    MarkScheduleBuilt(AForEncryption, LKey);
+  finally
+    TArrayUtilities.Fill(LKey, 0, System.Length(LKey), Byte(0));
+  end;
 end;
 
 procedure TAesBitSlicedEngine.Reset;
@@ -780,10 +792,10 @@ begin
   // The bit-sliced engine keeps no per-block chaining state; nothing to reset.
 end;
 
-destructor TAesBitSlicedEngine.Destroy;
+procedure TAesBitSlicedEngine.WipeSchedule;
 begin
-  TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
-  inherited Destroy;
+  if FSkey <> nil then
+    TArrayUtilities.Fill(FSkey, 0, System.Length(FSkey), UInt64(0));
 end;
 
 function TAesBitSlicedEngine.ProcessBlock(const AInput: TCryptoLibByteArray;

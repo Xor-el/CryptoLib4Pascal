@@ -14,22 +14,52 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGcmBlockCipher;
+unit ClpAesOcbPacketCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
-  ClpCryptoLibTypes;
+  ClpIAeadPacketCipher,
+  ClpIBlockCipher,
+  ClpIAeadCipher,
+  ClpOcbBlockCipher,
+  ClpAesUtilities,
+  ClpAbstractAeadPacketCipher;
 
 type
-  /// <summary>GCM (<see cref="IAeadBlockCipher"/>): AEAD over a 128-bit <see cref="IBlockCipher"/> (typically AES).</summary>
-  IGcmBlockCipher = interface(IAeadBlockCipher)
-    ['{EFA22310-0A01-49B5-BCDE-9AFBF996F85C}']
+  /// <summary>
+  /// One-shot / reusable AES-OCB packet cipher (see <see cref="IAeadPacketCipher"/>):
+  /// a per-message seal/open over a single reused <c>TOcbBlockCipher</c>. Holds no
+  /// cryptography of its own; not thread-safe (one instance per thread).
+  /// </summary>
+  TAesOcbPacketCipher = class sealed(TAbstractAeadPacketCipher)
+  public
+    constructor Create(); overload;
+    constructor Create(const AHashCipher, AMainCipher: IBlockCipher); overload;
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
+
+{ TAesOcbPacketCipher }
+
+constructor TAesOcbPacketCipher.Create();
+begin
+  Create(TAesUtilities.CreateEngine(), TAesUtilities.CreateEngine());
+end;
+
+constructor TAesOcbPacketCipher.Create(const AHashCipher,
+  AMainCipher: IBlockCipher);
+begin
+  inherited Create();
+  FCipher := TOcbBlockCipher.Create(AHashCipher, AMainCipher) as IAeadCipher;
+end;
+
+class function TAesOcbPacketCipher.GetInstance(): IAeadPacketCipher;
+begin
+  Result := TAesOcbPacketCipher.Create() as IAeadPacketCipher;
+end;
 
 end.

@@ -14,22 +14,46 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGcmBlockCipher;
+unit ClpChaCha20Poly1305PacketCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
+  ClpIAeadPacketCipher,
+  ClpIAeadCipher,
+  ClpChaCha20Poly1305,
+  ClpAbstractAeadPacketCipher,
   ClpCryptoLibTypes;
 
 type
-  /// <summary>GCM (<see cref="IAeadBlockCipher"/>): AEAD over a 128-bit <see cref="IBlockCipher"/> (typically AES).</summary>
-  IGcmBlockCipher = interface(IAeadBlockCipher)
-    ['{EFA22310-0A01-49B5-BCDE-9AFBF996F85C}']
+  /// <summary>
+  /// One-shot / reusable ChaCha20-Poly1305 packet cipher (see
+  /// <see cref="IAeadPacketCipher"/>): a per-message seal/open over a single reused
+  /// <c>TChaCha20Poly1305</c>. Holds no cryptography of its own; not thread-safe
+  /// (one instance per thread).
+  /// </summary>
+  TChaCha20Poly1305PacketCipher = class sealed(TAbstractAeadPacketCipher)
+  public
+    constructor Create();
+
+    class function GetInstance(): IAeadPacketCipher; static;
   end;
 
 implementation
+
+{ TChaCha20Poly1305PacketCipher }
+
+constructor TChaCha20Poly1305PacketCipher.Create();
+begin
+  inherited Create();
+  FCipher := TChaCha20Poly1305.Create() as IAeadCipher;
+end;
+
+class function TChaCha20Poly1305PacketCipher.GetInstance(): IAeadPacketCipher;
+begin
+  Result := TChaCha20Poly1305PacketCipher.Create() as IAeadPacketCipher;
+end;
 
 end.

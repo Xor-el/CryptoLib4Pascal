@@ -11,7 +11,7 @@ program CryptoLib.Tests;
 }
 
 {$WARN DUPLICATE_CTOR_DTOR OFF}
-
+{.$DEFINE CONSOLE_TESTRUNNER}
 {$IFNDEF TESTINSIGHT}
   {$IFDEF CONSOLE_TESTRUNNER}
     {$APPTYPE CONSOLE}
@@ -27,6 +27,7 @@ uses
   GUITestRunner,
   TextTestRunner,
   {$ENDIF }
+  ClpAbstractAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAbstractAesEngine.pas',
   ClpAesEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngine.pas',
   ClpAesBitSlicedEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesBitSlicedEngine.pas',
   ClpIAesHardwareEngine in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesHardwareEngine.pas',
@@ -35,6 +36,20 @@ uses
   ClpIAesEngineArm in '..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIAesEngineArm.pas',
   ClpAesEngineArm in '..\..\CryptoLib\src\Crypto\Engines\ClpAesEngineArm.pas',
   ClpAesUtilities in '..\..\CryptoLib\src\Crypto\ClpAesUtilities.pas',
+  ClpIPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIPacketCipher.pas',
+  ClpIAeadPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas',
+  ClpIBlockPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIBlockPacketCipher.pas',
+  ClpAesGcmPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmPacketCipher.pas',
+  ClpAesGcmSivPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmSivPacketCipher.pas',
+  ClpAbstractBlockPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractBlockPacketCipher.pas',
+  ClpAesCbcPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesCbcPacketCipher.pas',
+  ClpAesCtrPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesCtrPacketCipher.pas',
+  ClpChaCha20Poly1305PacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas',
+  ClpAbstractAeadPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractAeadPacketCipher.pas',
+  ClpAbstractPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractPacketCipher.pas',
+  ClpAesEaxPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesEaxPacketCipher.pas',
+  ClpAesCcmPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesCcmPacketCipher.pas',
+  ClpAesOcbPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesOcbPacketCipher.pas',
   ClpAesSimd in '..\..\CryptoLib\src\Simd\Facade\ClpAesSimd.pas',
   ClpAesLightEngine in '..\..\CryptoLib\src\Crypto\Engines\ClpAesLightEngine.pas',
   ClpAgreementUtilities in '..\..\CryptoLib\src\Crypto\Agreements\ClpAgreementUtilities.pas',
@@ -1079,6 +1094,7 @@ uses
   GcmSivTests in '..\src\Crypto\GcmSivTests.pas',
   GMacTests in '..\src\Crypto\GMacTests.pas',
   GcmReorderTests in '..\src\Crypto\GcmReorderTests.pas',
+  AeadEmptyInputTests in '..\src\Crypto\AeadEmptyInputTests.pas',
   GCMTests in '..\src\Crypto\GCMTests.pas',
   X448Tests in '..\src\Math\EC\Rfc7748\X448Tests.pas',
   Ed448Tests in '..\src\Math\EC\Rfc8032\Ed448Tests.pas',

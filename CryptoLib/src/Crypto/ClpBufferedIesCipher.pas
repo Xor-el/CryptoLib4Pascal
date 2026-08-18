@@ -34,7 +34,6 @@ resourcestring
   SEngineNil = 'engine cannot be nil';
   SCipherNotInitialized = 'cipher not initialized';
   SIesCipherParametersRequired = 'IIesCipherParameters required for init';
-  SInputNil = 'input cannot be nil';
   SInvalidOffsetLength = 'invalid offset/length';
 
 type
@@ -151,8 +150,6 @@ function TBufferedIesCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
 var
   LNewLen: Int32;
 begin
-  if AInput = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SInputNil);
   if (AInOff < 0) or (ALength < 0) or
     (AInOff + ALength > System.Length(AInput)) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidOffsetLength);

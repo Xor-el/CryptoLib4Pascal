@@ -14,20 +14,30 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIGcmBlockCipher;
+unit ClpAbstractPacketCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
+  ClpIPacketCipher,
+  ClpICipherParameters,
   ClpCryptoLibTypes;
 
 type
-  /// <summary>GCM (<see cref="IAeadBlockCipher"/>): AEAD over a 128-bit <see cref="IBlockCipher"/> (typically AES).</summary>
-  IGcmBlockCipher = interface(IAeadBlockCipher)
-    ['{EFA22310-0A01-49B5-BCDE-9AFBF996F85C}']
+  /// <summary>
+  /// Family-neutral root for the packet ciphers (see <see cref="IPacketCipher"/>).
+  /// Holds only the parameter-object entry point as the single customization
+  /// point; each family (AEAD, plain block modes) supplies its own unpack and
+  /// seal/open. Adds no cryptography of its own.
+  /// </summary>
+  TAbstractPacketCipher = class abstract(TInterfacedObject, IPacketCipher)
+  public
+    function ProcessPacket(AForEncryption: Boolean;
+      const AParameters: ICipherParameters; const AInput: TCryptoLibByteArray;
+      AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32)
+      : Int32; overload; virtual; abstract;
   end;
 
 implementation

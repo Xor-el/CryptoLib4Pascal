@@ -109,7 +109,8 @@ CLI: `--quick` (reduced budgets), `--row=<substr>` (run only matching rows).
   control is **not** a pass), or hardware kernels were live.
 * `1` FAIL - a subject showed a data-dependent timing signal.
 
-The per-row seeds are fixed, so runs are reproducible.
+Each row's seed is derived from its name (printed in the run output), so runs are
+reproducible and no two rows can silently share a seed.
 
 ## Leg 2 - ctgrind / Valgrind (`CTValgrind`)
 
