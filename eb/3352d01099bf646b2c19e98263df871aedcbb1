@@ -1,0 +1,46 @@
+CryptoLib.ConstantTime/Lazarus/CTValgrind.lpr
+  s_d73146a41790f9::t_0c0489cea6a4c1 34
+  s_d73146a41790f9::t_7ac0dbf4ee66d5 79
+  s_d73146a41790f9::t_c2c240207b9723 101
+CryptoLib.ConstantTime/Lazarus/CTValgrind.lpi
+  s_d73146a41790f9::t_4d3164f4aa8d75 44-47
+  s_d73146a41790f9::t_353e798d680968 35
+  s_d73146a41790f9::t_291dbfde254699 56-59
+CryptoLib.ConstantTime/src/Core/CtSubjects.pas
+  s_d73146a41790f9::t_a824a5bf955001 23,60-61,68-74,81-83,93,105-106,109-111,113,115,117-118,121,124,127,129,132-133,135,138,141,143-144,146-147,150,153-154,157,159,162-163,165,168,170-174,177,179-185,188,197,206,215-256,258-262,266-276,281-282,287-288,292-295,298-306,309-320,324-326,330-338
+CryptoLib.ConstantTime/README.md
+  s_d73146a41790f9::t_fe737527897d5d 112-113
+CryptoLib.ConstantTime/src/Core/CtPlatform.pas
+  s_d73146a41790f9::t_526d703ca9a17a 1-130
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpi
+  s_d73146a41790f9::t_9923b6b6c38457 44-47
+  s_d73146a41790f9::t_7b57600a7f24e6 35
+  s_d73146a41790f9::t_e7dd7ee06d7aad 56-59
+CryptoLib.ConstantTime/src/Core/CtOps.pas
+  s_d73146a41790f9::t_be6953c0004fd9 1-696
+CryptoLib.ConstantTime/Lazarus/CTLeakDetect.lpr
+  s_d73146a41790f9::t_ed2fa87d1c0c67 107,110
+  s_d73146a41790f9::t_bef7cd45c5bec9 63,69
+  s_d73146a41790f9::t_3141a623744ba4 200
+  s_d73146a41790f9::t_2a93afd04b1fa2 27
+  s_d73146a41790f9::t_32d773b648e775 155
+  s_d73146a41790f9::t_f96bbe02056b1c 143
+  s_d73146a41790f9::t_d79cf5ee89ad50 163
+  s_d73146a41790f9::t_65a2860c24d3db 145
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "eb3352d01099bf646b2c19e98263df871aedcbb1",
+  "prompts": {},
+  "sessions": {
+    "s_d73146a41790f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9014869-1fdc-43f4-9bbb-f1e1e9e01b78",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
