@@ -180,6 +180,9 @@ type
 
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
 
+    procedure InitPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32); override;
+
     procedure ProcessAadByte(AInput: Byte); override;
     procedure ProcessAadBytes(const AInput: TCryptoLibByteArray; AInOff, ALen: Int32); override;
 
@@ -406,6 +409,33 @@ begin
   FTheNonce := LMyNonce;
 
   DeriveKeys(LMyKey);
+  ResetStreams();
+end;
+
+procedure TGcmSivBlockCipher.InitPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
+var
+  LKeyLength: Int32;
+begin
+  // GCM-SIV's tag is fixed at 128 bits (RFC 8452); no same-key gate - keys
+  // derive per nonce, so every message re-derives (matching Init).
+  ValidateAeadMacSizeBits(AMacSizeBits, 128, 128, 8);
+
+  if System.Length(ANonce) <> NONCELEN then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidNonce);
+
+  if AKey = nil then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidKey);
+
+  LKeyLength := System.Length(AKey);
+  if (LKeyLength <> BUFLEN) and (LKeyLength <> (BUFLEN shl 1)) then
+    raise EArgumentCryptoLibException.CreateRes(@SInvalidKey);
+
+  FForEncryption := AForEncryption;
+  FTheInitialAEAD := AAad;
+  FTheNonce := ANonce;
+
+  DeriveKeys(TKeyParameter.Create(AKey) as IKeyParameter);
   ResetStreams();
 end;
 

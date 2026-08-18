@@ -43,6 +43,7 @@ uses
   ClpIPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIPacketCipher.pas',
   ClpIAeadPacketCipher in '..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas',
   ClpAesGcmPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmPacketCipher.pas',
+  ClpAesGcmSivPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmSivPacketCipher.pas',
   ClpChaCha20Poly1305PacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas',
   ClpAbstractAeadPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractAeadPacketCipher.pas',
   ClpAbstractPacketCipher in '..\..\CryptoLib\src\Crypto\Packets\ClpAbstractPacketCipher.pas',

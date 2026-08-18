@@ -48,6 +48,7 @@ contains
   ClpIPacketCipher in '..\..\Interfaces\Crypto\Packets\ClpIPacketCipher.pas',
   ClpIAeadPacketCipher in '..\..\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas',
   ClpAesGcmPacketCipher in '..\..\Crypto\Packets\ClpAesGcmPacketCipher.pas',
+  ClpAesGcmSivPacketCipher in '..\..\Crypto\Packets\ClpAesGcmSivPacketCipher.pas',
   ClpChaCha20Poly1305PacketCipher in '..\..\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas',
   ClpAbstractAeadPacketCipher in '..\..\Crypto\Packets\ClpAbstractAeadPacketCipher.pas',
   ClpAbstractPacketCipher in '..\..\Crypto\Packets\ClpAbstractPacketCipher.pas',

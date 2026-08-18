@@ -363,6 +363,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIPacketCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmPacketCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Packets\ClpAesGcmSivPacketCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Packets\ClpAbstractAeadPacketCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Packets\ClpAbstractPacketCipher.pas"/>

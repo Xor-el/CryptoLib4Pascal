@@ -37,12 +37,14 @@ uses
   ClpCcmBlockCipher,
   ClpEaxBlockCipher,
   ClpOcbBlockCipher,
+  ClpGcmSivBlockCipher,
   ClpIAeadPacketCipher,
   ClpAesGcmPacketCipher,
   ClpChaCha20Poly1305PacketCipher,
   ClpAesEaxPacketCipher,
   ClpAesCcmPacketCipher,
   ClpAesOcbPacketCipher,
+  ClpAesGcmSivPacketCipher,
   ClpCipherUtilities,
   ClpAesUtilities,
   ClpAeadParameters,
@@ -189,9 +191,12 @@ begin
     3:
       Result := TEaxBlockCipher.Create(TAesUtilities.CreateEngine())
         as IAeadCipher;
+    4:
+      Result := TOcbBlockCipher.Create(TAesUtilities.CreateEngine(),
+        TAesUtilities.CreateEngine()) as IAeadCipher;
   else
-    Result := TOcbBlockCipher.Create(TAesUtilities.CreateEngine(),
-      TAesUtilities.CreateEngine()) as IAeadCipher;
+    Result := TGcmSivBlockCipher.Create(TAesUtilities.CreateEngine())
+      as IAeadCipher;
   end;
 end;
 
@@ -206,8 +211,10 @@ begin
       Result := TAesCcmPacketCipher.GetInstance();
     3:
       Result := TAesEaxPacketCipher.GetInstance();
+    4:
+      Result := TAesOcbPacketCipher.GetInstance();
   else
-    Result := TAesOcbPacketCipher.GetInstance();
+    Result := TAesGcmSivPacketCipher.GetInstance();
   end;
 end;
 
@@ -289,6 +296,7 @@ begin
   CheckDifferential(2, 16, 12, 'CCM');
   CheckDifferential(3, 16, 12, 'EAX');
   CheckDifferential(4, 16, 12, 'OCB');
+  CheckDifferential(5, 16, 12, 'GCM-SIV');
 end;
 
 procedure TTestAeadEmptyInput.TestAeadModesAcceptEmptyInput;
@@ -318,6 +326,7 @@ begin
   CheckPacket(TAesEaxPacketCipher.GetInstance(), 16, 12, 'EAX-packet');
   CheckPacket(TAesCcmPacketCipher.GetInstance(), 16, 12, 'CCM-packet');
   CheckPacket(TAesOcbPacketCipher.GetInstance(), 16, 12, 'OCB-packet');
+  CheckPacket(TAesGcmSivPacketCipher.GetInstance(), 16, 12, 'GCM-SIV-packet');
 end;
 
 procedure TTestAeadEmptyInput.TestBufferedCiphersAcceptEmptyInput;
