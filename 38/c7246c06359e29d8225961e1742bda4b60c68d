@@ -1,0 +1,68 @@
+CryptoLib/src/Crypto/Packets/ClpAesEaxPacketCipher.pas
+  s_d73146a41790f9::t_c0d7e157e98ed2 24
+  s_d73146a41790f9::t_584694b456a4c1 33
+  s_d73146a41790f9::t_fb2fa5ea79823a 41
+  s_d73146a41790f9::t_0f76e68c0071a1 59,61
+CryptoLib/src/Crypto/Packets/ClpChaCha20Poly1305PacketCipher.pas
+  s_d73146a41790f9::t_b84bd2b5e59da0 24
+  s_d73146a41790f9::t_398ecaffe74989 54,56
+  s_d73146a41790f9::t_337c924933d8d7 33
+  s_d73146a41790f9::t_0ba1776e7f925b 41
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_d73146a41790f9::t_6d81c401ed5ee2 3576-3579
+  s_d73146a41790f9::t_6d4e76fac6e35e 34
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_d73146a41790f9::t_63be2c602628fb 364
+CryptoLib/src/Crypto/Packets/ClpAesGcmPacketCipher.pas
+  s_d73146a41790f9::t_8de3c7d2bdab99 35
+  s_d73146a41790f9::t_62d0f7edcaf62e 46
+  s_d73146a41790f9::t_8366d1523f5914 24
+  s_d73146a41790f9::t_bd23fe830d1d05 71,73
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_d73146a41790f9::t_54e3fe44224940 49
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_d73146a41790f9::t_c4314f3f8324f7 44
+CryptoLib.Tests/src/Crypto/AeadEmptyInputTests.pas
+  s_d73146a41790f9::t_87b5773309c3d0 40,70,73,76,157,198,230,253
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_d73146a41790f9::t_f31de6a817ede5 21
+CryptoLib/src/Crypto/Packets/ClpAbstractAeadPacketCipher.pas
+  s_d73146a41790f9::t_6a3043659acf69 24,26-27,29-35,39-40,43-47,49-50,55-62,66,73-101
+CryptoLib/src/Interfaces/Crypto/Packets/ClpIAeadPacketCipher.pas
+  s_d73146a41790f9::t_bce73e974c90d5 1-58
+CryptoLib/src/Crypto/Packets/ClpAesCcmPacketCipher.pas
+  s_d73146a41790f9::t_8be3a305ee17b2 44
+  s_d73146a41790f9::t_e2df326d2a2a86 24
+  s_d73146a41790f9::t_74cf26f980a42d 68,70
+  s_d73146a41790f9::t_a3526773981ec1 65
+  s_d73146a41790f9::t_0fa7f9a161d24c 34
+CryptoLib/src/Crypto/Packets/ClpAbstractPacketCipher.pas
+  s_d73146a41790f9::t_2408378b95312a 26,30-33,40
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_d73146a41790f9::t_04111279580ba4 291
+CryptoLib/src/Interfaces/Crypto/Packets/ClpIPacketCipher.pas
+  s_d73146a41790f9::t_708ad3e51cf70c 29-34,36-39,42,45-47
+CryptoLib/src/Crypto/Packets/ClpAesOcbPacketCipher.pas
+  s_d73146a41790f9::t_4b6a5bf49a822d 24
+  s_d73146a41790f9::t_32a1eb41ef732e 33
+  s_d73146a41790f9::t_e1e58df5048e8a 41
+  s_d73146a41790f9::t_b43833295c89eb 60,62
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_d73146a41790f9::t_87af6615f92df5 40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "38c7246c06359e29d8225961e1742bda4b60c68d",
+  "prompts": {},
+  "sessions": {
+    "s_d73146a41790f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9014869-1fdc-43f4-9bbb-f1e1e9e01b78",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
