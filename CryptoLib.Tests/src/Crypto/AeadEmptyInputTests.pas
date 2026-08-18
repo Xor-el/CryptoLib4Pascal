@@ -45,6 +45,9 @@ uses
   ClpAesCcmPacketCipher,
   ClpAesOcbPacketCipher,
   ClpAesGcmSivPacketCipher,
+  ClpIBlockPacketCipher,
+  ClpAesCbcPacketCipher,
+  ClpAesCtrPacketCipher,
   ClpCipherUtilities,
   ClpAesUtilities,
   ClpAeadParameters,
@@ -79,11 +82,19 @@ type
       const AKey, ANonce, AAad, AInput: TBytes): TBytes;
     procedure CheckDifferential(AMode, AKeyLen, ANonceLen: Int32;
       const AName: String);
+    function BlockPacketSeal(const APacket: IBlockPacketCipher;
+      AForEncryption: Boolean; const AKey, AIV, AInput: TBytes): TBytes;
+    function BufferedSeal(const ACipherName: String; AForEncryption: Boolean;
+      const AKey, AIV, AInput: TBytes): TBytes;
+    procedure CheckBlockMode(const APacket: IBlockPacketCipher;
+      const ACipherName: String; const ASizes: array of Int32;
+      const AName: String);
   published
     procedure TestAeadModesAcceptEmptyInput;
     procedure TestPacketCiphersZeroLength;
     procedure TestBufferedCiphersAcceptEmptyInput;
     procedure TestPacketMatchesStreaming;
+    procedure TestBlockPacketMatchesBuffered;
   end;
 
 implementation
@@ -297,6 +308,84 @@ begin
   CheckDifferential(3, 16, 12, 'EAX');
   CheckDifferential(4, 16, 12, 'OCB');
   CheckDifferential(5, 16, 12, 'GCM-SIV');
+end;
+
+function TTestAeadEmptyInput.BlockPacketSeal(const APacket: IBlockPacketCipher;
+  AForEncryption: Boolean; const AKey, AIV, AInput: TBytes): TBytes;
+var
+  LOut: TBytes;
+  LLen: Int32;
+begin
+  System.SetLength(LOut, APacket.GetOutputSize(AForEncryption,
+    System.Length(AInput)));
+  LLen := APacket.ProcessPacket(AForEncryption, AKey, AIV, AInput, 0,
+    System.Length(AInput), LOut, 0);
+  System.SetLength(LOut, LLen);
+  Result := LOut;
+end;
+
+function TTestAeadEmptyInput.BufferedSeal(const ACipherName: String;
+  AForEncryption: Boolean; const AKey, AIV, AInput: TBytes): TBytes;
+var
+  LCipher: IBufferedCipher;
+  LOut: TBytes;
+  LLen: Int32;
+begin
+  LCipher := TCipherUtilities.GetCipher(ACipherName);
+  LCipher.Init(AForEncryption, TParametersWithIV.Create(TKeyParameter.Create(AKey)
+    as IKeyParameter, AIV) as ICipherParameters);
+  System.SetLength(LOut, LCipher.GetOutputSize(System.Length(AInput)));
+  LLen := 0;
+  if System.Length(AInput) > 0 then
+    LLen := LCipher.ProcessBytes(AInput, 0, System.Length(AInput), LOut, 0);
+  LLen := LLen + LCipher.DoFinal(LOut, LLen);
+  System.SetLength(LOut, LLen);
+  Result := LOut;
+end;
+
+// The block packet path (CBC/CTR) must be byte-identical to the standard
+// buffered cipher across sizes, on a reused instance with a direction flip and
+// a rekey. CTR takes any length; CBC only whole blocks.
+procedure TTestAeadEmptyInput.CheckBlockMode(const APacket: IBlockPacketCipher;
+  const ACipherName: String; const ASizes: array of Int32; const AName: String);
+var
+  LKey, LKey2, LIV, LPt, LCtP, LCtB, LPt2: TBytes;
+  LI: Int32;
+begin
+  LKey := MakeBytes(16, 30);
+  for LI := 0 to System.High(ASizes) do
+  begin
+    LIV := MakeBytes(16, 100 + LI); // distinct IV per message
+    LPt := MakeBytes(ASizes[LI], 20 + LI);
+
+    LCtP := BlockPacketSeal(APacket, True, LKey, LIV, LPt);
+    LCtB := BufferedSeal(ACipherName, True, LKey, LIV, LPt);
+    Check(AreEqual(LCtP, LCtB), AName + ': packet enc must match buffered (size '
+      + IntToStr(ASizes[LI]) + ')');
+
+    LPt2 := BlockPacketSeal(APacket, False, LKey, LIV, LCtP);
+    Check(AreEqual(LPt2, LPt), AName + ': packet round-trip must recover plaintext'
+      + ' (size ' + IntToStr(ASizes[LI]) + ')');
+  end;
+
+  // Rekey on the reused instance (also a key-length change: 128 -> 256).
+  LKey2 := MakeBytes(32, 77);
+  LIV := MakeBytes(16, 250);
+  LPt := MakeBytes(64, 9);
+  LCtP := BlockPacketSeal(APacket, True, LKey2, LIV, LPt);
+  LCtB := BufferedSeal(ACipherName, True, LKey2, LIV, LPt);
+  Check(AreEqual(LCtP, LCtB), AName + ': packet rekey must match buffered');
+end;
+
+procedure TTestAeadEmptyInput.TestBlockPacketMatchesBuffered;
+const
+  CCtrSizes: array [0 .. 6] of Int32 = (0, 1, 15, 16, 17, 32, 100);
+  CCbcSizes: array [0 .. 3] of Int32 = (0, 16, 32, 64);
+begin
+  CheckBlockMode(TAesCtrPacketCipher.GetInstance(), 'AES/CTR/NOPADDING',
+    CCtrSizes, 'CTR');
+  CheckBlockMode(TAesCbcPacketCipher.GetInstance(), 'AES/CBC/NOPADDING',
+    CCbcSizes, 'CBC');
 end;
 
 procedure TTestAeadEmptyInput.TestAeadModesAcceptEmptyInput;

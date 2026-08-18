@@ -289,7 +289,8 @@ uses
   ClpIPacketCipher, ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
   ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
   ClpAesOcbPacketCipher, ClpAbstractPacketCipher, ClpIAeadPacketCipher, 
-  ClpAesGcmSivPacketCipher;
+  ClpAesGcmSivPacketCipher, ClpIBlockPacketCipher, 
+  ClpAbstractBlockPacketCipher, ClpAesCbcPacketCipher, ClpAesCtrPacketCipher;
 
 implementation
 
