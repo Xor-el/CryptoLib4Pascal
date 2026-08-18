@@ -1,0 +1,22 @@
+CryptoLib.ConstantTime/src/Core/CtSubjects.pas
+  s_d73146a41790f9::t_a8740eb67192d0 269-270,274,279
+  s_d73146a41790f9::t_75c4cb22a2f343 289,295-296
+  s_d73146a41790f9::t_8354968f54fb32 783-792,795,800
+  s_d73146a41790f9::t_376b8feb5762b6 335,338-347,349-350
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "12db0da0daa796c78f0387298516e03916b5a0da",
+  "prompts": {},
+  "sessions": {
+    "s_d73146a41790f9": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "c9014869-1fdc-43f4-9bbb-f1e1e9e01b78",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
