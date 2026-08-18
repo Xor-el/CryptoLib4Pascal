@@ -31,14 +31,8 @@ program CTValgrind;
 uses
   SysUtils,
   CtDudect,
+  CtPlatform,
   CtSubjects,
-{$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
-  ClpSimdLevels,
-  ClpX86SimdFeatures,
-{$ELSEIF DEFINED(CPUAARCH64) OR DEFINED(CPUARM)}
-  ClpSimdLevels,
-  ClpArmSimdFeatures,
-{$ENDIF}
   ClpCryptoLibTypes;
 
 {$IFDEF CT_VALGRIND_STUB}
@@ -53,17 +47,6 @@ end;
 procedure ct_poison(p: Pointer; n: NativeUInt); cdecl; external name 'ct_poison';
 procedure ct_unpoison(p: Pointer; n: NativeUInt); cdecl; external name 'ct_unpoison';
 {$ENDIF}
-
-function ScalarDispatchActive: Boolean;
-begin
-{$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
-  Result := TX86SimdFeatures.GetActiveSimdLevel() = TX86SimdLevel.Scalar;
-{$ELSEIF DEFINED(CPUAARCH64) OR DEFINED(CPUARM)}
-  Result := TArmSimdFeatures.GetActiveSimdLevel() = TArmSimdLevel.Scalar;
-{$ELSE}
-  Result := True;
-{$ENDIF}
-end;
 
 procedure ListTargets;
 var
@@ -93,7 +76,7 @@ var
   LSink: Byte;
   LP: PByte;
 begin
-  if not ScalarDispatchActive then
+  if not TCtPlatform.ScalarDispatchActive then
   begin
     Writeln('ABORT: hardware SIMD kernels are live. Rebuild with -dCRYPTOLIB_FORCE_SCALAR.');
     Halt(2);
@@ -115,7 +98,7 @@ begin
       Continue;
     LFound := True;
 
-    LOp := LTargets[LI].Make(UInt64(1));
+    LOp := LTargets[LI].Factory.Make(UInt64(1));
     try
       // Allocate buffers + set the fixed inputs (their concrete values are
       // irrelevant - the secret is about to be marked undefined).

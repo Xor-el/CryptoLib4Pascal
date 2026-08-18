@@ -20,7 +20,7 @@
 
     #  Subject (must stay clean)                Control (must fire)
     1  TX25519 ladder                           (none - clean baseline)
-    2  P-256 default (TFpCTMultiplier value-type) TWNafL2RMultiplier, same curve
+    2  secp256r1 default (TFpCTMultiplier value-type) TWNafL2RMultiplier, same curve
     3  sect283k1 default (F2m Montgomery ladder)TWTauNafMultiplier, same curve
     4  TAesBitSlicedEngine block                TAesEngine (T-table) block
     5  TBasicGcmMultiplier (ImplMul64) GHASH    TTables4kGcmMultiplier GHASH
@@ -57,22 +57,30 @@ unit CtSubjects;
 {$WARNINGS OFF}
 {$ENDIF FPC}
 
+{$SCOPEDENUMS ON}
+
 interface
 
 uses
   CtDudect;
 
 type
-  TCtOpFactory = function(ASeed: UInt64): TDudectOp;
+  { Builds one measured op for a given deterministic seed. An interface (not a bare
+    function pointer) so a factory can carry construction state - e.g. an EC curve
+    and multiplier kind - without a closure (Delphi mode has no anonymous methods). }
+  ICtOpFactory = interface
+    ['{4B8F1C2A-7D3E-4A9B-8C15-6E2F0A9D4B73}']
+    function Make(ASeed: UInt64): TDudectOp;
+  end;
 
   { One dudect registry row: a subject and (optionally) its paired leaky control,
     plus the per-row sampling budget (op cost spans microseconds to milliseconds). }
   TCtRow = record
     Name: string;
     SubjectLabel: string;
-    ControlLabel: string;      // '' when the row has no control
-    MakeSubject: TCtOpFactory;
-    MakeControl: TCtOpFactory;  // nil when the row has no control
+    ControlLabel: string;         // '' when the row has no control
+    SubjectFactory: ICtOpFactory;
+    ControlFactory: ICtOpFactory;  // nil when the row has no control
     Cfg: TDudectConfig;
   end;
 
@@ -82,7 +90,7 @@ type
                           ExpectLeak = False -> CT subject, MUST stay clean. }
   TCtVgTarget = record
     Name: string;
-    Make: TCtOpFactory;
+    Factory: ICtOpFactory;
     ExpectLeak: Boolean;
   end;
 
@@ -94,872 +102,240 @@ function GetValgrindTargets: TCtVgTargetArray;
 implementation
 
 uses
-  SysUtils,
-  ClpCryptoLibTypes,
-  ClpArrayUtilities,
-  ClpBigInteger,
-  ClpBigIntegerUtilities,
-  ClpMod,
-  ClpNat,
-  ClpCustomNamedCurves,
-  ClpIX9ECAsn1Objects,
-  ClpIECCommon,
-  ClpMultipliers,
-  ClpX25519,
-  ClpIBlockCipher,
-  ClpAesEngine,
-  ClpAesBitSlicedEngine,
-  ClpKeyParameter,
-  ClpIKeyParameter,
-  ClpIGcmMultiplier,
-  ClpBasicGcmMultiplier,
-  ClpTables4kGcmMultiplier;
-
-const
-  AES_BLOCK = Int32(16);
-  GHASH_BLOCK = Int32(16);
-  // Length for the FixedTimeEquals subject. The routine is length-generic (the
-  // AES same-key gate compares 16/32-byte keys); a longer span both gives the
-  // leaky early-exit control a decisive first-vs-last-byte separation and makes
-  // the CT subject's timing less noise-sensitive than a very short op.
-  CMP_LEN = Int32(1024);
-
-{ Build a scalar in [1, N-1] from raw bytes (reproducible via the caller's stream). }
-function ScalarFromBytes(const ABytes: TBytes; const AN: TBigInteger): TBigInteger;
-begin
-  Result := TBigInteger.Create(Int32(1), ABytes).&Mod(AN);
-  if Result.SignValue = 0 then
-    Result := TBigInteger.One;
-end;
-
-{ ============================ #1  X25519 ladder ============================ }
+  CtOps,
+  SysUtils;
 
 type
-  TX25519Op = class sealed(TDudectOp)
+  // Plain per-op constructor; wrapped by TFnFactory into an ICtOpFactory so the
+  // stateless subjects need no boilerplate factory class.
+  TCtOpFactory = function(ASeed: UInt64): TDudectOp;
+
+  TFnFactory = class(TInterfacedObject, ICtOpFactory)
   strict private
-    FRnd: TCtRandom;
-    FScalar, FPoint, FOut, FFixed: TBytes;
+    FFn: TCtOpFactory;
   public
-    constructor Create(ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-    function SecretPtr: Pointer; override;
-    function SecretLen: Int32; override;
-    function OutputPtr: Pointer; override;
-    function OutputLen: Int32; override;
+    constructor Create(AFn: TCtOpFactory);
+    function Make(ASeed: UInt64): TDudectOp;
   end;
 
-constructor TX25519Op.Create(ASeed: UInt64);
+constructor TFnFactory.Create(AFn: TCtOpFactory);
 begin
   inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  System.SetLength(FScalar, TX25519.ScalarSize);
-  System.SetLength(FOut, TX25519.PointSize);
-  System.SetLength(FPoint, TX25519.PointSize);
-  FPoint[0] := 9; // canonical X25519 base point u = 9
-  // Fixed class = all-zero scalar (a timing-extreme constant); dynamic arrays are
-  // already zero-filled by SetLength. A variable-time subject separates most from
-  // random against an extreme fixed value; a constant-time one does not.
-  System.SetLength(FFixed, TX25519.ScalarSize);
+  FFn := AFn;
 end;
 
-procedure TX25519Op.PrepareSecret(AClass: Int32);
+function TFnFactory.Make(ASeed: UInt64): TDudectOp;
 begin
-  // Class-symmetric preparation: always draw, overwrite for the fixed class, so
-  // the untimed prep leaves identical cache/predictor state for both classes.
-  FRnd.NextBytes(FScalar, 0, TX25519.ScalarSize);
-  if AClass = 0 then
-    System.Move(FFixed[0], FScalar[0], TX25519.ScalarSize);
+  Result := FFn(ASeed);
 end;
 
-procedure TX25519Op.RunOp;
+// Wrap a plain op constructor as an ICtOpFactory.
+function Fn(AFn: TCtOpFactory): ICtOpFactory;
 begin
-  TX25519.ScalarMult(FScalar, 0, FPoint, 0, FOut, 0);
+  Result := TFnFactory.Create(AFn);
 end;
 
-function TX25519Op.SecretPtr: Pointer;
-begin
-  Result := @FScalar[0];
-end;
-
-function TX25519Op.SecretLen: Int32;
-begin
-  Result := TX25519.ScalarSize;
-end;
-
-function TX25519Op.OutputPtr: Pointer;
-begin
-  Result := @FOut[0];
-end;
-
-function TX25519Op.OutputLen: Int32;
-begin
-  Result := TX25519.PointSize;
-end;
-
-{ ====================== #2/#3  EC scalar multiplication ==================== }
+{ ============================== EC factory =============================== }
 
 type
-  TECMulOp = class sealed(TDudectOp)
+  TEcFactory = class(TInterfacedObject, ICtOpFactory)
   strict private
-    FRnd: TCtRandom;
-    FMul: IECMultiplier;
-    FQ: IECPoint;
-    FN: TBigInteger;
-    FFixedK, FK: TBigInteger;
-    FResult: IECPoint;
-    FScalarBytes: TBytes;
-    FScalarByteLen: Int32;
+    FCurveName: string;
+    FKind: TEcMulKind;
   public
-    constructor Create(const AMul: IECMultiplier; const AQ: IECPoint;
-      const AN: TBigInteger; ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
+    constructor Create(const ACurveName: string; AKind: TEcMulKind);
+    function Make(ASeed: UInt64): TDudectOp;
   end;
 
-constructor TECMulOp.Create(const AMul: IECMultiplier; const AQ: IECPoint;
-  const AN: TBigInteger; ASeed: UInt64);
+constructor TEcFactory.Create(const ACurveName: string; AKind: TEcMulKind);
 begin
   inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  FMul := AMul;
-  FQ := AQ;
-  FN := AN;
-  // A few extra bytes over the modulus width keep the mod-reduction bias tiny.
-  FScalarByteLen := ((FN.BitLength + 7) div 8) + 8;
-  System.SetLength(FScalarBytes, FScalarByteLen);
-  // Fixed class = scalar 1: a variable-time (wNAF/tau-NAF) multiplier runs far
-  // fewer additions for it than for a random scalar (strong mean separation),
-  // while a constant-time multiplier blinds it to full length like any other.
-  FFixedK := TBigInteger.One;
+  FCurveName := ACurveName;
+  FKind := AKind;
 end;
 
-procedure TECMulOp.PrepareSecret(AClass: Int32);
+function TEcFactory.Make(ASeed: UInt64): TDudectOp;
 begin
-  if AClass = 0 then
-    FK := FFixedK
-  else
-  begin
-    FRnd.NextBytes(FScalarBytes, 0, FScalarByteLen);
-    FK := ScalarFromBytes(FScalarBytes, FN);
-  end;
+  Result := CtOps.MakeEc(FCurveName, FKind, ASeed);
 end;
 
-procedure TECMulOp.RunOp;
+// Scalar-mult factory for a curve + multiplier kind.
+function Ec(const ACurveName: string; AKind: TEcMulKind): ICtOpFactory;
 begin
-  FResult := FMul.Multiply(FQ, FK).Normalize();
-end;
-
-{ Force a fresh key schedule so a block cipher's same-key Init fast path cannot
-  make the untimed prep asymmetric by class: init a neutral key first, then the
-  real key, so BOTH classes take the (destructive) rebuild path. Without this a
-  constant-key class would skip the rebuild and dudect would measure prep
-  asymmetry, not the timed op (CT-leak-detector methodology trap #5). Shared so
-  any future engine-Init subject can stay class-symmetric the same way. }
-procedure PrimeBlockCipherClassSymmetric(const AEngine: IBlockCipher;
-  AForEncryption: Boolean; const ANeutralKey, AKey: TCryptoLibByteArray);
-begin
-  AEngine.Init(AForEncryption, TKeyParameter.Create(ANeutralKey) as IKeyParameter);
-  AEngine.Init(AForEncryption, TKeyParameter.Create(AKey) as IKeyParameter);
-end;
-
-{ =========================== #4  AES block cipher ========================= }
-
-type
-  TBlockCipherFactory = function: IBlockCipher;
-
-  TAesOp = class sealed(TDudectOp)
-  strict private
-    FRnd: TCtRandom;
-    FFactory: TBlockCipherFactory;
-    FEngine: IBlockCipher;
-    FKey, FFixedKey, FNeutralKey, FIn, FOut: TBytes;
-    FKeyLen: Int32;
-  public
-    constructor Create(AFactory: TBlockCipherFactory; AKeyLen: Int32; ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-    procedure RunPoisonedRoutine; override;
-    function SecretPtr: Pointer; override;
-    function SecretLen: Int32; override;
-    function OutputPtr: Pointer; override;
-    function OutputLen: Int32; override;
-  end;
-
-constructor TAesOp.Create(AFactory: TBlockCipherFactory; AKeyLen: Int32; ASeed: UInt64);
-var
-  LI: Int32;
-begin
-  inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  FFactory := AFactory;
-  FEngine := AFactory();
-  FKeyLen := AKeyLen;
-  System.SetLength(FKey, FKeyLen);
-  // Fixed key = a NON-extreme constant. The fixed class only needs to be constant
-  // (low variance) so cropping separates it from the random class; an all-zero
-  // extreme would instead create its own artifact (degenerate key schedule) and
-  // falsely flag the constant-time subject.
-  System.SetLength(FFixedKey, FKeyLen);
-  for LI := 0 to FKeyLen - 1 do
-    FFixedKey[LI] := Byte(LI * 7 + 3);
-  // Neutral key: a constant distinct from both the fixed and (any) random key,
-  // used to force a fresh key schedule per sample (see PrepareSecret).
-  System.SetLength(FNeutralKey, FKeyLen);
-  for LI := 0 to FKeyLen - 1 do
-    FNeutralKey[LI] := Byte(LI * 13 + 7);
-  System.SetLength(FIn, AES_BLOCK);
-  System.SetLength(FOut, AES_BLOCK);
-  for LI := 0 to AES_BLOCK - 1 do
-    FIn[LI] := Byte(LI * 17 + 1); // fixed plaintext, same for every sample
-end;
-
-procedure TAesOp.PrepareSecret(AClass: Int32);
-begin
-  // Class-symmetric preparation (always draw + build a key schedule); overwrite
-  // with the fixed key for class 0. ProcessBlock is the measured op. The neutral-
-  // key prime keeps prep symmetric against the engine's same-key Init gate.
-  FRnd.NextBytes(FKey, 0, FKeyLen);
-  if AClass = 0 then
-    System.Move(FFixedKey[0], FKey[0], FKeyLen);
-  PrimeBlockCipherClassSymmetric(FEngine, True, FNeutralKey, FKey);
-end;
-
-procedure TAesOp.RunOp;
-begin
-  FEngine.ProcessBlock(FIn, 0, FOut, 0);
-end;
-
-procedure TAesOp.RunPoisonedRoutine;
-var
-  LEngine: IBlockCipher;
-  LKp: IKeyParameter;
-begin
-  // Use a FRESH engine so the schedule-reuse gate cannot trigger: on a virgin
-  // engine FScheduleReady is False, so the reuse check short-circuits before the
-  // key compare and the poisoned Init takes the full REBUILD path - key
-  // expansion (S-box indexed by key bytes in the T-table engine) AND the block
-  // transform run under taint, which is the primitive this subject asserts. The
-  // gate's key-change compare is a deliberate one-bit signal (documented on
-  // TAbstractAesEngine) and is intentionally kept out of the taint scope; a
-  // reused schedule would run ProcessBlock on pre-poison round keys and test
-  // nothing.
-  LEngine := FFactory();
-  LKp := TKeyParameter.Create(FKey);
-  LEngine.Init(True, LKp);
-  LEngine.ProcessBlock(FIn, 0, FOut, 0);
-end;
-
-function TAesOp.SecretPtr: Pointer;
-begin
-  Result := @FKey[0];
-end;
-
-function TAesOp.SecretLen: Int32;
-begin
-  Result := FKeyLen;
-end;
-
-function TAesOp.OutputPtr: Pointer;
-begin
-  Result := @FOut[0];
-end;
-
-function TAesOp.OutputLen: Int32;
-begin
-  Result := AES_BLOCK;
-end;
-
-{ ============================== #5  GHASH ================================= }
-
-type
-  TGhashOp = class sealed(TDudectOp)
-  strict private
-    FRnd: TCtRandom;
-    FMul: IGcmMultiplier;
-    FX, FFixedBlock: TBytes;
-  public
-    constructor Create(const AMul: IGcmMultiplier; ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-    function SecretPtr: Pointer; override;
-    function SecretLen: Int32; override;
-    function OutputPtr: Pointer; override;
-    function OutputLen: Int32; override;
-  end;
-
-constructor TGhashOp.Create(const AMul: IGcmMultiplier; ASeed: UInt64);
-var
-  LH: TBytes;
-  LI: Int32;
-begin
-  inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  FMul := AMul;
-  // Fixed hash subkey H; the varied secret is the multiplied block (the value
-  // that drives the table access pattern in the 4k engine).
-  System.SetLength(LH, GHASH_BLOCK);
-  for LI := 0 to GHASH_BLOCK - 1 do
-    LH[LI] := Byte(LI * 31 + 7);
-  FMul.Init(LH);
-  System.SetLength(FX, GHASH_BLOCK);
-  // Fixed block = a NON-extreme constant (see the AES note): constant-but-typical
-  // so it separates from random via cropping for the leaky 4k control, without an
-  // all-zero artifact falsely flagging the constant-time ImplMul64 subject.
-  System.SetLength(FFixedBlock, GHASH_BLOCK);
-  for LI := 0 to GHASH_BLOCK - 1 do
-    FFixedBlock[LI] := Byte(LI * 13 + 5);
-end;
-
-procedure TGhashOp.PrepareSecret(AClass: Int32);
-begin
-  // Class-symmetric preparation: always draw, overwrite for the fixed class.
-  FRnd.NextBytes(FX, 0, GHASH_BLOCK);
-  if AClass = 0 then
-    System.Move(FFixedBlock[0], FX[0], GHASH_BLOCK);
-end;
-
-procedure TGhashOp.RunOp;
-begin
-  FMul.MultiplyH(FX); // mutates FX in place (X := X * H)
-end;
-
-function TGhashOp.SecretPtr: Pointer;
-begin
-  Result := @FX[0];
-end;
-
-function TGhashOp.SecretLen: Int32;
-begin
-  Result := GHASH_BLOCK;
-end;
-
-function TGhashOp.OutputPtr: Pointer;
-begin
-  Result := @FX[0]; // X is transformed in place
-end;
-
-function TGhashOp.OutputLen: Int32;
-begin
-  Result := GHASH_BLOCK;
-end;
-
-{ ======================= #6  modular inverse (mod n) ====================== }
-
-{ We exercise the safegcd CORE (TMod.ModOddInverse on fixed-width Nats) rather
-  than the TBigInteger wrapper. The wrapper's TNat.FromBigInteger / ToBigInteger
-  conversions are magnitude-dependent (not constant-time), so testing the public
-  API would flag the conversions, not the algorithm - the same reason the EC
-  subjects test the multiplier (which blinds the scalar to full width) and not raw
-  BigInteger. The CT-scoped primitive - the one X25519/EC field inversion actually
-  calls - is the TMod core, and that is what must be clean here. Class 0 and 1 are
-  both full-width Nats; only their contents differ. }
-type
-  TModInvOp = class sealed(TDudectOp)
-  strict private
-    FRnd: TCtRandom;
-    FSafeGcd: Boolean;
-    FModulus, FFixedBig: TBigInteger;
-    FBits, FLen: Int32;
-    FM, FZ, FX: TCryptoLibUInt32Array;
-    FScalarBytes: TBytes;
-    FScalarByteLen: Int32;
-    FSinkU: UInt32;
-    FSinkB: Boolean;
-  public
-    constructor Create(ASafeGcd: Boolean; const AModulus: TBigInteger; ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-  end;
-
-constructor TModInvOp.Create(ASafeGcd: Boolean; const AModulus: TBigInteger;
-  ASeed: UInt64);
-begin
-  inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  FSafeGcd := ASafeGcd;
-  FModulus := AModulus;
-  FBits := AModulus.BitLength;
-  FM := TNat.FromBigInteger(FBits, AModulus);
-  FLen := System.Length(FM);
-  FZ := TNat.Create(FLen);
-  // Fixed class = n-1 (full width): variable-time Euclid finds its inverse (n-1)
-  // in a couple of steps - a strong mean separation - while safegcd runs the same
-  // fixed number of divsteps as for any other full-width input.
-  FFixedBig := AModulus.Subtract(TBigInteger.One);
-  FScalarByteLen := ((FBits + 7) div 8) + 8;
-  System.SetLength(FScalarBytes, FScalarByteLen);
-  FX := TNat.FromBigInteger(FBits, FFixedBig);
-end;
-
-procedure TModInvOp.PrepareSecret(AClass: Int32);
-var
-  LRand, LK: TBigInteger;
-begin
-  // Untimed, but kept ALLOCATION-SYMMETRIC across classes: TMod.ModOddInverse
-  // allocates internally each call, so an asymmetric heap-churn here (only class 1
-  // allocating) would correlate the heap state with the class and show up as a
-  // false timing signal. Both classes therefore run the identical draw + convert
-  // sequence; only the resulting value differs.
-  FRnd.NextBytes(FScalarBytes, 0, FScalarByteLen);
-  LRand := ScalarFromBytes(FScalarBytes, FModulus);
-  if AClass = 0 then
-    LK := FFixedBig
-  else
-    LK := LRand;
-  FX := TNat.FromBigInteger(FBits, LK);
-end;
-
-procedure TModInvOp.RunOp;
-begin
-  // Modulus is the (odd, prime) curve order, so every X in [1, n-1] is invertible.
-  if FSafeGcd then
-    FSinkU := TMod.ModOddInverse(FM, FX, FZ)
-  else
-    FSinkB := TMod.ModOddInverseVar(FM, FX, FZ);
-end;
-
-{ =============== #7  modular inverse - TBigInteger WRAPPER ================ }
-
-{ Measures the exact ECDSA signer call shape: TBigIntegerUtilities.ModOddInverse
-  (n, k) - see ClpECDsaSigner - the FULL BigInteger wrapper (FromBigInteger ->
-  TMod core -> ToBigInteger), not just the core (#6). This turns "core-measured +
-  wrapper-CT-by-construction" into an end-to-end measurement. k is a nonce strictly
-  in [1, n-1] (as in signing), so the wrapper's magnitude-dependent range-reduction
-  branch stays dead and the fixed-width marshalling is word-count-invariant for
-  crypto-size nonces (a random k mod n is full width with overwhelming probability).
-  Fixed class = n-1 (full width, no word-count artifact vs random; its inverse is
-  n-1, which variable-time Euclid finds in ~2 steps, so the control separates). Prep
-  is allocation-symmetric; the timed RunOp is ONLY the ModOddInverse call. }
-type
-  TModInvWrapperOp = class sealed(TDudectOp)
-  strict private
-    FRnd: TCtRandom;
-    FSafeGcd: Boolean;
-    FModulus, FFixedBig, FK, FResult: TBigInteger;
-    FScalarBytes: TBytes;
-    FScalarByteLen: Int32;
-  public
-    constructor Create(ASafeGcd: Boolean; const AModulus: TBigInteger; ASeed: UInt64);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-  end;
-
-constructor TModInvWrapperOp.Create(ASafeGcd: Boolean; const AModulus: TBigInteger;
-  ASeed: UInt64);
-begin
-  inherited Create;
-  FRnd := TCtRandom.Create(ASeed);
-  FSafeGcd := ASafeGcd;
-  FModulus := AModulus;
-  FFixedBig := AModulus.Subtract(TBigInteger.One);
-  FScalarByteLen := ((AModulus.BitLength + 7) div 8) + 8;
-  System.SetLength(FScalarBytes, FScalarByteLen);
-end;
-
-procedure TModInvWrapperOp.PrepareSecret(AClass: Int32);
-var
-  LRand: TBigInteger;
-begin
-  // Allocation-symmetric, untimed: both classes draw + build a BigInteger; input
-  // construction stays OUT of the timed region, only the resulting value differs.
-  // (This is the trap the report hit - an asymmetric per-class alloc reads as a
-  // false timing signal because the wrapper allocates internally each call.)
-  FRnd.NextBytes(FScalarBytes, 0, FScalarByteLen);
-  LRand := ScalarFromBytes(FScalarBytes, FModulus); // strictly in [1, n-1]
-  if AClass = 0 then
-    FK := FFixedBig
-  else
-    FK := LRand;
-end;
-
-procedure TModInvWrapperOp.RunOp;
-begin
-  // The exact signer call: k^-1 mod n through the full TBigInteger wrapper.
-  if FSafeGcd then
-    FResult := TBigIntegerUtilities.ModOddInverse(FModulus, FK)
-  else
-    FResult := TBigIntegerUtilities.ModOddInverseVar(FModulus, FK);
-end;
-
-{ =================== #8  FixedTimeEquals (CT byte compare) ================ }
-
-{ Guards the load-bearing constant-time comparison behind the AES engine's
-  same-key Init gate (TArrayUtilities.FixedTimeEquals). Property under test:
-  mismatch-POSITION independence. Both classes are MISSES (candidate <> reference)
-  differing only in WHERE the single differing byte sits - class 0 at the first
-  byte, class 1 at the last. A full-scan CT compare is flat; the leaky control
-  (early-exit) returns after 1 byte for class 0 vs CMP_LEN bytes for class 1, so it
-  separates and fires. This is deliberately NOT a same-vs-different test (that would
-  just confirm the gate skips on a hit, which is by design); it proves the compare
-  cannot be turned into a byte-at-a-time key-recovery oracle. }
-type
-  TCtCompareOp = class sealed(TDudectOp)
-  strict private
-    FVarTime: Boolean;
-    FRef, FCand: TBytes;
-    FLen: Int32;
-    FSink: UInt32;
-    function VarTimeEquals: Boolean;
-  public
-    constructor Create(AVarTime: Boolean; ALen: Int32);
-    procedure PrepareSecret(AClass: Int32); override;
-    procedure RunOp; override;
-  end;
-
-constructor TCtCompareOp.Create(AVarTime: Boolean; ALen: Int32);
-var
-  LI: Int32;
-begin
-  inherited Create;
-  FVarTime := AVarTime;
-  FLen := ALen;
-  // Fixed resident reference; the candidate is its copy with exactly one byte
-  // flipped per sample (position chosen by class in PrepareSecret).
-  System.SetLength(FRef, FLen);
-  for LI := 0 to FLen - 1 do
-    FRef[LI] := Byte(LI * 29 + 11);
-  System.SetLength(FCand, FLen);
-end;
-
-procedure TCtCompareOp.PrepareSecret(AClass: Int32);
-begin
-  // Class-symmetric prep. Both classes copy FRef then store BOTH ends in the SAME
-  // order (head, then tail last), so the store pattern - and thus the timed
-  // compare's entry cache/store-forward state - is identical by class. Only the
-  // VALUES differ: exactly one end is flipped, placing the lone mismatch at the
-  // first byte (class 0) or the last (class 1). Both remain misses; only the
-  // position of the difference (the secret under test) varies.
-  System.Move(FRef[0], FCand[0], FLen);
-  if AClass = 0 then
-  begin
-    FCand[0] := Byte(FRef[0] xor $FF);
-    FCand[FLen - 1] := FRef[FLen - 1];
-  end
-  else
-  begin
-    FCand[0] := FRef[0];
-    FCand[FLen - 1] := Byte(FRef[FLen - 1] xor $FF);
-  end;
-end;
-
-function TCtCompareOp.VarTimeEquals: Boolean;
-var
-  LI: Int32;
-begin
-  // Deliberately leaky twin: early-exit on the first differing byte.
-  for LI := 0 to FLen - 1 do
-    if FRef[LI] <> FCand[LI] then
-      Exit(False);
-  Result := True;
-end;
-
-procedure TCtCompareOp.RunOp;
-begin
-  // Sink the result into a field so the compare cannot be elided.
-  if FVarTime then
-    FSink := FSink xor UInt32(Ord(VarTimeEquals))
-  else
-    FSink := FSink xor
-      UInt32(Ord(TArrayUtilities.FixedTimeEquals(FLen, FRef, 0, FCand, 0)));
-end;
-
-{ ============================== factories ================================ }
-
-function MakeX25519(ASeed: UInt64): TDudectOp;
-begin
-  Result := TX25519Op.Create(ASeed);
-end;
-
-function BuildEcOp(const ACurveName: string; const AMul: IECMultiplier;
-  ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName(ACurveName);
-  Result := TECMulOp.Create(AMul, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeP256CT(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp256r1');
-  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeP256WNaf(ASeed: UInt64): TDudectOp;
-begin
-  Result := BuildEcOp('secp256r1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
-end;
-
-function MakeSect283CT(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('sect283k1');
-  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSect283WTau(ASeed: UInt64): TDudectOp;
-begin
-  Result := BuildEcOp('sect283k1', TWTauNafMultiplier.Create as IECMultiplier, ASeed);
-end;
-
-function MakeSecp256k1CT(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp256k1');
-  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp256k1WNaf(ASeed: UInt64): TDudectOp;
-begin
-  Result := BuildEcOp('secp256k1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
-end;
-
-function MakeSecp384r1CT(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp384r1');
-  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp384r1WNaf(ASeed: UInt64): TDudectOp;
-begin
-  Result := BuildEcOp('secp384r1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
-end;
-
-function MakeSecp521r1CT(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp521r1');
-  Result := TECMulOp.Create(LX9.Curve.Multiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp521r1WNaf(ASeed: UInt64): TDudectOp;
-begin
-  Result := BuildEcOp('secp521r1', TWNafL2RMultiplier.Create as IECMultiplier, ASeed);
-end;
-
-{ Fixed-base comb subjects: the same TFpPointOps CT primitives as [d]Q, driven
-  through the fixed-base multiplier ([k]G on the reused generator). Paired with
-  the existing wNAF-on-G controls. }
-function MakeSecp256r1Comb(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp256r1');
-  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp256k1Comb(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp256k1');
-  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp384r1Comb(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp384r1');
-  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function MakeSecp521r1Comb(ASeed: UInt64): TDudectOp;
-var
-  LX9: IX9ECParameters;
-begin
-  LX9 := TCustomNamedCurves.GetByName('secp521r1');
-  Result := TECMulOp.Create(LX9.Curve.BasePointMultiplier, LX9.G, LX9.N, ASeed);
-end;
-
-function NewBitslicedEngine: IBlockCipher;
-begin
-  Result := TAesBitSlicedEngine.Create as IBlockCipher;
-end;
-
-function NewTableEngine: IBlockCipher;
-begin
-  Result := TAesEngine.Create as IBlockCipher;
-end;
-
-function MakeAesBitsliced(ASeed: UInt64): TDudectOp;
-begin
-  Result := TAesOp.Create(@NewBitslicedEngine, 16, ASeed);
-end;
-
-function MakeAesTable(ASeed: UInt64): TDudectOp;
-begin
-  Result := TAesOp.Create(@NewTableEngine, 16, ASeed);
-end;
-
-function MakeGhashBasic(ASeed: UInt64): TDudectOp;
-begin
-  Result := TGhashOp.Create(TBasicGcmMultiplier.Create as IGcmMultiplier, ASeed);
-end;
-
-function MakeGhashTable4k(ASeed: UInt64): TDudectOp;
-begin
-  Result := TGhashOp.Create(TTables4kGcmMultiplier.Create as IGcmMultiplier, ASeed);
-end;
-
-function P256Order: TBigInteger;
-begin
-  Result := TCustomNamedCurves.GetByName('secp256r1').N;
-end;
-
-function MakeModInvSafe(ASeed: UInt64): TDudectOp;
-begin
-  Result := TModInvOp.Create(True, P256Order, ASeed);
-end;
-
-function MakeModInvVar(ASeed: UInt64): TDudectOp;
-begin
-  Result := TModInvOp.Create(False, P256Order, ASeed);
-end;
-
-function MakeModInvWrapperSafe(ASeed: UInt64): TDudectOp;
-begin
-  Result := TModInvWrapperOp.Create(True, P256Order, ASeed);
-end;
-
-function MakeModInvWrapperVar(ASeed: UInt64): TDudectOp;
-begin
-  Result := TModInvWrapperOp.Create(False, P256Order, ASeed);
-end;
-
-// FixedTimeEquals: data is deterministic, so the op needs no per-run seed (ASeed
-// still drives dudect's own class scheduling via the row Cfg).
-function MakeCtCompareFixed(ASeed: UInt64): TDudectOp;
-begin
-  Result := TCtCompareOp.Create(False, CMP_LEN);
-end;
-
-function MakeCtCompareVar(ASeed: UInt64): TDudectOp;
-begin
-  Result := TCtCompareOp.Create(True, CMP_LEN);
+  Result := TEcFactory.Create(ACurveName, AKind);
 end;
 
 { ============================== registries =============================== }
 
-function ExpensiveCfg(ASeed: UInt64): TDudectConfig;
+{ Per-row seed = SplitMix64 finalizer over FNV-1a(row name). The name is the row's
+  identity (the --row filter matches on it), so this drops manual seed numbering and
+  cannot collide silently (a duplicate name is rejected by AddRow). Every run prints
+  its per-row seed, so any log reproduces regardless of this policy. }
+function SeedForName(const AName: string): UInt64;
+var
+  LI: Int32;
+  LZ: UInt64;
+begin
+  LZ := UInt64($CBF29CE484222325); // FNV-1a offset basis
+  for LI := 1 to System.Length(AName) do
+    LZ := (LZ xor UInt64(Ord(AName[LI]))) * UInt64($100000001B3);
+  LZ := LZ + UInt64($9E3779B97F4A7C15); // SplitMix64 finalizer
+  LZ := (LZ xor (LZ shr 30)) * UInt64($BF58476D1CE4E5B9);
+  LZ := (LZ xor (LZ shr 27)) * UInt64($94D049BB133111EB);
+  Result := LZ xor (LZ shr 31);
+end;
+
+function ExpensiveCfg: TDudectConfig;
 begin
   Result := TDudectConfig.Default;
   Result.WarmupSamples := 1000;
   Result.BatchSamples := 2000;
   Result.MaxSamples := 20000;
   Result.MinSamplesForDecision := 6000;
-  Result.Seed := ASeed;
 end;
 
-function MediumCfg(ASeed: UInt64): TDudectConfig;
+function MediumCfg: TDudectConfig;
 begin
   Result := TDudectConfig.Default;
   Result.WarmupSamples := 3000;
   Result.BatchSamples := 10000;
   Result.MaxSamples := 300000;
   Result.MinSamplesForDecision := 40000;
-  Result.Seed := ASeed;
 end;
 
-function CheapCfg(ASeed: UInt64): TDudectConfig;
+function CheapCfg: TDudectConfig;
 begin
   Result := TDudectConfig.Default;
   Result.WarmupSamples := 20000;
   Result.BatchSamples := 100000;
   Result.MaxSamples := 2000000;
   Result.MinSamplesForDecision := 200000;
-  Result.Seed := ASeed;
 end;
 
-function MakeRow(const AName, ASubjectLabel, AControlLabel: string;
-  AMakeSubject, AMakeControl: TCtOpFactory; const ACfg: TDudectConfig): TCtRow;
+type
+  { Append-only builder for the two registries: rows/targets accrue via AddRow /
+    AddTarget, so adding an algo is one call - no SetLength/index bookkeeping and no
+    hand-picked row seed to collide. }
+  TCtRegistrar = record
+  strict private
+    FRows: TCtRowArray;
+    FTargets: TCtVgTargetArray;
+  public
+    procedure AddRow(const AName, ASubjectLabel, AControlLabel: string;
+      const ASubject, AControl: ICtOpFactory; const ACfg: TDudectConfig);
+    procedure AddTarget(const AName: string; const AFactory: ICtOpFactory;
+      AExpectLeak: Boolean);
+    property Rows: TCtRowArray read FRows;
+    property Targets: TCtVgTargetArray read FTargets;
+  end;
+
+procedure TCtRegistrar.AddRow(const AName, ASubjectLabel, AControlLabel: string;
+  const ASubject, AControl: ICtOpFactory; const ACfg: TDudectConfig);
+var
+  LI: Int32;
+  LCfg: TDudectConfig;
 begin
-  Result.Name := AName;
-  Result.SubjectLabel := ASubjectLabel;
-  Result.ControlLabel := AControlLabel;
-  Result.MakeSubject := AMakeSubject;
-  Result.MakeControl := AMakeControl;
-  Result.Cfg := ACfg;
+  for LI := 0 to System.Length(FRows) - 1 do
+    if FRows[LI].Name = AName then
+      raise Exception.CreateFmt('duplicate CT row name: %s', [AName]);
+  LI := System.Length(FRows);
+  System.SetLength(FRows, LI + 1);
+  LCfg := ACfg;
+  LCfg.Seed := SeedForName(AName); // name-derived, reproducible, collision-checked
+  FRows[LI].Name := AName;
+  FRows[LI].SubjectLabel := ASubjectLabel;
+  FRows[LI].ControlLabel := AControlLabel;
+  FRows[LI].SubjectFactory := ASubject;
+  FRows[LI].ControlFactory := AControl;
+  FRows[LI].Cfg := LCfg;
+end;
+
+procedure TCtRegistrar.AddTarget(const AName: string;
+  const AFactory: ICtOpFactory; AExpectLeak: Boolean);
+var
+  LI: Int32;
+begin
+  LI := System.Length(FTargets);
+  System.SetLength(FTargets, LI + 1);
+  FTargets[LI].Name := AName;
+  FTargets[LI].Factory := AFactory;
+  FTargets[LI].ExpectLeak := AExpectLeak;
 end;
 
 function GetDudectRows: TCtRowArray;
+var
+  LReg: TCtRegistrar;
 begin
-  System.SetLength(Result, 15);
-  Result[0] := MakeRow('X25519', 'X25519 ladder', '',
-    @MakeX25519, nil, MediumCfg(UInt64($0000000000000001)));
-  Result[1] := MakeRow('P-256 [d]Q', 'value-type CT', 'wNAF (var-time)',
-    @MakeP256CT, @MakeP256WNaf, ExpensiveCfg(UInt64($0000000000000002)));
-  Result[2] := MakeRow('sect283k1 [d]Q', 'F2m Montgomery CT', 'WTauNAF (var-time)',
-    @MakeSect283CT, @MakeSect283WTau, ExpensiveCfg(UInt64($0000000000000003)));
+  LReg.AddRow('X25519', 'X25519 ladder', '',
+    Fn(@MakeX25519), nil, MediumCfg);
+  LReg.AddRow('secp256r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    Ec('secp256r1', TEcMulKind.Default), Ec('secp256r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('sect283k1 [d]Q', 'F2m Montgomery CT', 'WTauNAF (var-time)',
+    Ec('sect283k1', TEcMulKind.Default), Ec('sect283k1', TEcMulKind.WTau),
+    ExpensiveCfg);
   // AES bit-sliced is a clean-subject demonstration only. The T-table engine's
   // leak is a fine cache-timing effect (key-dependent table lines) that stays
   // below dudect's noise floor on a hot-L1 microbenchmark; it is caught
   // deterministically by the Valgrind/ctgrind leg instead (see GetValgrindTargets).
-  Result[3] := MakeRow('AES-128 block', 'Bit-sliced (CT)', '',
-    @MakeAesBitsliced, nil, CheapCfg(UInt64($0000000000000004)));
+  LReg.AddRow('AES-128 block', 'Bit-sliced (CT)', '',
+    Fn(@MakeAesBitsliced), nil, CheapCfg);
   // GHASH ImplMul64 is a clean-subject demonstration only. Like AES, the 4k-table
   // engine's leak is a table access-pattern effect that stays below dudect's noise
   // floor on a hot-L1 microbenchmark; it is caught deterministically by the
   // Valgrind/ctgrind leg (data-dependent table index) instead.
-  Result[4] := MakeRow('GHASH', 'ImplMul64 (CT)', '',
-    @MakeGhashBasic, nil, CheapCfg(UInt64($0000000000000005)));
+  LReg.AddRow('GHASH', 'ImplMul64 (CT)', '',
+    Fn(@MakeGhashBasic), nil, CheapCfg);
   // #6 tests the safegcd CORE (TMod.ModOddInverse on fixed-width Nats); #7 tests
   // the full TBigInteger WRAPPER - the exact ECDSA signer call k^-1 mod n - so the
   // nonce inverse is measured end-to-end, not just at the core.
-  Result[5] := MakeRow('mod-inv (core)', 'safegcd core (CT)', 'variable-time core',
-    @MakeModInvSafe, @MakeModInvVar, MediumCfg(UInt64($0000000000000006)));
-  Result[6] := MakeRow('mod-inv (wrapper)', 'safegcd wrapper (CT)', 'variable-time wrapper',
-    @MakeModInvWrapperSafe, @MakeModInvWrapperVar, MediumCfg(UInt64($0000000000000007)));
+  LReg.AddRow('mod-inv (core)', 'safegcd core (CT)', 'variable-time core',
+    Fn(@MakeModInvSafe), Fn(@MakeModInvVar), MediumCfg);
+  LReg.AddRow('mod-inv (wrapper)', 'safegcd wrapper (CT)', 'variable-time wrapper',
+    Fn(@MakeModInvWrapperSafe), Fn(@MakeModInvWrapperVar), MediumCfg);
   // The remaining prime curves also run the value-type CT multiplier; measure each
   // explicitly against its wNAF (variable-time) control.
-  Result[7] := MakeRow('secp256k1 [d]Q', 'value-type CT', 'wNAF (var-time)',
-    @MakeSecp256k1CT, @MakeSecp256k1WNaf, ExpensiveCfg(UInt64($0000000000000008)));
-  Result[8] := MakeRow('secp384r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
-    @MakeSecp384r1CT, @MakeSecp384r1WNaf, ExpensiveCfg(UInt64($0000000000000009)));
-  Result[9] := MakeRow('secp521r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
-    @MakeSecp521r1CT, @MakeSecp521r1WNaf, ExpensiveCfg(UInt64($000000000000000A)));
+  LReg.AddRow('secp256k1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    Ec('secp256k1', TEcMulKind.Default), Ec('secp256k1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('secp384r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    Ec('secp384r1', TEcMulKind.Default), Ec('secp384r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('secp521r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
+    Ec('secp521r1', TEcMulKind.Default), Ec('secp521r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
   // Fixed-base comb [k]G on the reused generator: same CT primitives as [d]Q,
   // paired against wNAF-on-G (variable-time) controls.
-  Result[10] := MakeRow('secp256r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
-    @MakeSecp256r1Comb, @MakeP256WNaf, ExpensiveCfg(UInt64($000000000000000B)));
-  Result[11] := MakeRow('secp256k1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
-    @MakeSecp256k1Comb, @MakeSecp256k1WNaf, ExpensiveCfg(UInt64($000000000000000C)));
-  Result[12] := MakeRow('secp384r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
-    @MakeSecp384r1Comb, @MakeSecp384r1WNaf, ExpensiveCfg(UInt64($000000000000000D)));
-  Result[13] := MakeRow('secp521r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
-    @MakeSecp521r1Comb, @MakeSecp521r1WNaf, ExpensiveCfg(UInt64($000000000000000E)));
+  LReg.AddRow('secp256r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    Ec('secp256r1', TEcMulKind.Comb), Ec('secp256r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('secp256k1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    Ec('secp256k1', TEcMulKind.Comb), Ec('secp256k1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('secp384r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    Ec('secp384r1', TEcMulKind.Comb), Ec('secp384r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
+  LReg.AddRow('secp521r1 [k]G comb', 'value-type comb (CT)', 'wNAF (var-time)',
+    Ec('secp521r1', TEcMulKind.Comb), Ec('secp521r1', TEcMulKind.WNaf),
+    ExpensiveCfg);
   // FixedTimeEquals: the CT byte compare behind the AES same-key Init gate.
   // Control = early-exit compare (first-vs-last mismatch position separates and
   // fires); subject = the full-scan FixedTimeEquals (must stay flat).
-  Result[14] := MakeRow('FixedTimeEquals', 'CT compare (position-indep)',
-    'early-exit compare', @MakeCtCompareFixed, @MakeCtCompareVar,
-    CheapCfg(UInt64($000000000000000F)));
-end;
-
-function MakeVg(const AName: string; AMake: TCtOpFactory;
-  AExpectLeak: Boolean): TCtVgTarget;
-begin
-  Result.Name := AName;
-  Result.Make := AMake;
-  Result.ExpectLeak := AExpectLeak;
+  LReg.AddRow('FixedTimeEquals', 'CT compare (position-indep)', 'early-exit compare',
+    Fn(@MakeCtCompareFixed), Fn(@MakeCtCompareVar), CheapCfg);
+  Result := LReg.Rows;
 end;
 
 function GetValgrindTargets: TCtVgTargetArray;
+var
+  LReg: TCtRegistrar;
 begin
-  System.SetLength(Result, 5);
-  Result[0] := MakeVg('x25519', @MakeX25519, False);
-  Result[1] := MakeVg('aes-bitsliced', @MakeAesBitsliced, False);
-  Result[2] := MakeVg('aes-ttable', @MakeAesTable, True);
-  Result[3] := MakeVg('ghash-basic', @MakeGhashBasic, False);
-  Result[4] := MakeVg('ghash-4k', @MakeGhashTable4k, True);
+  LReg.AddTarget('x25519', Fn(@MakeX25519), False);
+  LReg.AddTarget('aes-bitsliced', Fn(@MakeAesBitsliced), False);
+  LReg.AddTarget('aes-ttable', Fn(@MakeAesTable), True);
+  LReg.AddTarget('ghash-basic', Fn(@MakeGhashBasic), False);
+  LReg.AddTarget('ghash-4k', Fn(@MakeGhashTable4k), True);
+  Result := LReg.Targets;
 end;
 
 end.

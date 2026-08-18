@@ -24,90 +24,14 @@ uses
   SysUtils,
   CtClock,
   CtDudect,
+  CtPlatform,
   CtSubjects,
-{$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
-  ClpSimdLevels,
-  ClpX86SimdFeatures,
-{$ELSEIF DEFINED(CPUAARCH64) OR DEFINED(CPUARM)}
-  ClpSimdLevels,
-  ClpArmSimdFeatures,
-{$ENDIF}
   ClpCryptoLibTypes;
 
 var
   GQuick: Boolean = False;
   GRowFilter: string = '';
   GCurLabel: string = '';
-
-// OS/CPU/compiler line for the run banner (kept local so this diagnostic tool
-// carries no dependency on the benchmark tree).
-function PlatformInfo: string;
-var
-  LOS, LCPU: string;
-begin
-{$IF DEFINED(MSWINDOWS)}
-  LOS := 'Windows';
-{$ELSEIF DEFINED(LINUX)}
-  LOS := 'Linux';
-{$ELSEIF DEFINED(DARWIN)}
-  LOS := 'macOS';
-{$ELSE}
-  LOS := 'Unknown OS';
-{$ENDIF}
-{$IF DEFINED(CPUX86_64)}
-  LCPU := 'x86_64';
-{$ELSEIF DEFINED(CPUI386)}
-  LCPU := 'i386';
-{$ELSEIF DEFINED(CPUAARCH64)}
-  LCPU := 'AArch64';
-{$ELSEIF DEFINED(CPUARM)}
-  LCPU := 'ARM';
-{$ELSE}
-  LCPU := 'Unknown CPU';
-{$ENDIF}
-  Result := Format('Platform: %s %s, FPC %s', [LOS, LCPU, {$I %FPCVERSION%}]);
-end;
-
-function DispatchDescription(out AIsScalar: Boolean): string;
-{$IF DEFINED(CPUX86_64) OR DEFINED(CPUI386)}
-var
-  LLevel: TX86SimdLevel;
-begin
-  LLevel := TX86SimdFeatures.GetActiveSimdLevel();
-  AIsScalar := LLevel = TX86SimdLevel.Scalar;
-  case LLevel of
-    TX86SimdLevel.Scalar: Result := 'x86 SIMD level = Scalar';
-    TX86SimdLevel.SSE2: Result := 'x86 SIMD level = SSE2';
-    TX86SimdLevel.SSE3: Result := 'x86 SIMD level = SSE3';
-    TX86SimdLevel.SSSE3: Result := 'x86 SIMD level = SSSE3';
-    TX86SimdLevel.SSE41: Result := 'x86 SIMD level = SSE4.1';
-    TX86SimdLevel.SSE42: Result := 'x86 SIMD level = SSE4.2';
-    TX86SimdLevel.AVX2: Result := 'x86 SIMD level = AVX2';
-  else
-    Result := 'x86 SIMD level = (unknown)';
-  end;
-end;
-{$ELSEIF DEFINED(CPUAARCH64) OR DEFINED(CPUARM)}
-var
-  LLevel: TArmSimdLevel;
-begin
-  LLevel := TArmSimdFeatures.GetActiveSimdLevel();
-  AIsScalar := LLevel = TArmSimdLevel.Scalar;
-  case LLevel of
-    TArmSimdLevel.Scalar: Result := 'ARM SIMD level = Scalar';
-    TArmSimdLevel.NEON: Result := 'ARM SIMD level = NEON';
-    TArmSimdLevel.SVE: Result := 'ARM SIMD level = SVE';
-    TArmSimdLevel.SVE2: Result := 'ARM SIMD level = SVE2';
-  else
-    Result := 'ARM SIMD level = (unknown)';
-  end;
-end;
-{$ELSE}
-begin
-  AIsScalar := True; // no SIMD crypto engines on this architecture
-  Result := 'no SIMD engines on this architecture';
-end;
-{$ENDIF}
 
 procedure OnProgress(ATotalSamples: Int64; AMaxT: Double; ALeaky: Boolean);
 var
@@ -136,13 +60,13 @@ begin
     ACfg.BatchSamples := ACfg.MaxSamples div 4;
 end;
 
-function RunOne(AFactory: TCtOpFactory; const ALabel: string;
+function RunOne(const AFactory: ICtOpFactory; const ALabel: string;
   const ACfg: TDudectConfig): TDudectResult;
 var
   LOp: TDudectOp;
 begin
   GCurLabel := ALabel;
-  LOp := AFactory(ACfg.Seed);
+  LOp := AFactory.Make(ACfg.Seed);
   try
     Result := TDudect.Run(LOp, ACfg, OnProgress);
   finally
@@ -180,10 +104,10 @@ begin
 
   Writeln('Constant-time leak detector (dudect)');
   Writeln('====================================');
-  Writeln(PlatformInfo);
+  Writeln(TCtPlatform.PlatformInfo);
   Writeln('Clock : ', TCtClock.SourceName);
 
-  LDesc := DispatchDescription(LIsScalar);
+  LDesc := TCtPlatform.DispatchDescription(LIsScalar);
   if LIsScalar then
     Writeln('Dispatch: ', LDesc, '  [OK: software kernels active]')
   else
@@ -216,9 +140,9 @@ begin
     if (GRowFilter <> '') and (Pos(GRowFilter, LowerCase(LRow.Name)) = 0) then
       Continue;
 
-    LHasControl := Assigned(LRow.MakeControl);
+    LHasControl := Assigned(LRow.ControlFactory);
 
-    Writeln('--- ', LRow.Name, ' ---');
+    Writeln(Format('--- %s (seed=%.16x) ---', [LRow.Name, LRow.Cfg.Seed]));
 
     // Control first (fires fast; early-exit saves time).
     LControlFired := False;
@@ -228,7 +152,7 @@ begin
       LCfg := LRow.Cfg;
       if GQuick then
         ApplyQuick(LCfg);
-      LCtrlRes := RunOne(LRow.MakeControl, 'control: ' + LRow.ControlLabel, LCfg);
+      LCtrlRes := RunOne(LRow.ControlFactory, 'control: ' + LRow.ControlLabel, LCfg);
       LControlFired := LCtrlRes.Leaky;
     end;
 
@@ -236,7 +160,7 @@ begin
     LCfg := LRow.Cfg;
     if GQuick then
       ApplyQuick(LCfg);
-    LSubjRes := RunOne(LRow.MakeSubject, 'subject: ' + LRow.SubjectLabel, LCfg);
+    LSubjRes := RunOne(LRow.SubjectFactory, 'subject: ' + LRow.SubjectLabel, LCfg);
     LSubjectLeaky := LSubjRes.Leaky;
 
     // Row verdict.
@@ -273,7 +197,7 @@ begin
     Writeln('GATE: FAIL - at least one subject shows a data-dependent timing signal.')
   else
     Writeln('GATE: PASS - all controls fired and all subjects stayed clean.');
-  Writeln('Seed is per-row and fixed; re-run is reproducible.');
+  Writeln('Seed is per-row (derived from the row name, printed above); re-run is reproducible.');
 
   if LGateInvalid then
     Halt(2)
