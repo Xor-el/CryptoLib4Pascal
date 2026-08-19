@@ -1,0 +1,25 @@
+CryptoLib/src/Crypto/CipherKernels/Block/ClpAesNiGcmKernel.pas
+  s_74ad5af63bdcc6::t_728b7478fbbb5a 90-97
+CryptoLib/src/Include/Simd/Gcm/GcmFieldOps_i386.inc
+  s_74ad5af63bdcc6::t_728b7478fbbb5a 4,63,68-69
+CryptoLib/src/Include/Simd/Gcm/GcmFieldOps_aarch64.inc
+  s_74ad5af63bdcc6::t_728b7478fbbb5a 4,45,51-52
+CryptoLib/src/Include/Simd/Gcm/GcmFieldOps_x86_64.inc
+  s_74ad5af63bdcc6::t_728b7478fbbb5a 4,62,67-68
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "1a6387ab8535bc79d509ab0e8b4ffabf061eb8eb",
+  "prompts": {},
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
