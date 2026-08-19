@@ -79,6 +79,7 @@ type
   public
     constructor Create(); overload;
     constructor Create(const ACipher: IBlockCipher); overload;
+    destructor Destroy; override;
 
     function GetMacSize: Int32; override;
 
@@ -242,6 +243,15 @@ begin
   FCipher := ACipher;
   FPowTable := nil;
   System.SetLength(FCurrentBlock, BlockSize);
+end;
+
+destructor TPoly1305.Destroy;
+begin
+  // wipe one-time key material (r, s-multipliers, pad) + accumulator on free
+  System.FillChar(FState, SizeOf(FState), Byte(0));
+  TArrayUtilities.Fill(FCurrentBlock, 0, System.Length(FCurrentBlock), Byte(0));
+  TArrayUtilities.Fill(FPowTable, 0, System.Length(FPowTable), Byte(0));
+  inherited Destroy;
 end;
 
 procedure TPoly1305.Init(const AParameters: ICipherParameters);

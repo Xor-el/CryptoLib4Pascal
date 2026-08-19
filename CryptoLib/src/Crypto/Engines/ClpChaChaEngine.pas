@@ -25,6 +25,7 @@ uses
   ClpCheck,
   ClpIStreamCipher,
   ClpIChaChaEngine,
+  ClpIChaCha7539Engine,
   ClpSalsa20Engine,
   ClpPack,
   ClpChaChaSimd,
@@ -91,6 +92,9 @@ type
     procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
 
+    // IChaCha7539Engine.GetEngineStatePtr: raw pointer to the 16-word block state.
+    function GetEngineStatePtr: PUInt32;
+
     class procedure ChaChaCore(ARounds: Int32;
       const AInput: TCryptoLibUInt32Array;
       const AOutput: TCryptoLibByteArray); static;
@@ -155,6 +159,11 @@ end;
 procedure TChaChaBaseEngine.GenerateKeyStream(const AOutput: TCryptoLibByteArray);
 begin
   ChaChaCore(FRounds, FEngineState, AOutput);
+end;
+
+function TChaChaBaseEngine.GetEngineStatePtr: PUInt32;
+begin
+  Result := PUInt32(@FEngineState[0]);
 end;
 
 procedure TChaChaBaseEngine.DoFinal(const AInBuf: TCryptoLibByteArray;

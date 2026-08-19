@@ -290,7 +290,9 @@ uses
   ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
   ClpAesOcbPacketCipher, ClpAbstractPacketCipher, ClpIAeadPacketCipher, 
   ClpAesGcmSivPacketCipher, ClpIBlockPacketCipher, 
-  ClpAbstractBlockPacketCipher, ClpAesCbcPacketCipher, ClpAesCtrPacketCipher;
+  ClpAbstractBlockPacketCipher, ClpAesCbcPacketCipher, ClpAesCtrPacketCipher, 
+  ClpChaCha20Poly1305X86Kernel, ClpChaCha20Poly1305ArmKernel, 
+  ClpChaCha20Poly1305PolyOps;
 
 implementation
 

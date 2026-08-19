@@ -43,6 +43,12 @@ uses
   ClpAesCryptoExtCcmKernel,
   ClpAesCryptoExtEaxKernel,
   ClpPclmulGcmSivKernel,
-  ClpPmullGcmSivKernel;
+  ClpPmullGcmSivKernel,
+  // ChaCha20-Poly1305 fused kernels: only the aarch64 (NEON) arm is registered.
+  // On Intel x86-64 the scalar-poly mulx competes with ChaCha for ports 1/5 and
+  // on i386 the radix-2^26 poly is register-starved, so both lose to the
+  // vectorized two-pass and are intentionally NOT registered (the units and
+  // are preserved for reference).
+  ClpChaCha20Poly1305ArmKernel;
 
 end.
