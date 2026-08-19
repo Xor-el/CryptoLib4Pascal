@@ -24,15 +24,10 @@ uses
   ClpBitOperations,
   ClpInt64Utilities,
   ClpPack,
-  ClpBinaryPrimitives,
   ClpInterleave,
   ClpGhashSimd,
   ClpCryptoLibTypes,
-  ClpCryptoLibExceptions,
   ClpByteUtilities;
-
-resourcestring
-  SCarrylessMultiplyExtIsNotAvailable = 'Carryless multiply-ext is not available on this target';
 
 type
   TFieldElement = record
@@ -86,12 +81,6 @@ type
 
     class procedure Square(var AX: TFieldElement); static;
 
-    /// <summary>Carryless multiply: three 128-bit limbs (48 bytes). Operands 16 bytes each as two little-endian UInt64 halves.</summary>
-    class procedure MultiplyExt(PX, PY, POut48: PByte); static;
-    /// <summary>Fold middle limb Z1 into Z0 and Z2, then reduce to one 128-bit block.</summary>
-    class procedure Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte); static;
-    /// <summary>Xor three 16-byte limbs with three 16-byte slices from a 48-byte MultiplyExt output.</summary>
-    class procedure XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte); static;
     /// <summary>HPow[0..7] = H^8..H^1 as 16-byte limbs at offsets 0,16,...,112 (index 0 = H^8),
     /// each PRE-MULTIPLIED BY x in the reflected representation (DivideP) to match the
     /// carry-less-multiply folding reduction in the fused GHASH / POLYVAL kernels.
@@ -357,64 +346,6 @@ begin
   LZ3 := LZ3 and UInt64($8888888888888888);
 
   Result := LZ0 or LZ1 or LZ2 or LZ3;
-end;
-
-class procedure TGcmUtilities.MultiplyExt(PX, PY, POut48: PByte);
-begin
-  if TGhashSimd.TryMultiplyExt(PX, PY, POut48) then
-    Exit;
-  raise EInvalidOperationCryptoLibException.CreateRes(@SCarrylessMultiplyExtIsNotAvailable);
-end;
-
-class procedure TGcmUtilities.XorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte);
-var
-  LK: Int32;
-begin
-  if TGhashSimd.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48) then
-    Exit;
-
-  for LK := 0 to 1 do
-  begin
-    TByteUtilities.XorTo(8, PSrc48 + LK * 8, PA0 + LK * 8);
-    TByteUtilities.XorTo(8, PSrc48 + 16 + LK * 8, PA1 + LK * 8);
-    TByteUtilities.XorTo(8, PSrc48 + 32 + LK * 8, PA2 + LK * 8);
-  end;
-end;
-
-class procedure TGcmUtilities.Reduce3(PZ0, PZ1, PZ2, PSVector16: PByte);
-var
-  B0, B1, B2: array[0..15] of Byte;
-  SL, SR: array[0..15] of Byte;
-  LI: Int32;
-  LT3, LT2, LT1, LT0, LZ0, LZ1, LZ2: UInt64;
-begin
-  if TGhashSimd.TryReduce3(PZ0, PZ1, PZ2, PSVector16) then
-    Exit;
-
-  System.Move(PZ0^, B0[0], 16);
-  System.Move(PZ1^, B1[0], 16);
-  System.Move(PZ2^, B2[0], 16);
-  System.FillChar(SL[0], 16, 0);
-  System.Move(B1[0], SL[8], 8);
-  for LI := 0 to 15 do
-    B0[LI] := B0[LI] xor SL[LI];
-  System.FillChar(SR[0], 16, 0);
-  System.Move(B1[8], SR[0], 8);
-  for LI := 0 to 15 do
-    B2[LI] := B2[LI] xor SR[LI];
-  LT3 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B0[0]), 0);
-  LT2 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B0[0]), 8);
-  LT1 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B2[0]), 0);
-  LT0 := TBinaryPrimitives.ReadUInt64LittleEndian(PByte(@B2[0]), 8);
-  LT1 := LT1 xor LT3 xor (LT3 shr 1) xor (LT3 shr 2) xor (LT3 shr 7);
-  LT2 := LT2 xor (LT3 shl 63) xor (LT3 shl 62) xor (LT3 shl 57);
-  LZ0 := (LT0 shl 1) or (LT1 shr 63);
-  LZ1 := (LT1 shl 1) or (LT2 shr 63);
-  LZ2 := LT2 shl 1;
-  LZ0 := LZ0 xor LZ2 xor (LZ2 shr 1) xor (LZ2 shr 2) xor (LZ2 shr 7);
-  LZ1 := LZ1 xor (LT2 shl 63) xor (LT2 shl 58);
-  TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 0, LZ1);
-  TBinaryPrimitives.WriteUInt64LittleEndian(PSVector16, 8, LZ0);
 end;
 
 class procedure TGcmUtilities.InitEightWayHPowFromH(const AH: TCryptoLibByteArray;

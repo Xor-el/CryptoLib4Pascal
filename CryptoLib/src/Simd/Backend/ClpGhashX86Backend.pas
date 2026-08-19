@@ -38,12 +38,6 @@ type
   public
     /// <summary>PCLMULQDQ carryless multiply-reduce: <c>PX := PX * PY</c> in GF(2^128).</summary>
     class function TryMultiply(PX, PY: Pointer): Boolean; static;
-    /// <summary>PCLMULQDQ carryless multiply to three 128-bit limbs (48 bytes).</summary>
-    class function TryMultiplyExt(PX, PY, POut48: PByte): Boolean; static;
-    /// <summary>SIMD fold + reduce of three 128-bit limbs into one block.</summary>
-    class function TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean; static;
-    /// <summary>SIMD xor of three 16-byte limbs with three slices of a 48-byte MultiplyExt output.</summary>
-    class function TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean; static;
     /// <summary>PCLMULQDQ fused 4-way GHASH over ABatchCount 64-byte batches (requires packed vector layout). Uses the backend's own byte-reverse mask.</summary>
     class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
       ABatchCount: NativeInt): Boolean; static;
@@ -87,45 +81,6 @@ procedure GcmPclmulFieldPartial(PX, PY, POut: Pointer);
 {$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
 {$ENDIF}
 {$UNDEF CRYPTOLIB_GCMFIELD_PARTIAL}
-end;
-
-procedure GcmPclmulMultiplyExtBytes(PX, PY, POut48: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
-end;
-
-procedure GcmReduce3FoldSse2(PZ0, PZ1, PZ2, POut: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_REDUCE3}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_GCMFIELD_REDUCE3}
-end;
-
-procedure GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
-{$IFDEF CRYPTOLIB_X86_64_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_x86_64.inc}
-{$ENDIF}
-{$IFDEF CRYPTOLIB_I386_ASM}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_i386.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_i386.inc}
-{$ENDIF}
-{$UNDEF CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
 end;
 
 procedure GcmGhashFourFull(PFS, PC0, PHPow64, PMask: Pointer; ABatchCount: NativeInt);
@@ -211,42 +166,6 @@ begin
   begin
     GcmPclmulFieldPartial(PX, PY, @LPartial);
     GcmPclmulReducePartial(LPartial, PGcmFieldRaw(PX)^);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashX86Backend.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasPCLMULQDQ() then
-  begin
-    GcmPclmulMultiplyExtBytes(PX, PY, POut48);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashX86Backend.TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2() then
-  begin
-    GcmReduce3FoldSse2(PZ0, PZ1, PZ2, PSVector16);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashX86Backend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_X86_SIMD}
-  if TCpuFeatures.X86.HasSSE2() then
-  begin
-    GcmXorMultiplyExtLimbs48Sse2(PA0, PA1, PA2, PSrc48);
     Exit(True);
   end;
 {$ENDIF}

@@ -39,12 +39,6 @@ type
   public
     /// <summary>PMULL carryless multiply-reduce: <c>PX := PX * PY</c> in GF(2^128).</summary>
     class function TryMultiply(PX, PY: Pointer): Boolean; static;
-    /// <summary>PMULL carryless multiply to three 128-bit limbs (48 bytes).</summary>
-    class function TryMultiplyExt(PX, PY, POut48: PByte): Boolean; static;
-    /// <summary>SIMD fold + reduce of three 128-bit limbs into one block.</summary>
-    class function TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean; static;
-    /// <summary>SIMD xor of three 16-byte limbs with three slices of a 48-byte MultiplyExt output.</summary>
-    class function TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean; static;
     /// <summary>PMULL fused 4-way GHASH over ABatchCount 64-byte batches.</summary>
     class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
       ABatchCount: NativeInt): Boolean; static;
@@ -82,27 +76,6 @@ procedure GcmPmullFieldPartial(PX, PY, POut: Pointer);
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
 {$I ..\..\Include\Simd\Gcm\GcmFieldOps_aarch64.inc}
 {$UNDEF CRYPTOLIB_GCMFIELD_PARTIAL}
-end;
-
-procedure GcmPmullMultiplyExtBytes(PX, PY, POut48: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
-{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_aarch64.inc}
-{$UNDEF CRYPTOLIB_GCMFIELD_MULTIPLY_EXT}
-end;
-
-procedure GcmReduce3FoldNeon(PZ0, PZ1, PZ2, POut: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_REDUCE3}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_aarch64.inc}
-{$UNDEF CRYPTOLIB_GCMFIELD_REDUCE3}
-end;
-
-procedure GcmXorMultiplyExtLimbs48Neon(PA0, PA1, PA2, PSrc48: Pointer);
-{$DEFINE CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
-{$I ..\..\Include\Simd\Gcm\GcmFieldOps_aarch64.inc}
-{$UNDEF CRYPTOLIB_GCMFIELD_XOR_LIMBS48}
 end;
 
 procedure GcmGhashFourFull(PFS, PC0, PHPow64: Pointer; ABatchCount: NativeInt);
@@ -164,42 +137,6 @@ begin
   begin
     GcmPmullFieldPartial(PX, PY, @LPartial);
     GcmPmullReducePartial(LPartial, PGcmFieldRaw(PX)^);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashArmBackend.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasPMULL() then
-  begin
-    GcmPmullMultiplyExtBytes(PX, PY, POut48);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashArmBackend.TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasNEON() then
-  begin
-    GcmReduce3FoldNeon(PZ0, PZ1, PZ2, PSVector16);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
-
-class function TGhashArmBackend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasNEON() then
-  begin
-    GcmXorMultiplyExtLimbs48Neon(PA0, PA1, PA2, PSrc48);
     Exit(True);
   end;
 {$ENDIF}

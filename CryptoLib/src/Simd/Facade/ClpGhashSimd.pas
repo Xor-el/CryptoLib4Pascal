@@ -42,12 +42,6 @@ type
   public
     /// <summary>Carryless multiply-reduce: <c>PX := PX * PY</c> in GF(2^128).</summary>
     class function TryMultiply(PX, PY: Pointer): Boolean; static;
-    /// <summary>Carryless multiply to three 128-bit limbs (48 bytes).</summary>
-    class function TryMultiplyExt(PX, PY, POut48: PByte): Boolean; static;
-    /// <summary>Fold + reduce of three 128-bit limbs into one block.</summary>
-    class function TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean; static;
-    /// <summary>Xor three 16-byte limbs with three slices of a 48-byte MultiplyExt output.</summary>
-    class function TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean; static;
     /// <summary>Fused 4-way GHASH over ABatchCount contiguous 64-byte batches.</summary>
     class function TryFusedFourShuffledGhash(PFS, PC0, PHPow64: PByte;
       ABatchCount: NativeInt): Boolean; static;
@@ -73,39 +67,6 @@ begin
   Result := TGhashX86Backend.TryMultiply(PX, PY);
 {$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
   Result := TGhashArmBackend.TryMultiply(PX, PY);
-{$ELSE}
-  Result := False;
-{$IFEND}
-end;
-
-class function TGhashSimd.TryMultiplyExt(PX, PY, POut48: PByte): Boolean;
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.TryMultiplyExt(PX, PY, POut48);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TGhashArmBackend.TryMultiplyExt(PX, PY, POut48);
-{$ELSE}
-  Result := False;
-{$IFEND}
-end;
-
-class function TGhashSimd.TryReduce3(PZ0, PZ1, PZ2, PSVector16: PByte): Boolean;
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.TryReduce3(PZ0, PZ1, PZ2, PSVector16);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TGhashArmBackend.TryReduce3(PZ0, PZ1, PZ2, PSVector16);
-{$ELSE}
-  Result := False;
-{$IFEND}
-end;
-
-class function TGhashSimd.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48: PByte): Boolean;
-begin
-{$IF DEFINED(CRYPTOLIB_X86_SIMD)}
-  Result := TGhashX86Backend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
-{$ELSEIF DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  Result := TGhashArmBackend.TryXorMultiplyExtLimbs48(PA0, PA1, PA2, PSrc48);
 {$ELSE}
   Result := False;
 {$IFEND}

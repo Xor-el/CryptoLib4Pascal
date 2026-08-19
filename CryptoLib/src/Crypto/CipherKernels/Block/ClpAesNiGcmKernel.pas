@@ -87,14 +87,14 @@ implementation
 type
   // Context handed to the fused AES-NI CTR keystream + 8-way GHASH loop kernel.
   // Natural pointer-sized alignment, no padding: the field offsets match the
-  // [rcx + N] / [ebx + N] accesses in AesGcmFusedCtrGhashEight_x86_64.inc and
-  // AesGcmFusedCtrGhashEight_i386.inc (they differ with pointer / NativeUInt
-  // width: 8-byte fields on x86_64, 4-byte on i386). The kernel holds the loop
-  // state in registers across the batch run, writing only Counter32 back, and
-  // builds each batch's counter blocks in-register from Counter32 + PJ0Template
-  // (both arches); the GHASH-from-output flag is 1 for encrypt (fold the output
-  // ciphertext) and 0 for decrypt (fold the input). PHPow128 points at the
-  // kernel-owned x-pre-multiplied H-power table (see TAesNiGcmKernel.Create).
+  // [rcx + N] / [ebx + N] accesses in the fused kernel loop (they differ with
+  // pointer / NativeUInt width: 8-byte fields on x86_64, 4-byte on i386). The
+  // kernel holds the loop state in registers across the batch run, writing only
+  // Counter32 back, and builds each batch's counter blocks in-register from
+  // Counter32 + PJ0Template (both arches); the GHASH-from-output flag is 1 for
+  // encrypt (fold the output ciphertext) and 0 for decrypt (fold the input).
+  // PHPow128 points at the kernel-owned x-pre-multiplied H-power table (see
+  // TAesNiGcmKernel.Create).
   TGcmFusedCtx = record
     PXorIn: Pointer;
     POut: Pointer;
