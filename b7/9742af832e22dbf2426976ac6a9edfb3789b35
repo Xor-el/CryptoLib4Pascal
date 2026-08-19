@@ -1,0 +1,71 @@
+CryptoLib/src/Crypto/Modes/ClpEaxBlockCipher.pas
+  s_74ad5af63bdcc6::t_89828b6e36c2e5 404,407,414
+  s_74ad5af63bdcc6::t_901539e8150a34 274-277,279-281
+  s_74ad5af63bdcc6::t_db29797fc101f0 360-368
+  s_74ad5af63bdcc6::t_60970922207450 381
+  s_74ad5af63bdcc6::t_69d44ecb2f46da 418-420
+  s_74ad5af63bdcc6::t_5db80abc32eee7 323,327
+  s_74ad5af63bdcc6::t_42c58534c570f6 324-326
+  s_74ad5af63bdcc6::t_d8e00877915235 348,421
+  s_74ad5af63bdcc6::t_db11e469b30f3c 402-403,405-406,408
+  s_74ad5af63bdcc6::t_e7b4940066a607 336-340
+CryptoLib/src/Crypto/Modes/ClpAbstractAeadCipher.pas
+  s_74ad5af63bdcc6::t_4983af89cb1d92 243-244,246-251,254,257-260,263-268,270-272,274-275,277,279,281,283-285,287
+  s_74ad5af63bdcc6::t_504660c80da2f4 161
+  s_74ad5af63bdcc6::t_0c548f29ced918 63-68
+  s_74ad5af63bdcc6::t_466ab09bccb83f 223,225,227-230,232,236-241,245,261-262,278
+  s_74ad5af63bdcc6::t_959f701ebe0985 124,127-128,133-135,137-141,233-235
+  s_74ad5af63bdcc6::t_d5a91c513367e4 107-115,118,120-123,125-126,129-132
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_74ad5af63bdcc6::t_2fa067792fe1bc 318-324,329-330
+  s_74ad5af63bdcc6::t_849bfb14a91a3b 391-393,398-399
+CryptoLib/src/Crypto/Modes/ClpGcmBlockCipher.pas
+  s_74ad5af63bdcc6::t_a6ca4c38e9d3b2 606
+  s_74ad5af63bdcc6::t_bbaf197edcc64a 667,673
+  s_74ad5af63bdcc6::t_41ff0e3cbd3113 668,670-671
+  s_74ad5af63bdcc6::t_ed1ad21f746ae5 609-611,617
+  s_74ad5af63bdcc6::t_febf1090acd5d3 605,612,614-615
+  s_74ad5af63bdcc6::t_58946bb3ef24ad 468-472
+CryptoLib/src/Crypto/Modes/ClpOcbBlockCipher.pas
+  s_74ad5af63bdcc6::t_a73709758ef442 303-312
+  s_74ad5af63bdcc6::t_d39a9f8c223e7f 544-547
+  s_74ad5af63bdcc6::t_e45c2d88c8c417 462-471
+  s_74ad5af63bdcc6::t_85d02179174cdb 279
+  s_74ad5af63bdcc6::t_63abda23941e67 444
+  s_74ad5af63bdcc6::t_99869890a742d6 398-401
+CryptoLib/src/Crypto/Modes/ClpCcmBlockCipher.pas
+  s_74ad5af63bdcc6::t_390b3c93feb80d 254-255,262-263,279-280,286-287
+  s_74ad5af63bdcc6::t_ecae47a4cfca9c 330-338,340-342,344-346
+  s_74ad5af63bdcc6::t_c939d736bcf4f7 314
+  s_74ad5af63bdcc6::t_ce4e9097a35e39 256-261,264-268
+  s_74ad5af63bdcc6::t_d9020779ea54f1 228
+  s_74ad5af63bdcc6::t_bb1d68e0b31356 282-285
+CryptoLib.Tests/src/Crypto/AeadEmptyInputTests.pas
+  s_74ad5af63bdcc6::t_0df986376d7018 363-364
+  s_74ad5af63bdcc6::t_5671c471f6ca9a 410-411
+  s_74ad5af63bdcc6::t_d62283fca5e84d 102-107
+  s_74ad5af63bdcc6::t_ac07c5c1542f6c 79-82,270-271
+  s_74ad5af63bdcc6::t_893dc847bec875 242-244,249,259-269
+  s_74ad5af63bdcc6::t_736eae85a8bc01 337-362,365-409,412-414
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "b79742af832e22dbf2426976ac6a9edfb3789b35",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
