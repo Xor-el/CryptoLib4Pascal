@@ -47,7 +47,7 @@ env:
   MAKE_DEFINES: ''
   # When true, make.pas builds and runs console benchmarks after the test suite.
   # Override per job below, like MAKE_BUILD_BACKEND.
-  MAKE_RUN_BENCHMARK: false
+  MAKE_RUN_BENCHMARK: true
   # When true (default), the linux-x64-scalar job runs the ctgrind/Valgrind
   # constant-time gate after its build (subjects clean, leaky controls fire).
   # Set false to skip it. Read only by that job's valgrind-ct.sh step.
@@ -121,7 +121,6 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_tarball_target }}
-          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   # Scalar-dispatch legs: same native targets, but MAKE_DEFINES
@@ -222,7 +221,6 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['macos-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['macos-arm64'].fpc_tarball_target }}
-          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   macos-x64:
