@@ -101,10 +101,6 @@ type
     function GetAlgorithmName: String; override;
     function GetModeName: String; override;
     procedure WipeKeyMaterial(); override;
-    // True when the engine keeps its expanded key across a nonce-only re-Init
-    // (nil-key reuse fast path). XChaCha re-derives a per-nonce subkey, so it
-    // overrides this to False and is always re-keyed from the retained FKey.
-    function EngineSupportsKeyReuse: Boolean; virtual;
 
   strict private
   const
@@ -261,11 +257,6 @@ begin
   Result := GetAlgorithmName;
 end;
 
-function TChaCha20Poly1305.EngineSupportsKeyReuse: Boolean;
-begin
-  Result := True;
-end;
-
 procedure TChaCha20Poly1305.WipeKeyMaterial;
 begin
   TArrayUtilities.Fill(FKey, 0, System.Length(FKey), Byte(0));
@@ -284,7 +275,6 @@ var
   LInitNonce: TCryptoLibByteArray;
   LChaCha20Params: ICipherParameters;
   LMacSizeBits: Int32;
-  LKeyChanged: Boolean;
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
@@ -325,30 +315,19 @@ begin
         [AlgorithmName]);
   end;
 
-  // Same-key fast path (determined against the old FKey, before it is
-  // overwritten): a re-Init with the same key (fresh nonce) keeps the engine's
-  // expanded key and the resolved kernel; only the nonce and the per-message
-  // Poly1305 key are refreshed. A nil key is the "reuse last key" convention.
-  LKeyChanged := (LInitKeyParam <> nil) and
-    ((TState.Uninitialized = FState) or
-    (not LInitKeyParam.FixedTimeEquals(FKey)));
-
-  if LKeyChanged then
+  // Refresh the retained key from the caller; a nil key reuses the retained one
+  // ("reuse last key" convention). The engine is always handed the real key --
+  // ChaCha key setup is only a handful of word writes, so there is nothing worth
+  // caching, and handing over the real key keeps XChaCha correct (it re-derives
+  // its per-nonce subkey on every Init). Only the nonce and the per-message
+  // Poly1305 key change between same-key messages; the resolved kernel is kept.
+  if LInitKeyParam <> nil then
     LInitKeyParam.CopyKeyTo(FKey, 0, KeySize);
 
   System.Move(LInitNonce[0], FNonce[0], FNonceBytes);
 
-  // On a key change pass the key (full re-key); otherwise pass a nil key so the
-  // engine only refreshes the IV and keeps the already-expanded key state.
-  // XChaCha cannot reuse expanded state (it re-derives its subkey per nonce),
-  // so it is always re-keyed from the retained FKey.
-  if LKeyChanged then
-    LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce)
-  else if EngineSupportsKeyReuse then
-    LChaCha20Params := TParametersWithIV.Create(nil, LInitNonce)
-  else
-    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
-      as IKeyParameter, LInitNonce);
+  LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
+    as IKeyParameter, LInitNonce);
   FChaCha20.Init(True, LChaCha20Params);
 
   // Kernel is direction-agnostic for the poly path, so resolve once and keep it
@@ -381,7 +360,6 @@ procedure TChaCha20Poly1305.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
   LChaCha20Params: ICipherParameters;
-  LKeyChanged: Boolean;
 begin
   // Raw-span mirror of Init (no TryResolveAeadOrIv, no caller parameter objects).
   if ((MacSize * 8) <> AMacSizeBits) then
@@ -410,26 +388,15 @@ begin
 
   FInitialAad := AAad;
 
-  LKeyChanged := (AKey <> nil) and
-    ((TState.Uninitialized = FState) or
-    (not TArrayUtilities.FixedTimeEquals(AKey, FKey)));
-
-  if LKeyChanged then
+  // Refresh the retained key from the caller (a nil key reuses it); the engine
+  // is always handed the real key, as in Init.
+  if AKey <> nil then
     System.Move(AKey[0], FKey[0], KeySize);
 
   System.Move(ANonce[0], FNonce[0], FNonceBytes);
 
-  // Same-key -> nil-key engine re-init (IV only); a fresh TKeyParameter is
-  // created only on an actual rekey. XChaCha re-derives its subkey per nonce,
-  // so it is always re-keyed from the retained FKey instead.
-  if LKeyChanged then
-    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(AKey)
-      as IKeyParameter, ANonce)
-  else if EngineSupportsKeyReuse then
-    LChaCha20Params := TParametersWithIV.Create(nil, ANonce)
-  else
-    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
-      as IKeyParameter, ANonce);
+  LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
+    as IKeyParameter, ANonce);
   FChaCha20.Init(True, LChaCha20Params);
 
   // Kernel is direction-agnostic for the poly path, so resolve once and keep it

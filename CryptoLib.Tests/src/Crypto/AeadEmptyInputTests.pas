@@ -76,6 +76,10 @@ type
       const AName: String);
     function CreateStream(AMode: Int32): IAeadCipher;
     function CreatePacket(AMode: Int32): IAeadPacketCipher;
+    function SealParams(const ACipher: IAeadCipher; AForEncryption: Boolean;
+      const AParams: ICipherParameters; const AInput: TBytes): TBytes;
+    // nil-key parameter = "reuse the established key" convention.
+    function ReuseParams(const ANonce, AAad: TBytes): ICipherParameters;
     function StreamSeal(const ACipher: IAeadCipher; AForEncryption: Boolean;
       const AKey, ANonce, AAad, AInput: TBytes): TBytes;
     function PacketSeal(const APacket: IAeadPacketCipher; AForEncryption: Boolean;
@@ -95,6 +99,12 @@ type
     procedure TestBufferedCiphersAcceptEmptyInput;
     procedure TestPacketMatchesStreaming;
     procedure TestBlockPacketMatchesBuffered;
+    // Two-phase key-reuse protocol: a nil-key re-Init reuses the established key
+    // (must match an explicit re-key), and a rekey that fails mid-Init must clear
+    // the ready flag so a following nil-key reuse raises instead of running on a
+    // half-built or wiped schedule.
+    procedure TestNilKeyReuseMatchesRekey;
+    procedure TestFailedRekeyDefends;
   end;
 
 implementation
@@ -229,13 +239,14 @@ begin
   end;
 end;
 
-function TTestAeadEmptyInput.StreamSeal(const ACipher: IAeadCipher;
-  AForEncryption: Boolean; const AKey, ANonce, AAad, AInput: TBytes): TBytes;
+function TTestAeadEmptyInput.SealParams(const ACipher: IAeadCipher;
+  AForEncryption: Boolean; const AParams: ICipherParameters;
+  const AInput: TBytes): TBytes;
 var
   LOut: TBytes;
   LLen: Int32;
 begin
-  ACipher.Init(AForEncryption, AeadParams(AKey, ANonce, AAad));
+  ACipher.Init(AForEncryption, AParams);
   System.SetLength(LOut, ACipher.GetOutputSize(System.Length(AInput)));
   LLen := 0;
   if System.Length(AInput) > 0 then
@@ -243,6 +254,19 @@ begin
   LLen := LLen + ACipher.DoFinal(LOut, LLen);
   System.SetLength(LOut, LLen);
   Result := LOut;
+end;
+
+function TTestAeadEmptyInput.ReuseParams(const ANonce,
+  AAad: TBytes): ICipherParameters;
+begin
+  Result := TAeadParameters.Create(nil, 128, ANonce, AAad) as ICipherParameters;
+end;
+
+function TTestAeadEmptyInput.StreamSeal(const ACipher: IAeadCipher;
+  AForEncryption: Boolean; const AKey, ANonce, AAad, AInput: TBytes): TBytes;
+begin
+  Result := SealParams(ACipher, AForEncryption, AeadParams(AKey, ANonce, AAad),
+    AInput);
 end;
 
 function TTestAeadEmptyInput.PacketSeal(const APacket: IAeadPacketCipher;
@@ -308,6 +332,84 @@ begin
   CheckDifferential(3, 16, 12, 'EAX');
   CheckDifferential(4, 16, 12, 'OCB');
   CheckDifferential(5, 16, 12, 'GCM-SIV');
+end;
+
+procedure TTestAeadEmptyInput.TestNilKeyReuseMatchesRekey;
+
+  procedure Once(AMode, AKeyLen, ANonceLen: Int32; const AName: String);
+  var
+    LCipher: IAeadCipher;
+    LKey, LAad, LN1, LN2, LPt1, LPt2, LReuse, LRef: TBytes;
+  begin
+    LKey := MakeBytes(AKeyLen, 10);
+    LAad := MakeBytes(13, 11);
+    LN1 := MakeBytes(ANonceLen, 1);
+    LN2 := MakeBytes(ANonceLen, 2);
+    LPt1 := MakeBytes(24, 3);
+    LPt2 := MakeBytes(40, 4);
+
+    LCipher := CreateStream(AMode);
+    // Establish the key, then reuse it for a fresh nonce via a nil-key parameter.
+    SealParams(LCipher, True, AeadParams(LKey, LN1, LAad), LPt1);
+    LReuse := SealParams(LCipher, True, ReuseParams(LN2, LAad), LPt2);
+    // A fresh instance keyed explicitly at the same nonce must produce the same.
+    LRef := SealParams(CreateStream(AMode), True, AeadParams(LKey, LN2, LAad), LPt2);
+    Check(AreEqual(LReuse, LRef),
+      AName + ': nil-key reuse must match an explicit re-key');
+  end;
+
+begin
+  Once(0, 16, 12, 'GCM');
+  Once(2, 16, 12, 'CCM');
+  Once(3, 16, 12, 'EAX');
+  Once(4, 16, 12, 'OCB');
+end;
+
+procedure TTestAeadEmptyInput.TestFailedRekeyDefends;
+
+  procedure Once(AMode, AKeyLen, ANonceLen: Int32; const AName: String);
+  var
+    LCipher: IAeadCipher;
+    LKey, LBad, LAad, LN1, LN2, LN3, LPt: TBytes;
+    LThrew: Boolean;
+  begin
+    LKey := MakeBytes(AKeyLen, 10);
+    LBad := MakeBytes(AKeyLen + 4, 12); // wrong length: engine rejects during Init
+    LAad := MakeBytes(13, 11);
+    LN1 := MakeBytes(ANonceLen, 1);
+    LN2 := MakeBytes(ANonceLen, 2);
+    LN3 := MakeBytes(ANonceLen, 3);
+    LPt := MakeBytes(32, 5);
+
+    LCipher := CreateStream(AMode);
+    SealParams(LCipher, True, AeadParams(LKey, LN1, LAad), LPt); // establish
+
+    // A rekey that fails mid-Init must clear the ready flag ...
+    LThrew := False;
+    try
+      SealParams(LCipher, True, AeadParams(LBad, LN2, LAad), LPt);
+    except
+      LThrew := True;
+    end;
+    Check(LThrew, AName + ': a bad-length rekey must raise');
+
+    // ... so a following nil-key reuse cannot silently run on the half-built
+    // (or wiped) schedule: it must raise rather than produce output.
+    LThrew := False;
+    try
+      SealParams(LCipher, True, ReuseParams(LN3, LAad), LPt);
+    except
+      LThrew := True;
+    end;
+    Check(LThrew,
+      AName + ': nil-key reuse after a failed rekey must raise, not reuse state');
+  end;
+
+begin
+  Once(0, 16, 12, 'GCM');
+  Once(2, 16, 12, 'CCM');
+  Once(3, 16, 12, 'EAX');
+  Once(4, 16, 12, 'OCB');
 end;
 
 function TTestAeadEmptyInput.BlockPacketSeal(const APacket: IBlockPacketCipher;

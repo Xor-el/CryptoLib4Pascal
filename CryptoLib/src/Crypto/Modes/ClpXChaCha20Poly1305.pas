@@ -49,9 +49,6 @@ type
 
   strict protected
     function GetAlgorithmName: String; override;
-    // XChaCha derives a fresh per-nonce subkey via HChaCha20, so a nonce-only
-    // change is still a full re-key; the engine rejects nil-key re-init.
-    function EngineSupportsKeyReuse: Boolean; override;
 
   public
     constructor Create(); overload;
@@ -75,11 +72,6 @@ end;
 function TXChaCha20Poly1305.GetAlgorithmName: String;
 begin
   Result := 'XChaCha20Poly1305';
-end;
-
-function TXChaCha20Poly1305.EngineSupportsKeyReuse: Boolean;
-begin
-  Result := False;
 end;
 
 end.

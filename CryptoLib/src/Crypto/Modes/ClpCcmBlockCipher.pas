@@ -225,8 +225,7 @@ var
   LChoice: TCipherAeadChoice;
   LRequestedMacSizeBits: Int32;
   LDirection: TCipherKernelDirection;
-  LPrevKey: TCryptoLibByteArray;
-  LSameKey: Boolean;
+  LNeedReKey: Boolean;
 begin
   FForEncryption := AForEncryption;
 
@@ -239,7 +238,6 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameters, ['CCM']);
 
   CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
-  LPrevKey := FLastKey;
 
   FLastNonce := LChoice.Nonce;
   FInitialAssociatedText := LChoice.AssociatedText;
@@ -253,7 +251,21 @@ begin
   begin
     FKeyParam := LChoice.CipherKey;
     if LChoice.KeyParameter <> nil then
-      FLastKey := LChoice.KeyParameter.GetKey();
+      LNeedReKey := NeedsReKey(LChoice.KeyParameter)
+    else
+    begin
+      // non-IKeyParameter key: cannot be compared, so always rebuild and never
+      // mark it reusable; invalidate readiness before the destructive Init.
+      FKeyReady := False;
+      LNeedReKey := True;
+    end;
+  end
+  else
+  begin
+    // nil key reuses the established schedule; require a ready one.
+    if not FKeyReady then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    LNeedReKey := False;
   end;
 
   if (System.Length(FLastNonce) < 7) or (System.Length(FLastNonce) > 13) then
@@ -262,14 +274,17 @@ begin
   // Nonce-only rotation is the hot AEAD path: with the key and direction
   // unchanged the AES schedule, the CTR wrapper and the fused-kernel binding
   // all stay valid, so none of them are recomputed.
-  LSameKey := (LChoice.CipherKey = nil) or
-    ((LPrevKey <> nil) and (LChoice.KeyParameter <> nil) and
-    LChoice.KeyParameter.FixedTimeEquals(LPrevKey));
   if FKeyParam <> nil then
   begin
-    if not LSameKey then
+    if LNeedReKey then
+    begin
       FCipher.Init(True, FKeyParam);
-    if (FCcmKernel = nil) or (not LSameKey) or
+      // Commit (and mark ready) only for a comparable key; a non-IKeyParameter
+      // key stays "not ready" so the next init always rebuilds.
+      if LChoice.KeyParameter <> nil then
+        CommitKey(LChoice.KeyParameter);
+    end;
+    if (FCcmKernel = nil) or LNeedReKey or
       (FKernelForEnc <> AForEncryption) then
     begin
       FCcmKernel := nil;
@@ -296,7 +311,7 @@ procedure TCcmBlockCipher.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
   LDirection: TCipherKernelDirection;
-  LSameKey: Boolean;
+  LNeedReKey: Boolean;
 begin
   FForEncryption := AForEncryption;
 
@@ -312,15 +327,23 @@ begin
   if (System.Length(FLastNonce) < 7) or (System.Length(FLastNonce) > 13) then
     raise EArgumentCryptoLibException.CreateRes(@SNonceLengthRange);
 
-  LSameKey := SameKeyReuseRaw(AKey);
-  if (AKey <> nil) and (not LSameKey) then
-    FKeyParam := TKeyParameter.Create(AKey) as ICipherParameters;
-  if FKeyParam = nil then
-    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+  if AKey <> nil then
+    LNeedReKey := NeedsReKeyRaw(AKey)
+  else
+  begin
+    // nil key reuses the established key; there must be one.
+    if not FKeyReady then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    LNeedReKey := False;
+  end;
 
-  if not LSameKey then
+  if LNeedReKey then
+  begin
+    FKeyParam := TKeyParameter.Create(AKey) as ICipherParameters;
     FCipher.Init(True, FKeyParam);
-  if (FCcmKernel = nil) or (not LSameKey) or (FKernelForEnc <> AForEncryption) then
+    CommitKeyRaw(AKey);
+  end;
+  if (FCcmKernel = nil) or LNeedReKey or (FKernelForEnc <> AForEncryption) then
   begin
     FCcmKernel := nil;
     if AForEncryption then
