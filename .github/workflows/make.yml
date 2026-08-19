@@ -121,6 +121,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-arm64'].fpc_tarball_target }}
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   # Scalar-dispatch legs: same native targets, but MAKE_DEFINES
@@ -221,6 +222,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['macos-arm64'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['macos-arm64'].fpc_tarball_target }}
+          MAKE_RUN_BENCHMARK: true
         run: bash .github/workflows/ci/native-build.sh
 
   macos-x64:
