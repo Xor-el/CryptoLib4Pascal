@@ -32,6 +32,8 @@ resourcestring
   SOffsetOutOfRange = 'offset out of range';
   SCountOutOfRange = 'count out of range';
   SOutputBufferTooSmall = 'output buffer too small';
+  SStreamCannotBeNil = 'stream cannot be nil';
+  SExactLengthNegative = 'exact length cannot be negative';
 
 type
   /// <summary>
@@ -72,6 +74,15 @@ type
       const ABuf: TCryptoLibByteArray; AOff, ALen: Int32): Int32; overload; static;
     class function ReadFully(const AInStr: TStream;
       const ABuf: TCryptoLibByteArray): Int32; overload; static;
+
+    /// <summary>
+    /// Read exactly AExactLength bytes from AStream into a freshly allocated array. The array is grown
+    /// incrementally as data arrives rather than allocated at the full length up front, so a hostile
+    /// stream claiming a large length cannot force an outsized allocation before delivering the bytes.
+    /// Returns False (with ABytes = nil) if the stream ends before AExactLength bytes are read.
+    /// </summary>
+    class function TryReadExactIncremental(const AStream: TStream; AExactLength: Int32;
+      out ABytes: TCryptoLibByteArray): Boolean; static;
 
     class procedure ValidateBufferArguments(const ABuffer: TCryptoLibByteArray;
       AOffset, ACount: Int32); static;
@@ -231,6 +242,50 @@ class function TStreamUtilities.ReadFully(const AInStr: TStream;
   const ABuf: TCryptoLibByteArray): Int32;
 begin
   Result := ReadFully(AInStr, ABuf, 0, System.Length(ABuf));
+end;
+
+class function TStreamUtilities.TryReadExactIncremental(const AStream: TStream;
+  AExactLength: Int32; out ABytes: TCryptoLibByteArray): Boolean;
+var
+  LBuf: TCryptoLibByteArray;
+  LInitialAlloc, LTotalRead, LExpandedAlloc, LNumRead: Int32;
+begin
+  if AStream = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SStreamCannotBeNil);
+  if AExactLength < 0 then
+    raise EArgumentOutOfRangeCryptoLibException.CreateRes(@SExactLengthNegative);
+
+  // start small and grow toward AExactLength so a claimed-but-undelivered length never over-allocates
+  LInitialAlloc := AExactLength;
+  while LInitialAlloc > DefaultBufferSize do
+    LInitialAlloc := Int32((UInt32(LInitialAlloc) + 3) shr 2);
+
+  System.SetLength(LBuf, LInitialAlloc);
+  LTotalRead := 0;
+  while LTotalRead < AExactLength do
+  begin
+    if LTotalRead = System.Length(LBuf) then
+    begin
+      if Int64(4) * System.Length(LBuf) < AExactLength then
+        LExpandedAlloc := 4 * System.Length(LBuf)
+      else
+        LExpandedAlloc := AExactLength;
+      System.SetLength(LBuf, LExpandedAlloc);
+    end;
+
+    LNumRead := AStream.Read(LBuf[LTotalRead], System.Length(LBuf) - LTotalRead);
+    if LNumRead < 1 then
+    begin
+      ABytes := nil;
+      Result := False;
+      Exit;
+    end;
+
+    LTotalRead := LTotalRead + LNumRead;
+  end;
+
+  ABytes := LBuf;
+  Result := True;
 end;
 
 class procedure TStreamUtilities.ValidateBufferArguments(const ABuffer

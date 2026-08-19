@@ -62,6 +62,8 @@ type
     /// <summary>Set the public key that this certificate identifies.</summary>
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
+    /// <summary>Generate an unsigned certificate carrying an empty signature under id-alg-unsigned.</summary>
+    function GenerateUnsigned(): IX509Certificate;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
@@ -128,6 +130,8 @@ type
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate; overload;
     function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
       const AAltSignatureFactory: ISignatureFactory): IX509Certificate; overload;
+    /// <summary>Generate an unsigned certificate carrying an empty signature under id-alg-unsigned.</summary>
+    function GenerateUnsigned(): IX509Certificate;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 

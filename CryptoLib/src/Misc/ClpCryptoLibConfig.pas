@@ -26,6 +26,7 @@ uses
 
 resourcestring
   SMaxPolicyNodesNotPositive = 'the valid policy tree node ceiling must be greater than zero, got %d';
+  SMaxCertPathBuildNodesNotPositive = 'the CertPath build node ceiling must be greater than zero, got %d';
   SConfigCeilingNotPositive = 'the %s must be greater than zero, got %d';
   SConfigValueNegative = 'the %s must not be negative, got %d';
 
@@ -104,12 +105,21 @@ type
     /// </summary>
     DefaultMaxPolicyNodes = Int32(8192);
 
+    /// <summary>
+    /// The ceiling on nodes the PKIX CertPath builder visits per build. The builder walks the PKI
+    /// graph depth-first; because candidate issuers are matched by subject name only, a store full of
+    /// like-named certificates that never chain to a trust anchor could otherwise be explored as a
+    /// very large number of partial paths. Read it through <see cref="MaxCertPathBuildNodes" />.
+    /// </summary>
+    DefaultMaxCertPathBuildNodes = Int32(262144);
+
   class var
     /// <summary>
     /// Nullable rather than sentinel-encoded, so no legal value has to double as "unset". The
     /// Boolean settings need no such treatment: unset and False are indistinguishable to a caller.
     /// </summary>
     FMaxPolicyNodes: TNullable<Int32>;
+    FMaxCertPathBuildNodes: TNullable<Int32>;
     FSgp22NameConstraints: Boolean;
     FAllowLenientRfc822Name: Boolean;
     FAllowLenientIPAddressMask: Boolean;
@@ -118,6 +128,8 @@ type
 
     class function GetMaxPolicyNodes: Int32; static;
     class procedure SetMaxPolicyNodes(AValue: Int32); static;
+    class function GetMaxCertPathBuildNodes: Int32; static;
+    class procedure SetMaxCertPathBuildNodes(AValue: Int32); static;
     class function GetSgp22NameConstraints: Boolean; static;
     class procedure SetSgp22NameConstraints(AValue: Boolean); static;
     class function GetAllowLenientRfc822Name: Boolean; static;
@@ -138,6 +150,12 @@ type
     /// <see cref="ResetToDefaults" /> to go back to the default.
     /// </summary>
     class property MaxPolicyNodes: Int32 read GetMaxPolicyNodes write SetMaxPolicyNodes;
+
+    /// <summary>
+    /// The ceiling on nodes the PKIX CertPath builder visits per build. Assigning less than one
+    /// raises; call <see cref="ResetToDefaults" /> to go back to the default.
+    /// </summary>
+    class property MaxCertPathBuildNodes: Int32 read GetMaxCertPathBuildNodes write SetMaxCertPathBuildNodes;
 
     /// <summary>
     /// Applies the relaxed directoryName matching that eUICC certificate profiles expect, in place
@@ -530,6 +548,7 @@ end;
 class procedure TX509Config.ResetToDefaults();
 begin
   FMaxPolicyNodes := TNullable<Int32>.None;
+  FMaxCertPathBuildNodes := TNullable<Int32>.None;
   FSgp22NameConstraints := False;
   FAllowLenientRfc822Name := False;
   FAllowLenientIPAddressMask := False;
@@ -552,6 +571,22 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SMaxPolicyNodesNotPositive, [AValue]);
 
   FMaxPolicyNodes := TNullable<Int32>.Some(AValue);
+end;
+
+class function TX509Config.GetMaxCertPathBuildNodes: Int32;
+begin
+  if FMaxCertPathBuildNodes.HasValue then
+    Result := FMaxCertPathBuildNodes.Value
+  else
+    Result := DefaultMaxCertPathBuildNodes;
+end;
+
+class procedure TX509Config.SetMaxCertPathBuildNodes(AValue: Int32);
+begin
+  if AValue < 1 then
+    raise EArgumentCryptoLibException.CreateResFmt(@SMaxCertPathBuildNodesNotPositive, [AValue]);
+
+  FMaxCertPathBuildNodes := TNullable<Int32>.Some(AValue);
 end;
 
 class function TX509Config.GetSgp22NameConstraints: Boolean;

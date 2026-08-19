@@ -38,6 +38,7 @@ uses
   ClpIX509NameTokenizer,
   ClpX509NameTokenizer,
   ClpX509ObjectIdentifiers,
+  ClpIanaObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpBigInteger,
   ClpCryptoLibConfig,
@@ -1034,10 +1035,17 @@ type
     FIdKpIpsecIke: IDerObjectIdentifier;
     FIdKpCapwapAc: IDerObjectIdentifier;
     FIdKpCapwapWtp: IDerObjectIdentifier;
+    FIdKpSecureShellClient: IDerObjectIdentifier;
+    FIdKpSecureShellServer: IDerObjectIdentifier;
     FIdKpCmcCa: IDerObjectIdentifier;
     FIdKpCmcRa: IDerObjectIdentifier;
+    FIdKpCmcArchive: IDerObjectIdentifier;
     FIdKpCmKga: IDerObjectIdentifier;
+    FIdKpBundleSecurity: IDerObjectIdentifier;
     FIdKpDocumentSigning: IDerObjectIdentifier;
+    FIdKpJwt: IDerObjectIdentifier;
+    FIdKpHttpContentEncrypt: IDerObjectIdentifier;
+    FIdKpOauthAccessTokenSigning: IDerObjectIdentifier;
     FIdKpImUri: IDerObjectIdentifier;
     FIdKpConfigSigning: IDerObjectIdentifier;
     FIdKpTrustAnchorConfigSigning: IDerObjectIdentifier;
@@ -1050,8 +1058,8 @@ type
     FIdPkinitAuthData: IDerObjectIdentifier;
     FIdPkinitDHKeyData: IDerObjectIdentifier;
     FIdPkinitRkeyData: IDerObjectIdentifier;
-    FKeyPurposeClientAuth: IDerObjectIdentifier;
-    FKeyPurposeKdc: IDerObjectIdentifier;
+    FIdKpPkinitClientAuth: IDerObjectIdentifier;
+    FIdKpPkinitKdc: IDerObjectIdentifier;
     FIdKpNsSgc: IDerObjectIdentifier;
 
     class function GetAnyExtendedKeyUsage: IDerObjectIdentifier; static; inline;
@@ -1074,10 +1082,17 @@ type
     class function GetIdKpIpsecIke: IDerObjectIdentifier; static; inline;
     class function GetIdKpCapwapAc: IDerObjectIdentifier; static; inline;
     class function GetIdKpCapwapWtp: IDerObjectIdentifier; static; inline;
+    class function GetIdKpSecureShellClient: IDerObjectIdentifier; static; inline;
+    class function GetIdKpSecureShellServer: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmcCa: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmcRa: IDerObjectIdentifier; static; inline;
+    class function GetIdKpCmcArchive: IDerObjectIdentifier; static; inline;
     class function GetIdKpCmKga: IDerObjectIdentifier; static; inline;
+    class function GetIdKpBundleSecurity: IDerObjectIdentifier; static; inline;
     class function GetIdKpDocumentSigning: IDerObjectIdentifier; static; inline;
+    class function GetIdKpJwt: IDerObjectIdentifier; static; inline;
+    class function GetIdKpHttpContentEncrypt: IDerObjectIdentifier; static; inline;
+    class function GetIdKpOauthAccessTokenSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpImUri: IDerObjectIdentifier; static; inline;
     class function GetIdKpConfigSigning: IDerObjectIdentifier; static; inline;
     class function GetIdKpTrustAnchorConfigSigning: IDerObjectIdentifier; static; inline;
@@ -1090,8 +1105,8 @@ type
     class function GetIdPkinitAuthData: IDerObjectIdentifier; static; inline;
     class function GetIdPkinitDHKeyData: IDerObjectIdentifier; static; inline;
     class function GetIdPkinitRkeyData: IDerObjectIdentifier; static; inline;
-    class function GetKeyPurposeClientAuth: IDerObjectIdentifier; static; inline;
-    class function GetKeyPurposeKdc: IDerObjectIdentifier; static; inline;
+    class function GetIdKpPkinitClientAuth: IDerObjectIdentifier; static; inline;
+    class function GetIdKpPkinitKdc: IDerObjectIdentifier; static; inline;
     class function GetIdKpNsSgc: IDerObjectIdentifier; static; inline;
     class constructor Create;
 
@@ -1116,11 +1131,25 @@ type
     class property IdKpIpsecIke: IDerObjectIdentifier read GetIdKpIpsecIke;
     class property IdKpCapwapAc: IDerObjectIdentifier read GetIdKpCapwapAc;
     class property IdKpCapwapWtp: IDerObjectIdentifier read GetIdKpCapwapWtp;
+    /// <summary>RFC 6187 - SSH client authentication (<c>id-kp-secureShellClient</c>, <c>{ id-kp 21 }</c>).</summary>
+    class property IdKpSecureShellClient: IDerObjectIdentifier read GetIdKpSecureShellClient;
+    /// <summary>RFC 6187 - SSH server authentication (<c>id-kp-secureShellServer</c>, <c>{ id-kp 22 }</c>).</summary>
+    class property IdKpSecureShellServer: IDerObjectIdentifier read GetIdKpSecureShellServer;
     class property IdKpCmcCa: IDerObjectIdentifier read GetIdKpCmcCa;
     class property IdKpCmcRa: IDerObjectIdentifier read GetIdKpCmcRa;
+    /// <summary><c>id-kp-cmcArchive</c>, <c>{ id-kp 29 }</c>.</summary>
+    class property IdKpCmcArchive: IDerObjectIdentifier read GetIdKpCmcArchive;
     class property IdKpCmKga: IDerObjectIdentifier read GetIdKpCmKga;
+    /// <summary>RFC 9174 sec. 4.4.1 - Delay-Tolerant Networking bundle security, TCPCLv4 (<c>id-kp-bundleSecurity</c>, <c>{ id-kp 35 }</c>).</summary>
+    class property IdKpBundleSecurity: IDerObjectIdentifier read GetIdKpBundleSecurity;
     /// <summary>RFC 9336 sec. 3.1 ? signing documents (e.g. PDF, XML, JSON) for human consumption (<c>id-kp-documentSigning</c>, <c>{ id-kp 36 }</c>).</summary>
     class property IdKpDocumentSigning: IDerObjectIdentifier read GetIdKpDocumentSigning;
+    /// <summary>RFC 9509 sec. 3 - signing the JWT Claims Set of a 5G Client Credentials Assertion using JWS (<c>id-kp-jwt</c>, <c>{ id-kp 37 }</c>).</summary>
+    class property IdKpJwt: IDerObjectIdentifier read GetIdKpJwt;
+    /// <summary>RFC 9509 sec. 3 - encrypting JSON objects in HTTP messages between 5G SEPPs using JWE (<c>id-kp-httpContentEncrypt</c>, <c>{ id-kp 38 }</c>).</summary>
+    class property IdKpHttpContentEncrypt: IDerObjectIdentifier read GetIdKpHttpContentEncrypt;
+    /// <summary>RFC 9509 sec. 3 - signing OAuth 2.0 access tokens using JWS, as issued by a 5G NRF (<c>id-kp-oauthAccessTokenSigning</c>, <c>{ id-kp 39 }</c>).</summary>
+    class property IdKpOauthAccessTokenSigning: IDerObjectIdentifier read GetIdKpOauthAccessTokenSigning;
     /// <summary>RFC 9734 sec. 3 ? proving the identity of an IM client whose IM URI (RFC 3860) or XMPP URI (RFC 6121) appears in the subjectAltName (<c>id-kp-imUri</c>, <c>{ id-kp 40 }</c>).</summary>
     class property IdKpImUri: IDerObjectIdentifier read GetIdKpImUri;
     /// <summary>RFC 9809 sec. 3 ? signing general-purpose configuration files (<c>id-kp-configSigning</c>, <c>{ id-kp 41 }</c>).</summary>
@@ -1138,8 +1167,10 @@ type
     class property IdPkinitAuthData: IDerObjectIdentifier read GetIdPkinitAuthData;
     class property IdPkinitDHKeyData: IDerObjectIdentifier read GetIdPkinitDHKeyData;
     class property IdPkinitRkeyData: IDerObjectIdentifier read GetIdPkinitRkeyData;
-    class property KeyPurposeClientAuth: IDerObjectIdentifier read GetKeyPurposeClientAuth;
-    class property KeyPurposeKdc: IDerObjectIdentifier read GetKeyPurposeKdc;
+    /// <summary>Kerberos PKINIT client authentication (<c>id-pkinit-KPClientAuth</c>).</summary>
+    class property IdKpPkinitClientAuth: IDerObjectIdentifier read GetIdKpPkinitClientAuth;
+    /// <summary>Kerberos PKINIT KDC authentication (<c>id-pkinit-KPKdc</c>).</summary>
+    class property IdKpPkinitKdc: IDerObjectIdentifier read GetIdKpPkinitKdc;
     class property IdKpNsSgc: IDerObjectIdentifier read GetIdKpNsSgc;
 
   end;
@@ -6945,10 +6976,17 @@ begin
   FIdKpIpsecIke := TDerObjectIdentifier.Create(LIdKp.ID + '.17');
   FIdKpCapwapAc := TDerObjectIdentifier.Create(LIdKp.ID + '.18');
   FIdKpCapwapWtp := TDerObjectIdentifier.Create(LIdKp.ID + '.19');
+  FIdKpSecureShellClient := TDerObjectIdentifier.Create(LIdKp.ID + '.21');
+  FIdKpSecureShellServer := TDerObjectIdentifier.Create(LIdKp.ID + '.22');
   FIdKpCmcCa := TDerObjectIdentifier.Create(LIdKp.ID + '.27');
   FIdKpCmcRa := TDerObjectIdentifier.Create(LIdKp.ID + '.28');
+  FIdKpCmcArchive := TDerObjectIdentifier.Create(LIdKp.ID + '.29');
   FIdKpCmKga := TDerObjectIdentifier.Create(LIdKp.ID + '.32');
+  FIdKpBundleSecurity := TDerObjectIdentifier.Create(LIdKp.ID + '.35');
   FIdKpDocumentSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.36');
+  FIdKpJwt := TDerObjectIdentifier.Create(LIdKp.ID + '.37');
+  FIdKpHttpContentEncrypt := TDerObjectIdentifier.Create(LIdKp.ID + '.38');
+  FIdKpOauthAccessTokenSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.39');
   FIdKpImUri := TDerObjectIdentifier.Create(LIdKp.ID + '.40');
   FIdKpConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.41');
   FIdKpTrustAnchorConfigSigning := TDerObjectIdentifier.Create(LIdKp.ID + '.42');
@@ -6957,13 +6995,13 @@ begin
   FIdKpSmartcardlogon := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.20.2.2');
   FIdKpMacAddress := TDerObjectIdentifier.Create('1.3.6.1.1.1.1.22');
   FIdKpMsSgc := TDerObjectIdentifier.Create('1.3.6.1.4.1.311.10.3.3');
-  LIdPkinit := '1.3.6.1.5.2.3';
+  LIdPkinit := TIanaObjectIdentifiers.IdPkinit.ID;
   FScSysNodeNumber := TDerObjectIdentifier.Create(LIdPkinit + '.0');
   FIdPkinitAuthData := TDerObjectIdentifier.Create(LIdPkinit + '.1');
   FIdPkinitDHKeyData := TDerObjectIdentifier.Create(LIdPkinit + '.2');
   FIdPkinitRkeyData := TDerObjectIdentifier.Create(LIdPkinit + '.3');
-  FKeyPurposeClientAuth := TDerObjectIdentifier.Create(LIdPkinit + '.4');
-  FKeyPurposeKdc := TDerObjectIdentifier.Create(LIdPkinit + '.5');
+  FIdKpPkinitClientAuth := TDerObjectIdentifier.Create(LIdPkinit + '.4');
+  FIdKpPkinitKdc := TDerObjectIdentifier.Create(LIdPkinit + '.5');
   FIdKpNsSgc := TDerObjectIdentifier.Create('2.16.840.1.113730.4.1');
 end;
 
@@ -7067,6 +7105,16 @@ begin
   Result := FIdKpCapwapWtp;
 end;
 
+class function TKeyPurposeId.GetIdKpSecureShellClient: IDerObjectIdentifier;
+begin
+  Result := FIdKpSecureShellClient;
+end;
+
+class function TKeyPurposeId.GetIdKpSecureShellServer: IDerObjectIdentifier;
+begin
+  Result := FIdKpSecureShellServer;
+end;
+
 class function TKeyPurposeId.GetIdKpCmcCa: IDerObjectIdentifier;
 begin
   Result := FIdKpCmcCa;
@@ -7077,14 +7125,39 @@ begin
   Result := FIdKpCmcRa;
 end;
 
+class function TKeyPurposeId.GetIdKpCmcArchive: IDerObjectIdentifier;
+begin
+  Result := FIdKpCmcArchive;
+end;
+
 class function TKeyPurposeId.GetIdKpCmKga: IDerObjectIdentifier;
 begin
   Result := FIdKpCmKga;
 end;
 
+class function TKeyPurposeId.GetIdKpBundleSecurity: IDerObjectIdentifier;
+begin
+  Result := FIdKpBundleSecurity;
+end;
+
 class function TKeyPurposeId.GetIdKpDocumentSigning: IDerObjectIdentifier;
 begin
   Result := FIdKpDocumentSigning;
+end;
+
+class function TKeyPurposeId.GetIdKpJwt: IDerObjectIdentifier;
+begin
+  Result := FIdKpJwt;
+end;
+
+class function TKeyPurposeId.GetIdKpHttpContentEncrypt: IDerObjectIdentifier;
+begin
+  Result := FIdKpHttpContentEncrypt;
+end;
+
+class function TKeyPurposeId.GetIdKpOauthAccessTokenSigning: IDerObjectIdentifier;
+begin
+  Result := FIdKpOauthAccessTokenSigning;
 end;
 
 class function TKeyPurposeId.GetIdKpImUri: IDerObjectIdentifier;
@@ -7147,14 +7220,14 @@ begin
   Result := FIdPkinitRkeyData;
 end;
 
-class function TKeyPurposeId.GetKeyPurposeClientAuth: IDerObjectIdentifier;
+class function TKeyPurposeId.GetIdKpPkinitClientAuth: IDerObjectIdentifier;
 begin
-  Result := FKeyPurposeClientAuth;
+  Result := FIdKpPkinitClientAuth;
 end;
 
-class function TKeyPurposeId.GetKeyPurposeKdc: IDerObjectIdentifier;
+class function TKeyPurposeId.GetIdKpPkinitKdc: IDerObjectIdentifier;
 begin
-  Result := FKeyPurposeKdc;
+  Result := FIdKpPkinitKdc;
 end;
 
 class function TKeyPurposeId.GetIdKpNsSgc: IDerObjectIdentifier;

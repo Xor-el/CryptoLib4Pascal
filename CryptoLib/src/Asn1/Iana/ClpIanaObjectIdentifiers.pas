@@ -30,7 +30,8 @@ type
   strict private
     class var
       FInternet, FDirectory, FMgmt, FExperimental, FClsPrivate, FSecurity,
-      FSNMPv2, FMail, FSecurityMechanisms, FSecurityNametypes, FPkix, FIpsec,
+      FSNMPv2, FMail, FKerberosv5, FIdPkinit, FSecurityMechanisms,
+      FSecurityNametypes, FPkix, FIpsec,
       FIsakmpOakley, FHmacMD5, FHmacSha1, FHmacTiger, FHmacRipeMD160,
       FIdAlg, FIdRsassaPssShake128, FIdRsassaPssShake256, FIdEcdsaWithShake128,
       FIdEcdsaWithShake256, FIdAlgUnsigned: IDerObjectIdentifier;
@@ -43,6 +44,8 @@ type
     class function GetSecurity: IDerObjectIdentifier; static; inline;
     class function GetSNMPv2: IDerObjectIdentifier; static; inline;
     class function GetMail: IDerObjectIdentifier; static; inline;
+    class function GetKerberosv5: IDerObjectIdentifier; static; inline;
+    class function GetIdPkinit: IDerObjectIdentifier; static; inline;
     class function GetSecurityMechanisms: IDerObjectIdentifier; static; inline;
     class function GetSecurityNametypes: IDerObjectIdentifier; static; inline;
     class function GetPkix: IDerObjectIdentifier; static; inline;
@@ -69,6 +72,10 @@ type
     class property Security: IDerObjectIdentifier read GetSecurity;
     class property SNMPv2: IDerObjectIdentifier read GetSNMPv2;
     class property Mail: IDerObjectIdentifier read GetMail;
+    /// <summary>Kerberos V5: 1.3.6.1.5.2</summary>
+    class property Kerberosv5: IDerObjectIdentifier read GetKerberosv5;
+    /// <summary>PKINIT, RFC 4556 sec. 3.2.2: 1.3.6.1.5.2.3</summary>
+    class property IdPkinit: IDerObjectIdentifier read GetIdPkinit;
     class property SecurityMechanisms: IDerObjectIdentifier read GetSecurityMechanisms;
     class property SecurityNametypes: IDerObjectIdentifier read GetSecurityNametypes;
     class property Pkix: IDerObjectIdentifier read GetPkix;
@@ -106,6 +113,8 @@ begin
   FSecurity := FInternet.Branch('5');
   FSNMPv2 := FInternet.Branch('6');
   FMail := FInternet.Branch('7');
+  FKerberosv5 := FSecurity.Branch('2');
+  FIdPkinit := FKerberosv5.Branch('3');
   FSecurityMechanisms := FSecurity.Branch('5');
   FSecurityNametypes := FSecurity.Branch('6');
   FPkix := FSecurityMechanisms.Branch('7');
@@ -206,6 +215,16 @@ end;
 class function TIanaObjectIdentifiers.GetMail: IDerObjectIdentifier;
 begin
   Result := FMail;
+end;
+
+class function TIanaObjectIdentifiers.GetKerberosv5: IDerObjectIdentifier;
+begin
+  Result := FKerberosv5;
+end;
+
+class function TIanaObjectIdentifiers.GetIdPkinit: IDerObjectIdentifier;
+begin
+  Result := FIdPkinit;
 end;
 
 class function TIanaObjectIdentifiers.GetMgmt: IDerObjectIdentifier;
