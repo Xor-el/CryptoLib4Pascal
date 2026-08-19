@@ -27,33 +27,65 @@ uses
 
 type
   /// <summary>
-  ///   Mode-specific contract for an accelerated ChaCha20-Poly1305 body kernel: in a
-  ///   single pass over a run of 512-byte (8 x 64-byte) strides, generate the
-  ///   ChaCha20 keystream, XOR it into the payload, and fold the appropriate
-  ///   bytes into the running Poly1305 accumulator - encrypt folds the produced
-  ///   ciphertext (encrypt-then-MAC per stride), decrypt folds the input
-  ///   ciphertext before the XOR (MAC-then-decrypt). This is the stream-cipher
-  ///   analogue of the block-cipher accelerated kernels (GCM = CTR + GHASH); the
-  ///   engine key schedule and Poly1305 r/s clamp live inside the implementation.
+  ///   Mode-specific contract for an accelerated, fused ChaCha20-Poly1305 body
+  ///   kernel. The kernel OWNS the whole Poly1305 lifecycle in its own internal
+  ///   representation, so the mode stays agnostic to it: it derives the one-time
+  ///   poly key, then drives
+  ///   InitPoly -&gt; (UpdatePoly | ProcessStrides)* -&gt; FinishPoly. ProcessStrides is
+  ///   the fused bulk path (generate keystream, XOR the payload, fold the
+  ///   ciphertext into the accumulator in one pass); UpdatePoly is the poly-only
+  ///   drain for AAD and the sub-stride tail. This is the stream-cipher analogue
+  ///   of the block-cipher accelerated kernels (GCM = CTR + GHASH). The engine
+  ///   key schedule and the Poly1305 r/s clamp live inside the implementation.
   /// </summary>
   IChaCha20Poly1305Kernel = interface
-    ['{87051735-EA07-4800-A6D9-A8922BFDF6A2}']
+    ['{445983F0-6A17-4F2A-925B-90D46BCAC89A}']
 
     /// <summary>Stride granularity in bytes (512 = 8 x 64-byte ChaCha blocks).
     /// ProcessStrides consumes a positive multiple of this in one call.</summary>
     function StrideBytes: Int32;
 
     /// <summary>
-    ///   Process AStrideCount consecutive StrideBytes-sized strides in one pass,
-    ///   interleaving ChaCha20 keystream XOR with Poly1305 accumulation.
-    ///   AChaChaState points at the engine block state (counter advanced in
-    ///   place); APoly1305State points at the running Poly1305 accumulator
-    ///   (updated in place). AForEncrypt selects encrypt-then-MAC vs
-    ///   MAC-then-decrypt. AInPtr and AOutPtr are identical (in-place) or fully
-    ///   disjoint.
+    ///   Seed the internal Poly1305 state from the 32-byte one-time key (r || s)
+    ///   at APolyKey: clamp r, precompute the fold multiplier, capture the pad,
+    ///   and fully reset the accumulator (h := 0). Copies immediately; never
+    ///   retains APolyKey. Called once per message, before any UpdatePoly /
+    ///   ProcessStrides.
     /// </summary>
-    procedure ProcessStrides(AInPtr, AOutPtr, AChaChaState, APoly1305State: Pointer;
+    procedure InitPoly(APolyKey: PByte);
+
+    /// <summary>
+    ///   Poly-only drain: fold ABlockCount whole 16-byte blocks at ASrc into the
+    ///   running accumulator (each a full block, high 2^128 bit set). The mode
+    ///   zero-pads AAD and the tail to a 16-byte boundary before calling, so no
+    ///   partial-block handling is needed here. Used for AAD and the sub-stride
+    ///   ciphertext tail. ASrc is fully consumed before return and never
+    ///   retained, so the mode's in-place MAC-then-decrypt may overwrite it
+    ///   immediately afterwards.
+    /// </summary>
+    procedure UpdatePoly(ASrc: PByte; ABlockCount: NativeInt);
+
+    /// <summary>
+    ///   Fused bulk path: process AStrideCount consecutive StrideBytes-sized
+    ///   strides in one pass, interleaving ChaCha20 keystream XOR with Poly1305
+    ///   accumulation, updating the kernel's internal poly state and advancing
+    ///   the engine's block counter in place. The kernel binds to the engine
+    ///   at construction (like the AES kernels bind to the key schedule), so no
+    ///   engine state is passed here. AForEncrypt selects encrypt-then-MAC (fold
+    ///   produced ciphertext) vs MAC-then-decrypt (fold input ciphertext before
+    ///   XOR). AInPtr and AOutPtr are identical (in-place) or fully disjoint.
+    ///   Any lagged MAC is drained before return - no caller pointer is retained.
+    /// </summary>
+    procedure ProcessStrides(AInPtr, AOutPtr: PByte;
       AStrideCount: NativeInt; AForEncrypt: Boolean);
+
+    /// <summary>
+    ///   Absorb the final length block (LE(AAadLen) || LE(ADataLen)), fully
+    ///   reduce the accumulator mod 2^130-5, add the pad, and write the 16-byte
+    ///   tag to ATagOut. Zeroizes the accumulator on exit (r/s persist until the
+    ///   next InitPoly).
+    /// </summary>
+    procedure FinishPoly(AAadLen, ADataLen: UInt64; ATagOut: PByte);
   end;
 
   /// <summary>

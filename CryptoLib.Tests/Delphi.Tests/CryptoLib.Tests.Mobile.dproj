@@ -1098,6 +1098,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiCcmKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiEaxKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiGcmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305X86Kernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305ArmKernel.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305PolyOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiCtrKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesNiCbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\Block\ClpAesCryptoExtCtrKernel.pas"/>
@@ -1398,6 +1401,7 @@
         <DCCReference Include="..\src\Crypto\CMacTests.pas"/>
         <DCCReference Include="..\src\Crypto\MacTests.pas"/>
         <DCCReference Include="..\src\Crypto\ChaCha20Poly1305Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\ChaCha20Poly1305KernelDiffTests.pas"/>
         <DCCReference Include="..\src\Crypto\Poly1305Tests.pas"/>
         <DCCReference Include="..\src\Utils\NistSecureRandom.pas"/>
         <DCCReference Include="..\src\Crypto\MlKemTests.pas"/>

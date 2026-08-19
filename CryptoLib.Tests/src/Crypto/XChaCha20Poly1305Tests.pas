@@ -72,6 +72,7 @@ type
     procedure TestTamperedTagMacFailure;
     procedure TestRejectNonce12Byte;
     procedure TestReuseNonceEncryptionRejected;
+    procedure TestSameInstanceKeyReuseAcrossNonces;
     procedure TestGetCipherRegistry;
     procedure TestRandomRoundTrip;
     procedure TestRejectInvalidKeySize;
@@ -317,6 +318,76 @@ begin
         Fail('unexpected nonce reuse message: ' + E.Message);
     end;
   end;
+end;
+
+procedure TTestXChaCha20Poly1305.TestSameInstanceKeyReuseAcrossNonces;
+var
+  LState: UInt32;
+  LKey, LNonce1, LNonce2, LAad, LPlain, LCt1, LCt2, LCt2Fresh, LPt: TCryptoLibByteArray;
+  LParams1, LParams2: IAeadParameters;
+  LCipher, LFresh: IXChaCha20Poly1305;
+  LLen: Int32;
+begin
+  // Regression: reusing one cipher instance with the SAME key but a fresh nonce
+  // must re-derive the XChaCha subkey. A nonce-only re-Init cannot hand the
+  // engine a nil key (the mode's key-reuse fast path), or XChaCha raises
+  // "doesn't support re-init with nil key". This is the throughput-benchmark
+  // pattern (one cipher, many messages, same key, incrementing nonce).
+  System.SetLength(LKey, 32);
+  System.SetLength(LNonce1, 24);
+  System.SetLength(LNonce2, 24);
+  System.SetLength(LAad, 17);
+  System.SetLength(LPlain, 256);
+  LState := UInt32($1234ABCD);
+  DeterministicFill(LState, LKey, System.Length(LKey));
+  DeterministicFill(LState, LNonce1, System.Length(LNonce1));
+  DeterministicFill(LState, LNonce2, System.Length(LNonce2));
+  DeterministicFill(LState, LAad, System.Length(LAad));
+  DeterministicFill(LState, LPlain, System.Length(LPlain));
+
+  LParams1 := TAeadParameters.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+    128, LNonce1, LAad);
+  LParams2 := TAeadParameters.Create(TKeyParameter.Create(LKey) as IKeyParameter,
+    128, LNonce2, LAad);
+
+  LCipher := TXChaCha20Poly1305.Create();
+
+  // First message.
+  LCipher.Init(True, LParams1 as ICipherParameters);
+  System.SetLength(LCt1, LCipher.GetOutputSize(System.Length(LPlain)));
+  LLen := LCipher.ProcessBytes(LPlain, 0, System.Length(LPlain), LCt1, 0);
+  LCipher.DoFinal(LCt1, LLen);
+
+  // Same instance, same key, fresh nonce -> the key-reuse path that regressed.
+  LCipher.Init(True, LParams2 as ICipherParameters);
+  System.SetLength(LCt2, LCipher.GetOutputSize(System.Length(LPlain)));
+  LLen := LCipher.ProcessBytes(LPlain, 0, System.Length(LPlain), LCt2, 0);
+  LCipher.DoFinal(LCt2, LLen);
+
+  // A fresh nonce must actually re-derive the subkey: identical output would
+  // mean the reuse path skipped the re-key.
+  if TArrayUtilities.AreEqual(LCt1, LCt2) then
+    Fail('XChaCha20Poly1305 reuse produced identical output for distinct nonces');
+
+  // Equivalence (not just round-trip): a FRESH instance keyed with the same
+  // params must produce byte-identical ciphertext + tag, proving the reuse path
+  // re-keys to exactly the state a first-time init would build.
+  LFresh := TXChaCha20Poly1305.Create();
+  LFresh.Init(True, LParams2 as ICipherParameters);
+  System.SetLength(LCt2Fresh, LFresh.GetOutputSize(System.Length(LPlain)));
+  LLen := LFresh.ProcessBytes(LPlain, 0, System.Length(LPlain), LCt2Fresh, 0);
+  LFresh.DoFinal(LCt2Fresh, LLen);
+  CheckEqual('XChaCha20Poly1305 reuse vs fresh-instance ciphertext+tag',
+    LCt2Fresh, LCt2);
+
+  // Byte-correctness: the second message round-trips against its own nonce
+  // (decrypt-side reuse re-key is exercised here too).
+  LCipher.Init(False, LParams2 as ICipherParameters);
+  System.SetLength(LPt, LCipher.GetOutputSize(System.Length(LCt2)));
+  LLen := LCipher.ProcessBytes(LCt2, 0, System.Length(LCt2), LPt, 0);
+  LLen := LLen + LCipher.DoFinal(LPt, LLen);
+  CheckEqual('XChaCha20Poly1305 same-instance key-reuse round-trip', LPlain,
+    CopyOfRange(LPt, 0, System.Length(LPlain)));
 end;
 
 procedure TTestXChaCha20Poly1305.TestGetCipherRegistry;

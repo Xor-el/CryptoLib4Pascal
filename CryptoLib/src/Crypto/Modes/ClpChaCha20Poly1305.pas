@@ -101,6 +101,10 @@ type
     function GetAlgorithmName: String; override;
     function GetModeName: String; override;
     procedure WipeKeyMaterial(); override;
+    // True when the engine keeps its expanded key across a nonce-only re-Init
+    // (nil-key reuse fast path). XChaCha re-derives a per-nonce subkey, so it
+    // overrides this to False and is always re-keyed from the retained FKey.
+    function EngineSupportsKeyReuse: Boolean; virtual;
 
   strict private
   const
@@ -115,12 +119,13 @@ type
     // The cipher engine's bulk stream interface when it exposes one (resolved once);
     // enables the 512B/8-way tier. nil => the narrower per-tier path is used.
     FBulkChaCha: IBulkStreamCipher;
-    // A registered ChaCha20-Poly1305 kernel. It binds to the (fixed) engine
-    // instance and a direction, so it is resolved once per direction and cached
-    // across same-object re-Inits (a fresh nonce/key does not invalidate it).
+    // A registered ChaCha20-Poly1305 kernel bound to the (fixed) engine.
+    // Resolved once, direction-agnostic (the kernel handles both directions via
+    // ProcessStrides' AForEncrypt); cached across same-object re-Inits.
     FChaChaKernel: IChaCha20Poly1305Kernel;
     FKernelResolved: Boolean;
-    FKernelForEncryption: Boolean;
+    // Frozen per-message: True routes all Poly1305 through the active kernel.
+    FUseKernelPoly: Boolean;
     FNonceBytes: Int32;
     FPoly1305: IMac;
 
@@ -130,6 +135,9 @@ type
     // Reused 64-byte block for the per-message Poly1305 key derivation (was a
     // fresh allocation in InitMac every message).
     FMacKeyBlock: TCryptoLibByteArray;
+    // 16-byte AAD/tail staging for the kernel poly path (whole-block feed).
+    FMacStage: TCryptoLibByteArray;
+    FMacStagePos: Int32;
 
     FInitialAad: TCryptoLibByteArray;
 
@@ -143,7 +151,11 @@ type
     procedure FinishData(ANextState: TState);
     function IncrementCount(ACount: UInt64; AIncrement: UInt32; ALimit: UInt64): UInt64;
     procedure InitMac();
-    procedure PadMac(ACount: UInt64);
+    // Poly routing: kernel path stages whole 16-byte blocks, scalar path
+    // delegates to FPoly1305. Frozen per message by FUseKernelPoly.
+    procedure MacUpdate(const ASrc: TCryptoLibByteArray; AOff, ALen: Int32);
+    procedure MacUpdateByte(AByte: Byte);
+    procedure MacPad(ACount: UInt64);
     procedure ProcessBlock(const AInBytes: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32);
     // Bulk tier via the engine's IBulkStreamCipher (ACount whole 64B blocks); keeps
@@ -232,6 +244,7 @@ begin
   System.SetLength(FBuffer, BufSize + MacSize);
   System.SetLength(FMacBlock, MacSize);
   System.SetLength(FMacKeyBlock, BufSize);
+  System.SetLength(FMacStage, MacSize);
 
   FState := TState.Uninitialized;
 end;
@@ -248,6 +261,11 @@ begin
   Result := GetAlgorithmName;
 end;
 
+function TChaCha20Poly1305.EngineSupportsKeyReuse: Boolean;
+begin
+  Result := True;
+end;
+
 procedure TChaCha20Poly1305.WipeKeyMaterial;
 begin
   TArrayUtilities.Fill(FKey, 0, System.Length(FKey), Byte(0));
@@ -255,6 +273,7 @@ begin
   TArrayUtilities.Fill(FBuffer, 0, System.Length(FBuffer), Byte(0));
   TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   TArrayUtilities.Fill(FMacKeyBlock, 0, System.Length(FMacKeyBlock), Byte(0));
+  TArrayUtilities.Fill(FMacStage, 0, System.Length(FMacStage), Byte(0));
 end;
 
 procedure TChaCha20Poly1305.Init(AForEncryption: Boolean;
@@ -321,15 +340,20 @@ begin
 
   // On a key change pass the key (full re-key); otherwise pass a nil key so the
   // engine only refreshes the IV and keeps the already-expanded key state.
+  // XChaCha cannot reuse expanded state (it re-derives its subkey per nonce),
+  // so it is always re-keyed from the retained FKey.
   if LKeyChanged then
     LChaCha20Params := TParametersWithIV.Create(LInitKeyParam, LInitNonce)
+  else if EngineSupportsKeyReuse then
+    LChaCha20Params := TParametersWithIV.Create(nil, LInitNonce)
   else
-    LChaCha20Params := TParametersWithIV.Create(nil, LInitNonce);
+    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
+      as IKeyParameter, LInitNonce);
   FChaCha20.Init(True, LChaCha20Params);
 
-  // The kernel binds to the (fixed) engine instance and a direction, so it is
-  // resolved once per direction and reused across same-object re-Inits.
-  if (not FKernelResolved) or (FKernelForEncryption <> AForEncryption) then
+  // Kernel is direction-agnostic for the poly path, so resolve once and keep it
+  // across same-object re-Inits (no re-acquire on a direction flip).
+  if not FKernelResolved then
   begin
     if AForEncryption then
       TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
@@ -337,7 +361,11 @@ begin
     else
       TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
         TCipherKernelDirection.Decrypt, FChaChaKernel);
-    FKernelForEncryption := AForEncryption;
+    // Reject a kernel whose stride granularity the mode cannot carve cleanly
+    // (StrideBytes must be a positive whole number of 64-byte blocks).
+    if (FChaChaKernel <> nil) and ((FChaChaKernel.StrideBytes < BufSize) or
+      (FChaChaKernel.StrideBytes mod BufSize <> 0)) then
+      FChaChaKernel := nil;
     FKernelResolved := True;
   end;
 
@@ -392,15 +420,21 @@ begin
   System.Move(ANonce[0], FNonce[0], FNonceBytes);
 
   // Same-key -> nil-key engine re-init (IV only); a fresh TKeyParameter is
-  // created only on an actual rekey.
+  // created only on an actual rekey. XChaCha re-derives its subkey per nonce,
+  // so it is always re-keyed from the retained FKey instead.
   if LKeyChanged then
     LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(AKey)
       as IKeyParameter, ANonce)
+  else if EngineSupportsKeyReuse then
+    LChaCha20Params := TParametersWithIV.Create(nil, ANonce)
   else
-    LChaCha20Params := TParametersWithIV.Create(nil, ANonce);
+    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
+      as IKeyParameter, ANonce);
   FChaCha20.Init(True, LChaCha20Params);
 
-  if (not FKernelResolved) or (FKernelForEncryption <> AForEncryption) then
+  // Kernel is direction-agnostic for the poly path, so resolve once and keep it
+  // across same-object re-Inits (no re-acquire on a direction flip).
+  if not FKernelResolved then
   begin
     if AForEncryption then
       TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
@@ -408,7 +442,11 @@ begin
     else
       TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
         TCipherKernelDirection.Decrypt, FChaChaKernel);
-    FKernelForEncryption := AForEncryption;
+    // Reject a kernel whose stride granularity the mode cannot carve cleanly
+    // (StrideBytes must be a positive whole number of 64-byte blocks).
+    if (FChaChaKernel <> nil) and ((FChaChaKernel.StrideBytes < BufSize) or
+      (FChaChaKernel.StrideBytes mod BufSize <> 0)) then
+      FChaChaKernel := nil;
     FKernelResolved := True;
   end;
 
@@ -462,7 +500,7 @@ procedure TChaCha20Poly1305.ProcessAadByte(AInput: Byte);
 begin
   CheckAad();
   FAadCount := IncrementCount(FAadCount, 1, AadLimit);
-  FPoly1305.Update(AInput);
+  MacUpdateByte(AInput);
 end;
 
 procedure TChaCha20Poly1305.ProcessAadBytes(const AInput: TCryptoLibByteArray;
@@ -479,7 +517,7 @@ begin
   if (ALen > 0) then
   begin
     FAadCount := IncrementCount(FAadCount, UInt32(ALen), AadLimit);
-    FPoly1305.BlockUpdate(AInput, AInOff, ALen);
+    MacUpdate(AInput, AInOff, ALen);
   end;
 end;
 
@@ -495,7 +533,7 @@ begin
       System.Inc(FBufferPos);
       if (FBufferPos = System.Length(FBuffer)) then
       begin
-        FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+        MacUpdate(FBuffer, 0, BufSize);
         ProcessBlock(FBuffer, 0, AOutput, AOutOff);
         System.Move(FBuffer[BufSize], FBuffer[0], MacSize);
         FBufferPos := MacSize;
@@ -512,7 +550,7 @@ begin
       if (FBufferPos = BufSize) then
       begin
         ProcessBlock(FBuffer, 0, AOutput, AOutOff);
-        FPoly1305.BlockUpdate(AOutput, AOutOff, BufSize);
+        MacUpdate(AOutput, AOutOff, BufSize);
         FBufferPos := 0;
         Result := BufSize;
         Exit;
@@ -529,6 +567,7 @@ function TChaCha20Poly1305.ProcessBytes(const AInput: TCryptoLibByteArray;
   AInOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 var
   LResultLen, LAvailable, LInLimit1, LRemBlocks: Int32;
+  LStrides, LStrideBlocks, LStrideBlks: Int32;
 begin
   if (AInOff < 0) then
     raise EArgumentCryptoLibException.CreateRes(@SCannotBeNegative);
@@ -556,7 +595,7 @@ begin
 
       if (FBufferPos >= BufSize) then
       begin
-        FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+        MacUpdate(FBuffer, 0, BufSize);
         ProcessBlock(FBuffer, 0, AOutput, AOutOff);
         FBufferPos := FBufferPos - BufSize;
         System.Move(FBuffer[BufSize], FBuffer[0], FBufferPos);
@@ -576,22 +615,43 @@ begin
 
       LAvailable := BufSize - FBufferPos;
       System.Move(AInput[AInOff], FBuffer[FBufferPos], LAvailable);
-      FPoly1305.BlockUpdate(FBuffer, 0, BufSize);
+      MacUpdate(FBuffer, 0, BufSize);
       ProcessBlock(FBuffer, 0, AOutput, AOutOff + LResultLen);
       AInOff := AInOff + LAvailable;
       LResultLen := LResultLen + BufSize;
 
       if (FBulkChaCha <> nil) then
       begin
-        // Bulk: MAC then decrypt every whole block, one streaming call each
-        // (MAC first reads all ciphertext, so in-place decrypt stays safe).
+        // Bulk MAC-then-decrypt. Fused kernel path folds whole StrideBytes runs
+        // (MAC-before-XOR in-asm); the sub-stride remainder streams as before.
         if (AInOff <= LInLimit1) then
         begin
           LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;
-          FPoly1305.BlockUpdate(AInput, AInOff, LRemBlocks * BufSize);
-          ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
-          AInOff := AInOff + LRemBlocks * BufSize;
-          LResultLen := LResultLen + LRemBlocks * BufSize;
+          if FUseKernelPoly then
+          begin
+            LStrideBlocks := FChaChaKernel.StrideBytes div BufSize;
+            LStrides := LRemBlocks div LStrideBlocks;
+            if (LStrides > 0) then
+            begin
+              LStrideBlks := LStrides * LStrideBlocks;
+              // Count BEFORE the kernel call (load-bearing): DataLimit caps total
+              // blocks <= 2^32-1, so the counter cannot wrap inside the stride.
+              FDataCount := IncrementCount(FDataCount,
+                UInt32(LStrideBlks * BufSize), DataLimit);
+              FChaChaKernel.ProcessStrides(@AInput[AInOff],
+                @AOutput[AOutOff + LResultLen], LStrides, False);
+              AInOff := AInOff + LStrideBlks * BufSize;
+              LResultLen := LResultLen + LStrideBlks * BufSize;
+              LRemBlocks := LRemBlocks - LStrideBlks;
+            end;
+          end;
+          if (LRemBlocks > 0) then
+          begin
+            MacUpdate(AInput, AInOff, LRemBlocks * BufSize);
+            ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
+            AInOff := AInOff + LRemBlocks * BufSize;
+            LResultLen := LResultLen + LRemBlocks * BufSize;
+          end;
         end;
       end
       else
@@ -599,7 +659,7 @@ begin
         // No bulk engine: single-block MAC-then-decrypt.
         while (AInOff <= LInLimit1) do
         begin
-          FPoly1305.BlockUpdate(AInput, AInOff, BufSize);
+          MacUpdate(AInput, AInOff, BufSize);
           ProcessBlock(AInput, AInOff, AOutput, AOutOff + LResultLen);
           AInOff := AInOff + BufSize;
           LResultLen := LResultLen + BufSize;
@@ -626,20 +686,53 @@ begin
       begin
         System.Move(AInput[AInOff], FBuffer[FBufferPos], LAvailable);
         ProcessBlock(FBuffer, 0, AOutput, AOutOff);
+        // Kernel path MACs inline (the blanket MAC below is skipped); the fused
+        // strides don't cover this pre-stride block.
+        if FUseKernelPoly then
+          MacUpdate(AOutput, AOutOff, BufSize);
         AInOff := AInOff + LAvailable;
         LResultLen := BufSize;
       end;
 
       if (FBulkChaCha <> nil) then
       begin
-        // Bulk: encrypt every whole block in one streaming engine call (the
-        // ladder runs the widest kernels internally); MAC the ciphertext below.
+        // Bulk encrypt. Fused kernel path encrypts+MACs whole StrideBytes runs
+        // in one pass (first block + remainder MAC inline, blanket MAC skipped);
+        // otherwise encrypt all blocks and MAC the ciphertext once below.
         if (AInOff <= LInLimit1) then
         begin
           LRemBlocks := ((LInLimit1 - AInOff) div BufSize) + 1;
-          ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
-          AInOff := AInOff + LRemBlocks * BufSize;
-          LResultLen := LResultLen + LRemBlocks * BufSize;
+          if FUseKernelPoly then
+          begin
+            LStrideBlocks := FChaChaKernel.StrideBytes div BufSize;
+            LStrides := LRemBlocks div LStrideBlocks;
+            if (LStrides > 0) then
+            begin
+              LStrideBlks := LStrides * LStrideBlocks;
+              // Count BEFORE the kernel call (load-bearing): DataLimit caps total
+              // blocks <= 2^32-1, so the counter cannot wrap inside the stride.
+              FDataCount := IncrementCount(FDataCount,
+                UInt32(LStrideBlks * BufSize), DataLimit);
+              FChaChaKernel.ProcessStrides(@AInput[AInOff],
+                @AOutput[AOutOff + LResultLen], LStrides, True);
+              AInOff := AInOff + LStrideBlks * BufSize;
+              LResultLen := LResultLen + LStrideBlks * BufSize;
+              LRemBlocks := LRemBlocks - LStrideBlks;
+            end;
+            if (LRemBlocks > 0) then
+            begin
+              ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
+              MacUpdate(AOutput, AOutOff + LResultLen, LRemBlocks * BufSize);
+              AInOff := AInOff + LRemBlocks * BufSize;
+              LResultLen := LResultLen + LRemBlocks * BufSize;
+            end;
+          end
+          else
+          begin
+            ProcessBlocksBulk(AInput, AInOff, LRemBlocks, AOutput, AOutOff + LResultLen);
+            AInOff := AInOff + LRemBlocks * BufSize;
+            LResultLen := LResultLen + LRemBlocks * BufSize;
+          end;
         end;
       end
       else
@@ -652,7 +745,8 @@ begin
         end;
       end;
 
-      FPoly1305.BlockUpdate(AOutput, AOutOff, LResultLen);
+      if not FUseKernelPoly then
+        MacUpdate(AOutput, AOutOff, LResultLen);
 
       FBufferPos := BufSize + LInLimit1 - AInOff;
       System.Move(AInput[AInOff], FBuffer[0], FBufferPos);
@@ -688,7 +782,7 @@ begin
 
       if (LResultLen > 0) then
       begin
-        FPoly1305.BlockUpdate(FBuffer, 0, LResultLen);
+        MacUpdate(FBuffer, 0, LResultLen);
         ProcessData(FBuffer, 0, LResultLen, AOutput, AOutOff);
       end;
 
@@ -706,7 +800,7 @@ begin
       if (FBufferPos > 0) then
       begin
         ProcessData(FBuffer, 0, FBufferPos, AOutput, AOutOff);
-        FPoly1305.BlockUpdate(AOutput, AOutOff, FBufferPos);
+        MacUpdate(AOutput, AOutOff, FBufferPos);
       end;
 
       FinishData(TState.EncFinal);
@@ -761,7 +855,7 @@ end;
 
 procedure TChaCha20Poly1305.FinishAad(ANextState: TState);
 begin
-  PadMac(FAadCount);
+  MacPad(FAadCount);
   FState := ANextState;
 end;
 
@@ -769,14 +863,18 @@ procedure TChaCha20Poly1305.FinishData(ANextState: TState);
 var
   LLengths: TCryptoLibByteArray;
 begin
-  PadMac(FDataCount);
+  MacPad(FDataCount);
 
-  System.SetLength(LLengths, 16);
-  TPack.UInt64_To_LE(FAadCount, LLengths, 0);
-  TPack.UInt64_To_LE(FDataCount, LLengths, 8);
-  FPoly1305.BlockUpdate(LLengths, 0, 16);
-
-  FPoly1305.DoFinal(FMacBlock, 0);
+  if FUseKernelPoly then
+    FChaChaKernel.FinishPoly(FAadCount, FDataCount, @FMacBlock[0])
+  else
+  begin
+    System.SetLength(LLengths, 16);
+    TPack.UInt64_To_LE(FAadCount, LLengths, 0);
+    TPack.UInt64_To_LE(FDataCount, LLengths, 8);
+    FPoly1305.BlockUpdate(LLengths, 0, 16);
+    FPoly1305.DoFinal(FMacBlock, 0);
+  end;
 
   FState := ANextState;
 end;
@@ -795,22 +893,98 @@ begin
   // Derive the one-time Poly1305 key from ChaCha block 0 (nonce-dependent, so
   // this runs every message); FMacKeyBlock is reused instead of reallocated.
   TArrayUtilities.Fill(FMacKeyBlock, 0, 64, Byte(0));
+  // Freeze per-message routing: an active kernel owns the whole poly lifecycle.
+  // Requires the bulk engine tier - the fused stride path lives in that branch,
+  // so without it the per-block loops would leave ciphertext unMAC'd.
+  FUseKernelPoly := (FChaChaKernel <> nil) and (FBulkChaCha <> nil);
   try
     FChaCha20.ProcessBytes(FMacKeyBlock, 0, 64, FMacKeyBlock, 0);
-    FPoly1305.Init(TKeyParameter.Create(FMacKeyBlock, 0, 32) as IKeyParameter);
+    if FUseKernelPoly then
+      FChaChaKernel.InitPoly(@FMacKeyBlock[0])
+    else
+      FPoly1305.Init(TKeyParameter.Create(FMacKeyBlock, 0, 32) as IKeyParameter);
   finally
     TArrayUtilities.Fill(FMacKeyBlock, 0, 64, Byte(0));
   end;
+  FMacStagePos := 0;
 end;
 
-procedure TChaCha20Poly1305.PadMac(ACount: UInt64);
+procedure TChaCha20Poly1305.MacUpdate(const ASrc: TCryptoLibByteArray;
+  AOff, ALen: Int32);
+var
+  LFill, LWhole: Int32;
+begin
+  if not FUseKernelPoly then
+  begin
+    FPoly1305.BlockUpdate(ASrc, AOff, ALen);
+    Exit;
+  end;
+
+  // Complete any pending partial block, then feed whole 16-byte blocks direct.
+  if (FMacStagePos > 0) then
+  begin
+    LFill := MacSize - FMacStagePos;
+    if (LFill > ALen) then
+      LFill := ALen;
+    System.Move(ASrc[AOff], FMacStage[FMacStagePos], LFill);
+    FMacStagePos := FMacStagePos + LFill;
+    AOff := AOff + LFill;
+    ALen := ALen - LFill;
+    if (FMacStagePos = MacSize) then
+    begin
+      FChaChaKernel.UpdatePoly(@FMacStage[0], 1);
+      FMacStagePos := 0;
+    end;
+  end;
+
+  LWhole := ALen div MacSize;
+  if (LWhole > 0) then
+  begin
+    FChaChaKernel.UpdatePoly(@ASrc[AOff], LWhole);
+    AOff := AOff + LWhole * MacSize;
+    ALen := ALen - LWhole * MacSize;
+  end;
+
+  if (ALen > 0) then
+  begin
+    System.Move(ASrc[AOff], FMacStage[0], ALen);
+    FMacStagePos := ALen;
+  end;
+end;
+
+procedure TChaCha20Poly1305.MacUpdateByte(AByte: Byte);
+begin
+  if not FUseKernelPoly then
+  begin
+    FPoly1305.Update(AByte);
+    Exit;
+  end;
+  FMacStage[FMacStagePos] := AByte;
+  System.Inc(FMacStagePos);
+  if (FMacStagePos = MacSize) then
+  begin
+    FChaChaKernel.UpdatePoly(@FMacStage[0], 1);
+    FMacStagePos := 0;
+  end;
+end;
+
+procedure TChaCha20Poly1305.MacPad(ACount: UInt64);
 var
   LPartial: Int32;
 begin
-  LPartial := Int32(ACount) and (MacSize - 1);
-  if (0 <> LPartial) then
+  if not FUseKernelPoly then
   begin
-    FPoly1305.BlockUpdate(FZeroes, 0, MacSize - LPartial);
+    LPartial := Int32(ACount) and (MacSize - 1);
+    if (0 <> LPartial) then
+      FPoly1305.BlockUpdate(FZeroes, 0, MacSize - LPartial);
+    Exit;
+  end;
+  // Flush a staged partial as one zero-padded full block (scalar-equivalent pad).
+  if (FMacStagePos > 0) then
+  begin
+    TArrayUtilities.Fill(FMacStage, FMacStagePos, MacSize, Byte(0));
+    FChaChaKernel.UpdatePoly(@FMacStage[0], 1);
+    FMacStagePos := 0;
   end;
 end;
 
