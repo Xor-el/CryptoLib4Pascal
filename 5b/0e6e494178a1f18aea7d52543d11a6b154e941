@@ -1,0 +1,26 @@
+.github/workflows/ci/targets.json
+  h_878efc035442cc 4,6-8,10,13-14,16
+.github/workflows/make.yml
+  s_74ad5af63bdcc6::t_c6bff848de90ab 124,225
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "5b0e6e494178a1f18aea7d52543d11a6b154e941",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
