@@ -1,0 +1,191 @@
+CryptoLib/src/Crypto/CipherKernels/ClpCipherKernelDefaults.pas
+  s_74ad5af63bdcc6::t_328fa24999b105 52
+  s_74ad5af63bdcc6::t_b0fe75e9f8ce3a 51
+  s_74ad5af63bdcc6::t_3553ece6013694 46
+  s_74ad5af63bdcc6::t_7370279bfe2487 47-50
+CryptoLib/src/Include/Simd/ChaCha/Poly1305/ChaCha20Poly1305Fused_x86_64.inc
+  s_74ad5af63bdcc6::t_7813dd295fc22a 38,41-42,101,106,108
+  s_74ad5af63bdcc6::t_d5de5b87c615b8 125,8075
+  s_74ad5af63bdcc6::t_4feb82948ba589 2,36-37,39-40,43-100,102-105,107,109-110
+  s_74ad5af63bdcc6::t_ee58adc6b5f162 111-124,126-8074,8076-8085
+  s_74ad5af63bdcc6::t_7e82d8efc156cd 1,3-35
+CryptoLib/src/Crypto/CipherKernels/Stream/ClpChaCha20Poly1305ArmKernel.pas
+  s_74ad5af63bdcc6::t_ce2b0e859d6730 169
+  s_74ad5af63bdcc6::t_dffa6f0dec3475 1-33,35-44,46-55,57-127,129-146,148-156,159-161,163-168,170-183,185-189,191-204
+  s_74ad5af63bdcc6::t_e68a7c4532d16e 34
+  s_74ad5af63bdcc6::t_a6cb608d91e0b1 56
+  s_74ad5af63bdcc6::t_cfca161f9584bb 184
+  s_74ad5af63bdcc6::t_102ba310cabdf9 147
+  s_74ad5af63bdcc6::t_7668639cbf6e8a 128
+  s_74ad5af63bdcc6::t_6438dc50da926c 190
+  s_74ad5af63bdcc6::t_bc6a9d38655188 45
+  s_74ad5af63bdcc6::t_26f576b70a22cc 162
+  s_74ad5af63bdcc6::t_7c865bd656772a 157-158
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_74ad5af63bdcc6::t_c007fb49931ecc 1102
+  s_74ad5af63bdcc6::t_acbe35a9a580f4 1404
+  s_74ad5af63bdcc6::t_0e311205f1cd84 1101
+  s_74ad5af63bdcc6::t_3eac728ab83f40 1103
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_74ad5af63bdcc6::t_3eac728ab83f40 295
+  s_74ad5af63bdcc6::t_8c013477180e51 293
+  s_74ad5af63bdcc6::t_07f8d5c29c38ee 294
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_74ad5af63bdcc6::t_2b2d3bf0eb7241 41-42
+CryptoLib/src/Interfaces/Crypto/CipherKernels/Stream/ClpIChaCha20Poly1305Kernel.pas
+  s_74ad5af63bdcc6::t_ecf1648946b301 71-77,79
+  s_74ad5af63bdcc6::t_33008059ba0f25 31-33
+  s_74ad5af63bdcc6::t_fa99438b1e13a1 30,34-39,42,49-53,55-61,65-70,78,81-88
+  s_74ad5af63bdcc6::t_9aec05c6fc1fc3 62-64
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_74ad5af63bdcc6::t_6b48326fdb6c02 34
+  s_74ad5af63bdcc6::t_731866e4e76025 13
+  s_74ad5af63bdcc6::t_79bffbd5edd8c4 3608,3611
+  s_74ad5af63bdcc6::t_3eac728ab83f40 3609-3610
+  s_74ad5af63bdcc6::t_68cfa72ed5e72e 3600-3603
+  s_74ad5af63bdcc6::t_c007fb49931ecc 3604-3607
+CryptoLib/src/Crypto/Engines/ClpChaChaEngine.pas
+  s_74ad5af63bdcc6::t_a35d57b691a6bd 95
+  s_74ad5af63bdcc6::t_04cb784581a7f1 164,166
+  s_74ad5af63bdcc6::t_1c8adf5c509918 165
+  s_74ad5af63bdcc6::t_ea16573d742a64 96
+  s_74ad5af63bdcc6::t_b3a5cc6b9fb3db 28
+  s_74ad5af63bdcc6::t_e8d9ecc972e9fa 97
+  s_74ad5af63bdcc6::t_920745ccd0a720 167-168
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_74ad5af63bdcc6::t_3eac728ab83f40 781
+  s_74ad5af63bdcc6::t_97e3be6dbed762 1087
+  s_74ad5af63bdcc6::t_0e311205f1cd84 779
+  s_74ad5af63bdcc6::t_c007fb49931ecc 780
+CryptoLib/src/Crypto/CipherKernels/Stream/ClpChaCha20Poly1305X86Kernel.pas
+  s_74ad5af63bdcc6::t_50cd87a9e0b23e 245
+  s_74ad5af63bdcc6::t_600d1d203edc60 120-124,126
+  s_74ad5af63bdcc6::t_96213182277ad2 192-193
+  s_74ad5af63bdcc6::t_f646be2f833594 185
+  s_74ad5af63bdcc6::t_15aab62135beae 1-33,35-46,48-62,64-119,125,127-160,162-184,186-191,194-205,207-212,218-232,234-237,239-244,246-259
+  s_74ad5af63bdcc6::t_045eb3a1262569 161
+  s_74ad5af63bdcc6::t_e2d1863b83785b 63
+  s_74ad5af63bdcc6::t_1b08fce9737950 47
+  s_74ad5af63bdcc6::t_ef2d4d3ae2d351 238
+  s_74ad5af63bdcc6::t_990d6d24ac1f07 34
+  s_74ad5af63bdcc6::t_90103fdc7a747f 206
+  s_74ad5af63bdcc6::t_306d2ae4d7183b 233
+  s_74ad5af63bdcc6::t_d131d4531e2deb 213,215,217
+  s_74ad5af63bdcc6::t_092d63a7436bb2 214,216
+CryptoLib/src/Crypto/Macs/ClpPoly1305.pas
+  s_74ad5af63bdcc6::t_efcd28e7a60064 248-251,254
+  s_74ad5af63bdcc6::t_dc441cb0c360de 252
+  s_74ad5af63bdcc6::t_57673720c8a1b8 253
+  s_74ad5af63bdcc6::t_1e1b61595f9296 82
+  s_74ad5af63bdcc6::t_b4a8896a1fcf3b 255-256
+CryptoLib.Tests/src/Crypto/XChaCha20Poly1305Tests.pas
+  s_74ad5af63bdcc6::t_45ffc0db3d7ea0 75
+  s_74ad5af63bdcc6::t_d960fb642122c4 372-382
+  s_74ad5af63bdcc6::t_f517c6ec029523 326,328
+  s_74ad5af63bdcc6::t_ffa7f780cded15 323-325,327,329-371,383-392
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_74ad5af63bdcc6::t_c007fb49931ecc 759
+  s_74ad5af63bdcc6::t_0e311205f1cd84 758
+  s_74ad5af63bdcc6::t_562c9a93c49bdf 1066
+  s_74ad5af63bdcc6::t_3eac728ab83f40 760
+CryptoLib/src/Include/Simd/ChaCha/Poly1305/ChaCha20Poly1305Fused_aarch64.inc
+  s_74ad5af63bdcc6::t_9c8befd2356440 2,7,38-99,101-6067
+  s_74ad5af63bdcc6::t_92c7027acb9d54 100
+  s_74ad5af63bdcc6::t_cb0a72d2f8d28f 1,3-6,8-37
+CryptoLib/src/Crypto/Modes/ClpXChaCha20Poly1305.pas
+  s_74ad5af63bdcc6::t_276e1fba8d7503 80-84
+  s_74ad5af63bdcc6::t_4f1d74900d4e4b 52-54
+CryptoLib/src/Crypto/Modes/ClpChaCha20Poly1305.pas
+  s_74ad5af63bdcc6::t_40639806baccd0 570
+  s_74ad5af63bdcc6::t_af25a16df00d4d 423-424,428-429,431-432
+  s_74ad5af63bdcc6::t_068b5a7269a09a 154-158
+  s_74ad5af63bdcc6::t_758e4cb9474da0 343-344,347-348,350-351
+  s_74ad5af63bdcc6::t_a7b1426137a716 364-368,445-449
+  s_74ad5af63bdcc6::t_3da34ee144aafd 785
+  s_74ad5af63bdcc6::t_661062123501db 503
+  s_74ad5af63bdcc6::t_bd354287daf4d7 634,709
+  s_74ad5af63bdcc6::t_19988e8e0c682e 897-899
+  s_74ad5af63bdcc6::t_25bfc163076193 264-268
+  s_74ad5af63bdcc6::t_fd59de2afa466f 858,866,868-877
+  s_74ad5af63bdcc6::t_a08ec569bdcfeb 138-140
+  s_74ad5af63bdcc6::t_05b25ccc5edc8b 912-971,975-976,980-981,983,985-987
+  s_74ad5af63bdcc6::t_ed614f99731b1b 104-107
+  s_74ad5af63bdcc6::t_adf014d9c2144d 896,902-905,909
+  s_74ad5af63bdcc6::t_a4f09066fc8be7 598
+  s_74ad5af63bdcc6::t_92e0c110d39403 642,717
+  s_74ad5af63bdcc6::t_08db4916ddcc53 637-638,712-713
+  s_74ad5af63bdcc6::t_592c05046a3c74 127-128
+  s_74ad5af63bdcc6::t_b95e0c232b648f 553
+  s_74ad5af63bdcc6::t_5b8696778033a0 689-692
+  s_74ad5af63bdcc6::t_d7c098221c8276 803
+  s_74ad5af63bdcc6::t_a374e4c41c2cb6 520
+  s_74ad5af63bdcc6::t_1a2e57a94f55f5 699-701,705-708,710-711,714-716,718-735,748-749
+  s_74ad5af63bdcc6::t_f72bf18b7f8b6b 247
+  s_74ad5af63bdcc6::t_7c438d8337f602 618
+  s_74ad5af63bdcc6::t_e27b867db1259c 662
+  s_74ad5af63bdcc6::t_4da39e525edfca 354-356,435-437
+  s_74ad5af63bdcc6::t_6a371730cfd298 625-626,630-633,635-636,639-641,643-654
+  s_74ad5af63bdcc6::t_55398eda446b53 122-124
+  s_74ad5af63bdcc6::t_1dd3fcbb0392e2 276
+  s_74ad5af63bdcc6::t_3cb6602b8f4d0f 536
+  s_74ad5af63bdcc6::t_7c2ef9a1a888c3 977-979,982
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_74ad5af63bdcc6::t_3eac728ab83f40 766
+  s_74ad5af63bdcc6::t_0e311205f1cd84 764
+  s_74ad5af63bdcc6::t_c007fb49931ecc 765
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_74ad5af63bdcc6::t_3d7e702bb94b52 82
+  s_74ad5af63bdcc6::t_3b4db1c2882bcc 940-943
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_74ad5af63bdcc6::t_129cd9948d83f8 42-43
+CryptoLib.Tests/src/Crypto/ChaCha20Poly1305KernelDiffTests.pas
+  s_74ad5af63bdcc6::t_0a39e948135855 1-39,45-49,51-73,77-84,91-170,178-192,218-333
+  s_74ad5af63bdcc6::t_95ae206f3c1ead 74-76
+  s_74ad5af63bdcc6::t_2918d8442035a5 50
+  s_74ad5af63bdcc6::t_53a35f42adadc2 171-177
+  s_74ad5af63bdcc6::t_8ac550a387cf09 85-86
+  s_74ad5af63bdcc6::t_7b96cebded5270 88-90
+  s_74ad5af63bdcc6::t_294b8e38af5738 87
+  s_74ad5af63bdcc6::t_c7bf8825b52f62 205-210,212
+  s_74ad5af63bdcc6::t_9e8d2dc32412cf 40-44
+  s_74ad5af63bdcc6::t_eb3d5c7162f2bd 193-204,211,213-217
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_74ad5af63bdcc6::t_c007fb49931ecc 782
+  s_74ad5af63bdcc6::t_3eac728ab83f40 783
+  s_74ad5af63bdcc6::t_0e311205f1cd84 781
+CryptoLib/src/Include/Simd/ChaCha/Poly1305/ChaCha20Poly1305Fused_i386.inc
+  s_74ad5af63bdcc6::t_6313f8b3040905 1,3-8,11-27,33-39,41-42
+  s_74ad5af63bdcc6::t_e5093381518505 29
+  s_74ad5af63bdcc6::t_2a65bb8585606a 2,9-10,32,40,43-289,291-292,294-298,301-17338
+  s_74ad5af63bdcc6::t_c326746d0cabae 28,30-31,290,293,299-300
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_74ad5af63bdcc6::t_7ba21222a39c5f 899-902
+  s_74ad5af63bdcc6::t_3d7e702bb94b52 42
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_74ad5af63bdcc6::t_0e311205f1cd84 760
+  s_74ad5af63bdcc6::t_3eac728ab83f40 762
+  s_74ad5af63bdcc6::t_c007fb49931ecc 761
+CryptoLib/src/Crypto/CipherKernels/Stream/ClpChaCha20Poly1305PolyOps.pas
+  s_74ad5af63bdcc6::t_cb4017b44ea456 1-208
+CryptoLib/src/Interfaces/Crypto/Engines/ClpIChaCha7539Engine.pas
+  s_74ad5af63bdcc6::t_dc11471702ec3f 38
+  s_74ad5af63bdcc6::t_e1208168ecc66e 39-40,45
+  s_74ad5af63bdcc6::t_61ff19193dd4c8 46
+  s_74ad5af63bdcc6::t_a02f5273a07361 41-44
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "fd6c201b8f4c9187182abffb88fbb5d37568efd3",
+  "prompts": {},
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
