@@ -276,8 +276,7 @@ var
   LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
   LFusedDirection: TCipherKernelDirection;
-  LPrevKey: TCryptoLibByteArray;
-  LSameKey, LSameKeyDir: Boolean;
+  LSameKey, LSameKeyDir, LNeedReKey: Boolean;
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
@@ -293,10 +292,7 @@ begin
 
   LN := LChoice.Nonce;
   CheckNonceReuse(FForEncryption, LN, LChoice.KeyParameter);
-  LPrevKey := FLastKey;
   FLastNonce := System.Copy(LN);
-  if LChoice.KeyParameter <> nil then
-    FLastKey := LChoice.KeyParameter.GetKey();
 
   FInitialAssociatedText := LChoice.AssociatedText;
   LKeyParameter := LChoice.KeyParameter;
@@ -304,8 +300,16 @@ begin
   // Nonce-only rotation is the hot AEAD path: when the key (and, for the main
   // cipher / fused kernel, the direction) is unchanged, the key schedules, the
   // L table and the kernel binding all stay valid and are not recomputed.
-  LSameKey := (LKeyParameter = nil) or
-    ((LPrevKey <> nil) and LKeyParameter.FixedTimeEquals(LPrevKey));
+  if LKeyParameter <> nil then
+    LNeedReKey := NeedsReKey(LKeyParameter)
+  else
+  begin
+    // nil key reuses the established key; there must be one.
+    if not FKeyReady then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    LNeedReKey := False;
+  end;
+  LSameKey := not LNeedReKey;
   LSameKeyDir := LSameKey and (LOldForEncryption = AForEncryption);
 
   if LChoice.IsAead then
@@ -391,6 +395,10 @@ begin
     FLTableFlatCount := 0; // FL rebuilt for the new key; drop the flattened cache
   end;
 
+  // All key-dependent schedules are rebuilt; mark the key committed and ready.
+  if LNeedReKey then
+    CommitKey(LKeyParameter);
+
   LBottom := ProcessNonce(LN);
 
   LBits := LBottom mod 8;
@@ -433,7 +441,7 @@ end;
 procedure TOcbBlockCipher.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
-  LOldForEncryption, LSameKey, LSameKeyDir: Boolean;
+  LOldForEncryption, LSameKey, LSameKeyDir, LNeedReKey: Boolean;
   LKeyParam: IKeyParameter;
   LMainLen, LBottom, LBits, LBytes, LI: Int32;
   LB1, LB2: UInt32;
@@ -451,11 +459,17 @@ begin
 
   FInitialAssociatedText := AAad;
 
-  LSameKey := SameKeyReuseRaw(AKey);
+  if AKey <> nil then
+    LNeedReKey := NeedsReKeyRaw(AKey)
+  else
+  begin
+    // nil key reuses the established key; there must be one.
+    if not FKeyReady then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    LNeedReKey := False;
+  end;
+  LSameKey := not LNeedReKey;
   LSameKeyDir := LSameKey and (LOldForEncryption = AForEncryption);
-
-  if (AKey = nil) and (not LSameKey) then
-    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
 
   FMacSize := ValidateAeadMacSizeBits(AMacSizeBits, 64, 128, 8);
 
@@ -526,6 +540,10 @@ begin
     FL.Add(OCB_double(FL_Dollar));
     FLTableFlatCount := 0;
   end;
+
+  // All key-dependent schedules are rebuilt; mark the key committed and ready.
+  if LNeedReKey then
+    CommitKeyRaw(AKey);
 
   LBottom := ProcessNonce(ANonce);
 

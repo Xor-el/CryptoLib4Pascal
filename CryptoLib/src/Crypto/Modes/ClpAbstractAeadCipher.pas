@@ -60,6 +60,12 @@ type
     // Last-used key / nonce, retained for the encrypt-side nonce-reuse guard.
     FLastKey: TCryptoLibByteArray;
     FLastNonce: TCryptoLibByteArray;
+    // True only while FLastKey describes a key fully applied to the mode
+    // (schedules, subkeys, tables all rebuilt). Cleared before a destructive
+    // rekey and set again only after it succeeds, so a thrown Init never leaves
+    // the mode reusing a half-built or stale key. Mirrors the AES engine's
+    // FScheduleReady; never touched by Reset (modes reuse the cipher after Reset).
+    FKeyReady: Boolean;
 
     /// <summary>Short mode label used in exception messages (e.g. <c>EAX</c>,
     /// <c>GCM</c>). Distinct from the full <c>AlgorithmName</c>.</summary>
@@ -98,26 +104,41 @@ type
     procedure WipeKeyMaterial(); virtual;
 
     /// <summary>
-    /// Same-key detection + <c>FLastKey</c> maintenance shared by the AEAD
-    /// modes, so a re-Init under the same key does no per-message key copy.
-    /// Honors two "reuse the key" signals: (a) <c>AKeyParam = nil</c> (the
-    /// bc-csharp null-key convention) and (b) <c>AKeyParam</c> holding the same
-    /// bytes as the retained <c>FLastKey</c>. In both cases <c>FLastKey</c> is
-    /// left intact (no realloc/copy) and True is returned. When the key differs,
-    /// the old <c>FLastKey</c> is wiped, a fresh copy is stored, and False is
-    /// returned. Constant-time compare. MUST be called AFTER
+    /// The mode-level re-key gate, shared by every AEAD mode: returns True when a
+    /// destructive rebuild of the key-derived state is required for AKeyParam, and
+    /// False when the current key may be reused as-is. Reuse is granted only when
+    /// the mode is <c>FKeyReady</c> AND the key is unchanged - a nil key (the
+    /// null-key reuse convention) or bytes equal to the retained <c>FLastKey</c>
+    /// (constant-time). On any rebuild it clears <c>FKeyReady</c> first (the
+    /// rebuild is destructive) and records nothing, so an Init that then throws
+    /// leaves the mode "not ready" and <c>FLastKey</c> unchanged; the caller MUST
+    /// call <c>CommitKey</c> as the last step of a successful rebuild. Call AFTER
     /// <c>CheckNonceReuse</c> (both read the pre-update <c>FLastKey</c>).
     /// </summary>
-    function SameKeyReuse(const AKeyParam: IKeyParameter): Boolean;
+    function NeedsReKey(const AKeyParam: IKeyParameter): Boolean;
 
-    /// <summary>
-    /// Raw-key counterpart of <c>SameKeyReuse</c> for the one-shot packet path,
-    /// so the facade never has to wrap the key in an <c>IKeyParameter</c> per
-    /// message. Same contract: True (key retained as-is) when AKey is nil (reuse)
-    /// or matches the stored key; otherwise wipe + store a fresh copy and return
-    /// False. Constant-time compare; call AFTER <c>CheckNonceReuseRaw</c>.
+    /// <summary>Raw-key counterpart of <c>NeedsReKey</c> for the one-shot packet
+    /// path, so the facade need not wrap the key per message. Same contract; call
+    /// AFTER <c>CheckNonceReuseRaw</c>.</summary>
+    function NeedsReKeyRaw(const AKey: TCryptoLibByteArray): Boolean;
+
+    /// <summary>Pure same-key test against the retained <c>FLastKey</c> (a nil key
+    /// = reuse). Records nothing. Building block for <c>NeedsReKey</c>.</summary>
+    function IsSameKey(const AKeyParam: IKeyParameter): Boolean;
+
+    /// <summary>Retain <c>AKeyParam</c>'s bytes as <c>FLastKey</c> (wiping the old
+    /// copy; no realloc/copy for a nil or unchanged key) and set <c>FKeyReady</c>.
+    /// Call once, only after the key-dependent rebuild has succeeded, so a thrown
+    /// Init never commits a bad key or marks the mode ready.</summary>
+    procedure CommitKey(const AKeyParam: IKeyParameter);
+
+    /// <summary>Raw-key phase-1 test for the packet path. See <c>IsSameKey</c>.
     /// </summary>
-    function SameKeyReuseRaw(const AKey: TCryptoLibByteArray): Boolean;
+    function IsSameKeyRaw(const AKey: TCryptoLibByteArray): Boolean;
+
+    /// <summary>Raw-key phase-2 commit for the packet path. See <c>CommitKey</c>.
+    /// </summary>
+    procedure CommitKeyRaw(const AKey: TCryptoLibByteArray);
 
     /// <summary>Raw-key/raw-nonce counterpart of <c>CheckNonceReuse</c> for the
     /// one-shot packet path. Byte-identical guard: on encryption, refuse a
@@ -137,7 +158,7 @@ type
     /// Default one-shot packet init: builds an AeadParameters and defers to Init.
     /// This is NOT the zero-allocation path - modes with a small-buffer packet
     /// cipher override it with a raw InitPacket that skips the parameter objects
-    /// and routes key identity through SameKeyReuseRaw.
+    /// and routes key identity through NeedsReKeyRaw/CommitKeyRaw.
     /// </summary>
     procedure InitPacket(AForEncryption: Boolean;
       const AKey, ANonce, AAad: TCryptoLibByteArray;
@@ -199,51 +220,71 @@ begin
     AAad) as ICipherParameters);
 end;
 
-function TAbstractAeadCipher.SameKeyReuse(const AKeyParam
-  : IKeyParameter): Boolean;
+function TAbstractAeadCipher.IsSameKey(const AKeyParam: IKeyParameter): Boolean;
 begin
+  // null-key convention: reuse only makes sense once a key was established.
   if AKeyParam = nil then
-  begin
-    // null-key convention: reuse only makes sense once a key was established.
-    Result := FLastKey <> nil;
-    Exit;
-  end;
-
-  if (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey) then
-  begin
-    // Same key bytes: keep FLastKey as-is (no realloc, no copy).
-    Result := True;
-    Exit;
-  end;
-
-  // Key changed: wipe the old copy, retain a fresh one for the reuse guard.
-  if FLastKey <> nil then
-    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
-  FLastKey := AKeyParam.GetKey();
-  Result := False;
+    Result := FLastKey <> nil
+  else
+    Result := (FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey);
 end;
 
-function TAbstractAeadCipher.SameKeyReuseRaw(const AKey
+function TAbstractAeadCipher.IsSameKeyRaw(const AKey
   : TCryptoLibByteArray): Boolean;
 begin
   if AKey = nil then
-  begin
-    Result := FLastKey <> nil;
-    Exit;
-  end;
+    Result := FLastKey <> nil
+  else
+    Result := (FLastKey <> nil) and
+      (System.Length(FLastKey) = System.Length(AKey)) and
+      TArrayUtilities.FixedTimeEquals(FLastKey, AKey);
+end;
 
-  if (FLastKey <> nil) and
+function TAbstractAeadCipher.NeedsReKey(const AKeyParam
+  : IKeyParameter): Boolean;
+begin
+  if FKeyReady and IsSameKey(AKeyParam) then
+    Exit(False);
+  // A destructive rebuild follows: invalidate now, record nothing until the
+  // rebuild succeeds and calls CommitKey.
+  FKeyReady := False;
+  Result := True;
+end;
+
+function TAbstractAeadCipher.NeedsReKeyRaw(const AKey
+  : TCryptoLibByteArray): Boolean;
+begin
+  if FKeyReady and IsSameKeyRaw(AKey) then
+    Exit(False);
+  FKeyReady := False;
+  Result := True;
+end;
+
+procedure TAbstractAeadCipher.CommitKey(const AKeyParam: IKeyParameter);
+begin
+  // Store a fresh copy only when the key actually changed (no realloc/copy for a
+  // nil or unchanged key), then mark the mode ready.
+  if (AKeyParam <> nil) and
+    not((FLastKey <> nil) and AKeyParam.FixedTimeEquals(FLastKey)) then
+  begin
+    if FLastKey <> nil then
+      TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
+    FLastKey := AKeyParam.GetKey();
+  end;
+  FKeyReady := True;
+end;
+
+procedure TAbstractAeadCipher.CommitKeyRaw(const AKey: TCryptoLibByteArray);
+begin
+  if (AKey <> nil) and not((FLastKey <> nil) and
     (System.Length(FLastKey) = System.Length(AKey)) and
-    TArrayUtilities.FixedTimeEquals(FLastKey, AKey) then
+    TArrayUtilities.FixedTimeEquals(FLastKey, AKey)) then
   begin
-    Result := True;
-    Exit;
+    if FLastKey <> nil then
+      TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
+    FLastKey := System.Copy(AKey);
   end;
-
-  if FLastKey <> nil then
-    TArrayUtilities.Fill(FLastKey, 0, System.Length(FLastKey), Byte(0));
-  FLastKey := System.Copy(AKey);
-  Result := False;
+  FKeyReady := True;
 end;
 
 procedure TAbstractAeadCipher.CheckNonceReuseRaw(AForEncryption: Boolean;

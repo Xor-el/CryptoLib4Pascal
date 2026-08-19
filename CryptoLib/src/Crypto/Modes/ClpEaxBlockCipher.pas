@@ -271,8 +271,14 @@ begin
 
   CheckNonceReuse(FForEncryption, LChoice.Nonce, LChoice.KeyParameter);
   FLastNonce := System.Copy(LChoice.Nonce);
+  // A supplied key triggers a full rebuild below: invalidate readiness now and
+  // re-commit (wiping the old key copy) only once every schedule is rebuilt, so
+  // a mid-Init failure cannot leave the ready flag set over a half-built state.
+  // A nil key parameter means reuse; require an established schedule to reuse.
   if LChoice.KeyParameter <> nil then
-    FLastKey := LChoice.KeyParameter.GetKey();
+    FKeyReady := False
+  else if not FKeyReady then
+    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
 
   FInitialAssociatedText := LChoice.AssociatedText;
   if LChoice.IsAead then
@@ -314,6 +320,11 @@ begin
       TCipherKernelDirection.Decrypt, FEaxKernel);
   FUseFusedBody := FEaxKernel <> nil;
 
+  // Streaming always rebuilds the key schedule, so the OMAC subkeys are stale:
+  // wipe and drop them here so they never survive a rekey (re-derived below when
+  // fused, left nil for the scalar path).
+  TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
+  FOmacB := nil;
   if FUseFusedBody then
   begin
     System.SetLength(FOmacState, FBlockSize);
@@ -322,6 +333,11 @@ begin
     DeriveOmacSubkeys();
   end;
 
+  // Every key-dependent schedule is rebuilt: commit the key (wiping the prior
+  // copy) and mark the mode ready.
+  if LChoice.KeyParameter <> nil then
+    CommitKey(LChoice.KeyParameter);
+
   Reset(True);
 end;
 
@@ -329,7 +345,7 @@ procedure TEaxBlockCipher.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
   LTag: TCryptoLibByteArray;
-  LSameKey: Boolean;
+  LNeedReKey: Boolean;
 begin
   FForEncryption := AForEncryption;
 
@@ -341,9 +357,15 @@ begin
 
   FInitialAssociatedText := AAad;
 
-  LSameKey := SameKeyReuseRaw(AKey);
-  if (AKey = nil) and (not LSameKey) then
-    raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+  if AKey <> nil then
+    LNeedReKey := NeedsReKeyRaw(AKey)
+  else
+  begin
+    // nil key reuses the established key; there must be one.
+    if not FKeyReady then
+      raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
+    LNeedReKey := False;
+  end;
 
   FMacSize := ValidateAeadMacSizeBits(AMacSizeBits, 32, FBlockSize * 8, 8);
 
@@ -356,7 +378,7 @@ begin
 
   // Key schedule / CMAC subkeys depend only on the key: re-key the CMAC on an
   // actual rekey, otherwise just clear its running state.
-  if not LSameKey then
+  if LNeedReKey then
     FMac.Init(TKeyParameter.Create(AKey) as IKeyParameter)
   else
     FMac.Reset();
@@ -377,14 +399,25 @@ begin
       TCipherKernelDirection.Decrypt, FEaxKernel);
   FUseFusedBody := FEaxKernel <> nil;
 
+  // A rekey invalidates the OMAC subkeys; wipe and drop them so they cannot
+  // survive stale even if this init runs the scalar path (no fused body).
+  if LNeedReKey then
+  begin
+    TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
+    FOmacB := nil;
+  end;
   if FUseFusedBody then
   begin
     System.SetLength(FOmacState, FBlockSize);
     System.SetLength(FOmacLookahead, FBlockSize);
     System.SetLength(FCtrBlock, FBlockSize);
-    if (not LSameKey) or (FOmacB = nil) then
+    if FOmacB = nil then
       DeriveOmacSubkeys();
   end;
+
+  // All key-dependent schedules are rebuilt; mark the key committed and ready.
+  if LNeedReKey then
+    CommitKeyRaw(AKey);
 
   Reset(True);
 end;

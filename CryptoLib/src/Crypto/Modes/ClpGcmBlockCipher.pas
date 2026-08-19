@@ -465,6 +465,11 @@ begin
   // Zeroize any prior key-derived material before this rekey overwrites it.
   WipeKeyMaterial();
 
+  // Mark not-keyed before the (destructive) rekey: if FCipher.Init throws, the
+  // mode is left in a clean "needs re-Init" state (FHashSubKey = nil) instead of
+  // with a wiped H that a later same-key Init would mistake for a ready schedule.
+  FHashSubKey := nil;
+
   FCipher.Init(True, AKeyParam as ICipherParameters);
 
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
@@ -472,7 +477,6 @@ begin
   FGcmKernel := nil;
   FGcmKernelMinBlocks := 0;
 
-  FHashSubKey := nil;
   System.SetLength(FHashSubKey, BlockSize);
   FCipher.ProcessBlock(FHashSubKey, 0, FHashSubKey, 0);
 
@@ -598,15 +602,19 @@ begin
 
   // Same-key fast path: the key schedule, hash subkey, multiplier state,
   // H-power table and fused kernel all depend only on the key, so a re-Init
-  // with the same key (fresh nonce per message) keeps them all -- and, on the
-  // same-key path, SameKeyReuse leaves FLastKey intact (no per-message copy).
-  // A nil key parameter is the bc-csharp "reuse last key" convention.
+  // with the same key (fresh nonce per message) keeps them all. A nil key
+  // parameter is the "reuse last key" convention.
   if LKeyParam <> nil then
   begin
-    if not SameKeyReuse(LKeyParam) then
+    // Re-key only when the key changed or the mode is not ready (e.g. a prior
+    // rekey threw); commit the key as the final step of a successful rebuild.
+    if NeedsReKey(LKeyParam) then
+    begin
       InitCipherAndHashSubKey(LKeyParam);
+      CommitKey(LKeyParam);
+    end;
   end
-  else if FHashSubKey = nil then
+  else if not FKeyReady then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
   end;
@@ -656,10 +664,13 @@ begin
   // a fresh TKeyParameter is created only on an actual rekey. nil = reuse key.
   if AKey <> nil then
   begin
-    if not SameKeyReuseRaw(AKey) then
+    if NeedsReKeyRaw(AKey) then
+    begin
       InitCipherAndHashSubKey(TKeyParameter.Create(AKey) as IKeyParameter);
+      CommitKeyRaw(AKey);
+    end;
   end
-  else if FHashSubKey = nil then
+  else if not FKeyReady then
   begin
     raise EArgumentCryptoLibException.CreateRes(@SKeyMustBeSpecified);
   end;
