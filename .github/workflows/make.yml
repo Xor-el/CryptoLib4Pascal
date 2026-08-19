@@ -47,7 +47,7 @@ env:
   MAKE_DEFINES: ''
   # When true, make.pas builds and runs console benchmarks after the test suite.
   # Override per job below, like MAKE_BUILD_BACKEND.
-  MAKE_RUN_BENCHMARK: true
+  MAKE_RUN_BENCHMARK: false
   # When true (default), the linux-x64-scalar job runs the ctgrind/Valgrind
   # constant-time gate after its build (subjects clean, leaky controls fire).
   # Set false to skip it. Read only by that job's valgrind-ct.sh step.
