@@ -46,7 +46,7 @@ uses
   MlKemTests, MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests,
   Lib25519Tests, Asn1CipherBuilderWithKeyTests, AesBitSlicedTests,
   CryptoLibTestBase, PkixFoundationTests, PkixNameConstraintTests,
-  PkixComparerTests, CertPathTests, CertPathValidatorTests,
+  PkixComparerTests, CertPathTests, CertPathBuilderTests, CertPathValidatorTests,
   PkixPolicyMappingTests, OcspTests, CryptoLibHashSetTests, PkitsTestBase,
   NistCertPathTests, AttrCertPathTests, CtrDrbgTests, DrbgTestSupport,
   HashDrbgTests, HMacDrbgTests, SimdSelectSlotTests, BinaryPrimitivesTests,

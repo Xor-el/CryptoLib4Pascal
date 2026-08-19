@@ -26,6 +26,7 @@ uses
   ClpIAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
+  ClpX509ObjectIdentifiers,
   ClpIAsn1Core,
   ClpIX509Certificate,
   ClpX509Certificate,
@@ -80,6 +81,7 @@ type
     procedure SetSubjectDN(const ASubject: IX509Name);
     procedure SetPublicKey(const APublicKey: IAsymmetricKeyParameter);
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate;
+    function GenerateUnsigned(): IX509Certificate;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
@@ -156,6 +158,7 @@ type
     function Generate(const ASignatureFactory: ISignatureFactory): IX509Certificate; overload;
     function Generate(const ASignatureFactory: ISignatureFactory; AIsCritical: Boolean;
       const AAltSignatureFactory: ISignatureFactory): IX509Certificate; overload;
+    function GenerateUnsigned(): IX509Certificate;
     function GetSignatureAlgNames: TCryptoLibStringArray;
   end;
 
@@ -316,6 +319,22 @@ begin
   FTbsGen.SetSignature(LSigAlgID);
   LTbs := FTbsGen.GenerateTbsCertificate;
   LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbs);
+  LStruct := TX509CertificateStructure.Create(LTbs, LSigAlgID, LSignature);
+  Result := TX509Certificate.Create(LStruct);
+end;
+
+function TX509V1CertificateGenerator.GenerateUnsigned(): IX509Certificate;
+var
+  LSigAlgID: IAlgorithmIdentifier;
+  LTbs: ITbsCertificateStructure;
+  LSignature: IDerBitString;
+  LStruct: IX509CertificateStructure;
+  LEmpty: TCryptoLibByteArray;
+begin
+  LSigAlgID := TAlgorithmIdentifier.Create(TX509ObjectIdentifiers.IdAlgUnsigned);
+  FTbsGen.SetSignature(LSigAlgID);
+  LTbs := FTbsGen.GenerateTbsCertificate;
+  LSignature := TDerBitString.Create(LEmpty);
   LStruct := TX509CertificateStructure.Create(LTbs, LSigAlgID, LSignature);
   Result := TX509Certificate.Create(LStruct);
 end;
@@ -550,6 +569,41 @@ begin
 
   LTbs := FTbsGen.GenerateTbsCertificate;
   LSignature := TX509Utilities.GenerateSignature(ASignatureFactory, LTbs);
+  LStruct := TX509CertificateStructure.Create(LTbs, LSigAlgID, LSignature);
+  Result := TX509Certificate.Create(LStruct);
+end;
+
+function TX509V3CertificateGenerator.GenerateUnsigned(): IX509Certificate;
+var
+  LSigAlgID: IAlgorithmIdentifier;
+  LDeltaExt: IX509Extension;
+  LDescriptor: IDeltaCertificateDescriptor;
+  LTbs: ITbsCertificateStructure;
+  LSignature: IDerBitString;
+  LStruct: IX509CertificateStructure;
+  LEmpty: TCryptoLibByteArray;
+begin
+  LSigAlgID := TAlgorithmIdentifier.Create(TX509ObjectIdentifiers.IdAlgUnsigned);
+  FTbsGen.SetSignature(LSigAlgID);
+
+  if not FExtGenerator.IsEmpty then
+  begin
+    LDeltaExt := FExtGenerator.GetExtension(TX509Extensions.DraftDeltaCertificateDescriptor);
+    if LDeltaExt <> nil then
+    begin
+      LDescriptor := TDeltaCertificateTool.TrimDeltaCertificateDescriptor(
+        TDeltaCertificateDescriptor.GetInstance(LDeltaExt.GetParsedValue),
+        FTbsGen.GenerateTbsCertificate,
+        FExtGenerator.Generate);
+      FExtGenerator.ReplaceExtension(TX509Extensions.DraftDeltaCertificateDescriptor,
+        LDeltaExt.IsCritical, LDescriptor);
+    end;
+
+    FTbsGen.SetExtensions(FExtGenerator.Generate);
+  end;
+
+  LTbs := FTbsGen.GenerateTbsCertificate;
+  LSignature := TDerBitString.Create(LEmpty);
   LStruct := TX509CertificateStructure.Create(LTbs, LSigAlgID, LSignature);
   Result := TX509Certificate.Create(LStruct);
 end;

@@ -50,7 +50,8 @@ type
   /// <summary>
   /// Selects X.509 certificates from configurable criteria. An unset criterion matches anything.
   /// </summary>
-  TX509CertStoreSelector = class(TInterfacedObject, ISelector<IX509Certificate>, IX509CertStoreSelector)
+  TX509CertStoreSelector = class(TInterfacedObject, ISelector<IX509Certificate>, IX509CertStoreSelector,
+    ISpecificCertificate)
 
   strict private
   var
@@ -143,7 +144,8 @@ type
   /// <summary>
   /// Selects X.509 CRLs from configurable criteria. An unset criterion matches anything.
   /// </summary>
-  TX509CrlStoreSelector = class(TInterfacedObject, ISelector<IX509Crl>, IX509CrlStoreSelector)
+  TX509CrlStoreSelector = class(TInterfacedObject, ISelector<IX509Crl>, IX509CrlStoreSelector,
+    ICheckingCertificate, ICheckingAttrCert)
 
   strict private
   var
@@ -205,7 +207,7 @@ type
   /// Selects X.509 attribute certificates from configurable criteria (RFC 3281).
   /// </summary>
   TX509AttrCertStoreSelector = class(TInterfacedObject, ISelector<IX509V2AttributeCertificate>,
-    IX509AttrCertStoreSelector)
+    IX509AttrCertStoreSelector, ISpecificAttributeCert)
 
   strict private
   var

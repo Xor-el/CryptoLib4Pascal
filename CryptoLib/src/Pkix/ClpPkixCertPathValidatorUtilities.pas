@@ -63,6 +63,8 @@ resourcestring
   SDistributionPointIssuerFailed = 'could not get issuer information from distribution point: %s';
   SNoCrlsFound = 'no CRLs found for issuer "%s"';
   SIssuerCertSearchFailed = 'issuer certificate cannot be searched: %s';
+  STargetCertSearchFailed = 'error finding target certificate: %s';
+  SNoTargetCertFound = 'no certificate found matching the target constraints';
   SCrlUnsupportedCriticalExtensions = 'CRL has unsupported critical extensions';
   SCrlEntryUnsupportedCriticalExtensions = 'CRL entry has unsupported critical extensions';
 
@@ -209,6 +211,13 @@ type
     /// <summary>Candidate issuer certificates of ACert.</summary>
     class function FindIssuerCerts(const ACert: IX509Certificate;
       const APkixBuilderParameters: IPkixBuilderParameters): TCryptoLibGenericArray<IX509Certificate>; static;
+
+    /// <summary>
+    /// Candidate target certificates for a path build: the store matches of the target constraints,
+    /// or, when the stores hold none, the certificate named directly on the selector (ISpecificCertificate).
+    /// </summary>
+    class function FindTargets(const APkixBuilderParameters: IPkixBuilderParameters)
+      : TCryptoLibGenericArray<IX509Certificate>; static;
 
     /// <summary>Only the CRL extensions this library understands may be critical.</summary>
     class procedure CheckCrlCriticalExtensions(const ACrl: IX509Crl); static;
@@ -998,6 +1007,66 @@ begin
         System.Inc(LCount);
       end;
     end;
+  end;
+end;
+
+class function TPkixCertPathValidatorUtilities.FindTargets(
+  const APkixBuilderParameters: IPkixBuilderParameters): TCryptoLibGenericArray<IX509Certificate>;
+var
+  LSelector: ISelector<IX509Certificate>;
+  LStores: TCryptoLibGenericArray<IStore<IX509Certificate>>;
+  LMatches: TCryptoLibGenericArray<IX509Certificate>;
+  LOuter, LInner, LSeek, LCount: Int32;
+  LSeen: Boolean;
+  LSpecific: ISpecificCertificate;
+  LTarget: IX509Certificate;
+begin
+  LSelector := APkixBuilderParameters.GetTargetConstraintsCert();
+
+  Result := nil;
+  LCount := 0;
+
+  LStores := APkixBuilderParameters.GetStoresCert();
+  for LOuter := 0 to System.High(LStores) do
+  begin
+    try
+      LMatches := LStores[LOuter].EnumerateMatches(LSelector);
+    except
+      on E: Exception do
+        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@STargetCertSearchFailed, [E.Message]);
+    end;
+
+    for LInner := 0 to System.High(LMatches) do
+    begin
+      LSeen := False;
+      for LSeek := 0 to LCount - 1 do
+      begin
+        if Result[LSeek].Equals(LMatches[LInner]) then
+        begin
+          LSeen := True;
+          Break;
+        end;
+      end;
+      if not LSeen then
+      begin
+        System.SetLength(Result, LCount + 1);
+        Result[LCount] := LMatches[LInner];
+        System.Inc(LCount);
+      end;
+    end;
+  end;
+
+  if LCount < 1 then
+  begin
+    // no store match: allow the target to be specified directly on the selector
+    LTarget := nil;
+    if Supports(LSelector, ISpecificCertificate, LSpecific) then
+      LTarget := LSpecific.Certificate;
+
+    if LTarget = nil then
+      raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoTargetCertFound);
+
+    Result := TCryptoLibGenericArray<IX509Certificate>.Create(LTarget);
   end;
 end;
 

@@ -745,9 +745,6 @@ begin
 end;
 
 function TAsn1DefiniteLengthInputStream.ToArray: TCryptoLibByteArray;
-var
-  LBuf: TLimitedCapacityMemoryStream;
-  LThreshold: Int32;
 begin
   Result := nil;
   if FRemaining = 0 then
@@ -757,25 +754,14 @@ begin
 
   TAsn1InputStream.CheckLength(FRemaining, Limit);
 
-  LThreshold := TStreamUtilities.DefaultBufferSize * 8;
-  if FRemaining > LThreshold then
-  begin
-    LBuf := TLimitedCapacityMemoryStream.Create(FRemaining);
-    try
-      TStreamUtilities.CopyTo(Self, LBuf);
-      Result := LBuf.GetBuffer();
-    finally
-      LBuf.Free;
-    end;
+  // Read through Self so the per-read bookkeeping (FRemaining decrement, truncation raise,
+  // SetParentEofDetect) is enforced; the buffer grows incrementally rather than being sized to the
+  // claimed length up front.
+  if TStreamUtilities.TryReadExactIncremental(Self, FRemaining, Result) then
     Exit;
-  end;
 
-  System.SetLength(Result, FRemaining);
-  FRemaining := FRemaining - TStreamUtilities.ReadFully(FIn, Result, 0,
-    System.Length(Result));
-  if FRemaining <> 0 then
-    raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
-  SetParentEofDetect();
+  // Unreachable in practice: an incomplete read raises inside Self.Read; kept as a guard.
+  raise EEndOfStreamCryptoLibException.CreateResFmt(@SDefLengthObjectTruncated, [FOriginalLength, FRemaining]);
 end;
 
 { TAsn1IndefiniteLengthInputStream }

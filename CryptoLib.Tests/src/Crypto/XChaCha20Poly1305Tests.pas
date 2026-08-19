@@ -331,8 +331,8 @@ begin
   // Regression: reusing one cipher instance with the SAME key but a fresh nonce
   // must re-derive the XChaCha subkey. A nonce-only re-Init cannot hand the
   // engine a nil key (the mode's key-reuse fast path), or XChaCha raises
-  // "doesn't support re-init with nil key". This is the throughput-benchmark
-  // pattern (one cipher, many messages, same key, incrementing nonce).
+  // "doesn't support re-init with nil key".
+  // (one cipher, many messages, same key, incrementing nonce).
   System.SetLength(LKey, 32);
   System.SetLength(LNonce1, 24);
   System.SetLength(LNonce2, 24);

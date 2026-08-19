@@ -1092,6 +1092,7 @@ uses
   PkixNameConstraintTests in '..\src\Pkix\PkixNameConstraintTests.pas',
   PkixComparerTests in '..\src\Pkix\PkixComparerTests.pas',
   CertPathTests in '..\src\Pkix\CertPathTests.pas',
+  CertPathBuilderTests in '..\src\Pkix\CertPathBuilderTests.pas',
   CertPathValidatorTests in '..\src\Pkix\CertPathValidatorTests.pas',
   PkixPolicyMappingTests in '..\src\Pkix\PkixPolicyMappingTests.pas',
   OcspTests in '..\src\Ocsp\OcspTests.pas',

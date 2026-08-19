@@ -1429,6 +1429,7 @@
         <DCCReference Include="..\src\Pkix\PkixNameConstraintTests.pas"/>
         <DCCReference Include="..\src\Pkix\PkixComparerTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathTests.pas"/>
+        <DCCReference Include="..\src\Pkix\CertPathBuilderTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathValidatorTests.pas"/>
         <DCCReference Include="..\src\Pkix\PkixPolicyMappingTests.pas"/>
         <DCCReference Include="..\src\Ocsp\OcspTests.pas"/>

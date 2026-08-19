@@ -57,11 +57,14 @@ type
     FIdRsassaPssShake256: IDerObjectIdentifier;
     FIdEcdsaWithShake128: IDerObjectIdentifier;
     FIdEcdsaWithShake256: IDerObjectIdentifier;
+    FIdAlgNoSignature: IDerObjectIdentifier;
+    FIdAlgUnsigned: IDerObjectIdentifier;
     FIdPda: IDerObjectIdentifier;
     FIdAD: IDerObjectIdentifier;
     FIdADOcsp: IDerObjectIdentifier;
     FIdADCAIssuers: IDerObjectIdentifier;
     FIdCe: IDerObjectIdentifier;
+    FIdCt: IDerObjectIdentifier;
     FIdPeRelatedCert: IDerObjectIdentifier;
 
     class function GetAttributeType: IDerObjectIdentifier; static; inline;
@@ -85,11 +88,14 @@ type
     class function GetIdRsassaPssShake256: IDerObjectIdentifier; static; inline;
     class function GetIdEcdsaWithShake128: IDerObjectIdentifier; static; inline;
     class function GetIdEcdsaWithShake256: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgNoSignature: IDerObjectIdentifier; static; inline;
+    class function GetIdAlgUnsigned: IDerObjectIdentifier; static; inline;
     class function GetIdPda: IDerObjectIdentifier; static; inline;
     class function GetIdAD: IDerObjectIdentifier; static; inline;
     class function GetIdADOcsp: IDerObjectIdentifier; static; inline;
     class function GetIdADCAIssuers: IDerObjectIdentifier; static; inline;
     class function GetIdCe: IDerObjectIdentifier; static; inline;
+    class function GetIdCt: IDerObjectIdentifier; static; inline;
     class function GetIdPeRelatedCert: IDerObjectIdentifier; static; inline;
     class constructor Create();
 
@@ -122,6 +128,10 @@ type
     class property IdRsassaPssShake256: IDerObjectIdentifier read GetIdRsassaPssShake256;
     class property IdEcdsaWithShake128: IDerObjectIdentifier read GetIdEcdsaWithShake128;
     class property IdEcdsaWithShake256: IDerObjectIdentifier read GetIdEcdsaWithShake256;
+    /// <summary>id-alg-noSignature: 1.3.6.1.5.5.7.6.2</summary>
+    class property IdAlgNoSignature: IDerObjectIdentifier read GetIdAlgNoSignature;
+    /// <summary>id-alg-unsigned: 1.3.6.1.5.5.7.6.36</summary>
+    class property IdAlgUnsigned: IDerObjectIdentifier read GetIdAlgUnsigned;
     class property IdPda: IDerObjectIdentifier read GetIdPda;
 
     // Authority Information Access
@@ -133,6 +143,10 @@ type
 
     // Certificate Extensions
     class property IdCe: IDerObjectIdentifier read GetIdCe;
+    /// <summary>
+    /// Google's Certificate Transparency arc (parent of the RFC 6962 OIDs): 1.3.6.1.4.1.11129.2.4.
+    /// </summary>
+    class property IdCt: IDerObjectIdentifier read GetIdCt;
 
     /// <summary>
     /// RFC 9763 sec. 3 id-pe-relatedCert ({ id-pe 36 }): RelatedCertificate certificate extension for hybrid PQ migration.
@@ -182,6 +196,8 @@ begin
   FIdRsassaPssShake256 := FPkixAlgorithms.Branch('31');
   FIdEcdsaWithShake128 := FPkixAlgorithms.Branch('32');
   FIdEcdsaWithShake256 := FPkixAlgorithms.Branch('33');
+  FIdAlgNoSignature := FPkixAlgorithms.Branch('2');
+  FIdAlgUnsigned := FPkixAlgorithms.Branch('36');
   FIdPda := FIdPkix.Branch('9');
 
   // Authority Information Access
@@ -191,6 +207,7 @@ begin
 
   // Certificate Extensions: 2.5.29
   FIdCe := TDerObjectIdentifier.Create('2.5.29');
+  FIdCt := TDerObjectIdentifier.Create('1.3.6.1.4.1.11129.2.4');
 end;
 
 class function TX509ObjectIdentifiers.GetAttributeType: IDerObjectIdentifier;
@@ -298,6 +315,16 @@ begin
   Result := FIdEcdsaWithShake256;
 end;
 
+class function TX509ObjectIdentifiers.GetIdAlgNoSignature: IDerObjectIdentifier;
+begin
+  Result := FIdAlgNoSignature;
+end;
+
+class function TX509ObjectIdentifiers.GetIdAlgUnsigned: IDerObjectIdentifier;
+begin
+  Result := FIdAlgUnsigned;
+end;
+
 class function TX509ObjectIdentifiers.GetIdPda: IDerObjectIdentifier;
 begin
   Result := FIdPda;
@@ -321,6 +348,11 @@ end;
 class function TX509ObjectIdentifiers.GetIdCe: IDerObjectIdentifier;
 begin
   Result := FIdCe;
+end;
+
+class function TX509ObjectIdentifiers.GetIdCt: IDerObjectIdentifier;
+begin
+  Result := FIdCt;
 end;
 
 class function TX509ObjectIdentifiers.GetIdPeRelatedCert: IDerObjectIdentifier;

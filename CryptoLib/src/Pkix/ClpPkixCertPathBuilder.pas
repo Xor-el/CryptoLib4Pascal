@@ -23,21 +23,19 @@ interface
 uses
   SysUtils,
   Generics.Collections,
-  ClpIStore,
   ClpIX509Certificate,
-  ClpX509Comparers,
-  ClpCryptoLibHashSet,
   ClpIPkixTypes,
   ClpPkixCertPath,
   ClpPkixCertPathValidator,
   ClpPkixCertPathValidatorResult,
   ClpPkixCertPathValidatorUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
-  STargetCertSearchFailed = 'error finding target certificate: %s';
-  SNoTargetCertFound = 'no certificate found matching the target constraints';
+  SNodeBudgetExceeded = 'certification path build exceeded the node limit set by ' +
+    'TCryptoLibConfig.X509.MaxCertPathBuildNodes';
   SCertPathNotFound = 'unable to find certificate chain';
   SCertPathConstructionFailed = 'certification path could not be constructed from the certificate ' +
     'list: %s';
@@ -63,6 +61,9 @@ type
     FIsForCrlCheck: Boolean;
     /// <summary>The failure of the most recently tried chain, carried across the recursion.</summary>
     FCertPathException: String;
+    /// <summary>Per-build node-visit budget (from config) and running count, bounding the DFS.</summary>
+    FMaxNodes: Int32;
+    FNodesVisited: Int32;
 
     class function ContainsCert(const ACerts: TList<IX509Certificate>;
       const ACert: IX509Certificate): Boolean; overload; static;
@@ -86,6 +87,10 @@ type
   end;
 
 implementation
+
+type
+  /// <summary>Raised internally to abort a build once the node-visit budget is exhausted.</summary>
+  ENodeBudgetExceededCryptoLibException = class(ECryptoLibException);
 
 { TPkixCertPathBuilder }
 
@@ -170,6 +175,13 @@ var
 begin
   Result := nil;
 
+  // Bound the depth-first search: candidate issuers are matched by subject name only, so a store full
+  // of like-named certificates that never chain to a trust anchor could otherwise be explored as a very
+  // large number of partial paths (see TCryptoLibConfig.X509.MaxCertPathBuildNodes).
+  System.Inc(FNodesVisited);
+  if FNodesVisited > FMaxNodes then
+    raise ENodeBudgetExceededCryptoLibException.CreateRes(@SNodeBudgetExceeded);
+
   // the certificate is already on the path, so following it would cycle in the PKI graph
   if ContainsCert(ATbvPath, ATbvCert) then
     Exit;
@@ -234,6 +246,9 @@ begin
         Break;
     end;
   except
+    on E: ENodeBudgetExceededCryptoLibException do
+      // the whole build is over-budget; let it unwind to Build rather than trying more chains
+      raise;
     on E: Exception do
     begin
       // remembered for the caller; other candidate chains may still succeed
@@ -248,49 +263,34 @@ end;
 
 function TPkixCertPathBuilder.Build(const AParams: IPkixBuilderParameters): IPkixCertPathBuilderResult;
 var
-  LSelector: ISelector<IX509Certificate>;
-  LStores: TCryptoLibGenericArray<IStore<IX509Certificate>>;
-  LTargets: TCryptoLibHashSet<IX509Certificate>;
+  LTargets: TCryptoLibGenericArray<IX509Certificate>;
   LPath: TList<IX509Certificate>;
-  LCert: IX509Certificate;
   LIdx: Int32;
 begin
   Result := nil;
   FCertPathException := '';
+  FMaxNodes := TCryptoLibConfig.X509.MaxCertPathBuildNodes;
+  FNodesVisited := 0;
 
-  // search the target certificates
-  LSelector := AParams.GetTargetConstraintsCert();
-
-  LTargets := TCryptoLibHashSet<IX509Certificate>.Create(TX509Comparers.CertificateEqualityComparer);
+  LPath := TList<IX509Certificate>.Create();
   try
     try
-      LStores := AParams.GetStoresCert();
-      for LIdx := 0 to System.High(LStores) do
-      begin
-        LTargets.AddRange(LStores[LIdx].EnumerateMatches(LSelector));
-      end;
-    except
-      on E: Exception do
-        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@STargetCertSearchFailed, [E.Message]);
-    end;
+      // the target certificates: store matches, or one named directly on the selector
+      LTargets := TPkixCertPathValidatorUtilities.FindTargets(AParams);
 
-    if LTargets.Count < 1 then
-      raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoTargetCertFound);
-
-    LPath := TList<IX509Certificate>.Create();
-    try
       // check all potential target certificates
-      for LCert in LTargets do
+      for LIdx := 0 to System.High(LTargets) do
       begin
-        Result := BuildPath(LCert, AParams, LPath);
+        Result := BuildPath(LTargets[LIdx], AParams, LPath);
         if Result <> nil then
           Break;
       end;
-    finally
-      LPath.Free;
+    except
+      on E: ENodeBudgetExceededCryptoLibException do
+        raise EPkixCertPathBuilderCryptoLibException.Create(E.Message);
     end;
   finally
-    LTargets.Free;
+    LPath.Free;
   end;
 
   if Result <> nil then

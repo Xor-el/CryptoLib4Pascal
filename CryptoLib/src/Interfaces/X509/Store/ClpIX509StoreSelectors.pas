@@ -35,6 +35,34 @@ uses
   ClpCryptoLibTypes;
 
 type
+  /// <summary>Exposes the specific certificate a selector was built to match.</summary>
+  ISpecificCertificate = interface(IInterface)
+    ['{2F9C6A11-4D7E-4B92-8C05-1A6E3B70D941}']
+    function GetCertificate: IX509Certificate;
+    property Certificate: IX509Certificate read GetCertificate;
+  end;
+
+  /// <summary>Exposes the specific attribute certificate a selector was built to match.</summary>
+  ISpecificAttributeCert = interface(IInterface)
+    ['{3A0D7B22-5E8F-4CA3-9D16-2B7F4C81EA52}']
+    function GetAttributeCert: IX509V2AttributeCertificate;
+    property AttributeCert: IX509V2AttributeCertificate read GetAttributeCert;
+  end;
+
+  /// <summary>Exposes the certificate whose CRLs a selector is locating.</summary>
+  ICheckingCertificate = interface(IInterface)
+    ['{4B1E8C33-6F90-4DB4-AE27-3C801D92FB63}']
+    function GetCertificateChecking: IX509Certificate;
+    property CertificateChecking: IX509Certificate read GetCertificateChecking;
+  end;
+
+  /// <summary>Exposes the attribute certificate whose CRLs a selector is locating.</summary>
+  ICheckingAttrCert = interface(IInterface)
+    ['{5C2F9D44-7001-4EC5-BF38-4D912EA30C74}']
+    function GetAttrCertChecking: IX509V2AttributeCertificate;
+    property AttrCertChecking: IX509V2AttributeCertificate read GetAttrCertChecking;
+  end;
+
   /// <summary>
   /// Selects X.509 certificates from configurable criteria. An unset criterion matches anything.
   /// </summary>
