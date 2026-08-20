@@ -51,7 +51,7 @@ type
     ///   AInPtr / AOutPtr cover ABlockCount * 16 contiguous bytes each
     ///   and MAY alias.
     ///
-    ///   AOffsetPtr points at the 16-byte live FOffsetMAIN value; the
+    ///   AOffsetPtr points at the 16-byte live FOffsetMain value; the
     ///   kernel loads it at entry, updates it in-place as it walks the
     ///   offset ladder, and writes the final value back at exit.
     ///

@@ -732,12 +732,13 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
+  // Same-key/direction fast path: compare against the retained key WITHOUT
+  // materializing it, so a nonce-only re-Init copies and wipes nothing.
+  if CanReuseSchedule(AForEncryption, LKeyParameter) then
+    Exit;
+
   LKey := LKeyParameter.GetKey();
   try
-    // Same-key/direction fast path: keep the existing working key + S-box.
-    if CanReuseSchedule(AForEncryption, LKey) then
-      Exit;
-
     // GenerateWorkingKey zeroes the key array it is handed, so give it a
     // throwaway copy and keep LKey intact to record for future reuse checks.
     FWorkingKey := GenerateWorkingKey(AForEncryption, System.Copy(LKey));

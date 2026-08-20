@@ -28,6 +28,7 @@ uses
   ClpICtrKernel,
   ClpCipherKernelTypes,
   ClpCipherKernelRegistry,
+  ClpCipherKernelBinding,
   ClpIBulkBlockCipherMode,
   ClpAbstractBlockCipherMode,
   ClpBlockCipherBulkUtilities,
@@ -35,6 +36,10 @@ uses
   ClpISicBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpIKeyParameter,
+  ClpKeyParameter,
+  ClpIRawKeyedCipher,
+  ClpIRawInitBlockCipherMode,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -57,7 +62,7 @@ type
   /// the nonce is fused into an internal counter with bounds validated against the cipher block size.
   /// </remarks>
   TSicBlockCipher = class(TAbstractBlockCipherMode, ISicBlockCipher,
-    IBulkBlockCipherMode)
+    IBulkBlockCipherMode, IRawInitBlockCipherMode)
 
   strict private
   var
@@ -74,6 +79,13 @@ type
     // fuses counter generation, encryption and XOR. Preferred over FBulkCipher
     // for the batch-aligned bulk; nil (with FBulkCipher fallback) otherwise.
     FCtrKernel: ICtrKernel;
+    // Gate for the two acquisitions above: lets a same-key nonce-only re-Init
+    // skip the bulk probe and kernel walk and reuse the cached handles.
+    FKernelBinding: TCipherKernelBinding;
+    // Raw-key view of FCipher (nil if the engine does not implement it); probed
+    // once. Lets InitRaw re-key from raw bytes with no per-message key parameter.
+    FRawEngine: IRawKeyedCipher;
+    FRawEngineProbed: Boolean;
 
     /// <summary>
     /// Snapshot FCounter into APlainCounters and advance FCounter by ABlockCount
@@ -109,6 +121,8 @@ type
     /// <param name="AParameters">Must expose <see cref="IParametersWithIV"/> satisfying IV length constraints for this cipher block width.</param>
     /// <exception cref="EArgumentCryptoLibException">If IV shape is unsupported or nesting is absent.</exception>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+    procedure InitRaw(AForEncryption: Boolean;
+      const AKey, AIv: TCryptoLibByteArray);
     /// <summary>Encrypt/decrypt exactly one counter block-worth of payload.</summary>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
@@ -162,42 +176,69 @@ procedure TSicBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LIvParam: IParametersWithIV;
-  LParameters: ICipherParameters;
-  LMaxCounterSize: Int32;
+  LKeyParam: IKeyParameter;
+  LKey: TCryptoLibByteArray;
 begin
-  LParameters := AParameters;
-
-  if Supports(LParameters, IParametersWithIV, LIvParam) then
-  begin
-    FIV := LIvParam.GetIV();
-
-    if (FBlockSize < System.Length(FIV)) then
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidTooLargeIVLength,
-        [FBlockSize]);
-
-    LMaxCounterSize := Min(8, FBlockSize div 2);
-
-    if ((FBlockSize - System.Length(FIV)) > LMaxCounterSize) then
-      raise EArgumentCryptoLibException.CreateResFmt(@SInvalidTooSmallIVLength,
-        [FBlockSize - LMaxCounterSize]);
-
-    LParameters := LIvParam.Parameters;
-  end
-  else
+  if not Supports(AParameters, IParametersWithIV, LIvParam) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidParameterArgument);
 
-  if (LParameters <> nil) then
-    FCipher.Init(True, LParameters);
+  // A nil (or non-key) inner parameter is the "reuse the established key" signal.
+  if Supports(LIvParam.Parameters, IKeyParameter, LKeyParam) then
+    LKey := LKeyParam.GetKey()
+  else
+    LKey := nil;
 
-  // Probe once per Init. When the underlying cipher implements the bulk
-  // interface the batched path dispatches straight through FBulkCipher;
-  // otherwise we stay on the per-block path.
-  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
-  // Acquire the fused counter-mode kernel if an accelerator is registered for
-  // FCipher (sets FCtrKernel nil on miss). Direction is irrelevant for CTR
-  // keystream (always AES-encrypt of the counter), so request Encrypt.
-  TCipherKernelRegistry.TryAcquireCtr(FCipher, TCipherKernelDirection.Encrypt,
-    FCtrKernel);
+  InitRaw(AForEncryption, LKey, LIvParam.GetIV());
+end;
+
+procedure TSicBlockCipher.InitRaw(AForEncryption: Boolean;
+  const AKey, AIv: TCryptoLibByteArray);
+var
+  LIvLen, LMaxCounterSize: Int32;
+begin
+  LIvLen := System.Length(AIv);
+
+  if (FBlockSize < LIvLen) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidTooLargeIVLength,
+      [FBlockSize]);
+
+  LMaxCounterSize := Min(8, FBlockSize div 2);
+
+  if ((FBlockSize - LIvLen) > LMaxCounterSize) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidTooSmallIVLength,
+      [FBlockSize - LMaxCounterSize]);
+
+  // Copy the IV in place (no allocation when the length is unchanged).
+  if (FIV = nil) or (System.Length(FIV) <> LIvLen) then
+    System.SetLength(FIV, LIvLen);
+  System.Move(AIv[0], FIV[0], LIvLen);
+
+  // nil key = reuse the engine's established schedule; a real key hits the
+  // engine's raw-key compare-only gate (no key copy on reuse). CTR keystream is
+  // direction-independent, so always key for Encrypt.
+  if AKey <> nil then
+  begin
+    if not FRawEngineProbed then
+    begin
+      if not Supports(FCipher, IRawKeyedCipher, FRawEngine) then
+        FRawEngine := nil;
+      FRawEngineProbed := True;
+    end;
+    if FRawEngine <> nil then
+      FRawEngine.InitRaw(True, AKey)
+    else
+      FCipher.Init(True, TKeyParameter.Create(AKey) as ICipherParameters);
+  end;
+
+  // Bulk probe + fused counter-mode kernel are bound to FCipher's key schedule,
+  // so only (re)acquire when the binding reports the schedule or direction moved;
+  // a same-key nonce-only re-Init reuses both cached handles.
+  if FKernelBinding.NeedsRebind(FCipher, TCipherKernelDirection.Encrypt) then
+  begin
+    TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
+    TCipherKernelRegistry.TryAcquireCtr(FCipher, TCipherKernelDirection.Encrypt,
+      FCtrKernel);
+  end;
 
   Reset();
 end;

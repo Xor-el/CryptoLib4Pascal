@@ -34,6 +34,8 @@ uses
   ClpIBulkBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpCipherKernelTypes,
+  ClpCipherKernelBinding,
+  ClpIRawInitBlockCipherMode,
   ClpIEaxKernel,
   ClpCipherKernelRegistry,
   ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
@@ -70,6 +72,9 @@ type
   var
     FUnderlyingAes: IBlockCipher;
     FCipher: ISicBlockCipher;
+    // Raw-IV re-init view of FCipher (the nonce-CTR); QI'd once in the ctor. Lets
+    // the per-message CTR re-init skip its TParametersWithIV.
+    FCtrRaw: IRawInitBlockCipherMode;
     // Cached IBulkBlockCipherMode view of FCipher. TSicBlockCipher always
     // implements IBulkBlockCipherMode so this is non-nil in practice; the
     // Supports() call in the constructor keeps us robust against future
@@ -87,6 +92,10 @@ type
     // and non-AES ciphers stay on the TCMac / TSicBlockCipher scalar
     // path; set via FUseFusedBody below.
     FEaxKernel: IEaxKernel;
+    // Gate for FEaxKernel: bound to FUnderlyingAes's key schedule, so a same-key
+    // same-direction re-Init reuses the cached kernel instead of re-walking the
+    // registry. (The inner SIC's own kernel is gated inside TSicBlockCipher.)
+    FEaxBinding: TCipherKernelBinding;
 
     // True iff a fused body kernel is live for this Init cycle. Gates
     // the mode-owned OMAC substrate (FOmac* + FCtrBlock) against the
@@ -112,6 +121,23 @@ type
     FOmacB: TCryptoLibByteArray;
     FOmacP: TCryptoLibByteArray;
     FCtrBlock: TCryptoLibByteArray;
+
+    // Reused FBlockSize-byte per-message/per-block scratch, allocated once and
+    // overwritten each use. All hold key-derived intermediates except
+    // FTagScratch (tag constants only: zeroed at first alloc, only its last
+    // byte is ever written).
+    FTagScratch: TCryptoLibByteArray;
+    FMacOutScratch: TCryptoLibByteArray;
+    FKeystreamScratch: TCryptoLibByteArray;
+    FCbcTmpScratch: TCryptoLibByteArray;
+    FOmacTmpScratch: TCryptoLibByteArray;
+    FOmacPaddedScratch: TCryptoLibByteArray;
+    // Reused Length(FBufBlock)-byte DoFinal scratch (scalar final block); sized
+    // in DoFinal, so the fused path no longer allocates it per message.
+    FDoFinalTmp: TCryptoLibByteArray;
+    // Reused FBlockSize-byte block-0 stitch scratch (decrypt bulk path); holds
+    // one confirmed ciphertext block, fully overwritten each use.
+    FStitchScratch: TCryptoLibByteArray;
 
     procedure InitCipher();
     procedure CalculateMac();
@@ -202,6 +228,12 @@ type
 
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
+    /// <summary>One-shot seal/open after InitPacket/Init: drives the whole message
+    /// through ProcessBytes + DoFinal and, on a decrypt MAC failure, wipes the
+    /// plaintext output before re-raising (no unverified plaintext leaves).</summary>
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+
     procedure Reset(); overload; override;
   end;
 
@@ -218,7 +250,16 @@ begin
   System.SetLength(FMacBlock, FBlockSize);
   System.SetLength(FAssociatedTextMac, FMac.GetMacSize());
   System.SetLength(FNonceMac, FMac.GetMacSize());
+  // Allocate the reused per-message scratch blocks once (see field group).
+  System.SetLength(FTagScratch, FBlockSize);
+  System.SetLength(FMacOutScratch, FBlockSize);
+  System.SetLength(FKeystreamScratch, FBlockSize);
+  System.SetLength(FCbcTmpScratch, FBlockSize);
+  System.SetLength(FOmacTmpScratch, FBlockSize);
+  System.SetLength(FOmacPaddedScratch, FBlockSize);
+  System.SetLength(FStitchScratch, FBlockSize);
   FCipher := TSicBlockCipher.Create(ACipher);
+  Supports(FCipher, IRawInitBlockCipherMode, FCtrRaw);
   FUnderlyingCipher := FCipher;
   TBlockCipherBulkUtilities.TryResolveBulkCipherMode(FCipher, FBulkCipher);
   FUseFusedBody := False;
@@ -251,13 +292,21 @@ begin
   TArrayUtilities.Fill(FOmacB, 0, System.Length(FOmacB), Byte(0));
   TArrayUtilities.Fill(FOmacP, 0, System.Length(FOmacP), Byte(0));
   TArrayUtilities.Fill(FCtrBlock, 0, System.Length(FCtrBlock), Byte(0));
+  // Reused per-message scratch holding key-derived intermediates.
+  TArrayUtilities.Fill(FMacOutScratch, 0, System.Length(FMacOutScratch), Byte(0));
+  TArrayUtilities.Fill(FKeystreamScratch, 0, System.Length(FKeystreamScratch), Byte(0));
+  TArrayUtilities.Fill(FCbcTmpScratch, 0, System.Length(FCbcTmpScratch), Byte(0));
+  TArrayUtilities.Fill(FOmacTmpScratch, 0, System.Length(FOmacTmpScratch), Byte(0));
+  TArrayUtilities.Fill(FOmacPaddedScratch, 0, System.Length(FOmacPaddedScratch), Byte(0));
+  TArrayUtilities.Fill(FDoFinalTmp, 0, System.Length(FDoFinalTmp), Byte(0));
+  TArrayUtilities.Fill(FStitchScratch, 0, System.Length(FStitchScratch), Byte(0));
 end;
 
 procedure TEaxBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
   LChoice: TCipherAeadChoice;
-  LTag: TCryptoLibByteArray;
+  LDir: TCipherKernelDirection;
 begin
   FForEncryption := AForEncryption;
 
@@ -292,16 +341,17 @@ begin
   else
     System.SetLength(FBufBlock, FBlockSize + FMacSize);
 
-  System.SetLength(LTag, FBlockSize);
-
   FMac.Init(LChoice.CipherKey);
 
-  LTag[FBlockSize - 1] := Byte(Ord(TTag.TagN));
-  FMac.BlockUpdate(LTag, 0, FBlockSize);
+  FTagScratch[FBlockSize - 1] := Byte(Ord(TTag.TagN));
+  FMac.BlockUpdate(FTagScratch, 0, FBlockSize);
   FMac.BlockUpdate(LChoice.Nonce, 0, System.Length(LChoice.Nonce));
   FMac.DoFinal(FNonceMac, 0);
 
-  FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
+  if FCtrRaw <> nil then
+    FCtrRaw.InitRaw(True, nil, FNonceMac)
+  else
+    FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
 
   // Fused-body acquisition for both directions. Decrypt layers the OMAC
   // block-lookahead on top of the existing (FBlockSize + FMacSize)-byte
@@ -311,13 +361,17 @@ begin
   // Off-SIMD (or any build with no registered fused factory) TryAcquireEax
   // leaves FEaxKernel nil, so FUseFusedBody is False and the scalar
   // TCMac / TSicBlockCipher path runs - no compile-time arch gating needed.
-  FEaxKernel := nil;
   if FForEncryption then
-    TCipherKernelRegistry.TryAcquireEax(FCipher,
-      TCipherKernelDirection.Encrypt, FEaxKernel)
+    LDir := TCipherKernelDirection.Encrypt
   else
-    TCipherKernelRegistry.TryAcquireEax(FCipher,
-      TCipherKernelDirection.Decrypt, FEaxKernel);
+    LDir := TCipherKernelDirection.Decrypt;
+  // The fused EAX body kernel is bound to FUnderlyingAes's key schedule, so only
+  // (re)acquire it when the binding reports the schedule or direction changed.
+  if FEaxBinding.NeedsRebind(FUnderlyingAes, LDir) then
+  begin
+    FEaxKernel := nil;
+    TCipherKernelRegistry.TryAcquireEax(FCipher, LDir, FEaxKernel);
+  end;
   FUseFusedBody := FEaxKernel <> nil;
 
   // Streaming always rebuilds the key schedule, so the OMAC subkeys are stale:
@@ -344,8 +398,8 @@ end;
 procedure TEaxBlockCipher.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
-  LTag: TCryptoLibByteArray;
   LNeedReKey: Boolean;
+  LDir: TCipherKernelDirection;
 begin
   FForEncryption := AForEncryption;
 
@@ -374,8 +428,6 @@ begin
   else
     System.SetLength(FBufBlock, FBlockSize + FMacSize);
 
-  System.SetLength(LTag, FBlockSize);
-
   // Key schedule / CMAC subkeys depend only on the key: re-key the CMAC on an
   // actual rekey, otherwise just clear its running state.
   if LNeedReKey then
@@ -383,20 +435,27 @@ begin
   else
     FMac.Reset();
 
-  LTag[FBlockSize - 1] := Byte(Ord(TTag.TagN));
-  FMac.BlockUpdate(LTag, 0, FBlockSize);
+  FTagScratch[FBlockSize - 1] := Byte(Ord(TTag.TagN));
+  FMac.BlockUpdate(FTagScratch, 0, FBlockSize);
   FMac.BlockUpdate(ANonce, 0, System.Length(ANonce));
   FMac.DoFinal(FNonceMac, 0);
 
-  FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
-
-  FEaxKernel := nil;
-  if FForEncryption then
-    TCipherKernelRegistry.TryAcquireEax(FCipher,
-      TCipherKernelDirection.Encrypt, FEaxKernel)
+  if FCtrRaw <> nil then
+    FCtrRaw.InitRaw(True, nil, FNonceMac)
   else
-    TCipherKernelRegistry.TryAcquireEax(FCipher,
-      TCipherKernelDirection.Decrypt, FEaxKernel);
+    FCipher.Init(True, TParametersWithIV.Create(nil, FNonceMac) as IParametersWithIV);
+
+  if FForEncryption then
+    LDir := TCipherKernelDirection.Encrypt
+  else
+    LDir := TCipherKernelDirection.Decrypt;
+  // The fused EAX body kernel is bound to FUnderlyingAes's key schedule, so only
+  // (re)acquire it when the binding reports the schedule or direction changed.
+  if FEaxBinding.NeedsRebind(FUnderlyingAes, LDir) then
+  begin
+    FEaxKernel := nil;
+    TCipherKernelRegistry.TryAcquireEax(FCipher, LDir, FEaxKernel);
+  end;
   FUseFusedBody := FEaxKernel <> nil;
 
   // A rekey invalidates the OMAC subkeys; wipe and drop them so they cannot
@@ -437,12 +496,9 @@ end;
 
 procedure TEaxBlockCipher.CbcMacStep(const ABlock: TCryptoLibByteArray;
   AOff: Int32);
-var
-  LTmp: TCryptoLibByteArray;
 begin
-  System.SetLength(LTmp, FBlockSize);
-  TByteUtilities.&Xor(FBlockSize, FOmacState, 0, ABlock, AOff, LTmp, 0);
-  FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
+  TByteUtilities.&Xor(FBlockSize, FOmacState, 0, ABlock, AOff, FCbcTmpScratch, 0);
+  FUnderlyingAes.ProcessBlock(FCbcTmpScratch, 0, FOmacState, 0);
 end;
 
 procedure TEaxBlockCipher.FlushOmacLookahead;
@@ -471,32 +527,23 @@ begin
 end;
 
 procedure TEaxBlockCipher.CtrEncryptBlock(AInPtr, AOutPtr: PByte);
-var
-  LKeystream: TCryptoLibByteArray;
 begin
-  System.SetLength(LKeystream, FBlockSize);
-  FUnderlyingAes.ProcessBlock(FCtrBlock, 0, LKeystream, 0);
-  TByteUtilities.&Xor(FBlockSize, AInPtr, PByte(LKeystream), AOutPtr);
+  FUnderlyingAes.ProcessBlock(FCtrBlock, 0, FKeystreamScratch, 0);
+  TByteUtilities.&Xor(FBlockSize, AInPtr, PByte(FKeystreamScratch), AOutPtr);
   IncrementCtrBlock();
 end;
 
 procedure TEaxBlockCipher.CtrEncryptTail(AInPtr, AOutPtr: PByte; ALen: Int32);
-var
-  LKeystream: TCryptoLibByteArray;
 begin
-  System.SetLength(LKeystream, FBlockSize);
-  FUnderlyingAes.ProcessBlock(FCtrBlock, 0, LKeystream, 0);
-  TByteUtilities.&Xor(ALen, AInPtr, PByte(LKeystream), AOutPtr);
+  FUnderlyingAes.ProcessBlock(FCtrBlock, 0, FKeystreamScratch, 0);
+  TByteUtilities.&Xor(ALen, AInPtr, PByte(FKeystreamScratch), AOutPtr);
 end;
 
 procedure TEaxBlockCipher.FinalizeBodyOmacFullFromLookahead;
-var
-  LTmp: TCryptoLibByteArray;
 begin
-  System.SetLength(LTmp, FBlockSize);
-  TByteUtilities.&Xor(FBlockSize, FOmacState, FOmacLookahead, LTmp);
-  TByteUtilities.XorTo(FBlockSize, FOmacB, LTmp);
-  FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
+  TByteUtilities.&Xor(FBlockSize, FOmacState, FOmacLookahead, FOmacTmpScratch);
+  TByteUtilities.XorTo(FBlockSize, FOmacB, FOmacTmpScratch);
+  FUnderlyingAes.ProcessBlock(FOmacTmpScratch, 0, FOmacState, 0);
   FHasOmacLookahead := False;
 end;
 
@@ -504,29 +551,27 @@ procedure TEaxBlockCipher.FinalizeBodyOmacPartial(APartialPtr: PByte;
   APartialLen: Int32);
 var
   LI: Int32;
-  LPadded, LTmp: TCryptoLibByteArray;
   LPSrc: PByte;
 begin
   FlushOmacLookahead();
 
-  System.SetLength(LPadded, FBlockSize);
+  // Zero the pad tail beyond APartialLen (this block is reused, so bytes past
+  // the payload + $80 marker must be re-cleared, not left from a prior call).
+  TArrayUtilities.Fill(FOmacPaddedScratch, 0, FBlockSize, Byte(0));
   LPSrc := APartialPtr;
   for LI := 0 to System.Pred(APartialLen) do
   begin
-    LPadded[LI] := LPSrc^;
+    FOmacPaddedScratch[LI] := LPSrc^;
     System.Inc(LPSrc);
   end;
-  LPadded[APartialLen] := $80;
+  FOmacPaddedScratch[APartialLen] := $80;
 
-  System.SetLength(LTmp, FBlockSize);
-  TByteUtilities.&Xor(FBlockSize, FOmacState, LPadded, LTmp);
-  TByteUtilities.XorTo(FBlockSize, FOmacP, LTmp);
-  FUnderlyingAes.ProcessBlock(LTmp, 0, FOmacState, 0);
+  TByteUtilities.&Xor(FBlockSize, FOmacState, FOmacPaddedScratch, FOmacTmpScratch);
+  TByteUtilities.XorTo(FBlockSize, FOmacP, FOmacTmpScratch);
+  FUnderlyingAes.ProcessBlock(FOmacTmpScratch, 0, FOmacState, 0);
 end;
 
 procedure TEaxBlockCipher.InitCipher;
-var
-  LTag: TCryptoLibByteArray;
 begin
   if FCipherInitialized then
     Exit;
@@ -535,8 +580,7 @@ begin
 
   FMac.DoFinal(FAssociatedTextMac, 0);
 
-  System.SetLength(LTag, FBlockSize);
-  LTag[FBlockSize - 1] := Byte(Ord(TTag.TagC));
+  FTagScratch[FBlockSize - 1] := Byte(Ord(TTag.TagC));
 
   if FUseFusedBody then
   begin
@@ -545,33 +589,30 @@ begin
     // giving the same running state as FMac's TagC absorption would
     // have produced. An empty body takes the FinalizeBodyOmacFullFromLookahead
     // branch and OMAC-closes on TagC with subkey B.
-    System.Move(LTag[0], FOmacLookahead[0], FBlockSize);
+    System.Move(FTagScratch[0], FOmacLookahead[0], FBlockSize);
     FHasOmacLookahead := True;
   end
   else
   begin
-    FMac.BlockUpdate(LTag, 0, FBlockSize);
+    FMac.BlockUpdate(FTagScratch, 0, FBlockSize);
   end;
 end;
 
 procedure TEaxBlockCipher.CalculateMac;
-var
-  LOutC: TCryptoLibByteArray;
 begin
-  System.SetLength(LOutC, FBlockSize);
   if FUseFusedBody then
   begin
     // DoFinal has already invoked OMAC-close so FOmacState holds the
     // finalized OMAC of TagC || ciphertext.
-    System.Move(FOmacState[0], LOutC[0], FBlockSize);
+    System.Move(FOmacState[0], FMacOutScratch[0], FBlockSize);
   end
   else
   begin
-    FMac.DoFinal(LOutC, 0);
+    FMac.DoFinal(FMacOutScratch, 0);
   end;
 
   TByteUtilities.&Xor(System.Length(FMacBlock), FNonceMac, FAssociatedTextMac, FMacBlock);
-  TByteUtilities.XorTo(System.Length(FMacBlock), LOutC, FMacBlock);
+  TByteUtilities.XorTo(System.Length(FMacBlock), FMacOutScratch, FMacBlock);
 end;
 
 procedure TEaxBlockCipher.Reset;
@@ -580,8 +621,6 @@ begin
 end;
 
 procedure TEaxBlockCipher.Reset(AClearMac: Boolean);
-var
-  LTag: TCryptoLibByteArray;
 begin
   FCipher.Reset();
   FMac.Reset();
@@ -594,9 +633,8 @@ begin
     TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   end;
 
-  System.SetLength(LTag, FBlockSize);
-  LTag[FBlockSize - 1] := Byte(Ord(TTag.TagH));
-  FMac.BlockUpdate(LTag, 0, FBlockSize);
+  FTagScratch[FBlockSize - 1] := Byte(Ord(TTag.TagH));
+  FMac.BlockUpdate(FTagScratch, 0, FBlockSize);
 
   FCipherInitialized := False;
 
@@ -676,7 +714,6 @@ function TEaxBlockCipher.ProcessBytes(const AInput: TCryptoLibByteArray;
 var
   LI, LResultLen, LBulkBlocks, LBulkBytes, LKernelBlocks, LLastInOff,
     LLastOutOff, LMiddleBlocks, LMiddleInOff, LMiddleOutOff: Int32;
-  LScratch: TCryptoLibByteArray;
 begin
   InitCipher();
 
@@ -721,11 +758,10 @@ begin
         // Scalar block 0 (stitching the held FMacSize-byte tail of the
         // previous buffer with the first (FBlockSize - FMacSize) AInput
         // bytes into one confirmed ciphertext block).
-        System.SetLength(LScratch, FBlockSize);
-        StitchDecryptBlock0(AInput, AInOff, LScratch);
-        CtrEncryptBlock(@LScratch[0], @AOutput[AOutOff + LResultLen]);
+        StitchDecryptBlock0(AInput, AInOff, FStitchScratch);
+        CtrEncryptBlock(@FStitchScratch[0], @AOutput[AOutOff + LResultLen]);
         FlushOmacLookahead();
-        System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
+        System.Move(FStitchScratch[0], FOmacLookahead[0], FBlockSize);
         FHasOmacLookahead := True;
 
         // Kernel on the contiguous AInput run covering confirmed blocks
@@ -753,11 +789,10 @@ begin
         // Scalar slow path: confirmed block 0 stitches; blocks 1..N-1 run
         // directly from AInput. OMAC lookahead is threaded through each
         // block so the last confirmed block is always the lookahead.
-        System.SetLength(LScratch, FBlockSize);
-        StitchDecryptBlock0(AInput, AInOff, LScratch);
-        CtrEncryptBlock(@LScratch[0], @AOutput[AOutOff + LResultLen]);
+        StitchDecryptBlock0(AInput, AInOff, FStitchScratch);
+        CtrEncryptBlock(@FStitchScratch[0], @AOutput[AOutOff + LResultLen]);
         FlushOmacLookahead();
-        System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
+        System.Move(FStitchScratch[0], FOmacLookahead[0], FBlockSize);
         FHasOmacLookahead := True;
 
         for LI := 1 to System.Pred(LBulkBlocks) do
@@ -767,10 +802,10 @@ begin
           // Capture the ciphertext into scratch before CtrEncryptBlock
           // overwrites the input, so the in-place case (AOutput aliases
           // AInput) still feeds the OMAC lookahead the ciphertext.
-          System.Move(AInput[LLastInOff], LScratch[0], FBlockSize);
+          System.Move(AInput[LLastInOff], FStitchScratch[0], FBlockSize);
           CtrEncryptBlock(@AInput[LLastInOff], @AOutput[LLastOutOff]);
           FlushOmacLookahead();
-          System.Move(LScratch[0], FOmacLookahead[0], FBlockSize);
+          System.Move(FStitchScratch[0], FOmacLookahead[0], FBlockSize);
           FHasOmacLookahead := True;
         end;
       end;
@@ -947,10 +982,9 @@ begin
         TCheck.OutputLength(AOutput, AOutOff + LResultLen, LBulkBytes,
           SOutputBufferTooShort);
 
-        System.SetLength(LScratch, FBlockSize);
-        StitchDecryptBlock0(AInput, AInOff, LScratch);
-        FMac.BlockUpdate(LScratch, 0, FBlockSize);
-        FCipher.ProcessBlock(LScratch, 0, AOutput, AOutOff + LResultLen);
+        StitchDecryptBlock0(AInput, AInOff, FStitchScratch);
+        FMac.BlockUpdate(FStitchScratch, 0, FBlockSize);
+        FCipher.ProcessBlock(FStitchScratch, 0, AOutput, AOutOff + LResultLen);
 
         if LBulkBlocks > 1 then
         begin
@@ -990,12 +1024,11 @@ function TEaxBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
   LExtra: Int32;
-  LTmp: TCryptoLibByteArray;
 begin
   InitCipher();
 
   LExtra := FBufOff;
-  System.SetLength(LTmp, System.Length(FBufBlock));
+  System.SetLength(FDoFinalTmp, System.Length(FBufBlock));
 
   FBufOff := 0;
 
@@ -1017,9 +1050,9 @@ begin
     end
     else
     begin
-      FCipher.ProcessBlock(FBufBlock, 0, LTmp, 0);
-      System.Move(LTmp[0], AOutput[AOutOff], LExtra);
-      FMac.BlockUpdate(LTmp, 0, LExtra);
+      FCipher.ProcessBlock(FBufBlock, 0, FDoFinalTmp, 0);
+      System.Move(FDoFinalTmp[0], AOutput[AOutOff], LExtra);
+      FMac.BlockUpdate(FDoFinalTmp, 0, LExtra);
     end;
 
     CalculateMac();
@@ -1053,9 +1086,9 @@ begin
     begin
       FMac.BlockUpdate(FBufBlock, 0, LExtra - FMacSize);
 
-      FCipher.ProcessBlock(FBufBlock, 0, LTmp, 0);
+      FCipher.ProcessBlock(FBufBlock, 0, FDoFinalTmp, 0);
 
-      System.Move(LTmp[0], AOutput[AOutOff], LExtra - FMacSize);
+      System.Move(FDoFinalTmp[0], AOutput[AOutOff], LExtra - FMacSize);
     end;
 
     CalculateMac();
@@ -1066,6 +1099,30 @@ begin
     Reset(False);
 
     Result := LExtra - FMacSize;
+  end;
+end;
+
+function TEaxBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LLen, LPlainLen: Int32;
+begin
+  LLen := 0;
+  if AInLen > 0 then
+    LLen := ProcessBytes(AInput, AInOff, AInLen, AOutput, AOutOff);
+  try
+    Result := LLen + DoFinal(AOutput, AOutOff + LLen);
+  except
+    on EInvalidCipherTextCryptoLibException do
+    begin
+      // Decrypt MAC failure: wipe the tentative plaintext so none leaves the
+      // call. The data-too-short guard yields LPlainLen <= 0 (nothing written).
+      LPlainLen := AInLen - FMacSize;
+      if LPlainLen > 0 then
+        TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + LPlainLen, Byte(0));
+      raise;
+    end;
   end;
 end;
 

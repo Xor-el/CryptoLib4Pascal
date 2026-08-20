@@ -292,7 +292,8 @@ uses
   ClpAesGcmSivPacketCipher, ClpIBlockPacketCipher, 
   ClpAbstractBlockPacketCipher, ClpAesCbcPacketCipher, ClpAesCtrPacketCipher, 
   ClpChaCha20Poly1305X86Kernel, ClpChaCha20Poly1305ArmKernel, 
-  ClpChaCha20Poly1305PolyOps;
+  ClpChaCha20Poly1305PolyOps, ClpIScheduleEpoch, ClpCipherKernelBinding,
+  ClpIRawKeyedCipher, ClpIRawInitBlockCipherMode, ClpIRawInitStreamCipher;
 
 implementation
 

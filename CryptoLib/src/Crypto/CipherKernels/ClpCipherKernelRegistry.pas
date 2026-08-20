@@ -72,6 +72,13 @@ type
   ///   hot path allocates nothing. The short lock keeps runtime registration safe
   ///   against concurrent acquisition (registration remains a setup-time operation
   ///   in practice - every built-in factory registers during unit initialisation).
+  ///
+  ///   Register/unregister kernels BEFORE creating the ciphers that use them.
+  ///   Modes cache their resolved kernel (keyed on the engine's schedule epoch),
+  ///   so a factory registered or unregistered after a cipher's first use is not
+  ///   picked up by that already-initialised cipher instance until it is
+  ///   re-created. The framework's own factories all register at unit init, so
+  ///   this only concerns external kernels added at runtime.
   /// </summary>
   TCipherKernelRegistry = class sealed(TObject)
   strict private

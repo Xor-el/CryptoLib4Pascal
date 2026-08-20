@@ -32,12 +32,14 @@ uses
   ClpIChaCha7539Engine,
   ClpChaCha7539Engine,
   ClpCipherKernelTypes,
+  ClpCipherKernelBinding,
   ClpCipherKernelRegistry,
   ClpIChaCha20Poly1305Kernel,
   ClpPoly1305,
   ClpIMac,
   ClpKeyParameter,
   ClpParametersWithIV,
+  ClpIRawInitStreamCipher,
   ClpPack,
   ClpCheck,
   ClpArrayUtilities,
@@ -119,7 +121,14 @@ type
     // Resolved once, direction-agnostic (the kernel handles both directions via
     // ProcessStrides' AForEncrypt); cached across same-object re-Inits.
     FChaChaKernel: IChaCha20Poly1305Kernel;
-    FKernelResolved: Boolean;
+    // Resolve-once gate for FChaChaKernel (an engine-independent poly-path
+    // kernel): re-resolves only on a direction change or a kernel-availability
+    // change, not per message.
+    FChaChaBinding: TCipherKernelBinding;
+    // Raw-IV re-init view of FChaCha20 (probed once); lets InitPacket re-key from
+    // raw key + nonce spans with no per-message TParametersWithIV/TKeyParameter.
+    FChaChaRaw: IRawInitStreamCipher;
+    FChaChaRawProbed: Boolean;
     // Frozen per-message: True routes all Poly1305 through the active kernel.
     FUseKernelPoly: Boolean;
     FNonceBytes: Int32;
@@ -134,6 +143,9 @@ type
     // 16-byte AAD/tail staging for the kernel poly path (whole-block feed).
     FMacStage: TCryptoLibByteArray;
     FMacStagePos: Int32;
+    // Reused 16-byte length block for the scalar Poly1305 finish (holds the
+    // LE AAD/data length words; not secret). Was a fresh alloc per message.
+    FLengthsScratch: TCryptoLibByteArray;
 
     FInitialAad: TCryptoLibByteArray;
 
@@ -191,6 +203,12 @@ type
 
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
+    /// <summary>One-shot seal/open after InitPacket/Init: drives the whole message
+    /// through ProcessBytes + DoFinal and, on a decrypt MAC failure, wipes the
+    /// plaintext output before re-raising (no unverified plaintext leaves).</summary>
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+
     procedure Reset(); overload; override;
   end;
 
@@ -241,6 +259,7 @@ begin
   System.SetLength(FMacBlock, MacSize);
   System.SetLength(FMacKeyBlock, BufSize);
   System.SetLength(FMacStage, MacSize);
+  System.SetLength(FLengthsScratch, 16);
 
   FState := TState.Uninitialized;
 end;
@@ -275,6 +294,7 @@ var
   LInitNonce: TCryptoLibByteArray;
   LChaCha20Params: ICipherParameters;
   LMacSizeBits: Int32;
+  LDir: TCipherKernelDirection;
 begin
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
@@ -330,22 +350,23 @@ begin
     as IKeyParameter, LInitNonce);
   FChaCha20.Init(True, LChaCha20Params);
 
-  // Kernel is direction-agnostic for the poly path, so resolve once and keep it
-  // across same-object re-Inits (no re-acquire on a direction flip).
-  if not FKernelResolved then
+  // The poly-path kernel is engine-independent, so resolve it once and reuse it
+  // across re-Inits; the binding re-resolves only on a direction change or a
+  // kernel-availability change (register/unregister or the runtime gate flip).
+  if AForEncryption then
+    LDir := TCipherKernelDirection.Encrypt
+  else
+    LDir := TCipherKernelDirection.Decrypt;
+  if FChaChaBinding.NeedsResolve(LDir) then
   begin
-    if AForEncryption then
-      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-        TCipherKernelDirection.Encrypt, FChaChaKernel)
-    else
-      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-        TCipherKernelDirection.Decrypt, FChaChaKernel);
+    FChaChaKernel := nil;
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20, LDir,
+      FChaChaKernel);
     // Reject a kernel whose stride granularity the mode cannot carve cleanly
     // (StrideBytes must be a positive whole number of 64-byte blocks).
     if (FChaChaKernel <> nil) and ((FChaChaKernel.StrideBytes < BufSize) or
       (FChaChaKernel.StrideBytes mod BufSize <> 0)) then
       FChaChaKernel := nil;
-    FKernelResolved := True;
   end;
 
   if AForEncryption then
@@ -360,6 +381,7 @@ procedure TChaCha20Poly1305.InitPacket(AForEncryption: Boolean;
   const AKey, ANonce, AAad: TCryptoLibByteArray; AMacSizeBits: Int32);
 var
   LChaCha20Params: ICipherParameters;
+  LDir: TCipherKernelDirection;
 begin
   // Raw-span mirror of Init (no TryResolveAeadOrIv, no caller parameter objects).
   if ((MacSize * 8) <> AMacSizeBits) then
@@ -395,26 +417,41 @@ begin
 
   System.Move(ANonce[0], FNonce[0], FNonceBytes);
 
-  LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
-    as IKeyParameter, ANonce);
-  FChaCha20.Init(True, LChaCha20Params);
-
-  // Kernel is direction-agnostic for the poly path, so resolve once and keep it
-  // across same-object re-Inits (no re-acquire on a direction flip).
-  if not FKernelResolved then
+  // Re-init the engine from the raw key + nonce (no per-message parameter
+  // objects). The engine is always handed the real key (XChaCha derives a
+  // per-nonce subkey from it), matching Init.
+  if not FChaChaRawProbed then
   begin
-    if AForEncryption then
-      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-        TCipherKernelDirection.Encrypt, FChaChaKernel)
-    else
-      TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20,
-        TCipherKernelDirection.Decrypt, FChaChaKernel);
+    if not Supports(FChaCha20, IRawInitStreamCipher, FChaChaRaw) then
+      FChaChaRaw := nil;
+    FChaChaRawProbed := True;
+  end;
+  if FChaChaRaw <> nil then
+    FChaChaRaw.InitRaw(FKey, ANonce)
+  else
+  begin
+    LChaCha20Params := TParametersWithIV.Create(TKeyParameter.Create(FKey)
+      as IKeyParameter, ANonce);
+    FChaCha20.Init(True, LChaCha20Params);
+  end;
+
+  // The poly-path kernel is engine-independent, so resolve it once and reuse it
+  // across re-Inits; the binding re-resolves only on a direction change or a
+  // kernel-availability change (register/unregister or the runtime gate flip).
+  if AForEncryption then
+    LDir := TCipherKernelDirection.Encrypt
+  else
+    LDir := TCipherKernelDirection.Decrypt;
+  if FChaChaBinding.NeedsResolve(LDir) then
+  begin
+    FChaChaKernel := nil;
+    TCipherKernelRegistry.TryAcquireChaCha20Poly1305(FChaCha20, LDir,
+      FChaChaKernel);
     // Reject a kernel whose stride granularity the mode cannot carve cleanly
     // (StrideBytes must be a positive whole number of 64-byte blocks).
     if (FChaChaKernel <> nil) and ((FChaChaKernel.StrideBytes < BufSize) or
       (FChaChaKernel.StrideBytes mod BufSize <> 0)) then
       FChaChaKernel := nil;
-    FKernelResolved := True;
   end;
 
   if AForEncryption then
@@ -783,6 +820,30 @@ begin
   Result := LResultLen;
 end;
 
+function TChaCha20Poly1305.ProcessPacket(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LLen, LPlainLen: Int32;
+begin
+  LLen := 0;
+  if AInLen > 0 then
+    LLen := ProcessBytes(AInput, AInOff, AInLen, AOutput, AOutOff);
+  try
+    Result := LLen + DoFinal(AOutput, AOutOff + LLen);
+  except
+    on EInvalidCipherTextCryptoLibException do
+    begin
+      // Decrypt MAC failure: wipe the tentative plaintext so none leaves the
+      // call. The data-too-short guard yields LPlainLen <= 0 (nothing written).
+      LPlainLen := AInLen - FMacSize;
+      if LPlainLen > 0 then
+        TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + LPlainLen, Byte(0));
+      raise;
+    end;
+  end;
+end;
+
 procedure TChaCha20Poly1305.Reset;
 begin
   Reset(True, True);
@@ -827,8 +888,6 @@ begin
 end;
 
 procedure TChaCha20Poly1305.FinishData(ANextState: TState);
-var
-  LLengths: TCryptoLibByteArray;
 begin
   MacPad(FDataCount);
 
@@ -836,10 +895,9 @@ begin
     FChaChaKernel.FinishPoly(FAadCount, FDataCount, @FMacBlock[0])
   else
   begin
-    System.SetLength(LLengths, 16);
-    TPack.UInt64_To_LE(FAadCount, LLengths, 0);
-    TPack.UInt64_To_LE(FDataCount, LLengths, 8);
-    FPoly1305.BlockUpdate(LLengths, 0, 16);
+    TPack.UInt64_To_LE(FAadCount, FLengthsScratch, 0);
+    TPack.UInt64_To_LE(FDataCount, FLengthsScratch, 8);
+    FPoly1305.BlockUpdate(FLengthsScratch, 0, 16);
     FPoly1305.DoFinal(FMacBlock, 0);
   end;
 

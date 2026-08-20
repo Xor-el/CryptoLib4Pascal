@@ -28,9 +28,14 @@ uses
   ClpICbcBlockCipher,
   ClpICipherParameters,
   ClpIParametersWithIV,
+  ClpIKeyParameter,
+  ClpKeyParameter,
+  ClpIRawKeyedCipher,
+  ClpIRawInitBlockCipherMode,
   ClpAbstractBlockCipherMode,
   ClpBlockCipherBulkUtilities,
   ClpCipherKernelTypes,
+  ClpCipherKernelBinding,
   ClpICbcKernel,
   ClpCipherKernelRegistry,
   ClpArrayUtilities,
@@ -56,7 +61,7 @@ type
   /// last block is a separate concern.
   /// </remarks>
   TCbcBlockCipher = class sealed(TAbstractBlockCipherMode, ICbcBlockCipher,
-    IBulkBlockCipherMode)
+    IBulkBlockCipherMode, IRawInitBlockCipherMode)
 
   strict private
   var
@@ -75,6 +80,13 @@ type
     // aesdec + chain XOR). Both update FCbcV in place, matching the per-block
     // post-state exactly. nil otherwise -- the bulk fallbacks below take over.
     FCbcKernel: ICbcKernel;
+    // Gate for the bulk probe + kernel acquire: lets a same-key same-direction
+    // re-Init skip the registry walk and reuse the cached handles.
+    FKernelBinding: TCipherKernelBinding;
+    // Raw-key view of FCipher (nil if the engine does not implement it); probed
+    // once. Lets InitRaw re-key from raw bytes with no per-message key parameter.
+    FRawEngine: IRawKeyedCipher;
+    FRawEngineProbed: Boolean;
 
     function EncryptBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
       const AOutBytes: TCryptoLibByteArray; AOutOff: Int32): Int32;
@@ -108,6 +120,8 @@ type
     /// <param name="AParameters">Typically <see cref="IParametersWithIV" /> over a <see cref="IKeyParameter"/>.</param>
     /// <exception cref="EArgumentCryptoLibException">If the IV length is wrong or cipher state cannot change without a key.</exception>
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters); override;
+    procedure InitRaw(AForEncryption: Boolean;
+      const AKey, AIv: TCryptoLibByteArray);
     /// <summary>Encrypt or decrypt exactly one block (<c>GetBlockSize</c> bytes).</summary>
     /// <exception cref="EDataLengthCryptoLibException">If input or output ranges are shorter than one block.</exception>
     function ProcessBlock(const AInput: TCryptoLibByteArray; AInOff: Int32;
@@ -297,44 +311,79 @@ end;
 procedure TCbcBlockCipher.Init(AForEncryption: Boolean;
   const AParameters: ICipherParameters);
 var
-  LOldEncrypting: Boolean;
   LIvParam: IParametersWithIV;
-  LIv: TCryptoLibByteArray;
-  LParameters: ICipherParameters;
+  LKeyParam: IKeyParameter;
+  LKey, LIv: TCryptoLibByteArray;
+begin
+  LIv := nil;
+  if Supports(AParameters, IParametersWithIV, LIvParam) then
+  begin
+    LIv := LIvParam.GetIV();
+    Supports(LIvParam.Parameters, IKeyParameter, LKeyParam);
+  end
+  else
+    Supports(AParameters, IKeyParameter, LKeyParam);
+
+  if LKeyParam <> nil then
+    LKey := LKeyParam.GetKey()
+  else
+    LKey := nil;
+
+  InitRaw(AForEncryption, LKey, LIv);
+end;
+
+procedure TCbcBlockCipher.InitRaw(AForEncryption: Boolean;
+  const AKey, AIv: TCryptoLibByteArray);
+var
+  LOldEncrypting: Boolean;
+  LDir: TCipherKernelDirection;
 begin
   LOldEncrypting := FForEncryption;
   FForEncryption := AForEncryption;
-  LParameters := AParameters;
-  if Supports(LParameters, IParametersWithIV, LIvParam) then
+
+  // AIv <> nil: copy it in place (no GetIV allocation). AIv = nil keeps the
+  // current FIV (a bare-key re-Init).
+  if AIv <> nil then
   begin
-    LIv := LIvParam.GetIV();
-    if (System.Length(LIv) <> FBlockSize) then
+    if (System.Length(AIv) <> FBlockSize) then
       raise EArgumentCryptoLibException.CreateRes(@SInvalidIVLength);
-    System.Move(LIv[0], FIV[0], System.Length(LIv) * System.SizeOf(Byte));
-    LParameters := LIvParam.Parameters;
+    System.Move(AIv[0], FIV[0], FBlockSize * System.SizeOf(Byte));
   end;
+
   Reset();
-  if (LParameters <> nil) then
-    FCipher.Init(FForEncryption, LParameters)
+
+  // nil key = reuse the established schedule (raw-key compare-only gate for a
+  // real key); CBC cannot flip direction without a key (schedule differs enc/dec).
+  if AKey <> nil then
+  begin
+    if not FRawEngineProbed then
+    begin
+      if not Supports(FCipher, IRawKeyedCipher, FRawEngine) then
+        FRawEngine := nil;
+      FRawEngineProbed := True;
+    end;
+    if FRawEngine <> nil then
+      FRawEngine.InitRaw(FForEncryption, AKey)
+    else
+      FCipher.Init(FForEncryption, TKeyParameter.Create(AKey) as ICipherParameters);
+  end
   else if (LOldEncrypting <> FForEncryption) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidChangeState);
 
-  // Re-probe every Init: a user can re-key the same TCbcBlockCipher with a
-  // different underlying cipher reference. The runtime (FBlockSize = 16)
-  // guard in ProcessBlocks keeps us correct if a future non-16-byte bulk
-  // engine ever surfaces.
-  TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
-
-  // Acquire the direction-matched fused kernel when a provider claims FCipher.
-  // Encrypt folds the serial chain into one register-held pass; decrypt folds
-  // the chain XOR into the parallel aesdec pass (one pass over memory instead
-  // of the bulk-decrypt-then-XOR two passes). nil -> the bulk fallbacks below.
+  // Bulk probe + direction-matched fused kernel are bound to FCipher's key
+  // schedule, so only (re)acquire when the binding reports the schedule or
+  // direction changed; a same-key same-direction re-Init reuses both cached
+  // handles. Encrypt folds the serial chain into one register-held pass; decrypt
+  // folds the chain XOR into the parallel aesdec pass. nil -> the bulk fallbacks.
   if FForEncryption then
-    TCipherKernelRegistry.TryAcquireCbc(FCipher, TCipherKernelDirection.Encrypt,
-      FCbcKernel)
+    LDir := TCipherKernelDirection.Encrypt
   else
-    TCipherKernelRegistry.TryAcquireCbc(FCipher, TCipherKernelDirection.Decrypt,
-      FCbcKernel);
+    LDir := TCipherKernelDirection.Decrypt;
+  if FKernelBinding.NeedsRebind(FCipher, LDir) then
+  begin
+    TBlockCipherBulkUtilities.TryResolveBulkCipher(FCipher, FBulkCipher);
+    TCipherKernelRegistry.TryAcquireCbc(FCipher, LDir, FCbcKernel);
+  end;
 end;
 
 function TCbcBlockCipher.ProcessBlock(const AInput: TCryptoLibByteArray;

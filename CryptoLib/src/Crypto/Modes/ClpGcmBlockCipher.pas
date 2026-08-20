@@ -128,6 +128,8 @@ type
     FTagBlock: TCryptoLibByteArray;
     FReceivedMac: TCryptoLibByteArray;
     FLengthExponent: TCryptoLibByteArray;
+    // Reusable partial-block keystream (ProcessPartial); holds key material.
+    FPartialCtrBlock: TCryptoLibByteArray;
     FGHashState: TCryptoLibByteArray;
     FAadHashState: TCryptoLibByteArray;
     FAadHashStatePre: TCryptoLibByteArray;
@@ -315,6 +317,9 @@ type
     procedure GHASHBlock(const AY, AB: TCryptoLibByteArray; AOff: Int32); overload;
     procedure GHASHPartial(const AY, AB: TCryptoLibByteArray; AOff, ALen: Int32);
 
+    // Finalize the GHASH into FMacBlock (shared by DoFinal and ProcessPacket).
+    procedure ComputeMac();
+
     // ---------------------------------------------------------------------
     // Lifecycle: argument validation and reset.
     // ---------------------------------------------------------------------
@@ -355,6 +360,17 @@ type
       const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
+
+    /// <summary>
+    /// One-shot seal/open of a whole message, to be called after
+    /// <see cref="InitPacket"/> (or <see cref="Init"/>). Encrypt writes
+    /// ciphertext then the tag; decrypt verifies the trailing tag and writes
+    /// plaintext (wiping it and raising on a MAC mismatch). Processes the entire
+    /// input in a single pass with no <c>ProcessBytes</c> partial-block buffering
+    /// or trailing-tag hold-back. Returns bytes written to <c>AOutput</c>.
+    /// </summary>
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
 
     procedure Reset(); override;
   end;
@@ -522,8 +538,7 @@ begin
   // Reuse FPreCounterBlock across messages; zero it in place. The 12-byte-nonce path relies
   // on bytes [12..14] being zero, and the GHASH fallback accumulates into a
   // zeroed FPreCounterBlock -- the Fill guarantees both without a per-message allocation.
-  if FPreCounterBlock = nil then
-    System.SetLength(FPreCounterBlock, BlockSize);
+  System.SetLength(FPreCounterBlock, BlockSize);
   TArrayUtilities.Fill(FPreCounterBlock, 0, BlockSize, Byte(0));
 
   if System.Length(FLastNonce) = 12 then
@@ -544,23 +559,18 @@ procedure TGcmBlockCipher.ResetTransientState();
 begin
   // Allocate the fixed 16-byte transient buffers once per object lifetime and
   // zero them in place each message (they were reallocated every Init before).
-  if FGHashState = nil then
-    System.SetLength(FGHashState, BlockSize);
+  System.SetLength(FGHashState, BlockSize);
   TArrayUtilities.Fill(FGHashState, 0, BlockSize, Byte(0));
-  if FAadHashState = nil then
-    System.SetLength(FAadHashState, BlockSize);
+  System.SetLength(FAadHashState, BlockSize);
   TArrayUtilities.Fill(FAadHashState, 0, BlockSize, Byte(0));
-  if FAadHashStatePre = nil then
-    System.SetLength(FAadHashStatePre, BlockSize);
+  System.SetLength(FAadHashStatePre, BlockSize);
   TArrayUtilities.Fill(FAadHashStatePre, 0, BlockSize, Byte(0));
-  if FAadBlock = nil then
-    System.SetLength(FAadBlock, BlockSize);
+  System.SetLength(FAadBlock, BlockSize);
   TArrayUtilities.Fill(FAadBlock, 0, BlockSize, Byte(0));
   FAadBlockPos := 0;
   FAadLength := 0;
   FAadLengthPre := 0;
-  if FCounterBlock = nil then
-    System.SetLength(FCounterBlock, BlockSize);
+  System.SetLength(FCounterBlock, BlockSize);
   System.Move(FPreCounterBlock[0], FCounterBlock[0], BlockSize);
   FCounterWord := TPack.BE_To_UInt32(FCounterBlock, 12);
   FBlocksRemaining := UInt32($FFFFFFFF) - 1;
@@ -576,7 +586,8 @@ var
   LBufLength: Int32;
 begin
   FForEncryption := AForEncryption;
-  FMacBlock := nil;
+  // Invalidate the previous tag in place (keep the buffer; DoFinal sizes it).
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   FInitialised := True;
 
   ResolveInitParameters(AParameters, LNewNonce, LKeyParam);
@@ -632,7 +643,8 @@ var
   LBufLength: Int32;
 begin
   FForEncryption := AForEncryption;
-  FMacBlock := nil;
+  // Invalidate the previous tag in place (keep the buffer; DoFinal sizes it).
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
   FInitialised := True;
 
   // AAD is consumed in place below; store a reference (no clone).
@@ -656,8 +668,7 @@ begin
   // Snapshot the nonce into a reusable owned buffer: the nonce-reuse guard must
   // compare against a stable previous nonce, and callers routinely reuse one
   // nonce buffer across messages. One small Move, no alloc on the steady path.
-  if (FLastNonce = nil) or (System.Length(FLastNonce) <> System.Length(ANonce)) then
-    System.SetLength(FLastNonce, System.Length(ANonce));
+  System.SetLength(FLastNonce, System.Length(ANonce));
   System.Move(ANonce[0], FLastNonce[0], System.Length(ANonce));
 
   // Same-key fast path (raw): key schedule / H / multiplier / kernel retained;
@@ -1000,11 +1011,56 @@ begin
   Result := LResultLen;
 end;
 
+procedure TGcmBlockCipher.ComputeMac();
+var
+  LC: Int64;
+begin
+  // Fold any pending AAD, GHASH the length block, encrypt J0 and XOR to form the
+  // tag in FMacBlock. Pure state -> FMacBlock: no output buffer, no received tag,
+  // so both the streaming DoFinal and the one-shot ProcessPacket share it.
+  FAadLength := FAadLength + UInt64(FAadBlockPos);
+
+  if FAadLength > FAadLengthPre then
+  begin
+    if FAadBlockPos > 0 then
+      GHASHPartial(FAadHashState, FAadBlock, 0, FAadBlockPos);
+
+    if FAadLengthPre > 0 then
+      TGcmUtilities.&Xor(FAadHashState, FAadHashStatePre);
+
+    LC := Int64(((FTotalLength * 8) + 127) shr 7);
+
+    System.SetLength(FLengthExponent, 16);
+    if FExponentiator = nil then
+    begin
+      FExponentiator := TBasicGcmExponentiator.Create() as IGcmExponentiator;
+      FExponentiator.Init(FHashSubKey);
+    end;
+    FExponentiator.ExponentiateX(LC, FLengthExponent);
+
+    TGcmUtilities.Multiply(FAadHashState, FLengthExponent);
+
+    TGcmUtilities.&Xor(FGHashState, FAadHashState);
+  end;
+
+  System.SetLength(FLengthBlock, BlockSize);
+  TPack.UInt64_To_BE(FAadLength * UInt64(8), FLengthBlock, 0);
+  TPack.UInt64_To_BE(FTotalLength * UInt64(8), FLengthBlock, 8);
+
+  GHASHBlock(FGHashState, FLengthBlock);
+
+  System.SetLength(FTagBlock, BlockSize);
+  FCipher.ProcessBlock(FPreCounterBlock, 0, FTagBlock, 0);
+  TGcmUtilities.&Xor(FTagBlock, FGHashState);
+
+  System.SetLength(FMacBlock, FMacSize);
+  System.Move(FTagBlock[0], FMacBlock[0], FMacSize);
+end;
+
 function TGcmBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
   LExtra, LResultLen: Int32;
-  LC: Int64;
 begin
   CheckStatus();
 
@@ -1037,49 +1093,9 @@ begin
     ProcessPartial(FBufferBlock, 0, LExtra, AOutput, AOutOff);
   end;
 
-  FAadLength := FAadLength + UInt64(FAadBlockPos);
-
-  if FAadLength > FAadLengthPre then
-  begin
-    if FAadBlockPos > 0 then
-      GHASHPartial(FAadHashState, FAadBlock, 0, FAadBlockPos);
-
-    if FAadLengthPre > 0 then
-      TGcmUtilities.&Xor(FAadHashState, FAadHashStatePre);
-
-    LC := Int64(((FTotalLength * 8) + 127) shr 7);
-
-    if FLengthExponent = nil then
-      System.SetLength(FLengthExponent, 16);
-    if FExponentiator = nil then
-    begin
-      FExponentiator := TBasicGcmExponentiator.Create() as IGcmExponentiator;
-      FExponentiator.Init(FHashSubKey);
-    end;
-    FExponentiator.ExponentiateX(LC, FLengthExponent);
-
-    TGcmUtilities.Multiply(FAadHashState, FLengthExponent);
-
-    TGcmUtilities.&Xor(FGHashState, FAadHashState);
-  end;
-
-  if FLengthBlock = nil then
-    System.SetLength(FLengthBlock, BlockSize);
-  TPack.UInt64_To_BE(FAadLength * UInt64(8), FLengthBlock, 0);
-  TPack.UInt64_To_BE(FTotalLength * UInt64(8), FLengthBlock, 8);
-
-  GHASHBlock(FGHashState, FLengthBlock);
-
-  if FTagBlock = nil then
-    System.SetLength(FTagBlock, BlockSize);
-  FCipher.ProcessBlock(FPreCounterBlock, 0, FTagBlock, 0);
-  TGcmUtilities.&Xor(FTagBlock, FGHashState);
+  ComputeMac();
 
   LResultLen := LExtra;
-
-  if (FMacBlock = nil) or (System.Length(FMacBlock) <> FMacSize) then
-    System.SetLength(FMacBlock, FMacSize);
-  System.Move(FTagBlock[0], FMacBlock[0], FMacSize);
 
   if FForEncryption then
   begin
@@ -1088,8 +1104,7 @@ begin
   end
   else
   begin
-    if (FReceivedMac = nil) or (System.Length(FReceivedMac) <> FMacSize) then
-      System.SetLength(FReceivedMac, FMacSize);
+    System.SetLength(FReceivedMac, FMacSize);
     System.Move(FBufferBlock[LExtra], FReceivedMac[0], FMacSize);
     if not TArrayUtilities.FixedTimeEquals(FMacBlock, FReceivedMac) then
       RaiseMacCheckFailed();
@@ -1097,6 +1112,89 @@ begin
 
   DoReset(False);
 
+  Result := LResultLen;
+end;
+
+function TGcmBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LDataLen, LFull, LPartial, LInOff, LOutOff, LWholeLen, LResultLen: Int32;
+  LBlocksNeeded: UInt32;
+begin
+  CheckStatus();
+
+  TCheck.DataLength(AInput, AInOff, AInLen, SInputBufferTooShort);
+
+  if FForEncryption then
+  begin
+    LDataLen := AInLen;
+    TCheck.OutputLength(AOutput, AOutOff, LDataLen + FMacSize, SOutputBufferTooShort);
+  end
+  else
+  begin
+    if AInLen < FMacSize then
+      raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShort);
+    LDataLen := AInLen - FMacSize;
+    TCheck.OutputLength(AOutput, AOutOff, LDataLen, SOutputBufferTooShort);
+    // Snapshot the received tag before any output is written (the output may
+    // alias the input); compared byte-for-byte after finalization.
+    System.SetLength(FReceivedMac, FMacSize);
+    System.Move(AInput[AInOff + LDataLen], FReceivedMac[0], FMacSize);
+  end;
+
+  // Reserve every block up front (whole + trailing partial). The streaming lane
+  // decrements per block; failing early here is strictly safer.
+  LBlocksNeeded := (UInt32(LDataLen) + UInt32(BlockSize - 1)) shr 4;
+  if FBlocksRemaining < LBlocksNeeded then
+    raise EInvalidOperationCryptoLibException.CreateRes(@STooManyBlocks);
+  FBlocksRemaining := FBlocksRemaining - LBlocksNeeded;
+
+  // Fold the AAD into the running GHASH exactly once (InitCipher is not
+  // idempotent) before any body block.
+  InitCipher();
+
+  LInOff := AInOff;
+  LOutOff := AOutOff;
+  LFull := LDataLen and (not (BlockSize - 1));
+  if LFull > 0 then
+  begin
+    LWholeLen := LFull;
+    RunTieredWholeBlocks(FForEncryption, AInput, LInOff, LWholeLen, AOutput,
+      LOutOff, 0);
+    FTotalLength := FTotalLength + UInt64(LFull);
+  end;
+
+  LPartial := LDataLen - LFull;
+  if LPartial > 0 then
+  begin
+    // ProcessPartial XORs its buffer in place, so stage the tail in FBufferBlock
+    // rather than mutating the caller's input array. RunTieredWholeBlocks does
+    // not advance the output offset past its trailing single block, so index the
+    // tail explicitly from LFull rather than from the mutated LInOff/LOutOff.
+    System.Move(AInput[AInOff + LFull], FBufferBlock[0], LPartial);
+    ProcessPartial(FBufferBlock, 0, LPartial, AOutput, AOutOff + LFull);
+  end;
+
+  ComputeMac();
+
+  if FForEncryption then
+  begin
+    System.Move(FMacBlock[0], AOutput[AOutOff + LDataLen], FMacSize);
+    LResultLen := LDataLen + FMacSize;
+  end
+  else
+  begin
+    if not TArrayUtilities.FixedTimeEquals(FMacBlock, FReceivedMac) then
+    begin
+      // No unverified plaintext leaves the call.
+      TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + LDataLen, Byte(0));
+      RaiseMacCheckFailed();
+    end;
+    LResultLen := LDataLen;
+  end;
+
+  DoReset(False);
   Result := LResultLen;
 end;
 
@@ -1114,19 +1212,18 @@ begin
   FAadBlockPos := 0;
   FAadLength := 0;
   FAadLengthPre := 0;
-  if FCounterBlock = nil then
-    System.SetLength(FCounterBlock, BlockSize);
+  System.SetLength(FCounterBlock, BlockSize);
   System.Move(FPreCounterBlock[0], FCounterBlock[0], BlockSize);
   FCounterWord := TPack.BE_To_UInt32(FCounterBlock, 12);
   FBlocksRemaining := UInt32($FFFFFFFF) - 1;
   FBufferOffset := 0;
   FTotalLength := 0;
 
-  if FBufferBlock <> nil then
-    TArrayUtilities.Fill(FBufferBlock, 0, System.Length(FBufferBlock), Byte(0));
+  TArrayUtilities.Fill(FBufferBlock, 0, System.Length(FBufferBlock), Byte(0));
+  TArrayUtilities.Fill(FPartialCtrBlock, 0, System.Length(FPartialCtrBlock), Byte(0));
 
   if AClearMac then
-    FMacBlock := nil;
+    TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 
   if FForEncryption then
   begin
@@ -1144,6 +1241,7 @@ begin
   TArrayUtilities.Fill(FHashSubKeyPowers, 0, System.Length(FHashSubKeyPowers), Byte(0));
   TArrayUtilities.Fill(FCounterKeystream, 0, System.Length(FCounterKeystream), Byte(0));
   TArrayUtilities.Fill(FCounterKeystreamAhead, 0, System.Length(FCounterKeystreamAhead), Byte(0));
+  TArrayUtilities.Fill(FPartialCtrBlock, 0, System.Length(FPartialCtrBlock), Byte(0));
   FHashSubKeyPow1.N0 := 0; FHashSubKeyPow1.N1 := 0;
   FHashSubKeyPow2.N0 := 0; FHashSubKeyPow2.N1 := 0;
   FHashSubKeyPow3.N0 := 0; FHashSubKeyPow3.N1 := 0;
@@ -1894,22 +1992,19 @@ end;
 
 procedure TGcmBlockCipher.ProcessPartial(const ABuf: TCryptoLibByteArray;
   AOff, ALen: Int32; const AOutput: TCryptoLibByteArray; AOutOff: Int32);
-var
-  LCtrBlock: TCryptoLibByteArray;
 begin
-  LCtrBlock := nil;
-  System.SetLength(LCtrBlock, BlockSize);
-  GetNextCtrBlock(LCtrBlock);
+  System.SetLength(FPartialCtrBlock, BlockSize);
+  GetNextCtrBlock(FPartialCtrBlock);
 
   if FForEncryption then
   begin
-    TGcmUtilities.&Xor(ABuf, AOff, LCtrBlock, 0, ALen);
+    TGcmUtilities.&Xor(ABuf, AOff, FPartialCtrBlock, 0, ALen);
     GHASHPartial(FGHashState, ABuf, AOff, ALen);
   end
   else
   begin
     GHASHPartial(FGHashState, ABuf, AOff, ALen);
-    TGcmUtilities.&Xor(ABuf, AOff, LCtrBlock, 0, ALen);
+    TGcmUtilities.&Xor(ABuf, AOff, FPartialCtrBlock, 0, ALen);
   end;
 
   System.Move(ABuf[AOff], AOutput[AOutOff], ALen);

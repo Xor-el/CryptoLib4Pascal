@@ -38,6 +38,7 @@ uses
   ClpGcmUtilities,
   ClpGcmSivSimd,
   ClpCipherKernelTypes,
+  ClpCipherKernelBinding,
   ClpIGcmSivKernel,
   ClpCipherKernelRegistry,
   ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
@@ -131,6 +132,11 @@ type
     // matches the mode's 8-block batch contract.
     FGcmSivKernel: IGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
+    // Resolve-once gate for FGcmSivKernel. The kernel is engine-independent (it
+    // reads the H-power table by pointer), so unlike the block-mode kernels it is
+    // resolved once and reused across the per-nonce key derivations - only the
+    // table contents change per message, not the kernel object.
+    FSivBinding: TCipherKernelBinding;
 
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
@@ -903,22 +909,33 @@ begin
   // kernel and must outlive it (it is owned by this cipher instance).
   // TGcmSivSimd.IsSupported is False off-SIMD (or with no fused backend), so the
   // precompute is skipped and TGcmSivHasher.UpdateHash stays on scalar POLYVAL.
-  FGcmSivKernel := nil;
-  FGcmSivKernelBatchBytes := 0;
   if TGcmSivSimd.IsSupported then
   begin
     if System.Length(FHPow128) < 128 then
       System.SetLength(FHPow128, 128);
+    // Refill the H-power table for this per-nonce derived key; the fused kernel
+    // reads it through the stable @FHPow128[0] pointer. The kernel object itself
+    // is engine-independent, so resolve it once and reuse it across messages.
     TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
-    if TCipherKernelRegistry.TryAcquireGcmSiv(FTheCipher,
-      TCipherKernelDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
-      (FGcmSivKernel <> nil) then
+    if FSivBinding.NeedsResolve(TCipherKernelDirection.Encrypt) then
     begin
-      if FGcmSivKernel.MinimumBlockCount = 8 then
-        FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
-      else
-        FGcmSivKernel := nil;
+      FGcmSivKernel := nil;
+      FGcmSivKernelBatchBytes := 0;
+      if TCipherKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+        TCipherKernelDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+        (FGcmSivKernel <> nil) then
+      begin
+        if FGcmSivKernel.MinimumBlockCount = 8 then
+          FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
+        else
+          FGcmSivKernel := nil;
+      end;
     end;
+  end
+  else
+  begin
+    FGcmSivKernel := nil;
+    FGcmSivKernelBatchBytes := 0;
   end;
 
   FTheFlags := FTheFlags or INITIAL;

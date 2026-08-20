@@ -99,16 +99,28 @@ type
     FLTableFlat: TCryptoLibByteArray;
     FLTableFlatCount: Int32;
 
+    // Persisted KTop cache key (the masked nonce whose top bits produced the
+    // cached FStretch). Owned 16-byte buffer; FKTopValid marks it live. Both are
+    // invalidated on rekey so a new key never reuses a stale KTop.
     FKTopInput: TCryptoLibByteArray;
+    FKTopValid: Boolean;
     FStretch: TCryptoLibByteArray;
-    FOffsetMAIN_0: TCryptoLibByteArray;
+    FInitialOffsetMain: TCryptoLibByteArray;
+
+    // Reused 16-byte per-message scratch (allocated once, overwritten each use):
+    // the nonce builder, the KTop keystream, the decrypt tag copy and the
+    // final-block pad.
+    FNonceScratch: TCryptoLibByteArray;
+    FKTopScratch: TCryptoLibByteArray;
+    FTagScratch: TCryptoLibByteArray;
+    FPadScratch: TCryptoLibByteArray;
 
     FHashBlock, FMainBlock: TCryptoLibByteArray;
     FHashBlockPos, FMainBlockPos: Int32;
     FHashBlockCount, FMainBlockCount: Int64;
-    FOffsetHASH: TCryptoLibByteArray;
+    FOffsetHash: TCryptoLibByteArray;
     FSum: TCryptoLibByteArray;
-    FOffsetMAIN: TCryptoLibByteArray;
+    FOffsetMain: TCryptoLibByteArray;
     FChecksum: TCryptoLibByteArray;
 
     // 8-wide bulk-cipher fast path: cached bulk-capable view of
@@ -175,6 +187,12 @@ type
 
     function DoFinal(const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32; override;
 
+    /// <summary>One-shot seal/open after InitPacket/Init: drives the whole message
+    /// through ProcessBytes + DoFinal and, on a decrypt MAC failure, wipes the
+    /// plaintext output before re-raising (no unverified plaintext leaves).</summary>
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+
     procedure Reset(); overload; override;
   end;
 
@@ -204,8 +222,14 @@ begin
   FUnderlyingCipher := FMainCipher;
 
   System.SetLength(FStretch, 24);
-  System.SetLength(FOffsetMAIN_0, 16);
-  System.SetLength(FOffsetMAIN, 16);
+  System.SetLength(FInitialOffsetMain, 16);
+  System.SetLength(FOffsetMain, 16);
+  // Owned KTop cache key + reused per-message scratch, allocated once.
+  System.SetLength(FKTopInput, 16);
+  FKTopValid := False;
+  System.SetLength(FNonceScratch, 16);
+  System.SetLength(FKTopScratch, 16);
+  System.SetLength(FPadScratch, 16);
   FL := TList<TCryptoLibByteArray>.Create;
   System.SetLength(FLTableFlat, FUSED_LTABLE_ENTRIES * BLOCK_SIZE);
   FLTableFlatCount := 0;
@@ -256,9 +280,14 @@ begin
   TArrayUtilities.Fill(FLTableFlat, 0, System.Length(FLTableFlat), Byte(0));
   TArrayUtilities.Fill(FStretch, 0, System.Length(FStretch), Byte(0));
   TArrayUtilities.Fill(FKTopInput, 0, System.Length(FKTopInput), Byte(0));
-  TArrayUtilities.Fill(FOffsetMAIN_0, 0, System.Length(FOffsetMAIN_0), Byte(0));
-  TArrayUtilities.Fill(FOffsetMAIN, 0, System.Length(FOffsetMAIN), Byte(0));
-  TArrayUtilities.Fill(FOffsetHASH, 0, System.Length(FOffsetHASH), Byte(0));
+  FKTopValid := False;
+  TArrayUtilities.Fill(FNonceScratch, 0, System.Length(FNonceScratch), Byte(0));
+  TArrayUtilities.Fill(FKTopScratch, 0, System.Length(FKTopScratch), Byte(0));
+  TArrayUtilities.Fill(FPadScratch, 0, System.Length(FPadScratch), Byte(0));
+  TArrayUtilities.Fill(FTagScratch, 0, System.Length(FTagScratch), Byte(0));
+  TArrayUtilities.Fill(FInitialOffsetMain, 0, System.Length(FInitialOffsetMain), Byte(0));
+  TArrayUtilities.Fill(FOffsetMain, 0, System.Length(FOffsetMain), Byte(0));
+  TArrayUtilities.Fill(FOffsetHash, 0, System.Length(FOffsetHash), Byte(0));
   TArrayUtilities.Fill(FSum, 0, System.Length(FSum), Byte(0));
   TArrayUtilities.Fill(FChecksum, 0, System.Length(FChecksum), Byte(0));
   TArrayUtilities.Fill(FHashBlock, 0, System.Length(FHashBlock), Byte(0));
@@ -280,7 +309,8 @@ var
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
-  FMacBlock := nil;
+  // Invalidate the previous tag in place (keep the buffer; DoFinal sizes it).
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 
   if not TCipherModeParameterUtilities.TryResolveAeadOrIv(AParameters, LChoice)
   then
@@ -338,7 +368,7 @@ begin
     if not LSameKey then
     begin
       FHashCipher.Init(True, LKeyParameter);
-      FKTopInput := nil;
+      FKTopValid := False;
     end;
     FMainCipher.Init(AForEncryption, LKeyParameter);
   end
@@ -405,7 +435,7 @@ begin
   LBytes := LBottom div 8;
   if (LBits = 0) then
   begin
-    System.Move(FStretch[LBytes], FOffsetMAIN_0[0], 16);
+    System.Move(FStretch[LBytes], FInitialOffsetMain[0], 16);
   end
   else
   begin
@@ -414,7 +444,7 @@ begin
       LB1 := UInt32(FStretch[LBytes]);
       System.Inc(LBytes);
       LB2 := UInt32(FStretch[LBytes]);
-      FOffsetMAIN_0[LI] := Byte((LB1 shl LBits) or (LB2 shr (8 - LBits)));
+      FInitialOffsetMain[LI] := Byte((LB1 shl LBits) or (LB2 shr (8 - LBits)));
     end;
   end;
 
@@ -424,11 +454,11 @@ begin
   FHashBlockCount := 0;
   FMainBlockCount := 0;
 
-  System.SetLength(FOffsetHASH, 16);
-  TArrayUtilities.Fill(FOffsetHASH, 0, 16, Byte(0));
+  System.SetLength(FOffsetHash, 16);
+  TArrayUtilities.Fill(FOffsetHash, 0, 16, Byte(0));
   System.SetLength(FSum, 16);
   TArrayUtilities.Fill(FSum, 0, 16, Byte(0));
-  System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
+  System.Move(FInitialOffsetMain[0], FOffsetMain[0], 16);
   System.SetLength(FChecksum, 16);
   TArrayUtilities.Fill(FChecksum, 0, 16, Byte(0));
 
@@ -449,7 +479,8 @@ var
 begin
   LOldForEncryption := FForEncryption;
   FForEncryption := AForEncryption;
-  FMacBlock := nil;
+  // Invalidate the previous tag in place (keep the buffer; DoFinal sizes it).
+  TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
 
   CheckNonceReuseRaw(FForEncryption, ANonce, AKey);
 
@@ -496,7 +527,7 @@ begin
     if not LSameKey then
     begin
       FHashCipher.Init(True, LKeyParam);
-      FKTopInput := nil;
+      FKTopValid := False;
     end;
     FMainCipher.Init(AForEncryption, LKeyParam);
   end
@@ -551,7 +582,7 @@ begin
   LBytes := LBottom div 8;
   if (LBits = 0) then
   begin
-    System.Move(FStretch[LBytes], FOffsetMAIN_0[0], 16);
+    System.Move(FStretch[LBytes], FInitialOffsetMain[0], 16);
   end
   else
   begin
@@ -560,7 +591,7 @@ begin
       LB1 := UInt32(FStretch[LBytes]);
       System.Inc(LBytes);
       LB2 := UInt32(FStretch[LBytes]);
-      FOffsetMAIN_0[LI] := Byte((LB1 shl LBits) or (LB2 shr (8 - LBits)));
+      FInitialOffsetMain[LI] := Byte((LB1 shl LBits) or (LB2 shr (8 - LBits)));
     end;
   end;
 
@@ -570,11 +601,11 @@ begin
   FHashBlockCount := 0;
   FMainBlockCount := 0;
 
-  System.SetLength(FOffsetHASH, 16);
-  TArrayUtilities.Fill(FOffsetHASH, 0, 16, Byte(0));
+  System.SetLength(FOffsetHash, 16);
+  TArrayUtilities.Fill(FOffsetHash, 0, 16, Byte(0));
   System.SetLength(FSum, 16);
   TArrayUtilities.Fill(FSum, 0, 16, Byte(0));
-  System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
+  System.Move(FInitialOffsetMain[0], FOffsetMain[0], 16);
   System.SetLength(FChecksum, 16);
   TArrayUtilities.Fill(FChecksum, 0, 16, Byte(0));
 
@@ -586,26 +617,30 @@ end;
 
 function TOcbBlockCipher.ProcessNonce(const AN: TCryptoLibByteArray): Int32;
 var
-  LNonce, LKTop: TCryptoLibByteArray;
   LBottom, LI: Int32;
 begin
-  System.SetLength(LNonce, 16);
-  System.Move(AN[0], LNonce[System.Length(LNonce) - System.Length(AN)], System.Length(AN));
-  LNonce[0] := Byte(FMacSize shl 4);
-  LNonce[15 - System.Length(AN)] := LNonce[15 - System.Length(AN)] or 1;
+  // Build the masked nonce into the reused scratch (zeroed first: the leading
+  // pad bytes must be 0 before the nonce is placed in the tail).
+  TArrayUtilities.Fill(FNonceScratch, 0, 16, Byte(0));
+  System.Move(AN[0], FNonceScratch[16 - System.Length(AN)], System.Length(AN));
+  FNonceScratch[0] := Byte(FMacSize shl 4);
+  FNonceScratch[15 - System.Length(AN)] := FNonceScratch[15 - System.Length(AN)] or 1;
 
-  LBottom := LNonce[15] and $3F;
-  LNonce[15] := LNonce[15] and Byte($C0);
+  LBottom := FNonceScratch[15] and $3F;
+  FNonceScratch[15] := FNonceScratch[15] and Byte($C0);
 
-  if (FKTopInput = nil) or (not TArrayUtilities.AreEqual(LNonce, FKTopInput)) then
+  // KTop cache: recompute FStretch only when the masked-nonce top bits changed.
+  // On a miss, persist the key into the owned FKTopInput (copy, so the scratch
+  // stays free to be rebuilt next call) and mark it live.
+  if (not FKTopValid) or (not TArrayUtilities.AreEqual(FNonceScratch, FKTopInput)) then
   begin
-    System.SetLength(LKTop, 16);
-    FKTopInput := LNonce;
-    FHashCipher.ProcessBlock(FKTopInput, 0, LKTop, 0);
-    System.Move(LKTop[0], FStretch[0], 16);
+    System.Move(FNonceScratch[0], FKTopInput[0], 16);
+    FKTopValid := True;
+    FHashCipher.ProcessBlock(FKTopInput, 0, FKTopScratch, 0);
+    System.Move(FKTopScratch[0], FStretch[0], 16);
     for LI := 0 to 7 do
     begin
-      FStretch[16 + LI] := Byte(LKTop[LI] xor LKTop[LI + 1]);
+      FStretch[16 + LI] := Byte(FKTopScratch[LI] xor FKTopScratch[LI + 1]);
     end;
   end;
 
@@ -775,7 +810,7 @@ begin
     LInPtr := @AInput[AInOff];
     LBlock0Ptr := LInPtr;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      @FOffsetMain[0], @FChecksum[0], @FLTableFlat[0],
       LBlock0Ptr, ABlockCount, LStartBlockCount);
   end
   else if FMacSize = BLOCK_SIZE then
@@ -800,7 +835,7 @@ begin
     LBlock0Ptr := @FMainBlock[0];
     LInPtr := PByte(@AInput[AInOff]) - BLOCK_SIZE;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      @FOffsetMain[0], @FChecksum[0], @FLTableFlat[0],
       LBlock0Ptr, ABlockCount, LStartBlockCount);
 
     // Refresh the BLOCK_SIZE lookahead from the tail of the consumed
@@ -824,7 +859,7 @@ begin
     LInPtr := @LScratch[0];
     LBlock0Ptr := LInPtr;
     FOcbKernel.ProcessBlocks(LInPtr, @AOutput[AOutOff],
-      @FOffsetMAIN[0], @FChecksum[0], @FLTableFlat[0],
+      @FOffsetMain[0], @FChecksum[0], @FLTableFlat[0],
       LBlock0Ptr, ABlockCount, LStartBlockCount);
 
     System.Move(AInput[AInOff + LBatchBytes - FMacSize], FMainBlock[0],
@@ -842,15 +877,15 @@ var
   LLSub: TCryptoLibByteArray;
 begin
   // Evolve the per-block offset ladder the exact same way ProcessMainBlock
-  // would: FOffsetMAIN_{k+1} = FOffsetMAIN_k XOR L[ntz(count+1)]. Materialise
+  // would: FOffsetMain_{k+1} = FOffsetMain_k XOR L[ntz(count+1)]. Materialise
   // all 8 offsets consecutively in LOffsets[0..127] so the downstream XORs
   // run as a single 128-byte sweep via TByteUtilities.Xor.
   for LI := 0 to 7 do
   begin
     System.Inc(FMainBlockCount);
     LLSub := GetLSub(OCB_ntz(FMainBlockCount));
-    TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(LLSub), PByte(FOffsetMAIN));
-    System.Move(FOffsetMAIN[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
+    TByteUtilities.&Xor(16, PByte(FOffsetMain), PByte(LLSub), PByte(FOffsetMain));
+    System.Move(FOffsetMain[0], LOffsets[LI * BLOCK_SIZE], BLOCK_SIZE);
   end;
 
   if FForEncryption then
@@ -905,18 +940,17 @@ end;
 function TOcbBlockCipher.DoFinal(const AOutput: TCryptoLibByteArray;
   AOutOff: Int32): Int32;
 var
-  LTag, LPad: TCryptoLibByteArray;
   LResultLen: Int32;
 begin
-  LTag := nil;
   if (not FForEncryption) then
   begin
     if (FMainBlockPos < FMacSize) then
       raise EInvalidCipherTextCryptoLibException.CreateRes(@SDataTooShort);
 
     FMainBlockPos := FMainBlockPos - FMacSize;
-    System.SetLength(LTag, FMacSize);
-    System.Move(FMainBlock[FMainBlockPos], LTag[0], FMacSize);
+    // Reused tag copy, sized to the current MAC length.
+    System.SetLength(FTagScratch, FMacSize);
+    System.Move(FMainBlock[FMainBlockPos], FTagScratch[0], FMacSize);
   end;
 
   if (FHashBlockPos > 0) then
@@ -933,12 +967,11 @@ begin
       TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FMainBlock), PByte(FChecksum));
     end;
 
-    TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(FL_Asterisk), PByte(FOffsetMAIN));
+    TByteUtilities.&Xor(16, PByte(FOffsetMain), PByte(FL_Asterisk), PByte(FOffsetMain));
 
-    System.SetLength(LPad, 16);
-    FHashCipher.ProcessBlock(FOffsetMAIN, 0, LPad, 0);
+    FHashCipher.ProcessBlock(FOffsetMain, 0, FPadScratch, 0);
 
-    TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(LPad), PByte(FMainBlock));
+    TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FPadScratch), PByte(FMainBlock));
 
     TCheck.OutputLength(AOutput, AOutOff, FMainBlockPos, SOutputBufferTooShort);
     System.Move(FMainBlock[0], AOutput[AOutOff], FMainBlockPos);
@@ -950,7 +983,7 @@ begin
     end;
   end;
 
-  TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FOffsetMAIN), PByte(FChecksum));
+  TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FOffsetMain), PByte(FChecksum));
   TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FL_Dollar), PByte(FChecksum));
   FHashCipher.ProcessBlock(FChecksum, 0, FChecksum, 0);
   TByteUtilities.&Xor(16, PByte(FChecksum), PByte(FSum), PByte(FChecksum));
@@ -969,13 +1002,37 @@ begin
   end
   else
   begin
-    if (not TArrayUtilities.FixedTimeEquals(FMacBlock, LTag)) then
+    if (not TArrayUtilities.FixedTimeEquals(FMacBlock, FTagScratch)) then
       RaiseMacCheckFailed();
   end;
 
   Reset(False);
 
   Result := LResultLen;
+end;
+
+function TOcbBlockCipher.ProcessPacket(const AInput: TCryptoLibByteArray;
+  AInOff, AInLen: Int32; const AOutput: TCryptoLibByteArray;
+  AOutOff: Int32): Int32;
+var
+  LLen, LPlainLen: Int32;
+begin
+  LLen := 0;
+  if AInLen > 0 then
+    LLen := ProcessBytes(AInput, AInOff, AInLen, AOutput, AOutOff);
+  try
+    Result := LLen + DoFinal(AOutput, AOutOff + LLen);
+  except
+    on EInvalidCipherTextCryptoLibException do
+    begin
+      // Decrypt MAC failure: wipe the tentative plaintext so none leaves the
+      // call. The data-too-short guard yields LPlainLen <= 0 (nothing written).
+      LPlainLen := AInLen - FMacSize;
+      if LPlainLen > 0 then
+        TArrayUtilities.Fill(AOutput, AOutOff, AOutOff + LPlainLen, Byte(0));
+      raise;
+    end;
+  end;
 end;
 
 procedure TOcbBlockCipher.Reset;
@@ -1034,11 +1091,11 @@ begin
 
   System.Inc(FMainBlockCount);
   LLSub := GetLSub(OCB_ntz(FMainBlockCount));
-  TByteUtilities.&Xor(16, PByte(FOffsetMAIN), PByte(LLSub), PByte(FOffsetMAIN));
+  TByteUtilities.&Xor(16, PByte(FOffsetMain), PByte(LLSub), PByte(FOffsetMain));
 
-  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMAIN), PByte(FMainBlock));
+  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMain), PByte(FMainBlock));
   FMainCipher.ProcessBlock(FMainBlock, 0, FMainBlock, 0);
-  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMAIN), PByte(FMainBlock));
+  TByteUtilities.&Xor(16, PByte(FMainBlock), PByte(FOffsetMain), PByte(FMainBlock));
 
   System.Move(FMainBlock[0], AOutput[AOutOff], 16);
 
@@ -1061,13 +1118,13 @@ begin
   FHashBlockCount := 0;
   FMainBlockCount := 0;
 
-  Clear(FOffsetHASH);
+  Clear(FOffsetHash);
   Clear(FSum);
-  System.Move(FOffsetMAIN_0[0], FOffsetMAIN[0], 16);
+  System.Move(FInitialOffsetMain[0], FOffsetMain[0], 16);
   Clear(FChecksum);
 
   if AClearMac then
-    FMacBlock := nil;
+    Clear(FMacBlock);
 
   if (FInitialAssociatedText <> nil) then
   begin
@@ -1077,8 +1134,8 @@ end;
 
 procedure TOcbBlockCipher.UpdateHASH(const ALSub: TCryptoLibByteArray);
 begin
-  TByteUtilities.&Xor(16, PByte(FOffsetHASH), PByte(ALSub), PByte(FOffsetHASH));
-  TByteUtilities.&Xor(16, PByte(FHashBlock), PByte(FOffsetHASH), PByte(FHashBlock));
+  TByteUtilities.&Xor(16, PByte(FOffsetHash), PByte(ALSub), PByte(FOffsetHash));
+  TByteUtilities.&Xor(16, PByte(FHashBlock), PByte(FOffsetHash), PByte(FHashBlock));
   FHashCipher.ProcessBlock(FHashBlock, 0, FHashBlock, 0);
   TByteUtilities.&Xor(16, PByte(FSum), PByte(FHashBlock), PByte(FSum));
 end;

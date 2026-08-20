@@ -14,28 +14,29 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIOcbBlockCipher;
+unit ClpIRawKeyedCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
   ClpCryptoLibTypes;
 
 type
-  IOcbBlockCipher = interface(IAeadBlockCipher)
-    ['{5A8A8189-E1A7-4A48-9481-853AAEA8A371}']
+  /// <summary>
+  ///   Raw-key (re)init for a keyed cipher engine: (re)build the key schedule
+  ///   from a raw key byte span, with a compare-only same-key fast path - no
+  ///   parameter object and no key copy on the reuse path. Lets a one-shot /
+  ///   packet caller re-key across messages without constructing an
+  ///   IKeyParameter each time. AKey must be non-nil (nil-key "reuse" is a
+  ///   mode-level convention, handled by the calling mode, not the engine).
+  /// </summary>
+  IRawKeyedCipher = interface
+    ['{5C1D9E48-2A73-4F60-B18E-6D4A0F92C7B3}']
 
-    /// <summary>
-    /// One-shot seal/open of a whole message after <c>InitPacket</c>/<c>Init</c>:
-    /// encrypt writes ciphertext then the tag; decrypt verifies the trailing tag
-    /// and writes plaintext (wiping it and raising on a MAC mismatch). Returns
-    /// bytes written to <c>AOutput</c>.
-    /// </summary>
-    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    procedure InitRaw(AForEncryption: Boolean;
+      const AKey: TCryptoLibByteArray);
   end;
 
 implementation

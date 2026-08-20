@@ -26,6 +26,7 @@ uses
   ClpCheck,
   ClpIStreamCipher,
   ClpIBulkStreamCipher,
+  ClpIRawInitStreamCipher,
   ClpISalsa20Engine,
   ClpIKeyParameter,
   ClpICipherParameters,
@@ -59,7 +60,7 @@ type
   /// Implementation of Daniel J. Bernstein's Salsa20 stream cipher, Snuffle 2005
   /// </summary>
   TSalsa20Engine = class(TInterfacedObject, ISalsa20Engine, IStreamCipher,
-    IBulkStreamCipher)
+    IBulkStreamCipher, IRawInitStreamCipher)
 
   strict private
   const
@@ -147,6 +148,10 @@ type
 
     procedure Init(AForEncryption: Boolean;
       const AParameters: ICipherParameters); virtual;
+    /// <summary>IRawInitStreamCipher: (re)init from raw key and nonce byte spans,
+    /// with no TParametersWithIV/TKeyParameter wrappers. AKey = nil reuses the
+    /// established key. Same validation and effect as Init.</summary>
+    procedure InitRaw(const AKey, AIv: TCryptoLibByteArray);
     function ReturnByte(AInput: Byte): Byte; virtual;
 
     // IBulkStreamCipher: bulk keystream over whole 64B blocks; engine owns the ladder.
@@ -279,6 +284,27 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInitError,
       [AlgorithmName]);
   end;
+
+  Reset();
+  FInitialised := True;
+end;
+
+procedure TSalsa20Engine.InitRaw(const AKey, AIv: TCryptoLibByteArray);
+begin
+  if ((AIv = nil) or (System.Length(AIv) <> NonceSize)) then
+    raise EArgumentCryptoLibException.CreateResFmt(@SInvalidIV,
+      [AlgorithmName, NonceSize]);
+
+  if (AKey = nil) then
+  begin
+    if (not FInitialised) then
+      raise EArgumentCryptoLibException.CreateResFmt
+        (@SKeyParameterNullForFirstInit, [AlgorithmName]);
+
+    SetKey(nil, AIv);
+  end
+  else
+    SetKey(AKey, AIv);
 
   Reset();
   FInitialised := True;

@@ -21,6 +21,13 @@ unit ClpAbstractAesEngine;
 interface
 
 uses
+  SysUtils,
+  ClpIScheduleEpoch,
+  ClpIRawKeyedCipher,
+  ClpIBlockCipher,
+  ClpIKeyParameter,
+  ClpICipherParameters,
+  ClpKeyParameter,
   ClpArrayUtilities,
   ClpCryptoLibTypes;
 
@@ -37,7 +44,8 @@ type
   /// for keys derived from secret content (e.g. convergent encryption), where
   /// key-equality would reveal content-equality.</para>
   /// </summary>
-  TAbstractAesEngine = class abstract(TInterfacedObject)
+  TAbstractAesEngine = class abstract(TInterfacedObject, IScheduleEpoch,
+    IRawKeyedCipher)
 
   strict protected
   var
@@ -53,6 +61,12 @@ type
     /// again only after the rebuild succeeds, so a failed Init never leaves a
     /// stale schedule marked reusable.</summary>
     FScheduleReady: Boolean;
+    /// <summary>Monotonic count of destructive schedule rebuilds. Bumped the
+    /// moment CanReuseSchedule enters the rebuild path (not on success), so a
+    /// kernel bound to the old round-key buffer is treated as stale from the
+    /// instant the rebuild starts, mirroring FScheduleReady's invalidate-on-entry.
+    /// A same-key reuse leaves it untouched. Surfaced via GetScheduleEpoch.</summary>
+    FScheduleEpoch: UInt32;
 
     /// <summary>
     /// Returns True when the existing schedule can be reused for
@@ -64,7 +78,13 @@ type
     /// successful rebuild, call MarkScheduleBuilt as its last step.
     /// </summary>
     function CanReuseSchedule(AForEncryption: Boolean;
-      const AKey: TCryptoLibByteArray): Boolean;
+      const AKey: TCryptoLibByteArray): Boolean; overload;
+    /// <summary>Same-key gate for the parameter path: compares AKeyParam against
+    /// the retained key WITHOUT materializing it (GetKeyLength + constant-time
+    /// FixedTimeEquals), so a same-key re-Init copies nothing and wipes nothing.
+    /// Same invalidate-on-miss contract as the byte-array overload.</summary>
+    function CanReuseSchedule(AForEncryption: Boolean;
+      const AKeyParam: IKeyParameter): Boolean; overload;
 
     /// <summary>
     /// Records (AForEncryption, AKey) and marks the schedule ready. Call once,
@@ -85,12 +105,46 @@ type
     procedure WipeSchedule; virtual; abstract;
 
   public
+    /// <summary>IScheduleEpoch: the current schedule-rebuild generation (see
+    /// FScheduleEpoch). Lets a kernel-binding gate cheaply detect that the round
+    /// keys were rebuilt and re-acquire, without exposing the key.</summary>
+    function GetScheduleEpoch: UInt32;
+
+    /// <summary>IRawKeyedCipher: raw-key (re)init. Compare-only same-key fast
+    /// path (no allocation, no key copy); on a real rebuild it wraps the key once
+    /// and defers to the standard Init, so the key-expansion path stays in one
+    /// place. Inherited by every engine - none override it.</summary>
+    procedure InitRaw(AForEncryption: Boolean;
+      const AKey: TCryptoLibByteArray);
+
     destructor Destroy; override;
   end;
 
 implementation
 
 { TAbstractAesEngine }
+
+function TAbstractAesEngine.GetScheduleEpoch: UInt32;
+begin
+  Result := FScheduleEpoch;
+end;
+
+procedure TAbstractAesEngine.InitRaw(AForEncryption: Boolean;
+  const AKey: TCryptoLibByteArray);
+var
+  LCipher: IBlockCipher;
+begin
+  // Hot path: the schedule is already built for this exact key -> reuse it, no
+  // allocation and no key copy.
+  if CanReuseSchedule(AForEncryption, AKey) then
+    Exit;
+  // Rare rebuild: wrap the raw key once and defer to the standard Init (which
+  // re-validates and rebuilds), so the key-expansion path lives in one place.
+  // Self is the concrete engine, which implements IBlockCipher; the calling mode
+  // holds a reference, so this QI never drops the last one.
+  if Supports(Self, IBlockCipher, LCipher) then
+    LCipher.Init(AForEncryption, TKeyParameter.Create(AKey) as ICipherParameters);
+end;
 
 destructor TAbstractAesEngine.Destroy;
 begin
@@ -115,8 +169,26 @@ begin
 
   // Entering the rebuild path: it is destructive (it frees/overwrites the round
   // keys), so invalidate immediately. Nothing is recorded until the rebuild
-  // succeeds and calls MarkScheduleBuilt.
+  // succeeds and calls MarkScheduleBuilt. The epoch bump makes every kernel
+  // bound to the old round keys re-acquire on its next use.
   FScheduleReady := False;
+  System.Inc(FScheduleEpoch);
+  Result := False;
+end;
+
+function TAbstractAesEngine.CanReuseSchedule(AForEncryption: Boolean;
+  const AKeyParam: IKeyParameter): Boolean;
+begin
+  if FScheduleReady and (FLastForEncryption = AForEncryption) and
+    (FLastKey <> nil) and (System.Length(FLastKey) = AKeyParam.GetKeyLength()) and
+    AKeyParam.FixedTimeEquals(FLastKey) then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  FScheduleReady := False;
+  System.Inc(FScheduleEpoch);
   Result := False;
 end;
 

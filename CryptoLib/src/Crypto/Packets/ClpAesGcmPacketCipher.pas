@@ -23,7 +23,7 @@ interface
 uses
   ClpIAeadPacketCipher,
   ClpIBlockCipher,
-  ClpIAeadCipher,
+  ClpIGcmBlockCipher,
   ClpIGcmMultiplier,
   ClpGcmBlockCipher,
   ClpAesUtilities,
@@ -37,6 +37,8 @@ type
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
   TAesGcmPacketCipher = class sealed(TAbstractAeadPacketCipher)
+  strict private
+    FGcm: IGcmBlockCipher;
   public
     constructor Create(); overload;
     constructor Create(const AEngine: IBlockCipher); overload;
@@ -44,6 +46,11 @@ type
       const AMultiplier: IGcmMultiplier); overload;
 
     class function GetInstance(): IAeadPacketCipher; static;
+
+    function ProcessPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32)
+      : Int32; overload; override;
   end;
 
 implementation
@@ -57,20 +64,29 @@ end;
 
 constructor TAesGcmPacketCipher.Create(const AEngine: IBlockCipher);
 begin
-  inherited Create();
-  FCipher := TGcmBlockCipher.Create(AEngine) as IAeadCipher;
+  // nil multiplier lets TGcmBlockCipher pick the best one (CreateGcmMultiplier).
+  Create(AEngine, nil);
 end;
 
 constructor TAesGcmPacketCipher.Create(const AEngine: IBlockCipher;
   const AMultiplier: IGcmMultiplier);
 begin
   inherited Create();
-  FCipher := TGcmBlockCipher.Create(AEngine, AMultiplier) as IAeadCipher;
+  FGcm := TGcmBlockCipher.Create(AEngine, AMultiplier) as IGcmBlockCipher;
+  FCipher := FGcm; // FGcm is the typed one-shot view of the base FCipher
 end;
 
 class function TAesGcmPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
   Result := TAesGcmPacketCipher.Create() as IAeadPacketCipher;
+end;
+
+function TAesGcmPacketCipher.ProcessPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32): Int32;
+begin
+  FGcm.InitPacket(AForEncryption, AKey, ANonce, AAad, AMacSizeBits);
+  Result := FGcm.ProcessPacket(AInput, AInOff, AInLen, AOutput, AOutOff);
 end;
 
 end.

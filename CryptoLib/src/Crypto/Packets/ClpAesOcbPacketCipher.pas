@@ -23,10 +23,11 @@ interface
 uses
   ClpIAeadPacketCipher,
   ClpIBlockCipher,
-  ClpIAeadCipher,
+  ClpIOcbBlockCipher,
   ClpOcbBlockCipher,
   ClpAesUtilities,
-  ClpAbstractAeadPacketCipher;
+  ClpAbstractAeadPacketCipher,
+  ClpCryptoLibTypes;
 
 type
   /// <summary>
@@ -35,10 +36,17 @@ type
   /// cryptography of its own; not thread-safe (one instance per thread).
   /// </summary>
   TAesOcbPacketCipher = class sealed(TAbstractAeadPacketCipher)
+  strict private
+    FOcb: IOcbBlockCipher;
   public
     constructor Create(); overload;
     constructor Create(const AHashCipher, AMainCipher: IBlockCipher); overload;
     class function GetInstance(): IAeadPacketCipher; static;
+
+    function ProcessPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32)
+      : Int32; overload; override;
   end;
 
 implementation
@@ -54,12 +62,21 @@ constructor TAesOcbPacketCipher.Create(const AHashCipher,
   AMainCipher: IBlockCipher);
 begin
   inherited Create();
-  FCipher := TOcbBlockCipher.Create(AHashCipher, AMainCipher) as IAeadCipher;
+  FOcb := TOcbBlockCipher.Create(AHashCipher, AMainCipher) as IOcbBlockCipher;
+  FCipher := FOcb; // FOcb is the typed one-shot view of the base FCipher
 end;
 
 class function TAesOcbPacketCipher.GetInstance(): IAeadPacketCipher;
 begin
   Result := TAesOcbPacketCipher.Create() as IAeadPacketCipher;
+end;
+
+function TAesOcbPacketCipher.ProcessPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32): Int32;
+begin
+  FOcb.InitPacket(AForEncryption, AKey, ANonce, AAad, AMacSizeBits);
+  Result := FOcb.ProcessPacket(AInput, AInOff, AInLen, AOutput, AOutOff);
 end;
 
 end.
