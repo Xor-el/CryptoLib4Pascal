@@ -64,7 +64,6 @@ end;
 
 constructor TAesGcmPacketCipher.Create(const AEngine: IBlockCipher);
 begin
-  // nil multiplier lets TGcmBlockCipher pick the best one (CreateGcmMultiplier).
   Create(AEngine, nil);
 end;
 

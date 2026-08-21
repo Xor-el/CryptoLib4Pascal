@@ -57,8 +57,7 @@ end;
 
 constructor TAesGcmSivPacketCipher.Create(const AEngine: IBlockCipher);
 begin
-  inherited Create();
-  FCipher := TGcmSivBlockCipher.Create(AEngine) as IAeadCipher;
+  Create(AEngine, nil);
 end;
 
 constructor TAesGcmSivPacketCipher.Create(const AEngine: IBlockCipher;
