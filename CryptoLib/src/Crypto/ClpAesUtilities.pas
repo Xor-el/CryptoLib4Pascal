@@ -21,7 +21,9 @@ unit ClpAesUtilities;
 interface
 
 uses
+  SysUtils,
   ClpIBlockCipher,
+  ClpIAesEngine,
   ClpAesEngine,
   ClpAesSimd;
 
@@ -40,6 +42,12 @@ type
     /// at runtime (its <c>IsSupported</c> is True). Otherwise False.
     /// </summary>
     class function IsHardwareAccelerated(): Boolean; static;
+    /// <summary>
+    /// True when ACipher is one of the AES engine variants (every variant tags
+    /// itself with <see cref="IAesEngine"/> and produces identical output), i.e.
+    /// an engine interchangeable with <see cref="CreateEngine"/>'s result.
+    /// </summary>
+    class function IsAesEngine(const ACipher: IBlockCipher): Boolean; static;
   end;
 
 implementation
@@ -58,6 +66,11 @@ end;
 class function TAesUtilities.IsHardwareAccelerated(): Boolean;
 begin
   Result := TAesSimd.IsSupported;
+end;
+
+class function TAesUtilities.IsAesEngine(const ACipher: IBlockCipher): Boolean;
+begin
+  Result := Supports(ACipher, IAesEngine);
 end;
 
 end.

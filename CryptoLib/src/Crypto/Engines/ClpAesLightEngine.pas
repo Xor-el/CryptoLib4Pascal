@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   ClpIAesLightEngine,
+  ClpIAesEngine,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
@@ -66,7 +67,7 @@ type
   /// print.
   /// </para>
   /// </summary>
-  TAesLightEngine = class sealed(TAbstractAesEngine, IAesLightEngine,
+  TAesLightEngine = class sealed(TAbstractAesEngine, IAesLightEngine, IAesEngine,
     IBlockCipher)
 
   strict private

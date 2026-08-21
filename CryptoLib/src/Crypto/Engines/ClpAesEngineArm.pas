@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   ClpIAesEngineArm,
+  ClpIAesEngine,
   ClpIAesHardwareEngine,
   ClpIBulkBlockCipher,
   ClpIBlockCipher,
@@ -54,7 +55,7 @@ type
   /// <see cref="IsSupported" />).
   /// </summary>
   TAesEngineArm = class sealed(TAbstractAesEngine, IAesEngineArm, IAesHardwareEngine,
-    IBulkBlockCipher, IBlockCipher)
+    IBulkBlockCipher, IAesEngine, IBlockCipher)
   strict private
   type
     TAesArmMode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);

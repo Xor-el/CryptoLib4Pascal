@@ -103,6 +103,9 @@ type
     // leave NO recovered plaintext in the caller's output (wiped for the modes
     // that decrypt into it; never written for the SIV mode).
     procedure TestPacketWipesOnMacFailure;
+    // Re-key one reused GCM-SIV packet instance across 128/256/128-bit keys, so
+    // the per-nonce derived-key buffer's grow/shrink resize path is exercised.
+    procedure TestGcmSivKeySizeSwitch;
     procedure TestBlockPacketMatchesBuffered;
     // Two-phase key-reuse protocol: a nil-key re-Init reuses the established key
     // (must match an explicit re-key), and a rekey that fails mid-Init must clear
@@ -394,6 +397,31 @@ begin
         Check(LOut[LJ] = 0, CNames[LI] +
           ': output must be wiped on MAC failure');
   end;
+end;
+
+procedure TTestAeadEmptyInput.TestGcmSivKeySizeSwitch;
+var
+  LPacket: IAeadPacketCipher;
+  LK16, LK32, LNonce, LAad, LPt, LCt, LPt2: TBytes;
+
+  procedure RoundTrip(const AKey: TBytes; const ALabel: String);
+  begin
+    LCt := PacketSeal(LPacket, True, AKey, LNonce, LAad, LPt);
+    LPt2 := PacketSeal(LPacket, False, AKey, LNonce, LAad, LCt);
+    Check(AreEqual(LPt2, LPt), 'GCM-SIV ' + ALabel + ' round-trip');
+  end;
+
+begin
+  LPacket := CreatePacket(5); // GCM-SIV, one reused instance across key sizes
+  LK16 := MakeBytes(16, 1);
+  LK32 := MakeBytes(32, 2);
+  LNonce := MakeBytes(12, 3);
+  LAad := MakeBytes(13, 4);
+  LPt := MakeBytes(40, 5);
+
+  RoundTrip(LK16, '128');           // derived-key buffer sized to 16
+  RoundTrip(LK32, '256 (grow)');    // reused instance: 16 -> 32
+  RoundTrip(LK16, '128 (shrink)');  // reused instance: 32 -> 16
 end;
 
 procedure TTestAeadEmptyInput.TestNilKeyReuseMatchesRekey;
