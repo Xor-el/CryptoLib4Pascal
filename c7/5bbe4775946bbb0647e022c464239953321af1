@@ -1,0 +1,52 @@
+CryptoLib/src/Crypto/Engines/ClpAesLightEngine.pas
+  s_74ad5af63bdcc6::t_4dcc912def379a 70
+  s_74ad5af63bdcc6::t_549d9b283b4a15 26
+CryptoLib/src/Crypto/Engines/ClpAesEngineX86.pas
+  s_74ad5af63bdcc6::t_dc7a4765b2d8df 28
+  s_74ad5af63bdcc6::t_0e58dfb441a427 57
+CryptoLib.Tests/src/Crypto/AeadEmptyInputTests.pas
+  s_74ad5af63bdcc6::t_a3e74998008629 106-108
+  s_74ad5af63bdcc6::t_3a89744abfae47 402-426
+CryptoLib/src/Crypto/Modes/ClpGcmSivBlockCipher.pas
+  s_74ad5af63bdcc6::t_4b7dd66e1dbfc2 422-426
+  s_74ad5af63bdcc6::t_61fc5d2e231b53 491
+  s_74ad5af63bdcc6::t_8f68944def9058 427-428
+  s_74ad5af63bdcc6::t_842e92879658cd 160-161
+  s_74ad5af63bdcc6::t_dafadd9f61d390 898-915,919-926,928-931,934-936,938-939,941,943-945,947-948,950,952,954-956,958-959,962-967,969-971,974,986
+  s_74ad5af63bdcc6::t_bc81b531c7cac4 844-845
+  s_74ad5af63bdcc6::t_e050ea222f6b9d 472-474
+  s_74ad5af63bdcc6::t_e88be33eb2d068 374-376
+  s_74ad5af63bdcc6::t_ef6bb4254556a7 122-125
+  s_74ad5af63bdcc6::t_659661e7993185 111-121
+  s_74ad5af63bdcc6::t_96ccf7381cd2f3 358,365-373,377-378
+  s_74ad5af63bdcc6::t_3ed4e2c1b97e6d 826,837-838
+  s_74ad5af63bdcc6::t_20ce94a403f7ba 28
+  s_74ad5af63bdcc6::t_c851067a0bd122 362
+  s_74ad5af63bdcc6::t_8863efa8ec2bd9 359-361,363-364
+  s_74ad5af63bdcc6::t_c49b3d1d74c9fa 592
+  s_74ad5af63bdcc6::t_f9fa60c61ee923 816
+  s_74ad5af63bdcc6::t_67eb4d6f2ffd9d 850-852
+CryptoLib/src/Crypto/ClpAesUtilities.pas
+  s_74ad5af63bdcc6::t_88e7ef1e342396 71-75
+  s_74ad5af63bdcc6::t_9e57fcd4830468 24,26
+  s_74ad5af63bdcc6::t_23f25c96f2d2f2 45-50
+CryptoLib/src/Crypto/Engines/ClpAesEngineArm.pas
+  s_74ad5af63bdcc6::t_193be6dafb4d92 28
+  s_74ad5af63bdcc6::t_5fce03d1f8fe18 58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "c75bbe4775946bbb0647e022c464239953321af1",
+  "prompts": {},
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
