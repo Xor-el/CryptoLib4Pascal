@@ -1,0 +1,19 @@
+CryptoLib/src/Crypto/Packets/ClpAesGcmSivPacketCipher.pas
+  s_74ad5af63bdcc6::t_22aa0d18ef5ac8 60
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.22",
+  "base_commit_sha": "bf23e7a37b9f6b6ad042af9600d281ec5592fef8",
+  "prompts": {},
+  "sessions": {
+    "s_74ad5af63bdcc6": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "773c7193-1e25-41db-840d-2e987e927583",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
