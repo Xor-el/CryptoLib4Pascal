@@ -535,6 +535,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIBaseKdfBytesGenerator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Agreements\ClpIBasicAgreement.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBlockCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIScheduleEpoch.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIRawKeyedCipher.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIRawInitStreamCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICbcBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICfbBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpICtsBlockCipher.pas"/>
@@ -1047,6 +1050,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpICipherBuilder.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpICipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBlockCipherMode.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIRawInitBlockCipherMode.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Modes\ClpIBulkBlockCipherMode.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkBlockCipher.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\ClpIBulkStreamCipher.pas"/>
@@ -1087,6 +1091,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\CipherKernels\Block\ClpICtrKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\CipherKernels\Block\ClpICbcKernel.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelRegistry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelBinding.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\CipherKernels\ClpCipherKernelFactoryBase.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Facade\ClpAesFusedAeadSimd.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Simd\Backend\ClpAesNiFusedX86Backend.pas"/>

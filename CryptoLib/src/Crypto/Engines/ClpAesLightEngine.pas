@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   ClpIAesLightEngine,
+  ClpIAesEngine,
   ClpIBlockCipher,
   ClpICipherParameters,
   ClpIKeyParameter,
@@ -66,7 +67,7 @@ type
   /// print.
   /// </para>
   /// </summary>
-  TAesLightEngine = class sealed(TAbstractAesEngine, IAesLightEngine,
+  TAesLightEngine = class sealed(TAbstractAesEngine, IAesLightEngine, IAesEngine,
     IBlockCipher)
 
   strict private
@@ -645,12 +646,13 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
+  // Same-key/direction fast path: compare against the retained key WITHOUT
+  // materializing it, so a nonce-only re-Init copies and wipes nothing.
+  if CanReuseSchedule(AForEncryption, LKeyParameter) then
+    Exit;
+
   LKey := LKeyParameter.GetKey();
   try
-    // Same-key/direction fast path: keep the existing working key.
-    if CanReuseSchedule(AForEncryption, LKey) then
-      Exit;
-
     // GenerateWorkingKey zeroes the key array it is handed, so give it a
     // throwaway copy and keep LKey intact to record for future reuse checks.
     FWorkingKey := GenerateWorkingKey(AForEncryption, System.Copy(LKey));

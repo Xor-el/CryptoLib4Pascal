@@ -14,28 +14,30 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIOcbBlockCipher;
+unit ClpIScheduleEpoch;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
-uses
-  ClpIAeadBlockCipher,
-  ClpCryptoLibTypes;
-
 type
-  IOcbBlockCipher = interface(IAeadBlockCipher)
-    ['{5A8A8189-E1A7-4A48-9481-853AAEA8A371}']
+  /// <summary>
+  ///   Exposes a monotonic "schedule generation" from a keyed cipher whose
+  ///   key-derived state (round keys, and any pointer bound to them) is rebuilt
+  ///   in place. A consumer that caches something derived from the schedule -
+  ///   e.g. an accelerated kernel holding a raw pointer into the round-key
+  ///   buffer - reads this once per use: an unequal value means the schedule was
+  ///   rebuilt and every such cached handle is stale and must be re-acquired.
+  ///   Distinct from a same-key reuse test: the epoch changes on every rebuild,
+  ///   whether or not the key value differs.
+  /// </summary>
+  IScheduleEpoch = interface
+    ['{7B2E4D19-3A6C-4F81-9D52-8E1A0C7B6F34}']
 
-    /// <summary>
-    /// One-shot seal/open of a whole message after <c>InitPacket</c>/<c>Init</c>:
-    /// encrypt writes ciphertext then the tag; decrypt verifies the trailing tag
-    /// and writes plaintext (wiping it and raising on a MAC mismatch). Returns
-    /// bytes written to <c>AOutput</c>.
-    /// </summary>
-    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    /// <summary>Current schedule-rebuild generation. Unequal to a previously
+    /// cached value =&gt; the schedule was rebuilt since; equal =&gt; the schedule
+    /// (and anything bound to it) is unchanged.</summary>
+    function GetScheduleEpoch: UInt32;
   end;
 
 implementation

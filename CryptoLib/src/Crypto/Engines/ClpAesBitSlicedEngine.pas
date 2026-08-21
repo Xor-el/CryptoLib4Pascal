@@ -771,12 +771,13 @@ begin
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
   end;
 
+  // Same-key/direction fast path: compare against the retained key WITHOUT
+  // materializing it, so a nonce-only re-Init copies and wipes nothing.
+  if CanReuseSchedule(AForEncryption, LKeyParameter) then
+    Exit;
+
   LKey := LKeyParameter.GetKey();
   try
-    // Same-key/direction fast path: keep the existing bit-sliced schedule.
-    if CanReuseSchedule(AForEncryption, LKey) then
-      Exit;
-
     FForEncryption := AForEncryption;
     KeySchedule(LKey);
 

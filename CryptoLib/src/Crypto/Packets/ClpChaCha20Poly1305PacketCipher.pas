@@ -22,7 +22,7 @@ interface
 
 uses
   ClpIAeadPacketCipher,
-  ClpIAeadCipher,
+  ClpIChaCha20Poly1305,
   ClpChaCha20Poly1305,
   ClpAbstractAeadPacketCipher,
   ClpCryptoLibTypes;
@@ -35,10 +35,17 @@ type
   /// (one instance per thread).
   /// </summary>
   TChaCha20Poly1305PacketCipher = class sealed(TAbstractAeadPacketCipher)
+  strict private
+    FChaCha: IChaCha20Poly1305;
   public
     constructor Create();
 
     class function GetInstance(): IAeadPacketCipher; static;
+
+    function ProcessPacket(AForEncryption: Boolean;
+      const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32)
+      : Int32; overload; override;
   end;
 
 implementation
@@ -48,12 +55,21 @@ implementation
 constructor TChaCha20Poly1305PacketCipher.Create();
 begin
   inherited Create();
-  FCipher := TChaCha20Poly1305.Create() as IAeadCipher;
+  FChaCha := TChaCha20Poly1305.Create() as IChaCha20Poly1305;
+  FCipher := FChaCha; // FChaCha is the typed one-shot view of the base FCipher
 end;
 
 class function TChaCha20Poly1305PacketCipher.GetInstance(): IAeadPacketCipher;
 begin
   Result := TChaCha20Poly1305PacketCipher.Create() as IAeadPacketCipher;
+end;
+
+function TChaCha20Poly1305PacketCipher.ProcessPacket(AForEncryption: Boolean;
+  const AKey, ANonce, AAad, AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+  const AOutput: TCryptoLibByteArray; AOutOff, AMacSizeBits: Int32): Int32;
+begin
+  FChaCha.InitPacket(AForEncryption, AKey, ANonce, AAad, AMacSizeBits);
+  Result := FChaCha.ProcessPacket(AInput, AInOff, AInLen, AOutput, AOutOff);
 end;
 
 end.

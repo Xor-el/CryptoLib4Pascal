@@ -56,6 +56,7 @@ uses
   ClpIKeyParameter,
   ClpICipherParameters,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   CryptoLibTestBase;
 
 type
@@ -98,6 +99,13 @@ type
     procedure TestPacketCiphersZeroLength;
     procedure TestBufferedCiphersAcceptEmptyInput;
     procedure TestPacketMatchesStreaming;
+    // Decrypt with a tampered tag through the one-shot packet lane must raise and
+    // leave NO recovered plaintext in the caller's output (wiped for the modes
+    // that decrypt into it; never written for the SIV mode).
+    procedure TestPacketWipesOnMacFailure;
+    // Re-key one reused GCM-SIV packet instance across 128/256/128-bit keys, so
+    // the per-nonce derived-key buffer's grow/shrink resize path is exercised.
+    procedure TestGcmSivKeySizeSwitch;
     procedure TestBlockPacketMatchesBuffered;
     // Two-phase key-reuse protocol: a nil-key re-Init reuses the established key
     // (must match an explicit re-key), and a rekey that fails mid-Init must clear
@@ -290,7 +298,11 @@ end;
 procedure TTestAeadEmptyInput.CheckDifferential(AMode, AKeyLen,
   ANonceLen: Int32; const AName: String);
 const
-  CSizes: array [0 .. 5] of Int32 = (0, 1, 16, 17, 40, 100);
+  // Spans the block / 2-block / 4-block / 8-block tier boundaries and a large
+  // multi-tier payload, so the one-shot packet lane is compared against the
+  // streaming lane through every fused width (8-way needs >= 128 bytes).
+  CSizes: array [0 .. 17] of Int32 = (0, 1, 15, 16, 17, 31, 32, 33, 40, 63, 64,
+    65, 100, 127, 128, 129, 256, 1024);
 var
   LPacket: IAeadPacketCipher;
   LKey, LKey2, LNonce, LAad, LPt, LCtP, LCtS, LPt2: TBytes;
@@ -332,6 +344,84 @@ begin
   CheckDifferential(3, 16, 12, 'EAX');
   CheckDifferential(4, 16, 12, 'OCB');
   CheckDifferential(5, 16, 12, 'GCM-SIV');
+end;
+
+procedure TTestAeadEmptyInput.TestPacketWipesOnMacFailure;
+const
+  CModes: array [0 .. 5] of Int32 = (0, 1, 2, 3, 4, 5);
+  CKeyLens: array [0 .. 5] of Int32 = (16, 32, 16, 16, 16, 16);
+  CNames: array [0 .. 5] of String = ('GCM', 'ChaCha', 'CCM', 'EAX', 'OCB',
+    'GCM-SIV');
+  CPlainLen = 40;
+var
+  LI, LJ: Int32;
+  LPacket: IAeadPacketCipher;
+  LKey, LNonce, LAad, LPt, LCt, LOut: TBytes;
+  LRaised: Boolean;
+begin
+  for LI := 0 to System.High(CModes) do
+  begin
+    LPacket := CreatePacket(CModes[LI]);
+    LKey := MakeBytes(CKeyLens[LI], 10 + LI);
+    LNonce := MakeBytes(12, 100 + LI);
+    LAad := MakeBytes(13, 11);
+    LPt := MakeBytes(CPlainLen, 20 + LI);
+
+    LCt := PacketSeal(LPacket, True, LKey, LNonce, LAad, LPt);
+    // Corrupt the trailing tag so verification must fail.
+    LCt[System.Length(LCt) - 1] := Byte(LCt[System.Length(LCt) - 1] xor $FF);
+
+    // Pre-fill the output with a non-zero sentinel so a wipe is observable.
+    System.SetLength(LOut, CPlainLen);
+    for LJ := 0 to CPlainLen - 1 do
+      LOut[LJ] := $AA;
+
+    LRaised := False;
+    try
+      LPacket.ProcessPacket(False, LKey, LNonce, LAad, LCt, 0,
+        System.Length(LCt), LOut, 0, 128);
+    except
+      on E: EInvalidCipherTextCryptoLibException do
+        LRaised := True;
+    end;
+
+    Check(LRaised, CNames[LI] +
+      ': tampered tag must raise EInvalidCipherTextCryptoLibException');
+    // No recovered plaintext may leak, either way.
+    Check(not AreEqual(LOut, LPt), CNames[LI] +
+      ': plaintext must not leak on MAC failure');
+    // Modes that decrypt into the caller's buffer additionally wipe it to zero;
+    // the SIV mode recovers into an internal buffer and never writes on failure.
+    if CModes[LI] <> 5 then
+      for LJ := 0 to CPlainLen - 1 do
+        Check(LOut[LJ] = 0, CNames[LI] +
+          ': output must be wiped on MAC failure');
+  end;
+end;
+
+procedure TTestAeadEmptyInput.TestGcmSivKeySizeSwitch;
+var
+  LPacket: IAeadPacketCipher;
+  LK16, LK32, LNonce, LAad, LPt, LCt, LPt2: TBytes;
+
+  procedure RoundTrip(const AKey: TBytes; const ALabel: String);
+  begin
+    LCt := PacketSeal(LPacket, True, AKey, LNonce, LAad, LPt);
+    LPt2 := PacketSeal(LPacket, False, AKey, LNonce, LAad, LCt);
+    Check(AreEqual(LPt2, LPt), 'GCM-SIV ' + ALabel + ' round-trip');
+  end;
+
+begin
+  LPacket := CreatePacket(5); // GCM-SIV, one reused instance across key sizes
+  LK16 := MakeBytes(16, 1);
+  LK32 := MakeBytes(32, 2);
+  LNonce := MakeBytes(12, 3);
+  LAad := MakeBytes(13, 4);
+  LPt := MakeBytes(40, 5);
+
+  RoundTrip(LK16, '128');           // derived-key buffer sized to 16
+  RoundTrip(LK32, '256 (grow)');    // reused instance: 16 -> 32
+  RoundTrip(LK16, '128 (shrink)');  // reused instance: 32 -> 16
 end;
 
 procedure TTestAeadEmptyInput.TestNilKeyReuseMatchesRekey;

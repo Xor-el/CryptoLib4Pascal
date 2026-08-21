@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   ClpIAesEngineArm,
+  ClpIAesEngine,
   ClpIAesHardwareEngine,
   ClpIBulkBlockCipher,
   ClpIBlockCipher,
@@ -54,7 +55,7 @@ type
   /// <see cref="IsSupported" />).
   /// </summary>
   TAesEngineArm = class sealed(TAbstractAesEngine, IAesEngineArm, IAesHardwareEngine,
-    IBulkBlockCipher, IBlockCipher)
+    IBulkBlockCipher, IAesEngine, IBlockCipher)
   strict private
   type
     TAesArmMode = (Uninitialized, Dec128, Dec192, Dec256, Enc128, Enc192, Enc256);
@@ -555,16 +556,18 @@ begin
     raise EArgumentCryptoLibException.CreateResFmt(@SInvalidParameterAESArmInit,
       [TPlatformUtilities.GetTypeName(AParameters as TObject)]);
 
+  // Same-key/direction fast path: compare against the retained key WITHOUT
+  // materializing it, so a nonce-only re-Init copies and wipes nothing (the
+  // aligned buffer, FMode and bound cipher pointers are all still valid).
+  if CanReuseSchedule(AForEncryption, LKeyParameter) then
+    Exit;
+
+  // Rebuild path: materialize and validate the key.
   LKeyCopy := System.Copy(LKeyParameter.GetKey());
   try
     LKeyLen := System.Length(LKeyCopy);
     if not (LKeyLen in [16, 24, 32]) then
       raise EArgumentCryptoLibException.CreateRes(@SInvalidKeyLength);
-
-    // Same-key/direction fast path: keep the existing round-key schedule (the
-    // aligned buffer, FMode and bound cipher pointers are all still valid).
-    if CanReuseSchedule(AForEncryption, LKeyCopy) then
-      Exit;
 
     AllocAlignedKeys((TBitOperations.Asr32(LKeyLen, 2) + 6 + 1) * 16);
 

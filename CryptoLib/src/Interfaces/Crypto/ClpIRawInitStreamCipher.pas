@@ -14,28 +14,27 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIOcbBlockCipher;
+unit ClpIRawInitStreamCipher;
 
-{$I ..\..\..\Include\CryptoLib.inc}
+{$I ..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
   ClpCryptoLibTypes;
 
 type
-  IOcbBlockCipher = interface(IAeadBlockCipher)
-    ['{5A8A8189-E1A7-4A48-9481-853AAEA8A371}']
+  /// <summary>
+  ///   Zero-allocation (re)init for a stream cipher engine from raw key and
+  ///   nonce byte spans, avoiding the per-message TParametersWithIV /
+  ///   TKeyParameter wrappers Init would need. AKey = nil reuses the established
+  ///   key (raises if the engine was never keyed). Validation is identical to
+  ///   Init.
+  /// </summary>
+  IRawInitStreamCipher = interface
+    ['{6E0B7A32-4C51-49D8-9F2A-1B8D5E3C0A74}']
 
-    /// <summary>
-    /// One-shot seal/open of a whole message after <c>InitPacket</c>/<c>Init</c>:
-    /// encrypt writes ciphertext then the tag; decrypt verifies the trailing tag
-    /// and writes plaintext (wiping it and raising on a MAC mismatch). Returns
-    /// bytes written to <c>AOutput</c>.
-    /// </summary>
-    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    procedure InitRaw(const AKey, AIv: TCryptoLibByteArray);
   end;
 
 implementation

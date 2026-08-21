@@ -28,6 +28,15 @@ type
   /// <summary>GCM (<see cref="IAeadBlockCipher"/>): AEAD over a 128-bit <see cref="IBlockCipher"/> (typically AES).</summary>
   IGcmBlockCipher = interface(IAeadBlockCipher)
     ['{EFA22310-0A01-49B5-BCDE-9AFBF996F85C}']
+
+    /// <summary>
+    /// One-shot seal/open of a whole message after <c>InitPacket</c>/<c>Init</c>:
+    /// encrypt writes ciphertext then the tag; decrypt verifies the trailing tag
+    /// and writes plaintext (wiping it and raising on a MAC mismatch). Single pass,
+    /// no streaming partial-block buffering. Returns bytes written to <c>AOutput</c>.
+    /// </summary>
+    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
+      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
   end;
 
 implementation

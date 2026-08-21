@@ -14,28 +14,31 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIOcbBlockCipher;
+unit ClpIRawInitBlockCipherMode;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIAeadBlockCipher,
   ClpCryptoLibTypes;
 
 type
-  IOcbBlockCipher = interface(IAeadBlockCipher)
-    ['{5A8A8189-E1A7-4A48-9481-853AAEA8A371}']
+  /// <summary>
+  ///   Zero-allocation re-init for a block-cipher mode (CTR / CBC) driven from a
+  ///   one-shot packet cipher: the caller passes the key and the per-message IV
+  ///   as raw byte spans, avoiding the per-message TParametersWithIV wrapper (and
+  ///   the copy-on-read GetIV) that Init needs. The IV is copied in place (no
+  ///   allocation when the length is unchanged); the key routes to the engine's
+  ///   raw-key compare-only same-key gate (no key copy on reuse). AKey = nil
+  ///   reuses the engine's established schedule (raises if it was never keyed).
+  ///   Validation is identical to Init.
+  /// </summary>
+  IRawInitBlockCipherMode = interface
+    ['{3F8A1C05-9D42-4E7B-8A16-2B5C9E0D7F31}']
 
-    /// <summary>
-    /// One-shot seal/open of a whole message after <c>InitPacket</c>/<c>Init</c>:
-    /// encrypt writes ciphertext then the tag; decrypt verifies the trailing tag
-    /// and writes plaintext (wiping it and raising on a MAC mismatch). Returns
-    /// bytes written to <c>AOutput</c>.
-    /// </summary>
-    function ProcessPacket(const AInput: TCryptoLibByteArray; AInOff, AInLen: Int32;
-      const AOutput: TCryptoLibByteArray; AOutOff: Int32): Int32;
+    procedure InitRaw(AForEncryption: Boolean;
+      const AKey, AIv: TCryptoLibByteArray);
   end;
 
 implementation

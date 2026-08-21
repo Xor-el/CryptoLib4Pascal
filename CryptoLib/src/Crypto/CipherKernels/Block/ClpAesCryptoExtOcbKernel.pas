@@ -93,7 +93,7 @@ type
     Keys: Pointer;         // AES expanded schedule (enc / dec+invMC)
     InPtr: Pointer;        // ABlockCount * 16 bytes (advances per-iter)
     OutPtr: Pointer;       // ABlockCount * 16 bytes (advances per-iter)
-    OffsetPtr: Pointer;    // 16-byte live FOffsetMAIN state (r/w)
+    OffsetPtr: Pointer;    // 16-byte live FOffsetMain state (r/w)
     ChecksumPtr: Pointer;  // 16-byte live FChecksum state (r/w)
     LTablePtr: Pointer;    // flat L[0..LMax] * 16 bytes (read-only)
     Block0Ptr: Pointer;    // 16-byte source of iter-0 block 0 (may

@@ -74,7 +74,6 @@ implementation
 constructor TParametersWithIV.Create(const AParameters: ICipherParameters;
   const AIv: TCryptoLibByteArray);
 begin
-  inherited Create();
   Create(AParameters, AIv, 0, System.Length(AIv))
 end;
 

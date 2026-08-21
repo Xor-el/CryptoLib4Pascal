@@ -40,10 +40,11 @@ type
   /// a single reused AEAD mode through its <c>InitPacket</c> entry point, so a
   /// per-message seal/open pays only the irreducible nonce-dependent work - key
   /// identity is cached inside the mode by its own same-key gate, and a mode with
-  /// a raw <c>InitPacket</c> override skips the parameter objects entirely. Most
-  /// facades just construct the mode and assign <c>FCipher</c>; a whole-message
-  /// mode (CCM, GCM-SIV) instead overrides <c>ProcessPacket</c> to drive its own
-  /// one-shot path (still assigning <c>FCipher</c>). They add no cryptography of
+  /// a raw <c>InitPacket</c> override skips the parameter objects entirely. Every
+  /// AEAD facade constructs its concrete mode, assigns <c>FCipher</c>, and overrides
+  /// <c>ProcessPacket</c> to call the mode's own one-shot <c>ProcessPacket</c> (which
+  /// also gives the no-unverified-plaintext-on-failure contract); the drive below is
+  /// the reference fallback for any facade that does not. They add no cryptography of
   /// their own. Not thread-safe: one instance per thread.
   /// </summary>
   TAbstractAeadPacketCipher = class abstract(TAbstractPacketCipher,

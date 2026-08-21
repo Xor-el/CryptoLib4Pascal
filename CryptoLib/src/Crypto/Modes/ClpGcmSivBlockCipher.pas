@@ -25,6 +25,7 @@ uses
   Math,
   SysUtils,
   ClpIBlockCipher,
+  ClpIRawKeyedCipher,
   ClpIGcmSivBlockCipher,
   ClpIAeadBlockCipher,
   ClpIAeadCipher,
@@ -38,6 +39,7 @@ uses
   ClpGcmUtilities,
   ClpGcmSivSimd,
   ClpCipherKernelTypes,
+  ClpCipherKernelBinding,
   ClpIGcmSivKernel,
   ClpCipherKernelRegistry,
   ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
@@ -106,6 +108,21 @@ type
     // stays nil when the underlying engine cannot beat per-block dispatch.
     // Drives the 8-wide EncryptPlain / DecryptPlain pipeline below.
     FBulkCipher: IBulkBlockCipher;
+    // Dedicated master-key derivation engine: keyed with the MASTER key so its
+    // schedule is cached across same-key messages by the engine's own same-key
+    // gate, instead of re-expanding it every message. May alias FTheCipher on a
+    // non-AES fallback. FDeriveCipherRaw / FTheCipherRaw are the compare-only
+    // raw-init views (nil when the engine doesn't expose IRawKeyedCipher).
+    FDeriveCipher: IBlockCipher;
+    FDeriveCipherRaw: IRawKeyedCipher;
+    FTheCipherRaw: IRawKeyedCipher;
+    // Reused per-message key-derivation scratch (were fresh allocs in DeriveKeys).
+    FDeriveIn, FDeriveOut, FDeriveResult: TCryptoLibByteArray; // 16 bytes each
+    FDeriveEncKey: TCryptoLibByteArray;                        // 16 or 32 bytes; secret
+    // Reused 16-byte DoFinal scratch, each returned and consumed immediately by
+    // its caller (were fresh allocs). FTag/FPolyVal hold secret auth state;
+    // FLengthsScratch is only the public AAD/data length block.
+    FTagScratch, FPolyValScratch, FLengthsScratch: TCryptoLibByteArray;
     FTheMultiplier: IGcmMultiplier;
     FTheGHash: TCryptoLibByteArray;
     FTheReverse: TCryptoLibByteArray;
@@ -131,10 +148,17 @@ type
     // matches the mode's 8-block batch contract.
     FGcmSivKernel: IGcmSivKernel;
     FGcmSivKernelBatchBytes: Int32;
+    // Resolve-once gate for FGcmSivKernel. The kernel is engine-independent (it
+    // reads the H-power table by pointer), so unlike the block-mode kernels it is
+    // resolved once and reused across the per-nonce key derivations - only the
+    // table contents change per message, not the kernel object.
+    FSivBinding: TCipherKernelBinding;
 
     procedure CheckAeadStatus(ALen: Int32);
     procedure CheckStatus(ALen: Int32);
     procedure DeriveKeys(const AKey: IKeyParameter);
+    procedure DeriveKeysRaw(const AKey: TCryptoLibByteArray);
+    procedure DeriveKeysCore(AKeyLen: Int32);
     function CalculateTag(): TCryptoLibByteArray;
     function EncryptPlain(const ACounter: TCryptoLibByteArray;
       const ATarget: TCryptoLibByteArray; AOffset: Int32): Int32;
@@ -331,6 +355,27 @@ begin
   // pre-existing per-block path.
   TBlockCipherBulkUtilities.TryResolveBulkCipher(FTheCipher, FBulkCipher);
 
+  // Dedicated derive engine keyed with the master key (its schedule is cached
+  // across same-key messages by the engine's own gate). Every AES engine variant
+  // yields identical derivation output, so a fresh default engine substitutes for
+  // any injected AES variant; a non-AES cipher (the generic, non-RFC-8452
+  // construction this mode also accepts) aliases FTheCipher, degenerating exactly
+  // to the pre-R5 two-Init sequence.
+  if TAesUtilities.IsAesEngine(FTheCipher) then
+    FDeriveCipher := TAesUtilities.CreateEngine()
+  else
+    FDeriveCipher := FTheCipher;
+  Supports(FDeriveCipher, IRawKeyedCipher, FDeriveCipherRaw);
+  Supports(FTheCipher, IRawKeyedCipher, FTheCipherRaw);
+
+  System.SetLength(FDeriveIn, BUFLEN);
+  System.SetLength(FDeriveOut, BUFLEN);
+  System.SetLength(FDeriveResult, BUFLEN);
+  System.SetLength(FTagScratch, BUFLEN);
+  System.SetLength(FPolyValScratch, BUFLEN);
+  System.SetLength(FLengthsScratch, BUFLEN);
+  System.SetLength(FMacBlock, BUFLEN);
+
   System.SetLength(FTheGHash, BUFLEN);
   System.SetLength(FTheReverse, BUFLEN);
 
@@ -374,6 +419,13 @@ begin
   TArrayUtilities.Fill(FThePlain, 0, System.Length(FThePlain), Byte(0));
   TArrayUtilities.Fill(FTheEncData, 0, System.Length(FTheEncData), Byte(0));
   TArrayUtilities.Fill(FMacBlock, 0, System.Length(FMacBlock), Byte(0));
+  // Key-derivation scratch: FDeriveOut/Result hold raw derivation output,
+  // FDeriveEncKey is the per-nonce AES key (FDeriveIn is only counter+nonce).
+  TArrayUtilities.Fill(FDeriveOut, 0, System.Length(FDeriveOut), Byte(0));
+  TArrayUtilities.Fill(FDeriveResult, 0, System.Length(FDeriveResult), Byte(0));
+  TArrayUtilities.Fill(FDeriveEncKey, 0, System.Length(FDeriveEncKey), Byte(0));
+  TArrayUtilities.Fill(FTagScratch, 0, System.Length(FTagScratch), Byte(0));
+  TArrayUtilities.Fill(FPolyValScratch, 0, System.Length(FPolyValScratch), Byte(0));
 end;
 
 procedure TGcmSivBlockCipher.Init(AForEncryption: Boolean;
@@ -417,8 +469,9 @@ procedure TGcmSivBlockCipher.InitPacket(AForEncryption: Boolean;
 var
   LKeyLength: Int32;
 begin
-  // GCM-SIV's tag is fixed at 128 bits (RFC 8452); no same-key gate - keys
-  // derive per nonce, so every message re-derives (matching Init).
+  // GCM-SIV's tag is fixed at 128 bits (RFC 8452). Per-nonce keys are re-derived
+  // every message, but the master schedule is cached by FDeriveCipher's engine
+  // gate, so a same-key repeat skips the master key expansion.
   ValidateAeadMacSizeBits(AMacSizeBits, 128, 128, 8);
 
   if System.Length(ANonce) <> NONCELEN then
@@ -435,7 +488,7 @@ begin
   FTheInitialAEAD := AAad;
   FTheNonce := ANonce;
 
-  DeriveKeys(TKeyParameter.Create(AKey) as IKeyParameter);
+  DeriveKeysRaw(AKey);
   ResetStreams();
 end;
 
@@ -536,7 +589,7 @@ begin
   if FForEncryption then
   begin
     LMyTag := CalculateTag();
-    FMacBlock := System.Copy(LMyTag);
+    System.Move(LMyTag[0], FMacBlock[0], BUFLEN);
 
     LMyDataLen := BUFLEN + EncryptPlain(LMyTag, AOutput, AOutOff);
 
@@ -760,7 +813,7 @@ begin
   end;
 
   LMyTag := CalculateTag();
-  FMacBlock := System.Copy(LMyTag);
+  System.Move(LMyTag[0], FMacBlock[0], BUFLEN);
   if not TArrayUtilities.FixedTimeEquals(LMyTag, LMyExpected) then
   begin
     Reset();
@@ -770,41 +823,33 @@ end;
 
 function TGcmSivBlockCipher.CalculateTag: TCryptoLibByteArray;
 var
-  LMyPolyVal, LMyResult: TCryptoLibByteArray;
+  LMyPolyVal: TCryptoLibByteArray;
   LI: Int32;
 begin
   FTheDataHasher.CompleteHash();
   LMyPolyVal := CompletePolyVal();
-
-  System.SetLength(LMyResult, BUFLEN);
 
   for LI := 0 to NONCELEN - 1 do
     LMyPolyVal[LI] := LMyPolyVal[LI] xor FTheNonce[LI];
 
   LMyPolyVal[BUFLEN - 1] := LMyPolyVal[BUFLEN - 1] and Byte(MASK - 1);
 
-  FTheCipher.ProcessBlock(LMyPolyVal, 0, LMyResult, 0);
-  Result := LMyResult;
+  FTheCipher.ProcessBlock(LMyPolyVal, 0, FTagScratch, 0);
+  Result := FTagScratch;
 end;
 
 function TGcmSivBlockCipher.CompletePolyVal: TCryptoLibByteArray;
-var
-  LMyResult: TCryptoLibByteArray;
 begin
-  System.SetLength(LMyResult, BUFLEN);
   GHashLengths();
-  FillReverse(FTheGHash, 0, BUFLEN, LMyResult);
-  Result := LMyResult;
+  FillReverse(FTheGHash, 0, BUFLEN, FPolyValScratch);
+  Result := FPolyValScratch;
 end;
 
 procedure TGcmSivBlockCipher.GHashLengths;
-var
-  LMyIn: TCryptoLibByteArray;
 begin
-  System.SetLength(LMyIn, BUFLEN);
-  TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheDataHasher.GetBytesProcessed(), LMyIn, 0);
-  TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheAEADHasher.GetBytesProcessed(), LMyIn, TInt64Utilities.NumBytes);
-  GHASH(LMyIn);
+  TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheDataHasher.GetBytesProcessed(), FLengthsScratch, 0);
+  TPack.UInt64_To_BE(UInt64(TByteUtilities.NumBits) * FTheAEADHasher.GetBytesProcessed(), FLengthsScratch, TInt64Utilities.NumBytes);
+  GHASH(FLengthsScratch);
 end;
 
 procedure TGcmSivBlockCipher.GHASH(const ANext: TCryptoLibByteArray);
@@ -850,75 +895,114 @@ begin
 end;
 
 procedure TGcmSivBlockCipher.DeriveKeys(const AKey: IKeyParameter);
+begin
+  // Master schedule: keyed once per master key; the engine's own same-key gate
+  // skips the re-expansion on repeat, so this stays cheap across messages.
+  FDeriveCipher.Init(True, AKey as ICipherParameters);
+  DeriveKeysCore(AKey.GetKeyLength());
+end;
+
+procedure TGcmSivBlockCipher.DeriveKeysRaw(const AKey: TCryptoLibByteArray);
+begin
+  // Raw same-key fast path (no TKeyParameter): the engine compares and skips.
+  if FDeriveCipherRaw <> nil then
+    FDeriveCipherRaw.InitRaw(True, AKey)
+  else
+    FDeriveCipher.Init(True, TKeyParameter.Create(AKey) as ICipherParameters);
+  DeriveKeysCore(System.Length(AKey));
+end;
+
+procedure TGcmSivBlockCipher.DeriveKeysCore(AKeyLen: Int32);
 var
-  LMyIn, LMyOut, LMyResult, LMyEncKey: TCryptoLibByteArray;
   LMyOff: Int32;
 begin
-  System.SetLength(LMyIn, BUFLEN);
-  System.SetLength(LMyOut, BUFLEN);
-  System.SetLength(LMyResult, BUFLEN);
-  System.SetLength(LMyEncKey, AKey.GetKeyLength());
-
-  System.Move(FTheNonce[0], LMyIn[BUFLEN - NONCELEN], NONCELEN);
-  FTheCipher.Init(True, AKey as ICipherParameters);
-
-  LMyOff := 0;
-  FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyResult[LMyOff], HALFBUFLEN);
-  LMyIn[0] := Byte(LMyIn[0] + 1);
-  LMyOff := LMyOff + HALFBUFLEN;
-  FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyResult[LMyOff], HALFBUFLEN);
-
-  LMyIn[0] := Byte(LMyIn[0] + 1);
-  LMyOff := 0;
-  FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
-  LMyIn[0] := Byte(LMyIn[0] + 1);
-  LMyOff := LMyOff + HALFBUFLEN;
-  FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-  System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
-
-  if System.Length(LMyEncKey) = (BUFLEN shl 1) then
+  // FDeriveEncKey is resized only when the key length changes; wipe the old key
+  // bytes before a shrink so no secret tail is freed unwiped. The derivation
+  // fully overwrites every live byte below.
+  if System.Length(FDeriveEncKey) <> AKeyLen then
   begin
-    LMyIn[0] := Byte(LMyIn[0] + 1);
-    LMyOff := LMyOff + HALFBUFLEN;
-    FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-    System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
-    LMyIn[0] := Byte(LMyIn[0] + 1);
-    LMyOff := LMyOff + HALFBUFLEN;
-    FTheCipher.ProcessBlock(LMyIn, 0, LMyOut, 0);
-    System.Move(LMyOut[0], LMyEncKey[LMyOff], HALFBUFLEN);
+    TArrayUtilities.Fill(FDeriveEncKey, 0, System.Length(FDeriveEncKey), Byte(0));
+    System.SetLength(FDeriveEncKey, AKeyLen);
   end;
 
-  FTheCipher.Init(True, TKeyParameter.Create(LMyEncKey) as ICipherParameters);
+  // Reused input block: zero the counter head (byte 0 is bumped during
+  // derivation and must not carry over); the nonce Move fills bytes [4..15].
+  TArrayUtilities.Fill(FDeriveIn, 0, BUFLEN - NONCELEN, Byte(0));
+  System.Move(FTheNonce[0], FDeriveIn[BUFLEN - NONCELEN], NONCELEN);
 
-  FillReverse(LMyResult, 0, BUFLEN, LMyOut);
-  TGcmUtilities.MulX(LMyOut);
-  FTheMultiplier.Init(LMyOut);
+  LMyOff := 0;
+  FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+  System.Move(FDeriveOut[0], FDeriveResult[LMyOff], HALFBUFLEN);
+  FDeriveIn[0] := Byte(FDeriveIn[0] + 1);
+  LMyOff := LMyOff + HALFBUFLEN;
+  FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+  System.Move(FDeriveOut[0], FDeriveResult[LMyOff], HALFBUFLEN);
+
+  FDeriveIn[0] := Byte(FDeriveIn[0] + 1);
+  LMyOff := 0;
+  FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+  System.Move(FDeriveOut[0], FDeriveEncKey[LMyOff], HALFBUFLEN);
+  FDeriveIn[0] := Byte(FDeriveIn[0] + 1);
+  LMyOff := LMyOff + HALFBUFLEN;
+  FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+  System.Move(FDeriveOut[0], FDeriveEncKey[LMyOff], HALFBUFLEN);
+
+  if System.Length(FDeriveEncKey) = (BUFLEN shl 1) then
+  begin
+    FDeriveIn[0] := Byte(FDeriveIn[0] + 1);
+    LMyOff := LMyOff + HALFBUFLEN;
+    FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+    System.Move(FDeriveOut[0], FDeriveEncKey[LMyOff], HALFBUFLEN);
+    FDeriveIn[0] := Byte(FDeriveIn[0] + 1);
+    LMyOff := LMyOff + HALFBUFLEN;
+    FDeriveCipher.ProcessBlock(FDeriveIn, 0, FDeriveOut, 0);
+    System.Move(FDeriveOut[0], FDeriveEncKey[LMyOff], HALFBUFLEN);
+  end;
+
+  // Per-nonce encryption key (changes every message): raw re-key when available,
+  // else the parameter path. FTheCipher (and its FBulkCipher view) hold this key.
+  if FTheCipherRaw <> nil then
+    FTheCipherRaw.InitRaw(True, FDeriveEncKey)
+  else
+    FTheCipher.Init(True, TKeyParameter.Create(FDeriveEncKey) as ICipherParameters);
+
+  FillReverse(FDeriveResult, 0, BUFLEN, FDeriveOut);
+  TGcmUtilities.MulX(FDeriveOut);
+  FTheMultiplier.Init(FDeriveOut);
 
   // Precompute the POLYVAL H-power table and resolve the fused kernel for
-  // this key when a SIMD POLYVAL backend is available. LMyOut is already
+  // this key when a SIMD POLYVAL backend is available. FDeriveOut is already
   // conditioned for GHASH; the H-power table is captured by reference by the
   // kernel and must outlive it (it is owned by this cipher instance).
   // TGcmSivSimd.IsSupported is False off-SIMD (or with no fused backend), so the
   // precompute is skipped and TGcmSivHasher.UpdateHash stays on scalar POLYVAL.
-  FGcmSivKernel := nil;
-  FGcmSivKernelBatchBytes := 0;
   if TGcmSivSimd.IsSupported then
   begin
     if System.Length(FHPow128) < 128 then
       System.SetLength(FHPow128, 128);
-    TGcmUtilities.InitEightWayHPowFromH(LMyOut, FHPow128);
-    if TCipherKernelRegistry.TryAcquireGcmSiv(FTheCipher,
-      TCipherKernelDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
-      (FGcmSivKernel <> nil) then
+    // Refill the H-power table for this per-nonce derived key; the fused kernel
+    // reads it through the stable @FHPow128[0] pointer. The kernel object itself
+    // is engine-independent, so resolve it once and reuse it across messages.
+    TGcmUtilities.InitEightWayHPowFromH(FDeriveOut, FHPow128);
+    if FSivBinding.NeedsResolve(TCipherKernelDirection.Encrypt) then
     begin
-      if FGcmSivKernel.MinimumBlockCount = 8 then
-        FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
-      else
-        FGcmSivKernel := nil;
+      FGcmSivKernel := nil;
+      FGcmSivKernelBatchBytes := 0;
+      if TCipherKernelRegistry.TryAcquireGcmSiv(FTheCipher,
+        TCipherKernelDirection.Encrypt, @FHPow128[0], FGcmSivKernel) and
+        (FGcmSivKernel <> nil) then
+      begin
+        if FGcmSivKernel.MinimumBlockCount = 8 then
+          FGcmSivKernelBatchBytes := FGcmSivKernel.MinimumBlockCount * BUFLEN
+        else
+          FGcmSivKernel := nil;
+      end;
     end;
+  end
+  else
+  begin
+    FGcmSivKernel := nil;
+    FGcmSivKernelBatchBytes := 0;
   end;
 
   FTheFlags := FTheFlags or INITIAL;
