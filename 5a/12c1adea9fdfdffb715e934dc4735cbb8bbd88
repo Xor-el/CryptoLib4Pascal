@@ -1,0 +1,25 @@
+CryptoLib.ConstantTime/Lazarus/ct.supp
+  s_b17237920853dc::t_51a77b81318dd5 10-17
+  s_b17237920853dc::t_ac815f840267de 41-59
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "5a12c1adea9fdfdffb715e934dc4735cbb8bbd88",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b17237920853dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "550bcded-f9d5-4b65-bcf9-a0e23d94ac8f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
