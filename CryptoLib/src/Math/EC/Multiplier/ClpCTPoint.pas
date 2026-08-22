@@ -159,13 +159,9 @@ begin
 end;
 
 class procedure TCTPoint<TOps>.OneFe(const AFieldOps: IFpFieldOps; var AZ: TFe);
-var
-  LArr: TCryptoLibUInt32Array;
 begin
-  LArr := TNat.Create(AFieldOps.GetFieldInts);
-  AFieldOps.FieldOne(LArr);
-  FillChar(AZ, SizeOf(AZ), 0);
-  Move(LArr[0], AZ.W[0], AFieldOps.GetFieldInts * SizeOf(UInt32));
+  // Montgomery form of 1 (= R mod p); AFieldOps retained for signature parity.
+  TOps.SetOne(AZ);
 end;
 
 class procedure TCTPoint<TOps>.Infinity(const AFieldOps: IFpFieldOps; var AR: TFePoint);
@@ -178,12 +174,16 @@ class procedure TCTPoint<TOps>.FromAffine(const AFieldOps: IFpFieldOps;
   const AXa, AYa: TCryptoLibUInt32Array; var AR: TFePoint);
 var
   LN: Int32;
+  LTT: TFeExt;
 begin
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
   Move(AXa[0], AR.X.W[0], LN * SizeOf(UInt32));
   Move(AYa[0], AR.Y.W[0], LN * SizeOf(UInt32));
-  OneFe(AFieldOps, AR.Z);
+  // normal affine coords -> Montgomery domain; Z := Mont(1)
+  TOps.ToMont(AR.X, AR.X, LTT);
+  TOps.ToMont(AR.Y, AR.Y, LTT);
+  TOps.SetOne(AR.Z);
 end;
 
 class procedure TCTPoint<TOps>.FromAffineElt(const AFieldOps: IFpFieldOps;
@@ -205,12 +205,15 @@ class procedure TCTPoint<TOps>.ToAffine(const AFieldOps: IFpFieldOps;
 var
   LN: Int32;
   LZarr, LZInvArr: TCryptoLibUInt32Array;
-  LZInv, LTmp: TFe;
+  LZInv, LTmp, LZNorm: TFe;
   LTT: TFeExt;
 begin
   LN := AFieldOps.GetFieldInts;
   LZarr := TNat.Create(LN);
-  Move(AP.Z.W[0], LZarr[0], LN * SizeOf(UInt32));
+  // Z is in the Montgomery domain; take it out before the normal-domain inverse.
+  // The subsequent TOps.Mul(X_mont, Zinv_normal) then yields the normal affine coord.
+  TOps.FromMont(AP.Z, LZNorm, LTT);
+  Move(LZNorm.W[0], LZarr[0], LN * SizeOf(UInt32));
   AIsInfinity := AFieldOps.IsZero(LZarr);
   if AIsInfinity then
     Exit;

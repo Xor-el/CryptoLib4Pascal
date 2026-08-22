@@ -137,6 +137,7 @@ var
   LTable: array of TFePoint;
   LBase, LAcc, LSel: TFePoint;
   LLambda: TFe;
+  LLTT: TFeExt;
   LLambdaArr, LXa, LYa, LN, LR, LProd, LK, LKPrime: TCryptoLibUInt32Array;
   LIsInfinity: Boolean;
   LXfe, LYfe: IECFieldElement;
@@ -164,6 +165,8 @@ begin
   FFieldOps.RandomMult(LRandom, LLambdaArr);
   FillChar(LLambda, SizeOf(LLambda), 0);
   Move(LLambdaArr[0], LLambda.W[0], LFieldInts * SizeOf(UInt32));
+  // ladder runs in the Montgomery domain: the random blinding scalar must be there too
+  TOps.ToMont(LLambda, LLambda, LLTT);
   TCTPoint<TOps>.FromAffine(FFieldOps, LXa, LYa, LBase);
   ScaleRandom(LBase, LLambda, LBase);
 

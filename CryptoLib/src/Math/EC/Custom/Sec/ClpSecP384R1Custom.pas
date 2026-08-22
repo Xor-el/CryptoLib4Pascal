@@ -59,7 +59,6 @@ type
     PExt23 = UInt32($FFFFFFFF);
   class var
     FP, FPExt, FPExtInv: TCryptoLibUInt32Array;
-    FFb3: TFe; // b3 (= 3b) field rep for the CT ladder (a = -3 folded into MulByA)
   class procedure AddPInvTo(const AZ: TCryptoLibUInt32Array); overload; static;
   class procedure AddPInvTo(AZ: PUInt32); overload; static;
   class procedure SubPInvFrom(const AZ: TCryptoLibUInt32Array); overload; static;
@@ -69,7 +68,6 @@ type
   class constructor Create;
   public
     class procedure Add(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
-    class procedure Add(const AX, AY: TFe; var AZ: TFe); overload; static;
     class procedure AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
     class procedure AddOne(const AX, AZ: TCryptoLibUInt32Array); static;
     class function FromBigInteger(const AX: TBigInteger): TCryptoLibUInt32Array; static;
@@ -78,9 +76,6 @@ type
     class function IsZero(const AX: TCryptoLibUInt32Array): Int32; static;
     class procedure Multiply(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
     class procedure Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32Array); overload; static;
-    class procedure Multiply(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); overload; static;
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); static;
-    class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); static;
     class procedure Negate(const AX, AZ: TCryptoLibUInt32Array); static;
     class procedure Random(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
     class procedure RandomMult(const AR: ISecureRandom; const AZ: TCryptoLibUInt32Array); static;
@@ -90,13 +85,11 @@ type
     class procedure Reduce32(AX: UInt32; AZ: PUInt32); overload; static;
     class procedure Square(const AX, AZ: TCryptoLibUInt32Array); overload; static;
     class procedure Square(const AX, AZ, ATT: TCryptoLibUInt32Array); overload; static;
-    class procedure Square(const AX: TFe; var AZ: TFe; var ATT: TFeExt); overload; static;
     class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
       const AZ: TCryptoLibUInt32Array); overload; static;
     class procedure SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
       const AZ, ATT: TCryptoLibUInt32Array); overload; static;
     class procedure Subtract(const AX, AY, AZ: TCryptoLibUInt32Array); overload; static;
-    class procedure Subtract(const AX, AY: TFe; var AZ: TFe); overload; static;
     class procedure SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array); static;
     class procedure Twice(const AX, AZ: TCryptoLibUInt32Array); static;
 
@@ -242,14 +235,14 @@ type
 
 type
   TSecP384R1FieldArith = class sealed(TCTFieldArithBase)
+  strict private
+  class var
+    FParams: TMontParams;
+    class constructor Create;
   public
     class function FieldLimbs: Int32; override;
-    class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
-    class procedure Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
-    class procedure Add(const AX, AY: TFe; var AZ: TFe); override;
-    class procedure Sub(const AX, AY: TFe; var AZ: TFe); override;
+    class function MontParams: PMontParams; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
-    class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
 implementation
@@ -257,8 +250,6 @@ implementation
 { TSecP384R1Field }
 
 class constructor TSecP384R1Field.Create;
-var
-  LB, LB3: TCryptoLibUInt32Array;
 begin
   FP := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000000, $00000000, $FFFFFFFF,
   $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
@@ -269,14 +260,6 @@ begin
   FPExtInv := TCryptoLibUInt32Array.Create($FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD,
   $FFFFFFFF, $00000001, $FFFFFFFF, $FFFFFFFD, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
   $00000001, $FFFFFFFE, $FFFFFFFF, $00000001, $00000002);
-
-  // Value-type field constant for the CT ladder: b3 = 3b mod p.
-  System.FillChar(FFb3, SizeOf(FFb3), 0);
-  LB := FromBigInteger(TBigInteger.Create(1, THexEncoder.Decode('B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF')));
-  LB3 := TNat.Create(12);
-  Add(LB, LB, LB3);
-  Add(LB3, LB, LB3);
-  System.Move(LB3[0], FFb3.W[0], 12 * SizeOf(UInt32));
 end;
 
 class procedure TSecP384R1Field.AddPInvTo(const AZ: TCryptoLibUInt32Array);
@@ -348,15 +331,6 @@ begin
   LC := TNat.Add(12, AX, AY, AZ);
   if (LC <> 0) or ((AZ[11] = P11) and TNat.Gte(12, AZ, FP)) then
     AddPInvTo(AZ);
-end;
-
-class procedure TSecP384R1Field.Add(const AX, AY: TFe; var AZ: TFe);
-var
-  LC: UInt32;
-begin
-  LC := TNat.Add(12, PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@AZ.W[0]));
-  if (LC <> 0) or ((AZ.W[11] = P11) and TNat.Gte(12, PUInt32(@AZ.W[0]), PUInt32(@FP[0]))) then
-    AddPInvTo(PUInt32(@AZ.W[0]));
 end;
 
 class procedure TSecP384R1Field.AddExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
@@ -436,40 +410,6 @@ class procedure TSecP384R1Field.Multiply(const AX, AY, AZ, ATT: TCryptoLibUInt32
 begin
   MulExt(AX, AY, ATT);
   Reduce(ATT, AZ);
-end;
-
-class procedure TSecP384R1Field.Multiply(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
-var
-  LX, LY, LZ: TCryptoLibUInt32Array;
-begin
-  if TFpKernelSimd.TryMul(PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@ATT.W[0]), 12) then
-    Reduce(PUInt32(@ATT.W[0]), PUInt32(@AZ.W[0]))
-  else
-  begin
-    LX := TNat.Create(12);
-    LY := TNat.Create(12);
-    LZ := TNat.Create(12);
-    System.Move(AX.W[0], LX[0], 12 * SizeOf(UInt32));
-    System.Move(AY.W[0], LY[0], 12 * SizeOf(UInt32));
-    Multiply(LX, LY, LZ);
-    System.Move(LZ[0], AZ.W[0], 12 * SizeOf(UInt32));
-  end;
-end;
-
-class procedure TSecP384R1Field.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-var
-  Lt, LZero: TFe;
-begin
-  // a = -3: -(x+x+x) via field adds, cheaper than a full multiply by FFa.
-  Add(AX, AX, Lt);
-  Add(Lt, AX, Lt);
-  System.FillChar(LZero, SizeOf(LZero), 0);
-  Subtract(LZero, Lt, AZ);
-end;
-
-class procedure TSecP384R1Field.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  Multiply(AX, FFb3, AZ, ATT);
 end;
 
 class procedure TSecP384R1Field.Negate(const AX, AZ: TCryptoLibUInt32Array);
@@ -635,21 +575,6 @@ begin
   Reduce(ATT, AZ);
 end;
 
-class procedure TSecP384R1Field.Square(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-var
-  LX, LZ: TCryptoLibUInt32Array;
-begin
-  if TFpKernelSimd.TrySqr(PUInt32(@AX.W[0]), PUInt32(@ATT.W[0]), 12) then
-    Reduce(PUInt32(@ATT.W[0]), PUInt32(@AZ.W[0]))
-  else
-  begin
-    LX := TNat.Create(12);
-    LZ := TNat.Create(12);
-    System.Move(AX.W[0], LX[0], 12 * SizeOf(UInt32));
-    Square(LX, LZ);
-    System.Move(LZ[0], AZ.W[0], 12 * SizeOf(UInt32));
-  end;
-end;
 
 class procedure TSecP384R1Field.SquareN(const AX: TCryptoLibUInt32Array; AN: Int32;
   const AZ: TCryptoLibUInt32Array);
@@ -695,15 +620,6 @@ begin
   LC := TNat.Sub(12, AX, AY, AZ);
   if LC <> 0 then
     SubPInvFrom(AZ);
-end;
-
-class procedure TSecP384R1Field.Subtract(const AX, AY: TFe; var AZ: TFe);
-var
-  LC: Int32;
-begin
-  LC := TNat.Sub(12, PUInt32(@AX.W[0]), PUInt32(@AY.W[0]), PUInt32(@AZ.W[0]));
-  if LC <> 0 then
-    SubPInvFrom(PUInt32(@AZ.W[0]));
 end;
 
 class procedure TSecP384R1Field.SubtractExt(const AXX, AYY, AZZ: TCryptoLibUInt32Array);
@@ -1477,34 +1393,33 @@ begin
   Result := 12;
 end;
 
-class procedure TSecP384R1FieldArith.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
+class constructor TSecP384R1FieldArith.Create;
+var
+  LQ, LR, LR2, LB, LB3: TBigInteger;
 begin
-  TSecP384R1Field.Multiply(AX, AY, AZ, ATT);
+  // Montgomery-domain constants for the value-type CT ladder (R = 2^384).
+  LQ := TNat.ToBigInteger(12, TSecP384R1Field.P);
+  FParams.CtxData[1] := 6;
+  System.Move(TSecP384R1Field.P[0], FParams.CtxData[2], 12 * SizeOf(UInt32)); // p0..p5
+  FParams.CtxData[0] := ComputeN0Prime(FParams.CtxData[2]);
+  LR := TBigInteger.One.ShiftLeft(384).&Mod(LQ); // R mod p
+  LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p
+  ArrToFe(TSecP384R1Field.FromBigInteger(LR), 12, FParams.MontOne);
+  ArrToFe(TSecP384R1Field.FromBigInteger(LR2), 12, FParams.R2);
+  // b3 = 3b in Montgomery form: (3b * R) mod p
+  LB := TBigInteger.Create(1, THexEncoder.Decode('B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF'));
+  LB3 := LB.Add(LB).Add(LB).&Mod(LQ);
+  ArrToFe(TSecP384R1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 12, FParams.Fb3);
 end;
 
-class procedure TSecP384R1FieldArith.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+class function TSecP384R1FieldArith.MontParams: PMontParams;
 begin
-  TSecP384R1Field.Square(AX, AZ, ATT);
-end;
-
-class procedure TSecP384R1FieldArith.Add(const AX, AY: TFe; var AZ: TFe);
-begin
-  TSecP384R1Field.Add(AX, AY, AZ);
-end;
-
-class procedure TSecP384R1FieldArith.Sub(const AX, AY: TFe; var AZ: TFe);
-begin
-  TSecP384R1Field.Subtract(AX, AY, AZ);
+  Result := @FParams;
 end;
 
 class procedure TSecP384R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
-  TSecP384R1Field.MulByA(AX, AZ, ATT);
-end;
-
-class procedure TSecP384R1FieldArith.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  TSecP384R1Field.MulByB3(AX, AZ, ATT);
+  MulByMinusThree(AX, AZ); // a = -3
 end;
 
 end.
