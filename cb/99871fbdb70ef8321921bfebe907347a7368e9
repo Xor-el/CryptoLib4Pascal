@@ -1,0 +1,25 @@
+.github/workflows/ci/valgrind-ct.sh
+  s_b17237920853dc::t_71032a7ec6d9e6 92-95
+  s_b17237920853dc::t_f8cb338fccb582 74-75,77,80-81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "cb99871fbdb70ef8321921bfebe907347a7368e9",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b17237920853dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "550bcded-f9d5-4b65-bcf9-a0e23d94ac8f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
