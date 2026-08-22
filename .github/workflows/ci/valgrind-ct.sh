@@ -63,7 +63,9 @@ done
 
 echo "==> compiling CTValgrind against the prebuilt scalar packages"
 BUILD_DIR="$(mktemp -d)"
-( cd "$CT_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 \
+# -gl keeps the symbol table so Memcheck resolves function names; without it the
+# binary is stripped and every frame is '???', which no fun: suppression can match.
+( cd "$CT_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 -gl \
     -dCRYPTOLIB_FORCE_SCALAR -dHASHLIB_FORCE_SCALAR \
     -Fu"$CRYPTO_UNITS" -Fu"$HASH_UNITS" -Fu"$SB_UNITS" -Fu"$CT_CORE" \
     -Fl"$CT_LAZ" -FU"$BUILD_DIR" -oCTValgrind \
