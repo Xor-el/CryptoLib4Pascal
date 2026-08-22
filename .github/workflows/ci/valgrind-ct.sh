@@ -103,6 +103,9 @@ run_target() {  # <target> <clean|fire>
 
 echo "==> running the gate"
 run_target x25519        clean
+run_target x448          clean
+run_target ed25519       clean
+run_target ed448         clean
 run_target aes-bitsliced clean
 run_target ghash-basic   clean
 run_target aes-ttable    fire
