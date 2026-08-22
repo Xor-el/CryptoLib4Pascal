@@ -43,12 +43,21 @@ type
     /// <summary>AZz[0..2*ALimbs32-1] := AX * AY (both ALimbs32 uint32 limbs).
     /// Returns False if unsupported (caller falls back).</summary>
     class function TryMul(const AX, AY, AZz: TCryptoLibUInt32Array;
-      ALimbs32: Int32): Boolean; overload; static;
-    class function TryMul(APX, APY, APZz: PUInt32; ALimbs32: Int32): Boolean; overload; static;
+      ALimbs32: Int32): Boolean; overload; static; inline;
+    class function TryMul(APX, APY, APZz: PUInt32; ALimbs32: Int32): Boolean; overload; static; inline;
     /// <summary>AZz[0..2*ALimbs32-1] := AX^2. Returns False if unsupported.</summary>
     class function TrySqr(const AX, AZz: TCryptoLibUInt32Array;
-      ALimbs32: Int32): Boolean; overload; static;
-    class function TrySqr(APX, APZz: PUInt32; ALimbs32: Int32): Boolean; overload; static;
+      ALimbs32: Int32): Boolean; overload; static; inline;
+    class function TrySqr(APX, APZz: PUInt32; ALimbs32: Int32): Boolean; overload; static; inline;
+    /// <summary>Fused CIOS Montgomery multiply APR := APA*APB*R^-1 mod p. APCtx =
+    /// [n0', N, p[0..N-1]] (64-bit limbs); APR is the N+2-limb scratch and receives
+    /// the reduced N-limb result. Returns False when unsupported (caller uses its
+    /// Pascal Montgomery fallback).</summary>
+    class function TryMontMul(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Constant-time modular add/sub APR := (APA +/- APB) mod p. APCtx =
+    /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False when unsupported.</summary>
+    class function TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    class function TryModSub(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
   end;
 
 implementation
@@ -104,6 +113,57 @@ begin
   TFpKernelArmBackend.Sqr(PUInt64(APX), PUInt64(APZz), ALimbs32 shr 1);
   {$ENDIF}
   Result := True;
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TFpKernelSimd.TryMontMul(APR, APA, APB, APCtx: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TFpKernelX86Backend.IsSupported then
+    Exit(False);
+  Result := TFpKernelX86Backend.MontMul(APR, APA, APB, APCtx);
+  {$ELSE}
+  if not TFpKernelArmBackend.IsSupported then
+    Exit(False);
+  Result := TFpKernelArmBackend.MontMul(APR, APA, APB, APCtx);
+  {$ENDIF}
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TFpKernelSimd.TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TFpKernelX86Backend.IsSupported then
+    Exit(False);
+  Result := TFpKernelX86Backend.ModAdd(APR, APA, APB, APCtx);
+  {$ELSE}
+  if not TFpKernelArmBackend.IsSupported then
+    Exit(False);
+  Result := TFpKernelArmBackend.ModAdd(APR, APA, APB, APCtx);
+  {$ENDIF}
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TFpKernelSimd.TryModSub(APR, APA, APB, APCtx: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TFpKernelX86Backend.IsSupported then
+    Exit(False);
+  Result := TFpKernelX86Backend.ModSub(APR, APA, APB, APCtx);
+  {$ELSE}
+  if not TFpKernelArmBackend.IsSupported then
+    Exit(False);
+  Result := TFpKernelArmBackend.ModSub(APR, APA, APB, APCtx);
+  {$ENDIF}
 {$ELSE}
   Result := False;
 {$IFEND}
