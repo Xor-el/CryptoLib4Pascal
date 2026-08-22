@@ -187,9 +187,6 @@ end;
 class function TFpKernelX86Backend.IsSupported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  // Base kernel uses plain integer ops (no CPU-feature dependency); gate only on
-  // "not forced scalar" so a CRYPTOLIB_FORCE_SCALAR build (which pins the active
-  // level to Scalar) falls back to the scalar path.
   Result := TCpuFeatures.X86.GetActiveSimdLevel() <> TX86SimdLevel.Scalar;
 {$ELSE}
   Result := False;
