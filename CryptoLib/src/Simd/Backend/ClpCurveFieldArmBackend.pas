@@ -38,6 +38,8 @@ type
     class function IsSupported: Boolean; static; inline;
     class function Mul25519(PF, PG, PH: PUInt64): Boolean; static;
     class function Sqr25519(PX, PZ: PUInt64): Boolean; static;
+    class function Mul448(PF, PG, PH: PUInt64): Boolean; static;
+    class function Sqr448(PX, PZ: PUInt64): Boolean; static;
   end;
 
 implementation
@@ -89,6 +91,17 @@ begin
 {$ELSE}
   Result := False;
 {$ENDIF}
+end;
+
+// No radix-2^56 curve448 kernel yet: the field unit uses its Pascal fallback.
+class function TCurveFieldArmBackend.Mul448(PF, PG, PH: PUInt64): Boolean;
+begin
+  Result := False;
+end;
+
+class function TCurveFieldArmBackend.Sqr448(PX, PZ: PUInt64): Boolean;
+begin
+  Result := False;
 end;
 
 end.

@@ -41,7 +41,7 @@ type
     C_A24 = UInt32((156326 + 2) div 4);
   class procedure DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
     AN: TCryptoLibUInt32Array); static;
-  class procedure PointDouble(AX, AZ: TCryptoLibUInt32Array); static;
+  class procedure PointDouble(var AX, AZ: TX448Fe); static;
   public
   const
     PointSize = Int32(56);
@@ -118,13 +118,10 @@ begin
   ScalarMultBase(AK, AKOff, AR, AROff);
 end;
 
-class procedure TX448.PointDouble(AX, AZ: TCryptoLibUInt32Array);
+class procedure TX448.PointDouble(var AX, AZ: TX448Fe);
 var
-  LA, LB: TCryptoLibUInt32Array;
+  LA, LB: TX448Fe;
 begin
-  LA := TX448Field.Create;
-  LB := TX448Field.Create;
-
   TX448Field.Add(AX, AZ, LA);
   TX448Field.Sub(AX, AZ, LB);
   TX448Field.Sqr(LA, LA);
@@ -141,8 +138,8 @@ class procedure TX448.ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;
   AROff: Int32);
 var
   LN: TCryptoLibUInt32Array;
-  LX1, LX2, LZ2, LX3, LZ3: TCryptoLibUInt32Array;
-  LT1, LT2: TCryptoLibUInt32Array;
+  LX1, LX2, LZ2, LX3, LZ3: TX448Fe;
+  LT1, LT2: TX448Fe;
   LBit, LSwap, LWord, LShift, LKt, LI: Int32;
 begin
   TArrayUtilities.ValidateSegment(AK, AKOff, ScalarSize);
@@ -151,14 +148,13 @@ begin
   System.SetLength(LN, 14);
   DecodeScalar(AK, AKOff, LN);
 
-  LX1 := TX448Field.Create; TX448Field.Decode448(AU, AUOff, LX1);
-  LX2 := TX448Field.Create; TX448Field.Copy(LX1, 0, LX2, 0);
-  LZ2 := TX448Field.Create; LZ2[0] := 1;
-  LX3 := TX448Field.Create; LX3[0] := 1;
-  LZ3 := TX448Field.Create;
-
-  LT1 := TX448Field.Create;
-  LT2 := TX448Field.Create;
+  TX448Field.Decode(AU, AUOff, LX1);
+  TX448Field.Copy(LX1, LX2);
+  TX448Field.One(LZ2);
+  TX448Field.One(LX3);
+  TX448Field.Zero(LZ3);
+  TX448Field.Zero(LT1);
+  TX448Field.Zero(LT2);
 
   LBit := 447;
   LSwap := 1;
@@ -211,12 +207,12 @@ end;
 class procedure TX448.ScalarMultBase(const AK: TCryptoLibByteArray; AKOff: Int32;
   AR: TCryptoLibByteArray; AROff: Int32);
 var
-  LX, LY: TCryptoLibUInt32Array;
+  LX, LY: TX448Fe;
 begin
   TArrayUtilities.ValidateSegment(AK, AKOff, ScalarSize);
   TArrayUtilities.ValidateSegment(AR, AROff, PointSize);
-  LX := TX448Field.Create;
-  LY := TX448Field.Create;
+  TX448Field.Zero(LX);
+  TX448Field.Zero(LY);
 
   TEd448.ScalarMultBaseXY(AK, AKOff, LX, LY);
 

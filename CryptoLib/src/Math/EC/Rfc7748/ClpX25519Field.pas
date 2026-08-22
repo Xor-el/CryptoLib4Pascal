@@ -231,9 +231,7 @@ var
   begin
     Mul64(AA, AB, LpHi, LpLo);
     ALo := ALo + LpLo;
-    if ALo < LpLo then
-      System.Inc(AHi);
-    AHi := AHi + LpHi;
+    AHi := AHi + LpHi + UInt64(Ord(ALo < LpLo));
   end;
 
 begin
@@ -285,23 +283,19 @@ begin
   Lc := (Llo0 shr 51) or (Lhi0 shl 13);
   AH.L[0] := Llo0 and MASK51;
   Llo1 := Llo1 + Lc;
-  if Llo1 < Lc then
-    System.Inc(Lhi1);
+  Lhi1 := Lhi1 + UInt64(Ord(Llo1 < Lc));
   Lc := (Llo1 shr 51) or (Lhi1 shl 13);
   AH.L[1] := Llo1 and MASK51;
   Llo2 := Llo2 + Lc;
-  if Llo2 < Lc then
-    System.Inc(Lhi2);
+  Lhi2 := Lhi2 + UInt64(Ord(Llo2 < Lc));
   Lc := (Llo2 shr 51) or (Lhi2 shl 13);
   AH.L[2] := Llo2 and MASK51;
   Llo3 := Llo3 + Lc;
-  if Llo3 < Lc then
-    System.Inc(Lhi3);
+  Lhi3 := Lhi3 + UInt64(Ord(Llo3 < Lc));
   Lc := (Llo3 shr 51) or (Lhi3 shl 13);
   AH.L[3] := Llo3 and MASK51;
   Llo4 := Llo4 + Lc;
-  if Llo4 < Lc then
-    System.Inc(Lhi4);
+  Lhi4 := Lhi4 + UInt64(Ord(Llo4 < Lc));
   Lc := (Llo4 shr 51) or (Lhi4 shl 13);
   AH.L[4] := Llo4 and MASK51;
   AH.L[0] := AH.L[0] + Lc * 19;
@@ -328,8 +322,7 @@ begin
   begin
     Mul64(AX.L[LI], LW, LHi, LLo);
     LLo := LLo + LCarry;
-    if LLo < LCarry then
-      System.Inc(LHi);
+    LHi := LHi + UInt64(Ord(LLo < LCarry));
     AZ.L[LI] := LLo and MASK51;
     LCarry := (LLo shr 51) or (LHi shl 13);
   end;

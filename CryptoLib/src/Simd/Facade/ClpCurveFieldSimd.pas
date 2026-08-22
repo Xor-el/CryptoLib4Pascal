@@ -31,10 +31,11 @@ uses
 
 type
   /// <summary>
-  /// Arch-neutral facade over the radix-2^51 curve25519 field multiply/square
-  /// kernels. Each <c>Try*</c> runs the fully-reduced field operation over five
-  /// 64-bit limbs and returns <c>False</c> when no kernel applies (unsupported
-  /// arch or a forced-scalar build); the caller then uses its Pascal fallback.
+  /// Arch-neutral facade over the curve25519 (radix-2^51) and curve448
+  /// (radix-2^56) field multiply/square kernels. Each <c>Try*</c> runs the
+  /// fully-reduced field operation over the packed 64-bit limbs and returns
+  /// <c>False</c> when no kernel applies (unsupported arch or a forced-scalar
+  /// build); the caller then uses its Pascal fallback.
   /// </summary>
   TCurveFieldSimd = class sealed
   public
@@ -42,6 +43,10 @@ type
     class function TryMul25519(APF, APG, APH: PUInt64): Boolean; static; inline;
     /// <summary>APZ := APX^2 (mod 2^255-19), five 64-bit limbs.</summary>
     class function TrySqr25519(APX, APZ: PUInt64): Boolean; static; inline;
+    /// <summary>APH := APF * APG (mod 2^448-2^224-1), eight 64-bit limbs each.</summary>
+    class function TryMul448(APF, APG, APH: PUInt64): Boolean; static; inline;
+    /// <summary>APZ := APX^2 (mod 2^448-2^224-1), eight 64-bit limbs.</summary>
+    class function TrySqr448(APX, APZ: PUInt64): Boolean; static; inline;
   end;
 
 implementation
@@ -74,6 +79,40 @@ begin
   if not TCurveFieldArmBackend.IsSupported then
     Exit(False);
   Result := TCurveFieldArmBackend.Sqr25519(APX, APZ);
+  {$ENDIF}
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TCurveFieldSimd.TryMul448(APF, APG, APH: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TCurveFieldX86Backend.IsSupported then
+    Exit(False);
+  Result := TCurveFieldX86Backend.Mul448(APF, APG, APH);
+  {$ELSE}
+  if not TCurveFieldArmBackend.IsSupported then
+    Exit(False);
+  Result := TCurveFieldArmBackend.Mul448(APF, APG, APH);
+  {$ENDIF}
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TCurveFieldSimd.TrySqr448(APX, APZ: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TCurveFieldX86Backend.IsSupported then
+    Exit(False);
+  Result := TCurveFieldX86Backend.Sqr448(APX, APZ);
+  {$ELSE}
+  if not TCurveFieldArmBackend.IsSupported then
+    Exit(False);
+  Result := TCurveFieldArmBackend.Sqr448(APX, APZ);
   {$ENDIF}
 {$ELSE}
   Result := False;
