@@ -1,0 +1,53 @@
+.github/workflows/make.yml
+  h_878efc035442cc 50,270,297,319,390
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP384R1Custom.pas
+  s_b17237920853dc::t_dd3b0e92d250bd 1403
+.github/workflows/ci/targets.json
+  h_878efc035442cc 11-12
+CryptoLib/src/Math/EC/Multiplier/ClpCTFieldArith.pas
+  s_b17237920853dc::t_066454ac621267 57,59
+  s_b17237920853dc::t_67b39931200de9 303,308,316-317,334,339,347-348,358
+  s_b17237920853dc::t_f9919d05aa51df 26
+  s_b17237920853dc::t_f620df00a6d995 55-56,58
+  s_b17237920853dc::t_f1f68e7a1cbf87 95-96
+  s_b17237920853dc::t_bb2d77a7d1e7d1 237
+  s_b17237920853dc::t_8a92bc06fde2bf 305,319,325,331,336,349,356
+  s_b17237920853dc::t_c8c6671a48af9c 97,102,105-106
+  s_b17237920853dc::t_36b8318bc75f0a 144-145,150-151,162-166
+  s_b17237920853dc::t_1efce8a2c9c7f9 142-143,146-149,152-161,167-171
+  s_b17237920853dc::t_08ac82eb1375b1 173,187,193
+  s_b17237920853dc::t_91f765a1854751 178,184-185,188
+  s_b17237920853dc::t_8f0e1977cc856e 175,222,227,321,326
+  s_b17237920853dc::t_864d9cf081ab73 186,197
+  s_b17237920853dc::t_76cbfff1a65df5 98-101
+  s_b17237920853dc::t_f356db50d23548 289
+  s_b17237920853dc::t_9343bbfecdd45b 103-104
+  s_b17237920853dc::t_3a44e719a09e38 278
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_b17237920853dc::t_135b138ca6d7a4 1395
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256K1Custom.pas
+  s_b17237920853dc::t_42dbba1afda3e9 1231
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP521R1Custom.pas
+  s_b17237920853dc::t_7b1cb4e6e220f3 1199-1200
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "1f89b7cbe803d2ce8724c4ba56eed9814f06cf1a",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b17237920853dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "550bcded-f9d5-4b65-bcf9-a0e23d94ac8f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
