@@ -1,0 +1,36 @@
+CryptoLib/src/Simd/Backend/ClpCurveFieldX86Backend.pas
+  s_b17237920853dc::t_5fca57c4d5f9f3 82,85-89,96,99-103
+  s_b17237920853dc::t_e3a4935f888405 141-143,145,151-153,155
+  s_b17237920853dc::t_b6148783d71707 140,150
+  s_b17237920853dc::t_1fe102655b7675 79-81,83-84,90-95,97-98,104-106
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe64_i386.inc
+  s_b17237920853dc::t_555338299a2167 1-3202
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe64_x86_64.inc
+  s_b17237920853dc::t_204479de2cf0b6 1-901
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe64_aarch64.inc
+  s_b17237920853dc::t_1c42428b991d68 1-1035
+CryptoLib/src/Simd/Backend/ClpCurveFieldArmBackend.pas
+  s_b17237920853dc::t_da2e3b1da60d3b 114-117,119,124-127,129
+  s_b17237920853dc::t_18de88ec491514 65-80
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "3e7540319165f0f2d82a00d6b9141535eb55b400",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_b17237920853dc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "550bcded-f9d5-4b65-bcf9-a0e23d94ac8f",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
