@@ -23,6 +23,7 @@ interface
 uses
   ClpFpKernelSimd,
   ClpCTFieldValue,
+  ClpBinaryPrimitives,
   ClpCryptoLibTypes;
 
 type
@@ -51,6 +52,11 @@ type
   strict private
     /// <summary>128-bit product APHi:APLo := AX * AY.</summary>
     class procedure Mul64(AX, AY: UInt64; out APHi, APLo: UInt64); static;
+    /// <summary>Read the AIdx-th 64-bit limb from a uint32-limb array
+    /// (limb = W[2*AIdx] + W[2*AIdx+1] * 2^32).</summary>
+    class function LoadLimb(AP: PCardinal; AIdx: Int32): UInt64; static; inline;
+    /// <summary>Write AVal into the AIdx-th uint32 limb pair.</summary>
+    class procedure StoreLimb(AP: PCardinal; AIdx: Int32; AVal: UInt64); static; inline;
   public
     // ---- curve-specific providers ----
     /// <summary>uint32 limb count N for this curve (P-256 = 8).</summary>
@@ -86,15 +92,18 @@ type
     class procedure ArrToFe(const AArr: TCryptoLibUInt32Array; ALimbs: Int32; out AFe: TFe); static;
     /// <summary>n0' = -p^-1 mod 2^64 from the low 64-bit limb of p (Newton).</summary>
     class function ComputeN0Prime(AP0: UInt64): UInt64; static;
-    /// <summary>Width-general CIOS Montgomery multiply - the fallback used when the
-    /// asm kernel is unavailable (forced-scalar / unsupported CPU). Same contract as
-    /// the asm kernel: APCtx = [n0', N, p[0..N-1]] (64-bit limbs), APR receives the
-    /// reduced N-limb result (needs N+2 scratch limbs of headroom).</summary>
-    class procedure MontMul(APR, APA, APB, APCtx: PUInt64); static;
-    /// <summary>Width-general constant-time modular add/sub - the fallback used when
-    /// the asm kernel is unavailable. APCtx = [n0'(unused), N, p[0..N-1]]; inputs < p.</summary>
-    class procedure ModAdd(APR, APA, APB, APCtx: PUInt64); static;
-    class procedure ModSub(APR, APA, APB, APCtx: PUInt64); static;
+    /// <summary>Pack ALimbs32 uint32 modulus limbs at AP into ceil(ALimbs32/2)
+    /// 64-bit limbs at APCtx (the CIOS ctx p[] slots).</summary>
+    class procedure LoadModulus(AP: PCardinal; ALimbs32: Int32; APCtx: PUInt64); static;
+    /// <summary>Width-general CIOS Montgomery multiply. The field operands APR/APA/APB
+    /// are uint32-limb arrays read through <c>LoadLimb</c>; APCtx = [n0', N, p[0..N-1]]
+    /// (64-bit limbs). APR receives the reduced N-limb result (needs N+2 scratch limbs
+    /// of headroom).</summary>
+    class procedure MontMul(APR, APA, APB: PCardinal; APCtx: PUInt64); static;
+    /// <summary>Width-general constant-time modular add/sub. Operands are uint32-limb
+    /// arrays; APCtx = [n0'(unused), N, p[0..N-1]]; inputs < p.</summary>
+    class procedure ModAdd(APR, APA, APB: PCardinal; APCtx: PUInt64); static;
+    class procedure ModSub(APR, APA, APB: PCardinal; APCtx: PUInt64); static;
   end;
 
 implementation
@@ -130,26 +139,62 @@ begin
   Result := UInt64(0) - LInv;
 end;
 
-class procedure TCTFieldArithBase.MontMul(APR, APA, APB, APCtx: PUInt64);
+class function TCTFieldArithBase.LoadLimb(AP: PCardinal; AIdx: Int32): UInt64;
+begin
+  Result := UInt64(TBinaryPrimitives.LoadUInt32(@AP[2 * AIdx])) or
+    (UInt64(TBinaryPrimitives.LoadUInt32(@AP[2 * AIdx + 1])) shl 32);
+end;
+
+class procedure TCTFieldArithBase.StoreLimb(AP: PCardinal; AIdx: Int32; AVal: UInt64);
+begin
+  TBinaryPrimitives.StoreUInt32(@AP[2 * AIdx], UInt32(AVal));
+  TBinaryPrimitives.StoreUInt32(@AP[2 * AIdx + 1], UInt32(AVal shr 32));
+end;
+
+class procedure TCTFieldArithBase.LoadModulus(AP: PCardinal; ALimbs32: Int32; APCtx: PUInt64);
 var
+  LI: Int32;
+  LHi: UInt32;
+begin
+  LI := 0;
+  while (LI * 2) < ALimbs32 do
+  begin
+    if (LI * 2 + 1) < ALimbs32 then
+      LHi := TBinaryPrimitives.LoadUInt32(@AP[LI * 2 + 1])
+    else
+      LHi := 0;
+    APCtx[LI] := UInt64(TBinaryPrimitives.LoadUInt32(@AP[LI * 2])) or (UInt64(LHi) shl 32);
+    Inc(LI);
+  end;
+end;
+
+class procedure TCTFieldArithBase.MontMul(APR, APA, APB: PCardinal; APCtx: PUInt64);
+var
+  LA, LB: array [0 .. 9] of UInt64;
   Lt: array [0 .. 19] of UInt64;
-  Ld: array [0 .. 9] of UInt64;
+  LD: array [0 .. 9] of UInt64;
   LPMod: PUInt64;
   LN, LI, LJ: Int32;
-  LN0, LM, LHi, LLo, LC, LS, LX, LBorrowIn, LB1, LB2, LMask: UInt64;
+  LN0, LM, LHi, LLo, LC, LS, LX, LBorrowIn, LB1, LB2, LMask, LBI: UInt64;
 begin
   LN0 := APCtx[0];
   LN := Int32(APCtx[1]);
   LPMod := APCtx;
   Inc(LPMod, 2);
+  for LI := 0 to LN - 1 do
+  begin
+    LA[LI] := LoadLimb(APA, LI);
+    LB[LI] := LoadLimb(APB, LI);
+  end;
   for LI := 0 to LN + 1 do
     Lt[LI] := 0;
   for LI := 0 to LN - 1 do
   begin
+    LBI := LB[LI];
     LC := 0;
     for LJ := 0 to LN - 1 do
     begin
-      Mul64(APA[LJ], APB[LI], LHi, LLo);
+      Mul64(LA[LJ], LBI, LHi, LLo);
       LLo := LLo + Lt[LJ]; if LLo < Lt[LJ] then Inc(LHi);
       LLo := LLo + LC;     if LLo < LC     then Inc(LHi);
       Lt[LJ] := LLo; LC := LHi;
@@ -174,12 +219,12 @@ begin
   for LI := 0 to LN - 1 do
   begin
     LX := Lt[LI] - LBorrowIn; LB1 := Ord(Lt[LI] < LBorrowIn);
-    Ld[LI] := LX - LPMod[LI]; LB2 := Ord(LX < LPMod[LI]);
+    LD[LI] := LX - LPMod[LI]; LB2 := Ord(LX < LPMod[LI]);
     LBorrowIn := LB1 + LB2;
   end;
   LMask := UInt64(0) - UInt64(Ord(Lt[LN] < LBorrowIn)); // all-ones if t < p (keep t)
   for LI := 0 to LN - 1 do
-    APR[LI] := (Lt[LI] and LMask) or (Ld[LI] and (not LMask));
+    StoreLimb(APR, LI, (Lt[LI] and LMask) or (LD[LI] and (not LMask)));
 end;
 
 class procedure TCTFieldArithBase.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
@@ -189,7 +234,7 @@ begin
   LP := MontParams;
   if not TFpKernelSimd.TryMontMul(PUInt64(@ATT.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
-    MontMul(PUInt64(@ATT.W[0]), PUInt64(@AX.W[0]), PUInt64(@AY.W[0]),
+    MontMul(PCardinal(@ATT.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
   Move(ATT.W[0], AZ.W[0], (Int32(LP^.CtxData[1]) * 2) * SizeOf(UInt32));
 end;
@@ -230,7 +275,7 @@ begin
   LP := MontParams;
   if not TFpKernelSimd.TryModAdd(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
-    ModAdd(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]), PUInt64(@AY.W[0]),
+    ModAdd(PCardinal(@AZ.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
 end;
 
@@ -241,7 +286,7 @@ begin
   LP := MontParams;
   if not TFpKernelSimd.TryModSub(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
-    ModSub(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]), PUInt64(@AY.W[0]),
+    ModSub(PCardinal(@AZ.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
 end;
 
@@ -255,12 +300,12 @@ begin
   Sub(LZero, LT, AZ); // -3*AX
 end;
 
-class procedure TCTFieldArithBase.ModAdd(APR, APA, APB, APCtx: PUInt64);
+class procedure TCTFieldArithBase.ModAdd(APR, APA, APB: PCardinal; APCtx: PUInt64);
 var
-  Ld: array [0 .. 9] of UInt64;
+  LR, LD: array [0 .. 9] of UInt64;
   LPMod: PUInt64;
   LN, LI: Int32;
-  LC, LS, LX, LBorrow, LB1, LB2, LMask: UInt64;
+  LC, LS, LX, LA, LBorrow, LB1, LB2, LMask: UInt64;
 begin
   LN := Int32(APCtx[1]);
   LPMod := APCtx;
@@ -268,28 +313,30 @@ begin
   LC := 0;
   for LI := 0 to LN - 1 do
   begin
-    LS := APA[LI] + APB[LI]; LX := Ord(LS < APA[LI]);
+    LA := LoadLimb(APA, LI);
+    LS := LA + LoadLimb(APB, LI); LX := Ord(LS < LA);
     LS := LS + LC; LX := LX + Ord(LS < LC);
-    APR[LI] := LS; LC := LX;
+    LR[LI] := LS; LC := LX;
   end;
-  // constant-time: subtract p into Ld, mask-select if (carry) or (no borrow)
+  // constant-time: subtract p into LD, mask-select if (carry) or (no borrow)
   LBorrow := 0;
   for LI := 0 to LN - 1 do
   begin
-    LS := APR[LI] - LBorrow; LB1 := Ord(APR[LI] < LBorrow);
-    Ld[LI] := LS - LPMod[LI]; LB2 := Ord(LS < LPMod[LI]);
+    LS := LR[LI] - LBorrow; LB1 := Ord(LR[LI] < LBorrow);
+    LD[LI] := LS - LPMod[LI]; LB2 := Ord(LS < LPMod[LI]);
     LBorrow := LB1 + LB2;
   end;
   LMask := UInt64(0) - (UInt64(Ord(LC <> 0)) or UInt64(Ord(LBorrow = 0)));
   for LI := 0 to LN - 1 do
-    APR[LI] := (Ld[LI] and LMask) or (APR[LI] and (not LMask));
+    StoreLimb(APR, LI, (LD[LI] and LMask) or (LR[LI] and (not LMask)));
 end;
 
-class procedure TCTFieldArithBase.ModSub(APR, APA, APB, APCtx: PUInt64);
+class procedure TCTFieldArithBase.ModSub(APR, APA, APB: PCardinal; APCtx: PUInt64);
 var
+  LR: array [0 .. 9] of UInt64;
   LPMod: PUInt64;
   LN, LI: Int32;
-  LC, LS, LX, LBorrow, LB1, LB2, LMask: UInt64;
+  LC, LS, LX, LA, LB, LBorrow, LB1, LB2, LMask: UInt64;
 begin
   LN := Int32(APCtx[1]);
   LPMod := APCtx;
@@ -297,17 +344,18 @@ begin
   LBorrow := 0;
   for LI := 0 to LN - 1 do
   begin
-    LS := APA[LI] - LBorrow; LB1 := Ord(APA[LI] < LBorrow);
-    APR[LI] := LS - APB[LI]; LB2 := Ord(LS < APB[LI]);
+    LA := LoadLimb(APA, LI); LB := LoadLimb(APB, LI);
+    LS := LA - LBorrow; LB1 := Ord(LA < LBorrow);
+    LR[LI] := LS - LB; LB2 := Ord(LS < LB);
     LBorrow := LB1 + LB2;
   end;
   LMask := UInt64(0) - LBorrow; // all-ones if A < B (add p back)
   LC := 0;
   for LI := 0 to LN - 1 do
   begin
-    LS := APR[LI] + (LPMod[LI] and LMask); LX := Ord(LS < APR[LI]);
+    LS := LR[LI] + (LPMod[LI] and LMask); LX := Ord(LS < LR[LI]);
     LS := LS + LC; LX := LX + Ord(LS < LC);
-    APR[LI] := LS; LC := LX;
+    StoreLimb(APR, LI, LS); LC := LX;
   end;
 end;
 

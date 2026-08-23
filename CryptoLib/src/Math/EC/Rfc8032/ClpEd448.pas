@@ -48,34 +48,15 @@ type
   strict private
   type
     TPointAffine = record
-    private
-      Fx, Fy: TCryptoLibUInt32Array;
-    public
-      property X: TCryptoLibUInt32Array read Fx write Fx;
-      property Y: TCryptoLibUInt32Array read Fy write Fy;
+      X, Y: TX448Fe;
     end;
 
     TPointProjective = record
-    private
-      Fx, Fy, Fz: TCryptoLibUInt32Array;
-    public
-      property X: TCryptoLibUInt32Array read Fx write Fx;
-      property Y: TCryptoLibUInt32Array read Fy write Fy;
-      property Z: TCryptoLibUInt32Array read Fz write Fz;
+      X, Y, Z: TX448Fe;
     end;
 
     TPointTemp = record
-    private
-      Fr0, Fr1, Fr2, Fr3, Fr4, Fr5, Fr6, Fr7: TCryptoLibUInt32Array;
-    public
-      property R0: TCryptoLibUInt32Array read Fr0 write Fr0;
-      property R1: TCryptoLibUInt32Array read Fr1 write Fr1;
-      property R2: TCryptoLibUInt32Array read Fr2 write Fr2;
-      property R3: TCryptoLibUInt32Array read Fr3 write Fr3;
-      property R4: TCryptoLibUInt32Array read Fr4 write Fr4;
-      property R5: TCryptoLibUInt32Array read Fr5 write Fr5;
-      property R6: TCryptoLibUInt32Array read Fr6 write Fr6;
-      property R7: TCryptoLibUInt32Array read Fr7 write Fr7;
+      R0, R1, R2, R3, R4, R5, R6, R7: TX448Fe;
     end;
 
   public
@@ -84,17 +65,17 @@ type
 
     IPublicPoint = interface
       ['{A7B3C1D2-E4F5-6789-0ABC-DEF012345678}']
-      function GetData: TCryptoLibUInt32Array;
-      property Data: TCryptoLibUInt32Array read GetData;
+      function GetData: TX448FeArray;
+      property Data: TX448FeArray read GetData;
     end;
 
     TPublicPoint = class sealed(TInterfacedObject, IPublicPoint)
     strict private
-      FData: TCryptoLibUInt32Array;
-      function GetData: TCryptoLibUInt32Array;
+      FData: TX448FeArray;
+      function GetData: TX448FeArray;
     public
-      constructor Create(const AData: TCryptoLibUInt32Array);
-      property Data: TCryptoLibUInt32Array read GetData;
+      constructor Create(const AData: TX448FeArray);
+      property Data: TX448FeArray read GetData;
     end;
 
   strict private
@@ -116,10 +97,10 @@ type
   class var
     FDom4Prefix: TCryptoLibByteArray;
     FP: TCryptoLibUInt32Array;
-    FB_x, FB_y, FB225_x, FB225_y: TCryptoLibUInt32Array;
+    FB_x, FB_y, FB225_x, FB225_y: TX448Fe;
     FPrecompBaseWnaf: TCryptoLibGenericArray<TPointAffine>;
     FPrecompBase225Wnaf: TCryptoLibGenericArray<TPointAffine>;
-    FPrecompBaseComb: TCryptoLibUInt32Array;
+    FPrecompBaseComb: TX448FeArray;
   class constructor Create;
   class procedure Precompute; static;
   class function CalculateS(const AR, AK, &AS: TCryptoLibByteArray): TCryptoLibByteArray; static;
@@ -168,9 +149,9 @@ type
   class procedure PointCopy(var AP: TPointProjective; var AR: TPointProjective); overload; static;
   class procedure PointDouble(var AR: TPointProjective; var AT: TPointTemp); static;
   class procedure PointLookup(ABlock, AIndex: Int32; var AP: TPointAffine); overload; static;
-  class procedure PointLookup(const AX: TCryptoLibUInt32Array; AN: Int32; const ATable: TCryptoLibUInt32Array; var AR: TPointProjective); overload; static;
-  class procedure PointLookup15(const ATable: TCryptoLibUInt32Array; var AR: TPointProjective); static;
-  class function PointPrecompute(var AP: TPointProjective; ACount: Int32; var AT: TPointTemp): TCryptoLibUInt32Array; overload; static;
+  class procedure PointLookup(const AX: TCryptoLibUInt32Array; AN: Int32; const ATable: TX448FeArray; var AR: TPointProjective); overload; static;
+  class procedure PointLookup15(const ATable: TX448FeArray; var AR: TPointProjective); static;
+  class function PointPrecompute(var AP: TPointProjective; ACount: Int32; var AT: TPointTemp): TX448FeArray; overload; static;
   class procedure PointPrecompute(var AP: TPointAffine; APoints: TCryptoLibGenericArray<TPointProjective>;
     APointsOff, APointsLen: Int32; var AT: TPointTemp); overload; static;
   class procedure PointSetNeutral(var AP: TPointProjective); static;
@@ -202,7 +183,7 @@ type
     function GeneratePublicKey(const ASk: TCryptoLibByteArray; ASkOff: Int32): IPublicPoint; overload;
 
     class procedure ScalarMultBaseXY(const AK: TCryptoLibByteArray; AKOff: Int32;
-      const AX, AY: TCryptoLibUInt32Array); static;
+      var AX, AY: TX448Fe); static;
 
     procedure Sign(const ASk: TCryptoLibByteArray; ASkOff: Int32; const ACtx: TCryptoLibByteArray;
       const AM: TCryptoLibByteArray; AMOff, AMLen: Int32; ASig: TCryptoLibByteArray; ASigOff: Int32); overload;
@@ -259,13 +240,13 @@ uses
 
 { TEd448.TPublicPoint }
 
-constructor TEd448.TPublicPoint.Create(const AData: TCryptoLibUInt32Array);
+constructor TEd448.TPublicPoint.Create(const AData: TX448FeArray);
 begin
   inherited Create();
   FData := AData;
 end;
 
-function TEd448.TPublicPoint.GetData: TCryptoLibUInt32Array;
+function TEd448.TPublicPoint.GetData: TX448FeArray;
 begin
   Result := FData;
 end;
@@ -285,19 +266,10 @@ begin
   $FFFFFFFF, $FFFFFFFF, $FFFFFFFF, $FFFFFFFE, $FFFFFFFF, $FFFFFFFF, $FFFFFFFF,
   $FFFFFFFF, $FFFFFFFF, $FFFFFFFF);
 
-  FB_x := TCryptoLibUInt32Array.Create($070CC05E, $026A82BC, $00938E26, $080E18B0,
-  $0511433B, $0F72AB66, $0412AE1A, $0A3D3A46, $0A6DE324, $00F1767E, $04657047,
-  $036DA9E1, $05A622BF, $0ED221D1, $066BED0D, $04F1970C);
-  FB_y := TCryptoLibUInt32Array.Create($0230FA14, $008795BF, $07C8AD98, $0132C4ED,
-  $09C4FDBD, $01CE67C3, $073AD3FF, $005A0C2D, $07789C1E, $0A398408, $0A73736C,
-  $0C7624BE, $003756C9, $02488762, $016EB6BC, $0693F467);
-
-  FB225_x := TCryptoLibUInt32Array.Create($06909EE2, $01D7605C, $0995EC8A, $0FC4D970,
-  $0CF2B361, $02D82E9D, $01225F55, $007F0EF6, $0AEE9C55, $0A240C13, $05627B54,
-  $0D449D1E, $03A44575, $007164A7, $0BD4BD71, $061A15FD);
-  FB225_y := TCryptoLibUInt32Array.Create($0D3A9FE4, $030696B9, $07E7E326, $068308C7,
-  $0CE0B8C8, $03AC222B, $0304DB8E, $083EE319, $05E5DB0B, $0ECA503B, $0B1C6539,
-  $078A8DCE, $02D256BC, $04A8B05E, $0BD9FD57, $0A1C3CB8);
+  FB_x := TX448Field.MakeFe($26A82BC70CC05E, $80E18B00938E26, $F72AB66511433B, $A3D3A46412AE1A, $0F1767EA6DE324, $36DA9E14657047, $ED221D15A622BF, $4F1970C66BED0D);
+  FB_y := TX448Field.MakeFe($08795BF230FA14, $132C4ED7C8AD98, $1CE67C39C4FDBD, $05A0C2D73AD3FF, $A3984087789C1E, $C7624BEA73736C, $248876203756C9, $693F46716EB6BC);
+  FB225_x := TX448Field.MakeFe($1D7605C6909EE2, $FC4D970995EC8A, $2D82E9DCF2B361, $07F0EF61225F55, $A240C13AEE9C55, $D449D1E5627B54, $07164A73A44575, $61A15FDBD4BD71);
+  FB225_y := TX448Field.MakeFe($30696B9D3A9FE4, $68308C77E7E326, $3AC222BCE0B8C8, $83EE319304DB8E, $ECA503B5E5DB0B, $78A8DCEB1C6539, $4A8B05E2D256BC, $A1C3CB8BD9FD57);
   Precompute;
 end;
 
@@ -328,7 +300,7 @@ end;
 
 class function TEd448.CheckPoint(var AP: TPointAffine): Int32;
 var
-  LT, LU, LV: TCryptoLibUInt32Array;
+  LT, LU, LV: TX448Fe;
 begin
   LT := TX448Field.Create;
   LU := TX448Field.Create;
@@ -349,7 +321,7 @@ end;
 
 class function TEd448.CheckPoint(const AP: TPointProjective): Int32;
 var
-  LT, LU, LV, LW: TCryptoLibUInt32Array;
+  LT, LU, LV, LW: TX448Fe;
 begin
   LT := TX448Field.Create;
   LU := TX448Field.Create;
@@ -479,11 +451,11 @@ end;
 class function TEd448.DecodePointVar(const AP: TCryptoLibByteArray; ANegate: Boolean; var AR: TPointAffine): Boolean;
 var
   LX0: Int32;
-  LU, LV: TCryptoLibUInt32Array;
+  LU, LV: TX448Fe;
 begin
   LX0 := (AP[PointBytes - 1] and $80) shr 7;
 
-  TX448Field.Decode448(AP, AR.Y);
+  TX448Field.Decode(AP, AR.Y);
 
   LU := TX448Field.Create;
   LV := TX448Field.Create;
@@ -507,7 +479,7 @@ begin
     Exit;
   end;
 
-  if ANegate xor (LX0 <> Int32(AR.X[0] and 1)) then
+  if ANegate xor (LX0 <> Int32(AR.X.L[0] and 1)) then
   begin
     TX448Field.Negate(AR.X, AR.X);
     TX448Field.Normalize(AR.X);
@@ -541,7 +513,7 @@ end;
 class procedure TEd448.EncodePoint(var AP: TPointAffine; const AR: TCryptoLibByteArray; AROff: Int32);
 begin
   TX448Field.Encode(AP.Y, AR, AROff);
-  AR[AROff + PointBytes - 1] := Byte((AP.X[0] and 1) shl 7);
+  AR[AROff + PointBytes - 1] := Byte((AP.X.L[0] and 1) shl 7);
 end;
 
 class procedure TEd448.EncodePublicPoint(const APublicPoint: IPublicPoint; const APk: TCryptoLibByteArray; APkOff: Int32);
@@ -549,8 +521,8 @@ begin
   if APublicPoint = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SPublicPointNil);
   TArrayUtilities.ValidateSegment(APk, APkOff, PublicKeySize);
-  TX448Field.Encode(APublicPoint.Data, TX448Field.Size, APk, APkOff);
-  APk[APkOff + PointBytes - 1] := Byte((APublicPoint.Data[0] and 1) shl 7);
+  TX448Field.Encode(APublicPoint.Data[1], APk, APkOff);
+  APk[APkOff + PointBytes - 1] := Byte((APublicPoint.Data[0].L[0] and 1) shl 7);
 end;
 
 class function TEd448.EncodeResult(var AP: TPointProjective; const AR: TCryptoLibByteArray; AROff: Int32): Int32;
@@ -565,11 +537,11 @@ end;
 
 class function TEd448.ExportPoint(var AP: TPointAffine): IPublicPoint;
 var
-  LData: TCryptoLibUInt32Array;
+  LData: TX448FeArray;
 begin
-  System.SetLength(LData, TX448Field.Size * 2);
-  TX448Field.Copy(AP.X, 0, LData, 0);
-  TX448Field.Copy(AP.Y, 0, LData, TX448Field.Size);
+  System.SetLength(LData, 2);
+  TX448Field.Copy(AP.X, LData[0]);
+  TX448Field.Copy(AP.Y, LData[1]);
   Result := TPublicPoint.Create(LData);
 end;
 
@@ -584,48 +556,38 @@ end;
 
 class procedure TEd448.InitPointAffine(var AR: TPointAffine);
 begin
-  AR.X := TX448Field.Create;
-  AR.Y := TX448Field.Create;
+  System.FillChar(AR, System.SizeOf(AR), 0);
 end;
 
 class procedure TEd448.InitPointProjective(var AR: TPointProjective);
 begin
-  AR.X := TX448Field.Create;
-  AR.Y := TX448Field.Create;
-  AR.Z := TX448Field.Create;
+  System.FillChar(AR, System.SizeOf(AR), 0);
 end;
 
 class procedure TEd448.InitPointTemp(var AR: TPointTemp);
 begin
-  AR.R0 := TX448Field.Create;
-  AR.R1 := TX448Field.Create;
-  AR.R2 := TX448Field.Create;
-  AR.R3 := TX448Field.Create;
-  AR.R4 := TX448Field.Create;
-  AR.R5 := TX448Field.Create;
-  AR.R6 := TX448Field.Create;
-  AR.R7 := TX448Field.Create;
+  System.FillChar(AR, System.SizeOf(AR), 0);
 end;
 
 class procedure TEd448.InvertZs(APoints: TCryptoLibGenericArray<TPointProjective>);
 var
   LCount, LI, LJ: Int32;
-  LCs: TCryptoLibUInt32Array;
-  LU, LT: TCryptoLibUInt32Array;
+  LCs: TX448FeArray;
+  LU, LT: TX448Fe;
 begin
   LCount := System.Length(APoints);
   LCs := TX448Field.CreateTable(LCount);
 
   LU := TX448Field.Create;
-  TX448Field.Copy(APoints[0].Z, 0, LU, 0);
-  TX448Field.Copy(LU, 0, LCs, 0);
+  TX448Field.Copy(APoints[0].Z, LU);
+  TX448Field.Copy(LU, LCs[0]);
 
   LI := 0;
   while LI + 1 < LCount do
   begin
     Inc(LI);
     TX448Field.Mul(LU, APoints[LI].Z, LU);
-    TX448Field.Copy(LU, 0, LCs, LI * TX448Field.Size);
+    TX448Field.Copy(LU, LCs[LI]);
   end;
 
   TX448Field.InvVar(LU, LU);
@@ -636,13 +598,13 @@ begin
   begin
     LJ := LI;
     Dec(LI);
-    TX448Field.Copy(LCs, LI * TX448Field.Size, LT, 0);
+    TX448Field.Copy(LCs[LI], LT);
     TX448Field.Mul(LT, LU, LT);
     TX448Field.Mul(LU, APoints[LJ].Z, LU);
-    TX448Field.Copy(LT, 0, APoints[LJ].Z, 0);
+    TX448Field.Copy(LT, APoints[LJ].Z);
   end;
 
-  TX448Field.Copy(LU, 0, APoints[0].Z, 0);
+  TX448Field.Copy(LU, APoints[0].Z);
 end;
 
 class procedure TEd448.NormalizeToAffine(var AP: TPointProjective; var AR: TPointAffine);
@@ -664,228 +626,228 @@ end;
 
 class procedure TEd448.PointAdd(var AP: TPointAffine; var AR: TPointProjective; var AT: TPointTemp);
 var
-  LB, LC, LD, LE, LF, LG, LH: TCryptoLibUInt32Array;
+  LB, LC, LD, LE, LF, LG, LH: PX448Fe;
 begin
-  LB := AT.R1; LC := AT.R2; LD := AT.R3; LE := AT.R4;
-  LF := AT.R5; LG := AT.R6; LH := AT.R7;
+  LB := @AT.R1; LC := @AT.R2; LD := @AT.R3; LE := @AT.R4;
+  LF := @AT.R5; LG := @AT.R6; LH := @AT.R7;
 
-  TX448Field.Sqr(AR.Z, LB);
-  TX448Field.Mul(AP.X, AR.X, LC);
-  TX448Field.Mul(AP.Y, AR.Y, LD);
-  TX448Field.Mul(LC, LD, LE);
-  TX448Field.Mul(LE, C_d, LE);
-  TX448Field.Add(LB, LE, LF);
-  TX448Field.Sub(LB, LE, LG);
-  TX448Field.Add(AP.Y, AP.X, LH);
-  TX448Field.Add(AR.Y, AR.X, LE);
-  TX448Field.Mul(LH, LE, LH);
-  TX448Field.Add(LD, LC, LB);
-  TX448Field.Sub(LD, LC, LE);
-  TX448Field.Carry(LB);
-  TX448Field.Sub(LH, LB, LH);
-  TX448Field.Mul(LH, AR.Z, LH);
-  TX448Field.Mul(LE, AR.Z, LE);
-  TX448Field.Mul(LF, LH, AR.X);
-  TX448Field.Mul(LE, LG, AR.Y);
-  TX448Field.Mul(LF, LG, AR.Z);
+  TX448Field.Sqr(AR.Z, LB^);
+  TX448Field.Mul(AP.X, AR.X, LC^);
+  TX448Field.Mul(AP.Y, AR.Y, LD^);
+  TX448Field.Mul(LC^, LD^, LE^);
+  TX448Field.Mul(LE^, C_d, LE^);
+  TX448Field.Add(LB^, LE^, LF^);
+  TX448Field.Sub(LB^, LE^, LG^);
+  TX448Field.Add(AP.Y, AP.X, LH^);
+  TX448Field.Add(AR.Y, AR.X, LE^);
+  TX448Field.Mul(LH^, LE^, LH^);
+  TX448Field.Add(LD^, LC^, LB^);
+  TX448Field.Sub(LD^, LC^, LE^);
+  TX448Field.Carry(LB^);
+  TX448Field.Sub(LH^, LB^, LH^);
+  TX448Field.Mul(LH^, AR.Z, LH^);
+  TX448Field.Mul(LE^, AR.Z, LE^);
+  TX448Field.Mul(LF^, LH^, AR.X);
+  TX448Field.Mul(LE^, LG^, AR.Y);
+  TX448Field.Mul(LF^, LG^, AR.Z);
 end;
 
 class procedure TEd448.PointAdd(var AP: TPointProjective; var AR: TPointProjective; var AT: TPointTemp);
 var
-  LA, LB, LC, LD, LE, LF, LG, LH: TCryptoLibUInt32Array;
+  LA, LB, LC, LD, LE, LF, LG, LH: PX448Fe;
 begin
-  LA := AT.R0; LB := AT.R1; LC := AT.R2; LD := AT.R3;
-  LE := AT.R4; LF := AT.R5; LG := AT.R6; LH := AT.R7;
+  LA := @AT.R0; LB := @AT.R1; LC := @AT.R2; LD := @AT.R3;
+  LE := @AT.R4; LF := @AT.R5; LG := @AT.R6; LH := @AT.R7;
 
-  TX448Field.Mul(AP.Z, AR.Z, LA);
-  TX448Field.Sqr(LA, LB);
-  TX448Field.Mul(AP.X, AR.X, LC);
-  TX448Field.Mul(AP.Y, AR.Y, LD);
-  TX448Field.Mul(LC, LD, LE);
-  TX448Field.Mul(LE, C_d, LE);
-  TX448Field.Add(LB, LE, LF);
-  TX448Field.Sub(LB, LE, LG);
-  TX448Field.Add(AP.Y, AP.X, LH);
-  TX448Field.Add(AR.Y, AR.X, LE);
-  TX448Field.Mul(LH, LE, LH);
-  TX448Field.Add(LD, LC, LB);
-  TX448Field.Sub(LD, LC, LE);
-  TX448Field.Carry(LB);
-  TX448Field.Sub(LH, LB, LH);
-  TX448Field.Mul(LH, LA, LH);
-  TX448Field.Mul(LE, LA, LE);
-  TX448Field.Mul(LF, LH, AR.X);
-  TX448Field.Mul(LE, LG, AR.Y);
-  TX448Field.Mul(LF, LG, AR.Z);
+  TX448Field.Mul(AP.Z, AR.Z, LA^);
+  TX448Field.Sqr(LA^, LB^);
+  TX448Field.Mul(AP.X, AR.X, LC^);
+  TX448Field.Mul(AP.Y, AR.Y, LD^);
+  TX448Field.Mul(LC^, LD^, LE^);
+  TX448Field.Mul(LE^, C_d, LE^);
+  TX448Field.Add(LB^, LE^, LF^);
+  TX448Field.Sub(LB^, LE^, LG^);
+  TX448Field.Add(AP.Y, AP.X, LH^);
+  TX448Field.Add(AR.Y, AR.X, LE^);
+  TX448Field.Mul(LH^, LE^, LH^);
+  TX448Field.Add(LD^, LC^, LB^);
+  TX448Field.Sub(LD^, LC^, LE^);
+  TX448Field.Carry(LB^);
+  TX448Field.Sub(LH^, LB^, LH^);
+  TX448Field.Mul(LH^, LA^, LH^);
+  TX448Field.Mul(LE^, LA^, LE^);
+  TX448Field.Mul(LF^, LH^, AR.X);
+  TX448Field.Mul(LE^, LG^, AR.Y);
+  TX448Field.Mul(LF^, LG^, AR.Z);
 end;
 
 class procedure TEd448.PointAddVar(ANegate: Boolean; var AP: TPointAffine; var AR: TPointProjective; var AT: TPointTemp);
 var
-  LB, LC, LD, LE, LF, LG, LH: TCryptoLibUInt32Array;
-  LNb, LNe, LNf, LNg: TCryptoLibUInt32Array;
+  LB, LC, LD, LE, LF, LG, LH: PX448Fe;
+  LNb, LNe, LNf, LNg: PX448Fe;
 begin
-  LB := AT.R1; LC := AT.R2; LD := AT.R3; LE := AT.R4;
-  LF := AT.R5; LG := AT.R6; LH := AT.R7;
+  LB := @AT.R1; LC := @AT.R2; LD := @AT.R3; LE := @AT.R4;
+  LF := @AT.R5; LG := @AT.R6; LH := @AT.R7;
 
   if ANegate then
   begin
     LNb := LE; LNe := LB; LNf := LG; LNg := LF;
-    TX448Field.Sub(AP.Y, AP.X, LH);
+    TX448Field.Sub(AP.Y, AP.X, LH^);
   end
   else
   begin
     LNb := LB; LNe := LE; LNf := LF; LNg := LG;
-    TX448Field.Add(AP.Y, AP.X, LH);
+    TX448Field.Add(AP.Y, AP.X, LH^);
   end;
 
-  TX448Field.Sqr(AR.Z, LB);
-  TX448Field.Mul(AP.X, AR.X, LC);
-  TX448Field.Mul(AP.Y, AR.Y, LD);
-  TX448Field.Mul(LC, LD, LE);
-  TX448Field.Mul(LE, C_d, LE);
-  TX448Field.Add(LB, LE, LNf);
-  TX448Field.Sub(LB, LE, LNg);
-  TX448Field.Add(AR.Y, AR.X, LE);
-  TX448Field.Mul(LH, LE, LH);
-  TX448Field.Add(LD, LC, LNb);
-  TX448Field.Sub(LD, LC, LNe);
-  TX448Field.Carry(LNb);
-  TX448Field.Sub(LH, LB, LH);
-  TX448Field.Mul(LH, AR.Z, LH);
-  TX448Field.Mul(LE, AR.Z, LE);
-  TX448Field.Mul(LF, LH, AR.X);
-  TX448Field.Mul(LE, LG, AR.Y);
-  TX448Field.Mul(LF, LG, AR.Z);
+  TX448Field.Sqr(AR.Z, LB^);
+  TX448Field.Mul(AP.X, AR.X, LC^);
+  TX448Field.Mul(AP.Y, AR.Y, LD^);
+  TX448Field.Mul(LC^, LD^, LE^);
+  TX448Field.Mul(LE^, C_d, LE^);
+  TX448Field.Add(LB^, LE^, LNf^);
+  TX448Field.Sub(LB^, LE^, LNg^);
+  TX448Field.Add(AR.Y, AR.X, LE^);
+  TX448Field.Mul(LH^, LE^, LH^);
+  TX448Field.Add(LD^, LC^, LNb^);
+  TX448Field.Sub(LD^, LC^, LNe^);
+  TX448Field.Carry(LNb^);
+  TX448Field.Sub(LH^, LB^, LH^);
+  TX448Field.Mul(LH^, AR.Z, LH^);
+  TX448Field.Mul(LE^, AR.Z, LE^);
+  TX448Field.Mul(LF^, LH^, AR.X);
+  TX448Field.Mul(LE^, LG^, AR.Y);
+  TX448Field.Mul(LF^, LG^, AR.Z);
 end;
 
 class procedure TEd448.PointAddVar(ANegate: Boolean; var AP: TPointProjective; var AR: TPointProjective; var AT: TPointTemp);
 var
-  LA, LB, LC, LD, LE, LF, LG, LH: TCryptoLibUInt32Array;
-  LNb, LNe, LNf, LNg: TCryptoLibUInt32Array;
+  LA, LB, LC, LD, LE, LF, LG, LH: PX448Fe;
+  LNb, LNe, LNf, LNg: PX448Fe;
 begin
-  LA := AT.R0; LB := AT.R1; LC := AT.R2; LD := AT.R3;
-  LE := AT.R4; LF := AT.R5; LG := AT.R6; LH := AT.R7;
+  LA := @AT.R0; LB := @AT.R1; LC := @AT.R2; LD := @AT.R3;
+  LE := @AT.R4; LF := @AT.R5; LG := @AT.R6; LH := @AT.R7;
 
   if ANegate then
   begin
     LNb := LE; LNe := LB; LNf := LG; LNg := LF;
-    TX448Field.Sub(AP.Y, AP.X, LH);
+    TX448Field.Sub(AP.Y, AP.X, LH^);
   end
   else
   begin
     LNb := LB; LNe := LE; LNf := LF; LNg := LG;
-    TX448Field.Add(AP.Y, AP.X, LH);
+    TX448Field.Add(AP.Y, AP.X, LH^);
   end;
 
-  TX448Field.Mul(AP.Z, AR.Z, LA);
-  TX448Field.Sqr(LA, LB);
-  TX448Field.Mul(AP.X, AR.X, LC);
-  TX448Field.Mul(AP.Y, AR.Y, LD);
-  TX448Field.Mul(LC, LD, LE);
-  TX448Field.Mul(LE, C_d, LE);
-  TX448Field.Add(LB, LE, LNf);
-  TX448Field.Sub(LB, LE, LNg);
-  TX448Field.Add(AR.Y, AR.X, LE);
-  TX448Field.Mul(LH, LE, LH);
-  TX448Field.Add(LD, LC, LNb);
-  TX448Field.Sub(LD, LC, LNe);
-  TX448Field.Carry(LNb);
-  TX448Field.Sub(LH, LB, LH);
-  TX448Field.Mul(LH, LA, LH);
-  TX448Field.Mul(LE, LA, LE);
-  TX448Field.Mul(LF, LH, AR.X);
-  TX448Field.Mul(LE, LG, AR.Y);
-  TX448Field.Mul(LF, LG, AR.Z);
+  TX448Field.Mul(AP.Z, AR.Z, LA^);
+  TX448Field.Sqr(LA^, LB^);
+  TX448Field.Mul(AP.X, AR.X, LC^);
+  TX448Field.Mul(AP.Y, AR.Y, LD^);
+  TX448Field.Mul(LC^, LD^, LE^);
+  TX448Field.Mul(LE^, C_d, LE^);
+  TX448Field.Add(LB^, LE^, LNf^);
+  TX448Field.Sub(LB^, LE^, LNg^);
+  TX448Field.Add(AR.Y, AR.X, LE^);
+  TX448Field.Mul(LH^, LE^, LH^);
+  TX448Field.Add(LD^, LC^, LNb^);
+  TX448Field.Sub(LD^, LC^, LNe^);
+  TX448Field.Carry(LNb^);
+  TX448Field.Sub(LH^, LB^, LH^);
+  TX448Field.Mul(LH^, LA^, LH^);
+  TX448Field.Mul(LE^, LA^, LE^);
+  TX448Field.Mul(LF^, LH^, AR.X);
+  TX448Field.Mul(LE^, LG^, AR.Y);
+  TX448Field.Mul(LF^, LG^, AR.Z);
 end;
 
 class procedure TEd448.PointCopy(var AP: TPointAffine; var AR: TPointProjective);
 begin
-  TX448Field.Copy(AP.X, 0, AR.X, 0);
-  TX448Field.Copy(AP.Y, 0, AR.Y, 0);
+  TX448Field.Copy(AP.X, AR.X);
+  TX448Field.Copy(AP.Y, AR.Y);
   TX448Field.One(AR.Z);
 end;
 
 class procedure TEd448.PointCopy(var AP: TPointProjective; var AR: TPointProjective);
 begin
-  TX448Field.Copy(AP.X, 0, AR.X, 0);
-  TX448Field.Copy(AP.Y, 0, AR.Y, 0);
-  TX448Field.Copy(AP.Z, 0, AR.Z, 0);
+  TX448Field.Copy(AP.X, AR.X);
+  TX448Field.Copy(AP.Y, AR.Y);
+  TX448Field.Copy(AP.Z, AR.Z);
 end;
 
 class procedure TEd448.PointDouble(var AR: TPointProjective; var AT: TPointTemp);
 var
-  LB, LC, LD, LE, LH, LJ: TCryptoLibUInt32Array;
+  LB, LC, LD, LE, LH, LJ: PX448Fe;
 begin
-  LB := AT.R1; LC := AT.R2; LD := AT.R3; LE := AT.R4;
-  LH := AT.R7; LJ := AT.R0;
+  LB := @AT.R1; LC := @AT.R2; LD := @AT.R3; LE := @AT.R4;
+  LH := @AT.R7; LJ := @AT.R0;
 
-  TX448Field.Add(AR.X, AR.Y, LB);
-  TX448Field.Sqr(LB, LB);
-  TX448Field.Sqr(AR.X, LC);
-  TX448Field.Sqr(AR.Y, LD);
-  TX448Field.Add(LC, LD, LE);
-  TX448Field.Carry(LE);
-  TX448Field.Sqr(AR.Z, LH);
-  TX448Field.Add(LH, LH, LH);
-  TX448Field.Carry(LH);
-  TX448Field.Sub(LE, LH, LJ);
-  TX448Field.Sub(LB, LE, LB);
-  TX448Field.Sub(LC, LD, LC);
-  TX448Field.Mul(LB, LJ, AR.X);
-  TX448Field.Mul(LE, LC, AR.Y);
-  TX448Field.Mul(LE, LJ, AR.Z);
+  TX448Field.Add(AR.X, AR.Y, LB^);
+  TX448Field.Sqr(LB^, LB^);
+  TX448Field.Sqr(AR.X, LC^);
+  TX448Field.Sqr(AR.Y, LD^);
+  TX448Field.Add(LC^, LD^, LE^);
+  TX448Field.Carry(LE^);
+  TX448Field.Sqr(AR.Z, LH^);
+  TX448Field.Add(LH^, LH^, LH^);
+  TX448Field.Carry(LH^);
+  TX448Field.Sub(LE^, LH^, LJ^);
+  TX448Field.Sub(LB^, LE^, LB^);
+  TX448Field.Sub(LC^, LD^, LC^);
+  TX448Field.Mul(LB^, LJ^, AR.X);
+  TX448Field.Mul(LE^, LC^, AR.Y);
+  TX448Field.Mul(LE^, LJ^, AR.Z);
 end;
 
 class procedure TEd448.PointLookup(ABlock, AIndex: Int32; var AP: TPointAffine);
 var
-  LOff, LI, LCond: Int32;
+  LIdx, LI, LCond: Int32;
 begin
-  LOff := ABlock * PrecompPoints * 2 * TX448Field.Size;
+  LIdx := ABlock * PrecompPoints * 2;
   for LI := 0 to PrecompPoints - 1 do
   begin
     LCond := TBitOperations.Asr32((LI xor AIndex) - 1, 31);
-    TX448Field.CMov(LCond, FPrecompBaseComb, LOff, AP.X, 0); Inc(LOff, TX448Field.Size);
-    TX448Field.CMov(LCond, FPrecompBaseComb, LOff, AP.Y, 0); Inc(LOff, TX448Field.Size);
+    TX448Field.CMov(LCond, FPrecompBaseComb[LIdx], AP.X); Inc(LIdx);
+    TX448Field.CMov(LCond, FPrecompBaseComb[LIdx], AP.Y); Inc(LIdx);
   end;
 end;
 
 class procedure TEd448.PointLookup(const AX: TCryptoLibUInt32Array; AN: Int32;
-  const ATable: TCryptoLibUInt32Array; var AR: TPointProjective);
+  const ATable: TX448FeArray; var AR: TPointProjective);
 var
   LW: UInt32;
-  LSign, LAbs, LI, LCond, LOff: Int32;
+  LSign, LAbs, LI, LCond, LIdx: Int32;
 begin
   LW := GetWindow4(AX, AN);
   LSign := Int32(LW shr (4 - 1)) xor 1;
   LAbs := (Int32(LW) xor (-LSign)) and 7;
 
-  LOff := 0;
+  LIdx := 0;
   for LI := 0 to 7 do
   begin
     LCond := TBitOperations.Asr32((LI xor LAbs) - 1, 31);
-    TX448Field.CMov(LCond, ATable, LOff, AR.X, 0); Inc(LOff, TX448Field.Size);
-    TX448Field.CMov(LCond, ATable, LOff, AR.Y, 0); Inc(LOff, TX448Field.Size);
-    TX448Field.CMov(LCond, ATable, LOff, AR.Z, 0); Inc(LOff, TX448Field.Size);
+    TX448Field.CMov(LCond, ATable[LIdx], AR.X); Inc(LIdx);
+    TX448Field.CMov(LCond, ATable[LIdx], AR.Y); Inc(LIdx);
+    TX448Field.CMov(LCond, ATable[LIdx], AR.Z); Inc(LIdx);
   end;
 
   TX448Field.CNegate(LSign, AR.X);
 end;
 
-class procedure TEd448.PointLookup15(const ATable: TCryptoLibUInt32Array; var AR: TPointProjective);
+class procedure TEd448.PointLookup15(const ATable: TX448FeArray; var AR: TPointProjective);
 var
-  LOff: Int32;
+  LIdx: Int32;
 begin
-  LOff := TX448Field.Size * 3 * 7;
-  TX448Field.Copy(ATable, LOff, AR.X, 0); Inc(LOff, TX448Field.Size);
-  TX448Field.Copy(ATable, LOff, AR.Y, 0); Inc(LOff, TX448Field.Size);
-  TX448Field.Copy(ATable, LOff, AR.Z, 0);
+  LIdx := 3 * 7;
+  TX448Field.Copy(ATable[LIdx], AR.X); Inc(LIdx);
+  TX448Field.Copy(ATable[LIdx], AR.Y); Inc(LIdx);
+  TX448Field.Copy(ATable[LIdx], AR.Z);
 end;
 
-class function TEd448.PointPrecompute(var AP: TPointProjective; ACount: Int32; var AT: TPointTemp): TCryptoLibUInt32Array;
+class function TEd448.PointPrecompute(var AP: TPointProjective; ACount: Int32; var AT: TPointTemp): TX448FeArray;
 var
   LQ, LD: TPointProjective;
-  LTable: TCryptoLibUInt32Array;
-  LOff, LI: Int32;
+  LTable: TX448FeArray;
+  LIdx, LI: Int32;
 begin
   InitPointProjective(LQ);
   PointCopy(AP, LQ);
@@ -895,14 +857,14 @@ begin
   PointDouble(LD, AT);
 
   LTable := TX448Field.CreateTable(ACount * 3);
-  LOff := 0;
+  LIdx := 0;
 
   LI := 0;
   while True do
   begin
-    TX448Field.Copy(LQ.X, 0, LTable, LOff); Inc(LOff, TX448Field.Size);
-    TX448Field.Copy(LQ.Y, 0, LTable, LOff); Inc(LOff, TX448Field.Size);
-    TX448Field.Copy(LQ.Z, 0, LTable, LOff); Inc(LOff, TX448Field.Size);
+    TX448Field.Copy(LQ.X, LTable[LIdx]); Inc(LIdx);
+    TX448Field.Copy(LQ.Y, LTable[LIdx]); Inc(LIdx);
+    TX448Field.Copy(LQ.Z, LTable[LIdx]); Inc(LIdx);
 
     Inc(LI);
     if LI = ACount then
@@ -960,14 +922,14 @@ begin
   InitPointTemp(LT);
 
   InitPointAffine(LB);
-  TX448Field.Copy(FB_x, 0, LB.X, 0);
-  TX448Field.Copy(FB_y, 0, LB.Y, 0);
+  TX448Field.Copy(FB_x, LB.X);
+  TX448Field.Copy(FB_y, LB.Y);
 
   PointPrecompute(LB, LPoints, 0, LWnafPoints, LT);
 
   InitPointAffine(LB225);
-  TX448Field.Copy(FB225_x, 0, LB225.X, 0);
-  TX448Field.Copy(FB225_y, 0, LB225.Y, 0);
+  TX448Field.Copy(FB225_x, LB225.X);
+  TX448Field.Copy(FB225_y, LB225.Y);
 
   PointPrecompute(LB225, LPoints, LWnafPoints, LWnafPoints, LT);
 
@@ -1052,8 +1014,8 @@ begin
     TX448Field.Mul(LPoints[LI].Y, LPoints[LI].Z, LPoints[LI].Y);
     TX448Field.Normalize(LPoints[LI].Y);
 
-    TX448Field.Copy(LPoints[LI].X, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
-    TX448Field.Copy(LPoints[LI].Y, 0, FPrecompBaseComb, LOff); Inc(LOff, TX448Field.Size);
+    TX448Field.Copy(LPoints[LI].X, FPrecompBaseComb[LOff]); Inc(LOff);
+    TX448Field.Copy(LPoints[LI].Y, FPrecompBaseComb[LOff]); Inc(LOff);
   end;
 end;
 
@@ -1070,7 +1032,7 @@ var
   LN: TCryptoLibUInt32Array;
   LQ: TPointProjective;
   LT: TPointTemp;
-  LTable: TCryptoLibUInt32Array;
+  LTable: TX448FeArray;
   LW, LI: Int32;
 begin
   System.SetLength(LN, ScalarUints + 1);
@@ -1162,16 +1124,12 @@ begin
 end;
 
 class procedure TEd448.ScalarMultBaseXY(const AK: TCryptoLibByteArray; AKOff: Int32;
-  const AX, AY: TCryptoLibUInt32Array);
+  var AX, AY: TX448Fe);
 var
   LN: TCryptoLibByteArray;
   LP: TPointProjective;
 begin
   TArrayUtilities.ValidateSegment(AK, AKOff, TX448.ScalarSize);
-  if (AX = nil) or (System.Length(AX) <> TX448Field.Size) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
-  if (AY = nil) or (System.Length(AY) <> TX448Field.Size) then
-    raise EArgumentCryptoLibException.CreateRes(@SInvalidBufferLength);
   System.SetLength(LN, ScalarBytes);
   PruneScalar(AK, AKOff, LN);
 
@@ -1181,8 +1139,8 @@ begin
   if 0 = CheckPoint(LP) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SInvalidPoint);
 
-  TX448Field.Copy(LP.X, 0, AX, 0);
-  TX448Field.Copy(LP.Y, 0, AY, 0);
+  TX448Field.Copy(LP.X, AX);
+  TX448Field.Copy(LP.Y, AY);
 end;
 
 class procedure TEd448.ScalarMultOrderVar(var AP: TPointAffine; var AR: TPointProjective);
@@ -1482,8 +1440,8 @@ begin
   end;
 
   InitPointAffine(LPA);
-  TX448Field.Negate(APublicPoint.Data, LPA.X);
-  TX448Field.Copy(APublicPoint.Data, TX448Field.Size, LPA.Y, 0);
+  TX448Field.Negate(APublicPoint.Data[0], LPA.X);
+  TX448Field.Copy(APublicPoint.Data[1], LPA.Y);
 
   System.SetLength(LA, PublicKeySize);
   EncodePublicPoint(APublicPoint, LA, 0);

@@ -7,6 +7,14 @@
 # RULES (do not break these):
 #   * Suppress ONLY frames in the FPC RTL / libc startup. NEVER suppress anything
 #     in a Clp* crypto unit - that is exactly what the tool is meant to catch.
+#   * NARROW EXCEPTION - public-output declassification: a branch inside a Clp*
+#     unit MAY be suppressed IFF its condition is a deterministic function of a
+#     value the routine is about to PUBLISH (the signature R, the public key A) -
+#     i.e. public-equivalent, so branching on it leaks nothing beyond the output.
+#     Such an entry MUST (a) be scoped to the single top frame, (b) carry a proof
+#     comment of public-equivalence, (c) keep the underlying check in the code,
+#     (d) never apply to a non-published intermediate. This is declassification,
+#     not leak-hiding. Every other Clp* frame stays forbidden.
 #   * After adding suppressions, re-run the CONTROLS (aes-ttable, ghash-4k) WITH
 #     this file applied and confirm they STILL report an error. If a suppression
 #     silences a control, it is too broad - remove it.
@@ -30,3 +38,22 @@
 #   fun:FPC_*
 #   obj:*/CTValgrind
 # }
+
+# ---- Public-output declassification (see the NARROW EXCEPTION rule above) ----
+# Ed25519/Ed448 ScalarMultBaseEncoded validates [k]B (k secret-derived) with
+# CheckPoint before encoding it as R / the public key A. The branch is on the
+# validity of a point that is about to be published -> public-equivalent; and its
+# outcome is invariant ([k]B is a prime-order base-point multiple, hence always a
+# valid non-identity point, so it never raises). The check is KEPT in the code
+# (random-fault / DFA defence); only the ctgrind flag on this one public-equivalent
+# branch is masked. Scoped to the top frame so no other branch is affected.
+{
+   ed25519-sign-point-validity-public-equivalent
+   Memcheck:Cond
+   fun:CLPED25519$_$TED25519_$__$$_SCALARMULTBASEENCODED$*
+}
+{
+   ed448-sign-point-validity-public-equivalent
+   Memcheck:Cond
+   fun:CLPED448$_$TED448_$__$$_SCALARMULTBASEENCODED$*
+}

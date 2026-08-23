@@ -112,13 +112,13 @@ end;
 class function TCurve448KeyUtilities.ToX448PublicKey(const AEd448PublicKey: IEd448PublicKeyParameters): IX448PublicKeyParameters;
 var
   LPk, LEncoded: TCryptoLibByteArray;
-  LY, LU, LV, LY2, LInv, LDummy: TCryptoLibUInt32Array;
+  LY, LU, LV, LY2, LInv, LDummy: TX448Fe;
 begin
   if AEd448PublicKey = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SCurve448Ed448PublicKeyNil);
   LPk := AEd448PublicKey.GetEncoded();
   LY := TX448Field.Create();
-  TX448Field.Decode448(LPk, 0, LY);
+  TX448Field.Decode(LPk, 0, LY);
   LU := TX448Field.Create();
   LV := TX448Field.Create();
   LY2 := TX448Field.Create();

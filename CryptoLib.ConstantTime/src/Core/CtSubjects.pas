@@ -268,6 +268,14 @@ var
 begin
   LReg.AddRow('X25519', 'X25519 ladder', '',
     Fn(@MakeX25519), nil, MediumCfg);
+  LReg.AddRow('X448', 'X448 ladder', '',
+    Fn(@MakeX448), nil, MediumCfg);
+  // Ed25519/Ed448 whole-sign: byte-seed secret like X25519, but exercising the
+  // comb [k]G + scalar arithmetic. Clean-baseline (no variable-time signer to pair).
+  LReg.AddRow('Ed25519 sign', 'CT sign', '',
+    Fn(@MakeEd25519), nil, MediumCfg);
+  LReg.AddRow('Ed448 sign', 'CT sign', '',
+    Fn(@MakeEd448), nil, MediumCfg);
   LReg.AddRow('secp256r1 [d]Q', 'value-type CT', 'wNAF (var-time)',
     Ec('secp256r1', TEcMulKind.Default), Ec('secp256r1', TEcMulKind.WNaf),
     ExpensiveCfg);
@@ -331,6 +339,11 @@ var
   LReg: TCtRegistrar;
 begin
   LReg.AddTarget('x25519', Fn(@MakeX25519), False);
+  LReg.AddTarget('x448', Fn(@MakeX448), False);
+  // Ed25519/Ed448 sign: the seed is a poisonable byte buffer (hashed before use),
+  // so it taint-checks cleanly like X25519, unlike the EC BigInteger scalars.
+  LReg.AddTarget('ed25519', Fn(@MakeEd25519), False);
+  LReg.AddTarget('ed448', Fn(@MakeEd448), False);
   LReg.AddTarget('aes-bitsliced', Fn(@MakeAesBitsliced), False);
   LReg.AddTarget('aes-ttable', Fn(@MakeAesTable), True);
   LReg.AddTarget('ghash-basic', Fn(@MakeGhashBasic), False);

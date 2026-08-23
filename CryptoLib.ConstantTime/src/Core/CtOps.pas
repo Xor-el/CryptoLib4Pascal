@@ -40,6 +40,9 @@ type
   TEcMulKind = (Default, Comb, WNaf, WTau);
 
 function MakeX25519(ASeed: UInt64): TDudectOp;
+function MakeX448(ASeed: UInt64): TDudectOp;
+function MakeEd25519(ASeed: UInt64): TDudectOp;
+function MakeEd448(ASeed: UInt64): TDudectOp;
 function MakeAesBitsliced(ASeed: UInt64): TDudectOp;
 function MakeAesTable(ASeed: UInt64): TDudectOp;
 function MakeGhashBasic(ASeed: UInt64): TDudectOp;
@@ -69,6 +72,9 @@ uses
   ClpIECCommon,
   ClpMultipliers,
   ClpX25519,
+  ClpX448,
+  ClpEd25519,
+  ClpEd448,
   ClpIBlockCipher,
   ClpAesEngine,
   ClpAesBitSlicedEngine,
@@ -189,6 +195,109 @@ end;
 procedure TX25519Op.RunOp;
 begin
   TX25519.ScalarMult(FSecret, 0, FPoint, 0, FOut, 0);
+end;
+
+{ ============================== X448 ladder ================================ }
+
+type
+  TX448Op = class sealed(TCtByteBufferOp)
+  strict private
+    FPoint: TBytes;
+  public
+    constructor Create(ASeed: UInt64);
+    procedure RunOp; override;
+  end;
+
+constructor TX448Op.Create(ASeed: UInt64);
+begin
+  inherited Create;
+  FRnd := TCtRandom.Create(ASeed);
+  FSecretLen := TX448.ScalarSize;
+  System.SetLength(FSecret, FSecretLen);
+  System.SetLength(FOut, TX448.PointSize);
+  System.SetLength(FPoint, TX448.PointSize);
+  FPoint[0] := 5; // canonical X448 base point u = 5
+  System.SetLength(FFixed, FSecretLen);
+end;
+
+procedure TX448Op.RunOp;
+begin
+  TX448.ScalarMult(FSecret, 0, FPoint, 0, FOut, 0);
+end;
+
+{ ===================== Ed25519 / Ed448 signature ========================== }
+
+// The poisoned secret is the private seed; the whole sign (seed hash -> scalar
+// -> fixed-base comb [k]G -> encode) must be constant-time. Adds the comb +
+// scalar-arithmetic coverage the X25519/X448 ladders do not exercise.
+type
+  TEd25519SignOp = class sealed(TCtByteBufferOp)
+  strict private
+    FSigner: TEd25519;
+    FMsg: TBytes;
+  public
+    constructor Create(ASeed: UInt64);
+    destructor Destroy; override;
+    procedure RunOp; override;
+  end;
+
+  TEd448SignOp = class sealed(TCtByteBufferOp)
+  strict private
+    FSigner: TEd448;
+    FMsg, FCtx: TBytes;
+  public
+    constructor Create(ASeed: UInt64);
+    destructor Destroy; override;
+    procedure RunOp; override;
+  end;
+
+constructor TEd25519SignOp.Create(ASeed: UInt64);
+begin
+  inherited Create;
+  FRnd := TCtRandom.Create(ASeed);
+  FSigner := TEd25519.Create;
+  FSecretLen := TEd25519.SecretKeySize;
+  System.SetLength(FSecret, FSecretLen);
+  System.SetLength(FFixed, FSecretLen);
+  System.SetLength(FMsg, 32);
+  FRnd.NextBytes(FMsg, 0, System.Length(FMsg));
+  System.SetLength(FOut, TEd25519.SignatureSize);
+end;
+
+destructor TEd25519SignOp.Destroy;
+begin
+  FSigner.Free;
+  inherited Destroy;
+end;
+
+procedure TEd25519SignOp.RunOp;
+begin
+  FSigner.Sign(FSecret, 0, FMsg, 0, System.Length(FMsg), FOut, 0);
+end;
+
+constructor TEd448SignOp.Create(ASeed: UInt64);
+begin
+  inherited Create;
+  FRnd := TCtRandom.Create(ASeed);
+  FSigner := TEd448.Create;
+  FSecretLen := TEd448.SecretKeySize;
+  System.SetLength(FSecret, FSecretLen);
+  System.SetLength(FFixed, FSecretLen);
+  System.SetLength(FMsg, 32);
+  FRnd.NextBytes(FMsg, 0, System.Length(FMsg));
+  System.SetLength(FCtx, 0);
+  System.SetLength(FOut, TEd448.SignatureSize);
+end;
+
+destructor TEd448SignOp.Destroy;
+begin
+  FSigner.Free;
+  inherited Destroy;
+end;
+
+procedure TEd448SignOp.RunOp;
+begin
+  FSigner.Sign(FSecret, 0, FCtx, FMsg, 0, System.Length(FMsg), FOut, 0);
 end;
 
 { ====================== #2/#3  EC scalar multiplication ==================== }
@@ -631,6 +740,21 @@ end;
 function MakeX25519(ASeed: UInt64): TDudectOp;
 begin
   Result := TX25519Op.Create(ASeed);
+end;
+
+function MakeX448(ASeed: UInt64): TDudectOp;
+begin
+  Result := TX448Op.Create(ASeed);
+end;
+
+function MakeEd25519(ASeed: UInt64): TDudectOp;
+begin
+  Result := TEd25519SignOp.Create(ASeed);
+end;
+
+function MakeEd448(ASeed: UInt64): TDudectOp;
+begin
+  Result := TEd448SignOp.Create(ASeed);
 end;
 
 function MakeAesBitsliced(ASeed: UInt64): TDudectOp;

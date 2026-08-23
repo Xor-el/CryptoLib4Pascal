@@ -41,7 +41,7 @@ type
     C_A24 = (C_A + 2) div 4;
   class procedure DecodeScalar(const AK: TCryptoLibByteArray; AKOff: Int32;
     AN: TCryptoLibUInt32Array); static;
-  class procedure PointDouble(AX, AZ: TCryptoLibInt32Array); static;
+  class procedure PointDouble(var AX, AZ: TX25519Fe); static;
   public
   const
     PointSize = 32;
@@ -117,12 +117,10 @@ begin
   ScalarMultBase(AK, AKOff, AR, AROff);
 end;
 
-class procedure TX25519.PointDouble(AX, AZ: TCryptoLibInt32Array);
+class procedure TX25519.PointDouble(var AX, AZ: TX25519Fe);
 var
-  LA, LB: TCryptoLibInt32Array;
+  LA, LB: TX25519Fe;
 begin
-  LA := TX25519Field.Create();
-  LB := TX25519Field.Create();
   TX25519Field.Apm(AX, AZ, LA, LB);
   TX25519Field.Sqr(LA, LA);
   TX25519Field.Sqr(LB, LB);
@@ -137,8 +135,7 @@ class procedure TX25519.ScalarMult(const AK: TCryptoLibByteArray; AKOff: Int32;
   const AU: TCryptoLibByteArray; AUOff: Int32; AR: TCryptoLibByteArray; AROff: Int32);
 var
   LN: TCryptoLibUInt32Array;
-  LX1, LX2, LZ2, LX3, LZ3: TCryptoLibInt32Array;
-  LT1, LT2: TCryptoLibInt32Array;
+  LX1, LX2, LZ2, LX3, LZ3, LT1, LT2: TX25519Fe;
   LBit, LSwap, LWord, LShift, LKt: Int32;
   LI: Int32;
 begin
@@ -147,17 +144,13 @@ begin
   TArrayUtilities.ValidateSegment(AR, AROff, PointSize);
   System.SetLength(LN, 8);
   DecodeScalar(AK, AKOff, LN);
-  LX1 := TX25519Field.Create();
-  TX25519Field.Decode255(AU, AUOff, LX1);
-  LX2 := TX25519Field.Create();
-  TX25519Field.Copy(LX1, 0, LX2, 0);
-  LZ2 := TX25519Field.Create();
-  LZ2[0] := 1;
-  LX3 := TX25519Field.Create();
-  LX3[0] := 1;
-  LZ3 := TX25519Field.Create();
-  LT1 := TX25519Field.Create();
-  LT2 := TX25519Field.Create();
+  TX25519Field.Decode(AU, AUOff, LX1);
+  TX25519Field.Copy(LX1, LX2);
+  TX25519Field.Zero(LZ2);
+  LZ2.L[0] := 1;
+  TX25519Field.Zero(LX3);
+  LX3.L[0] := 1;
+  TX25519Field.Zero(LZ3);
   LBit := 254;
   LSwap := 1;
   repeat
@@ -199,12 +192,10 @@ end;
 class procedure TX25519.ScalarMultBase(const AK: TCryptoLibByteArray; AKOff: Int32;
   AR: TCryptoLibByteArray; AROff: Int32);
 var
-  LY, LZ: TCryptoLibInt32Array;
+  LY, LZ: TX25519Fe;
 begin
   TArrayUtilities.ValidateSegment(AK, AKOff, ScalarSize);
   TArrayUtilities.ValidateSegment(AR, AROff, PointSize);
-  LY := TX25519Field.Create();
-  LZ := TX25519Field.Create();
   TEd25519.ScalarMultBaseYZ(AK, AKOff, LY, LZ);
   TX25519Field.Apm(LZ, LY, LY, LZ);
   TX25519Field.Inv(LZ, LZ);

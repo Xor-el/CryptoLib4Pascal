@@ -63,7 +63,9 @@ done
 
 echo "==> compiling CTValgrind against the prebuilt scalar packages"
 BUILD_DIR="$(mktemp -d)"
-( cd "$CT_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 \
+# -gl keeps the symbol table so Memcheck resolves function names; without it the
+# binary is stripped and every frame is '???', which no fun: suppression can match.
+( cd "$CT_LAZ" && fpc "-T$OS" "-P$CPU" -MDelphi -O3 -gl \
     -dCRYPTOLIB_FORCE_SCALAR -dHASHLIB_FORCE_SCALAR \
     -Fu"$CRYPTO_UNITS" -Fu"$HASH_UNITS" -Fu"$SB_UNITS" -Fu"$CT_CORE" \
     -Fl"$CT_LAZ" -FU"$BUILD_DIR" -oCTValgrind \
@@ -71,11 +73,14 @@ BUILD_DIR="$(mktemp -d)"
 BIN="$CT_LAZ/CTValgrind"
 chmod +x "$BIN"
 
-# ct.supp starts empty (masks nothing). Only pass it if it has real entries.
+# ct.supp: pass it whenever it exists (an all-comments file just loads 0 rules,
+# which is harmless - so no fragile "has real entries" guard).
 VG=(valgrind --error-exitcode=1 --track-origins=yes)
-if [ -s "$SUPP" ] && grep -qvE '^\s*(#|$)' "$SUPP"; then
+if [ -s "$SUPP" ]; then
   VG+=(--suppressions="$SUPP")
 fi
+echo "==> valgrind: ${VG[*]}"
+echo "==> ct.supp: $SUPP ($([ -s "$SUPP" ] && grep -cE '^[[:space:]]*\{' "$SUPP" || echo 0) suppression blocks)"
 
 FAIL=0
 run_target() {  # <target> <clean|fire>
@@ -86,9 +91,10 @@ run_target() {  # <target> <clean|fire>
       echo "  PASS  subject $t: clean under Memcheck"
     else
       echo "::error::subject $t reported a secret-dependent access (constant-time violation, OR unsuppressed RTL noise)"
-      grep -E "Conditional jump|uninitialised|depends on|ERROR SUMMARY" "$log" | head -20 || true
-      echo "  (if these frames are FPC RTL - fpc_*/SYSTEM_*/libc startup - add them to ct.supp;"
-      echo "   regenerate with: valgrind --gen-suppressions=all $BIN $t)"
+      grep -E "Conditional jump|uninitialised|depends on|Uninitialised|ERROR SUMMARY|[[:space:]](at|by) 0x" "$log" | head -50 || true
+      echo "  ---- suppressions valgrind would generate for $t (paste the crypto-unit block into ct.supp) ----"
+      "${VG[@]}" --gen-suppressions=all "$BIN" "$t" 2>&1 | awk '/^{/{p=1} p; /^}/{p=0}' | head -60 || true
+      echo "  (RTL frames - fpc_*/SYSTEM_*/libc startup - go in ct.supp under the RTL rule.)"
       FAIL=1
     fi
   else
@@ -103,6 +109,9 @@ run_target() {  # <target> <clean|fire>
 
 echo "==> running the gate"
 run_target x25519        clean
+run_target x448          clean
+run_target ed25519       clean
+run_target ed448         clean
 run_target aes-bitsliced clean
 run_target ghash-basic   clean
 run_target aes-ttable    fire

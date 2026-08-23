@@ -97,13 +97,13 @@ end;
 class function TCurve25519KeyUtilities.ToX25519PublicKey(const AEd25519PublicKey: IEd25519PublicKeyParameters): IX25519PublicKeyParameters;
 var
   LPk, LEncoded: TCryptoLibByteArray;
-  LY, LOne, LOneMinusY, LOnePlusY, LInv, LU: TCryptoLibInt32Array;
+  LY, LOne, LOneMinusY, LOnePlusY, LInv, LU: TX25519Fe;
 begin
   if AEd25519PublicKey = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SCurve25519Ed25519PublicKeyNil);
   LPk := AEd25519PublicKey.GetEncoded();
   LY := TX25519Field.Create();
-  TX25519Field.Decode255(LPk, LY);
+  TX25519Field.Decode(LPk, LY);
   LOne := TX25519Field.Create();
   TX25519Field.One(LOne);
   LOneMinusY := TX25519Field.Create();
