@@ -4,14 +4,14 @@
 // One selector-driven file; exactly one of the following must be defined before
 // including this file:
 //
-//   CRYPTOLIB_CURVE448_FE64MUL   PH := PF * PG mod (2^448-2^224-1)
-//   CRYPTOLIB_CURVE448_FE64SQR   PH := PF^2  mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56MUL   PH := PF * PG mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56SQR   PH := PF^2  mod (2^448-2^224-1)
 //
 // Representation: 8 x 64-bit limbs, radix 2^56 (limb i at [ptr+8i]). Limbs are
 // UNSIGNED and loosely reduced (each < 2^57); output limbs < 2^57.
 //
 // On entry (via ClpSimdProc3Begin_aarch64): x0 = PH, x1 = PF, x2 = PG.
-// FE64SQR (via ClpSimdProc2Begin_aarch64): x0 = PH, x1 = PF (g = f).
+// FE56SQR (via ClpSimdProc2Begin_aarch64): x0 = PH, x1 = PF (g = f).
 //
 // Each of the fifteen 128-bit columns is summed in a register pair (mul/umulh,
 // limbs unsigned so umulh is correct) and stored to a 256-byte frame; then the
@@ -21,7 +21,7 @@
 // Reference: 64-bit radix-2^56 Goldilocks field arithmetic (edwards448 / ed448-goldilocks).
 
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64MUL}
+{$IFDEF CRYPTOLIB_CURVE448_FE56MUL}
   sub  sp, sp, #256
   ldr  x3, [x1, #0]
   ldr  x4, [x2, #0]
@@ -525,9 +525,9 @@
   add  x6, x6, x5
   str  x6, [x0, #40]
   add  sp, sp, #256
-{$ENDIF CRYPTOLIB_CURVE448_FE64MUL}
+{$ENDIF CRYPTOLIB_CURVE448_FE56MUL}
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64SQR}
+{$IFDEF CRYPTOLIB_CURVE448_FE56SQR}
   mov  x2, x1
   sub  sp, sp, #256
   ldr  x3, [x1, #0]
@@ -1032,4 +1032,4 @@
   add  x6, x6, x5
   str  x6, [x0, #40]
   add  sp, sp, #256
-{$ENDIF CRYPTOLIB_CURVE448_FE64SQR}
+{$ENDIF CRYPTOLIB_CURVE448_FE56SQR}

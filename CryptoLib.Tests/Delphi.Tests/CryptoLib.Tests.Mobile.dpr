@@ -961,6 +961,7 @@ uses
   X25519HigherLevelTests in '..\src\Others\X25519HigherLevelTests.pas',
   Ed25519HigherLevelTests in '..\src\Others\Ed25519HigherLevelTests.pas',
   X25519Tests in '..\src\Math\EC\Rfc7748\X25519Tests.pas',
+  X25519FieldDiffTests in '..\src\Crypto\X25519FieldDiffTests.pas',
   Ed25519Tests in '..\src\Math\EC\Rfc8032\Ed25519Tests.pas',
   DigestRandomNumberTests in '..\src\Crypto\DigestRandomNumberTests.pas',
   DrbgTestVectors in '..\src\Utils\Vectors\DrbgTestVectors.pas',

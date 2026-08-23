@@ -4,14 +4,14 @@
 // One selector-driven file; exactly one of the following must be defined before
 // including this file:
 //
-//   CRYPTOLIB_CURVE25519_FE64MUL   PH := PF * PG mod (2^255-19)
-//   CRYPTOLIB_CURVE25519_FE64SQR   PH := PF^2  mod (2^255-19)
+//   CRYPTOLIB_CURVE25519_FE51MUL   PH := PF * PG mod (2^255-19)
+//   CRYPTOLIB_CURVE25519_FE51SQR   PH := PF^2  mod (2^255-19)
 //
 // Representation: 5 x 64-bit limbs, radix 2^51 (limb i at [ptr+8i]). Limbs are
 // UNSIGNED and loosely reduced (each < 2^52); output limbs < 2^52.
 //
 // On entry (via ClpSimdProc3Begin_i386): ebx = PH, esi = PF, edi = PG.
-// FE64SQR (via ClpSimdProc2Begin_i386): ebx = PH, esi = PF (shuffled to edi = PF).
+// FE51SQR (via ClpSimdProc2Begin_i386): ebx = PH, esi = PF (shuffled to edi = PF).
 //
 // i386 is register-starved: each 51x51 limb product is four 32x32 muls accumulated
 // into a per-column 128-bit stack accumulator; then the donna64 51-bit carry chain
@@ -19,7 +19,7 @@
 // Reference: 64-bit radix-2^51 field arithmetic (Bernstein curve25519 / ref10-64).
 
 
-{$IFDEF CRYPTOLIB_CURVE25519_FE64MUL}
+{$IFDEF CRYPTOLIB_CURVE25519_FE51MUL}
   push ebp
   sub esp, 112
   xor eax, eax
@@ -668,9 +668,9 @@
   pop edi
   pop esi
   pop ebx
-{$ENDIF CRYPTOLIB_CURVE25519_FE64MUL}
+{$ENDIF CRYPTOLIB_CURVE25519_FE51MUL}
 
-{$IFDEF CRYPTOLIB_CURVE25519_FE64SQR}
+{$IFDEF CRYPTOLIB_CURVE25519_FE51SQR}
   push edi
   mov edi, esi
   push ebp
@@ -1321,4 +1321,4 @@
   pop edi
   pop esi
   pop ebx
-{$ENDIF CRYPTOLIB_CURVE25519_FE64SQR}
+{$ENDIF CRYPTOLIB_CURVE25519_FE51SQR}
