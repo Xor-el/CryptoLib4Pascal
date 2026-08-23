@@ -4,14 +4,14 @@
 // One selector-driven file; exactly one of the following must be defined before
 // including this file:
 //
-//   CRYPTOLIB_CURVE448_FE64MUL   PH := PF * PG mod (2^448-2^224-1)
-//   CRYPTOLIB_CURVE448_FE64SQR   PH := PF^2  mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56MUL   PH := PF * PG mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56SQR   PH := PF^2  mod (2^448-2^224-1)
 //
 // Representation: 8 x 64-bit limbs, radix 2^56 (limb i at [ptr+8i]). Limbs are
 // UNSIGNED and loosely reduced (each < 2^57); output limbs < 2^57.
 //
 // On entry (via ClpSimdProc3Begin_i386): ebx = PH, esi = PF, edi = PG.
-// FE64SQR (via ClpSimdProc2Begin_i386): ebx = PH, esi = PF (shuffled to edi = PF).
+// FE56SQR (via ClpSimdProc2Begin_i386): ebx = PH, esi = PF (shuffled to edi = PF).
 //
 // i386 is register-starved: each 56x56 limb product is four 32x32 muls accumulated
 // into a per-column 128-bit (4 x 32-bit) stack accumulator; then the Goldilocks
@@ -21,7 +21,7 @@
 // Reference: 64-bit radix-2^56 Goldilocks field arithmetic (edwards448 / ed448-goldilocks).
 
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64MUL}
+{$IFDEF CRYPTOLIB_CURVE448_FE56MUL}
   push ebp
   sub esp, 240
   xor eax, eax
@@ -1608,9 +1608,9 @@
   pop edi
   pop esi
   pop ebx
-{$ENDIF CRYPTOLIB_CURVE448_FE64MUL}
+{$ENDIF CRYPTOLIB_CURVE448_FE56MUL}
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64SQR}
+{$IFDEF CRYPTOLIB_CURVE448_FE56SQR}
   push edi
   mov edi, esi
   push ebp
@@ -3199,4 +3199,4 @@
   pop edi
   pop esi
   pop ebx
-{$ENDIF CRYPTOLIB_CURVE448_FE64SQR}
+{$ENDIF CRYPTOLIB_CURVE448_FE56SQR}

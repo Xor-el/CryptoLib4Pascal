@@ -4,14 +4,14 @@
 // One selector-driven file; exactly one of the following must be defined before
 // including this file:
 //
-//   CRYPTOLIB_CURVE448_FE64MUL   PH := PF * PG mod (2^448-2^224-1)
-//   CRYPTOLIB_CURVE448_FE64SQR   PH := PF^2  mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56MUL   PH := PF * PG mod (2^448-2^224-1)
+//   CRYPTOLIB_CURVE448_FE56SQR   PH := PF^2  mod (2^448-2^224-1)
 //
 // Representation: 8 x 64-bit limbs, radix 2^56 (limb i at [ptr+8i]). Limbs are
 // UNSIGNED and loosely reduced (each < 2^57); output limbs < 2^57.
 //
 // On entry (via ClpSimdProc3Begin_x86_64): rcx = PH, rdx = PF, r8 = PG.
-// FE64SQR (via ClpSimdProc2Begin_x86_64): rcx = PH, rdx = PF (g = f).
+// FE56SQR (via ClpSimdProc2Begin_x86_64): rcx = PH, rdx = PF (g = f).
 //
 // Plain 8x8 schoolbook into fifteen 128-bit columns on a 256-byte stack frame,
 // then the Goldilocks fold (column k -> k-4 and k-8 for k=14..8, high-to-low so
@@ -20,7 +20,7 @@
 // Reference: 64-bit radix-2^56 Goldilocks field arithmetic (edwards448 / ed448-goldilocks).
 
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64MUL}
+{$IFDEF CRYPTOLIB_CURVE448_FE56MUL}
   push rbx
   push rbp
   push rsi
@@ -458,9 +458,9 @@
   pop rsi
   pop rbp
   pop rbx
-{$ENDIF CRYPTOLIB_CURVE448_FE64MUL}
+{$ENDIF CRYPTOLIB_CURVE448_FE56MUL}
 
-{$IFDEF CRYPTOLIB_CURVE448_FE64SQR}
+{$IFDEF CRYPTOLIB_CURVE448_FE56SQR}
   push rbx
   push rbp
   push rsi
@@ -898,4 +898,4 @@
   pop rsi
   pop rbp
   pop rbx
-{$ENDIF CRYPTOLIB_CURVE448_FE64SQR}
+{$ENDIF CRYPTOLIB_CURVE448_FE56SQR}
