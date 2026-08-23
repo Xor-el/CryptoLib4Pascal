@@ -62,6 +62,22 @@ procedure Curve25519Fe51SqrAsm(PH, PF: PUInt64);
 {$UNDEF CRYPTOLIB_CURVE25519_FE64SQR}
 end;
 
+// PH := PF * PG mod (2^448-2^224-1), eight 64-bit limbs.
+procedure Curve448Fe56MulAsm(PH, PF, PG: PUInt64);
+{$DEFINE CRYPTOLIB_CURVE448_FE64MUL}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Curve448\X448Field_Fe64_aarch64.inc}
+{$UNDEF CRYPTOLIB_CURVE448_FE64MUL}
+end;
+
+// PH := PF^2 mod (2^448-2^224-1).
+procedure Curve448Fe56SqrAsm(PH, PF: PUInt64);
+{$DEFINE CRYPTOLIB_CURVE448_FE64SQR}
+{$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_aarch64.inc}
+{$I ..\..\Include\Simd\Curve448\X448Field_Fe64_aarch64.inc}
+{$UNDEF CRYPTOLIB_CURVE448_FE64SQR}
+end;
+
 {$ENDIF}
 
 class function TCurveFieldArmBackend.IsSupported: Boolean;
@@ -93,15 +109,24 @@ begin
 {$ENDIF}
 end;
 
-// No radix-2^56 curve448 kernel yet: the field unit uses its Pascal fallback.
 class function TCurveFieldArmBackend.Mul448(PF, PG, PH: PUInt64): Boolean;
 begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  Curve448Fe56MulAsm(PH, PF, PG);
+  Result := True;
+{$ELSE}
   Result := False;
+{$ENDIF}
 end;
 
 class function TCurveFieldArmBackend.Sqr448(PX, PZ: PUInt64): Boolean;
 begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  Curve448Fe56SqrAsm(PZ, PX);
+  Result := True;
+{$ELSE}
   Result := False;
+{$ENDIF}
 end;
 
 end.
