@@ -1196,8 +1196,8 @@ begin
   // Montgomery-domain constants for the value-type CT ladder (R = 2^576, p = 2^521-1).
   LQ := TNat.ToBigInteger(17, TSecP521R1Field.P);
   FParams.CtxData[1] := 9;
-  // 17 real uint32 limbs; the 18th (high half of uint64[8]) stays 0 (zero-init record).
-  System.Move(TSecP521R1Field.P[0], FParams.CtxData[2], 17 * SizeOf(UInt32));
+  // 17 real uint32 limbs; the 18th (high half of uint64[8]) stays 0 (odd count handled).
+  LoadModulus(PCardinal(@TSecP521R1Field.P[0]), 17, @FParams.CtxData[2]);
   FParams.CtxData[0] := ComputeN0Prime(FParams.CtxData[2]);
   LR := TBigInteger.One.ShiftLeft(576).&Mod(LQ); // R mod p
   LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p

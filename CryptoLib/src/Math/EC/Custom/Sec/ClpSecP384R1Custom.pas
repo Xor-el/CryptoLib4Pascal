@@ -1400,7 +1400,7 @@ begin
   // Montgomery-domain constants for the value-type CT ladder (R = 2^384).
   LQ := TNat.ToBigInteger(12, TSecP384R1Field.P);
   FParams.CtxData[1] := 6;
-  System.Move(TSecP384R1Field.P[0], FParams.CtxData[2], 12 * SizeOf(UInt32)); // p0..p5
+  LoadModulus(PCardinal(@TSecP384R1Field.P[0]), 12, @FParams.CtxData[2]); // p0..p5
   FParams.CtxData[0] := ComputeN0Prime(FParams.CtxData[2]);
   LR := TBigInteger.One.ShiftLeft(384).&Mod(LQ); // R mod p
   LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p

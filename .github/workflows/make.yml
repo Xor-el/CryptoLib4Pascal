@@ -47,7 +47,7 @@ env:
   MAKE_DEFINES: ''
   # When true, make.pas builds and runs console benchmarks after the test suite.
   # Override per job below, like MAKE_BUILD_BACKEND.
-  MAKE_RUN_BENCHMARK: false
+  MAKE_RUN_BENCHMARK: true
   # When true (default), the linux-x64-scalar job runs the ctgrind/Valgrind
   # constant-time gate after its build (subjects clean, leaky controls fire).
   # Set false to skip it. Read only by that job's valgrind-ct.sh step.
@@ -267,7 +267,7 @@ jobs:
             LAZARUS_REPO: ${{ env.LAZARUS_REPO }}
             MAKE_BUILD_BACKEND: ${{ env.MAKE_BUILD_BACKEND }}
             MAKE_PACKAGE_SCOPE: ${{ env.MAKE_PACKAGE_SCOPE }}
-            MAKE_RUN_BENCHMARK: ${{ env.MAKE_RUN_BENCHMARK }}
+            MAKE_RUN_BENCHMARK: false
             MAKE_LAZBUILD_GUI: ${{ env.MAKE_LAZBUILD_GUI }}
             CI_DEBUG: ${{ env.CI_DEBUG }}
           run: bash .github/workflows/ci/arm32-run.sh
@@ -294,7 +294,7 @@ jobs:
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['linux-powerpc64-be'].fpc_tarball_target }}
           MAKE_BUILD_BACKEND: ${{ env.MAKE_BUILD_BACKEND }}
           MAKE_PACKAGE_SCOPE: ${{ env.MAKE_PACKAGE_SCOPE }}
-          MAKE_RUN_BENCHMARK: ${{ env.MAKE_RUN_BENCHMARK }}
+          MAKE_RUN_BENCHMARK: false
           MAKE_LAZBUILD_GUI: ${{ env.MAKE_LAZBUILD_GUI }}
         run: bash .github/workflows/ci/ppc64-be-build.sh
 
@@ -316,6 +316,7 @@ jobs:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['freebsd'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['freebsd'].fpc_tarball_target }}
           FREEBSD_INSTALL_MODE: interim
+          MAKE_RUN_BENCHMARK: false
         with:
           envs: FPC_VERSION FPC_TARGET FPC_TARBALL_TARGET LAZARUS_BRANCH LAZARUS_REPO MAKE_BUILD_BACKEND MAKE_PACKAGE_SCOPE MAKE_RUN_BENCHMARK MAKE_LAZBUILD_GUI FREEBSD_INSTALL_MODE CI_DEBUG
           release: "15.0"
@@ -386,6 +387,7 @@ jobs:
         env:
           FPC_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['solaris'].fpc_target }}
           FPC_TARBALL_TARGET: ${{ fromJSON(needs.setup.outputs.target_map)['solaris'].fpc_tarball_target }}
+          MAKE_RUN_BENCHMARK: false
         with:
           envs: FPC_VERSION LAZARUS_BRANCH LAZARUS_REPO MAKE_BUILD_BACKEND MAKE_PACKAGE_SCOPE MAKE_RUN_BENCHMARK MAKE_LAZBUILD_GUI FPC_TARGET FPC_TARBALL_TARGET CI_DEBUG
           release: "11.4-gcc"
