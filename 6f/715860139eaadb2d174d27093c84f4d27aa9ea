@@ -1,0 +1,16 @@
+.github/workflows/ci/targets.json
+  h_878efc035442cc 11-12
+.github/workflows/make.yml
+  h_878efc035442cc 50,270,297
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "6f715860139eaadb2d174d27093c84f4d27aa9ea",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
