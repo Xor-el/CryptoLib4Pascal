@@ -1,0 +1,108 @@
+CryptoLib/src/Simd/Backend/ClpCurveFieldArmBackend.pas
+  s_3957973a090260::t_97b43a40552a31 44
+  s_3957973a090260::t_6f8d2ba31478fe 43,45-52,61,63-64,69,71-72,77,79-80,85-125,127-142
+  s_3957973a090260::t_9505f643701c93 200,202,204,209-211,216-218,223-225,230-232,237-239,244-246,251-253
+  s_3957973a090260::t_fb48573ec10542 198-199,203,205-208,212-215,219-222,226-229,233-236,240-243,247-250,254-255
+  s_3957973a090260::t_d264a1236310d2 143-144
+  s_3957973a090260::t_b01d15a5c7861d 201
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Sat64_aarch64.inc
+  h_878efc035442cc 1-2570
+CryptoLib/src/Simd/Backend/ClpCurveFieldX86Backend.pas
+  s_3957973a090260::t_ec4ee8bf97df2f 27,139
+  s_3957973a090260::t_b035a2b5377554 282
+  s_3957973a090260::t_1b154e28d9ec4f 122,131,138,279-281,283-336
+  s_3957973a090260::t_43d36682b0de8b 47-52
+  s_3957973a090260::t_4bfb8d1a5bc5ba 53
+  s_3957973a090260::t_f3cf78b5ea7f4a 124,250-278
+  s_3957973a090260::t_f6ff9db6aa3f78 141-179,182-198
+  s_3957973a090260::t_ddcbfceb41c5fa 46,54-61
+  s_3957973a090260::t_4dc8d2f41e7077 140
+  s_3957973a090260::t_c64df57206eddd 70,73,77,79,84,87,91,93,98,101,105,107,112,115,119,121,123,125-130,132-137
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_3957973a090260::t_178b18fbf3d3a8 82
+  s_3957973a090260::t_c0d82047d61a41 948-951
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_3957973a090260::t_049c17a71efce8 21
+  s_3957973a090260::t_e04a6f999c4078 22
+CryptoLib/src/Math/EC/Rfc7748/ClpX25519.pas
+  s_3957973a090260::t_6d45d639f67a79 215,226,230-231,238-242,249
+  s_3957973a090260::t_3b3586abbc6b50 29
+  s_3957973a090260::t_dcff52bc5dd237 161
+  s_3957973a090260::t_d6fa2827b32735 44-46,50-57
+  s_3957973a090260::t_5997ef361c2ed2 25
+  s_3957973a090260::t_ef2ff945a3a239 158-160,162
+  s_3957973a090260::t_5d6ee7535afdc9 210-214,216-225,227-229,232-237,243-248,250-345
+CryptoLib/src/Simd/Facade/ClpCurveFieldSimd.pas
+  s_3957973a090260::t_9953b373fec42f 42,45-49
+  s_3957973a090260::t_86de0de7378f9b 65-68
+  s_3957973a090260::t_93a47513336e70 92-102,109-112,129-132
+  s_3957973a090260::t_50c69ed53af768 194,197,199,201,203-205,210,213,215,217,219-221,226,229,231,233,235-237,242,245,247,249,251-253,258,261,263,265,267-269,274,277,279,281,283-285,290,293,295,297,299-301
+  s_3957973a090260::t_2c424e09f119d4 177-193,195-196,198,200,202,206-209,211-212,214,216,218,222-225,227-228,230,232,234,238-241,243-244,246,248,250,254-257,259-260,262,264,266,270-273,275-276,278,280,282,286-289,291-292,294,296,298,302-303
+  s_3957973a090260::t_ef0462f8290d21 33-41,43-44,50-51,73-87
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_3957973a090260::t_20598faed00d9b 22
+  s_3957973a090260::t_31d19ff4ccbec2 23
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_3957973a090260::t_fa8508bf404f62 907-910
+  s_3957973a090260::t_d48d13c4166a77 42
+.github/workflows/make.yml
+  h_878efc035442cc 50,270,297,316,388
+.github/workflows/ci/targets.json
+  h_878efc035442cc 11-12
+CryptoLib.Tests/src/Crypto/X25519FieldDiffTests.pas
+  s_3957973a090260::t_cc9794a7816ad8 243-296
+  s_3957973a090260::t_d94fff44a60098 1-55,58-60,64-71,77-129,170-242,297-305
+  s_3957973a090260::t_a5b475633aaa5d 56-57,61-63,72-76
+  s_3957973a090260::t_8acd221378faf1 130-169
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_3957973a090260::t_7adccf765802b7 990
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_3957973a090260::t_010238b1d6e8d0 964
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Adx32_i386.inc
+  s_3957973a090260::t_a5bd4d0c49bb58 1-1347
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Fe51_aarch64.inc
+  s_3957973a090260::t_7017eac401ce19 7-8,14,22-36,41-60,62-83,85-106,108-129,131-152,154-155,157-165,167-179,184-195,197-210,212-225,227-240,242-255,257-258,260-267
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Fe51_i386.inc
+  s_3957973a090260::t_121769a576bf59 7-8,14,22,671,673,1324
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Fe51_x86_64.inc
+  s_3957973a090260::t_fd68a057df4755 7-8,16,28-29,38-41,43-44,46-47,49-50,52-154,156-159,161-164,166-169,171-174,176,178-197,199,208-216,218-219,221-222,224-288,290-293,295-298,300-303,305-308,310,312-331
+CryptoLib/src/Include/Simd/Curve25519/X25519Field_Sat64Adx_x86_64.inc
+  s_3957973a090260::t_61941f895780ec 1-2152
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe56_aarch64.inc
+  s_3957973a090260::t_076d627bf26c9c 7-8,14,24,528,530,1035
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe56_i386.inc
+  s_3957973a090260::t_15b1176d01b162 7-8,14,24,1611,1613,3202
+CryptoLib/src/Include/Simd/Curve448/X448Field_Fe56_x86_64.inc
+  s_3957973a090260::t_d5b59ff29792f5 7-8,14,23,461,463,901
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_4e1203de6285cf::t_29f53557a9c239 1090,1092-1094,1304
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "bbe02d2fa16fde13609ae5fe7d176d107b835945",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_3957973a090260": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6deaf670-7f07-4977-8d0c-c1e8159f395d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_4e1203de6285cf": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a14ea07cb110056b8",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
