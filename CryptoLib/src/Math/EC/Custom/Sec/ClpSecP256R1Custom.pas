@@ -29,7 +29,10 @@ uses
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,
-  ClpFpCombMultiplier,
+  ClpFpAffineCombMultiplier,
+  ClpCTScalarField,
+  ClpScalarFieldRegistry,
+  ClpIScalarFieldOps,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -247,6 +250,27 @@ type
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+  end;
+
+type
+  /// <summary>P-256 scalar-field (mod n) arithmetic for the value-type CT path:
+  /// the same Montgomery kernel as <see cref="TSecP256R1FieldArith"/> but with the
+  /// constants built from the group order n, so ECDSA nonce math (inverse,
+  /// multiply, add mod n) runs allocation-free and constant-time. No point ops,
+  /// so <c>MulByA</c> is unused.</summary>
+  TSecP256R1OrderArith = class sealed(TCTFieldArithBase)
+  strict private
+  class var
+    FParams: TMontParams;
+    class constructor Create;
+  public
+    class function FieldLimbs: Int32; override;
+    class function MontParams: PMontParams; override;
+    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    /// <summary>The secp256r1 group order n.</summary>
+    class function Order: TBigInteger;
+    /// <summary>Publish the constant-time nonce-math path for n to the signer.</summary>
+    class procedure RegisterScalarField;
   end;
 
 implementation
@@ -1306,7 +1330,7 @@ var
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP256R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCombMultiplier<TSecP256R1FieldArith>.Create(LFieldOps);
+  Result := TFpAffineCombMultiplier<TSecP256R1FieldArith>.Create(LFieldOps);
 end;
 
 { TSecP256R1FpFieldOps }
@@ -1425,5 +1449,59 @@ class procedure TSecP256R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT:
 begin
   MulByMinusThree(AX, AZ); // a = -3
 end;
+
+{ TSecP256R1OrderArith }
+
+class function TSecP256R1OrderArith.Order: TBigInteger;
+begin
+  Result := TBigInteger.Create(1, THexEncoder.Decode(
+    'FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551'));
+end;
+
+class procedure TSecP256R1OrderArith.RegisterScalarField;
+var
+  LN: TBigInteger;
+  LOps: IScalarFieldOps;
+begin
+  LN := Order;
+  LOps := TCTScalarField<TSecP256R1OrderArith>.Create(LN);
+  TScalarFieldRegistry.Register(LN, LOps);
+end;
+
+class constructor TSecP256R1OrderArith.Create;
+var
+  LN, LR, LR2: TBigInteger;
+  LNArr: TCryptoLibUInt32Array;
+begin
+  // Montgomery-domain constants over the group order n (R = 2^256).
+  LN := Order;
+  LNArr := TNat.FromBigInteger(256, LN);
+  FParams.CtxData[1] := 4;
+  LoadModulus(PCardinal(@LNArr[0]), 8, @FParams.CtxData[2]); // n0..n3
+  FParams.CtxData[0] := ComputeN0Prime(FParams.CtxData[2]);
+  LR := TBigInteger.One.ShiftLeft(256).&Mod(LN);  // R mod n
+  LR2 := LR.Multiply(LR).&Mod(LN);                // R^2 mod n
+  ArrToFe(TNat.FromBigInteger(256, LR), 8, FParams.MontOne);
+  ArrToFe(TNat.FromBigInteger(256, LR2), 8, FParams.R2);
+end;
+
+class function TSecP256R1OrderArith.FieldLimbs: Int32;
+begin
+  Result := 8;
+end;
+
+class function TSecP256R1OrderArith.MontParams: PMontParams;
+begin
+  Result := @FParams;
+end;
+
+class procedure TSecP256R1OrderArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  AZ := AX; // unused for scalar-field arithmetic (no curve coefficient)
+end;
+
+initialization
+
+TSecP256R1OrderArith.RegisterScalarField;
 
 end.

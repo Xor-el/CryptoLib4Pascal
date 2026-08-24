@@ -127,7 +127,7 @@
         <AUP_READ_PHONE_STATE>true</AUP_READ_PHONE_STATE>
         <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>
         <Icns_MainIcns>$(BDS)\bin\delphi_PROJECTICNS.icns</Icns_MainIcns>
-        <DCC_UnitSearchPath>$(PROJECTDIR)..\..\;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(PROJECTDIR)..\..\;C:\DelphiDevLibs\HashLib4Pascal;C:\DelphiDevLibs\SimpleBaseLib4Pascal;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <AUP_NEARBY_WIFI_DEVICES>true</AUP_NEARBY_WIFI_DEVICES>
         <SanitizedProjectName>CryptoLib_Tests_Mobile</SanitizedProjectName>
     </PropertyGroup>
@@ -615,6 +615,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Asn1\X500\Style\ClpIetfUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIExtensionField.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIFiniteField.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIAffineCombPreCompInfo.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFixedPointPreCompInfo.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\Field\ClpIGenericPolynomialExtensionField.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Signers\ClpIGenericSigner.pas"/>
@@ -683,6 +684,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpIRsaEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIRsaParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpISalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIScalarFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIScalarSplitParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIScryptParametersGenerator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Sec\ClpISecECAsn1Objects.pas"/>
@@ -754,8 +756,9 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldValue.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldArith.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTPoint.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTScalarField.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas"/>
-        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpAffineCombMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIF2mFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpLopezDahabLadder.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpF2mMontgomeryLadderCTMultiplier.pas"/>
@@ -804,6 +807,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpRsaEngine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpRsaParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSalsa20Engine.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpScalarFieldRegistry.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpScalarSplitParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECPointMaps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas"/>
@@ -1301,6 +1305,7 @@
         <DCCReference Include="..\src\Others\X25519HigherLevelTests.pas"/>
         <DCCReference Include="..\src\Others\Ed25519HigherLevelTests.pas"/>
         <DCCReference Include="..\src\Math\EC\Rfc7748\X25519Tests.pas"/>
+        <DCCReference Include="..\src\Crypto\CTAffineCombMultiplierTests.pas"/>
         <DCCReference Include="..\src\Crypto\X25519FieldDiffTests.pas"/>
         <DCCReference Include="..\src\Math\EC\Rfc8032\Ed25519Tests.pas"/>
         <DCCReference Include="..\src\Crypto\DigestRandomNumberTests.pas"/>

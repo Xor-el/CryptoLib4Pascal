@@ -55,6 +55,15 @@ type
     X, Y, Z: TFe;
   end;
 
+  /// <summary>
+  /// An affine point (Montgomery-domain X,Y, implicit Z=1) as an inline value
+  /// aggregate. The flat per-window entries of the fixed-base affine comb table
+  /// are stored as these; the mixed addition supplies the unit Z.
+  /// </summary>
+  TFeAffine = record
+    X, Y: TFe;
+  end;
+
 implementation
 
 end.

@@ -19,6 +19,7 @@ uses
   Salsa20Tests, XSalsa20Tests, ChaChaTests, ChaCha7539Tests,
   StreamCipherTestBase, HChaCha20Tests, XChaCha20Tests, XChaCha20Poly1305Tests,
   StreamCipherResetTests, CTSTests, X25519Tests, X25519FieldDiffTests,
+  CTAffineCombMultiplierTests,
   X448Tests, Ed25519Tests,
   Ed448Tests, X25519HigherLevelTests, Ed25519HigherLevelTests,
   ShortenedDigestTests, Kdf1GeneratorTests, Kdf2GeneratorTests,

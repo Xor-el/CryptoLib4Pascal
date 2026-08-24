@@ -25,6 +25,8 @@ uses
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpCryptoServicesRegistrar,
+  ClpScalarFieldRegistry,
+  ClpIScalarFieldOps,
   ClpECAlgorithms,
   ClpIECCommon,
   ClpIECFieldElement,
@@ -175,11 +177,15 @@ var
   LBasePointMultiplier: IECMultiplier;
   LN, LE, LD, LR, LS, LK: TBigInteger;
   LP: IECPoint;
+  LScalarOps: IScalarFieldOps;
+  LHaveScalarOps: Boolean;
 begin
   LEC := FKey.Parameters;
   LN := LEC.N;
   LE := CalculateE(LN, AMessage);
   LD := (FKey as IECPrivateKeyParameters).D;
+  // constant-time, allocation-free nonce math when available for this order
+  LHaveScalarOps := TScalarFieldRegistry.TryGet(LN, LScalarOps);
 
   if (FKCalculator.IsDeterministic) then
   begin
@@ -204,7 +210,10 @@ begin
       LR := LP.AffineXCoord.ToBigInteger().&Mod(LN);
     until (not(LR.SignValue = 0));
 
-    LS := TBigIntegerUtilities.ModOddInverse(LN, LK).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
+    if LHaveScalarOps then
+      LS := LScalarOps.ComputeS(LK, LE, LD, LR)
+    else
+      LS := TBigIntegerUtilities.ModOddInverse(LN, LK).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
 
   until (not(LS.SignValue = 0));
 

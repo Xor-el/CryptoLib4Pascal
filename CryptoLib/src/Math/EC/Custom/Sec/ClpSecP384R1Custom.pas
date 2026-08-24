@@ -29,7 +29,7 @@ uses
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,
-  ClpFpCombMultiplier,
+  ClpFpAffineCombMultiplier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -1308,7 +1308,7 @@ var
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCombMultiplier<TSecP384R1FieldArith>.Create(LFieldOps);
+  Result := TFpAffineCombMultiplier<TSecP384R1FieldArith>.Create(LFieldOps);
 end;
 
 { TSecP384R1FpFieldOps }

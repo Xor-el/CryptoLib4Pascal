@@ -284,16 +284,18 @@ uses
   ClpAbstractBlockCipherMode, ClpAbstractAeadCipher, 
   ClpAbstractAeadBlockCipher, ClpFpKernelX86Backend, ClpFpKernelSimd, 
   ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldArith, ClpCTPoint, 
-  ClpFpCTMultiplier, ClpFpCombMultiplier, ClpCurveFieldSimd, 
-  ClpCurveFieldX86Backend, ClpCurveFieldArmBackend, ClpAbstractAesEngine, 
-  ClpIPacketCipher, ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
+  ClpFpCTMultiplier, ClpCurveFieldSimd, ClpCurveFieldX86Backend, 
+  ClpCurveFieldArmBackend, ClpAbstractAesEngine, ClpIPacketCipher, 
+  ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
   ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
   ClpAesOcbPacketCipher, ClpAbstractPacketCipher, ClpIAeadPacketCipher, 
   ClpAesGcmSivPacketCipher, ClpIBlockPacketCipher, 
   ClpAbstractBlockPacketCipher, ClpAesCbcPacketCipher, ClpAesCtrPacketCipher, 
   ClpChaCha20Poly1305X86Kernel, ClpChaCha20Poly1305ArmKernel, 
-  ClpChaCha20Poly1305PolyOps, ClpIScheduleEpoch, ClpCipherKernelBinding,
-  ClpIRawKeyedCipher, ClpIRawInitBlockCipherMode, ClpIRawInitStreamCipher;
+  ClpChaCha20Poly1305PolyOps, ClpIScheduleEpoch, ClpCipherKernelBinding, 
+  ClpIRawKeyedCipher, ClpIRawInitBlockCipherMode, ClpIRawInitStreamCipher, 
+  ClpIAffineCombPreCompInfo, ClpFpAffineCombMultiplier, ClpIScalarFieldOps, 
+  ClpCTScalarField, ClpScalarFieldRegistry;
 
 implementation
 

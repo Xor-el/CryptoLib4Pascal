@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="217">
+    <Units Count="218">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -949,6 +949,10 @@
         <Filename Value="..\src\Crypto\X25519FieldDiffTests.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit216>
+      <Unit217>
+        <Filename Value="..\src\Crypto\CTAffineCombMultiplierTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit217>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
