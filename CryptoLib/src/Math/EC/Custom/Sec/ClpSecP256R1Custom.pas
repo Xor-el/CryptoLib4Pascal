@@ -33,6 +33,9 @@ uses
   ClpCTScalarField,
   ClpScalarFieldRegistry,
   ClpIScalarFieldOps,
+  ClpFpVarBaseVerifier,
+  ClpVarBaseVerifierRegistry,
+  ClpIECVarBaseVerifier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -235,6 +238,9 @@ type
     procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt32Array);
     function CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
     procedure FieldOne(const AZ: TCryptoLibUInt32Array);
+    /// <summary>Build the point-field (mod p) ops for a curve; the verify-path
+    /// factory the var-base verifier is registered with.</summary>
+    class function CreateForCurve(const ACurve: IECCurve): IFpFieldOps; static;
   end;
 
 type
@@ -263,17 +269,37 @@ type
   class var
     FParams: TMontParams;
     class constructor Create;
+    /// <summary>The secp256r1 group order n (Montgomery-constant source for the
+    /// class ctor; not public API - n is exposed on the curve).</summary>
+    class function Order: TBigInteger;
   public
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
-    /// <summary>The secp256r1 group order n.</summary>
-    class function Order: TBigInteger;
-    /// <summary>Publish the constant-time nonce-math path for n to the signer.</summary>
-    class procedure RegisterScalarField;
   end;
 
 implementation
+
+type
+  TSecP256R1Defaults = class sealed(TObject)
+  public
+    class procedure RegisterDefaults; static;
+  end;
+
+class procedure TSecP256R1Defaults.RegisterDefaults;
+var
+  LN: TBigInteger;
+  LScalar: IScalarFieldOps;
+  LVerifier: IECVarBaseVerifier;
+begin
+  LN := TBigInteger.Create(
+    'FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551', 16);
+  LScalar := TCTScalarField<TSecP256R1OrderArith>.Create(LN);
+  TScalarFieldRegistry.Register(LN, LScalar);
+  LVerifier := TFpVarBaseVerifier<TSecP256R1FieldArith>.Create(
+    @TSecP256R1FpFieldOps.CreateForCurve);
+  TVarBaseVerifierRegistry.Register(LN, LVerifier);
+end;
 
 { TSecP256R1Field }
 
@@ -1458,14 +1484,16 @@ begin
     'FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551'));
 end;
 
-class procedure TSecP256R1OrderArith.RegisterScalarField;
+class function TSecP256R1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;
 var
-  LN: TBigInteger;
-  LOps: IScalarFieldOps;
+  LA, LB: IECFieldElement;
 begin
-  LN := Order;
-  LOps := TCTScalarField<TSecP256R1OrderArith>.Create(LN);
-  TScalarFieldRegistry.Register(LN, LOps);
+  // Rebuild the coefficients as this curve's own field-element type from their
+  // values, so the ops also serve the generic TFpCurve that shares this prime
+  // (the order-keyed registry can hand either curve object to the verifier).
+  LA := TSecP256R1FieldElement.Create(ACurve.A.ToBigInteger());
+  LB := TSecP256R1FieldElement.Create(ACurve.B.ToBigInteger());
+  Result := TSecP256R1FpFieldOps.Create(LA, LB, ACurve.Order);
 end;
 
 class constructor TSecP256R1OrderArith.Create;
@@ -1502,6 +1530,6 @@ end;
 
 initialization
 
-TSecP256R1OrderArith.RegisterScalarField;
+TSecP256R1Defaults.RegisterDefaults;
 
 end.

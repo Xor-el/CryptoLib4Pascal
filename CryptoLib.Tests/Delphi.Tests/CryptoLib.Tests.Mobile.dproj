@@ -684,6 +684,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Parameters\ClpIRsaParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Engines\ClpISalsa20Engine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIScalarFieldOps.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIECVarBaseVerifier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Endo\ClpIScalarSplitParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Generators\ClpIScryptParametersGenerator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Asn1\Sec\ClpISecECAsn1Objects.pas"/>
@@ -757,6 +758,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTPoint.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTScalarField.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpVarBaseVerifier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpAffineCombMultiplier.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIF2mFieldOps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpLopezDahabLadder.pas"/>
@@ -807,6 +809,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpRsaParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Engines\ClpSalsa20Engine.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpScalarFieldRegistry.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Math\EC\Multiplier\ClpVarBaseVerifierRegistry.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpScalarSplitParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\ClpECPointMaps.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpScryptParametersGenerator.pas"/>

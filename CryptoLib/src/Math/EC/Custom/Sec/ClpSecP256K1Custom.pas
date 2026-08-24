@@ -30,6 +30,9 @@ uses
   ClpCTFieldArith,
   ClpFpCTMultiplier,
   ClpFpAffineCombMultiplier,
+  ClpFpVarBaseVerifier,
+  ClpVarBaseVerifierRegistry,
+  ClpIECVarBaseVerifier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -229,6 +232,8 @@ type
     procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt32Array);
     function CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
     procedure FieldOne(const AZ: TCryptoLibUInt32Array);
+    /// <summary>Point-field (mod p) ops factory for the verify path.</summary>
+    class function CreateForCurve(const ACurve: IECCurve): IFpFieldOps; static;
   end;
 
 type
@@ -245,6 +250,23 @@ type
   end;
 
 implementation
+
+type
+  TSecP256K1Defaults = class sealed(TObject)
+  public
+    class procedure RegisterDefaults; static;
+  end;
+
+class procedure TSecP256K1Defaults.RegisterDefaults;
+var
+  LN: TBigInteger;
+  LVerifier: IECVarBaseVerifier;
+begin
+  LN := TBigInteger.Create('FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141', 16);
+  LVerifier := TFpVarBaseVerifier<TSecP256K1FieldArith>.Create(
+    @TSecP256K1FpFieldOps.CreateForCurve);
+  TVarBaseVerifierRegistry.Register(LN, LVerifier);
+end;
 
 { TSecP256K1Field }
 
@@ -1261,5 +1283,20 @@ class procedure TSecP256K1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT:
 begin
   System.FillChar(AZ, SizeOf(AZ), 0); // a = 0
 end;
+
+class function TSecP256K1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;
+var
+  LA, LB: IECFieldElement;
+begin
+  // Rebuild coefficients as this curve's own field-element type so the ops also
+  // serve the generic TFpCurve sharing this prime (registry is order-keyed).
+  LA := TSecP256K1FieldElement.Create(ACurve.A.ToBigInteger());
+  LB := TSecP256K1FieldElement.Create(ACurve.B.ToBigInteger());
+  Result := TSecP256K1FpFieldOps.Create(LA, LB, ACurve.Order);
+end;
+
+initialization
+
+TSecP256K1Defaults.RegisterDefaults;
 
 end.
