@@ -240,6 +240,7 @@ type
   public
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
+    class function ACoeff: TCTACoeff; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
@@ -1237,6 +1238,8 @@ begin
   // b3 = 3b = 21 in Montgomery form: (21 * R) mod p
   LB3 := TBigInteger.ValueOf(21).&Mod(LQ);
   ArrToFe(TSecP256K1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 8, FParams.Fb3);
+  // b = 7 in Montgomery form (kept for parity; a=0 formulas use b3 only)
+  ArrToFe(TSecP256K1Field.FromBigInteger(TBigInteger.ValueOf(7).Multiply(LR).&Mod(LQ)), 8, FParams.Fb);
 end;
 
 class function TSecP256K1FieldArith.FieldLimbs: Int32;
@@ -1247,6 +1250,11 @@ end;
 class function TSecP256K1FieldArith.MontParams: PMontParams;
 begin
   Result := @FParams;
+end;
+
+class function TSecP256K1FieldArith.ACoeff: TCTACoeff;
+begin
+  Result := TCTACoeff.Zero;
 end;
 
 class procedure TSecP256K1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);

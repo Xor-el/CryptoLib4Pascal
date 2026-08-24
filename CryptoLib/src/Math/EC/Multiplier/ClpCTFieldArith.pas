@@ -27,6 +27,12 @@ uses
   ClpCryptoLibTypes;
 
 type
+  /// <summary>Form of the curve coefficient a, selecting which RCB2016 complete
+  /// group law a curve runs: <c>MinusThree</c> uses the a=-3 formulas
+  /// (Algorithms 4/6), <c>Zero</c> the a=0 formulas (Algorithms 7/9), and
+  /// <c>General</c> the general-a Algorithms 1/3.</summary>
+  TCTACoeff = (General, MinusThree, Zero);
+
   /// <summary>The Montgomery-domain constants a curve supplies to the shared field
   /// arithmetic: the CIOS context plus the fixed operands the domain ops need.</summary>
   TMontParams = record
@@ -34,6 +40,7 @@ type
     R2: TFe;      // R^2 mod p       (ToMont operand)
     MontOne: TFe; // R mod p         (Montgomery form of 1)
     Fb3: TFe;     // 3b * R mod p    (MulByB3 operand, Montgomery form)
+    Fb: TFe;      // b * R mod p     (MulByB operand, a=-3 formulas)
   end;
 
   PMontParams = ^TMontParams;
@@ -66,6 +73,9 @@ type
     /// <summary>AZ := a * AX mod p (curve coefficient a; a=-3 folds to MulByMinusThree,
     /// a=0 to FillChar). The only genuinely per-curve op left.</summary>
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual; abstract;
+    /// <summary>Form of the coefficient a. Default <c>General</c>; a=-3 curves
+    /// override to <c>MinusThree</c> to take the faster complete formulas.</summary>
+    class function ACoeff: TCTACoeff; virtual;
 
     // ---- shared ops (one implementation for every curve) ----
     /// <summary>AZ := MontMul(AX, AY) = AX*AY*R^-1 mod p. ATT is caller-owned scratch.</summary>
@@ -80,6 +90,8 @@ type
     class procedure MulByMinusThree(const AX: TFe; var AZ: TFe);
     /// <summary>AZ := 3b * AX (Fb3 held in Montgomery form).</summary>
     class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual;
+    /// <summary>AZ := b * AX (Fb held in Montgomery form; a=-3 formulas).</summary>
+    class procedure MulByB(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual;
     /// <summary>AZ := Montgomery form of 1 (= R mod p).</summary>
     class procedure SetOne(var AZ: TFe); virtual;
     /// <summary>AZ := AX*R mod p (normal domain -> Montgomery).</summary>
@@ -247,6 +259,16 @@ end;
 class procedure TCTFieldArithBase.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   Mul(AX, MontParams^.Fb3, AZ, ATT);
+end;
+
+class procedure TCTFieldArithBase.MulByB(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  Mul(AX, MontParams^.Fb, AZ, ATT);
+end;
+
+class function TCTFieldArithBase.ACoeff: TCTACoeff;
+begin
+  Result := TCTACoeff.General;
 end;
 
 class procedure TCTFieldArithBase.SetOne(var AZ: TFe);
