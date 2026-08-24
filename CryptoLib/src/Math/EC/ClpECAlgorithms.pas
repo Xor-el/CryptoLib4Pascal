@@ -97,7 +97,9 @@ implementation
 
 uses
   ClpMultipliers,
-  ClpWNafUtilities;
+  ClpWNafUtilities,
+  ClpVarBaseVerifierRegistry,
+  ClpIECVarBaseVerifier;
 
 { TECAlgorithms }
 
@@ -258,6 +260,7 @@ var
   LF2mCurve: IAbstractF2mCurve;
   LGlv: IGlvEndomorphism;
   LTau: IECMultiplier;
+  LVerifier: IECVarBaseVerifier;
 begin
   LCurve := AP.Curve;
   LQ := ImportPoint(LCurve, AQ);
@@ -271,6 +274,17 @@ begin
     Result := ImplCheckResult(LTau.Multiply(AP, AK).Add(LTau.Multiply(LQ, AL)));
     Exit;
   end;
+
+  // Re-hosted variable-time verify path (public inputs) on the fast value-type
+  // field, when a curve has registered one and both scalars are non-negative
+  // (the ECDSA/EC-NR verify domain). Non-registered curves keep the paths below.
+  if (AK.SignValue >= 0) and (AL.SignValue >= 0) and
+    TVarBaseVerifierRegistry.TryGet(LCurve.Order, LVerifier) then
+  begin
+    Result := ImplCheckResult(LVerifier.SumOfTwoMultiplies(AP, AK, LQ, AL));
+    Exit;
+  end;
+
   if Supports(LCurve.GetEndomorphism(), IGlvEndomorphism, LGlv) then
   begin
     Result := ImplCheckResult(ImplSumOfMultipliesGlv(

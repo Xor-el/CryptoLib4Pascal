@@ -295,7 +295,7 @@ uses
   ClpChaCha20Poly1305PolyOps, ClpIScheduleEpoch, ClpCipherKernelBinding, 
   ClpIRawKeyedCipher, ClpIRawInitBlockCipherMode, ClpIRawInitStreamCipher, 
   ClpIAffineCombPreCompInfo, ClpFpAffineCombMultiplier, ClpIScalarFieldOps, 
-  ClpCTScalarField, ClpScalarFieldRegistry;
+  ClpCTScalarField, ClpScalarFieldRegistry, ClpIECVarBaseVerifier, ClpVarBaseVerifierRegistry, ClpFpVarBaseVerifier;
 
 implementation
 

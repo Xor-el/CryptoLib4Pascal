@@ -30,6 +30,9 @@ uses
   ClpCTFieldArith,
   ClpFpCTMultiplier,
   ClpFpAffineCombMultiplier,
+  ClpFpVarBaseVerifier,
+  ClpVarBaseVerifierRegistry,
+  ClpIECVarBaseVerifier,
   ClpMod,
   ClpPack,
   ClpEncoders,
@@ -223,6 +226,8 @@ type
     procedure FieldFromBigInteger(const AX: TBigInteger; const AZ: TCryptoLibUInt32Array);
     function CreateFieldElement(const AX: TCryptoLibUInt32Array): IECFieldElement;
     procedure FieldOne(const AZ: TCryptoLibUInt32Array);
+    /// <summary>Point-field (mod p) ops factory for the verify path.</summary>
+    class function CreateForCurve(const ACurve: IECCurve): IFpFieldOps; static;
   end;
 
 type
@@ -239,6 +244,23 @@ type
   end;
 
 implementation
+
+type
+  TSecP521R1Defaults = class sealed(TObject)
+  public
+    class procedure RegisterDefaults; static;
+  end;
+
+class procedure TSecP521R1Defaults.RegisterDefaults;
+var
+  LN: TBigInteger;
+  LVerifier: IECVarBaseVerifier;
+begin
+  LN := TBigInteger.Create('01FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFA51868783BF2F966B7FCC0148F709A5D03BB5C9B8899C47AEBB6FB71E91386409', 16);
+  LVerifier := TFpVarBaseVerifier<TSecP521R1FieldArith>.Create(
+    @TSecP521R1FpFieldOps.CreateForCurve);
+  TVarBaseVerifierRegistry.Register(LN, LVerifier);
+end;
 
 { TSecP521R1Field }
 
@@ -1230,5 +1252,20 @@ class procedure TSecP521R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT:
 begin
   MulByMinusThree(AX, AZ); // a = -3
 end;
+
+class function TSecP521R1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;
+var
+  LA, LB: IECFieldElement;
+begin
+  // Rebuild coefficients as this curve's own field-element type so the ops also
+  // serve the generic TFpCurve sharing this prime (registry is order-keyed).
+  LA := TSecP521R1FieldElement.Create(ACurve.A.ToBigInteger());
+  LB := TSecP521R1FieldElement.Create(ACurve.B.ToBigInteger());
+  Result := TSecP521R1FpFieldOps.Create(LA, LB, ACurve.Order);
+end;
+
+initialization
+
+TSecP521R1Defaults.RegisterDefaults;
 
 end.
