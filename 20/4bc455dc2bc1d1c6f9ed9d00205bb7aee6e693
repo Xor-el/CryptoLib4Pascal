@@ -1,0 +1,46 @@
+CryptoLib/src/Math/EC/Multiplier/ClpCTFieldArith.pas
+  s_3957973a090260::t_08734c1cb13f76 30,35,43
+  s_3957973a090260::t_f062623cd1585a 93-94
+  s_3957973a090260::t_c50c6c358d8776 264-273
+  s_3957973a090260::t_6104458dc30f30 31-34
+  s_3957973a090260::t_28e7fe9c6135f0 76-78
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_3957973a090260::t_0b81e6cf67a535 248,1417-1418
+  s_3957973a090260::t_d1f920f9c4d0ef 1406,1414-1416
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP384R1Custom.pas
+  s_3957973a090260::t_36a71460e60d1b 245,1425-1426
+  s_3957973a090260::t_bfa8b6c8fd8c96 1414,1422-1424
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP521R1Custom.pas
+  s_3957973a090260::t_0c119299dfbe77 237,1222-1223
+  s_3957973a090260::t_5e425fbecdb3c9 1211,1219-1221
+CryptoLib/src/Math/EC/Multiplier/ClpCTPoint.pas
+  s_3957973a090260::t_c32ad72e0004dc 293-337
+  s_3957973a090260::t_38260a9799116e 441,445-446,449,453-455
+  s_3957973a090260::t_d6f630d4b060dd 244-246
+  s_3957973a090260::t_f61907da4b0a9b 85,89-94
+  s_3957973a090260::t_a83a471d8267dd 47-51,54-57,61-62
+  s_3957973a090260::t_1419b89a8e66c3 198-241
+  s_3957973a090260::t_0607f6c7bf70c6 338-366
+  s_3957973a090260::t_691c5d37a8a2d7 144-197,243,247-252
+  s_3957973a090260::t_58c03d99d702bf 52-53,58-59,63,65-66
+  s_3957973a090260::t_a46c1b9a71a488 86-88
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256K1Custom.pas
+  s_3957973a090260::t_eb1222610e1e14 243
+  s_3957973a090260::t_7f83caa5c7f167 1241-1242,1255-1259
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.23",
+  "base_commit_sha": "204bc455dc2bc1d1c6f9ed9d00205bb7aee6e693",
+  "prompts": {},
+  "sessions": {
+    "s_3957973a090260": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "6deaf670-7f07-4977-8d0c-c1e8159f395d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
