@@ -40,8 +40,9 @@ type
   /// methods, so the formulas run with no interface dispatch and every temporary
   /// is a stack <see cref="TFe"/>. The curve context needed by the conversions
   /// (field width, one, is-zero, inverse) comes from the <c>IFpFieldOps</c>
-  /// adapter threaded in as a parameter. The windowed/comb scalar loops that
-  /// drive these live in <c>TFpCTMultiplier</c> / <c>TFpCombMultiplier</c>.
+  /// adapter threaded in as a parameter. The variable-point windowed ladder and
+  /// the fixed-base affine comb that drive these live in <c>TFpCTMultiplier</c> /
+  /// <c>TFpAffineCombMultiplier</c>.
   /// </summary>
   TCTPoint<TOps: TCTFieldArithBase> = class sealed
   strict private
@@ -77,6 +78,19 @@ type
     /// ACount entries so the access pattern is scalar-independent.</summary>
     class procedure SelectEntry(const AFieldOps: IFpFieldOps;
       const ATable: array of TFePoint; ACount, AIndex: Int32; var AR: TFePoint); static;
+    /// <summary>Constant-time masked lookup over a flat affine table: AR :=
+    /// ATable[ABase + AIndex], scanning all ACount entries of the window at
+    /// ABase. AIndex outside [0, ACount) (e.g. -1 for a zero Booth digit)
+    /// selects nothing, leaving AR zero.</summary>
+    class procedure SelectAffineEntry(const AFieldOps: IFpFieldOps;
+      const ATable: array of TFeAffine; ABase, ACount, AIndex: Int32;
+      var AR: TFeAffine); static;
+    /// <summary>RCB2016 complete addition of a projective point and an affine
+    /// point (Z2=1): AR := AP + AQ. Runs the same complete formula as
+    /// <see cref="PointAdd"/> with a unit Z, so it is exception-free for the
+    /// identity and P=Q cases the comb produces.</summary>
+    class procedure PointAddMixed(const AP: TFePoint; const AQ: TFeAffine;
+      var AR: TFePoint); static;
   end;
 
 implementation
@@ -455,6 +469,38 @@ begin
       AR.Z.W[LJ] := AR.Z.W[LJ] xor (LEntry^.Z.W[LJ] and LMask);
     end;
   end;
+end;
+
+class procedure TCTPoint<TOps>.SelectAffineEntry(const AFieldOps: IFpFieldOps;
+  const ATable: array of TFeAffine; ABase, ACount, AIndex: Int32; var AR: TFeAffine);
+var
+  LN, LI, LJ: Int32;
+  LMask: UInt32;
+  LEntry: ^TFeAffine;
+begin
+  LN := AFieldOps.GetFieldInts;
+  FillChar(AR, SizeOf(AR), 0);
+  for LI := 0 to ACount - 1 do
+  begin
+    LEntry := @ATable[ABase + LI];
+    LMask := UInt32(TBitOperations.Asr32(((LI xor AIndex) - 1), 31));
+    for LJ := 0 to LN - 1 do
+    begin
+      AR.X.W[LJ] := AR.X.W[LJ] xor (LEntry^.X.W[LJ] and LMask);
+      AR.Y.W[LJ] := AR.Y.W[LJ] xor (LEntry^.Y.W[LJ] and LMask);
+    end;
+  end;
+end;
+
+class procedure TCTPoint<TOps>.PointAddMixed(const AP: TFePoint;
+  const AQ: TFeAffine; var AR: TFePoint);
+var
+  LQ: TFePoint;
+begin
+  LQ.X := AQ.X;
+  LQ.Y := AQ.Y;
+  TOps.SetOne(LQ.Z);
+  PointAdd(AP, LQ, AR);
 end;
 
 end.

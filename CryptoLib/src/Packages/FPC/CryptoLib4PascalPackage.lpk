@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="3"/>
-    <Files Count="899">
+    <Files Count="903">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3522,113 +3522,129 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <UnitName Value="ClpFpCTMultiplier"/>
       </Item872>
       <Item873>
-        <Filename Value="..\..\Math\EC\Multiplier\ClpFpCombMultiplier.pas"/>
-        <UnitName Value="ClpFpCombMultiplier"/>
-      </Item873>
-      <Item874>
         <Filename Value="..\..\Simd\Facade\ClpCurveFieldSimd.pas"/>
         <UnitName Value="ClpCurveFieldSimd"/>
-      </Item874>
-      <Item875>
+      </Item873>
+      <Item874>
         <Filename Value="..\..\Simd\Backend\ClpCurveFieldX86Backend.pas"/>
         <UnitName Value="ClpCurveFieldX86Backend"/>
-      </Item875>
-      <Item876>
+      </Item874>
+      <Item875>
         <Filename Value="..\..\Simd\Backend\ClpCurveFieldArmBackend.pas"/>
         <UnitName Value="ClpCurveFieldArmBackend"/>
-      </Item876>
-      <Item877>
+      </Item875>
+      <Item876>
         <Filename Value="..\..\Crypto\Engines\ClpAbstractAesEngine.pas"/>
         <UnitName Value="ClpAbstractAesEngine"/>
-      </Item877>
-      <Item878>
+      </Item876>
+      <Item877>
         <Filename Value="..\..\Interfaces\Crypto\Packets\ClpIPacketCipher.pas"/>
         <UnitName Value="ClpIPacketCipher"/>
-      </Item878>
-      <Item879>
+      </Item877>
+      <Item878>
         <Filename Value="..\..\Crypto\Packets\ClpAesGcmPacketCipher.pas"/>
         <UnitName Value="ClpAesGcmPacketCipher"/>
-      </Item879>
-      <Item880>
+      </Item878>
+      <Item879>
         <Filename Value="..\..\Crypto\Packets\ClpChaCha20Poly1305PacketCipher.pas"/>
         <UnitName Value="ClpChaCha20Poly1305PacketCipher"/>
-      </Item880>
-      <Item881>
+      </Item879>
+      <Item880>
         <Filename Value="..\..\Crypto\Packets\ClpAbstractAeadPacketCipher.pas"/>
         <UnitName Value="ClpAbstractAeadPacketCipher"/>
-      </Item881>
-      <Item882>
+      </Item880>
+      <Item881>
         <Filename Value="..\..\Crypto\Packets\ClpAesEaxPacketCipher.pas"/>
         <UnitName Value="ClpAesEaxPacketCipher"/>
-      </Item882>
-      <Item883>
+      </Item881>
+      <Item882>
         <Filename Value="..\..\Crypto\Packets\ClpAesCcmPacketCipher.pas"/>
         <UnitName Value="ClpAesCcmPacketCipher"/>
-      </Item883>
-      <Item884>
+      </Item882>
+      <Item883>
         <Filename Value="..\..\Crypto\Packets\ClpAesOcbPacketCipher.pas"/>
         <UnitName Value="ClpAesOcbPacketCipher"/>
-      </Item884>
-      <Item885>
+      </Item883>
+      <Item884>
         <Filename Value="..\..\Crypto\Packets\ClpAbstractPacketCipher.pas"/>
         <UnitName Value="ClpAbstractPacketCipher"/>
-      </Item885>
-      <Item886>
+      </Item884>
+      <Item885>
         <Filename Value="..\..\Interfaces\Crypto\Packets\ClpIAeadPacketCipher.pas"/>
         <UnitName Value="ClpIAeadPacketCipher"/>
-      </Item886>
-      <Item887>
+      </Item885>
+      <Item886>
         <Filename Value="..\..\Crypto\Packets\ClpAesGcmSivPacketCipher.pas"/>
         <UnitName Value="ClpAesGcmSivPacketCipher"/>
-      </Item887>
-      <Item888>
+      </Item886>
+      <Item887>
         <Filename Value="..\..\Interfaces\Crypto\Packets\ClpIBlockPacketCipher.pas"/>
         <UnitName Value="ClpIBlockPacketCipher"/>
-      </Item888>
-      <Item889>
+      </Item887>
+      <Item888>
         <Filename Value="..\..\Crypto\Packets\ClpAbstractBlockPacketCipher.pas"/>
         <UnitName Value="ClpAbstractBlockPacketCipher"/>
-      </Item889>
-      <Item890>
+      </Item888>
+      <Item889>
         <Filename Value="..\..\Crypto\Packets\ClpAesCbcPacketCipher.pas"/>
         <UnitName Value="ClpAesCbcPacketCipher"/>
-      </Item890>
-      <Item891>
+      </Item889>
+      <Item890>
         <Filename Value="..\..\Crypto\Packets\ClpAesCtrPacketCipher.pas"/>
         <UnitName Value="ClpAesCtrPacketCipher"/>
-      </Item891>
-      <Item892>
+      </Item890>
+      <Item891>
         <Filename Value="..\..\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305X86Kernel.pas"/>
         <UnitName Value="ClpChaCha20Poly1305X86Kernel"/>
-      </Item892>
-      <Item893>
+      </Item891>
+      <Item892>
         <Filename Value="..\..\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305ArmKernel.pas"/>
         <UnitName Value="ClpChaCha20Poly1305ArmKernel"/>
-      </Item893>
-      <Item894>
+      </Item892>
+      <Item893>
         <Filename Value="..\..\Crypto\CipherKernels\Stream\ClpChaCha20Poly1305PolyOps.pas"/>
         <UnitName Value="ClpChaCha20Poly1305PolyOps"/>
-      </Item894>
-      <Item895>
+      </Item893>
+      <Item894>
         <Filename Value="..\..\Interfaces\Crypto\ClpIScheduleEpoch.pas"/>
         <UnitName Value="ClpIScheduleEpoch"/>
-      </Item895>
-      <Item896>
+      </Item894>
+      <Item895>
         <Filename Value="..\..\Crypto\CipherKernels\ClpCipherKernelBinding.pas"/>
         <UnitName Value="ClpCipherKernelBinding"/>
-      </Item896>
-      <Item897>
+      </Item895>
+      <Item896>
         <Filename Value="..\..\Interfaces\Crypto\ClpIRawKeyedCipher.pas"/>
         <UnitName Value="ClpIRawKeyedCipher"/>
-      </Item897>
-      <Item898>
+      </Item896>
+      <Item897>
         <Filename Value="..\..\Interfaces\Crypto\Modes\ClpIRawInitBlockCipherMode.pas"/>
         <UnitName Value="ClpIRawInitBlockCipherMode"/>
-      </Item898>
-      <Item899>
+      </Item897>
+      <Item898>
         <Filename Value="..\..\Interfaces\Crypto\ClpIRawInitStreamCipher.pas"/>
         <UnitName Value="ClpIRawInitStreamCipher"/>
+      </Item898>
+      <Item899>
+        <Filename Value="..\..\Interfaces\Math\EC\Multiplier\ClpIAffineCombPreCompInfo.pas"/>
+        <UnitName Value="ClpIAffineCombPreCompInfo"/>
       </Item899>
+      <Item900>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpFpAffineCombMultiplier.pas"/>
+        <UnitName Value="ClpFpAffineCombMultiplier"/>
+      </Item900>
+      <Item901>
+        <Filename Value="..\..\Interfaces\Math\EC\Multiplier\ClpIScalarFieldOps.pas"/>
+        <UnitName Value="ClpIScalarFieldOps"/>
+      </Item901>
+      <Item902>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpCTScalarField.pas"/>
+        <UnitName Value="ClpCTScalarField"/>
+      </Item902>
+      <Item903>
+        <Filename Value="..\..\Math\EC\Multiplier\ClpScalarFieldRegistry.pas"/>
+        <UnitName Value="ClpScalarFieldRegistry"/>
+      </Item903>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">
