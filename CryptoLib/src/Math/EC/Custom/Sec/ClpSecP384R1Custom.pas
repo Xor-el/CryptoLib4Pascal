@@ -242,6 +242,7 @@ type
   public
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
+    class function ACoeff: TCTACoeff; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
@@ -1410,11 +1411,17 @@ begin
   LB := TBigInteger.Create(1, THexEncoder.Decode('B3312FA7E23EE7E4988E056BE3F82D19181D9C6EFE8141120314088F5013875AC656398D8A2ED19D2A85C8EDD3EC2AEF'));
   LB3 := LB.Add(LB).Add(LB).&Mod(LQ);
   ArrToFe(TSecP384R1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 12, FParams.Fb3);
+  ArrToFe(TSecP384R1Field.FromBigInteger(LB.Multiply(LR).&Mod(LQ)), 12, FParams.Fb);
 end;
 
 class function TSecP384R1FieldArith.MontParams: PMontParams;
 begin
   Result := @FParams;
+end;
+
+class function TSecP384R1FieldArith.ACoeff: TCTACoeff;
+begin
+  Result := TCTACoeff.MinusThree;
 end;
 
 class procedure TSecP384R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);

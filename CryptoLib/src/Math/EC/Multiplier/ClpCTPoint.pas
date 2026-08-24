@@ -44,12 +44,26 @@ type
   /// drive these live in <c>TFpCTMultiplier</c> / <c>TFpCombMultiplier</c>.
   /// </summary>
   TCTPoint<TOps: TCTFieldArithBase> = class sealed
+  strict private
+    /// <summary>RCB2016 general-a complete addition (Algorithm 1).</summary>
+    class procedure PointAddGeneral(const AP, AQ: TFePoint; var AR: TFePoint); static;
+    /// <summary>RCB2016 a=-3 complete addition (Algorithm 4).</summary>
+    class procedure PointAddM3(const AP, AQ: TFePoint; var AR: TFePoint); static;
+    /// <summary>RCB2016 a=0 complete addition (Algorithm 7).</summary>
+    class procedure PointAddZero(const AP, AQ: TFePoint; var AR: TFePoint); static;
+    /// <summary>RCB2016 general-a complete doubling (Algorithm 3).</summary>
+    class procedure PointDoubleGeneral(const AP: TFePoint; var AR: TFePoint); static;
+    /// <summary>RCB2016 a=-3 complete doubling (Algorithm 6).</summary>
+    class procedure PointDoubleM3(const AP: TFePoint; var AR: TFePoint); static;
+    /// <summary>RCB2016 a=0 complete doubling (Algorithm 9).</summary>
+    class procedure PointDoubleZero(const AP: TFePoint; var AR: TFePoint); static;
   public
-    /// <summary>RCB2016 complete addition (Algorithm 1, explicit a and b3).
-    /// AR := AP + AQ in homogeneous coordinates; all temporaries are stack
-    /// records. AR may alias AP or AQ.</summary>
+    /// <summary>RCB2016 complete addition. AR := AP + AQ in homogeneous
+    /// coordinates; all temporaries are stack records. AR may alias AP or AQ.
+    /// a=-3 curves take Algorithm 4, a=0 Algorithm 7, others Algorithm 1.</summary>
     class procedure PointAdd(const AP, AQ: TFePoint; var AR: TFePoint); static;
-    /// <summary>RCB2016 complete doubling (Algorithm 3). AR := 2*AP.</summary>
+    /// <summary>RCB2016 complete doubling. AR := 2*AP (a=-3 Algorithm 6, a=0
+    /// Algorithm 9, else Algorithm 3).</summary>
     class procedure PointDouble(const AP: TFePoint; var AR: TFePoint); static;
     class procedure OneFe(const AFieldOps: IFpFieldOps; var AZ: TFe); static;
     class procedure Infinity(const AFieldOps: IFpFieldOps; var AR: TFePoint); static;
@@ -68,6 +82,16 @@ type
 implementation
 
 class procedure TCTPoint<TOps>.PointAdd(const AP, AQ: TFePoint; var AR: TFePoint);
+begin
+  if TOps.ACoeff = TCTACoeff.Zero then
+    PointAddZero(AP, AQ, AR)
+  else if TOps.ACoeff = TCTACoeff.MinusThree then
+    PointAddM3(AP, AQ, AR)
+  else
+    PointAddGeneral(AP, AQ, AR);
+end;
+
+class procedure TCTPoint<TOps>.PointAddGeneral(const AP, AQ: TFePoint; var AR: TFePoint);
 var
   Lt0, Lt1, Lt2, Lt3, Lt4, Lt5, LX3, LY3, LZ3: TFe;
   LTT: TFeExt;
@@ -117,7 +141,115 @@ begin
   AR.Z := LZ3;
 end;
 
+class procedure TCTPoint<TOps>.PointAddM3(const AP, AQ: TFePoint; var AR: TFePoint);
+var
+  Lt0, Lt1, Lt2, Lt3, Lt4, LX3, LY3, LZ3: TFe;
+  LTT: TFeExt;
+begin
+  // RCB2016 Algorithm 4 (complete addition, a=-3); 12M + 2 mul_b, no mul_a.
+  TOps.Mul(AP.X, AQ.X, Lt0, LTT);   // t0 = X1*X2
+  TOps.Mul(AP.Y, AQ.Y, Lt1, LTT);   // t1 = Y1*Y2
+  TOps.Mul(AP.Z, AQ.Z, Lt2, LTT);   // t2 = Z1*Z2
+  TOps.Add(AP.X, AP.Y, Lt3);        // t3 = X1+Y1
+  TOps.Add(AQ.X, AQ.Y, Lt4);        // t4 = X2+Y2
+  TOps.Mul(Lt3, Lt4, Lt3, LTT);     // t3 = t3*t4
+  TOps.Add(Lt0, Lt1, Lt4);          // t4 = t0+t1
+  TOps.Sub(Lt3, Lt4, Lt3);          // t3 = t3-t4
+  TOps.Add(AP.Y, AP.Z, Lt4);        // t4 = Y1+Z1
+  TOps.Add(AQ.Y, AQ.Z, LX3);        // X3 = Y2+Z2
+  TOps.Mul(Lt4, LX3, Lt4, LTT);     // t4 = t4*X3
+  TOps.Add(Lt1, Lt2, LX3);          // X3 = t1+t2
+  TOps.Sub(Lt4, LX3, Lt4);          // t4 = t4-X3
+  TOps.Add(AP.X, AP.Z, LX3);        // X3 = X1+Z1
+  TOps.Add(AQ.X, AQ.Z, LY3);        // Y3 = X2+Z2
+  TOps.Mul(LX3, LY3, LX3, LTT);     // X3 = X3*Y3
+  TOps.Add(Lt0, Lt2, LY3);          // Y3 = t0+t2
+  TOps.Sub(LX3, LY3, LY3);          // Y3 = X3-Y3
+  TOps.MulByB(Lt2, LZ3, LTT);       // Z3 = b*t2
+  TOps.Sub(LY3, LZ3, LX3);          // X3 = Y3-Z3
+  TOps.Add(LX3, LX3, LZ3);          // Z3 = X3+X3
+  TOps.Add(LX3, LZ3, LX3);          // X3 = X3+Z3
+  TOps.Sub(Lt1, LX3, LZ3);          // Z3 = t1-X3
+  TOps.Add(Lt1, LX3, LX3);          // X3 = t1+X3
+  TOps.MulByB(LY3, LY3, LTT);       // Y3 = b*Y3
+  TOps.Add(Lt2, Lt2, Lt1);          // t1 = t2+t2
+  TOps.Add(Lt1, Lt2, Lt2);          // t2 = t1+t2
+  TOps.Sub(LY3, Lt2, LY3);          // Y3 = Y3-t2
+  TOps.Sub(LY3, Lt0, LY3);          // Y3 = Y3-t0
+  TOps.Add(LY3, LY3, Lt1);          // t1 = Y3+Y3
+  TOps.Add(Lt1, LY3, LY3);          // Y3 = t1+Y3
+  TOps.Add(Lt0, Lt0, Lt1);          // t1 = t0+t0
+  TOps.Add(Lt1, Lt0, Lt0);          // t0 = t1+t0
+  TOps.Sub(Lt0, Lt2, Lt0);          // t0 = t0-t2
+  TOps.Mul(Lt4, LY3, Lt1, LTT);     // t1 = t4*Y3
+  TOps.Mul(Lt0, LY3, Lt2, LTT);     // t2 = t0*Y3
+  TOps.Mul(LX3, LZ3, LY3, LTT);     // Y3 = X3*Z3
+  TOps.Add(LY3, Lt2, LY3);          // Y3 = Y3+t2
+  TOps.Mul(Lt3, LX3, LX3, LTT);     // X3 = t3*X3
+  TOps.Sub(LX3, Lt1, LX3);          // X3 = X3-t1
+  TOps.Mul(Lt4, LZ3, LZ3, LTT);     // Z3 = t4*Z3
+  TOps.Mul(Lt3, Lt0, Lt1, LTT);     // t1 = t3*t0
+  TOps.Add(LZ3, Lt1, LZ3);          // Z3 = Z3+t1
+  AR.X := LX3;
+  AR.Y := LY3;
+  AR.Z := LZ3;
+end;
+
+class procedure TCTPoint<TOps>.PointAddZero(const AP, AQ: TFePoint; var AR: TFePoint);
+var
+  Lt0, Lt1, Lt2, Lt3, Lt4, LX3, LY3, LZ3: TFe;
+  LTT: TFeExt;
+begin
+  // RCB2016 Algorithm 7 (complete addition, a=0); 12M + 2 mul_b3, no mul_a.
+  TOps.Mul(AP.X, AQ.X, Lt0, LTT);   // t0 = X1*X2
+  TOps.Mul(AP.Y, AQ.Y, Lt1, LTT);   // t1 = Y1*Y2
+  TOps.Mul(AP.Z, AQ.Z, Lt2, LTT);   // t2 = Z1*Z2
+  TOps.Add(AP.X, AP.Y, Lt3);        // t3 = X1+Y1
+  TOps.Add(AQ.X, AQ.Y, Lt4);        // t4 = X2+Y2
+  TOps.Mul(Lt3, Lt4, Lt3, LTT);     // t3 = t3*t4
+  TOps.Add(Lt0, Lt1, Lt4);          // t4 = t0+t1
+  TOps.Sub(Lt3, Lt4, Lt3);          // t3 = t3-t4
+  TOps.Add(AP.Y, AP.Z, Lt4);        // t4 = Y1+Z1
+  TOps.Add(AQ.Y, AQ.Z, LX3);        // X3 = Y2+Z2
+  TOps.Mul(Lt4, LX3, Lt4, LTT);     // t4 = t4*X3
+  TOps.Add(Lt1, Lt2, LX3);          // X3 = t1+t2
+  TOps.Sub(Lt4, LX3, Lt4);          // t4 = t4-X3
+  TOps.Add(AP.X, AP.Z, LX3);        // X3 = X1+Z1
+  TOps.Add(AQ.X, AQ.Z, LY3);        // Y3 = X2+Z2
+  TOps.Mul(LX3, LY3, LX3, LTT);     // X3 = X3*Y3
+  TOps.Add(Lt0, Lt2, LY3);          // Y3 = t0+t2
+  TOps.Sub(LX3, LY3, LY3);          // Y3 = X3-Y3
+  TOps.Add(Lt0, Lt0, LX3);          // X3 = t0+t0
+  TOps.Add(LX3, Lt0, Lt0);          // t0 = X3+t0
+  TOps.MulByB3(Lt2, Lt2, LTT);      // t2 = b3*t2
+  TOps.Add(Lt1, Lt2, LZ3);          // Z3 = t1+t2
+  TOps.Sub(Lt1, Lt2, Lt1);          // t1 = t1-t2
+  TOps.MulByB3(LY3, LY3, LTT);      // Y3 = b3*Y3
+  TOps.Mul(Lt4, LY3, LX3, LTT);     // X3 = t4*Y3
+  TOps.Mul(Lt3, Lt1, Lt2, LTT);     // t2 = t3*t1
+  TOps.Sub(Lt2, LX3, LX3);          // X3 = t2-X3
+  TOps.Mul(LY3, Lt0, LY3, LTT);     // Y3 = Y3*t0
+  TOps.Mul(Lt1, LZ3, Lt1, LTT);     // t1 = t1*Z3
+  TOps.Add(Lt1, LY3, LY3);          // Y3 = t1+Y3
+  TOps.Mul(Lt0, Lt3, Lt0, LTT);     // t0 = t0*t3
+  TOps.Mul(LZ3, Lt4, LZ3, LTT);     // Z3 = Z3*t4
+  TOps.Add(LZ3, Lt0, LZ3);          // Z3 = Z3+t0
+  AR.X := LX3;
+  AR.Y := LY3;
+  AR.Z := LZ3;
+end;
+
 class procedure TCTPoint<TOps>.PointDouble(const AP: TFePoint; var AR: TFePoint);
+begin
+  if TOps.ACoeff = TCTACoeff.Zero then
+    PointDoubleZero(AP, AR)
+  else if TOps.ACoeff = TCTACoeff.MinusThree then
+    PointDoubleM3(AP, AR)
+  else
+    PointDoubleGeneral(AP, AR);
+end;
+
+class procedure TCTPoint<TOps>.PointDoubleGeneral(const AP: TFePoint; var AR: TFePoint);
 var
   Lt0, Lt1, Lt2, Lt3, LX3, LY3, LZ3: TFe;
   LTT: TFeExt;
@@ -153,6 +285,80 @@ begin
   TOps.Mul(Lt2, Lt1, LZ3, LTT);     // Z3 = t2*t1
   TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
   TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  AR.X := LX3;
+  AR.Y := LY3;
+  AR.Z := LZ3;
+end;
+
+class procedure TCTPoint<TOps>.PointDoubleM3(const AP: TFePoint; var AR: TFePoint);
+var
+  Lt0, Lt1, Lt2, Lt3, LX3, LY3, LZ3: TFe;
+  LTT: TFeExt;
+begin
+  // RCB2016 Algorithm 6 (exception-free doubling, a=-3); 8M + 3S + 2 mul_b, no mul_a.
+  TOps.Sqr(AP.X, Lt0, LTT);         // t0 = X*X
+  TOps.Sqr(AP.Y, Lt1, LTT);         // t1 = Y*Y
+  TOps.Sqr(AP.Z, Lt2, LTT);         // t2 = Z*Z
+  TOps.Mul(AP.X, AP.Y, Lt3, LTT);   // t3 = X*Y
+  TOps.Add(Lt3, Lt3, Lt3);          // t3 = t3+t3
+  TOps.Mul(AP.X, AP.Z, LZ3, LTT);   // Z3 = X*Z
+  TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  TOps.MulByB(Lt2, LY3, LTT);       // Y3 = b*t2
+  TOps.Sub(LY3, LZ3, LY3);          // Y3 = Y3-Z3
+  TOps.Add(LY3, LY3, LX3);          // X3 = Y3+Y3
+  TOps.Add(LX3, LY3, LY3);          // Y3 = X3+Y3
+  TOps.Sub(Lt1, LY3, LX3);          // X3 = t1-Y3
+  TOps.Add(Lt1, LY3, LY3);          // Y3 = t1+Y3
+  TOps.Mul(LX3, LY3, LY3, LTT);     // Y3 = X3*Y3
+  TOps.Mul(LX3, Lt3, LX3, LTT);     // X3 = X3*t3
+  TOps.Add(Lt2, Lt2, Lt3);          // t3 = t2+t2
+  TOps.Add(Lt2, Lt3, Lt2);          // t2 = t2+t3
+  TOps.MulByB(LZ3, LZ3, LTT);       // Z3 = b*Z3
+  TOps.Sub(LZ3, Lt2, LZ3);          // Z3 = Z3-t2
+  TOps.Sub(LZ3, Lt0, LZ3);          // Z3 = Z3-t0
+  TOps.Add(LZ3, LZ3, Lt3);          // t3 = Z3+Z3
+  TOps.Add(LZ3, Lt3, LZ3);          // Z3 = Z3+t3
+  TOps.Add(Lt0, Lt0, Lt3);          // t3 = t0+t0
+  TOps.Add(Lt3, Lt0, Lt0);          // t0 = t3+t0
+  TOps.Sub(Lt0, Lt2, Lt0);          // t0 = t0-t2
+  TOps.Mul(Lt0, LZ3, Lt0, LTT);     // t0 = t0*Z3
+  TOps.Add(LY3, Lt0, LY3);          // Y3 = Y3+t0
+  TOps.Mul(AP.Y, AP.Z, Lt0, LTT);   // t0 = Y*Z
+  TOps.Add(Lt0, Lt0, Lt0);          // t0 = t0+t0
+  TOps.Mul(Lt0, LZ3, LZ3, LTT);     // Z3 = t0*Z3
+  TOps.Sub(LX3, LZ3, LX3);          // X3 = X3-Z3
+  TOps.Mul(Lt0, Lt1, LZ3, LTT);     // Z3 = t0*t1
+  TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  AR.X := LX3;
+  AR.Y := LY3;
+  AR.Z := LZ3;
+end;
+
+class procedure TCTPoint<TOps>.PointDoubleZero(const AP: TFePoint; var AR: TFePoint);
+var
+  Lt0, Lt1, Lt2, LX3, LY3, LZ3: TFe;
+  LTT: TFeExt;
+begin
+  // RCB2016 Algorithm 9 (exception-free doubling, a=0); 6M + 2S + 1 mul_b3, no mul_a.
+  TOps.Sqr(AP.Y, Lt0, LTT);         // t0 = Y*Y
+  TOps.Add(Lt0, Lt0, LZ3);          // Z3 = t0+t0
+  TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  TOps.Add(LZ3, LZ3, LZ3);          // Z3 = Z3+Z3
+  TOps.Mul(AP.Y, AP.Z, Lt1, LTT);   // t1 = Y*Z
+  TOps.Sqr(AP.Z, Lt2, LTT);         // t2 = Z*Z
+  TOps.MulByB3(Lt2, Lt2, LTT);      // t2 = b3*t2
+  TOps.Mul(Lt2, LZ3, LX3, LTT);     // X3 = t2*Z3
+  TOps.Add(Lt0, Lt2, LY3);          // Y3 = t0+t2
+  TOps.Mul(Lt1, LZ3, LZ3, LTT);     // Z3 = t1*Z3
+  TOps.Add(Lt2, Lt2, Lt1);          // t1 = t2+t2
+  TOps.Add(Lt1, Lt2, Lt2);          // t2 = t1+t2
+  TOps.Sub(Lt0, Lt2, Lt0);          // t0 = t0-t2
+  TOps.Mul(Lt0, LY3, LY3, LTT);     // Y3 = t0*Y3
+  TOps.Add(LX3, LY3, LY3);          // Y3 = X3+Y3
+  TOps.Mul(AP.X, AP.Y, Lt1, LTT);   // t1 = X*Y
+  TOps.Mul(Lt0, Lt1, LX3, LTT);     // X3 = t0*t1
+  TOps.Add(LX3, LX3, LX3);          // X3 = X3+X3
   AR.X := LX3;
   AR.Y := LY3;
   AR.Z := LZ3;
@@ -232,19 +438,21 @@ class procedure TCTPoint<TOps>.SelectEntry(const AFieldOps: IFpFieldOps;
 var
   LN, LI, LJ: Int32;
   LMask: UInt32;
-  LEntry: TFePoint;
+  LEntry: ^TFePoint;
 begin
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
+  // Scan every entry (scalar-independent access pattern); read straight from the
+  // table (no per-entry struct copy) and only the N live limbs.
   for LI := 0 to ACount - 1 do
   begin
-    LEntry := ATable[LI];
+    LEntry := @ATable[LI];
     LMask := UInt32(TBitOperations.Asr32(((LI xor AIndex) - 1), 31));
     for LJ := 0 to LN - 1 do
     begin
-      AR.X.W[LJ] := AR.X.W[LJ] xor (LEntry.X.W[LJ] and LMask);
-      AR.Y.W[LJ] := AR.Y.W[LJ] xor (LEntry.Y.W[LJ] and LMask);
-      AR.Z.W[LJ] := AR.Z.W[LJ] xor (LEntry.Z.W[LJ] and LMask);
+      AR.X.W[LJ] := AR.X.W[LJ] xor (LEntry^.X.W[LJ] and LMask);
+      AR.Y.W[LJ] := AR.Y.W[LJ] xor (LEntry^.Y.W[LJ] and LMask);
+      AR.Z.W[LJ] := AR.Z.W[LJ] xor (LEntry^.Z.W[LJ] and LMask);
     end;
   end;
 end;
