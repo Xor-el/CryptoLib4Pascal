@@ -748,7 +748,113 @@
   pop rsi
   pop rbx
       {$ELSE}
-        {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX6}
+        {$IFDEF CRYPTOLIB_FP_MONTMUL_P256}
+  push rbx
+  push rsi
+  push rdi
+  push r12
+  push r13
+  push r14
+  push r15
+  push rcx
+  mov rsi, rdx
+  mov rdi, r8
+  xor r8, r8
+  xor r10, r10
+  xor r11, r11
+  xor r12, r12
+  xor r13, r13
+  xor r14, r14
+  mov ecx, 4
+@@FpMontMulxRow:
+  mov rdx, [rdi]
+  xor eax, eax
+  db $C4, $E2, $83, $F6, $1E       // mulx rbx, r15, [rsi]
+  db $66, $4D, $0F, $38, $F6, $C7  // adcx r8, r15
+  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
+  db $C4, $E2, $83, $F6, $5E, $08  // mulx rbx, r15, [rsi+0x8]
+  db $66, $4D, $0F, $38, $F6, $D7  // adcx r10, r15
+  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
+  db $C4, $E2, $83, $F6, $5E, $10  // mulx rbx, r15, [rsi+0x10]
+  db $66, $4D, $0F, $38, $F6, $DF  // adcx r11, r15
+  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
+  db $C4, $E2, $83, $F6, $5E, $18  // mulx rbx, r15, [rsi+0x18]
+  db $66, $4D, $0F, $38, $F6, $E7  // adcx r12, r15
+  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
+  mov eax, 0
+  db $66, $4C, $0F, $38, $F6, $E8  // adcx r13, rax
+  db $F3, $4C, $0F, $38, $F6, $F0  // adox r14, rax
+  db $66, $4C, $0F, $38, $F6, $F0  // adcx r14, rax
+  mov rdx, r8            // m = t[0]  (n0' = 1)
+  mov rbx, rdx
+  shl rbx, 32            // rbx = low64(m<<32)
+  mov r15, rdx
+  shr r15, 32            // r15 = high32(m<<32)
+  add r10, rbx          // t[1..] += m<<96  = (m<<32) at limb 1
+  adc r11, r15
+  adc r12, 0
+  adc r13, 0
+  adc r14, 0
+  mov rax, rdx          // rax:rbx = m*p3 = m + m<<64 - m<<32 (128-bit, >= 0)
+  sub rax, rbx
+  mov rbx, rdx
+  sbb rbx, r15
+  add r12, rax          // t[3..] += m*p3 << 192  = m<<192 - m<<224 + m<<256
+  adc r13, rbx
+  adc r14, 0
+  mov r8, r10
+  mov r10, r11
+  mov r11, r12
+  mov r12, r13
+  mov r13, r14
+  xor r14, r14
+  add rdi, 8
+  dec ecx
+  jnz @@FpMontMulxRow
+  mov rax, r8
+  sub rax, [r9+16]
+  mov r15, rax
+  mov rax, r10
+  sbb rax, [r9+24]
+  mov rbx, rax
+  mov rax, r11
+  sbb rax, [r9+32]
+  mov rsi, rax
+  mov rax, r12
+  sbb rax, [r9+40]
+  mov rdi, rax
+  mov rax, r13
+  sbb rax, 0
+  sbb rdx, rdx
+  mov rcx, rdx
+  not rdx
+  and r8, rcx
+  and r15, rdx
+  or r8, r15
+  and r10, rcx
+  and rbx, rdx
+  or r10, rbx
+  and r11, rcx
+  and rsi, rdx
+  or r11, rsi
+  and r12, rcx
+  and rdi, rdx
+  or r12, rdi
+  mov rax, [rsp]
+  mov [rax+0], r8
+  mov [rax+8], r10
+  mov [rax+16], r11
+  mov [rax+24], r12
+  add rsp, 8
+  pop r15
+  pop r14
+  pop r13
+  pop r12
+  pop rdi
+  pop rsi
+  pop rbx
+        {$ELSE}
+          {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX6}
   push rbx
   push rsi
   push rdi
@@ -1173,8 +1279,8 @@
   pop rdi
   pop rsi
   pop rbx
-        {$ELSE}
-          {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX9}
+          {$ELSE}
+            {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX9}
   push rbx
   push rsi
   push rdi
@@ -2087,8 +2193,8 @@
   pop rdi
   pop rsi
   pop rbx
-          {$ELSE}
-            {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX5}
+            {$ELSE}
+              {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX5}
   push rbx
   push rsi
   push rdi
@@ -2412,8 +2518,8 @@
   pop rdi
   pop rsi
   pop rbx
-            {$ELSE}
-              {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX7}
+              {$ELSE}
+                {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX7}
   push rbx
   push rsi
   push rdi
@@ -2964,8 +3070,8 @@
   pop rdi
   pop rsi
   pop rbx
-              {$ELSE}
-                {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX8}
+                {$ELSE}
+                  {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX8}
   push rbx
   push rsi
   push rdi
@@ -3685,8 +3791,8 @@
   pop rdi
   pop rsi
   pop rbx
-                {$ELSE}
-                  {$IFDEF CRYPTOLIB_FP_MODADD}
+                  {$ELSE}
+                    {$IFDEF CRYPTOLIB_FP_MODADD}
   push rbx
   push rsi
   push rdi
@@ -3759,8 +3865,8 @@
   pop  rdi
   pop  rsi
   pop  rbx
-                  {$ELSE}
-                    {$IFDEF CRYPTOLIB_FP_MODSUB}
+                    {$ELSE}
+                      {$IFDEF CRYPTOLIB_FP_MODSUB}
   push rbx
   push rsi
   push rdi
@@ -3815,8 +3921,9 @@
   pop  rdi
   pop  rsi
   pop  rbx
-                    {$ELSE}
-                    {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_MULX4, CRYPTOLIB_FP_MONTMUL_MULX6, CRYPTOLIB_FP_MONTMUL_MULX9, CRYPTOLIB_FP_MONTMUL_MULX5, CRYPTOLIB_FP_MONTMUL_MULX7, CRYPTOLIB_FP_MONTMUL_MULX8, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
+                      {$ELSE}
+                      {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_MULX4, CRYPTOLIB_FP_MONTMUL_P256, CRYPTOLIB_FP_MONTMUL_MULX6, CRYPTOLIB_FP_MONTMUL_MULX9, CRYPTOLIB_FP_MONTMUL_MULX5, CRYPTOLIB_FP_MONTMUL_MULX7, CRYPTOLIB_FP_MONTMUL_MULX8, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
+                      {$ENDIF}
                     {$ENDIF}
                   {$ENDIF}
                 {$ENDIF}
