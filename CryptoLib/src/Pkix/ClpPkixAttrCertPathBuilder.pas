@@ -177,6 +177,7 @@ function TPkixAttrCertPathBuilder.BuildPath(const AAttrCert: IX509V2AttributeCer
   const ATbvPath: TList<IX509Certificate>): IPkixCertPathBuilderResult;
 var
   LCertPath: IPkixCertPath;
+  LValidator: IPkixAttrCertPathValidator;
   LValidatorResult: IPkixCertPathValidatorResult;
   LIssuers: TCryptoLibGenericArray<IX509Certificate>;
   LIssuer: IX509Certificate;
@@ -200,65 +201,68 @@ begin
   ATbvPath.Add(ATbvCert);
 
   try
-    // the issuer of the certificate is a trust anchor: this chain is complete
-    if TPkixCertPathValidatorUtilities.IsIssuerTrustAnchor(ATbvCert, AParams.GetTrustAnchors()) then
-    begin
-      LCertPath := TPkixCertPath.Create(ToCertArray(ATbvPath)) as IPkixCertPath;
+    try
+      // the issuer of the certificate is a trust anchor: this chain is complete
+      if TPkixCertPathValidatorUtilities.IsIssuerTrustAnchor(ATbvCert, AParams.GetTrustAnchors()) then
+      begin
+        LCertPath := TPkixCertPath.Create(ToCertArray(ATbvPath)) as IPkixCertPath;
 
-      try
-        LValidatorResult := (TPkixAttrCertPathValidator.Create() as IPkixAttrCertPathValidator)
-          .Validate(LCertPath, AParams);
-      except
-        on E: Exception do
-          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathValidationFailed,
-            [E.Message]);
+        try
+          LValidator := TPkixAttrCertPathValidator.Create() as IPkixAttrCertPathValidator;
+          LValidatorResult := LValidator.Validate(LCertPath, AParams);
+        except
+          on E: Exception do
+            raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathValidationFailed,
+              [E.Message]);
+        end;
+
+        // the path is kept: this chain is the answer
+        Result := TPkixCertPathBuilderResult.Create(LCertPath, LValidatorResult.TrustAnchor,
+          LValidatorResult.PolicyTree, LValidatorResult.SubjectPublicKey) as IPkixCertPathBuilderResult;
+        Exit;
       end;
 
-      // the path is kept: this chain is the answer
-      Result := TPkixCertPathBuilderResult.Create(LCertPath, LValidatorResult.TrustAnchor,
-        LValidatorResult.PolicyTree, LValidatorResult.SubjectPublicKey) as IPkixCertPathBuilderResult;
-      Exit;
-    end;
+      // add additional X.509 stores from locations in the certificate
+      try
+        TPkixCertPathValidatorUtilities.AddAdditionalStoresFromAltNames(ATbvCert, AParams);
+      except
+        on E: Exception do
+          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SAdditionalStoresFailed, [E.Message]);
+      end;
 
-    // add additional X.509 stores from locations in the certificate
-    try
-      TPkixCertPathValidatorUtilities.AddAdditionalStoresFromAltNames(ATbvCert, AParams);
+      try
+        LIssuers := TPkixCertPathValidatorUtilities.FindIssuerCerts(ATbvCert, AParams);
+      except
+        on E: Exception do
+          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SIssuerCertSearchFailed, [E.Message]);
+      end;
+
+      if System.Length(LIssuers) < 1 then
+        raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoIssuerCertFound);
+
+      for LIssuer in LIssuers do
+      begin
+        // an untrusted self signed certificate cannot extend the chain
+        if TPkixCertPathValidatorUtilities.IsSelfIssued(LIssuer) then
+          Continue;
+
+        Result := BuildPath(AAttrCert, LIssuer, AParams, ATbvPath);
+        if Result <> nil then
+          Break;
+      end;
     except
       on E: Exception do
-        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SAdditionalStoresFailed, [E.Message]);
+      begin
+        // remembered for the caller; other candidate chains may still succeed
+        FCertPathException := E.Message;
+        Result := nil;
+      end;
     end;
-
-    try
-      LIssuers := TPkixCertPathValidatorUtilities.FindIssuerCerts(ATbvCert, AParams);
-    except
-      on E: Exception do
-        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SIssuerCertSearchFailed, [E.Message]);
-    end;
-
-    if System.Length(LIssuers) < 1 then
-      raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoIssuerCertFound);
-
-    for LIssuer in LIssuers do
-    begin
-      // an untrusted self signed certificate cannot extend the chain
-      if TPkixCertPathValidatorUtilities.IsSelfIssued(LIssuer) then
-        Continue;
-
-      Result := BuildPath(AAttrCert, LIssuer, AParams, ATbvPath);
-      if Result <> nil then
-        Break;
-    end;
-  except
-    on E: Exception do
-    begin
-      // remembered for the caller; other candidate chains may still succeed
-      FCertPathException := E.Message;
-      Result := nil;
-    end;
-  end;
-
-  if Result = nil then
+  finally
+    // undo the add on every exit: the success path (the path was built from a copy of ATbvPath)
+    // and a stashed failure
     RemoveCert(ATbvPath, ATbvCert);
+  end;
 end;
 
 function TPkixAttrCertPathBuilder.Build(const AParams: IPkixBuilderParameters): IPkixCertPathBuilderResult;
