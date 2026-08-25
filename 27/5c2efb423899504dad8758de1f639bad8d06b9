@@ -1,0 +1,46 @@
+CryptoLib/src/Simd/Backend/ClpFpKernelArmBackend.pas
+  s_5e9312dc1422f7::t_d872d80fabc30c 202-211
+  s_5e9312dc1422f7::t_eab363caaff774 131-138
+  s_5e9312dc1422f7::t_2db67597bcbbb1 49-52
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_5e9312dc1422f7::t_fb4d532627a240 1483-1500
+  s_5e9312dc1422f7::t_2a15492acd0c52 259-262
+.github/workflows/make.yml
+  h_878efc035442cc 50,270,297,316,388
+CryptoLib/src/Simd/Facade/ClpFpKernelSimd.pas
+  s_5e9312dc1422f7::t_5abc2883e86d9f 42-43
+  s_5e9312dc1422f7::t_92d8284861058d 157-161,163
+  s_5e9312dc1422f7::t_0f50cd0f0b7770 59-63,68-70
+  s_5e9312dc1422f7::t_418de059125abe 148-156,162,164-166
+CryptoLib/src/Simd/Backend/ClpFpKernelX86Backend.pas
+  s_5e9312dc1422f7::t_c7dd11e8577ab4 48-51
+  s_5e9312dc1422f7::t_cb2b3c0cebe367 157-159,166
+  s_5e9312dc1422f7::t_7ff6aa22a45d39 259,267
+  s_5e9312dc1422f7::t_c5395656b2b7f1 160-165
+  s_5e9312dc1422f7::t_67a7722ba58a0d 256-258,260-266,268-270
+CryptoLib/src/Include/Simd/FpKernel/FpKernel_aarch64.inc
+  s_5e9312dc1422f7::t_03698f57303440 259-532,876-877,1380-1381,2073-2074,2989-2990,4154-4155,5600-5601,5656-5657,5693-5695
+CryptoLib/src/Include/Simd/FpKernel/FpKernel_x86_64.inc
+  s_5e9312dc1422f7::t_7221ed950435e6 751-857,1282-1283,2196-2197,2521-2522,3073-3074,3794-3795,3868-3869,3924-3926
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "275c2efb423899504dad8758de1f639bad8d06b9",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
