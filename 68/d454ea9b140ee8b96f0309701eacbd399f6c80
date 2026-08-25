@@ -1,0 +1,28 @@
+CryptoLib/src/Pkix/ClpPkixAttrCertPathBuilder.pas
+  s_0f1a2e9196b415::t_7411768a0f2b54 204-210,213-217,219-225,227,230,233-238,240-241,243-252,255-259,261-263,265
+  s_0f1a2e9196b415::t_6e72daabccc0a0 211-212
+  s_0f1a2e9196b415::t_24f40b993804e4 180
+CryptoLib/src/Pkix/ClpPkixCertPathBuilder.pas
+  s_0f1a2e9196b415::t_a4cd936bdcb1da 200-211,214-226,228,231,235,238,241-242,244-249,251-253,255-259,261-263,265
+  s_0f1a2e9196b415::t_5915c83780ac85 172
+  s_0f1a2e9196b415::t_b58fbbe950b9cf 212-213
+CryptoLib.Tests/src/Pkix/CertPathBuilderTests.pas
+  s_0f1a2e9196b415::t_45fde05aaa6859 262-321
+  s_0f1a2e9196b415::t_9d6c6dc51a8d1b 76
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "68d454ea9b140ee8b96f0309701eacbd399f6c80",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
