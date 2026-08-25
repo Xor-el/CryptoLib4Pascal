@@ -256,6 +256,10 @@ type
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
     class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    /// <summary>P-256 special-prime Montgomery multiply/square: the folded-reduction
+    /// kernel when supported (writing AZ in place), else the generic CIOS (inherited).</summary>
+    class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    class procedure Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
 type
@@ -1474,6 +1478,24 @@ end;
 class procedure TSecP256R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
   MulByMinusThree(AX, AZ); // a = -3
+end;
+
+class procedure TSecP256R1FieldArith.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  // Special-prime kernel writes the reduced 4-limb result straight to AZ (no scratch
+  // copy); on any fallback the generic CIOS path is bit-for-bit identical.
+  if TFpKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+    PUInt64(@AY.W[0]), PUInt64(@FParams.CtxData[0])) then
+    Exit;
+  inherited Mul(AX, AY, AZ, ATT);
+end;
+
+class procedure TSecP256R1FieldArith.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
+begin
+  if TFpKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+    PUInt64(@AX.W[0]), PUInt64(@FParams.CtxData[0])) then
+    Exit;
+  inherited Sqr(AX, AZ, ATT);
 end;
 
 { TSecP256R1OrderArith }

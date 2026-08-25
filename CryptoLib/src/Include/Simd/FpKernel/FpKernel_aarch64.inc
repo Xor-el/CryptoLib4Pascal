@@ -256,7 +256,280 @@
   cmp   x6, x4
   b.lo  .LFpMontFAdd
     {$ELSE}
-      {$IFDEF CRYPTOLIB_FP_MONTMUL_REG4}
+      {$IFDEF CRYPTOLIB_FP_MONTMUL_P256}
+  mov  x4, xzr
+  mov  x5, xzr
+  mov  x6, xzr
+  mov  x7, xzr
+  mov  x8, xzr
+  mov  x9, xzr
+  ldr  x10, [x2, #0]
+  mov  x11, xzr
+  ldr  x15, [x1, #0]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x4, x4, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #8]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x5, x5, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #16]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x6, x6, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #24]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x7, x7, x13
+  adc  x11, x14, xzr
+  adds x8, x8, x11
+  adc  x9, xzr, xzr
+  lsl  x13, x4, #32       // low64(m<<32)
+  lsr  x14, x4, #32       // high32(m<<32)
+  adds x5, x5, x13        // t[1..] += m<<96
+  adcs x6, x6, x14
+  adcs x7, x7, xzr
+  adcs x8, x8, xzr
+  adc  x9, x9, xzr
+  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
+  sbc  x12, x4, x14
+  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x8, x8, x12
+  adc  x9, x9, xzr
+  mov  x4, x5             // shift down one limb (drop t0)
+  mov  x5, x6
+  mov  x6, x7
+  mov  x7, x8
+  mov  x8, x9
+  ldr  x10, [x2, #8]
+  mov  x11, xzr
+  ldr  x15, [x1, #0]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x4, x4, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #8]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x5, x5, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #16]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x6, x6, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #24]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x7, x7, x13
+  adc  x11, x14, xzr
+  adds x8, x8, x11
+  adc  x9, xzr, xzr
+  lsl  x13, x4, #32       // low64(m<<32)
+  lsr  x14, x4, #32       // high32(m<<32)
+  adds x5, x5, x13        // t[1..] += m<<96
+  adcs x6, x6, x14
+  adcs x7, x7, xzr
+  adcs x8, x8, xzr
+  adc  x9, x9, xzr
+  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
+  sbc  x12, x4, x14
+  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x8, x8, x12
+  adc  x9, x9, xzr
+  mov  x4, x5             // shift down one limb (drop t0)
+  mov  x5, x6
+  mov  x6, x7
+  mov  x7, x8
+  mov  x8, x9
+  ldr  x10, [x2, #16]
+  mov  x11, xzr
+  ldr  x15, [x1, #0]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x4, x4, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #8]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x5, x5, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #16]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x6, x6, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #24]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x7, x7, x13
+  adc  x11, x14, xzr
+  adds x8, x8, x11
+  adc  x9, xzr, xzr
+  lsl  x13, x4, #32       // low64(m<<32)
+  lsr  x14, x4, #32       // high32(m<<32)
+  adds x5, x5, x13        // t[1..] += m<<96
+  adcs x6, x6, x14
+  adcs x7, x7, xzr
+  adcs x8, x8, xzr
+  adc  x9, x9, xzr
+  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
+  sbc  x12, x4, x14
+  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x8, x8, x12
+  adc  x9, x9, xzr
+  mov  x4, x5             // shift down one limb (drop t0)
+  mov  x5, x6
+  mov  x6, x7
+  mov  x7, x8
+  mov  x8, x9
+  ldr  x10, [x2, #24]
+  mov  x11, xzr
+  ldr  x15, [x1, #0]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x4, x4, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #8]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x5, x5, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #16]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x6, x6, x13
+  adc  x11, x14, xzr
+  ldr  x15, [x1, #24]
+  mul  x13, x15, x10
+  umulh x14, x15, x10
+  adds x13, x13, x11
+  adc  x14, x14, xzr
+  adds x7, x7, x13
+  adc  x11, x14, xzr
+  adds x8, x8, x11
+  adc  x9, xzr, xzr
+  lsl  x13, x4, #32       // low64(m<<32)
+  lsr  x14, x4, #32       // high32(m<<32)
+  adds x5, x5, x13        // t[1..] += m<<96
+  adcs x6, x6, x14
+  adcs x7, x7, xzr
+  adcs x8, x8, xzr
+  adc  x9, x9, xzr
+  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
+  sbc  x12, x4, x14
+  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x8, x8, x12
+  adc  x9, x9, xzr
+  mov  x4, x5             // shift down one limb (drop t0)
+  mov  x5, x6
+  mov  x6, x7
+  mov  x7, x8
+  mov  x8, x9
+  mov  x11, xzr
+  ldr  x15, [x3, #16]
+  subs x13, x4, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  ldr  x15, [x3, #24]
+  subs x13, x5, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  ldr  x15, [x3, #32]
+  subs x13, x6, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  ldr  x15, [x3, #40]
+  subs x13, x7, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  subs x13, x8, x11
+  adc  x12, xzr, xzr
+  neg  x12, x12
+  mov  x11, xzr
+  ldr  x15, [x3, #16]
+  and  x15, x15, x12
+  subs x13, x4, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  str  x13, [x0, #0]
+  ldr  x15, [x3, #24]
+  and  x15, x15, x12
+  subs x13, x5, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  str  x13, [x0, #8]
+  ldr  x15, [x3, #32]
+  and  x15, x15, x12
+  subs x13, x6, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  str  x13, [x0, #16]
+  ldr  x15, [x3, #40]
+  and  x15, x15, x12
+  subs x13, x7, x11
+  sbc  x14, xzr, xzr
+  subs x13, x13, x15
+  sbc  x10, xzr, xzr
+  add  x11, x14, x10
+  neg  x11, x11
+  str  x13, [x0, #24]
+      {$ELSE}
+        {$IFDEF CRYPTOLIB_FP_MONTMUL_REG4}
   mov  x4, xzr
   mov  x5, xzr
   mov  x6, xzr
@@ -600,8 +873,8 @@
   add  x11, x14, x10
   neg  x11, x11
   str  x13, [x0, #24]
-      {$ELSE}
-        {$IFDEF CRYPTOLIB_FP_MONTMUL_REG5}
+        {$ELSE}
+          {$IFDEF CRYPTOLIB_FP_MONTMUL_REG5}
   mov  x4, xzr
   mov  x5, xzr
   mov  x6, xzr
@@ -1104,8 +1377,8 @@
   add  x12, x15, x11
   neg  x12, x12
   str  x14, [x0, #32]
-        {$ELSE}
-          {$IFDEF CRYPTOLIB_FP_MONTMUL_REG6}
+          {$ELSE}
+            {$IFDEF CRYPTOLIB_FP_MONTMUL_REG6}
   mov  x4, xzr
   mov  x5, xzr
   mov  x6, xzr
@@ -1797,8 +2070,8 @@
   add  x13, x16, x12
   neg  x13, x13
   str  x15, [x0, #40]
-          {$ELSE}
-            {$IFDEF CRYPTOLIB_FP_MONTMUL_REG7}
+            {$ELSE}
+              {$IFDEF CRYPTOLIB_FP_MONTMUL_REG7}
   sub  sp, sp, #16
   str  x19, [sp, #0]
   mov  x4, xzr
@@ -2713,8 +2986,8 @@
   str  x16, [x0, #48]
   ldr  x19, [sp, #0]
   add  sp, sp, #16
-            {$ELSE}
-              {$IFDEF CRYPTOLIB_FP_MONTMUL_REG8}
+              {$ELSE}
+                {$IFDEF CRYPTOLIB_FP_MONTMUL_REG8}
   sub  sp, sp, #16
   stp  x19, x20, [sp, #0]
   mov  x4, xzr
@@ -3878,8 +4151,8 @@
   str  x17, [x0, #56]
   ldp  x19, x20, [sp, #0]
   add  sp, sp, #16
-              {$ELSE}
-                {$IFDEF CRYPTOLIB_FP_MONTMUL_REG9}
+                {$ELSE}
+                  {$IFDEF CRYPTOLIB_FP_MONTMUL_REG9}
   sub  sp, sp, #32
   stp  x19, x20, [sp, #0]
   str  x21, [sp, #16]
@@ -5324,8 +5597,8 @@
   ldp  x19, x20, [sp, #0]
   ldr  x21, [sp, #16]
   add  sp, sp, #32
-                {$ELSE}
-                  {$IFDEF CRYPTOLIB_FP_MODADD}
+                  {$ELSE}
+                    {$IFDEF CRYPTOLIB_FP_MODADD}
   // x0=PR, x1=PA, x2=PB, x3=PCtx ([n0'(unused)@0, N@8, p@16]); inputs < p.
   // R := (A + B) mod p, constant-time. Width-general, single carry chain.
   ldr   x4, [x3, #8]               // N
@@ -5380,8 +5653,8 @@
   add   x6, x6, #1
   cmp   x6, x4
   b.lo  .LFpModAddBack
-                  {$ELSE}
-                    {$IFDEF CRYPTOLIB_FP_MODSUB}
+                    {$ELSE}
+                      {$IFDEF CRYPTOLIB_FP_MODSUB}
   // x0=PR, x1=PA, x2=PB, x3=PCtx ([n0'(unused)@0, N@8, p@16]); inputs < p.
   // R := (A - B) mod p, constant-time. Width-general, single borrow chain.
   ldr   x4, [x3, #8]               // N
@@ -5417,8 +5690,9 @@
   add   x6, x6, #1
   cmp   x6, x4
   b.lo  .LFpModSubBack
-                    {$ELSE}
-                    {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_REG4, CRYPTOLIB_FP_MONTMUL_REG5, CRYPTOLIB_FP_MONTMUL_REG6, CRYPTOLIB_FP_MONTMUL_REG7, CRYPTOLIB_FP_MONTMUL_REG8, CRYPTOLIB_FP_MONTMUL_REG9, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
+                      {$ELSE}
+                      {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_P256, CRYPTOLIB_FP_MONTMUL_REG4, CRYPTOLIB_FP_MONTMUL_REG5, CRYPTOLIB_FP_MONTMUL_REG6, CRYPTOLIB_FP_MONTMUL_REG7, CRYPTOLIB_FP_MONTMUL_REG8, CRYPTOLIB_FP_MONTMUL_REG9, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
+                      {$ENDIF}
                     {$ENDIF}
                   {$ENDIF}
                 {$ENDIF}

@@ -46,6 +46,10 @@ type
     /// [n0', N, p[0..N-1]]; PR is the N+2-limb scratch and receives the reduced
     /// N-limb result. Returns False on an arch without the kernel.</summary>
     class function MontMul(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>P-256 special-prime Montgomery multiply PR := PA*PB*R^-1 mod p, with the
+    /// folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns False
+    /// when not aarch64 or no SIMD (caller falls back to generic CIOS).</summary>
+    class function MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -124,6 +128,14 @@ procedure FpKernelMontMulReg9Asm(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG9}
 end;
 
+// P-256 special-prime N=4 fast path: mul/umulh product + folded shift/add reduction.
+procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_P256}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_P256}
+end;
+
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general.
 procedure FpKernelModAddAsm(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODADD}
@@ -181,6 +193,16 @@ begin
   else
     FpKernelMontMulAsm(PR, PA, PB, PCtx);
   end;
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelMontMulP256Asm(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   Result := False;

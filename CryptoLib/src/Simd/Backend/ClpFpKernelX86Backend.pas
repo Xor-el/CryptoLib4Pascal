@@ -45,6 +45,10 @@ type
     /// [n0', N, p[0..N-1]]; PR is the N+2-limb scratch and receives the reduced
     /// N-limb result. Returns False on an arch without the kernel yet (i386).</summary>
     class function MontMul(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>P-256 special-prime Montgomery multiply PR := PA*PB*R^-1 mod p, with
+    /// the folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns
+    /// False when BMI2+ADX absent or not x86-64 (caller falls back to generic CIOS).</summary>
+    class function MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -150,6 +154,16 @@ procedure FpKernelMontMulMulx8Asm(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_MULX8}
 end;
 
+// P-256 special-prime N=4 fast path: MULX product + folded shift/add reduction
+// (gated on BMI2+ADX below). x86-64 only; i386 falls back to generic CIOS (its
+// memory-resident kernel is not in-place safe for the aliased Mul/Sqr calls).
+procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_P256}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_P256}
+end;
+
 {$ENDIF}
 
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general:
@@ -236,6 +250,21 @@ begin
   {$ELSE}
   Result := False;
   {$ENDIF}
+{$ENDIF}
+end;
+
+class function TFpKernelX86Backend.MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  begin
+    FpKernelMontMulP256Asm(PR, PA, PB, PCtx);
+    Result := True;
+  end
+  else
+    Result := False;
+{$ELSE}
+  Result := False; // i386: generic CIOS (kernel not in-place safe)
 {$ENDIF}
 end;
 

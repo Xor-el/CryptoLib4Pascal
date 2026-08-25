@@ -39,6 +39,8 @@ type
   /// existing 32-bit path.
   /// </summary>
   TFpKernelSimd = class sealed
+  strict private
+    class var FForceP256Disabled: Boolean;
   public
     /// <summary>AZz[0..2*ALimbs32-1] := AX * AY (both ALimbs32 uint32 limbs).
     /// Returns False if unsupported (caller falls back).</summary>
@@ -54,10 +56,18 @@ type
     /// the reduced N-limb result. Returns False when unsupported (caller uses its
     /// Pascal Montgomery fallback).</summary>
     class function TryMontMul(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>P-256 special-prime Montgomery multiply APR := APA*APB*R^-1 mod p (folded
+    /// shift/add reduction). APCtx = the P-256 [n0'=1, N=4, p0..p3]. False when the gate
+    /// is disabled, force-scalar, no BMI2+ADX, or non-x86-64 -> caller uses generic CIOS,
+    /// bit-for-bit.</summary>
+    class function TryMontMulP256(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
     /// <summary>Constant-time modular add/sub APR := (APA +/- APB) mod p. APCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False when unsupported.</summary>
     class function TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
     class function TryModSub(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Test gate: force the P-256 special kernel off so the generic CIOS runs
+    /// (differential dual-path validation). Default False.</summary>
+    class property ForceP256Disabled: Boolean read FForceP256Disabled write FForceP256Disabled;
   end;
 
 implementation
@@ -133,6 +143,25 @@ begin
 {$ELSE}
   Result := False;
 {$IFEND}
+end;
+
+class function TFpKernelSimd.TryMontMulP256(APR, APA, APB, APCtx: PUInt64): Boolean;
+begin
+  if FForceP256Disabled then
+    Exit(False);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TFpKernelX86Backend.IsSupported then
+    Exit(False); // force-scalar / no SIMD -> generic CIOS
+  Result := TFpKernelX86Backend.MontMulP256(APR, APA, APB, APCtx); // False if no BMI2+ADX
+{$ELSE}
+  {$IFDEF CRYPTOLIB_AARCH64_ASM}
+  if not TFpKernelArmBackend.IsSupported then
+    Exit(False); // force-scalar / no SIMD -> generic CIOS
+  Result := TFpKernelArmBackend.MontMulP256(APR, APA, APB, APCtx);
+  {$ELSE}
+  Result := False;
+  {$ENDIF}
+{$ENDIF}
 end;
 
 class function TFpKernelSimd.TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean;
