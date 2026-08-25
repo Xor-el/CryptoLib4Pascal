@@ -169,6 +169,7 @@ function TPkixCertPathBuilder.BuildPath(const ATbvCert: IX509Certificate;
   : IPkixCertPathBuilderResult;
 var
   LCertPath: IPkixCertPath;
+  LValidator: IPkixCertPathValidator;
   LValidatorResult: IPkixCertPathValidatorResult;
   LIssuers: TCryptoLibGenericArray<IX509Certificate>;
   LIdx: Int32;
@@ -196,69 +197,72 @@ begin
   ATbvPath.Add(ATbvCert);
 
   try
-    if TPkixCertPathValidatorUtilities.IsIssuerTrustAnchor(ATbvCert, AParams.GetTrustAnchors()) then
-    begin
+    try
+      if TPkixCertPathValidatorUtilities.IsIssuerTrustAnchor(ATbvCert, AParams.GetTrustAnchors()) then
+      begin
+        try
+          LCertPath := TPkixCertPath.Create(ToCertArray(ATbvPath)) as IPkixCertPath;
+        except
+          on E: Exception do
+            raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathConstructionFailed,
+              [E.Message]);
+        end;
+
+        try
+          LValidator := TPkixCertPathValidator.Create(FIsForCrlCheck) as IPkixCertPathValidator;
+          LValidatorResult := LValidator.Validate(LCertPath, AParams);
+        except
+          on E: Exception do
+            raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathValidationFailed,
+              [E.Message]);
+        end;
+
+        // the path is kept: this chain is the answer
+        Result := TPkixCertPathBuilderResult.Create(LCertPath, LValidatorResult.TrustAnchor,
+          LValidatorResult.PolicyTree, LValidatorResult.SubjectPublicKey) as IPkixCertPathBuilderResult;
+        Exit;
+      end;
+
+      // add additional X.509 stores from locations in the certificate
       try
-        LCertPath := TPkixCertPath.Create(ToCertArray(ATbvPath)) as IPkixCertPath;
+        TPkixCertPathValidatorUtilities.AddAdditionalStoresFromAltNames(ATbvCert, AParams);
       except
         on E: Exception do
-          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathConstructionFailed,
-            [E.Message]);
+          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SAdditionalStoresFailed, [E.Message]);
       end;
 
       try
-        LValidatorResult := (TPkixCertPathValidator.Create(FIsForCrlCheck) as IPkixCertPathValidator)
-          .Validate(LCertPath, AParams);
+        LIssuers := TPkixCertPathValidatorUtilities.FindIssuerCerts(ATbvCert, AParams);
       except
         on E: Exception do
-          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathValidationFailed,
-            [E.Message]);
+          raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SIssuerCertSearchFailed, [E.Message]);
       end;
 
-      // the path is kept: this chain is the answer
-      Result := TPkixCertPathBuilderResult.Create(LCertPath, LValidatorResult.TrustAnchor,
-        LValidatorResult.PolicyTree, LValidatorResult.SubjectPublicKey) as IPkixCertPathBuilderResult;
-      Exit;
-    end;
+      if System.Length(LIssuers) < 1 then
+        raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoIssuerCertFound);
 
-    // add additional X.509 stores from locations in the certificate
-    try
-      TPkixCertPathValidatorUtilities.AddAdditionalStoresFromAltNames(ATbvCert, AParams);
+      for LIdx := 0 to System.High(LIssuers) do
+      begin
+        Result := BuildPath(LIssuers[LIdx], AParams, ATbvPath);
+        if Result <> nil then
+          Break;
+      end;
     except
+      on E: ENodeBudgetExceededCryptoLibException do
+        // the whole build is over-budget; let it unwind to Build rather than trying more chains
+        raise;
       on E: Exception do
-        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SAdditionalStoresFailed, [E.Message]);
+      begin
+        // remembered for the caller; other candidate chains may still succeed
+        FCertPathException := E.Message;
+        Result := nil;
+      end;
     end;
-
-    try
-      LIssuers := TPkixCertPathValidatorUtilities.FindIssuerCerts(ATbvCert, AParams);
-    except
-      on E: Exception do
-        raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SIssuerCertSearchFailed, [E.Message]);
-    end;
-
-    if System.Length(LIssuers) < 1 then
-      raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoIssuerCertFound);
-
-    for LIdx := 0 to System.High(LIssuers) do
-    begin
-      Result := BuildPath(LIssuers[LIdx], AParams, ATbvPath);
-      if Result <> nil then
-        Break;
-    end;
-  except
-    on E: ENodeBudgetExceededCryptoLibException do
-      // the whole build is over-budget; let it unwind to Build rather than trying more chains
-      raise;
-    on E: Exception do
-    begin
-      // remembered for the caller; other candidate chains may still succeed
-      FCertPathException := E.Message;
-      Result := nil;
-    end;
-  end;
-
-  if Result = nil then
+  finally
+    // undo the add on every exit: the success path (the path was built from a copy of ATbvPath),
+    // a stashed failure, and an unwinding node-budget exception
     RemoveCert(ATbvPath, ATbvCert);
+  end;
 end;
 
 function TPkixCertPathBuilder.Build(const AParams: IPkixBuilderParameters): IPkixCertPathBuilderResult;

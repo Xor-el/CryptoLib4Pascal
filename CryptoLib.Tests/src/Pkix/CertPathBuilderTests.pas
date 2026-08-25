@@ -73,6 +73,7 @@ type
     procedure TestBuildTargetInStore;
     procedure TestBuildTargetViaSelector;
     procedure TestBuildWithUnsignedTrustAnchor;
+    procedure TestBuilderInstanceReuse;
     procedure TestNodeBudgetGuard;
   end;
 
@@ -256,6 +257,66 @@ begin
   CheckNotNull(LResult, 'a chain anchored at an unsigned trust anchor builds and validates');
   CheckEquals(1, System.Length(LResult.CertPath.Certificates),
     'the built path holds the single end-entity certificate below the unsigned anchor');
+end;
+
+procedure TCertPathBuilderTest.TestBuilderInstanceReuse;
+var
+  LRootKp, LEeKp, LOtherKp: IAsymmetricCipherKeyPair;
+  LRoot, LEe, LOther: IX509Certificate;
+  LSelector: IX509CertStoreSelector;
+  LTarget: ISelector<IX509Certificate>;
+  LStore: IStore<IX509Certificate>;
+  LParams: IPkixBuilderParameters;
+  LBuilder: IPkixCertPathBuilder;
+  LResult: IPkixCertPathBuilderResult;
+  LRaised: Boolean;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LEeKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LEe := TCertTestUtilities.GenerateEndEntityCert(LEeKp.Public as IAsymmetricKeyParameter,
+    LRootKp.Private as IAsymmetricKeyParameter, LRoot);
+  LOtherKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LOther := TCertTestUtilities.GenerateRootCert(LOtherKp, TX509Name.Create('CN=Unrelated CA') as IX509Name);
+
+  // one builder instance is reused across two builds
+  LBuilder := TPkixCertPathBuilder.Create() as IPkixCertPathBuilder;
+
+  // 1) the end-entity does not chain to the (unrelated) trust anchor: no path
+  LSelector := TX509CertStoreSelector.Create();
+  LSelector.Subject := LEe.SubjectDN;
+  LTarget := LSelector;
+  LStore := TCollectionStore<IX509Certificate>.Create(
+    TCryptoLibGenericArray<IX509Certificate>.Create(LEe));
+  LParams := TPkixBuilderParameters.Create(AnchorsOf(LOther), LTarget) as IPkixBuilderParameters;
+  LParams.SetTargetConstraintsCert(LTarget);
+  LParams.AddStoreCert(LStore);
+  LParams.IsRevocationEnabled := False;
+
+  LRaised := False;
+  try
+    LBuilder.Build(LParams);
+  except
+    on E: EPkixCertPathBuilderCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'the first build finds no chain to the unrelated trust anchor');
+
+  // 2) the SAME builder instance must still find a valid chain to the correct anchor
+  LSelector := TX509CertStoreSelector.Create();
+  LSelector.Subject := LEe.SubjectDN;
+  LTarget := LSelector;
+  LStore := TCollectionStore<IX509Certificate>.Create(
+    TCryptoLibGenericArray<IX509Certificate>.Create(LEe));
+  LParams := TPkixBuilderParameters.Create(AnchorsOf(LRoot), LTarget) as IPkixBuilderParameters;
+  LParams.SetTargetConstraintsCert(LTarget);
+  LParams.AddStoreCert(LStore);
+  LParams.IsRevocationEnabled := False;
+
+  LResult := LBuilder.Build(LParams);
+  CheckNotNull(LResult, 'reusing the builder after a failed build still finds a valid chain');
+  CheckEquals(1, System.Length(LResult.CertPath.Certificates),
+    'the reused builder returns the single end-entity certificate below the trust anchor');
 end;
 
 procedure TCertPathBuilderTest.TestNodeBudgetGuard;
