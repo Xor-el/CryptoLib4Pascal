@@ -1,0 +1,57 @@
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_5e9312dc1422f7::t_5afa0a1eae95d9 266-269
+  s_5e9312dc1422f7::t_1a9717e3b0708d 1514-1525
+  s_5e9312dc1422f7::t_1f1a1bedff323f 1508-1513
+  s_5e9312dc1422f7::t_0009ecc4437363 263-265
+CryptoLib/src/Math/EC/Multiplier/ClpCTFieldArith.pas
+  s_5e9312dc1422f7::t_9ce0675af635dc 291-300
+  s_5e9312dc1422f7::t_fc260b45e9813e 286-290
+  s_5e9312dc1422f7::t_e1317d622dbbd5 79-83
+  s_5e9312dc1422f7::t_43305e23af2372 84-90
+CryptoLib/src/Math/EC/Multiplier/ClpCTPoint.pas
+  s_5e9312dc1422f7::t_0a093079358bb4 263-267
+  s_5e9312dc1422f7::t_83fde06e4cb1c7 100-104
+  s_5e9312dc1422f7::t_fb2d635b97efbc 510-514
+CryptoLib/src/Simd/Facade/ClpFpKernelSimd.pas
+  s_5e9312dc1422f7::t_6f64805f0b6c24 205-213,221-232
+  s_5e9312dc1422f7::t_023d0e519c9069 214-220
+  s_5e9312dc1422f7::t_fb279190e2e1e6 71-79
+  s_5e9312dc1422f7::t_bdd319c04ff6b6 233-239
+  s_5e9312dc1422f7::t_c79b854ae97e2f 44
+  s_5e9312dc1422f7::t_038898d4f32adc 183-185
+  s_5e9312dc1422f7::t_d2400047cbe068 186-194,202-204
+  s_5e9312dc1422f7::t_3859ac9f983e0b 195-201
+  s_5e9312dc1422f7::t_54c1ef4f37a56f 65-70
+  s_5e9312dc1422f7::t_4bbcbbbd534309 87-89
+CryptoLib/src/Simd/Backend/ClpFpKernelArmBackend.pas
+  s_5e9312dc1422f7::t_edb4bc599df33e 152-181
+  s_5e9312dc1422f7::t_6627cf7b7e31e4 53-65
+  s_5e9312dc1422f7::t_36c24b076226e1 255-284
+CryptoLib/src/Simd/Backend/ClpFpKernelX86Backend.pas
+  s_5e9312dc1422f7::t_68134cfd05bcde 52-56
+  s_5e9312dc1422f7::t_781a7bc1c53272 181-191
+  s_5e9312dc1422f7::t_f36f57a97628e0 317-331
+  s_5e9312dc1422f7::t_6ea5de4d4a7426 57-65
+  s_5e9312dc1422f7::t_ee91239ffdf2a7 332-361
+  s_5e9312dc1422f7::t_9a700256e673d5 192-212
+CryptoLib/src/Include/Simd/FpKernel/FpKernelP256Point_aarch64.inc
+  s_5e9312dc1422f7::t_c64b96b577ad49 1-14561
+CryptoLib/src/Include/Simd/FpKernel/FpKernelP256Point_x86_64.inc
+  s_5e9312dc1422f7::t_384e561907fa7a 1-7064
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "520801cf1a33af349223d101b016d5409551e564",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
