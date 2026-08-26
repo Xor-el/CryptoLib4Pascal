@@ -283,28 +283,23 @@ end;
 
 function TBaseStream.ReadByte: Int32;
 var
-  LBuffer: TCryptoLibByteArray;
+  LByte: Byte;
   LBytesRead: Int32;
 begin
-  System.SetLength(LBuffer, 1);
-  LBytesRead := Read(LBuffer[0], 1);
+  LBytesRead := Read(LByte, 1);
   if LBytesRead = 0 then
   begin
     Result := -1;
   end
   else
   begin
-    Result := Int32(LBuffer[0]);
+    Result := Int32(LByte);
   end;
 end;
 
 procedure TBaseStream.WriteByte(AValue: Byte);
-var
-  LOneByteArray: TCryptoLibByteArray;
 begin
-  System.SetLength(LOneByteArray, 1);
-  LOneByteArray[0] := AValue;
-  Write(LOneByteArray[0], 1);
+  Write(AValue, 1);
 end;
 
 { TFixedBufferStream }
