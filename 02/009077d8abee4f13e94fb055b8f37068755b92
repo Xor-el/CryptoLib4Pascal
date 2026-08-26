@@ -1,0 +1,26 @@
+CryptoLib/src/IO/ClpStreamUtilities.pas
+  s_5e9312dc1422f7::t_62ebf068baf842 345,351,354
+  s_5e9312dc1422f7::t_6e38186d670c58 363
+CryptoLib/src/IO/ClpStreams.pas
+  s_5e9312dc1422f7::t_169abd03545831 286,289,296
+  s_5e9312dc1422f7::t_46880815a7c084 302
+CryptoLib/src/X509/ClpX509CertificateParser.pas
+  s_5e9312dc1422f7::t_6b281a4b81e473 188,190
+  s_5e9312dc1422f7::t_79fce25c6e5271 175,177
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.24",
+  "base_commit_sha": "02009077d8abee4f13e94fb055b8f37068755b92",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
