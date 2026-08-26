@@ -260,6 +260,13 @@ type
     /// kernel when supported (writing AZ in place), else the generic CIOS (inherited).</summary>
     class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
     class procedure Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
+    /// <summary>Gated fused RCB PointDouble (a=-3): the whole-point kernel when
+    /// supported, else False so the generic per-op formula runs (bit-for-bit).</summary>
+    class function TryFusedPointDouble(APR, APA: PUInt64): Boolean; override;
+    /// <summary>Gated fused RCB PointAdd / PointAddMixed (a=-3): the whole-point
+    /// kernel when supported, else False so the generic per-op formula runs.</summary>
+    class function TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean; override;
+    class function TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean; override;
   end;
 
 type
@@ -1496,6 +1503,24 @@ begin
     PUInt64(@AX.W[0]), PUInt64(@FParams.CtxData[0])) then
     Exit;
   inherited Sqr(AX, AZ, ATT);
+end;
+
+class function TSecP256R1FieldArith.TryFusedPointDouble(APR, APA: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryP256PointDouble(APR, APA,
+    PUInt64(@FParams.CtxData[0]));
+end;
+
+class function TSecP256R1FieldArith.TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryP256PointAdd(APR, APA, APQ,
+    PUInt64(@FParams.CtxData[0]));
+end;
+
+class function TSecP256R1FieldArith.TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryP256PointAddMixed(APR, APA, APQ,
+    PUInt64(@FParams.CtxData[0]));
 end;
 
 { TSecP256R1OrderArith }
