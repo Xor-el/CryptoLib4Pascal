@@ -50,6 +50,19 @@ type
     /// folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns False
     /// when not aarch64 or no SIMD (caller falls back to generic CIOS).</summary>
     class function MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 RCB PointDouble PR := 2*PA over homogeneous coords
+    /// (PR/PA are TFePoint bases; PCtx = [n0', N, p0..p3] with Fb at a fixed
+    /// offset). Returns False when not aarch64 or no SIMD (caller falls back to
+    /// the generic per-op RCB doubling).</summary>
+    class function PointDoubleP256(PR, PA, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 RCB PointAdd PR := PA + PQ over homogeneous coords
+    /// (PR/PA/PQ are TFePoint bases; PCtx = [n0', N, p0..p3] with Fb at a fixed
+    /// offset). Returns False when not aarch64 or no SIMD (caller falls back to
+    /// the generic per-op RCB addition).</summary>
+    class function PointAddP256(PR, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 RCB PointAddMixed PR := PA + PQ where PQ is a TFeAffine
+    /// base (implicit Z2=1, from PCtx.MontOne). False when not aarch64 or no SIMD.</summary>
+    class function PointAddMixedP256(PR, PA, PQ, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -136,6 +149,36 @@ procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_P256}
 end;
 
+// Fused P-256 RCB PointDouble (a=-3): one straight-line, stack-framed doubling
+// over a homogeneous point, inlining the special-prime field multiply. PR/PA are
+// TFePoint bases, PCtx = [n0', N, p0..p3] (with Fb at a fixed offset). aarch64 only.
+procedure FpKernelP256PointDoubleAsm(PR, PA, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_POINTDOUBLE}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_POINTDOUBLE}
+end;
+
+// Fused P-256 RCB PointAdd (a=-3): one straight-line, stack-framed complete
+// addition over two homogeneous points, inlining the special-prime field
+// multiply. PR/PA/PQ are TFePoint bases, PCtx = [n0', N, p0..p3] (with Fb at a
+// fixed offset). aarch64 only.
+procedure FpKernelP256PointAddAsm(PR, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_POINTADD}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_POINTADD}
+end;
+
+// Fused P-256 RCB PointAddMixed (a=-3): the complete addition with PQ an affine
+// (TFeAffine) point; the unit Z2 is supplied from PCtx.MontOne. aarch64 only.
+procedure FpKernelP256PointAddMixedAsm(PR, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_POINTADDMIXED}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_POINTADDMIXED}
+end;
+
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general.
 procedure FpKernelModAddAsm(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODADD}
@@ -203,6 +246,36 @@ class function TFpKernelArmBackend.MontMulP256(PR, PA, PB, PCtx: PUInt64): Boole
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
   FpKernelMontMulP256Asm(PR, PA, PB, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.PointDoubleP256(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelP256PointDoubleAsm(PR, PA, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.PointAddP256(PR, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelP256PointAddAsm(PR, PA, PQ, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.PointAddMixedP256(PR, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelP256PointAddMixedAsm(PR, PA, PQ, PCtx);
   Result := True;
 {$ELSE}
   Result := False;

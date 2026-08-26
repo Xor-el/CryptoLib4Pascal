@@ -76,6 +76,18 @@ type
     /// <summary>Form of the coefficient a. Default <c>General</c>; a=-3 curves
     /// override to <c>MinusThree</c> to take the faster complete formulas.</summary>
     class function ACoeff: TCTACoeff; virtual;
+    /// <summary>Optional fused whole-point doubling: APR := 2*APA over homogeneous
+    /// coords (APR/APA are <c>TFePoint</c> bases). Default returns False so the
+    /// generic per-op RCB formula runs; a curve with a gated fused kernel overrides
+    /// it. Keeps the P-256 kernel reference out of the generic point unit.</summary>
+    class function TryFusedPointDouble(APR, APA: PUInt64): Boolean; virtual;
+    /// <summary>Optional fused whole-point complete addition: APR := APA + APQ over
+    /// homogeneous coords (all three are <c>TFePoint</c> bases). Default False so the
+    /// generic per-op RCB formula runs; a curve with a gated fused kernel overrides it.</summary>
+    class function TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean; virtual;
+    /// <summary>Optional fused mixed complete addition: APR := APA + APQ where APQ is a
+    /// <c>TFeAffine</c> base (implicit Z2=1). Default False -> generic formula.</summary>
+    class function TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean; virtual;
 
     // ---- shared ops (one implementation for every curve) ----
     /// <summary>AZ := MontMul(AX, AY) = AX*AY*R^-1 mod p. ATT is caller-owned scratch.</summary>
@@ -269,6 +281,21 @@ end;
 class function TCTFieldArithBase.ACoeff: TCTACoeff;
 begin
   Result := TCTACoeff.General;
+end;
+
+class function TCTFieldArithBase.TryFusedPointDouble(APR, APA: PUInt64): Boolean;
+begin
+  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
+end;
+
+class function TCTFieldArithBase.TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean;
+begin
+  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
+end;
+
+class function TCTFieldArithBase.TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean;
+begin
+  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
 end;
 
 class procedure TCTFieldArithBase.SetOne(var AZ: TFe);

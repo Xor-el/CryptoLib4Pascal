@@ -97,6 +97,11 @@ implementation
 
 class procedure TCTPoint<TOps>.PointAdd(const AP, AQ: TFePoint; var AR: TFePoint);
 begin
+  // Gated fused whole-point addition (nil/False for every curve without a kernel;
+  // it copies both inputs up front, so AR aliasing AP or AQ is safe). Off => the
+  // per-op RCB formula below runs, bit-for-bit.
+  if TOps.TryFusedPointAdd(PUInt64(@AR), PUInt64(@AP), PUInt64(@AQ)) then
+    Exit;
   if TOps.ACoeff = TCTACoeff.Zero then
     PointAddZero(AP, AQ, AR)
   else if TOps.ACoeff = TCTACoeff.MinusThree then
@@ -255,6 +260,11 @@ end;
 
 class procedure TCTPoint<TOps>.PointDouble(const AP: TFePoint; var AR: TFePoint);
 begin
+  // Gated fused whole-point doubling (nil/False for every curve without a kernel;
+  // it copies its inputs up front, so AR aliasing AP is safe). Off => the per-op
+  // RCB formula below runs, bit-for-bit.
+  if TOps.TryFusedPointDouble(PUInt64(@AR), PUInt64(@AP)) then
+    Exit;
   if TOps.ACoeff = TCTACoeff.Zero then
     PointDoubleZero(AP, AR)
   else if TOps.ACoeff = TCTACoeff.MinusThree then
@@ -497,6 +507,11 @@ class procedure TCTPoint<TOps>.PointAddMixed(const AP: TFePoint;
 var
   LQ: TFePoint;
 begin
+  // Gated fused mixed addition (Z2=1). The kernel copies both inputs up front and
+  // supplies the unit Z itself, so AR aliasing AP is safe. Off => build a unit-Z
+  // projective Q and run the complete addition, bit-for-bit.
+  if TOps.TryFusedPointAddMixed(PUInt64(@AR), PUInt64(@AP), PUInt64(@AQ)) then
+    Exit;
   LQ.X := AQ.X;
   LQ.Y := AQ.Y;
   TOps.SetOne(LQ.Z);
