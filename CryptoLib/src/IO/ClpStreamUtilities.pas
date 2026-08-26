@@ -342,33 +342,25 @@ end;
 
 function TStreamHelper.ReadByte(): Int32;
 var
-  LBuffer: TCryptoLibByteArray;
+  LByte: Byte;
 begin
-  LBuffer := nil;
   if Self is TBaseStream then
     Result := (Self as TBaseStream).ReadByte
   else
   begin
-    System.SetLength(LBuffer, 1);
-    if Self.Read(LBuffer[0], 1) = 0 then
+    if Self.Read(LByte, 1) = 0 then
       Result := -1
     else
-      Result := Int32(LBuffer[0]);
+      Result := Int32(LByte);
   end;
 end;
 
 procedure TStreamHelper.WriteByte(AValue: Byte);
-var
-  LOneByteArray: TCryptoLibByteArray;
 begin
   if Self is TBaseStream then
    (Self as TBaseStream).WriteByte(AValue)
   else
-  begin
-    System.SetLength(LOneByteArray, 1);
-    LOneByteArray[0] := AValue;
-    Self.Write(LOneByteArray[0], 1);
-  end;
+    Self.Write(AValue, 1);
 end;
 
 procedure TStreamHelper.Flush;

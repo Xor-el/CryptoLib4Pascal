@@ -172,13 +172,10 @@ end;
 
 function TX509CertificateParser.ReadCertificate(const AInput: TCryptoLibByteArray): IX509Certificate;
 var
-  LInStream: TMemoryStream;
+  LInStream: TFixedBufferStream;
 begin
-  LInStream := TMemoryStream.Create();
+  LInStream := TFixedBufferStream.Create(AInput, 0, System.Length(AInput), False);
   try
-    if System.Length(AInput) > 0 then
-      LInStream.Write(AInput[0], System.Length(AInput));
-    LInStream.Position := 0;
     Result := ReadCertificate(LInStream);
   finally
     LInStream.Free;
@@ -188,13 +185,10 @@ end;
 
 function TX509CertificateParser.ReadCertificates(const AInput: TCryptoLibByteArray): TCryptoLibGenericArray<IX509Certificate>;
 var
-  LInStream: TMemoryStream;
+  LInStream: TFixedBufferStream;
 begin
-  LInStream := TMemoryStream.Create();
+  LInStream := TFixedBufferStream.Create(AInput, 0, System.Length(AInput), False);
   try
-    if System.Length(AInput) > 0 then
-      LInStream.Write(AInput[0], System.Length(AInput));
-    LInStream.Position := 0;
     Result := ReadCertificates(LInStream);
   finally
     LInStream.Free;
