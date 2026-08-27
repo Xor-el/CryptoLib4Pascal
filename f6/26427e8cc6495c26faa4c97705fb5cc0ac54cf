@@ -1,0 +1,29 @@
+CryptoLib/src/Math/EC/Multiplier/ClpFpCTMultiplier.pas
+  s_5e9312dc1422f7::t_9cd3f6d8f036db 88-90
+  s_5e9312dc1422f7::t_08b7565a9f7e20 241-245
+CryptoLib/src/Math/EC/Multiplier/ClpCTJacPoint.pas
+  s_5e9312dc1422f7::t_3cecea3c19fc26 386
+  s_5e9312dc1422f7::t_c11df969b7752e 427
+  s_5e9312dc1422f7::t_e5bb2e3685b91c 404-410
+  s_5e9312dc1422f7::t_733325c2f6b745 451-452
+  s_5e9312dc1422f7::t_b26c4e0f7e9a2a 411-412
+  s_5e9312dc1422f7::t_61b5a3fadaf051 453-454
+CryptoLib.Tests/src/Crypto/ECDHPrimeConstantTimeTests.pas
+  s_5e9312dc1422f7::t_51e7a394fe7748 370-373
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "f626427e8cc6495c26faa4c97705fb5cc0ac54cf",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
