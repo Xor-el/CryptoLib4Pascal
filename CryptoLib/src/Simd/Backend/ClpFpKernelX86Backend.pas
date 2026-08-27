@@ -49,20 +49,15 @@ type
     /// the folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns
     /// False when BMI2+ADX absent or not x86-64 (caller falls back to generic CIOS).</summary>
     class function MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean; static;
-    /// <summary>Fused P-256 RCB PointDouble PR := 2*PA over homogeneous coords
-    /// (PR/PA are TFePoint bases; PCtx = [n0', N, p0..p3] with Fb at a fixed
-    /// offset). Returns False when BMI2+ADX absent or not x86-64 (caller falls
-    /// back to the generic per-op RCB doubling).</summary>
-    class function PointDoubleP256(PR, PA, PCtx: PUInt64): Boolean; static;
-    /// <summary>Fused P-256 RCB PointAdd PR := PA + PQ over homogeneous coords
-    /// (PR/PA/PQ are TFePoint bases; PCtx = [n0', N, p0..p3] with Fb at a fixed
-    /// offset). Returns False when BMI2+ADX absent or not x86-64 (caller falls
-    /// back to the generic per-op RCB addition).</summary>
-    class function PointAddP256(PR, PA, PQ, PCtx: PUInt64): Boolean; static;
-    /// <summary>Fused P-256 RCB PointAddMixed PR := PA + PQ where PQ is a TFeAffine
-    /// base (implicit Z2=1, from PCtx.MontOne). False when BMI2+ADX absent or not
-    /// x86-64.</summary>
-    class function PointAddMixedP256(PR, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 incomplete-Jacobian doubling PR := 2*PA (Jacobian). False
+    /// when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointDoubleP256(PR, PA, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 incomplete-Jacobian addition; PScratch = TJacAddScratch
+    /// base. False when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointAddP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused P-256 incomplete-Jacobian mixed addition (PQ a TFeAffine base).
+    /// False when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -178,36 +173,32 @@ procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_P256}
 end;
 
-// Fused P-256 RCB PointDouble (a=-3): one straight-line, stack-framed doubling
-// over a homogeneous point, inlining the special-prime field multiply. PR/PA are
-// TFePoint bases, PCtx = [n0', N, p0..p3] (with Fb at a fixed offset). Gated on
+// Fused P-256 incomplete-Jacobian doubling (a=-3): straight-line, stack-framed,
+// inlining the special-prime field multiply. PR/PA are TFePoint bases. Gated on
 // BMI2+ADX below; x86-64 only.
-procedure FpKernelP256PointDoubleAsm(PR, PA, PCtx: PUInt64);
-{$DEFINE CRYPTOLIB_FP_P256_POINTDOUBLE}
+procedure FpKernelP256JacPointDoubleAsm(PR, PA, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_JACPOINTDOUBLE}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
-{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_x86_64.inc}
-{$UNDEF CRYPTOLIB_FP_P256_POINTDOUBLE}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_JACPOINTDOUBLE}
 end;
 
-// Fused P-256 RCB PointAdd (a=-3): one straight-line, stack-framed complete
-// addition over two homogeneous points, inlining the special-prime field
-// multiply. PR/PA/PQ are TFePoint bases, PCtx = [n0', N, p0..p3] (with Fb at a
-// fixed offset). Gated on BMI2+ADX below; x86-64 only.
-procedure FpKernelP256PointAddAsm(PR, PA, PQ, PCtx: PUInt64);
-{$DEFINE CRYPTOLIB_FP_P256_POINTADD}
+// Fused P-256 incomplete-Jacobian addition (add-2007-bl): masked-infinity
+// completion inside; predicate operands H/RS exposed for the caller's P=Q
+// detect-and-double. PScratch = TJacAddScratch, PA/PQ = TFePoint bases.
+procedure FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_JACPOINTADD}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_x86_64.inc}
-{$UNDEF CRYPTOLIB_FP_P256_POINTADD}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_JACPOINTADD}
 end;
 
-// Fused P-256 RCB PointAddMixed (a=-3): the complete addition with PQ an affine
-// (TFeAffine) point; the unit Z2 is supplied from PCtx.MontOne. Gated on BMI2+ADX
-// below; x86-64 only.
-procedure FpKernelP256PointAddMixedAsm(PR, PA, PQ, PCtx: PUInt64);
-{$DEFINE CRYPTOLIB_FP_P256_POINTADDMIXED}
+// Fused P-256 incomplete-Jacobian mixed addition: PQ affine (Z2=1 from MontOne).
+procedure FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
-{$I ..\..\Include\Simd\FpKernel\FpKernelP256Point_x86_64.inc}
-{$UNDEF CRYPTOLIB_FP_P256_POINTADDMIXED}
+{$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 end;
 
 {$ENDIF}
@@ -314,48 +305,48 @@ begin
 {$ENDIF}
 end;
 
-class function TFpKernelX86Backend.PointDoubleP256(PR, PA, PCtx: PUInt64): Boolean;
+class function TFpKernelX86Backend.JacPointDoubleP256(PR, PA, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256PointDoubleAsm(PR, PA, PCtx);
+    FpKernelP256JacPointDoubleAsm(PR, PA, PCtx);
     Result := True;
   end
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op RCB doubling
+  Result := False; // i386: generic per-op Jacobian doubling
 {$ENDIF}
 end;
 
-class function TFpKernelX86Backend.PointAddP256(PR, PA, PQ, PCtx: PUInt64): Boolean;
+class function TFpKernelX86Backend.JacPointAddP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256PointAddAsm(PR, PA, PQ, PCtx);
+    FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx);
     Result := True;
   end
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op RCB addition
+  Result := False; // i386: generic per-op Jacobian addition
 {$ENDIF}
 end;
 
-class function TFpKernelX86Backend.PointAddMixedP256(PR, PA, PQ, PCtx: PUInt64): Boolean;
+class function TFpKernelX86Backend.JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256PointAddMixedAsm(PR, PA, PQ, PCtx);
+    FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx);
     Result := True;
   end
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op RCB addition
+  Result := False; // i386: generic per-op Jacobian addition
 {$ENDIF}
 end;
 

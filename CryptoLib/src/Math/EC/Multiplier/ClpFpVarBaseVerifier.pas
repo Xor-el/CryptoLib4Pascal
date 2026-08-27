@@ -30,7 +30,7 @@ uses
   ClpIECVarBaseVerifier,
   ClpCTFieldValue,
   ClpCTFieldArith,
-  ClpCTPoint,
+  ClpCTJacPoint,
   ClpCryptoLibTypes;
 
 type
@@ -40,11 +40,12 @@ type
 
   /// <summary>
   /// Variable-time double-scalar multiply AU1*AP + AU2*AQ re-hosted onto the fast
-  /// value-type Montgomery field. Interleaved width-w wNAF over the RCB2016 complete
-  /// (exception-free) group law from <c>TCTPoint&lt;TOps&gt;</c>: completeness makes
-  /// the identity, P=Q and P=-Q cases (including the adversarial u1=0 / u2=0 /
-  /// u1*P=+-u2*Q joins) fall out with no special-case code. Public inputs only -
-  /// reached only from <c>SumOfTwoMultiplies</c>, never a secret-scalar path.
+  /// value-type Montgomery field. Interleaved width-w wNAF. Public inputs only -
+  /// reached only from <c>SumOfTwoMultiplies</c>, never a secret-scalar path - so it
+  /// runs the faster incomplete-Jacobian group law from <c>TCTJacPoint&lt;TOps&gt;</c>;
+  /// its masked-infinity completion plus the P=Q detect-and-double backstop discharge
+  /// the identity, P=Q and P=-Q joins (H=0 => Z3=0 gives P=-Q for free), so no vartime
+  /// exceptional-case wrapper is needed.
   /// </summary>
   TFpVarBaseVerifier<TOps: TCTFieldArithBase> = class sealed(TInterfacedObject, IECVarBaseVerifier)
   strict private
@@ -96,10 +97,10 @@ var
   LTwo: TFePoint;
   LI: Int32;
 begin
-  TCTPoint<TOps>.FromAffine(AFieldOps, AXa, AYa, ATable[0]); // 1*P (Z = MontOne)
-  TCTPoint<TOps>.PointDouble(ATable[0], LTwo);               // 2*P
+  TCTJacPoint<TOps>.FromAffine(AFieldOps, AXa, AYa, ATable[0]); // 1*P (Z = MontOne)
+  TCTJacPoint<TOps>.PointDouble(ATable[0], LTwo);               // 2*P
   for LI := 1 to TABLE_SIZE - 1 do
-    TCTPoint<TOps>.PointAdd(ATable[LI - 1], LTwo, ATable[LI]); // (2i+1)*P
+    TCTJacPoint<TOps>.PointAdd(ATable[LI - 1], LTwo, ATable[LI]); // (2i+1)*P
   FillChar(LTwo, SizeOf(LTwo), 0);
 end;
 
@@ -147,12 +148,12 @@ begin
   else
     LLen := LLenQ;
 
-  TCTPoint<TOps>.Infinity(LFieldOps, LAcc);
+  TCTJacPoint<TOps>.Infinity(LFieldOps, LAcc);
   LI := LLen;
   while LI > 0 do
   begin
     Dec(LI);
-    TCTPoint<TOps>.PointDouble(LAcc, LAcc);
+    TCTJacPoint<TOps>.PointDouble(LAcc, LAcc);
 
     if LI < LLenP then
       LWiP := Int32(ShortInt(LWnafP[LI]))
@@ -169,7 +170,7 @@ begin
       LAdd := LTableP[LIdx];
       if LWiP < 0 then
         NegateY(LAdd);
-      TCTPoint<TOps>.PointAdd(LAcc, LAdd, LAcc);
+      TCTJacPoint<TOps>.PointAdd(LAcc, LAdd, LAcc);
     end;
     if LWiQ <> 0 then
     begin
@@ -177,13 +178,13 @@ begin
       LAdd := LTableQ[LIdx];
       if LWiQ < 0 then
         NegateY(LAdd);
-      TCTPoint<TOps>.PointAdd(LAcc, LAdd, LAcc);
+      TCTJacPoint<TOps>.PointAdd(LAcc, LAdd, LAcc);
     end;
   end;
 
   LXa := TNat.Create(LFieldInts);
   LYa := TNat.Create(LFieldInts);
-  TCTPoint<TOps>.ToAffine(LFieldOps, LAcc, LXa, LYa, LIsInfinity);
+  TCTJacPoint<TOps>.ToAffine(LFieldOps, LAcc, LXa, LYa, LIsInfinity);
   if LIsInfinity then
   begin
     Result := LCurve.Infinity;

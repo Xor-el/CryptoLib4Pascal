@@ -413,7 +413,7 @@ uses
   ClpIFpFieldOps in '..\..\CryptoLib\src\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas',
   ClpCTFieldValue in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldValue.pas',
   ClpCTFieldArith in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldArith.pas',
-  ClpCTPoint in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTPoint.pas',
+  ClpCTJacPoint in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTJacPoint.pas',
   ClpCTScalarField in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTScalarField.pas',
   ClpFpCTMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas',
   ClpFpVarBaseVerifier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpVarBaseVerifier.pas',

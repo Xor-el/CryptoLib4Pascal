@@ -37,7 +37,7 @@ uses
   ClpIECCommon,
   ClpCTFieldValue,
   ClpCTFieldArith,
-  ClpCTPoint,
+  ClpCTJacPoint,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -179,7 +179,7 @@ begin
     for LJ := 0 to LEntries - 1 do
     begin
       LNorm := LAcc.Normalize();
-      TCTPoint<TOps>.FromAffineElt(FFieldOps, LNorm.AffineXCoord,
+      TCTJacPoint<TOps>.FromAffineElt(FFieldOps, LNorm.AffineXCoord,
         LNorm.AffineYCoord, LPt);
       LTable[LI * LEntries + LJ].X := LPt.X;
       LTable[LI * LEntries + LJ].Y := LPt.Y;
@@ -269,6 +269,8 @@ var
   LGatherIdx: Int32;
   LIsInfinity: Boolean;
 begin
+  // The online masked mixed-adds run on the incomplete-Jacobian engine; the Booth
+  // recode, masked gather, masked sign and masked skip-cmov are coordinate-neutral.
   LCallback := TAffineCombPreCompCallback<TOps>.Create(AP, FFieldOps, FScalarBits, WINDOW);
   if not Supports(AP.Precompute(PRECOMP_NAME, LCallback), IAffineCombPreCompInfo, LInfo) then
     raise EInvalidOperationCryptoLibException.Create('affine comb precompute failed');
@@ -294,7 +296,7 @@ begin
   TNat.Add(LScalarInts, LKn, LProd, LKPrime);
 
   try
-    TCTPoint<TOps>.Infinity(FFieldOps, LR);
+    TCTJacPoint<TOps>.Infinity(FFieldOps, LR);
     for LI := 0 to LNumWin - 1 do
     begin
       LWin := GetBoothWindow(LKPrime, LI);
@@ -306,7 +308,7 @@ begin
       // a zero digit still gathers a real entry (index 0), so the mixed-add
       // operands are never scalar-dependent zeros; the result is dropped below
       LGatherIdx := Int32((UInt32(Int32(LMag) - 1)) and (not LSkipMask));
-      TCTPoint<TOps>.SelectAffineEntry(FFieldOps, LTable, LI * LEntries, LEntries,
+      TCTPointCommon.SelectAffineEntry(FFieldOps, LTable, LI * LEntries, LEntries,
         LGatherIdx, LSel);
 
       // masked Y-negation by the Booth sign (branch-free)
@@ -316,7 +318,7 @@ begin
         LSel.Y.W[LJ] := (LSel.Y.W[LJ] and (not LNegMask)) or (LNegY.W[LJ] and LNegMask);
 
       // R' := R + affine(sel); keep R when the digit is zero (masked point-cmov)
-      TCTPoint<TOps>.PointAddMixed(LR, LSel, LRnew);
+      TCTJacPoint<TOps>.PointAddMixed(LR, LSel, LRnew);
       for LJ := 0 to LN - 1 do
       begin
         LR.X.W[LJ] := (LR.X.W[LJ] and LSkipMask) or (LRnew.X.W[LJ] and (not LSkipMask));
@@ -332,13 +334,12 @@ begin
     FillChar(LLambda, SizeOf(LLambda), 0);
     Move(LLambdaArr[0], LLambda.W[0], LN * SizeOf(UInt32));
     TOps.ToMont(LLambda, LLambda, LTT);
-    TOps.Mul(LR.X, LLambda, LR.X, LTT);
-    TOps.Mul(LR.Y, LLambda, LR.Y, LTT);
-    TOps.Mul(LR.Z, LLambda, LR.Z, LTT);
+    // Jacobian rescale keeps the affine point: (X*l^2, Y*l^3, Z*l).
+    TCTJacPoint<TOps>.ScaleRandom(LR, LLambda, LR);
 
     LXa := TNat.Create(LN);
     LYa := TNat.Create(LN);
-    TCTPoint<TOps>.ToAffine(FFieldOps, LR, LXa, LYa, LIsInfinity);
+    TCTJacPoint<TOps>.ToAffine(FFieldOps, LR, LXa, LYa, LIsInfinity);
     if LIsInfinity then
       Exit(AP.Curve.Infinity);
 

@@ -64,6 +64,18 @@ type
     X, Y: TFe;
   end;
 
+  /// <summary>
+  /// Output of a fused incomplete-Jacobian addition: the masked-infinity-completed
+  /// sum <c>R</c> plus the two predicate operands <c>H</c> (= U2-U1) and <c>RS</c>
+  /// (= S2-S1). The layout is pinned (R.X/Y/Z at +0/+72/+144, H at +216, RS at
+  /// +288) so the generated kernel can write it by fixed offset; the wrapper reads
+  /// H/RS to drive the P=Q detect-and-double.
+  /// </summary>
+  TJacAddScratch = record
+    R: TFePoint;
+    H, RS: TFe;
+  end;
+
 implementation
 
 end.

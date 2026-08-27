@@ -246,7 +246,6 @@ type
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
 implementation
@@ -1246,7 +1245,7 @@ end;
 
 class constructor TSecP256K1FieldArith.Create;
 var
-  LQ, LR, LR2, LB3: TBigInteger;
+  LQ, LR, LR2: TBigInteger;
 begin
   // Montgomery-domain constants for the value-type CT ladder (R = 2^256, b = 7).
   LQ := TNat.ToBigInteger(8, TSecP256K1Field.P);
@@ -1257,11 +1256,6 @@ begin
   LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p
   ArrToFe(TSecP256K1Field.FromBigInteger(LR), 8, FParams.MontOne);
   ArrToFe(TSecP256K1Field.FromBigInteger(LR2), 8, FParams.R2);
-  // b3 = 3b = 21 in Montgomery form: (21 * R) mod p
-  LB3 := TBigInteger.ValueOf(21).&Mod(LQ);
-  ArrToFe(TSecP256K1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 8, FParams.Fb3);
-  // b = 7 in Montgomery form (kept for parity; a=0 formulas use b3 only)
-  ArrToFe(TSecP256K1Field.FromBigInteger(TBigInteger.ValueOf(7).Multiply(LR).&Mod(LQ)), 8, FParams.Fb);
 end;
 
 class function TSecP256K1FieldArith.FieldLimbs: Int32;
@@ -1277,11 +1271,6 @@ end;
 class function TSecP256K1FieldArith.ACoeff: TCTACoeff;
 begin
   Result := TCTACoeff.Zero;
-end;
-
-class procedure TSecP256K1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  System.FillChar(AZ, SizeOf(AZ), 0); // a = 0
 end;
 
 class function TSecP256K1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;
