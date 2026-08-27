@@ -65,6 +65,7 @@ type
     procedure TestParityWithWNaf;
     procedure TestEdgeScalars;
     procedure TestBlindingTransparency;
+    procedure TestOversizedScalarReducesModCardinality;
   end;
 
 implementation
@@ -185,6 +186,37 @@ begin
     LAgain := LCT.Multiply(LX9.G, LK).Normalize();
     AssertPointsEqual('transparency', LFirst, LAgain);
   end;
+end;
+
+procedure TTestECDHBinaryConstantTime.TestOversizedScalarReducesModCardinality;
+var
+  LX9: IX9ECParameters;
+  LCurve: IECCurve;
+  LWNaf, LCT: IECMultiplier;
+  LCard: TBigInteger;
+  LCardBits: Int32;
+
+  procedure CheckK(const AK: TBigInteger; const ALabel: String);
+  begin
+    AssertPointsEqual(ALabel, LWNaf.Multiply(LX9.G, AK).Normalize(),
+      LCT.Multiply(LX9.G, AK).Normalize());
+  end;
+
+begin
+  // an out-of-range scalar reduces mod the full cardinality h*n rather than
+  // truncating, matching the variable-time WNAF result for every k (the cardinality,
+  // not the subgroup order, is the lossless modulus on this cofactor-4 curve)
+  LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
+  LX9 := GetCurve;
+  LCurve := LX9.Curve;
+  LCT := LCurve.Multiplier;
+  LCard := LCurve.Order.Multiply(LCurve.Cofactor);
+  LCardBits := LCard.BitLength;
+  CheckK(LX9.N, 'k = n');
+  CheckK(LCard, 'k = cardinality');                 // reduces to 0 -> infinity
+  CheckK(LCard.Add(TBigInteger.One), 'k = cardinality + 1');
+  CheckK(TBigInteger.One.ShiftLeft(LCardBits), 'k = 2^cardbits');
+  CheckK(TBigInteger.One.ShiftLeft(LCardBits + 1), 'k = 2^(cardbits+1)');
 end;
 
 initialization
