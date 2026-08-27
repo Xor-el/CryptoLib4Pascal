@@ -40,7 +40,6 @@ uses
 
 resourcestring
   SPointNotOnCurve = 'point is not a valid point on the curve for constant-time multiplication';
-  SScalarTooLarge = 'scalar is larger than the curve order';
   SInvalidBlindBits = 'blinding length must be 0 or 32 (ephemeral) or a multiple of 32 between 64 and 512';
 
 type
@@ -234,18 +233,25 @@ end;
 
 function TFpCTMultiplier<TOps>.MultiplyPositive(const AP: IECPoint;
   const AK: TBigInteger): IECPoint;
+var
+  LK: TBigInteger;
 begin
   if not AP.IsValid then
     raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
 
-  // a scalar exceeding the order (k > n) is the only input that can reach the
-  // incomplete-add P=Q backstop on the unblinded ladder; reject it against the order
-  // itself rather than admit the wider bit-length band. k = n stays valid (yields the
-  // point at infinity, backstop-free) so this remains a drop-in curve multiplier.
-  if AK.CompareTo(AP.Curve.Order) > 0 then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SScalarTooLarge);
+  // reduce into the prime-order group ([k]P = [k mod n]P) so the ladder always runs
+  // on k < n: this keeps the fixed-length ladder exact and the incomplete-add P=Q
+  // backstop unreachable, and gives the same "any scalar" contract as the general
+  // multiplier. The compare and the (out-of-range-only) reduction sit in the variable
+  // -time BigInteger stage that precedes the constant-time ladder; an in-range secret
+  // takes neither. A scalar that reduces to zero yields infinity, as elsewhere.
+  LK := AK;
+  if LK.CompareTo(AP.Curve.Order) >= 0 then
+    LK := LK.&Mod(AP.Curve.Order);
+  if LK.SignValue = 0 then
+    Exit(AP.Curve.Infinity);
 
-  Result := MultiplyJacobian(AP, AK);
+  Result := MultiplyJacobian(AP, LK);
 end;
 
 end.
