@@ -108,9 +108,22 @@ var
   LQ1, LQ2: TLDPoint;
   LIsInfinity: Boolean;
   LXfe, LLfe: IECFieldElement;
+  LCardinality, LKin: TBigInteger;
 begin
   if not AP.IsValid then
     raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
+
+  // reduce into the group before the fixed-length ladder: [k]P = [k mod (h*n)]P for
+  // every on-curve point, so the full cardinality h*n (not the subgroup order n) is
+  // the lossless modulus on a cofactor-h curve. The compare and the out-of-range-only
+  // reduction sit in the variable-time BigInteger stage that precedes the ladder; an
+  // in-range scalar takes neither. A scalar that reduces to zero yields infinity.
+  LCardinality := AP.Curve.Order.Multiply(AP.Curve.Cofactor);
+  LKin := AK;
+  if LKin.CompareTo(LCardinality) >= 0 then
+    LKin := LKin.&Mod(LCardinality);
+  if LKin.SignValue = 0 then
+    Exit(AP.Curve.Infinity);
 
   LN := FFieldOps.GetFieldLongs;
   LRandom := GetRandom;
@@ -134,7 +147,7 @@ begin
   FFieldOps.GetCardinality(LCard, LScalarInts);
   GenerateBlind(LRandom, LR);
   TNat.Mul(LScalarInts, LR, LCard, LProd);
-  LK := TNat.FromBigInteger(LScalarInts * 32, AK);
+  LK := TNat.FromBigInteger(LScalarInts * 32, LKin);
   LKPrime := TNat.Create(LScalarInts);
   TNat.Add(LScalarInts, LK, LProd, LKPrime);
 

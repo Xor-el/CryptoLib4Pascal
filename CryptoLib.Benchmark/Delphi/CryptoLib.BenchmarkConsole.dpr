@@ -420,6 +420,7 @@ uses
   ClpCTFieldValue in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldValue.pas',
   ClpCTFieldOps in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTFieldOps.pas',
   ClpCTLadder in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTLadder.pas',
+  ClpCTJacPoint in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTJacPoint.pas',
   ClpCTScalarField in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpCTScalarField.pas',
   ClpFpCTMultiplier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpCTMultiplier.pas',
   ClpFpVarBaseVerifier in '..\..\CryptoLib\src\Math\EC\Multiplier\ClpFpVarBaseVerifier.pas',

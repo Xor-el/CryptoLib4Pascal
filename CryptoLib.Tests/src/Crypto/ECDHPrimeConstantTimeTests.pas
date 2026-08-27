@@ -39,7 +39,7 @@ uses
   ClpMultipliers,
   ClpIFpFieldOps,
   ClpCTFieldValue,
-  ClpCTPoint,
+  ClpCTJacPoint,
   ClpFpCTMultiplier,
   ClpSecP256R1Custom,
   ClpSecP256K1Custom,
@@ -71,10 +71,6 @@ type
     function MakeFieldOps(const AName: String; const ACurve: IECCurve): IFpFieldOps;
     function RandomScalar(const AN: TBigInteger): TBigInteger;
     procedure AssertPointsEqual(const AMsg: String; const AA, AB: IECPoint);
-    function FePointFromAffine(const AFO: IFpFieldOps; const AP: IECPoint): TFePoint;
-    function FePointToPoint(const AFO: IFpFieldOps; const ACurve: IECCurve;
-      const AP: TFePoint): IECPoint;
-    function FeInfinity(const AFO: IFpFieldOps): TFePoint;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -85,7 +81,7 @@ type
     procedure TestBlindingTransparency;
     procedure TestExceptionalFormulas;
     procedure TestECDHAgreement;
-    procedure TestScalarRangeGuard;
+    procedure TestOversizedScalarReducesModOrder;
     procedure TestBlindBitsValidation;
   end;
 
@@ -133,64 +129,6 @@ procedure TTestECDHPrimeConstantTime.AssertPointsEqual(const AMsg: String;
 begin
   CheckEquals(True, AA.Equals(AB), AMsg);
   CheckEquals(True, AB.Equals(AA), AMsg);
-end;
-
-function TTestECDHPrimeConstantTime.FePointFromAffine(const AFO: IFpFieldOps;
-  const AP: IECPoint): TFePoint;
-var
-  LN: Int32;
-  LX, LY, LOne: TCryptoLibUInt32Array;
-  LQ: IECPoint;
-begin
-  LN := AFO.GetFieldInts;
-  LQ := AP.Normalize();
-  LX := TNat.Create(LN);
-  LY := TNat.Create(LN);
-  LOne := TNat.Create(LN);
-  AFO.FieldFromBigInteger(LQ.AffineXCoord.ToBigInteger(), LX);
-  AFO.FieldFromBigInteger(LQ.AffineYCoord.ToBigInteger(), LY);
-  AFO.FieldOne(LOne);
-  System.FillChar(Result, SizeOf(Result), 0);
-  System.Move(LX[0], Result.X.W[0], LN * SizeOf(UInt32));
-  System.Move(LY[0], Result.Y.W[0], LN * SizeOf(UInt32));
-  System.Move(LOne[0], Result.Z.W[0], LN * SizeOf(UInt32));
-end;
-
-function TTestECDHPrimeConstantTime.FeInfinity(const AFO: IFpFieldOps): TFePoint;
-var
-  LN: Int32;
-  LOne: TCryptoLibUInt32Array;
-begin
-  // identity in homogeneous coords is (0 : 1 : 0)
-  LN := AFO.GetFieldInts;
-  LOne := TNat.Create(LN);
-  AFO.FieldOne(LOne);
-  System.FillChar(Result, SizeOf(Result), 0);
-  System.Move(LOne[0], Result.Y.W[0], LN * SizeOf(UInt32));
-end;
-
-function TTestECDHPrimeConstantTime.FePointToPoint(const AFO: IFpFieldOps;
-  const ACurve: IECCurve; const AP: TFePoint): IECPoint;
-var
-  LN: Int32;
-  LZ, LZInv, LXtmp, LYtmp, LXa, LYa: TCryptoLibUInt32Array;
-begin
-  LN := AFO.GetFieldInts;
-  LZ := TNat.Create(LN);
-  System.Move(AP.Z.W[0], LZ[0], LN * SizeOf(UInt32));
-  if AFO.IsZero(LZ) then
-    Exit(ACurve.Infinity);
-  LZInv := TNat.Create(LN);
-  LXtmp := TNat.Create(LN);
-  LYtmp := TNat.Create(LN);
-  LXa := TNat.Create(LN);
-  LYa := TNat.Create(LN);
-  System.Move(AP.X.W[0], LXtmp[0], LN * SizeOf(UInt32));
-  System.Move(AP.Y.W[0], LYtmp[0], LN * SizeOf(UInt32));
-  AFO.Inv(LZ, LZInv);
-  AFO.Mul(LXtmp, LZInv, LXa);
-  AFO.Mul(LYtmp, LZInv, LYa);
-  Result := ACurve.CreateRawPoint(AFO.CreateFieldElement(LXa), AFO.CreateFieldElement(LYa));
 end;
 
 procedure TTestECDHPrimeConstantTime.TestDefaultMultiplierIsConstantTime;
@@ -304,53 +242,68 @@ var
   LCurve: IECCurve;
   LFO: IFpFieldOps;
   LWNaf: IECMultiplier;
-  LN: Int32;
   LP, LDbl, LNeg, LSum, LInf: TFePoint;
-  LNegY, LZeroArr, LYtmp: TCryptoLibUInt32Array;
+  LZero: TFe;
+  LXa, LYa: TCryptoLibUInt32Array;
   LG, LNegG, LRef2G: IECPoint;
+
+  function ToPoint(const AP: TFePoint): IECPoint;
+  var
+    LXo, LYo: TCryptoLibUInt32Array;
+    LInfLocal: Boolean;
+  begin
+    LXo := TNat.Create(LFO.GetFieldInts);
+    LYo := TNat.Create(LFO.GetFieldInts);
+    TCTJacPoint<TSecP256R1FieldArith>.ToAffine(LFO, AP, LXo, LYo, LInfLocal);
+    if LInfLocal then
+      Exit(LCurve.Infinity);
+    Result := LCurve.CreateRawPoint(LFO.CreateFieldElement(LXo),
+      LFO.CreateFieldElement(LYo));
+  end;
+
 begin
-  // Exercise the LIVE value-type complete-addition formulas (TCTPoint) on the
-  // exceptional inputs the end-to-end [d]Q test does not deterministically hit.
+  // Exercise the LIVE incomplete-Jacobian formulas on the exceptional inputs the
+  // end-to-end [d]Q test does not deterministically hit: the masked-infinity
+  // completion and the P=Q detect-and-double backstop.
   LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
   LX9 := TCustomNamedCurves.GetByName('secp256r1');
   LCurve := LX9.Curve;
   LFO := MakeFieldOps('secp256r1', LCurve);
-  LN := LFO.GetFieldInts;
 
   LG := LX9.G.Normalize();
-  LP := FePointFromAffine(LFO, LG);
+  LXa := TNat.Create(LFO.GetFieldInts);
+  LYa := TNat.Create(LFO.GetFieldInts);
+  LFO.FieldFromBigInteger(LG.AffineXCoord.ToBigInteger(), LXa);
+  LFO.FieldFromBigInteger(LG.AffineYCoord.ToBigInteger(), LYa);
+  TCTJacPoint<TSecP256R1FieldArith>.FromAffine(LFO, LXa, LYa, LP);
 
-  // complete Add must handle P == Q (doubling): Add(P,P) == Double(P) == 2G
-  TCTPoint<TSecP256R1FieldArith>.PointDouble(LP, LDbl);
-  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LP, LSum);
+  // Add must handle P == Q (doubling): Add(P,P) == Double(P) == 2G
+  TCTJacPoint<TSecP256R1FieldArith>.PointDouble(LP, LDbl);
+  TCTJacPoint<TSecP256R1FieldArith>.PointAdd(LP, LP, LSum);
   LRef2G := LWNaf.Multiply(LX9.G, TBigInteger.Two).Normalize();
-  AssertPointsEqual('Double(P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LDbl));
-  AssertPointsEqual('Add(P,P)=2G', LRef2G, FePointToPoint(LFO, LCurve, LSum));
+  AssertPointsEqual('Double(P)=2G', LRef2G, ToPoint(LDbl));
+  AssertPointsEqual('Add(P,P)=2G', LRef2G, ToPoint(LSum));
 
-  // P + (-P) == O   (-P = (X : -Y : Z))
+  // P + (-P) == O   (-P = (X : -Y : Z) in the Montgomery domain)
   LNeg := LP;
-  LYtmp := TNat.Create(LN);
-  System.Move(LP.Y.W[0], LYtmp[0], LN * SizeOf(UInt32));
-  LZeroArr := TNat.Create(LN);
-  LNegY := TNat.Create(LN);
-  LFO.Sub(LZeroArr, LYtmp, LNegY);
-  System.Move(LNegY[0], LNeg.Y.W[0], LN * SizeOf(UInt32));
-  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LNeg, LSum);
-  CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'P+(-P)=O');
+  System.FillChar(LZero, SizeOf(LZero), 0);
+  TSecP256R1FieldArith.Sub(LZero, LP.Y, LNeg.Y);
+  TCTJacPoint<TSecP256R1FieldArith>.PointAdd(LP, LNeg, LSum);
+  CheckEquals(True, ToPoint(LSum).IsInfinity, 'P+(-P)=O');
   // cross-check the affine (-P) really is the curve negation of P
   LNegG := LX9.G.Negate().Normalize();
-  AssertPointsEqual('(-P) affine', LNegG, FePointToPoint(LFO, LCurve, LNeg));
+  AssertPointsEqual('(-P) affine', LNegG, ToPoint(LNeg));
 
   // P + O == P and O + P == P
-  LInf := FeInfinity(LFO);
-  TCTPoint<TSecP256R1FieldArith>.PointAdd(LP, LInf, LSum);
-  AssertPointsEqual('P+O=P', LG, FePointToPoint(LFO, LCurve, LSum));
-  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LP, LSum);
-  AssertPointsEqual('O+P=P', LG, FePointToPoint(LFO, LCurve, LSum));
+  TCTJacPoint<TSecP256R1FieldArith>.Infinity(LFO, LInf);
+  TCTJacPoint<TSecP256R1FieldArith>.PointAdd(LP, LInf, LSum);
+  AssertPointsEqual('P+O=P', LG, ToPoint(LSum));
+  TCTJacPoint<TSecP256R1FieldArith>.PointAdd(LInf, LP, LSum);
+  AssertPointsEqual('O+P=P', LG, ToPoint(LSum));
 
   // O + O == O
-  TCTPoint<TSecP256R1FieldArith>.PointAdd(LInf, LInf, LSum);
-  CheckEquals(True, FePointToPoint(LFO, LCurve, LSum).IsInfinity, 'O+O=O');
+  TCTJacPoint<TSecP256R1FieldArith>.PointAdd(LInf, LInf, LSum);
+  CheckEquals(True, ToPoint(LSum).IsInfinity, 'O+O=O');
 end;
 
 procedure TTestECDHPrimeConstantTime.TestECDHAgreement;
@@ -385,40 +338,38 @@ begin
   end;
 end;
 
-procedure TTestECDHPrimeConstantTime.TestScalarRangeGuard;
+procedure TTestECDHPrimeConstantTime.TestOversizedScalarReducesModOrder;
 var
   LNames: TCryptoLibStringArray;
   LI, LOrderBits: Int32;
   LX9: IX9ECParameters;
-  LMul: IECMultiplier;
+  LMul, LRef: IECMultiplier;
   LN: TBigInteger;
 
-  function Raises(const AK: TBigInteger): Boolean;
+  procedure CheckK(const AK: TBigInteger; const ALabel: string);
+  var
+    LExpected, LActual: IECPoint;
   begin
-    Result := False;
-    try
-      LMul.Multiply(LX9.G, AK);
-    except
-      on E: EInvalidOperationCryptoLibException do
-        Result := True;
-    end;
+    // one contract with the general multiplier: [k]P = [k mod n]P for every integer k
+    LExpected := LRef.Multiply(LX9.G, AK).Normalize();
+    LActual := LMul.Multiply(LX9.G, AK).Normalize();
+    CheckTrue(LActual.Equals(LExpected), ALabel + ' mismatch for ' + LNames[LI]);
   end;
 
 begin
   LNames := CurveNames;
+  LRef := TWNafL2RMultiplier.Create() as IECMultiplier;
   for LI := 0 to System.Length(LNames) - 1 do
   begin
     LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
     LMul := LX9.Curve.Multiplier;
     LN := LX9.N;
     LOrderBits := LN.BitLength;
-    // k = n (BitLength = order bits) is in range and must not raise
-    CheckFalse(Raises(LN), 'k = n unexpectedly rejected for ' + LNames[LI]);
-    // scalars wider than the order must raise
-    CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits)),
-      'k = 2^orderbits not rejected for ' + LNames[LI]);
-    CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits + 1)),
-      'k = 2^(orderbits+1) not rejected for ' + LNames[LI]);
+    // an out-of-range scalar reduces mod n rather than raising, matching WNAF exactly
+    CheckK(LN, 'k = n');                            // reduces to 0 -> infinity
+    CheckK(LN.Add(TBigInteger.One), 'k = n + 1');   // reduces to 1 -> G
+    CheckK(TBigInteger.One.ShiftLeft(LOrderBits), 'k = 2^orderbits');
+    CheckK(TBigInteger.One.ShiftLeft(LOrderBits + 1), 'k = 2^(orderbits+1)');
   end;
 end;
 
@@ -443,12 +394,17 @@ var
 begin
   LX9 := TCustomNamedCurves.GetByName('secp256r1');
   LFO := MakeFieldOps('secp256r1', LX9.Curve);
-  CheckTrue(Rejects(0), '0 accepted');
-  CheckTrue(Rejects(32), '32 (below floor) accepted');
+  // 0 and 32 are the distinguished ephemeral opt-in (single-use ECDHE runs the
+  // exact-length unblinded ladder); the default and every reused/static scalar
+  // keep a full blind in [64, 512].
+  CheckFalse(Rejects(0), '0 (ephemeral) rejected');
+  CheckFalse(Rejects(32), '32 (ephemeral) rejected');
+  CheckTrue(Rejects(16), '16 (non-multiple of 32) accepted');
   CheckTrue(Rejects(48), '48 (non-multiple of 32) accepted');
   CheckTrue(Rejects(544), '544 (above cap) accepted');
   CheckFalse(Rejects(64), '64 rejected');
   CheckFalse(Rejects(128), '128 rejected');
+  CheckFalse(Rejects(512), '512 (cap) rejected');
 end;
 
 initialization

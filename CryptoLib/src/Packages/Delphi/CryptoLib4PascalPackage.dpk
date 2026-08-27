@@ -427,7 +427,7 @@ contains
   ClpIFpFieldOps in '..\..\Interfaces\Math\EC\Multiplier\ClpIFpFieldOps.pas',
   ClpCTFieldValue in '..\..\Math\EC\Multiplier\ClpCTFieldValue.pas',
   ClpCTFieldArith in '..\..\Math\EC\Multiplier\ClpCTFieldArith.pas',
-  ClpCTPoint in '..\..\Math\EC\Multiplier\ClpCTPoint.pas',
+  ClpCTJacPoint in '..\..\Math\EC\Multiplier\ClpCTJacPoint.pas',
   ClpCTScalarField in '..\..\Math\EC\Multiplier\ClpCTScalarField.pas',
   ClpFpCTMultiplier in '..\..\Math\EC\Multiplier\ClpFpCTMultiplier.pas',
   ClpFpVarBaseVerifier in '..\..\Math\EC\Multiplier\ClpFpVarBaseVerifier.pas',

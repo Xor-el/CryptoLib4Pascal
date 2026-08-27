@@ -39,8 +39,6 @@ type
     CtxData: array [0 .. 10] of UInt64; // [n0', N, p0..p(N-1)] (N in [1], max N = 9)
     R2: TFe;      // R^2 mod p       (ToMont operand)
     MontOne: TFe; // R mod p         (Montgomery form of 1)
-    Fb3: TFe;     // 3b * R mod p    (MulByB3 operand, Montgomery form)
-    Fb: TFe;      // b * R mod p     (MulByB operand, a=-3 formulas)
   end;
 
   PMontParams = ^TMontParams;
@@ -48,11 +46,11 @@ type
   /// <summary>
   /// Per-curve prime-field arithmetic for the value-type constant-time ladder. The
   /// ladder runs in the Montgomery domain (every field element is x*R mod p); the
-  /// domain ops (<c>Mul</c>/<c>Sqr</c>/<c>MulByB3</c>/<c>SetOne</c>/<c>ToMont</c>/
+  /// domain ops (<c>Mul</c>/<c>Sqr</c>/<c>SetOne</c>/<c>ToMont</c>/
   /// <c>FromMont</c>) are implemented ONCE here and are identical for every curve -
   /// a curve only supplies its constants (<c>MontParams</c>) and the genuinely
-  /// curve-specific ops (<c>Add</c>/<c>Sub</c>/<c>MulByA</c>, which depend on p and a).
-  /// The generic <c>TCTPoint&lt;TOps: TCTFieldArithBase&gt;</c> dispatches to it with
+  /// curve-specific ops (<c>Add</c>/<c>Sub</c>, which depend on p).
+  /// The generic <c>TCTJacPoint&lt;TOps: TCTFieldArithBase&gt;</c> dispatches to it with
   /// no interface dispatch and every temporary a stack <see cref="TFe"/>.
   /// </summary>
   TCTFieldArithBase = class
@@ -70,24 +68,20 @@ type
     class function FieldLimbs: Int32; virtual; abstract;
     /// <summary>Pointer to this curve's Montgomery constants.</summary>
     class function MontParams: PMontParams; virtual; abstract;
-    /// <summary>AZ := a * AX mod p (curve coefficient a; a=-3 folds to MulByMinusThree,
-    /// a=0 to FillChar). The only genuinely per-curve op left.</summary>
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual; abstract;
     /// <summary>Form of the coefficient a. Default <c>General</c>; a=-3 curves
     /// override to <c>MinusThree</c> to take the faster complete formulas.</summary>
     class function ACoeff: TCTACoeff; virtual;
-    /// <summary>Optional fused whole-point doubling: APR := 2*APA over homogeneous
-    /// coords (APR/APA are <c>TFePoint</c> bases). Default returns False so the
-    /// generic per-op RCB formula runs; a curve with a gated fused kernel overrides
-    /// it. Keeps the P-256 kernel reference out of the generic point unit.</summary>
-    class function TryFusedPointDouble(APR, APA: PUInt64): Boolean; virtual;
-    /// <summary>Optional fused whole-point complete addition: APR := APA + APQ over
-    /// homogeneous coords (all three are <c>TFePoint</c> bases). Default False so the
-    /// generic per-op RCB formula runs; a curve with a gated fused kernel overrides it.</summary>
-    class function TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean; virtual;
-    /// <summary>Optional fused mixed complete addition: APR := APA + APQ where APQ is a
-    /// <c>TFeAffine</c> base (implicit Z2=1). Default False -> generic formula.</summary>
-    class function TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean; virtual;
+    /// <summary>Optional fused incomplete-Jacobian doubling: APR := 2*APA (Jacobian).
+    /// Default False -> generic per-op Jacobian formula.</summary>
+    class function TryFusedJacPointDouble(APR, APA: PUInt64): Boolean; virtual;
+    /// <summary>Optional fused incomplete-Jacobian addition. APScratch is a
+    /// <c>TJacAddScratch</c> base receiving the masked-infinity-completed sum in R and
+    /// the predicate operands H (= U2-U1) and RS (= S2-S1); the caller owns the P=Q
+    /// detect-and-double. APA/APQ are <c>TFePoint</c> bases. Default False.</summary>
+    class function TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean; virtual;
+    /// <summary>Optional fused mixed incomplete-Jacobian addition: APQ is a
+    /// <c>TFeAffine</c> base (implicit Z2=1). Default False.</summary>
+    class function TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean; virtual;
 
     // ---- shared ops (one implementation for every curve) ----
     /// <summary>AZ := MontMul(AX, AY) = AX*AY*R^-1 mod p. ATT is caller-owned scratch.</summary>
@@ -98,12 +92,6 @@ type
     class procedure Add(const AX, AY: TFe; var AZ: TFe); virtual;
     /// <summary>AZ := AX - AY mod p (domain-agnostic; modulus from MontParams).</summary>
     class procedure Sub(const AX, AY: TFe; var AZ: TFe); virtual;
-    /// <summary>AZ := -3 * AX = -(AX+AX+AX) mod p (for a=-3 curves' MulByA).</summary>
-    class procedure MulByMinusThree(const AX: TFe; var AZ: TFe);
-    /// <summary>AZ := 3b * AX (Fb3 held in Montgomery form).</summary>
-    class procedure MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual;
-    /// <summary>AZ := b * AX (Fb held in Montgomery form; a=-3 formulas).</summary>
-    class procedure MulByB(const AX: TFe; var AZ: TFe; var ATT: TFeExt); virtual;
     /// <summary>AZ := Montgomery form of 1 (= R mod p).</summary>
     class procedure SetOne(var AZ: TFe); virtual;
     /// <summary>AZ := AX*R mod p (normal domain -> Montgomery).</summary>
@@ -268,34 +256,24 @@ begin
   Mul(AX, AX, AZ, ATT); // dedicated MontSqr is a later perf layer
 end;
 
-class procedure TCTFieldArithBase.MulByB3(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  Mul(AX, MontParams^.Fb3, AZ, ATT);
-end;
-
-class procedure TCTFieldArithBase.MulByB(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  Mul(AX, MontParams^.Fb, AZ, ATT);
-end;
-
 class function TCTFieldArithBase.ACoeff: TCTACoeff;
 begin
   Result := TCTACoeff.General;
 end;
 
-class function TCTFieldArithBase.TryFusedPointDouble(APR, APA: PUInt64): Boolean;
+class function TCTFieldArithBase.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
 begin
-  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
+  Result := False; // generic curves run the per-op Jacobian formula
 end;
 
-class function TCTFieldArithBase.TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean;
+class function TCTFieldArithBase.TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
+  Result := False; // generic curves run the per-op Jacobian formula
 end;
 
-class function TCTFieldArithBase.TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean;
+class function TCTFieldArithBase.TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := False; // generic curves have no fused kernel; per-op RCB formula runs
+  Result := False; // generic curves run the per-op Jacobian formula
 end;
 
 class procedure TCTFieldArithBase.SetOne(var AZ: TFe);
@@ -337,16 +315,6 @@ begin
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
     ModSub(PCardinal(@AZ.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
-end;
-
-class procedure TCTFieldArithBase.MulByMinusThree(const AX: TFe; var AZ: TFe);
-var
-  LT, LZero: TFe;
-begin
-  Add(AX, AX, LT);   // 2*AX
-  Add(LT, AX, LT);   // 3*AX
-  FillChar(LZero, SizeOf(LZero), 0);
-  Sub(LZero, LT, AZ); // -3*AX
 end;
 
 class procedure TCTFieldArithBase.ModAdd(APR, APA, APB: PCardinal; APCtx: PUInt64);

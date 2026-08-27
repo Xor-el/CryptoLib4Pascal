@@ -283,8 +283,8 @@ uses
   ClpIF2mFieldOps, ClpLopezDahabLadder, ClpGaloisFieldUtilities, 
   ClpAbstractBlockCipherMode, ClpAbstractAeadCipher, 
   ClpAbstractAeadBlockCipher, ClpFpKernelX86Backend, ClpFpKernelSimd, 
-  ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldArith, ClpCTPoint, 
-  ClpFpCTMultiplier, ClpCurveFieldSimd, ClpCurveFieldX86Backend, 
+  ClpFpKernelArmBackend, ClpCTFieldValue, ClpCTFieldArith,
+  ClpFpCTMultiplier, ClpCurveFieldSimd, ClpCurveFieldX86Backend,
   ClpCurveFieldArmBackend, ClpAbstractAesEngine, ClpIPacketCipher, 
   ClpAesGcmPacketCipher, ClpChaCha20Poly1305PacketCipher, 
   ClpAbstractAeadPacketCipher, ClpAesEaxPacketCipher, ClpAesCcmPacketCipher, 
@@ -295,7 +295,8 @@ uses
   ClpChaCha20Poly1305PolyOps, ClpIScheduleEpoch, ClpCipherKernelBinding, 
   ClpIRawKeyedCipher, ClpIRawInitBlockCipherMode, ClpIRawInitStreamCipher, 
   ClpIAffineCombPreCompInfo, ClpFpAffineCombMultiplier, ClpIScalarFieldOps, 
-  ClpCTScalarField, ClpScalarFieldRegistry, ClpIECVarBaseVerifier, ClpVarBaseVerifierRegistry, ClpFpVarBaseVerifier;
+  ClpCTScalarField, ClpScalarFieldRegistry, ClpIECVarBaseVerifier, 
+  ClpVarBaseVerifierRegistry, ClpFpVarBaseVerifier, ClpCTJacPoint;
 
 implementation
 

@@ -240,7 +240,6 @@ type
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
 implementation
@@ -1214,7 +1213,7 @@ end;
 
 class constructor TSecP521R1FieldArith.Create;
 var
-  LQ, LR, LR2, LB, LB3: TBigInteger;
+  LQ, LR, LR2: TBigInteger;
 begin
   // Montgomery-domain constants for the value-type CT ladder (R = 2^576, p = 2^521-1).
   LQ := TNat.ToBigInteger(17, TSecP521R1Field.P);
@@ -1226,11 +1225,6 @@ begin
   LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p
   ArrToFe(TSecP521R1Field.FromBigInteger(LR), 17, FParams.MontOne);
   ArrToFe(TSecP521R1Field.FromBigInteger(LR2), 17, FParams.R2);
-  // b3 = 3b in Montgomery form: (3b * R) mod p
-  LB := TBigInteger.Create(1, THexEncoder.Decode('0051953EB9618E1C9A1F929A21A0B68540EEA2DA725B99B315F3B8B489918EF109E156193951EC7E937B1652C0BD3BB1BF073573DF883D2C34F1EF451FD46B503F00'));
-  LB3 := LB.Add(LB).Add(LB).&Mod(LQ);
-  ArrToFe(TSecP521R1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 17, FParams.Fb3);
-  ArrToFe(TSecP521R1Field.FromBigInteger(LB.Multiply(LR).&Mod(LQ)), 17, FParams.Fb);
 end;
 
 class function TSecP521R1FieldArith.FieldLimbs: Int32;
@@ -1246,11 +1240,6 @@ end;
 class function TSecP521R1FieldArith.MontParams: PMontParams;
 begin
   Result := @FParams;
-end;
-
-class procedure TSecP521R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  MulByMinusThree(AX, AZ); // a = -3
 end;
 
 class function TSecP521R1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;

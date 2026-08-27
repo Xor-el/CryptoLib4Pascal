@@ -41,7 +41,6 @@ type
   TFpKernelSimd = class sealed
   strict private
     class var FForceP256Disabled: Boolean;
-    class var FForceP256PointDisabled: Boolean;
   public
     /// <summary>AZz[0..2*ALimbs32-1] := AX * AY (both ALimbs32 uint32 limbs).
     /// Returns False if unsupported (caller falls back).</summary>
@@ -55,28 +54,24 @@ type
     /// <summary>Fused CIOS Montgomery multiply APR := APA*APB*R^-1 mod p. APCtx =
     /// [n0', N, p[0..N-1]] (64-bit limbs); APR is the N+2-limb scratch and receives
     /// the reduced N-limb result. Returns False when unsupported (caller uses its
-    /// Pascal Montgomery fallback).</summary>
+    /// Montgomery fallback).</summary>
     class function TryMontMul(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
     /// <summary>P-256 special-prime Montgomery multiply APR := APA*APB*R^-1 mod p (folded
     /// shift/add reduction). APCtx = the P-256 [n0'=1, N=4, p0..p3]. False when the gate
     /// is disabled, force-scalar, no BMI2+ADX, or non-x86-64 -> caller uses generic CIOS,
     /// bit-for-bit.</summary>
     class function TryMontMulP256(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
-    /// <summary>Fused P-256 RCB PointDouble APR := 2*APA over homogeneous coords.
-    /// APR/APA are TFePoint bases; APCtx = the P-256 [n0'=1, N=4, p0..p3] (with Fb
-    /// at a fixed offset off it). False when the gate is disabled, force-scalar, no
-    /// BMI2+ADX, or non-x86-64 -> caller uses the generic per-op RCB doubling,
-    /// bit-for-bit.</summary>
-    class function TryP256PointDouble(APR, APA, APCtx: PUInt64): Boolean; static; inline;
-    /// <summary>Fused P-256 RCB complete addition APR := APA + APQ over homogeneous
-    /// coords (APR/APA/APQ are TFePoint bases; APCtx = the P-256 [n0'=1, N=4, p0..p3]
-    /// with Fb at a fixed offset off it). False when the gate is disabled, force-scalar,
-    /// no BMI2+ADX, or non-x86-64 -> caller uses the generic per-op RCB addition,
-    /// bit-for-bit.</summary>
-    class function TryP256PointAdd(APR, APA, APQ, APCtx: PUInt64): Boolean; static; inline;
-    /// <summary>Fused P-256 RCB mixed addition APR := APA + APQ where APQ is a TFeAffine
-    /// base (implicit Z2=1, supplied from APCtx.MontOne). Same gate as TryP256PointAdd.</summary>
-    class function TryP256PointAddMixed(APR, APA, APQ, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Fused P-256 incomplete-Jacobian doubling APR := 2*APA (Jacobian). False
+    /// when force-scalar, no BMI2+ADX, or non-x86-64 -> caller uses the generic per-op
+    /// Jacobian formula.</summary>
+    class function TryP256JacPointDouble(APR, APA, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Fused P-256 incomplete-Jacobian addition. APScratch is a TJacAddScratch
+    /// base (R + H + RS); the masked-infinity completion runs inside the kernel and the
+    /// caller owns the P=Q detect-and-double.</summary>
+    class function TryP256JacPointAdd(APScratch, APA, APQ, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Fused P-256 incomplete-Jacobian mixed addition (APQ a TFeAffine base,
+    /// implicit Z2=1 from APCtx.MontOne).</summary>
+    class function TryP256JacPointAddMixed(APScratch, APA, APQ, APCtx: PUInt64): Boolean; static; inline;
     /// <summary>Constant-time modular add/sub APR := (APA +/- APB) mod p. APCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False when unsupported.</summary>
     class function TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
@@ -84,9 +79,6 @@ type
     /// <summary>Test gate: force the P-256 special kernel off so the generic CIOS runs
     /// (differential dual-path validation). Default False.</summary>
     class property ForceP256Disabled: Boolean read FForceP256Disabled write FForceP256Disabled;
-    /// <summary>Test gate: force the fused P-256 PointDouble off so the generic per-op
-    /// RCB doubling runs (differential dual-path validation). Default False.</summary>
-    class property ForceP256PointDisabled: Boolean read FForceP256PointDisabled write FForceP256PointDisabled;
   end;
 
 implementation
@@ -183,59 +175,53 @@ begin
 {$ENDIF}
 end;
 
-class function TFpKernelSimd.TryP256PointDouble(APR, APA, APCtx: PUInt64): Boolean;
+class function TFpKernelSimd.TryP256JacPointDouble(APR, APA, APCtx: PUInt64): Boolean;
 begin
-  if FForceP256PointDisabled then
-    Exit(False);
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TFpKernelX86Backend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB doubling
-  Result := TFpKernelX86Backend.PointDoubleP256(APR, APA, APCtx); // False if no BMI2+ADX
+    Exit(False);
+  Result := TFpKernelX86Backend.JacPointDoubleP256(APR, APA, APCtx);
 {$ELSE}
   {$IFDEF CRYPTOLIB_AARCH64_ASM}
   if not TFpKernelArmBackend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB doubling
-  Result := TFpKernelArmBackend.PointDoubleP256(APR, APA, APCtx);
+    Exit(False);
+  Result := TFpKernelArmBackend.JacPointDoubleP256(APR, APA, APCtx);
   {$ELSE}
-  Result := False; // no fused point kernel on this arch -> generic per-op formula
+  Result := False;
   {$ENDIF}
 {$ENDIF}
 end;
 
-class function TFpKernelSimd.TryP256PointAdd(APR, APA, APQ, APCtx: PUInt64): Boolean;
+class function TFpKernelSimd.TryP256JacPointAdd(APScratch, APA, APQ, APCtx: PUInt64): Boolean;
 begin
-  if FForceP256PointDisabled then
-    Exit(False);
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TFpKernelX86Backend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB addition
-  Result := TFpKernelX86Backend.PointAddP256(APR, APA, APQ, APCtx); // False if no BMI2+ADX
+    Exit(False);
+  Result := TFpKernelX86Backend.JacPointAddP256(APScratch, APA, APQ, APCtx);
 {$ELSE}
   {$IFDEF CRYPTOLIB_AARCH64_ASM}
   if not TFpKernelArmBackend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB addition
-  Result := TFpKernelArmBackend.PointAddP256(APR, APA, APQ, APCtx);
+    Exit(False);
+  Result := TFpKernelArmBackend.JacPointAddP256(APScratch, APA, APQ, APCtx);
   {$ELSE}
-  Result := False; // no fused point kernel on this arch -> generic per-op formula
+  Result := False;
   {$ENDIF}
 {$ENDIF}
 end;
 
-class function TFpKernelSimd.TryP256PointAddMixed(APR, APA, APQ, APCtx: PUInt64): Boolean;
+class function TFpKernelSimd.TryP256JacPointAddMixed(APScratch, APA, APQ, APCtx: PUInt64): Boolean;
 begin
-  if FForceP256PointDisabled then
-    Exit(False);
 {$IFDEF CRYPTOLIB_X86_SIMD}
   if not TFpKernelX86Backend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB addition
-  Result := TFpKernelX86Backend.PointAddMixedP256(APR, APA, APQ, APCtx); // False if no BMI2+ADX
+    Exit(False);
+  Result := TFpKernelX86Backend.JacPointAddMixedP256(APScratch, APA, APQ, APCtx);
 {$ELSE}
   {$IFDEF CRYPTOLIB_AARCH64_ASM}
   if not TFpKernelArmBackend.IsSupported then
-    Exit(False); // force-scalar / no SIMD -> generic per-op RCB addition
-  Result := TFpKernelArmBackend.PointAddMixedP256(APR, APA, APQ, APCtx);
+    Exit(False);
+  Result := TFpKernelArmBackend.JacPointAddMixedP256(APScratch, APA, APQ, APCtx);
   {$ELSE}
-  Result := False; // no fused point kernel on this arch -> generic per-op formula
+  Result := False;
   {$ENDIF}
 {$ENDIF}
 end;

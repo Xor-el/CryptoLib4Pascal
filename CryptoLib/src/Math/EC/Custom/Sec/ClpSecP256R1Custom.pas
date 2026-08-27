@@ -255,26 +255,23 @@ type
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
     /// <summary>P-256 special-prime Montgomery multiply/square: the folded-reduction
     /// kernel when supported (writing AZ in place), else the generic CIOS (inherited).</summary>
     class procedure Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt); override;
     class procedure Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
-    /// <summary>Gated fused RCB PointDouble (a=-3): the whole-point kernel when
-    /// supported, else False so the generic per-op formula runs (bit-for-bit).</summary>
-    class function TryFusedPointDouble(APR, APA: PUInt64): Boolean; override;
-    /// <summary>Gated fused RCB PointAdd / PointAddMixed (a=-3): the whole-point
-    /// kernel when supported, else False so the generic per-op formula runs.</summary>
-    class function TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean; override;
-    class function TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean; override;
+    /// <summary>Gated fused incomplete-Jacobian double / add / mixed-add: the whole-
+    /// point kernel when supported, else False so the generic per-op Jacobian
+    /// formula runs.</summary>
+    class function TryFusedJacPointDouble(APR, APA: PUInt64): Boolean; override;
+    class function TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean; override;
+    class function TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean; override;
   end;
 
 type
   /// <summary>P-256 scalar-field (mod n) arithmetic for the value-type CT path:
   /// the same Montgomery kernel as <see cref="TSecP256R1FieldArith"/> but with the
   /// constants built from the group order n, so ECDSA nonce math (inverse,
-  /// multiply, add mod n) runs allocation-free and constant-time. No point ops,
-  /// so <c>MulByA</c> is unused.</summary>
+  /// multiply, add mod n) runs allocation-free and constant-time.</summary>
   TSecP256R1OrderArith = class sealed(TCTFieldArithBase)
   strict private
   class var
@@ -286,7 +283,6 @@ type
   public
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
-    class procedure MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt); override;
   end;
 
 implementation
@@ -1449,7 +1445,7 @@ end;
 
 class constructor TSecP256R1FieldArith.Create;
 var
-  LQ, LR, LR2, LB, LB3: TBigInteger;
+  LQ, LR, LR2: TBigInteger;
 begin
   // Montgomery-domain constants for the value-type CT ladder (R = 2^256).
   LQ := TNat.ToBigInteger(8, TSecP256R1Field.P);
@@ -1460,11 +1456,6 @@ begin
   LR2 := LR.Multiply(LR).&Mod(LQ); // R^2 mod p
   ArrToFe(TSecP256R1Field.FromBigInteger(LR), 8, FParams.MontOne);
   ArrToFe(TSecP256R1Field.FromBigInteger(LR2), 8, FParams.R2);
-  // b3 = 3b in Montgomery form: (3b * R) mod p
-  LB := TBigInteger.Create(1, THexEncoder.Decode('5AC635D8AA3A93E7B3EBBD55769886BC651D06B0CC53B0F63BCE3C3E27D2604B'));
-  LB3 := LB.Add(LB).Add(LB).&Mod(LQ);
-  ArrToFe(TSecP256R1Field.FromBigInteger(LB3.Multiply(LR).&Mod(LQ)), 8, FParams.Fb3);
-  ArrToFe(TSecP256R1Field.FromBigInteger(LB.Multiply(LR).&Mod(LQ)), 8, FParams.Fb);
 end;
 
 class function TSecP256R1FieldArith.FieldLimbs: Int32;
@@ -1480,11 +1471,6 @@ end;
 class function TSecP256R1FieldArith.MontParams: PMontParams;
 begin
   Result := @FParams;
-end;
-
-class procedure TSecP256R1FieldArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  MulByMinusThree(AX, AZ); // a = -3
 end;
 
 class procedure TSecP256R1FieldArith.Mul(const AX, AY: TFe; var AZ: TFe; var ATT: TFeExt);
@@ -1505,21 +1491,21 @@ begin
   inherited Sqr(AX, AZ, ATT);
 end;
 
-class function TSecP256R1FieldArith.TryFusedPointDouble(APR, APA: PUInt64): Boolean;
+class function TSecP256R1FieldArith.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256PointDouble(APR, APA,
+  Result := TFpKernelSimd.TryP256JacPointDouble(APR, APA,
     PUInt64(@FParams.CtxData[0]));
 end;
 
-class function TSecP256R1FieldArith.TryFusedPointAdd(APR, APA, APQ: PUInt64): Boolean;
+class function TSecP256R1FieldArith.TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256PointAdd(APR, APA, APQ,
+  Result := TFpKernelSimd.TryP256JacPointAdd(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
-class function TSecP256R1FieldArith.TryFusedPointAddMixed(APR, APA, APQ: PUInt64): Boolean;
+class function TSecP256R1FieldArith.TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256PointAddMixed(APR, APA, APQ,
+  Result := TFpKernelSimd.TryP256JacPointAddMixed(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
@@ -1568,11 +1554,6 @@ end;
 class function TSecP256R1OrderArith.MontParams: PMontParams;
 begin
   Result := @FParams;
-end;
-
-class procedure TSecP256R1OrderArith.MulByA(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
-begin
-  AZ := AX; // unused for scalar-field arithmetic (no curve coefficient)
 end;
 
 initialization

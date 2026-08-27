@@ -34,14 +34,13 @@ uses
   ClpIECCommon,
   ClpCTFieldValue,
   ClpCTFieldArith,
-  ClpCTPoint,
+  ClpCTJacPoint,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
 resourcestring
   SPointNotOnCurve = 'point is not a valid point on the curve for constant-time multiplication';
-  SScalarTooLarge = 'scalar is larger than the curve order';
-  SInvalidBlindBits = 'blinding length must be a multiple of 32 between 64 and 512';
+  SInvalidBlindBits = 'blinding length must be 0 or 32 (ephemeral) or a multiple of 32 between 64 and 512';
 
 type
   /// <summary>
@@ -50,7 +49,7 @@ type
   /// projective coordinates,
   /// fixed processing length, masked table lookups, one unconditional add per
   /// window), but the hot loop runs over stack <see cref="TFePoint"/> records via
-  /// the generic <c>TCTPoint&lt;TOps&gt;</c> — no per-operation heap allocation
+  /// the generic <c>TCTJacPoint&lt;TOps&gt;</c> — no per-operation heap allocation
   /// and no interface dispatch. The curve context (order, affine conversion,
   /// inverse, field-element boxing) comes from the <c>IFpFieldOps</c> adapter.
   /// </summary>
@@ -65,9 +64,11 @@ type
     FFieldOps: IFpFieldOps;
     FRandom: ISecureRandom;
     FBlindBits: Int32;
+    class function ValidBlindBits(ABlindBits: Int32): Boolean; static;
     function GetRandom: ISecureRandom;
     procedure GenerateBlind(const ARandom: ISecureRandom; const AZ: TCryptoLibUInt32Array);
-    procedure ScaleRandom(const AP: TFePoint; const ALambda: TFe; var AR: TFePoint);
+    procedure ScaleRandomJac(const AP: TFePoint; const ALambda: TFe; var AR: TFePoint);
+    function MultiplyJacobian(const AP: IECPoint; const AK: TBigInteger): IECPoint;
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
@@ -81,11 +82,20 @@ implementation
 
 { TFpCTMultiplier<TOps> }
 
+class function TFpCTMultiplier<TOps>.ValidBlindBits(ABlindBits: Int32): Boolean;
+begin
+  // The ephemeral opt-in for single-use ECDHE [d]Q: 0 runs the exact-length
+  // unblinded ladder, 32 adds only a minimal one-word blind; every other
+  // construction keeps the full blind (>= 64).
+  Result := ((ABlindBits and 31) = 0) and
+    ((ABlindBits = 0) or (ABlindBits = 32) or
+    ((ABlindBits >= DEFAULT_BLIND_BITS) and (ABlindBits <= MAX_BLIND_BITS)));
+end;
+
 constructor TFpCTMultiplier<TOps>.Create(const AFieldOps: IFpFieldOps; ABlindBits: Int32);
 begin
   Inherited Create;
-  if (ABlindBits < DEFAULT_BLIND_BITS) or (ABlindBits > MAX_BLIND_BITS)
-    or ((ABlindBits and 31) <> 0) then
+  if not ValidBlindBits(ABlindBits) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
   FBlindBits := ABlindBits;
@@ -95,8 +105,7 @@ constructor TFpCTMultiplier<TOps>.Create(const AFieldOps: IFpFieldOps;
   const ARandom: ISecureRandom; ABlindBits: Int32);
 begin
   Inherited Create;
-  if (ABlindBits < DEFAULT_BLIND_BITS) or (ABlindBits > MAX_BLIND_BITS)
-    or ((ABlindBits and 31) <> 0) then
+  if not ValidBlindBits(ABlindBits) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;
   FRandom := ARandom;
@@ -120,17 +129,13 @@ begin
   TPack.LE_To_UInt32(LBytes, 0, AZ, 0, FBlindBits div 32);
 end;
 
-procedure TFpCTMultiplier<TOps>.ScaleRandom(const AP: TFePoint; const ALambda: TFe;
+procedure TFpCTMultiplier<TOps>.ScaleRandomJac(const AP: TFePoint; const ALambda: TFe;
   var AR: TFePoint);
-var
-  LTT: TFeExt;
 begin
-  TOps.Mul(AP.X, ALambda, AR.X, LTT);
-  TOps.Mul(AP.Y, ALambda, AR.Y, LTT);
-  TOps.Mul(AP.Z, ALambda, AR.Z, LTT);
+  TCTJacPoint<TOps>.ScaleRandom(AP, ALambda, AR);
 end;
 
-function TFpCTMultiplier<TOps>.MultiplyPositive(const AP: IECPoint;
+function TFpCTMultiplier<TOps>.MultiplyJacobian(const AP: IECPoint;
   const AK: TBigInteger): IECPoint;
 var
   LFieldInts, LScalarBits, LScalarInts, LWindows, LI, LJ, LBit, LLimb, LShift, LDigit: Int32;
@@ -144,40 +149,38 @@ var
   LAffine: IECPoint;
   LRandom: ISecureRandom;
 begin
-  if not AP.IsValid then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
-
-  if AK.BitLength > FFieldOps.GetOrderBits then
-    raise EInvalidOperationCryptoLibException.CreateRes(@SScalarTooLarge);
-
   LFieldInts := FFieldOps.GetFieldInts;
   LRandom := GetRandom;
 
-  // affine coordinates of the (public) input point
   LAffine := AP.Normalize();
   LXa := TNat.Create(LFieldInts);
   LYa := TNat.Create(LFieldInts);
   FFieldOps.FieldFromBigInteger(LAffine.AffineXCoord.ToBigInteger(), LXa);
   FFieldOps.FieldFromBigInteger(LAffine.AffineYCoord.ToBigInteger(), LYa);
 
-  // randomized projective coordinates: base = (lambda*x, lambda*y, lambda)
+  // randomized projective (Jacobian) coordinates: base = (x*l^2, y*l^3, l)
   LLambdaArr := TNat.Create(LFieldInts);
   FFieldOps.RandomMult(LRandom, LLambdaArr);
   FillChar(LLambda, SizeOf(LLambda), 0);
   Move(LLambdaArr[0], LLambda.W[0], LFieldInts * SizeOf(UInt32));
-  // ladder runs in the Montgomery domain: the random blinding scalar must be there too
   TOps.ToMont(LLambda, LLambda, LLTT);
-  TCTPoint<TOps>.FromAffine(FFieldOps, LXa, LYa, LBase);
-  ScaleRandom(LBase, LLambda, LBase);
+  TCTJacPoint<TOps>.FromAffine(FFieldOps, LXa, LYa, LBase);
+  ScaleRandomJac(LBase, LLambda, LBase);
 
-  // projective precomputation table [0]=O, [i]=[i]*base
+  // table build that never presents equal points to the incomplete add: even
+  // entries via the dedicated double, odd entries via a provably-distinct add
+  // ((i-1)*B + B with (i-1) >= 2 so the operands differ).
   SetLength(LTable, TABLE_SIZE);
-  TCTPoint<TOps>.Infinity(FFieldOps, LTable[0]);
+  TCTJacPoint<TOps>.Infinity(FFieldOps, LTable[0]);
   LTable[1] := LBase;
   for LI := 2 to TABLE_SIZE - 1 do
-    TCTPoint<TOps>.PointAdd(LTable[LI - 1], LBase, LTable[LI]);
+    if (LI and 1) = 0 then
+      TCTJacPoint<TOps>.PointDouble(LTable[LI shr 1], LTable[LI])
+    else
+      TCTJacPoint<TOps>.PointAdd(LTable[LI - 1], LBase, LTable[LI]);
 
-  // scalar blinding in fixed-width Nat: k' = k + r*n
+  // scalar blinding in fixed-width Nat: k' = k + r*n (r is empty for the ephemeral
+  // unblinded configuration, giving the exact-length ladder)
   LScalarBits := FFieldOps.GetOrderBits + FBlindBits + 1;
   LScalarInts := TNat.GetLengthForBits(LScalarBits) + 1;
   LN := TNat.Create(LScalarInts);
@@ -191,25 +194,23 @@ begin
   TNat.Add(LScalarInts, LK, LProd, LKPrime);
 
   try
-    // fixed-length windowed ladder
     LWindows := (LScalarBits + WINDOW_BITS - 1) div WINDOW_BITS;
-    TCTPoint<TOps>.Infinity(FFieldOps, LAcc);
+    TCTJacPoint<TOps>.Infinity(FFieldOps, LAcc);
     for LI := LWindows - 1 downto 0 do
     begin
       for LJ := 0 to WINDOW_BITS - 1 do
-        TCTPoint<TOps>.PointDouble(LAcc, LAcc);
+        TCTJacPoint<TOps>.PointDouble(LAcc, LAcc);
 
-      // WINDOW_BITS divides 32, so a digit never spans a limb boundary
       LBit := LI * WINDOW_BITS;
       LLimb := TBitOperations.Asr32(LBit, 5);
       LShift := LBit and 31;
       LDigit := Int32((LKPrime[LLimb] shr LShift) and UInt32(TABLE_SIZE - 1));
 
-      TCTPoint<TOps>.SelectEntry(FFieldOps, LTable, TABLE_SIZE, LDigit, LSel);
-      TCTPoint<TOps>.PointAdd(LAcc, LSel, LAcc);
+      TCTJacPoint<TOps>.SelectEntry(FFieldOps, LTable, TABLE_SIZE, LDigit, LSel);
+      TCTJacPoint<TOps>.PointAdd(LAcc, LSel, LAcc);
     end;
 
-    TCTPoint<TOps>.ToAffine(FFieldOps, LAcc, LXa, LYa, LIsInfinity);
+    TCTJacPoint<TOps>.ToAffine(FFieldOps, LAcc, LXa, LYa, LIsInfinity);
     if LIsInfinity then
       Exit(AP.Curve.Infinity);
 
@@ -228,6 +229,29 @@ begin
     for LI := 0 to TABLE_SIZE - 1 do
       FillChar(LTable[LI], SizeOf(LTable[LI]), 0);
   end;
+end;
+
+function TFpCTMultiplier<TOps>.MultiplyPositive(const AP: IECPoint;
+  const AK: TBigInteger): IECPoint;
+var
+  LK: TBigInteger;
+begin
+  if not AP.IsValid then
+    raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
+
+  // reduce into the prime-order group ([k]P = [k mod n]P) so the ladder always runs
+  // on k < n: this keeps the fixed-length ladder exact and the incomplete-add P=Q
+  // backstop unreachable, and gives the same "any scalar" contract as the general
+  // multiplier. The compare and the (out-of-range-only) reduction sit in the variable
+  // -time BigInteger stage that precedes the constant-time ladder; an in-range secret
+  // takes neither. A scalar that reduces to zero yields infinity, as elsewhere.
+  LK := AK;
+  if LK.CompareTo(AP.Curve.Order) >= 0 then
+    LK := LK.&Mod(AP.Curve.Order);
+  if LK.SignValue = 0 then
+    Exit(AP.Curve.Infinity);
+
+  Result := MultiplyJacobian(AP, LK);
 end;
 
 end.
