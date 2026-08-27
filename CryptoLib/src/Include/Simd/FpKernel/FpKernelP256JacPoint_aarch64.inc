@@ -7897,125 +7897,125 @@
   // masked select X3 -> R
   ldr x4, [sp, #608]
   ldr x5, [sp, #0]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #96]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #0]
   ldr x4, [sp, #616]
   ldr x5, [sp, #8]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #104]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #8]
   ldr x4, [sp, #624]
   ldr x5, [sp, #16]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #112]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #16]
   ldr x4, [sp, #632]
   ldr x5, [sp, #24]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #120]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #24]
   // masked select Y3 -> R
   ldr x4, [sp, #640]
   ldr x5, [sp, #32]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #128]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #72]
   ldr x4, [sp, #648]
   ldr x5, [sp, #40]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #136]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #80]
   ldr x4, [sp, #656]
   ldr x5, [sp, #48]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #144]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #88]
   ldr x4, [sp, #664]
   ldr x5, [sp, #56]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #152]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #96]
   // masked select Z3 -> R
   ldr x4, [sp, #672]
   ldr x5, [sp, #64]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #160]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #144]
   ldr x4, [sp, #680]
   ldr x5, [sp, #72]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #168]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #152]
   ldr x4, [sp, #688]
   ldr x5, [sp, #80]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #176]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #160]
   ldr x4, [sp, #696]
   ldr x5, [sp, #88]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #184]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #168]
   // expose predicate operands H, RS
   ldr x16, [sp, #384]
@@ -11856,125 +11856,125 @@
   // masked select X3 -> R
   ldr x4, [sp, #512]
   ldr x5, [sp, #0]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #96]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #0]
   ldr x4, [sp, #520]
   ldr x5, [sp, #8]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #104]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #8]
   ldr x4, [sp, #528]
   ldr x5, [sp, #16]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #112]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #16]
   ldr x4, [sp, #536]
   ldr x5, [sp, #24]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #120]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #24]
   // masked select Y3 -> R
   ldr x4, [sp, #544]
   ldr x5, [sp, #32]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #128]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #72]
   ldr x4, [sp, #552]
   ldr x5, [sp, #40]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #136]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #80]
   ldr x4, [sp, #560]
   ldr x5, [sp, #48]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #144]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #88]
   ldr x4, [sp, #568]
   ldr x5, [sp, #56]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #152]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #96]
   // masked select Z3 -> R
   ldr x4, [sp, #576]
   ldr x5, [sp, #64]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #160]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #144]
   ldr x4, [sp, #584]
   ldr x5, [sp, #72]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #168]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #152]
   ldr x4, [sp, #592]
   ldr x5, [sp, #80]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #176]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #160]
   ldr x4, [sp, #600]
   ldr x5, [sp, #88]
+  eor x5, x5, x4
   and x5, x5, x14
-  bic x4, x4, x14
-  orr x4, x4, x5
+  eor x4, x4, x5
   ldr x5, [sp, #184]
+  eor x5, x5, x4
   and x5, x5, x13
-  bic x4, x4, x13
-  orr x4, x4, x5
+  eor x4, x4, x5
   str x4, [x0, #168]
   // expose predicate operands H, RS
   ldr x16, [sp, #288]
