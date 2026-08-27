@@ -85,8 +85,9 @@ implementation
 
 class function TFpCTMultiplier<TOps>.ValidBlindBits(ABlindBits: Int32): Boolean;
 begin
-  // 0/32 are the distinguished ephemeral opt-in (single-use ECDHE [d]Q runs the
-  // exact-length unblinded ladder); every other construction keeps the full blind.
+  // The ephemeral opt-in for single-use ECDHE [d]Q: 0 runs the exact-length
+  // unblinded ladder, 32 adds only a minimal one-word blind; every other
+  // construction keeps the full blind (>= 64).
   Result := ((ABlindBits and 31) = 0) and
     ((ABlindBits = 0) or (ABlindBits = 32) or
     ((ABlindBits >= DEFAULT_BLIND_BITS) and (ABlindBits <= MAX_BLIND_BITS)));
@@ -237,7 +238,11 @@ begin
   if not AP.IsValid then
     raise EInvalidOperationCryptoLibException.CreateRes(@SPointNotOnCurve);
 
-  if AK.BitLength > FFieldOps.GetOrderBits then
+  // a scalar exceeding the order (k > n) is the only input that can reach the
+  // incomplete-add P=Q backstop on the unblinded ladder; reject it against the order
+  // itself rather than admit the wider bit-length band. k = n stays valid (yields the
+  // point at infinity, backstop-free) so this remains a drop-in curve multiplier.
+  if AK.CompareTo(AP.Curve.Order) > 0 then
     raise EInvalidOperationCryptoLibException.CreateRes(@SScalarTooLarge);
 
   Result := MultiplyJacobian(AP, AK);

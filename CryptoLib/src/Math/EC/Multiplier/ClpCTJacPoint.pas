@@ -383,7 +383,7 @@ class procedure TCTJacPoint<TOps>.PointAdd(const AP, AQ: TFePoint; var AR: TFePo
 var
   LScr: TJacAddScratch;
   LRtmp: TFePoint;
-  LIn1, LIn2, LHz, LRz: UInt32;
+  LIn1, LIn2, LHz, LRz, LTake: UInt32;
 begin
   LIn1 := InfMask(AP);
   LIn2 := InfMask(AQ);
@@ -401,11 +401,15 @@ begin
     CompleteInfinity(LIn1, LIn2, AP, AQ, LRtmp);
   end;
 
-  // P=Q backstop: a detect-and-double BRANCH, isolated here so a
-  // later fully-masked-cmov double is a swap of this block. Only when both operands
-  // are finite and equal (U1=U2 and S1=S2). Never taken on an honest ephemeral
-  // [d]Q, so no secret-dependent timing there; correctness is guaranteed always.
-  if ((LIn1 or LIn2) = 0) and (LHz <> 0) and (LRz <> 0) then
+  // P=Q backstop. Combining every predicate into one mask keeps the sole
+  // data-dependent branch on the P=Q event alone, never on the per-window digit-zero
+  // or accumulator-at-infinity flags. That event is unreachable on the unblinded
+  // ladder for a reduced scalar (k < n) and, on these prime-order (cofactor-1)
+  // curves, independent of the base point; on the blinded ladder it arises only for
+  // tiny scalars, negligibly for uniformly-drawn secrets. Isolated so a
+  // fully-masked-cmov double would be a drop-in swap.
+  LTake := (not (LIn1 or LIn2)) and LHz and LRz;
+  if LTake <> 0 then
   begin
     PointDouble(AP, AR);
     Exit;
@@ -420,7 +424,7 @@ var
   LScr: TJacAddScratch;
   LRtmp: TFePoint;
   LOne: TFe;
-  LIn1, LHz, LRz: UInt32;
+  LIn1, LHz, LRz, LTake: UInt32;
   LN, LJ: Int32;
 begin
   LIn1 := InfMask(AP);
@@ -444,7 +448,10 @@ begin
     end;
   end;
 
-  if (LIn1 = 0) and (LHz <> 0) and (LRz <> 0) then
+  // P=Q backstop. One mask keeps the guard branching only on the P=Q event, never on
+  // the per-window accumulator-at-infinity flag. See PointAdd.
+  LTake := (not LIn1) and LHz and LRz;
+  if LTake <> 0 then
   begin
     PointDouble(AP, AR);
     Exit;

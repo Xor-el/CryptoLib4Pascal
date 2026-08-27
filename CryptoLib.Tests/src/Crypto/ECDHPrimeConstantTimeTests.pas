@@ -367,6 +367,10 @@ begin
     LOrderBits := LN.BitLength;
     // k = n (BitLength = order bits) is in range and must not raise
     CheckFalse(Raises(LN), 'k = n unexpectedly rejected for ' + LNames[LI]);
+    // any scalar above the order must raise, including one that shares the order's
+    // bit length (the band a bit-length-only guard would wrongly admit)
+    CheckTrue(Raises(LN.Add(TBigInteger.One)),
+      'k = n + 1 not rejected for ' + LNames[LI]);
     // scalars wider than the order must raise
     CheckTrue(Raises(TBigInteger.One.ShiftLeft(LOrderBits)),
       'k = 2^orderbits not rejected for ' + LNames[LI]);
