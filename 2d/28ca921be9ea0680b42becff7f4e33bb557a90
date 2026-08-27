@@ -1,0 +1,23 @@
+CryptoLib/src/Math/EC/Multiplier/ClpF2mMontgomeryLadderCTMultiplier.pas
+  s_5e9312dc1422f7::t_4173da10adc372 150
+  s_5e9312dc1422f7::t_673db4bb8689de 111,116-127
+CryptoLib.Tests/src/Crypto/ECDHBinaryConstantTimeTests.pas
+  s_5e9312dc1422f7::t_2299f448cf36cb 68
+  s_5e9312dc1422f7::t_78aaebfa3f5b46 191-221
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "2d28ca921be9ea0680b42becff7f4e33bb557a90",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
