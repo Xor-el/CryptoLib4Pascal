@@ -1,0 +1,22 @@
+CryptoLib.Tests/src/Crypto/ECDHPrimeConstantTimeTests.pas
+  s_5e9312dc1422f7::t_ce5f0e25e98b5f 84
+  s_5e9312dc1422f7::t_951a3f50927b6d 341,346,349-351,353-356,361,368-372
+CryptoLib/src/Math/EC/Multiplier/ClpFpCTMultiplier.pas
+  s_5e9312dc1422f7::t_405c80218d4fea 236-237,242-252,254
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "b1aaa74a8ec55a126d647aaecac31bcc0c1519b1",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
