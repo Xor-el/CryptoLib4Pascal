@@ -369,7 +369,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic CIOS (kernel not in-place safe)
+  Result := False;
 {$ENDIF}
 end;
 
@@ -384,7 +384,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian doubling
+  Result := False;
 {$ENDIF}
 end;
 
@@ -399,7 +399,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian addition
+  Result := False;
 {$ENDIF}
 end;
 
@@ -414,7 +414,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian addition
+  Result := False;
 {$ENDIF}
 end;
 
@@ -429,7 +429,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian doubling
+  Result := False;
 {$ENDIF}
 end;
 
@@ -444,7 +444,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian addition
+  Result := False;
 {$ENDIF}
 end;
 
@@ -459,7 +459,7 @@ begin
   else
     Result := False;
 {$ELSE}
-  Result := False; // i386: generic per-op Jacobian addition
+  Result := False;
 {$ENDIF}
 end;
 
