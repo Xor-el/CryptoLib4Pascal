@@ -1,0 +1,25 @@
+CryptoLib/src/Crypto/Generators/ClpECGenerators.pas
+  s_5e9312dc1422f7::t_fcbe008f407093 84
+  s_5e9312dc1422f7::t_5935f74300a47d 51
+  s_5e9312dc1422f7::t_443b974c8a97f6 126
+CryptoLib/src/Simd/Backend/ClpCurveFieldX86Backend.pas
+  s_5e9312dc1422f7::t_fe690f71217757 37
+CryptoLib/src/Simd/Backend/ClpFpKernelX86Backend.pas
+  s_5e9312dc1422f7::t_da928d76986c8b 46
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "f2e621f2f3fd7617a4ec51cb2c7d2e4c1589689c",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
