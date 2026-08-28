@@ -253,7 +253,7 @@ end;
 
 class procedure TCTFieldArithBase.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
-  Mul(AX, AX, AZ, ATT); // dedicated MontSqr is a later perf layer
+  Mul(AX, AX, AZ, ATT);
 end;
 
 class function TCTFieldArithBase.ACoeff: TCTACoeff;

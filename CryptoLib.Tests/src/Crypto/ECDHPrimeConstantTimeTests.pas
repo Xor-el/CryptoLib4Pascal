@@ -49,6 +49,9 @@ uses
   ClpIECParameters,
   ClpECGenerators,
   ClpECDHBasicAgreement,
+  ClpEphemeralECDHAgreement,
+  ClpIEphemeralECDHAgreement,
+  ClpECCurveConstants,
   ClpIBasicAgreement,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricCipherKeyPairGenerator,
@@ -79,6 +82,8 @@ type
     procedure TestParityWithWNaf;
     procedure TestEdgeScalars;
     procedure TestBlindingTransparency;
+    procedure TestEphemeralPostureParity;
+    procedure TestEphemeralAgreementParity;
     procedure TestExceptionalFormulas;
     procedure TestECDHAgreement;
     procedure TestOversizedScalarReducesModOrder;
@@ -212,6 +217,85 @@ begin
       LGot := LCT.Multiply(LX9.G, LScalars[LJ]).Normalize();
       AssertPointsEqual('edge ' + LNames[LI] + ' idx ' + IntToStr(LJ), LRef, LGot);
     end;
+  end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestEphemeralAgreementParity;
+var
+  LNames: TCryptoLibStringArray;
+  LI: Int32;
+  LX9: IX9ECParameters;
+  LEC: IECDomainParameters;
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LP1, LP2: IAsymmetricCipherKeyPair;
+  LStd: IBasicAgreement;
+  LEph: IEphemeralECDHAgreement;
+  LRef, LGot: TBigInteger;
+  LRaised: Boolean;
+begin
+  LNames := CurveNames;
+  for LI := 0 to System.Length(LNames) - 1 do
+  begin
+    LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
+    LEC := TECDomainParameters.Create(LX9.Curve, LX9.G, LX9.N, LX9.H);
+    LKpg := TECKeyPairGenerator.Create();
+    LKpg.Init(TECKeyGenerationParameters.Create(LEC, FRandom) as IECKeyGenerationParameters);
+    LP1 := LKpg.GenerateKeyPair();
+    LP2 := LKpg.GenerateKeyPair();
+    // reference: standard fully-blinded agreement
+    LStd := TECDHBasicAgreement.Create();
+    LStd.Init(LP1.Private);
+    LRef := LStd.CalculateAgreement(LP2.Public as ICipherParameters);
+    // deterministic (0-blind) ephemeral must produce the identical secret
+    LEph := TEphemeralECDHAgreement.Create(LP1.Private as IECPrivateKeyParameters,
+      TECCurveConstants.SCALAR_BLIND_DETERMINISTIC);
+    LGot := LEph.CalculateAgreement(LP2.Public as ICipherParameters);
+    CheckEquals(True, LRef.Equals(LGot), 'deterministic ephemeral mismatch ' + LNames[LI]);
+    // use-once: a second call must be refused
+    LRaised := False;
+    try
+      LEph.CalculateAgreement(LP2.Public as ICipherParameters);
+    except
+      on E: EInvalidOperationCryptoLibException do
+        LRaised := True;
+    end;
+    CheckEquals(True, LRaised, 'ephemeral reuse not rejected ' + LNames[LI]);
+    // minimal (32-blind) ephemeral must also match
+    LEph := TEphemeralECDHAgreement.Create(LP1.Private as IECPrivateKeyParameters,
+      TECCurveConstants.SCALAR_BLIND_MINIMAL);
+    CheckEquals(True, LRef.Equals(LEph.CalculateAgreement(LP2.Public as ICipherParameters)),
+      'minimal ephemeral mismatch ' + LNames[LI]);
+  end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestEphemeralPostureParity;
+var
+  LX9: IX9ECParameters;
+  LFO: IFpFieldOps;
+  LWNaf, LDet, LMin: IECMultiplier;
+  LN, LK: TBigInteger;
+  LQ, LRef: IECPoint;
+  LI: Int32;
+begin
+  // The ephemeral postures (0 = deterministic fixed-length k+n/k+2n, 32 = minimal
+  // blind) must give the same result as the reference for every scalar, including
+  // small ones that force the k+2n branch (k+n below 2^orderBits).
+  LX9 := TCustomNamedCurves.GetByName('secp256r1');
+  LFO := MakeFieldOps('secp256r1', LX9.Curve);
+  LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
+  LDet := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFO, 0);
+  LMin := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFO, 32);
+  LN := LX9.N;
+  LQ := LWNaf.Multiply(LX9.G, RandomScalar(LN)).Normalize();
+  for LI := 0 to 15 do
+  begin
+    if LI < 8 then
+      LK := TBigInteger.ValueOf(LI + 1)   // small: exercises the k+2n select
+    else
+      LK := RandomScalar(LN);
+    LRef := LWNaf.Multiply(LQ, LK).Normalize();
+    AssertPointsEqual('deterministic k=' + LK.ToString, LRef, LDet.Multiply(LQ, LK).Normalize());
+    AssertPointsEqual('minimal k=' + LK.ToString, LRef, LMin.Multiply(LQ, LK).Normalize());
   end;
 end;
 

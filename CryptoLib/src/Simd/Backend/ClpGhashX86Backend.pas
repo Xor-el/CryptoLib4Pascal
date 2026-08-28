@@ -26,7 +26,7 @@ uses
 
 type
   /// <summary>
-  /// x86 SIMD backend for the GHASH / GF(2^128) field operations behind
+  /// X86 SIMD backend for the GHASH / GF(2^128) field operations behind
   /// <c>TGcmUtilities</c>: owns the SIMD GHASH kernels (bodies in
   /// <c>Include\Simd\Gcm\</c>) and the runtime capability gates. Compiles on
   /// every target - every entry point returns <c>False</c> (leaving the caller on

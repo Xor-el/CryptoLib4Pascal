@@ -30,9 +30,9 @@ uses
 
 type
   /// <summary>
-  /// x86 (i386 + x86-64) big-integer kernel backend for prime-field (Fp)
-  /// multiplication/square. A leaf: capability probe plus the hot schoolbook
-  /// multiply/square. The arch-neutral dispatch and the scalar fallback live in
+  /// X86 kernel backend for prime-field (Fp) arithmetic. A leaf:
+  /// capability probe plus the hot unreduced schoolbook multiply/square and the
+  /// Montgomery multiply. The arch-neutral dispatch and the scalar fallback live in
   /// <c>TFpKernelSimd</c> / the field units. Hot paths are in
   /// <c>Include/Simd/FpKernel/</c>.
   /// </summary>
@@ -58,17 +58,29 @@ type
     /// <summary>Fused P-256 incomplete-Jacobian mixed addition (PQ a TFeAffine base).
     /// False when BMI2+ADX absent or not x86-64.</summary>
     class function JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 (a=0) incomplete-Jacobian doubling PR := 2*PA. False
+    /// when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointDoubleK256(PR, PA, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 incomplete-Jacobian addition; PScratch = TJacAddScratch
+    /// base. False when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointAddK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 incomplete-Jacobian mixed addition (PQ a TFeAffine base).
+    /// False when BMI2+ADX absent or not x86-64.</summary>
+    class function JacPointAddMixedK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
     class function ModSub(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>Constant-time gather: PDst := the AIndex-th of ACount entries (each
+    /// AEntryBytes wide), with index-independent access.</summary>
+    class function Gather(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt): Boolean; static;
   end;
 
 implementation
 
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
-procedure FpKernelMulAsm(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
+procedure FpKernelMul(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 {$DEFINE CRYPTOLIB_FP_MUL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
@@ -82,7 +94,7 @@ procedure FpKernelMulAsm(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 end;
 
 // Square Z := X^2 (FP_SQR selector).
-procedure FpKernelSqrAsm(PX, PZ: PUInt64; ALimbs64: NativeInt);
+procedure FpKernelSqr(PX, PZ: PUInt64; ALimbs64: NativeInt);
 {$DEFINE CRYPTOLIB_FP_SQR}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
@@ -97,7 +109,7 @@ end;
 
 // Fused CIOS Montgomery multiply (FP_MONTMUL selector), width-general: x86-64 (radix
 // 2^64) and i386 (radix 2^32).
-procedure FpKernelMontMulAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMul(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
@@ -113,7 +125,7 @@ end;
 // MULX/ADCX/ADOX register-resident fast paths (x86-64 only).
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 // MULX/ADCX/ADOX register-resident N=4 fast path (gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx4Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx4(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX4}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -121,7 +133,7 @@ procedure FpKernelMontMulMulx4Asm(PR, PA, PB, PCtx: PUInt64);
 end;
 
 // MULX/ADCX/ADOX register-resident N=5 fast path (320-bit; gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx5Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx5(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX5}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -129,7 +141,7 @@ procedure FpKernelMontMulMulx5Asm(PR, PA, PB, PCtx: PUInt64);
 end;
 
 // MULX/ADCX/ADOX fully-unrolled N=6 fast path (P-384; gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx6Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx6(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX6}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -138,7 +150,7 @@ end;
 
 // MULX/ADCX/ADOX fully-unrolled N=9 fast path (P-521; PB spilled so 9 of 11 t-words
 // stay in registers; gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx9Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx9(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX9}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -147,7 +159,7 @@ end;
 
 // MULX/ADCX/ADOX fully-unrolled N=7 fast path (448-bit; PB spilled, all 9 t-words in
 // registers; gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx7Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx7(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX7}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -156,7 +168,7 @@ end;
 
 // MULX/ADCX/ADOX fully-unrolled N=8 fast path (512-bit; PB spilled + 1 stack word;
 // gated on BMI2+ADX below).
-procedure FpKernelMontMulMulx8Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulMulx8(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_MULX8}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -166,7 +178,7 @@ end;
 // P-256 special-prime N=4 fast path: MULX product + folded shift/add reduction
 // (gated on BMI2+ADX below). x86-64 only; i386 falls back to generic CIOS (its
 // memory-resident kernel is not in-place safe for the aliased Mul/Sqr calls).
-procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulP256(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_P256}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
@@ -176,7 +188,7 @@ end;
 // Fused P-256 incomplete-Jacobian doubling (a=-3): straight-line, stack-framed,
 // inlining the special-prime field multiply. PR/PA are TFePoint bases. Gated on
 // BMI2+ADX below; x86-64 only.
-procedure FpKernelP256JacPointDoubleAsm(PR, PA, PCtx: PUInt64);
+procedure FpKernelP256JacPointDouble(PR, PA, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTDOUBLE}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
@@ -186,7 +198,7 @@ end;
 // Fused P-256 incomplete-Jacobian addition (add-2007-bl): masked-infinity
 // completion inside; predicate operands H/RS exposed for the caller's P=Q
 // detect-and-double. PScratch = TJacAddScratch, PA/PQ = TFePoint bases.
-procedure FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx: PUInt64);
+procedure FpKernelP256JacPointAdd(PScratch, PA, PQ, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTADD}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
@@ -194,18 +206,74 @@ procedure FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx: PUInt64);
 end;
 
 // Fused P-256 incomplete-Jacobian mixed addition: PQ affine (Z2=1 from MontOne).
-procedure FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx: PUInt64);
+procedure FpKernelP256JacPointAddMixed(PScratch, PA, PQ, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_x86_64.inc}
 {$UNDEF CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 end;
 
+// Fused secp256k1 incomplete-Jacobian doubling (a=0, dbl-2009-l): straight-line,
+// stack-framed, inlining the generic MULX4 multiply / dedicated square (k1's prime
+// is pseudo-Mersenne, so no folded reduction). PR/PA are TFePoint bases. Gated on
+// BMI2+ADX below; x86-64 only.
+procedure FpKernelK1JacPointDouble(PR, PA, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTDOUBLE}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTDOUBLE}
+end;
+
+// Fused secp256k1 incomplete-Jacobian addition (add-2007-bl): masked-infinity
+// completion inside; predicate operands H/RS exposed for the caller's P=Q
+// detect-and-double. PScratch = TJacAddScratch, PA/PQ = TFePoint bases.
+procedure FpKernelK1JacPointAdd(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTADD}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTADD}
+end;
+
+// Fused secp256k1 incomplete-Jacobian mixed addition: PQ affine (Z2=1 from MontOne).
+procedure FpKernelK1JacPointAddMixed(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTADDMIXED}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTADDMIXED}
+end;
+
 {$ENDIF}
+
+// Constant-time table gather (SSE2), x86-64 + i386: PDst := the AIndex-th entry
+// out of ACount, each AEntryBytes wide, masked-accumulated in constant time.
+// The SSE2 path (pre-AVX2 x86-64 and i386).
+procedure FpKernelGatherSse2(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelGatherSse2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelGatherSse2_i386.inc}
+{$ENDIF}
+end;
+
+// Constant-time table gather (AVX2), x86-64 + i386: 32-byte ymm chunks. The
+// caller (Gather) picks this over SSE2 when AVX2 is present.
+procedure FpKernelGatherAvx2(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelGatherAvx2_x86_64.inc}
+{$ENDIF}
+{$IFDEF CRYPTOLIB_I386_ASM}
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_i386.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelGatherAvx2_i386.inc}
+{$ENDIF}
+end;
 
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general:
 // x86-64 (radix 2^64) and i386 (radix 2^32).
-procedure FpKernelModAddAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelModAdd(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODADD}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
@@ -218,7 +286,7 @@ procedure FpKernelModAddAsm(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MODADD}
 end;
 
-procedure FpKernelModSubAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelModSub(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODSUB}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
@@ -247,14 +315,14 @@ end;
 class procedure TFpKernelX86Backend.Mul(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  FpKernelMulAsm(PX, PY, PZ, ALimbs64);
+  FpKernelMul(PX, PY, PZ, ALimbs64);
 {$ENDIF}
 end;
 
 class procedure TFpKernelX86Backend.Sqr(PX, PZ: PUInt64; ALimbs64: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  FpKernelSqrAsm(PX, PZ, ALimbs64);
+  FpKernelSqr(PX, PZ, ALimbs64);
 {$ENDIF}
 end;
 
@@ -267,22 +335,22 @@ begin
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
     case PUInt64(PByte(PCtx) + 8)^ of
-      4: FpKernelMontMulMulx4Asm(PR, PA, PB, PCtx);
-      5: FpKernelMontMulMulx5Asm(PR, PA, PB, PCtx);
-      6: FpKernelMontMulMulx6Asm(PR, PA, PB, PCtx);
-      7: FpKernelMontMulMulx7Asm(PR, PA, PB, PCtx);
-      8: FpKernelMontMulMulx8Asm(PR, PA, PB, PCtx);
-      9: FpKernelMontMulMulx9Asm(PR, PA, PB, PCtx);
+      4: FpKernelMontMulMulx4(PR, PA, PB, PCtx);
+      5: FpKernelMontMulMulx5(PR, PA, PB, PCtx);
+      6: FpKernelMontMulMulx6(PR, PA, PB, PCtx);
+      7: FpKernelMontMulMulx7(PR, PA, PB, PCtx);
+      8: FpKernelMontMulMulx8(PR, PA, PB, PCtx);
+      9: FpKernelMontMulMulx9(PR, PA, PB, PCtx);
     else
-      FpKernelMontMulAsm(PR, PA, PB, PCtx);
+      FpKernelMontMul(PR, PA, PB, PCtx);
     end;
   end
   else
-    FpKernelMontMulAsm(PR, PA, PB, PCtx);
+    FpKernelMontMul(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   {$IFDEF CRYPTOLIB_I386_ASM}
-  FpKernelMontMulAsm(PR, PA, PB, PCtx);
+  FpKernelMontMul(PR, PA, PB, PCtx);
   Result := True;
   {$ELSE}
   Result := False;
@@ -295,7 +363,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelMontMulP256Asm(PR, PA, PB, PCtx);
+    FpKernelMontMulP256(PR, PA, PB, PCtx);
     Result := True;
   end
   else
@@ -310,7 +378,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256JacPointDoubleAsm(PR, PA, PCtx);
+    FpKernelP256JacPointDouble(PR, PA, PCtx);
     Result := True;
   end
   else
@@ -325,7 +393,7 @@ begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx);
+    FpKernelP256JacPointAdd(PScratch, PA, PQ, PCtx);
     Result := True;
   end
   else
@@ -340,7 +408,52 @@ begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
   if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
   begin
-    FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx);
+    FpKernelP256JacPointAddMixed(PScratch, PA, PQ, PCtx);
+    Result := True;
+  end
+  else
+    Result := False;
+{$ELSE}
+  Result := False; // i386: generic per-op Jacobian addition
+{$ENDIF}
+end;
+
+class function TFpKernelX86Backend.JacPointDoubleK256(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  begin
+    FpKernelK1JacPointDouble(PR, PA, PCtx);
+    Result := True;
+  end
+  else
+    Result := False;
+{$ELSE}
+  Result := False; // i386: generic per-op Jacobian doubling
+{$ENDIF}
+end;
+
+class function TFpKernelX86Backend.JacPointAddK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  begin
+    FpKernelK1JacPointAdd(PScratch, PA, PQ, PCtx);
+    Result := True;
+  end
+  else
+    Result := False;
+{$ELSE}
+  Result := False; // i386: generic per-op Jacobian addition
+{$ENDIF}
+end;
+
+class function TFpKernelX86Backend.JacPointAddMixedK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  begin
+    FpKernelK1JacPointAddMixed(PScratch, PA, PQ, PCtx);
     Result := True;
   end
   else
@@ -353,7 +466,7 @@ end;
 class function TFpKernelX86Backend.ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_64_ASM) OR DEFINED(CRYPTOLIB_I386_ASM)}
-  FpKernelModAddAsm(PR, PA, PB, PCtx);
+  FpKernelModAdd(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -363,11 +476,23 @@ end;
 class function TFpKernelX86Backend.ModSub(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_64_ASM) OR DEFINED(CRYPTOLIB_I386_ASM)}
-  FpKernelModSubAsm(PR, PA, PB, PCtx);
+  FpKernelModSub(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
 {$IFEND}
+end;
+
+class function TFpKernelX86Backend.Gather(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if TCpuFeatures.X86.HasAVX2() then
+    FpKernelGatherAvx2(PDst, PTable, AEntryBytes, ACount, AIndex)
+  else
+    FpKernelGatherSse2(PDst, PTable, AEntryBytes, ACount, AIndex);
+  Exit(True);
+{$ENDIF}
+  Result := False;
 end;
 
 end.

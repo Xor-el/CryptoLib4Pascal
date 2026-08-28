@@ -29,7 +29,7 @@ uses
 
 type
   /// <summary>
-  /// x86 backend shared by the in-tree AES-NI fused kernel factories (the AEAD
+  /// X86 backend shared by the in-tree AES-NI fused kernel factories (the AEAD
   /// family and the standalone CTR kernel): owns the AEAD CPU/build gate and the
   /// concrete <c>IAesEngineX86</c> resolution (CTR uses only the latter).
   /// Compiles on every target - <c>CpuSupports</c> is <c>False</c> off x86 and

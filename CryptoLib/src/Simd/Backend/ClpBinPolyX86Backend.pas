@@ -27,7 +27,7 @@ uses
 
 type
   /// <summary>
-  /// x86 carryless-multiply (PCLMULQDQ, 128-bit) kernel backend for
+  /// X86 carryless-multiply (PCLMULQDQ, 128-bit) kernel backend for
   /// binary-polynomial multiplication. A leaf: it exposes only the capability
   /// probe and the hot leaf kernels. The arch-neutral size dispatch and the
   /// scalar fallback live in <c>TBinPolySimd</c> / <c>TBinPolys</c>; the

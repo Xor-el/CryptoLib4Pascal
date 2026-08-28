@@ -34,6 +34,13 @@ type
     const COORD_LAMBDA_AFFINE = 5;
     const COORD_LAMBDA_PROJECTIVE = 6;
     const COORD_SKEWED = 7;
+    // Scalar-blind widths for the constant-time Fp multiplier factory
+    // (IECCTMultiplierFactory.CreateCTMultiplier). MINIMAL/DETERMINISTIC are for
+    // single-use ephemeral scalars only; DETERMINISTIC (0) uses the exact-length
+    // k+n/k+2n ladder. Long-term keys use FULL.
+    const SCALAR_BLIND_FULL = 64;
+    const SCALAR_BLIND_MINIMAL = 32;
+    const SCALAR_BLIND_DETERMINISTIC = 0;
 
     class function GetAllCoordinateSystems: TCryptoLibInt32Array; static;
   end;

@@ -27,6 +27,7 @@ uses
   ClpIECFieldElement,
   ClpCTFieldValue,
   ClpCTFieldArith,
+  ClpFpKernelSimd,
   ClpCryptoLibTypes;
 
 type
@@ -121,6 +122,9 @@ var
   LMask: UInt32;
   LEntry: ^TFePoint;
 begin
+  if TFpKernelSimd.TryGather(PByte(@AR), PByte(@ATable[0]),
+    SizeOf(TFePoint), ACount, AIndex) then
+    Exit;
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
   for LI := 0 to ACount - 1 do
@@ -143,6 +147,9 @@ var
   LMask: UInt32;
   LEntry: ^TFeAffine;
 begin
+  if TFpKernelSimd.TryGather(PByte(@AR), PByte(@ATable[ABase]),
+    SizeOf(TFeAffine), ACount, AIndex) then
+    Exit;
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
   for LI := 0 to ACount - 1 do

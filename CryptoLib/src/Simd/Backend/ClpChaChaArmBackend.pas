@@ -30,7 +30,7 @@ resourcestring
 
 type
   /// <summary>
-  /// ARM (NEON) SIMD backend for the ChaCha family: owns the NEON keystream
+  /// Arm (NEON) SIMD backend for the ChaCha family: owns the NEON keystream
   /// kernels (bodies in <c>Include\Simd\ChaCha\</c>): the 4-way vertical
   /// streaming kernel plus the horizontal 1-block core and 2-block fused-I/O
   /// kernel. Compiles on every target - when built without AArch64 SIMD the

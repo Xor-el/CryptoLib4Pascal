@@ -164,7 +164,7 @@ type
 
 type
   TSecP256R1Curve = class sealed(TAbstractFpCurve, IAbstractFpCurve, IECCurve,
-    ISecP256R1Curve)
+    IECCTMultiplierFactory, ISecP256R1Curve)
   strict private
   const
     SECP256R1_DEFAULT_COORDS = TECCurveConstants.COORD_JACOBIAN;
@@ -212,6 +212,7 @@ type
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
     function CreateBasePointMultiplier: IECMultiplier; override;
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 
     class property Q: TBigInteger read FQ;
     class property SecP256R1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP256R1AffineZs;
@@ -1346,14 +1347,19 @@ begin
   end;
 end;
 
-function TSecP256R1Curve.CreateDefaultMultiplier: IECMultiplier;
+function TSecP256R1Curve.CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 var
   LCurve: IECCurve;
   LFieldOps: IFpFieldOps;
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP256R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFieldOps);
+  Result := TFpCTMultiplier<TSecP256R1FieldArith>.Create(LFieldOps, ABlindBits);
+end;
+
+function TSecP256R1Curve.CreateDefaultMultiplier: IECMultiplier;
+begin
+  Result := CreateCTMultiplier(TECCurveConstants.SCALAR_BLIND_FULL);
 end;
 
 function TSecP256R1Curve.CreateBasePointMultiplier: IECMultiplier;

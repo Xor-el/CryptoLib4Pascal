@@ -26,7 +26,7 @@ uses
 
 type
   /// <summary>
-  /// ARM (NEON) SIMD backend for the Salsa20 family: owns the NEON kernels
+  /// Arm (NEON) SIMD backend for the Salsa20 family: owns the NEON kernels
   /// (bodies in <c>Include\Simd\Salsa\</c>): the 1-block core, the
   /// 2-block fused-I/O kernel and the 4-way vertical streaming kernel.
   /// Compiles on every target - when built without AArch64 SIMD the

@@ -77,7 +77,13 @@ type
     function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger; virtual;
 
     class function CalculateAgreementFieldElement(const APrivateKey: IECPrivateKeyParameters;
-      const APublicKey: IECPublicKeyParameters): IECFieldElement; static;
+      const APublicKey: IECPublicKeyParameters): IECFieldElement; overload; static;
+    /// <summary>As above but multiplies the peer point by the private scalar with
+    /// AMultiplier instead of the curve's shared default (nil falls back to the
+    /// default). Used by the ephemeral-ECDH path to select a dedicated single-use
+    /// multiplier without touching the shared curve multiplier.</summary>
+    class function CalculateAgreementFieldElement(const APrivateKey: IECPrivateKeyParameters;
+      const APublicKey: IECPublicKeyParameters; const AMultiplier: IECMultiplier): IECFieldElement; overload; static;
 
   end;
 
@@ -99,10 +105,18 @@ end;
 class function TECDHBasicAgreement.CalculateAgreementFieldElement(
   const APrivateKey: IECPrivateKeyParameters; const APublicKey: IECPublicKeyParameters)
   : IECFieldElement;
+begin
+  Result := CalculateAgreementFieldElement(APrivateKey, APublicKey, nil);
+end;
+
+class function TECDHBasicAgreement.CalculateAgreementFieldElement(
+  const APrivateKey: IECPrivateKeyParameters; const APublicKey: IECPublicKeyParameters;
+  const AMultiplier: IECMultiplier): IECFieldElement;
 var
   LParams: IECDomainParameters;
   LP, LQ: IECPoint;
   LD, LH: TBigInteger;
+  LMul: IECMultiplier;
 begin
   LParams := APrivateKey.Parameters;
   if not LParams.Equals(APublicKey.Parameters) then
@@ -123,7 +137,11 @@ begin
     LQ := TECAlgorithms.ReferenceMultiply(LQ, LH);
   end;
 
-  LP := LParams.Curve.Multiplier.Multiply(LQ, LD).Normalize();
+  if AMultiplier <> nil then
+    LMul := AMultiplier
+  else
+    LMul := LParams.Curve.Multiplier;
+  LP := LMul.Multiply(LQ, LD).Normalize();
 
   if LP.IsInfinity then
     raise EInvalidOperationCryptoLibException.CreateRes

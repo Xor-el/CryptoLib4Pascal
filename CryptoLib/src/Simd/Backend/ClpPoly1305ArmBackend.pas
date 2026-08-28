@@ -27,7 +27,7 @@ uses
 
 type
   /// <summary>
-  /// ARM (NEON) SIMD backend for Poly1305: owns the r^1..r^4 power-table
+  /// Arm (NEON) SIMD backend for Poly1305: owns the r^1..r^4 power-table
   /// builder and the 4-way bulk kernel (body in
   /// <c>Include\Simd\Poly1305\</c>), sharing the radix-2^26 field
   /// arithmetic and power-table layout with the x86 4-way kernel.
