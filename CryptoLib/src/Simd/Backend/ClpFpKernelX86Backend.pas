@@ -43,7 +43,7 @@ type
     class procedure Sqr(PX, PZ: PUInt64; ALimbs64: NativeInt); static;
     /// <summary>Fused CIOS Montgomery multiply PR := PA*PB*R^-1 mod p. PCtx =
     /// [n0', N, p[0..N-1]]; PR is the N+2-limb scratch and receives the reduced
-    /// N-limb result. Returns False on an arch without the kernel yet (i386).</summary>
+    /// N-limb result. Returns False on an arch without the kernel.</summary>
     class function MontMul(PR, PA, PB, PCtx: PUInt64): Boolean; static;
     /// <summary>P-256 special-prime Montgomery multiply PR := PA*PB*R^-1 mod p, with
     /// the folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns

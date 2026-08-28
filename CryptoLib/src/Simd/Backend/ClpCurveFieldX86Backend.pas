@@ -34,7 +34,7 @@ type
   /// A leaf: capability probe plus the hot multiply/square. The arch-neutral
   /// dispatch and the Pascal fallback live in <c>TCurveFieldSimd</c> / the field
   /// unit. Kernels are in <c>Include/Simd/Curve25519/</c>. <c>Mul25519</c> /
-  /// <c>Sqr25519</c> return <c>False</c> on an arch without a kernel yet (i386).
+  /// <c>Sqr25519</c> return <c>False</c> on an arch without a kernel.
   /// </summary>
   TCurveFieldX86Backend = class sealed
   public
