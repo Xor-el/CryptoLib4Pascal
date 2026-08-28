@@ -1,0 +1,14 @@
+CryptoLib/src/Simd/Backend/ClpFpKernelX86Backend.pas
+  h_878efc035442cc 372,387,402,417,432,447,462
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "0a40faeed71a8dfd7444c4f50784f26f80929c20",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
