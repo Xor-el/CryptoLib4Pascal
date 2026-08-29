@@ -1491,6 +1491,9 @@ end;
 
 class procedure TSecP256R1FieldArith.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
+  if TFpKernelSimd.TryMontSqrP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+    PUInt64(@FParams.CtxData[0])) then
+    Exit;
   if TFpKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AX.W[0]), PUInt64(@FParams.CtxData[0])) then
     Exit;

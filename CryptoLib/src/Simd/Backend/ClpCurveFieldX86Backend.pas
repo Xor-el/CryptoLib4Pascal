@@ -250,7 +250,7 @@ end;
 class function TCurveFieldX86Backend.Adx32Supported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_I386_ASM}
-  Result := IsSupported and TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX();
+  Result := IsSupported and TX86SimdFeatures.HasBMI2ADX();
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -279,7 +279,7 @@ end;
 class function TCurveFieldX86Backend.Fe64Supported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Result := IsSupported and TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX();
+  Result := IsSupported and TX86SimdFeatures.HasBMI2ADX();
 {$ELSE}
   Result := False;
 {$ENDIF}

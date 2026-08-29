@@ -49,6 +49,10 @@ type
     /// the folded (shift/add) reduction. PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns
     /// False when BMI2+ADX absent or not x86-64 (caller falls back to generic CIOS).</summary>
     class function MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>P-256 dedicated Montgomery square PR := PA^2 * R^-1 mod p (dual-chain
+    /// SOS square + folded reduction). PCtx = the P-256 [n0'=1, N=4, p0..p3]. Returns
+    /// False when BMI2+ADX absent or not x86-64 (caller falls back to the multiply).</summary>
+    class function MontSqrP256(PR, PA, PCtx: PUInt64): Boolean; static;
     /// <summary>Fused P-256 incomplete-Jacobian doubling PR := 2*PA (Jacobian). False
     /// when BMI2+ADX absent or not x86-64.</summary>
     class function JacPointDoubleP256(PR, PA, PCtx: PUInt64): Boolean; static;
@@ -185,6 +189,16 @@ procedure FpKernelMontMulP256(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_P256}
 end;
 
+// P-256 dedicated Montgomery square: dual-chain SOS square (10 MULX vs the
+// multiply's 16) + the same folded special-prime reduction (gated on BMI2+ADX
+// below). x86-64 only.
+procedure FpKernelMontSqrP256(PR, PA, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_P256}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_P256}
+end;
+
 // Fused P-256 incomplete-Jacobian doubling (a=-3): straight-line, stack-framed,
 // inlining the special-prime field multiply. PR/PA are TFePoint bases. Gated on
 // BMI2+ADX below; x86-64 only.
@@ -271,6 +285,25 @@ procedure FpKernelGatherAvx2(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: N
 {$ENDIF}
 end;
 
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+// Dedicated unrolled N=4 modular add/sub: one add/adc (sub/sbb) pass,
+// speculative subtract (masked add-back) of p in registers, masked select,
+// one store pass. Plain ops only (no BMI2/ADX gate).
+procedure FpKernelModAdd4(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MODADD4}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MODADD4}
+end;
+
+procedure FpKernelModSub4(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MODSUB4}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MODSUB4}
+end;
+{$ENDIF}
+
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general:
 // x86-64 (radix 2^64) and i386 (radix 2^32).
 procedure FpKernelModAdd(PR, PA, PB, PCtx: PUInt64);
@@ -332,7 +365,7 @@ begin
   // CtxData[1] = N (uint64 limbs). With BMI2+ADX every width N=4..9 takes a
   // two-carry-chain MULX kernel (contiguous coverage: any value-type Fp curve up to
   // 576-bit auto-benefits); anything outside 4..9 uses the plain-MUL kernel.
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     case PUInt64(PByte(PCtx) + 8)^ of
       4: FpKernelMontMulMulx4(PR, PA, PB, PCtx);
@@ -361,9 +394,24 @@ end;
 class function TFpKernelX86Backend.MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelMontMulP256(PR, PA, PB, PCtx);
+    Result := True;
+  end
+  else
+    Result := False;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelX86Backend.MontSqrP256(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2ADX() then
+  begin
+    FpKernelMontSqrP256(PR, PA, PCtx);
     Result := True;
   end
   else
@@ -376,7 +424,7 @@ end;
 class function TFpKernelX86Backend.JacPointDoubleP256(PR, PA, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelP256JacPointDouble(PR, PA, PCtx);
     Result := True;
@@ -391,7 +439,7 @@ end;
 class function TFpKernelX86Backend.JacPointAddP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelP256JacPointAdd(PScratch, PA, PQ, PCtx);
     Result := True;
@@ -406,7 +454,7 @@ end;
 class function TFpKernelX86Backend.JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelP256JacPointAddMixed(PScratch, PA, PQ, PCtx);
     Result := True;
@@ -421,7 +469,7 @@ end;
 class function TFpKernelX86Backend.JacPointDoubleK256(PR, PA, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelK1JacPointDouble(PR, PA, PCtx);
     Result := True;
@@ -436,7 +484,7 @@ end;
 class function TFpKernelX86Backend.JacPointAddK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelK1JacPointAdd(PScratch, PA, PQ, PCtx);
     Result := True;
@@ -451,7 +499,7 @@ end;
 class function TFpKernelX86Backend.JacPointAddMixedK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  if TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX() then
+  if TX86SimdFeatures.HasBMI2ADX() then
   begin
     FpKernelK1JacPointAddMixed(PScratch, PA, PQ, PCtx);
     Result := True;
@@ -465,22 +513,39 @@ end;
 
 class function TFpKernelX86Backend.ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
-{$IF DEFINED(CRYPTOLIB_X86_64_ASM) OR DEFINED(CRYPTOLIB_I386_ASM)}
-  FpKernelModAdd(PR, PA, PB, PCtx);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  // CtxData[1] = N (public curve width, not secret-dependent).
+  if PUInt64(PByte(PCtx) + 8)^ = 4 then
+    FpKernelModAdd4(PR, PA, PB, PCtx)
+  else
+    FpKernelModAdd(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
+  {$IFDEF CRYPTOLIB_I386_ASM}
+  FpKernelModAdd(PR, PA, PB, PCtx);
+  Result := True;
+  {$ELSE}
   Result := False;
-{$IFEND}
+  {$ENDIF}
+{$ENDIF}
 end;
 
 class function TFpKernelX86Backend.ModSub(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
-{$IF DEFINED(CRYPTOLIB_X86_64_ASM) OR DEFINED(CRYPTOLIB_I386_ASM)}
-  FpKernelModSub(PR, PA, PB, PCtx);
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if PUInt64(PByte(PCtx) + 8)^ = 4 then
+    FpKernelModSub4(PR, PA, PB, PCtx)
+  else
+    FpKernelModSub(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
+  {$IFDEF CRYPTOLIB_I386_ASM}
+  FpKernelModSub(PR, PA, PB, PCtx);
+  Result := True;
+  {$ELSE}
   Result := False;
-{$IFEND}
+  {$ENDIF}
+{$ENDIF}
 end;
 
 class function TFpKernelX86Backend.Gather(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt): Boolean;

@@ -61,6 +61,10 @@ type
     /// is disabled, force-scalar, no BMI2+ADX, or non-x86-64 -> caller uses generic CIOS,
     /// bit-for-bit.</summary>
     class function TryMontMulP256(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>P-256 dedicated Montgomery square APR := APA^2 * R^-1 mod p (dual-chain
+    /// SOS square + the same folded reduction). Same gating as TryMontMulP256; False ->
+    /// caller falls back to the multiply.</summary>
+    class function TryMontSqrP256(APR, APA, APCtx: PUInt64): Boolean; static; inline;
     /// <summary>Fused P-256 incomplete-Jacobian doubling APR := 2*APA (Jacobian). False
     /// when force-scalar, no BMI2+ADX, or non-x86-64 -> caller uses the generic per-op
     /// Jacobian formula.</summary>
@@ -186,6 +190,19 @@ begin
   {$ELSE}
   Result := False;
   {$ENDIF}
+{$ENDIF}
+end;
+
+class function TFpKernelSimd.TryMontSqrP256(APR, APA, APCtx: PUInt64): Boolean;
+begin
+  if FForceP256Disabled then
+    Exit(False);
+{$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TFpKernelX86Backend.IsSupported then
+    Exit(False); // force-scalar / no SIMD -> generic CIOS
+  Result := TFpKernelX86Backend.MontSqrP256(APR, APA, APCtx); // False if no BMI2+ADX
+{$ELSE}
+  Result := False;
 {$ENDIF}
 end;
 
