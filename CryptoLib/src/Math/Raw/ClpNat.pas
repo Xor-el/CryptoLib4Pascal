@@ -1011,35 +1011,25 @@ end;
 class function TNat.FromBigInteger(ABits: Int32; AX: TBigInteger): TCryptoLibUInt32Array;
 var
   LLen: Int32;
-  LI: Int32;
 begin
   LLen := GetLengthForBits(ABits);
-  Result := Create(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
-  Result[0] := UInt32(AX.Int32Value);
-  for LI := 1 to LLen - 1 do
-  begin
-    AX := AX.ShiftRight(32);
-    Result[LI] := UInt32(AX.Int32Value);
-  end;
+  Result := Create(LLen);
+  // direct magnitude extraction: one allocation, a value-independent word copy
+  // (no per-limb shift arithmetic)
+  AX.ToUInt32sLittleEndian(Result, LLen);
 end;
 
 class function TNat.FromBigInteger64(ABits: Int32; AX: TBigInteger): TCryptoLibUInt64Array;
 var
   LLen: Int32;
-  LI: Int32;
 begin
   LLen := GetLengthForBits64(ABits);
-  Result := Create64(LLen);
   if ((AX.SignValue < 0) or (AX.BitLength > ABits)) then
   raise EArgumentCryptoLibException.CreateRes(@SValueOutOfRangeForBitLength);
-  Result[0] := UInt64(AX.Int64Value);
-  for LI := 1 to LLen - 1 do
-  begin
-    AX := AX.ShiftRight(64);
-    Result[LI] := UInt64(AX.Int64Value);
-  end;
+  Result := Create64(LLen);
+  AX.ToUInt64sLittleEndian(Result, LLen);
 end;
 
 class function TNat.GetBit(const AX: TCryptoLibUInt32Array; ABit: Int32): UInt32;

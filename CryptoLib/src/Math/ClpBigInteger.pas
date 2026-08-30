@@ -212,6 +212,19 @@ type
     // Conversion methods
     function ToByteArray(): TCryptoLibByteArray;
     function ToByteArrayUnsigned(): TCryptoLibByteArray;
+    /// <summary>
+    /// Writes the ACount least-significant 32-bit words of the (non-negative)
+    /// value into ADest[0..ACount-1], least-significant word first, zero-padding
+    /// past the magnitude. A value-independent copy: no per-word shift
+    /// arithmetic and no allocation.
+    /// </summary>
+    procedure ToUInt32sLittleEndian(const ADest: TCryptoLibUInt32Array; ACount: Int32);
+    /// <summary>
+    /// Writes the ACount least-significant 64-bit words of the (non-negative)
+    /// value into ADest[0..ACount-1], least-significant word first, zero-padding
+    /// past the magnitude.
+    /// </summary>
+    procedure ToUInt64sLittleEndian(const ADest: TCryptoLibUInt64Array; ACount: Int32);
     function ToByteArrayInternal(const AUnsigned: Boolean): TCryptoLibByteArray;
     function GetLengthofByteArray(): Int32;
     function GetLengthofByteArrayUnsigned(): Int32;
@@ -1271,6 +1284,39 @@ end;
 function TBigInteger.GetIsInitialized: Boolean;
 begin
   Result := FIsInitialized;
+end;
+
+procedure TBigInteger.ToUInt32sLittleEndian(const ADest: TCryptoLibUInt32Array; ACount: Int32);
+var
+  LMagLen, LI, LN: Int32;
+begin
+  LMagLen := System.Length(FMagnitude);
+  LN := Math.Min(ACount, LMagLen);
+  for LI := 0 to LN - 1 do
+    ADest[LI] := FMagnitude[LMagLen - 1 - LI];
+  for LI := LN to ACount - 1 do
+    ADest[LI] := 0;
+end;
+
+procedure TBigInteger.ToUInt64sLittleEndian(const ADest: TCryptoLibUInt64Array; ACount: Int32);
+var
+  LMagLen, LI, LWord: Int32;
+  LLo, LHi: UInt64;
+begin
+  LMagLen := System.Length(FMagnitude);
+  for LI := 0 to ACount - 1 do
+  begin
+    LWord := 2 * LI;
+    if LWord < LMagLen then
+      LLo := FMagnitude[LMagLen - 1 - LWord]
+    else
+      LLo := 0;
+    if LWord + 1 < LMagLen then
+      LHi := FMagnitude[LMagLen - 2 - LWord]
+    else
+      LHi := 0;
+    ADest[LI] := LLo or (LHi shl 32);
+  end;
 end;
 
 function TBigInteger.GetInt32Value: Int32;

@@ -266,6 +266,9 @@ type
     class function TryFusedJacPointDouble(APR, APA: PUInt64): Boolean; override;
     class function TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean; override;
     class function TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean; override;
+    /// <summary>Montgomery-domain inverse by the fixed p-2 addition chain
+    /// (255 squarings + 13 multiplies, all on the field kernels).</summary>
+    class function TryInvMont(const AX: TFe; var AZ: TFe; var ATT: TFeExt): Boolean; override;
   end;
 
 type
@@ -1498,6 +1501,67 @@ begin
     PUInt64(@AX.W[0]), PUInt64(@FParams.CtxData[0])) then
     Exit;
   inherited Sqr(AX, AZ, ATT);
+end;
+
+class function TSecP256R1FieldArith.TryInvMont(const AX: TFe; var AZ: TFe; var ATT: TFeExt): Boolean;
+var
+  LX2, LX4, LX8, LX16, LX32, LRes: TFe;
+  LI: Int32;
+begin
+  // AZ := AX^(p-2) with p = 2^256 - 2^224 + 2^192 + 2^96 - 1. The exponent is
+  // public and fixed, so the schedule below is data-independent: 255 squarings
+  // + 13 multiplies, all through the Montgomery field kernels.
+  Sqr(AX, LX2, ATT);
+  Mul(LX2, AX, LX2, ATT);                 // x2 = z^(2^2-1)
+  LX4 := LX2;
+  for LI := 1 to 2 do
+    Sqr(LX4, LX4, ATT);
+  Mul(LX4, LX2, LX4, ATT);                // x4 = z^(2^4-1)
+  LX8 := LX4;
+  for LI := 1 to 4 do
+    Sqr(LX8, LX8, ATT);
+  Mul(LX8, LX4, LX8, ATT);                // x8 = z^(2^8-1)
+  LX16 := LX8;
+  for LI := 1 to 8 do
+    Sqr(LX16, LX16, ATT);
+  Mul(LX16, LX8, LX16, ATT);              // x16 = z^(2^16-1)
+  LX32 := LX16;
+  for LI := 1 to 16 do
+    Sqr(LX32, LX32, ATT);
+  Mul(LX32, LX16, LX32, ATT);             // x32 = z^(2^32-1)
+  LRes := LX32;                           // 32 leading ones
+  for LI := 1 to 32 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, AX, LRes, ATT);               // .. 00000001
+  for LI := 1 to 128 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX32, LRes, ATT);             // .. 96 zeros + 32 ones
+  for LI := 1 to 32 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX32, LRes, ATT);             // .. 32 ones
+  for LI := 1 to 16 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX16, LRes, ATT);
+  for LI := 1 to 8 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX8, LRes, ATT);
+  for LI := 1 to 4 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX4, LRes, ATT);
+  for LI := 1 to 2 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, LX2, LRes, ATT);              // .. 30 ones (16+8+4+2)
+  for LI := 1 to 2 do
+    Sqr(LRes, LRes, ATT);
+  Mul(LRes, AX, LRes, ATT);               // .. '01' -> ...fffffffd
+  AZ := LRes;
+  FillChar(LX2, SizeOf(LX2), 0);
+  FillChar(LX4, SizeOf(LX4), 0);
+  FillChar(LX8, SizeOf(LX8), 0);
+  FillChar(LX16, SizeOf(LX16), 0);
+  FillChar(LX32, SizeOf(LX32), 0);
+  FillChar(LRes, SizeOf(LRes), 0);
+  Result := True;
 end;
 
 class function TSecP256R1FieldArith.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
