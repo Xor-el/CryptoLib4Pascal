@@ -32,7 +32,6 @@ uses
   ClpIKeyGenerationParameters,
   ClpIECParameters,
   ClpIECCommon,
-  ClpMultipliers,
   ClpSecObjectIdentifiers,
   ClpCustomNamedCurves,
   ClpECNamedCurveTable,
@@ -49,7 +48,7 @@ resourcestring
   SInvalidKeySize = 'unknown key size %d';
 
 type
-  TECKeyPairGenerator = class sealed(TInterfacedObject, IECKeyPairGenerator,
+  TECKeyPairGenerator = class(TInterfacedObject, IECKeyPairGenerator,
     IAsymmetricCipherKeyPairGenerator)
   strict private
     FAlgorithm: String;
@@ -82,7 +81,7 @@ end;
 
 function TECKeyPairGenerator.CreateBasePointMultiplier: IECMultiplier;
 begin
-  Result := TFixedPointCombMultiplier.Create();
+  Result := FParameters.Curve.GetBasePointMultiplier;
 end;
 
 class function TECKeyPairGenerator.FindECCurveByOid(const AOid: IDerObjectIdentifier): IX9ECParameters;
@@ -124,7 +123,7 @@ var
   LQ: IECPoint;
 begin
   LEc := APrivKey.Parameters;
-  LQ := (TFixedPointCombMultiplier.Create() as IECMultiplier).Multiply(LEc.G, APrivKey.D);
+  LQ := LEc.Curve.GetBasePointMultiplier.Multiply(LEc.G, APrivKey.D);
   Result := TECPublicKeyParameters.Create(APrivKey.AlgorithmName, LQ, LEc);
 end;
 

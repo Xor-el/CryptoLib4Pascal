@@ -25,7 +25,7 @@ uses
 
 type
   /// <summary>
-  /// x86 SIMD backend for the AES-GCM-SIV POLYVAL batch kernel: owns the
+  /// X86 SIMD backend for the AES-GCM-SIV POLYVAL batch kernel: owns the
   /// PCLMULQDQ 8-block Horner kernel (body in <c>Include\Simd\GcmSiv\</c>)
   /// and the runtime capability gate. Compiles on every target - <c>IsSupported</c>
   /// returns <c>False</c> off x86 (so the fused-kernel factory declines to build a

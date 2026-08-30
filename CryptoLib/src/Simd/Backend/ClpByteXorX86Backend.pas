@@ -26,7 +26,7 @@ uses
 
 type
   /// <summary>
-  /// x86 SIMD backend for the byte-array XOR primitives behind
+  /// X86 SIMD backend for the byte-array XOR primitives behind
   /// <c>TByteUtilities</c>: an SSE2 <c>movdqu</c>/<c>pxor</c> kernel (body in
   /// <c>Include\Simd\ByteXor\</c>) plus the runtime capability gate.
   /// Compiles on every target - the entry points return <c>False</c> (leaving the

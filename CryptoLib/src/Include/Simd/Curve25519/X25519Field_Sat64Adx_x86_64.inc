@@ -38,32 +38,19 @@
   push r15
   mov rsi, rdx
   mov rdi, r8
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rdi]
+  db $C4, $62, $BB, $F6, $0E       // mulx r9, r8, qword ptr [rsi]
+  db $C4, $62, $E3, $F6, $56, $08  // mulx r10, rbx, qword ptr [rsi + 8]
+  db $C4, $62, $FB, $F6, $5E, $10  // mulx r11, rax, qword ptr [rsi + 0x10]
+  db $C4, $62, $D3, $F6, $66, $18  // mulx r12, rbp, qword ptr [rsi + 0x18]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rdi]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $1E       // mulx rbx, rax, qword ptr [rsi]
-  db $66, $4C, $0F, $38, $F6, $C0  // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB  // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $5E, $08  // mulx rbx, rax, qword ptr [rsi + 8]
-  db $66, $4C, $0F, $38, $F6, $C8  // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $5E, $10  // mulx rbx, rax, qword ptr [rsi + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $5E, $18  // mulx rbx, rax, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $D8  // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5  // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED  // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED  // adcx r13, rbp
   mov rdx, qword ptr [rdi+8]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $1E       // mulx rbx, rax, qword ptr [rsi]
@@ -114,33 +101,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB  // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD  // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC       // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4       // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED       // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6       // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF       // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD       // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE       // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF       // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -176,29 +150,18 @@
   push r14
   push r15
   mov rsi, rdx
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rsi]
+  db $C4, $62, $B3, $F6, $56, $08  // mulx r10, r9, qword ptr [rsi + 8]
+  db $C4, $62, $E3, $F6, $5E, $10  // mulx r11, rbx, qword ptr [rsi + 0x10]
+  db $C4, $62, $FB, $F6, $66, $18  // mulx r12, rax, qword ptr [rsi + 0x18]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rsi]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $5E, $08  // mulx rbx, rax, qword ptr [rsi + 8]
-  db $66, $4C, $0F, $38, $F6, $C8  // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $5E, $10  // mulx rbx, rax, qword ptr [rsi + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $5E, $18  // mulx rbx, rax, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $D8  // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5  // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED  // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED  // adcx r13, rbp
   mov rdx, qword ptr [rsi+8]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $5E, $10  // mulx rbx, rax, qword ptr [rsi + 0x10]
@@ -243,33 +206,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC       // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4       // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED       // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6       // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF       // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD       // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE       // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF       // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -480,29 +430,18 @@
   push r15
   mov rsi, rdx
   mov rdi, r8
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rsi]
+  db $C4, $62, $B3, $F6, $56, $08  // mulx r10, r9, qword ptr [rsi + 8]
+  db $C4, $62, $E3, $F6, $5E, $10  // mulx r11, rbx, qword ptr [rsi + 0x10]
+  db $C4, $62, $FB, $F6, $66, $18  // mulx r12, rax, qword ptr [rsi + 0x18]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rsi]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $5E, $08  // mulx rbx, rax, qword ptr [rsi + 8]
-  db $66, $4C, $0F, $38, $F6, $C8  // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $5E, $10  // mulx rbx, rax, qword ptr [rsi + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $5E, $18  // mulx rbx, rax, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $D8  // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5  // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED  // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED  // adcx r13, rbp
   mov rdx, qword ptr [rsi+8]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $5E, $10  // mulx rbx, rax, qword ptr [rsi + 0x10]
@@ -547,33 +486,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC       // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4       // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED       // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6       // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF       // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD       // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE       // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF       // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -593,29 +519,18 @@
 @@Fe64SqrNLoop:
   test rdi, rdi
   jle @@Fe64SqrNDone
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx]
+  db $C4, $62, $B3, $F6, $51, $08  // mulx r10, r9, qword ptr [rcx + 8]
+  db $C4, $62, $E3, $F6, $59, $10  // mulx r11, rbx, qword ptr [rcx + 0x10]
+  db $C4, $62, $FB, $F6, $61, $18  // mulx r12, rax, qword ptr [rcx + 0x18]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $08  // mulx rbx, rax, qword ptr [rcx + 8]
-  db $66, $4C, $0F, $38, $F6, $C8  // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $10  // mulx rbx, rax, qword ptr [rcx + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $18  // mulx rbx, rax, qword ptr [rcx + 0x18]
-  db $66, $4C, $0F, $38, $F6, $D8  // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5  // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED  // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED  // adcx r13, rbp
   mov rdx, qword ptr [rcx+8]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $10  // mulx rbx, rax, qword ptr [rcx + 0x10]
@@ -660,33 +575,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC       // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4       // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED       // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6       // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF       // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD       // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE       // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF       // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -862,32 +764,19 @@
   mov qword ptr [rcx+40], r9
   mov qword ptr [rcx+48], r10
   mov qword ptr [rcx+56], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+32]
+  db $C4, $62, $BB, $F6, $0C, $24                 // mulx r9, r8, qword ptr [rsp]
+  db $C4, $62, $E3, $F6, $54, $24, $08            // mulx r10, rbx, qword ptr [rsp + 8]
+  db $C4, $62, $FB, $F6, $5C, $24, $10            // mulx r11, rax, qword ptr [rsp + 0x10]
+  db $C4, $62, $D3, $F6, $64, $24, $18            // mulx r12, rbp, qword ptr [rsp + 0x18]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+32]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $1C, $24                 // mulx rbx, rax, qword ptr [rsp]
-  db $66, $4C, $0F, $38, $F6, $C0                 // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB                 // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $5C, $24, $08            // mulx rbx, rax, qword ptr [rsp + 8]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $5C, $24, $10            // mulx rbx, rax, qword ptr [rsp + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $5C, $24, $18            // mulx rbx, rax, qword ptr [rsp + 0x18]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+40]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $1C, $24                 // mulx rbx, rax, qword ptr [rsp]
@@ -938,33 +827,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB                 // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD                 // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -980,32 +856,19 @@
   mov qword ptr [rsp+8], r9
   mov qword ptr [rsp+16], r10
   mov qword ptr [rsp+24], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+128]
+  db $C4, $62, $BB, $F6, $49, $60                 // mulx r9, r8, qword ptr [rcx + 0x60]
+  db $C4, $62, $E3, $F6, $51, $68                 // mulx r10, rbx, qword ptr [rcx + 0x68]
+  db $C4, $62, $FB, $F6, $59, $70                 // mulx r11, rax, qword ptr [rcx + 0x70]
+  db $C4, $62, $D3, $F6, $61, $78                 // mulx r12, rbp, qword ptr [rcx + 0x78]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+128]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $60                 // mulx rbx, rax, qword ptr [rcx + 0x60]
-  db $66, $4C, $0F, $38, $F6, $C0                 // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB                 // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $59, $68                 // mulx rbx, rax, qword ptr [rcx + 0x68]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $70                 // mulx rbx, rax, qword ptr [rcx + 0x70]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $78                 // mulx rbx, rax, qword ptr [rcx + 0x78]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+136]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $60                 // mulx rbx, rax, qword ptr [rcx + 0x60]
@@ -1056,33 +919,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB                 // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD                 // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1098,29 +948,18 @@
   mov qword ptr [rcx+104], r9
   mov qword ptr [rcx+112], r10
   mov qword ptr [rcx+120], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+128]
+  db $C4, $62, $B3, $F6, $91, $88, $00, $00, $00  // mulx r10, r9, qword ptr [rcx + 0x88]
+  db $C4, $62, $E3, $F6, $99, $90, $00, $00, $00  // mulx r11, rbx, qword ptr [rcx + 0x90]
+  db $C4, $62, $FB, $F6, $A1, $98, $00, $00, $00  // mulx r12, rax, qword ptr [rcx + 0x98]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+128]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $99, $88, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x88]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $99, $90, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x90]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $99, $98, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x98]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+136]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $99, $90, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x90]
@@ -1165,33 +1004,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1207,29 +1033,18 @@
   mov qword ptr [rcx+136], r9
   mov qword ptr [rcx+144], r10
   mov qword ptr [rcx+152], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+32]
+  db $C4, $62, $B3, $F6, $51, $28                 // mulx r10, r9, qword ptr [rcx + 0x28]
+  db $C4, $62, $E3, $F6, $59, $30                 // mulx r11, rbx, qword ptr [rcx + 0x30]
+  db $C4, $62, $FB, $F6, $61, $38                 // mulx r12, rax, qword ptr [rcx + 0x38]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+32]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $28                 // mulx rbx, rax, qword ptr [rcx + 0x28]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $30                 // mulx rbx, rax, qword ptr [rcx + 0x30]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $38                 // mulx rbx, rax, qword ptr [rcx + 0x38]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+40]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $30                 // mulx rbx, rax, qword ptr [rcx + 0x30]
@@ -1274,33 +1089,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1428,32 +1230,19 @@
   mov qword ptr [rcx+72], r9
   mov qword ptr [rcx+80], r10
   mov qword ptr [rcx+88], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rsp+32]
+  db $C4, $62, $BB, $F6, $49, $40                 // mulx r9, r8, qword ptr [rcx + 0x40]
+  db $C4, $62, $E3, $F6, $51, $48                 // mulx r10, rbx, qword ptr [rcx + 0x48]
+  db $C4, $62, $FB, $F6, $59, $50                 // mulx r11, rax, qword ptr [rcx + 0x50]
+  db $C4, $62, $D3, $F6, $61, $58                 // mulx r12, rbp, qword ptr [rcx + 0x58]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rsp+32]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $40                 // mulx rbx, rax, qword ptr [rcx + 0x40]
-  db $66, $4C, $0F, $38, $F6, $C0                 // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB                 // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $59, $48                 // mulx rbx, rax, qword ptr [rcx + 0x48]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $50                 // mulx rbx, rax, qword ptr [rcx + 0x50]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $58                 // mulx rbx, rax, qword ptr [rcx + 0x58]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rsp+40]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $40                 // mulx rbx, rax, qword ptr [rcx + 0x40]
@@ -1504,33 +1293,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB                 // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD                 // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1546,32 +1322,19 @@
   mov qword ptr [rcx+72], r9
   mov qword ptr [rcx+80], r10
   mov qword ptr [rcx+88], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+128]
+  db $C4, $62, $BB, $F6, $49, $20                 // mulx r9, r8, qword ptr [rcx + 0x20]
+  db $C4, $62, $E3, $F6, $51, $28                 // mulx r10, rbx, qword ptr [rcx + 0x28]
+  db $C4, $62, $FB, $F6, $59, $30                 // mulx r11, rax, qword ptr [rcx + 0x30]
+  db $C4, $62, $D3, $F6, $61, $38                 // mulx r12, rbp, qword ptr [rcx + 0x38]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+128]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $20                 // mulx rbx, rax, qword ptr [rcx + 0x20]
-  db $66, $4C, $0F, $38, $F6, $C0                 // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB                 // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $59, $28                 // mulx rbx, rax, qword ptr [rcx + 0x28]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $30                 // mulx rbx, rax, qword ptr [rcx + 0x30]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $38                 // mulx rbx, rax, qword ptr [rcx + 0x38]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+136]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $20                 // mulx rbx, rax, qword ptr [rcx + 0x20]
@@ -1622,33 +1385,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB                 // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD                 // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1732,29 +1482,18 @@
   mov qword ptr [rcx+104], r9
   mov qword ptr [rcx+112], r10
   mov qword ptr [rcx+120], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+96]
+  db $C4, $62, $B3, $F6, $51, $68                 // mulx r10, r9, qword ptr [rcx + 0x68]
+  db $C4, $62, $E3, $F6, $59, $70                 // mulx r11, rbx, qword ptr [rcx + 0x70]
+  db $C4, $62, $FB, $F6, $61, $78                 // mulx r12, rax, qword ptr [rcx + 0x78]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+96]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $59, $68                 // mulx rbx, rax, qword ptr [rcx + 0x68]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $59, $70                 // mulx rbx, rax, qword ptr [rcx + 0x70]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $59, $78                 // mulx rbx, rax, qword ptr [rcx + 0x78]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+104]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $59, $70                 // mulx rbx, rax, qword ptr [rcx + 0x70]
@@ -1799,33 +1538,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1841,29 +1567,18 @@
   mov qword ptr [rcx+104], r9
   mov qword ptr [rcx+112], r10
   mov qword ptr [rcx+120], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx+128]
+  db $C4, $62, $B3, $F6, $91, $88, $00, $00, $00  // mulx r10, r9, qword ptr [rcx + 0x88]
+  db $C4, $62, $E3, $F6, $99, $90, $00, $00, $00  // mulx r11, rbx, qword ptr [rcx + 0x90]
+  db $C4, $62, $FB, $F6, $A1, $98, $00, $00, $00  // mulx r12, rax, qword ptr [rcx + 0x98]
   xor r13d, r13d
+  add r10, rbx
+  adc r11, rax
+  adc r12, 0
+  xor r8d, r8d
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx+128]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $99, $88, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x88]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $99, $90, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x90]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $99, $98, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x98]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+136]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $99, $90, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x90]
@@ -1908,33 +1623,20 @@
   adc r14, rax
   adc r15, rbx
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0
@@ -1950,32 +1652,19 @@
   mov qword ptr [rcx+136], r9
   mov qword ptr [rcx+144], r10
   mov qword ptr [rcx+152], r11
-  xor r8d, r8d
-  xor r9d, r9d
-  xor r10d, r10d
-  xor r11d, r11d
-  xor r12d, r12d
+  mov rdx, qword ptr [rcx]
+  db $C4, $62, $BB, $F6, $89, $80, $00, $00, $00  // mulx r9, r8, qword ptr [rcx + 0x80]
+  db $C4, $62, $E3, $F6, $91, $88, $00, $00, $00  // mulx r10, rbx, qword ptr [rcx + 0x88]
+  db $C4, $62, $FB, $F6, $99, $90, $00, $00, $00  // mulx r11, rax, qword ptr [rcx + 0x90]
+  db $C4, $62, $D3, $F6, $A1, $98, $00, $00, $00  // mulx r12, rbp, qword ptr [rcx + 0x98]
   xor r13d, r13d
+  add r9, rbx
+  adc r10, rax
+  adc r11, rbp
+  adc r12, 0
   xor r14d, r14d
   xor r15d, r15d
   xor ebp, ebp
-  mov rdx, qword ptr [rcx]
-  xor eax, eax
-  db $C4, $E2, $FB, $F6, $99, $80, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x80]
-  db $66, $4C, $0F, $38, $F6, $C0                 // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $CB                 // adox r9, rbx
-  db $C4, $E2, $FB, $F6, $99, $88, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x88]
-  db $66, $4C, $0F, $38, $F6, $C8                 // adcx r9, rax
-  db $F3, $4C, $0F, $38, $F6, $D3                 // adox r10, rbx
-  db $C4, $E2, $FB, $F6, $99, $90, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x90]
-  db $66, $4C, $0F, $38, $F6, $D0                 // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $DB                 // adox r11, rbx
-  db $C4, $E2, $FB, $F6, $99, $98, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x98]
-  db $66, $4C, $0F, $38, $F6, $D8                 // adcx r11, rax
-  db $F3, $4C, $0F, $38, $F6, $E3                 // adox r12, rbx
-  db $66, $4C, $0F, $38, $F6, $E5                 // adcx r12, rbp
-  db $F3, $4C, $0F, $38, $F6, $ED                 // adox r13, rbp
-  db $66, $4C, $0F, $38, $F6, $ED                 // adcx r13, rbp
   mov rdx, qword ptr [rcx+8]
   xor eax, eax
   db $C4, $E2, $FB, $F6, $99, $80, $00, $00, $00  // mulx rbx, rax, qword ptr [rcx + 0x80]
@@ -2026,33 +1715,20 @@
   db $F3, $4C, $0F, $38, $F6, $FB                 // adox r15, rbx
   db $66, $4C, $0F, $38, $F6, $FD                 // adcx r15, rbp
   mov rdx, 38
-  xor ebp, ebp
-  db $C4, $C2, $FB, $F6, $DC                      // mulx rbx, rax, r12
-  add rax, rbp
-  adc rbx, 0
+  db $C4, $42, $FB, $F6, $E4                      // mulx r12, rax, r12
+  db $C4, $42, $E3, $F6, $ED                      // mulx r13, rbx, r13
+  db $C4, $42, $D3, $F6, $F6                      // mulx r14, rbp, r14
+  db $C4, $42, $EB, $F6, $FF                      // mulx r15, rdx, r15
   add r8, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DD                      // mulx rbx, rax, r13
-  add rax, rbp
-  adc rbx, 0
-  add r9, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DE                      // mulx rbx, rax, r14
-  add rax, rbp
-  adc rbx, 0
-  add r10, rax
-  adc rbx, 0
-  mov rbp, rbx
-  db $C4, $C2, $FB, $F6, $DF                      // mulx rbx, rax, r15
-  add rax, rbp
-  adc rbx, 0
-  add r11, rax
-  adc rbx, 0
-  mov rbp, rbx
-  mov rax, rbp
-  imul rax, rax, 38
+  adc r9, rbx
+  adc r10, rbp
+  adc r11, rdx
+  adc r15, 0
+  add r9, r12
+  adc r10, r13
+  adc r11, r14
+  adc r15, 0
+  imul rax, r15, 38
   add r8, rax
   adc r9, 0
   adc r10, 0

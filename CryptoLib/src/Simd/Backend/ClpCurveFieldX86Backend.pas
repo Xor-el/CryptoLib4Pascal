@@ -30,11 +30,11 @@ uses
 
 type
   /// <summary>
-  /// x86 (i386 + x86-64) kernel backend for the radix-2^51 curve25519 field.
+  /// X86 kernel backend for the radix-2^51 curve25519 field.
   /// A leaf: capability probe plus the hot multiply/square. The arch-neutral
   /// dispatch and the Pascal fallback live in <c>TCurveFieldSimd</c> / the field
   /// unit. Kernels are in <c>Include/Simd/Curve25519/</c>. <c>Mul25519</c> /
-  /// <c>Sqr25519</c> return <c>False</c> on an arch without a kernel yet (i386).
+  /// <c>Sqr25519</c> return <c>False</c> on an arch without a kernel.
   /// </summary>
   TCurveFieldX86Backend = class sealed
   public
@@ -66,7 +66,7 @@ implementation
 {$IFDEF CRYPTOLIB_X86_SIMD}
 
 // PH := PF * PG mod (2^255-19), five 64-bit limbs.
-procedure Curve25519Fe51MulAsm(PH, PF, PG: PUInt64);
+procedure Curve25519Fe51Mul(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_FE51MUL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
@@ -80,7 +80,7 @@ procedure Curve25519Fe51MulAsm(PH, PF, PG: PUInt64);
 end;
 
 // PH := PF^2 mod (2^255-19).
-procedure Curve25519Fe51SqrAsm(PH, PF: PUInt64);
+procedure Curve25519Fe51Sqr(PH, PF: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_FE51SQR}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
@@ -94,7 +94,7 @@ procedure Curve25519Fe51SqrAsm(PH, PF: PUInt64);
 end;
 
 // PH := PF * PG mod (2^448-2^224-1), eight 64-bit limbs.
-procedure Curve448Fe56MulAsm(PH, PF, PG: PUInt64);
+procedure Curve448Fe56Mul(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE448_FE56MUL}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
@@ -108,7 +108,7 @@ procedure Curve448Fe56MulAsm(PH, PF, PG: PUInt64);
 end;
 
 // PH := PF^2 mod (2^448-2^224-1).
-procedure Curve448Fe56SqrAsm(PH, PF: PUInt64);
+procedure Curve448Fe56Sqr(PH, PF: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE448_FE56SQR}
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
@@ -123,14 +123,14 @@ end;
 
 {$IFDEF CRYPTOLIB_I386_ASM}
 // radix-2^32 saturated MULX curve25519 kernels (i386, BMI2 + ADX), fe51 interface.
-procedure Curve25519Adx32MulAsm(PH, PF, PG: PUInt64);
+procedure Curve25519Adx32Mul(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_ADX32MUL}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_i386.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Adx32_i386.inc}
 {$UNDEF CRYPTOLIB_CURVE25519_ADX32MUL}
 end;
 
-procedure Curve25519Adx32SqrAsm(PH, PF: PUInt64);
+procedure Curve25519Adx32Sqr(PH, PF: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_ADX32SQR}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_i386.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Adx32_i386.inc}
@@ -140,7 +140,7 @@ end;
 
 {$IFDEF CRYPTOLIB_X86_64_ASM}
 // radix-2^64 (saturated) curve25519 ADX kernels. PH := PF * PG mod (2^255-19).
-procedure Curve25519Fe64MulAsm(PH, PF, PG: PUInt64);
+procedure Curve25519Fe64Mul(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64MUL}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -148,7 +148,7 @@ procedure Curve25519Fe64MulAsm(PH, PF, PG: PUInt64);
 end;
 
 // PH := PF^2 mod (2^255-19).
-procedure Curve25519Fe64SqrAsm(PH, PF: PUInt64);
+procedure Curve25519Fe64Sqr(PH, PF: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64SQR}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -156,7 +156,7 @@ procedure Curve25519Fe64SqrAsm(PH, PF: PUInt64);
 end;
 
 // PH := PF + PG mod (2^255-19).
-procedure Curve25519Fe64AddAsm(PH, PF, PG: PUInt64);
+procedure Curve25519Fe64Add(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64ADD}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -164,7 +164,7 @@ procedure Curve25519Fe64AddAsm(PH, PF, PG: PUInt64);
 end;
 
 // PH := PF - PG mod (2^255-19).
-procedure Curve25519Fe64SubAsm(PH, PF, PG: PUInt64);
+procedure Curve25519Fe64Sub(PH, PF, PG: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64SUB}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -172,7 +172,7 @@ procedure Curve25519Fe64SubAsm(PH, PF, PG: PUInt64);
 end;
 
 // PH := PF * 121666 mod (2^255-19).
-procedure Curve25519Fe64Mul121666Asm(PH, PF: PUInt64);
+procedure Curve25519Fe64Mul121666(PH, PF: PUInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64M121666}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -180,7 +180,7 @@ procedure Curve25519Fe64Mul121666Asm(PH, PF: PUInt64);
 end;
 
 // PH := PF^(2^AN) mod (2^255-19), AN >= 1 (AN is a public count, not a secret).
-procedure Curve25519Fe64SqrNAsm(PH, PF: PUInt64; AN: NativeInt);
+procedure Curve25519Fe64SqrN(PH, PF: PUInt64; AN: NativeInt);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64SQRN}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -188,7 +188,7 @@ procedure Curve25519Fe64SqrNAsm(PH, PF: PUInt64; AN: NativeInt);
 end;
 
 // One Montgomery ladder step + cswap over PState (x1,x2,z2,x3,z3, 4 limbs each).
-procedure Curve25519Fe64LadderStepAsm(PState: PUInt64; AMask: UInt64);
+procedure Curve25519Fe64LadderStep(PState: PUInt64; AMask: UInt64);
 {$DEFINE CRYPTOLIB_CURVE25519_SAT64LADDER}
 {$I ..\..\Include\Simd\Common\ClpSimdProc2Begin_x86_64.inc}
 {$I ..\..\Include\Simd\Curve25519\X25519Field_Sat64Adx_x86_64.inc}
@@ -210,7 +210,7 @@ end;
 class function TCurveFieldX86Backend.Mul25519(PF, PG, PH: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Curve25519Fe51MulAsm(PH, PF, PG);
+  Curve25519Fe51Mul(PH, PF, PG);
   Result := True;
 {$ELSE}
   Result := False;
@@ -220,7 +220,7 @@ end;
 class function TCurveFieldX86Backend.Sqr25519(PX, PZ: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Curve25519Fe51SqrAsm(PZ, PX);
+  Curve25519Fe51Sqr(PZ, PX);
   Result := True;
 {$ELSE}
   Result := False;
@@ -230,7 +230,7 @@ end;
 class function TCurveFieldX86Backend.Mul448(PF, PG, PH: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Curve448Fe56MulAsm(PH, PF, PG);
+  Curve448Fe56Mul(PH, PF, PG);
   Result := True;
 {$ELSE}
   Result := False;
@@ -240,7 +240,7 @@ end;
 class function TCurveFieldX86Backend.Sqr448(PX, PZ: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_SIMD}
-  Curve448Fe56SqrAsm(PZ, PX);
+  Curve448Fe56Sqr(PZ, PX);
   Result := True;
 {$ELSE}
   Result := False;
@@ -250,7 +250,7 @@ end;
 class function TCurveFieldX86Backend.Adx32Supported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_I386_ASM}
-  Result := IsSupported and TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX();
+  Result := IsSupported and TX86SimdFeatures.HasBMI2ADX();
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -259,7 +259,7 @@ end;
 class function TCurveFieldX86Backend.Adx32Mul25519(PF, PG, PH: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_I386_ASM}
-  Curve25519Adx32MulAsm(PH, PF, PG);
+  Curve25519Adx32Mul(PH, PF, PG);
   Result := True;
 {$ELSE}
   Result := False;
@@ -269,7 +269,7 @@ end;
 class function TCurveFieldX86Backend.Adx32Sqr25519(PX, PZ: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_I386_ASM}
-  Curve25519Adx32SqrAsm(PZ, PX);
+  Curve25519Adx32Sqr(PZ, PX);
   Result := True;
 {$ELSE}
   Result := False;
@@ -279,7 +279,7 @@ end;
 class function TCurveFieldX86Backend.Fe64Supported: Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Result := IsSupported and TX86SimdFeatures.HasBMI2() and TX86SimdFeatures.HasADX();
+  Result := IsSupported and TX86SimdFeatures.HasBMI2ADX();
 {$ELSE}
   Result := False;
 {$ENDIF}
@@ -288,49 +288,49 @@ end;
 class procedure TCurveFieldX86Backend.Fe64Mul25519(PF, PG, PH: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64MulAsm(PH, PF, PG);
+  Curve25519Fe64Mul(PH, PF, PG);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64Sqr25519(PX, PZ: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64SqrAsm(PZ, PX);
+  Curve25519Fe64Sqr(PZ, PX);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64Add(PA, PB, PR: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64AddAsm(PR, PA, PB);
+  Curve25519Fe64Add(PR, PA, PB);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64Sub(PA, PB, PR: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64SubAsm(PR, PA, PB);
+  Curve25519Fe64Sub(PR, PA, PB);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64Mul121666(PF, PH: PUInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64Mul121666Asm(PH, PF);
+  Curve25519Fe64Mul121666(PH, PF);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64SqrN(PF, PH: PUInt64; AN: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64SqrNAsm(PH, PF, AN);
+  Curve25519Fe64SqrN(PH, PF, AN);
 {$ENDIF}
 end;
 
 class procedure TCurveFieldX86Backend.Fe64LadderStep25519(PState: PUInt64; AMask: UInt64);
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  Curve25519Fe64LadderStepAsm(PState, AMask);
+  Curve25519Fe64LadderStep(PState, AMask);
 {$ENDIF}
 end;
 

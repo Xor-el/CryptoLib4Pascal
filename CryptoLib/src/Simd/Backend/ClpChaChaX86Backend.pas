@@ -31,7 +31,7 @@ resourcestring
 
 type
   /// <summary>
-  /// x86 SIMD backend for the ChaCha family: owns the SIMD keystream kernels
+  /// X86 SIMD backend for the ChaCha family: owns the SIMD keystream kernels
   /// (bodies in <c>Include\Simd\ChaCha\</c>) and the runtime tier selection via
   /// <c>TCpuFeatures.X86.SelectSlot</c>. Compiles on every target - when built
   /// without x86 SIMD the <c>Try*</c> entry points return <c>False</c> and the

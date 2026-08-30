@@ -29,9 +29,9 @@ uses
 
 type
   /// <summary>
-  /// AArch64 big-integer kernel backend for prime-field (Fp) multiplication/
-  /// square. A leaf: capability probe plus the hot schoolbook multiply/square.
-  /// The arch-neutral dispatch and the scalar fallback live in
+  /// Arm kernel backend for prime-field (Fp) arithmetic. A leaf: capability
+  /// probe plus the hot unreduced schoolbook multiply/square and the Montgomery
+  /// multiply. The arch-neutral dispatch and the scalar fallback live in
   /// <c>TFpKernelSimd</c> / the field units. Hot paths are in
   /// <c>Include/Simd/FpKernel/</c>.
   /// </summary>
@@ -56,10 +56,19 @@ type
     class function JacPointAddP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
     /// <summary>Fused P-256 incomplete-Jacobian mixed addition (PQ a TFeAffine).</summary>
     class function JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 (a=0) incomplete-Jacobian doubling PR := 2*PA (Jacobian).</summary>
+    class function JacPointDoubleK256(PR, PA, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 incomplete-Jacobian addition; PScratch = TJacAddScratch.</summary>
+    class function JacPointAddK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
+    /// <summary>Fused secp256k1 incomplete-Jacobian mixed addition (PQ a TFeAffine).</summary>
+    class function JacPointAddMixedK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
     class function ModSub(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>Constant-time gather: PDst := the AIndex-th of ACount entries (each
+    /// AEntryBytes wide), with index-independent access.</summary>
+    class function Gather(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt): Boolean; static;
   end;
 
 implementation
@@ -67,7 +76,7 @@ implementation
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
 
 // Z[0..2N-1] := X[0..N-1] * Y[0..N-1].
-procedure FpKernelMulAsm(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
+procedure FpKernelMul(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 {$DEFINE CRYPTOLIB_FP_MUL}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
@@ -75,7 +84,7 @@ procedure FpKernelMulAsm(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 end;
 
 // Z[0..2N-1] := X[0..N-1]^2.
-procedure FpKernelSqrAsm(PX, PZ: PUInt64; ALimbs64: NativeInt);
+procedure FpKernelSqr(PX, PZ: PUInt64; ALimbs64: NativeInt);
 {$DEFINE CRYPTOLIB_FP_SQR}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
@@ -83,7 +92,7 @@ procedure FpKernelSqrAsm(PX, PZ: PUInt64; ALimbs64: NativeInt);
 end;
 
 // Fused CIOS Montgomery multiply (FP_MONTMUL selector), width-general fallback.
-procedure FpKernelMontMulAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMul(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
@@ -92,42 +101,42 @@ end;
 
 // Fully-unrolled register-resident Montgomery multiply per width N=4..9,
 // dispatched by N below.
-procedure FpKernelMontMulReg4Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg4(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG4}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG4}
 end;
 
-procedure FpKernelMontMulReg5Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg5(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG5}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG5}
 end;
 
-procedure FpKernelMontMulReg6Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg6(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG6}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG6}
 end;
 
-procedure FpKernelMontMulReg7Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg7(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG7}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG7}
 end;
 
-procedure FpKernelMontMulReg8Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg8(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG8}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG8}
 end;
 
-procedure FpKernelMontMulReg9Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulReg9(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_REG9}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
@@ -135,7 +144,7 @@ procedure FpKernelMontMulReg9Asm(PR, PA, PB, PCtx: PUInt64);
 end;
 
 // P-256 special-prime N=4 fast path: mul/umulh product + folded shift/add reduction.
-procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelMontMulP256(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MONTMUL_P256}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
@@ -143,7 +152,7 @@ procedure FpKernelMontMulP256Asm(PR, PA, PB, PCtx: PUInt64);
 end;
 
 // Fused P-256 incomplete-Jacobian doubling (a=-3). PR/PA are TFePoint bases.
-procedure FpKernelP256JacPointDoubleAsm(PR, PA, PCtx: PUInt64);
+procedure FpKernelP256JacPointDouble(PR, PA, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTDOUBLE}
 {$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_aarch64.inc}
@@ -152,7 +161,7 @@ end;
 
 // Fused P-256 incomplete-Jacobian addition (add-2007-bl): masked-infinity inside;
 // H/RS predicate exposed. PScratch = TJacAddScratch, PA/PQ = TFePoint bases.
-procedure FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx: PUInt64);
+procedure FpKernelP256JacPointAdd(PScratch, PA, PQ, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTADD}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_aarch64.inc}
@@ -160,26 +169,62 @@ procedure FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx: PUInt64);
 end;
 
 // Fused P-256 incomplete-Jacobian mixed addition: PQ affine (Z2=1 from MontOne).
-procedure FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx: PUInt64);
+procedure FpKernelP256JacPointAddMixed(PScratch, PA, PQ, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernelP256JacPoint_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_P256_JACPOINTADDMIXED}
 end;
 
+// Fused secp256k1 incomplete-Jacobian doubling (a=0, dbl-2009-l): straight-line,
+// stack-framed, inlining the generic register montmul (k1's prime is pseudo-
+// Mersenne, so no folded reduction; the square is that montmul with operands
+// aliased). PR/PA are TFePoint bases.
+procedure FpKernelK1JacPointDouble(PR, PA, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTDOUBLE}
+{$I ..\..\Include\Simd\Common\ClpSimdProc3Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTDOUBLE}
+end;
+
+// Fused secp256k1 incomplete-Jacobian addition (add-2007-bl): masked-infinity
+// completion inside; predicate operands H/RS exposed for the caller's P=Q
+// detect-and-double. PScratch = TJacAddScratch, PA/PQ = TFePoint bases.
+procedure FpKernelK1JacPointAdd(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTADD}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTADD}
+end;
+
+// Fused secp256k1 incomplete-Jacobian mixed addition: PQ affine (Z2=1 from MontOne).
+procedure FpKernelK1JacPointAddMixed(PScratch, PA, PQ, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_K256_POINTADDMIXED}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelK256JacPoint_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_K256_POINTADDMIXED}
+end;
+
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general.
-procedure FpKernelModAddAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelModAdd(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODADD}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MODADD}
 end;
 
-procedure FpKernelModSubAsm(PR, PA, PB, PCtx: PUInt64);
+procedure FpKernelModSub(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODSUB}
 {$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
 {$I ..\..\Include\Simd\FpKernel\FpKernel_aarch64.inc}
 {$UNDEF CRYPTOLIB_FP_MODSUB}
+end;
+
+// Constant-time table gather (NEON): PDst := the AIndex-th entry out of ACount,
+// each AEntryBytes wide, masked-accumulated in constant time.
+procedure FpKernelGatherNeon(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt);
+{$I ..\..\Include\Simd\Common\ClpSimdProc5Begin_aarch64.inc}
+{$I ..\..\Include\Simd\FpKernel\FpKernelGatherNeon_aarch64.inc}
 end;
 
 {$ENDIF}
@@ -198,14 +243,14 @@ end;
 class procedure TFpKernelArmBackend.Mul(PX, PY, PZ: PUInt64; ALimbs64: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelMulAsm(PX, PY, PZ, ALimbs64);
+  FpKernelMul(PX, PY, PZ, ALimbs64);
 {$ENDIF}
 end;
 
 class procedure TFpKernelArmBackend.Sqr(PX, PZ: PUInt64; ALimbs64: NativeInt);
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelSqrAsm(PX, PZ, ALimbs64);
+  FpKernelSqr(PX, PZ, ALimbs64);
 {$ENDIF}
 end;
 
@@ -215,14 +260,14 @@ begin
   // CtxData[1] = N (uint64 limbs). N=4..9 take a fully-unrolled register-resident
   // kernel; any other width uses the width-general loop.
   case PUInt64(PByte(PCtx) + 8)^ of
-    4: FpKernelMontMulReg4Asm(PR, PA, PB, PCtx);
-    5: FpKernelMontMulReg5Asm(PR, PA, PB, PCtx);
-    6: FpKernelMontMulReg6Asm(PR, PA, PB, PCtx);
-    7: FpKernelMontMulReg7Asm(PR, PA, PB, PCtx);
-    8: FpKernelMontMulReg8Asm(PR, PA, PB, PCtx);
-    9: FpKernelMontMulReg9Asm(PR, PA, PB, PCtx);
+    4: FpKernelMontMulReg4(PR, PA, PB, PCtx);
+    5: FpKernelMontMulReg5(PR, PA, PB, PCtx);
+    6: FpKernelMontMulReg6(PR, PA, PB, PCtx);
+    7: FpKernelMontMulReg7(PR, PA, PB, PCtx);
+    8: FpKernelMontMulReg8(PR, PA, PB, PCtx);
+    9: FpKernelMontMulReg9(PR, PA, PB, PCtx);
   else
-    FpKernelMontMulAsm(PR, PA, PB, PCtx);
+    FpKernelMontMul(PR, PA, PB, PCtx);
   end;
   Result := True;
 {$ELSE}
@@ -233,7 +278,7 @@ end;
 class function TFpKernelArmBackend.MontMulP256(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelMontMulP256Asm(PR, PA, PB, PCtx);
+  FpKernelMontMulP256(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -243,7 +288,7 @@ end;
 class function TFpKernelArmBackend.JacPointDoubleP256(PR, PA, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelP256JacPointDoubleAsm(PR, PA, PCtx);
+  FpKernelP256JacPointDouble(PR, PA, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -253,7 +298,7 @@ end;
 class function TFpKernelArmBackend.JacPointAddP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelP256JacPointAddAsm(PScratch, PA, PQ, PCtx);
+  FpKernelP256JacPointAdd(PScratch, PA, PQ, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -263,7 +308,37 @@ end;
 class function TFpKernelArmBackend.JacPointAddMixedP256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelP256JacPointAddMixedAsm(PScratch, PA, PQ, PCtx);
+  FpKernelP256JacPointAddMixed(PScratch, PA, PQ, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.JacPointDoubleK256(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelK1JacPointDouble(PR, PA, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.JacPointAddK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelK1JacPointAdd(PScratch, PA, PQ, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.JacPointAddMixedK256(PScratch, PA, PQ, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelK1JacPointAddMixed(PScratch, PA, PQ, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -273,7 +348,7 @@ end;
 class function TFpKernelArmBackend.ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelModAddAsm(PR, PA, PB, PCtx);
+  FpKernelModAdd(PR, PA, PB, PCtx);
   Result := True;
 {$ELSE}
   Result := False;
@@ -283,7 +358,17 @@ end;
 class function TFpKernelArmBackend.ModSub(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
-  FpKernelModSubAsm(PR, PA, PB, PCtx);
+  FpKernelModSub(PR, PA, PB, PCtx);
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TFpKernelArmBackend.Gather(PDst, PTable: PByte; AEntryBytes, ACount, AIndex: NativeInt): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  FpKernelGatherNeon(PDst, PTable, AEntryBytes, ACount, AIndex);
   Result := True;
 {$ELSE}
   Result := False;

@@ -25,7 +25,7 @@ uses
 
 type
   /// <summary>
-  /// AArch64 SIMD backend for the AES-GCM-SIV POLYVAL batch kernel: owns the
+  /// Arm SIMD backend for the AES-GCM-SIV POLYVAL batch kernel: owns the
   /// PMULL 8-block Horner kernel (the raw-input variant of the GHASH batch
   /// body in <c>Include\Simd\Gcm\</c>) and the runtime capability gate.
   /// Compiles on every target - <c>IsSupported</c> returns <c>False</c> off aarch64

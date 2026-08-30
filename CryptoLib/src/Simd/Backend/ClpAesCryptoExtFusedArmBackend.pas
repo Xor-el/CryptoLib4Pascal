@@ -29,7 +29,7 @@ uses
 
 type
   /// <summary>
-  /// ARM backend shared by the in-tree AES CryptoExt fused kernel factories:
+  /// Arm backend shared by the in-tree AES CryptoExt fused kernel factories:
   /// owns the CPU/build gate and the concrete <c>IAesEngineArm</c> resolution.
   /// Compiles on every target - <c>CpuSupports</c> is <c>False</c> off aarch64
   /// and <c>TryResolveEngine</c> then finds no engine.

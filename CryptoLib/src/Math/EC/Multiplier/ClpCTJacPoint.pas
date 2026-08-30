@@ -27,6 +27,7 @@ uses
   ClpIECFieldElement,
   ClpCTFieldValue,
   ClpCTFieldArith,
+  ClpFpKernelSimd,
   ClpCryptoLibTypes;
 
 type
@@ -121,6 +122,9 @@ var
   LMask: UInt32;
   LEntry: ^TFePoint;
 begin
+  if TFpKernelSimd.TryGather(PByte(@AR), PByte(@ATable[0]),
+    SizeOf(TFePoint), ACount, AIndex) then
+    Exit;
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
   for LI := 0 to ACount - 1 do
@@ -143,6 +147,9 @@ var
   LMask: UInt32;
   LEntry: ^TFeAffine;
 begin
+  if TFpKernelSimd.TryGather(PByte(@AR), PByte(@ATable[ABase]),
+    SizeOf(TFeAffine), ACount, AIndex) then
+    Exit;
   LN := AFieldOps.GetFieldInts;
   FillChar(AR, SizeOf(AR), 0);
   for LI := 0 to ACount - 1 do
@@ -503,20 +510,42 @@ end;
 class procedure TCTJacPoint<TOps>.ToAffine(const AFieldOps: IFpFieldOps;
   const AP: TFePoint; const AXa, AYa: TCryptoLibUInt32Array; out AIsInfinity: Boolean);
 var
-  LN: Int32;
-  LZn, LXn, LYn: TFe;
+  LN, LI: Int32;
+  LAcc: UInt32;
+  LZn, LXn, LYn, LZInvM, LZInv2M, LZInv3M: TFe;
   LTT: TFeExt;
   LZarr, LZInv, LZInv2, LZInv3, LXn0, LYn0: TCryptoLibUInt32Array;
 begin
   LN := AFieldOps.GetFieldInts;
-  // Bring each coordinate out of the Montgomery domain, then do the x = X/Z^2,
-  // y = Y/Z^3 division in the normal domain (one modular inverse of Z).
+  // Infinity iff Z = 0 (the Montgomery image of zero is zero).
+  LAcc := 0;
+  for LI := 0 to LN - 1 do
+    LAcc := LAcc or AP.Z.W[LI];
+  AIsInfinity := LAcc = 0;
+  if AIsInfinity then
+    Exit;
+  if TOps.TryInvMont(AP.Z, LZInvM, LTT) then
+  begin
+    // Montgomery-domain normalize: x = X*(Z^-1)^2, y = Y*(Z^-1)^3 on the field
+    // kernels, leaving the domain only for the two results.
+    TOps.Sqr(LZInvM, LZInv2M, LTT);
+    TOps.Mul(LZInv2M, LZInvM, LZInv3M, LTT);
+    TOps.Mul(AP.X, LZInv2M, LXn, LTT);
+    TOps.Mul(AP.Y, LZInv3M, LYn, LTT);
+    TOps.FromMont(LXn, LXn, LTT);
+    TOps.FromMont(LYn, LYn, LTT);
+    Move(LXn.W[0], AXa[0], LN * SizeOf(UInt32));
+    Move(LYn.W[0], AYa[0], LN * SizeOf(UInt32));
+    FillChar(LZInvM, SizeOf(LZInvM), 0);
+    FillChar(LZInv2M, SizeOf(LZInv2M), 0);
+    FillChar(LZInv3M, SizeOf(LZInv3M), 0);
+    Exit;
+  end;
+  // generic path: leave the Montgomery domain, then one modular inverse of Z
+  // in the normal domain (x = X/Z^2, y = Y/Z^3).
   TOps.FromMont(AP.Z, LZn, LTT);
   LZarr := TNat.Create(LN);
   Move(LZn.W[0], LZarr[0], LN * SizeOf(UInt32));
-  AIsInfinity := AFieldOps.IsZero(LZarr);
-  if AIsInfinity then
-    Exit;
   TOps.FromMont(AP.X, LXn, LTT);
   TOps.FromMont(AP.Y, LYn, LTT);
   LXn0 := TNat.Create(LN);

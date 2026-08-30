@@ -158,7 +158,7 @@ type
 
 type
   TSecP256K1Curve = class sealed(TAbstractFpCurve, IAbstractFpCurve, IECCurve,
-    ISecP256K1Curve)
+    IECCTMultiplierFactory, ISecP256K1Curve)
   strict private
   const
     SECP256K1_DEFAULT_COORDS = TECCurveConstants.COORD_JACOBIAN;
@@ -206,6 +206,7 @@ type
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
     function CreateBasePointMultiplier: IECMultiplier; override;
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 
     class property Q: TBigInteger read FQ;
     class property SecP256K1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP256K1AffineZs;
@@ -246,6 +247,12 @@ type
     class function FieldLimbs: Int32; override;
     class function MontParams: PMontParams; override;
     class function ACoeff: TCTACoeff; override;
+    /// <summary>Gated fused incomplete-Jacobian double / add / mixed-add (a=0): the
+    /// whole-point kernel when supported, else False so the generic per-op Jacobian
+    /// formula runs.</summary>
+    class function TryFusedJacPointDouble(APR, APA: PUInt64): Boolean; override;
+    class function TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean; override;
+    class function TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean; override;
   end;
 
 implementation
@@ -1140,14 +1147,19 @@ begin
   end;
 end;
 
-function TSecP256K1Curve.CreateDefaultMultiplier: IECMultiplier;
+function TSecP256K1Curve.CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 var
   LCurve: IECCurve;
   LFieldOps: IFpFieldOps;
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP256K1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCTMultiplier<TSecP256K1FieldArith>.Create(LFieldOps);
+  Result := TFpCTMultiplier<TSecP256K1FieldArith>.Create(LFieldOps, ABlindBits);
+end;
+
+function TSecP256K1Curve.CreateDefaultMultiplier: IECMultiplier;
+begin
+  Result := CreateCTMultiplier(TECCurveConstants.SCALAR_BLIND_FULL);
 end;
 
 function TSecP256K1Curve.CreateBasePointMultiplier: IECMultiplier;
@@ -1271,6 +1283,24 @@ end;
 class function TSecP256K1FieldArith.ACoeff: TCTACoeff;
 begin
   Result := TCTACoeff.Zero;
+end;
+
+class function TSecP256K1FieldArith.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryK256JacPointDouble(APR, APA,
+    PUInt64(@FParams.CtxData[0]));
+end;
+
+class function TSecP256K1FieldArith.TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryK256JacPointAdd(APScratch, APA, APQ,
+    PUInt64(@FParams.CtxData[0]));
+end;
+
+class function TSecP256K1FieldArith.TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean;
+begin
+  Result := TFpKernelSimd.TryK256JacPointAddMixed(APScratch, APA, APQ,
+    PUInt64(@FParams.CtxData[0]));
 end;
 
 class function TSecP256K1FpFieldOps.CreateForCurve(const ACurve: IECCurve): IFpFieldOps;

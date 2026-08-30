@@ -82,6 +82,13 @@ type
     /// <summary>Optional fused mixed incomplete-Jacobian addition: APQ is a
     /// <c>TFeAffine</c> base (implicit Z2=1). Default False.</summary>
     class function TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean; virtual;
+    /// <summary>
+    /// Montgomery-domain modular inverse AZ := AX^-1 mod p (input and output
+    /// Montgomery-domain, AX non-zero) via a curve-specific Fermat addition
+    /// chain over the field kernels. False when the curve has no dedicated
+    /// chain; the caller then uses its generic inverse.
+    /// </summary>
+    class function TryInvMont(const AX: TFe; var AZ: TFe; var ATT: TFeExt): Boolean; virtual;
 
     // ---- shared ops (one implementation for every curve) ----
     /// <summary>AZ := MontMul(AX, AY) = AX*AY*R^-1 mod p. ATT is caller-owned scratch.</summary>
@@ -253,12 +260,17 @@ end;
 
 class procedure TCTFieldArithBase.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
-  Mul(AX, AX, AZ, ATT); // dedicated MontSqr is a later perf layer
+  Mul(AX, AX, AZ, ATT);
 end;
 
 class function TCTFieldArithBase.ACoeff: TCTACoeff;
 begin
   Result := TCTACoeff.General;
+end;
+
+class function TCTFieldArithBase.TryInvMont(const AX: TFe; var AZ: TFe; var ATT: TFeExt): Boolean;
+begin
+  Result := False; // no dedicated inversion chain; caller uses its generic inverse
 end;
 
 class function TCTFieldArithBase.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;

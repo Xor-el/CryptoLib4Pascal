@@ -14,52 +14,32 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpByteXorArmBackend;
+unit ClpIEphemeralECDHAgreement;
 
-{$I ..\..\Include\CryptoLib.inc}
+{$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpCpuFeatures,
-  ClpCryptoLibTypes;
+  ClpBigInteger,
+  ClpICipherParameters;
 
 type
   /// <summary>
-  /// Arm (NEON) backend for the variable-length XOR utility (body in
-  /// <c>Include\Simd\ByteXor\</c>). Compiles on every target - when built
-  /// without AArch64 SIMD <c>TryXor</c> returns <c>False</c> and the caller
-  /// runs its scalar path.
+  /// Single-use ECDH agreement for a freshly generated EPHEMERAL private key
+  /// (e.g. a TLS 1.3 ECDHE key share). It multiplies the peer point by the private
+  /// scalar with a dedicated constant-time multiplier whose scalar-blind width is
+  /// chosen for one-shot use (minimal blind, or deterministic fixed-length), never
+  /// the curve's shared fully-blinded default. The private key is released after a
+  /// single CalculateAgreement, and a second call is refused. NOT for long-term or
+  /// reused (static) keys - those must use the fully-blinded default agreement.
   /// </summary>
-  TByteXorArmBackend = class sealed
-  public
-    /// <summary>PZ[i] := PX[i] xor PY[i] for i in [0, ALen); PZ may alias
-    /// PX or PY.</summary>
-    class function TryXor(ALen: NativeInt; AX, AY, AZ: PByte): Boolean; static;
+  IEphemeralECDHAgreement = interface(IInterface)
+    ['{6F2A1C34-8E5B-4D71-9A2C-3B7E1F5D8A46}']
+
+    function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger;
   end;
 
 implementation
-
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-procedure ByteXorNeon(ALen: NativeInt; AX, AY, AZ: Pointer);
-{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
-{$I ..\..\Include\Simd\ByteXor\ByteXorNeon_aarch64.inc}
-end;
-{$ENDIF CRYPTOLIB_AARCH64_ASM}
-
-{ TByteXorArmBackend }
-
-class function TByteXorArmBackend.TryXor(ALen: NativeInt;
-  AX, AY, AZ: PByte): Boolean;
-begin
-{$IFDEF CRYPTOLIB_AARCH64_ASM}
-  if TCpuFeatures.Arm.HasNEON() then
-  begin
-    ByteXorNeon(ALen, AX, AY, AZ);
-    Exit(True);
-  end;
-{$ENDIF}
-  Result := False;
-end;
 
 end.

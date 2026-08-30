@@ -152,7 +152,7 @@ type
 
 type
   TSecP521R1Curve = class sealed(TAbstractFpCurve, IAbstractFpCurve, IECCurve,
-    ISecP521R1Curve)
+    IECCTMultiplierFactory, ISecP521R1Curve)
   strict private
   const
     SECP521R1_DEFAULT_COORDS = TECCurveConstants.COORD_JACOBIAN;
@@ -200,6 +200,7 @@ type
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
     function CreateBasePointMultiplier: IECMultiplier; override;
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 
     class property Q: TBigInteger read FQ;
     class property SecP521R1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP521R1AffineZs;
@@ -1113,14 +1114,19 @@ begin
   end;
 end;
 
-function TSecP521R1Curve.CreateDefaultMultiplier: IECMultiplier;
+function TSecP521R1Curve.CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
 var
   LCurve: IECCurve;
   LFieldOps: IFpFieldOps;
 begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP521R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
-  Result := TFpCTMultiplier<TSecP521R1FieldArith>.Create(LFieldOps);
+  Result := TFpCTMultiplier<TSecP521R1FieldArith>.Create(LFieldOps, ABlindBits);
+end;
+
+function TSecP521R1Curve.CreateDefaultMultiplier: IECMultiplier;
+begin
+  Result := CreateCTMultiplier(TECCurveConstants.SCALAR_BLIND_FULL);
 end;
 
 function TSecP521R1Curve.CreateBasePointMultiplier: IECMultiplier;

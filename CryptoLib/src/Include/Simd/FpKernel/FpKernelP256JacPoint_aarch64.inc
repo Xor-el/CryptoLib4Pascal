@@ -59,828 +59,459 @@
   // sqr delta = Z
   add x0, sp, #96
   add x1, sp, #64
-  add x2, sp, #64
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // sqr gamma = Y
   add x0, sp, #128
   add x1, sp, #32
-  add x2, sp, #32
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul beta = X * gamma
   add x0, sp, #160
   add x1, sp, #0
   add x2, sp, #128
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub t = X - delta
   ldr x4, [sp, #0]
   ldr x9, [sp, #96]
@@ -957,277 +588,152 @@
   add x0, sp, #288
   add x1, sp, #224
   add x2, sp, #256
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModAdd alpha = tmp + tmp
   ldr x4, [sp, #288]
   ldr x9, [sp, #288]
@@ -1315,278 +821,156 @@
   // sqr X3 = alpha
   add x0, sp, #320
   add x1, sp, #192
-  add x2, sp, #192
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModAdd tmp = beta + beta
   ldr x4, [sp, #160]
   ldr x9, [sp, #160]
@@ -1788,278 +1172,156 @@
   // sqr Z3 = Z3
   add x0, sp, #384
   add x1, sp, #384
-  add x2, sp, #384
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub Z3 = Z3 - gamma
   ldr x4, [sp, #384]
   ldr x9, [sp, #128]
@@ -2238,552 +1500,305 @@
   add x0, sp, #352
   add x1, sp, #192
   add x2, sp, #288
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // sqr tmp = gamma
   add x0, sp, #288
   add x1, sp, #128
-  add x2, sp, #128
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModAdd tmp = tmp + tmp
   ldr x4, [sp, #288]
   ldr x9, [sp, #288]
@@ -3025,2203 +2040,1209 @@
   // sqr Z1Z1 = Z1
   add x0, sp, #192
   add x1, sp, #64
-  add x2, sp, #64
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // sqr Z2Z2 = Z2
   add x0, sp, #224
   add x1, sp, #160
-  add x2, sp, #160
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul U1 = X1 * Z2Z2
   add x0, sp, #256
   add x1, sp, #0
   add x2, sp, #224
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul U2 = X2 * Z1Z1
   add x0, sp, #288
   add x1, sp, #96
   add x2, sp, #192
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul t = Y1 * Z2
   add x0, sp, #576
   add x1, sp, #32
   add x2, sp, #160
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul S1 = t * Z2Z2
   add x0, sp, #320
   add x1, sp, #576
   add x2, sp, #224
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul t = Y2 * Z1
   add x0, sp, #576
   add x1, sp, #128
   add x2, sp, #64
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul S2 = t * Z1Z1
   add x0, sp, #352
   add x1, sp, #576
   add x2, sp, #192
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub H = U2 - U1
   ldr x4, [sp, #288]
   ldr x9, [sp, #256]
@@ -5369,1103 +3390,609 @@
   // sqr I = t
   add x0, sp, #480
   add x1, sp, #576
-  add x2, sp, #576
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul J = H * I
   add x0, sp, #512
   add x1, sp, #384
   add x2, sp, #480
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul V = U1 * I
   add x0, sp, #544
   add x1, sp, #256
   add x2, sp, #480
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // sqr X3 = R
   add x0, sp, #608
   add x1, sp, #448
-  add x2, sp, #448
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub X3 = X3 - J
   ldr x4, [sp, #608]
   ldr x9, [sp, #512]
@@ -6602,552 +4129,302 @@
   add x0, sp, #640
   add x1, sp, #448
   add x2, sp, #576
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul t = S1 * J
   add x0, sp, #576
   add x1, sp, #320
   add x2, sp, #512
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModAdd t = t + t
   ldr x4, [sp, #576]
   ldr x9, [sp, #576]
@@ -7265,278 +4542,156 @@
   // sqr Z3 = Z3
   add x0, sp, #672
   add x1, sp, #672
-  add x2, sp, #672
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub Z3 = Z3 - Z1Z1
   ldr x4, [sp, #672]
   ldr x9, [sp, #192]
@@ -7601,277 +4756,152 @@
   add x0, sp, #672
   add x1, sp, #672
   add x2, sp, #384
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // infinity masks in1 (x13), in2 (x14)
   ldr x9, [sp, #64]
   ldr x10, [sp, #72]
@@ -8093,1103 +5123,606 @@
   // sqr Z1Z1 = Z1
   add x0, sp, #192
   add x1, sp, #64
-  add x2, sp, #64
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul U2 = X2 * Z1Z1
   add x0, sp, #224
   add x1, sp, #96
   add x2, sp, #192
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul t = Y2 * Z1
   add x0, sp, #480
   add x1, sp, #128
   add x2, sp, #64
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul S2 = t * Z1Z1
   add x0, sp, #256
   add x1, sp, #480
   add x2, sp, #192
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub H = U2 - X1
   ldr x4, [sp, #224]
   ldr x9, [sp, #0]
@@ -9337,1103 +5870,609 @@
   // sqr I = t
   add x0, sp, #384
   add x1, sp, #480
-  add x2, sp, #480
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul J = H * I
   add x0, sp, #416
   add x1, sp, #288
   add x2, sp, #384
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul V = X1 * I
   add x0, sp, #448
   add x1, sp, #0
   add x2, sp, #384
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // sqr X3 = R
   add x0, sp, #512
   add x1, sp, #352
-  add x2, sp, #352
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub X3 = X3 - J
   ldr x4, [sp, #512]
   ldr x9, [sp, #416]
@@ -10570,552 +6609,302 @@
   add x0, sp, #544
   add x1, sp, #352
   add x2, sp, #480
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // mul t = Y1 * J
   add x0, sp, #480
   add x1, sp, #32
   add x2, sp, #416
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModAdd t = t + t
   ldr x4, [sp, #480]
   ldr x9, [sp, #480]
@@ -11233,278 +7022,156 @@
   // sqr Z3 = Z3
   add x0, sp, #576
   add x1, sp, #576
-  add x2, sp, #576
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  // dedicated Montgomery square: [x1]^2 -> [x0]
+  ldr x12, [x1, #0]
+  ldr x13, [x1, #8]
+  ldr x14, [x1, #16]
+  ldr x15, [x1, #24]
+  mov x5, xzr
+  mov x6, xzr
+  mov x7, xzr
+  mov x8, xzr
+  mov x9, xzr
+  mov x10, xzr
+  mul x16, x13, x12
+  umulh x17, x13, x12
+  adds x5, x5, x16
+  adc x2, x17, xzr
+  mul x16, x14, x12
+  umulh x17, x14, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x6, x6, x16
+  adc x2, x17, xzr
+  mul x16, x15, x12
+  umulh x17, x15, x12
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  adds x8, x8, x2
+  mul x16, x14, x13
+  umulh x17, x14, x13
+  adds x7, x7, x16
+  adc x2, x17, xzr
+  mul x16, x15, x13
+  umulh x17, x15, x13
+  adds x16, x16, x2
+  adc x17, x17, xzr
+  adds x8, x8, x16
+  adc x2, x17, xzr
+  adds x9, x9, x2
+  mul x16, x15, x14
+  umulh x17, x15, x14
+  adds x9, x9, x16
+  adc x2, x17, xzr
+  adds x10, x10, x2
+  adds x5, x5, x5
+  adcs x6, x6, x6
+  adcs x7, x7, x7
+  adcs x8, x8, x8
+  adcs x9, x9, x9
+  adcs x10, x10, x10
+  adc x11, xzr, xzr
+  mul x4, x12, x12
+  umulh x16, x12, x12
+  adds x5, x5, x16
+  mul x16, x13, x13
+  umulh x17, x13, x13
+  adcs x6, x6, x16
+  adcs x7, x7, x17
+  mul x16, x14, x14
+  umulh x17, x14, x14
+  adcs x8, x8, x16
+  adcs x9, x9, x17
+  mul x16, x15, x15
+  umulh x17, x15, x15
+  adcs x10, x10, x16
+  adcs x11, x11, x17
+  mov x2, xzr
+  lsl x13, x4, #32
+  lsr x14, x4, #32
   adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
   adcs x6, x6, x14
   adcs x7, x7, xzr
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x4, x13
+  sbc x12, x4, x14
+  adds x7, x7, x15
   adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x5, #32
+  lsr x14, x5, #32
   adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
+  adcs x7, x7, x14
   adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x5, x13
+  sbc x12, x5, x14
+  adds x8, x8, x15
+  adcs x9, x9, x12
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x6, #32
+  lsr x14, x6, #32
   adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  adcs x8, x8, x14
+  adcs x9, x9, xzr
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x6, x13
+  sbc x12, x6, x14
+  adds x9, x9, x15
+  adcs x10, x10, x12
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  lsl x13, x7, #32
+  lsr x14, x7, #32
+  adds x8, x8, x13
+  adcs x9, x9, x14
+  adcs x10, x10, xzr
+  adcs x11, x11, xzr
+  adc x2, x2, xzr
+  subs x15, x7, x13
+  sbc x12, x7, x14
+  adds x10, x10, x15
+  adcs x11, x11, x12
+  adc x2, x2, xzr
+  mov x4, x8
+  mov x5, x9
+  mov x6, x10
+  mov x7, x11
+  mov x8, x2
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x4, x10
+  sbcs  x15, x5, x11
+  sbcs  x16, x6, x12
+  sbcs  x17, x7, x13
+  sbcs  xzr, x8, xzr
+  sbc   x8, xzr, xzr
+  and   x10, x10, x8
+  and   x11, x11, x8
+  and   x12, x12, x8
+  and   x13, x13, x8
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // ModSub Z3 = Z3 - Z1Z1
   ldr x4, [sp, #576]
   ldr x9, [sp, #192]
@@ -11569,277 +7236,152 @@
   add x0, sp, #576
   add x1, sp, #576
   add x2, sp, #288
-  mov  x4, xzr
-  mov  x5, xzr
-  mov  x6, xzr
-  mov  x7, xzr
-  mov  x8, xzr
-  mov  x9, xzr
-  ldr  x10, [x2, #0]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #8]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #16]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  ldr  x10, [x2, #24]
-  mov  x11, xzr
-  ldr  x15, [x1, #0]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x4, x4, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #8]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x5, x5, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #16]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x6, x6, x13
-  adc  x11, x14, xzr
-  ldr  x15, [x1, #24]
-  mul  x13, x15, x10
-  umulh x14, x15, x10
-  adds x13, x13, x11
-  adc  x14, x14, xzr
-  adds x7, x7, x13
-  adc  x11, x14, xzr
-  adds x8, x8, x11
-  adc  x9, xzr, xzr
-  lsl  x13, x4, #32       // low64(m<<32)
-  lsr  x14, x4, #32       // high32(m<<32)
-  adds x5, x5, x13        // t[1..] += m<<96
-  adcs x6, x6, x14
-  adcs x7, x7, xzr
-  adcs x8, x8, xzr
-  adc  x9, x9, xzr
-  subs x15, x4, x13       // x15:x12 = m*p3 = m + m<<64 - m<<32
-  sbc  x12, x4, x14
-  adds x7, x7, x15        // t[3..] += m*p3 << 192
-  adcs x8, x8, x12
-  adc  x9, x9, xzr
-  mov  x4, x5             // shift down one limb (drop t0)
-  mov  x5, x6
-  mov  x6, x7
-  mov  x7, x8
-  mov  x8, x9
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #24]
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #32]
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  ldr  x15, [x3, #40]
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  subs x13, x8, x11
-  adc  x12, xzr, xzr
-  neg  x12, x12
-  mov  x11, xzr
-  ldr  x15, [x3, #16]
-  and  x15, x15, x12
-  subs x13, x4, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #0]
-  ldr  x15, [x3, #24]
-  and  x15, x15, x12
-  subs x13, x5, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #8]
-  ldr  x15, [x3, #32]
-  and  x15, x15, x12
-  subs x13, x6, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #16]
-  ldr  x15, [x3, #40]
-  and  x15, x15, x12
-  subs x13, x7, x11
-  sbc  x14, xzr, xzr
-  subs x13, x13, x15
-  sbc  x10, xzr, xzr
-  add  x11, x14, x10
-  neg  x11, x11
-  str  x13, [x0, #24]
+  ldp   x10, x11, [x1]
+  ldp   x12, x13, [x1, #16]
+  ldr   x14, [x2]
+  mul   x4, x10, x14
+  umulh x5, x10, x14
+  mul   x15, x11, x14
+  umulh x6, x11, x14
+  mul   x16, x12, x14
+  umulh x7, x12, x14
+  mul   x17, x13, x14
+  umulh x8, x13, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, x17
+  adc   x8, x8, xzr
+  mov   x9, xzr
+  lsl   x15, x4, #32
+  lsr   x16, x4, #32
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  adcs  x7, x7, xzr
+  adcs  x8, x8, xzr
+  adc   x9, x9, xzr
+  subs  x17, x4, x15
+  sbc   x16, x4, x16
+  adds  x7, x7, x17
+  adcs  x8, x8, x16
+  adc   x9, x9, xzr
+  mov   x4, xzr
+  ldr   x14, [x2, #8]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x5, x5, x15
+  adcs  x6, x6, x16
+  mul   x15, x13, x14
+  adcs  x7, x7, x17
+  adcs  x8, x8, x15
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  umulh x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adc   x4, x4, xzr
+  lsl   x15, x5, #32
+  lsr   x16, x5, #32
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  adcs  x8, x8, xzr
+  adcs  x9, x9, xzr
+  adc   x4, x4, xzr
+  subs  x17, x5, x15
+  sbc   x16, x5, x16
+  adds  x8, x8, x17
+  adcs  x9, x9, x16
+  adc   x4, x4, xzr
+  mov   x5, xzr
+  ldr   x14, [x2, #16]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x6, x6, x15
+  adcs  x7, x7, x16
+  mul   x15, x13, x14
+  adcs  x8, x8, x17
+  adcs  x9, x9, x15
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  umulh x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adc   x5, x5, xzr
+  lsl   x15, x6, #32
+  lsr   x16, x6, #32
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  adcs  x9, x9, xzr
+  adcs  x4, x4, xzr
+  adc   x5, x5, xzr
+  subs  x17, x6, x15
+  sbc   x16, x6, x16
+  adds  x9, x9, x17
+  adcs  x4, x4, x16
+  adc   x5, x5, xzr
+  mov   x6, xzr
+  ldr   x14, [x2, #24]
+  mul   x15, x10, x14
+  mul   x16, x11, x14
+  mul   x17, x12, x14
+  adds  x7, x7, x15
+  adcs  x8, x8, x16
+  mul   x15, x13, x14
+  adcs  x9, x9, x17
+  adcs  x4, x4, x15
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  umulh x15, x10, x14
+  umulh x16, x11, x14
+  umulh x17, x12, x14
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  umulh x15, x13, x14
+  adcs  x4, x4, x17
+  adcs  x5, x5, x15
+  adc   x6, x6, xzr
+  lsl   x15, x7, #32
+  lsr   x16, x7, #32
+  adds  x8, x8, x15
+  adcs  x9, x9, x16
+  adcs  x4, x4, xzr
+  adcs  x5, x5, xzr
+  adc   x6, x6, xzr
+  subs  x17, x7, x15
+  sbc   x16, x7, x16
+  adds  x4, x4, x17
+  adcs  x5, x5, x16
+  adc   x6, x6, xzr
+  mov   x7, xzr
+  ldp   x10, x11, [x3, #16]
+  ldp   x12, x13, [x3, #32]
+  subs  x14, x8, x10
+  sbcs  x15, x9, x11
+  sbcs  x16, x4, x12
+  sbcs  x17, x5, x13
+  sbcs  xzr, x6, xzr
+  sbc   x6, xzr, xzr
+  and   x10, x10, x6
+  and   x11, x11, x6
+  and   x12, x12, x6
+  and   x13, x13, x6
+  adds  x14, x14, x10
+  adcs  x15, x15, x11
+  adcs  x16, x16, x12
+  adc   x17, x17, x13
+  stp   x14, x15, [x0]
+  stp   x16, x17, [x0, #16]
   // infinity masks in1 (x13), in2 (x14)
   ldr x9, [sp, #64]
   ldr x10, [sp, #72]

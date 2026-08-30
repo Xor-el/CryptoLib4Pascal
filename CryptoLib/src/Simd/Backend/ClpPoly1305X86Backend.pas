@@ -28,7 +28,7 @@ uses
 
 type
   /// <summary>
-  /// x86 SIMD backend for Poly1305: owns the AVX2 power-table builder and the
+  /// X86 SIMD backend for Poly1305: owns the AVX2 power-table builder and the
   /// 4-way bulk kernel (body in <c>Include\Simd\Poly1305\</c>) plus the runtime
   /// tier selection via <c>TCpuFeatures.X86.SelectSlot</c>. Compiles on every
   /// target - when built without x86 SIMD <c>TryInitPowerTable</c> returns

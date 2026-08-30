@@ -134,6 +134,8 @@ begin
   LFieldOps.FieldFromBigInteger(LQn.AffineXCoord.ToBigInteger(), LQx);
   LFieldOps.FieldFromBigInteger(LQn.AffineYCoord.ToBigInteger(), LQy);
 
+  LTableP := nil;
+  LTableQ := nil;
   SetLength(LTableP, TABLE_SIZE);
   SetLength(LTableQ, TABLE_SIZE);
   BuildOddMultiples(LFieldOps, LPx, LPy, LTableP);

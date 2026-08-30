@@ -34,6 +34,7 @@ type
     FHasAESNI: Boolean;
     FHasBMI2: Boolean;
     FHasADX: Boolean;
+    FHasBMI2ADX: Boolean;
 
   strict private
     class function CPUHasSSE2(): Boolean; static;
@@ -72,6 +73,7 @@ type
     class function HasAESNI(): Boolean; static;
     class function HasBMI2(): Boolean; static;
     class function HasADX(): Boolean; static;
+    class function HasBMI2ADX(): Boolean; static; inline;
 
     // Picks the highest declared tier in ATiers that is <= the cached
     // FActiveSimdLevel. Falls back to TX86SimdLevel.Scalar when no tier
@@ -308,6 +310,7 @@ begin
   FHasAESNI := False;
   FHasBMI2 := False;
   FHasADX := False;
+  FHasBMI2ADX := False;
 end;
 
 class procedure TX86SimdFeatures.ProbeHardwareAndCache();
@@ -345,6 +348,7 @@ begin
   FHasVPCLMULQDQ := CPUHasVPCLMULQDQ() and LHasAVX2;  // VPCLMULQDQ needs AVX/AVX2 lanes
   FHasBMI2       := CPUHasBMI2();
   FHasADX        := CPUHasADX();
+  FHasBMI2ADX    := FHasBMI2 and FHasADX;
 end;
 
 class procedure TX86SimdFeatures.ApplyBuildOverrides();
@@ -438,6 +442,11 @@ end;
 class function TX86SimdFeatures.HasADX(): Boolean;
 begin
   Result := FHasADX;
+end;
+
+class function TX86SimdFeatures.HasBMI2ADX(): Boolean;
+begin
+  Result := FHasBMI2ADX;
 end;
 
 class function TX86SimdFeatures.SelectSlot(const ATiers

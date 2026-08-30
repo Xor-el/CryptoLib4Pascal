@@ -35,6 +35,7 @@ type
   IECPoint = interface;
 
   IECMultiplier = interface;
+  IECCTMultiplierFactory = interface;
   IECEndomorphism = interface;
   IECLookupTable = interface;
 
@@ -240,6 +241,18 @@ type
     ['{D4E5F6A7-B8C9-0123-D4E5-F6A7B8C90124}']
 
     function Multiply(const APoint: IECPoint; const AK: TBigInteger): IECPoint;
+  end;
+
+  /// <summary>Segregated factory for a fresh, dedicated constant-time scalar
+  /// multiplier with an explicit scalar-blind width. Implemented only by the
+  /// value-type Fp custom curves. ABlindBits: 64 = full blind (long-term keys),
+  /// 32 = minimal blind, 0 = deterministic fixed-length ladder; 32/0 are for
+  /// single-use ephemeral scalars only. The result is always a new instance,
+  /// never the curve's shared (fully-blinded) default multiplier.</summary>
+  IECCTMultiplierFactory = interface(IInterface)
+    ['{C7A3F1E2-9B4D-4A6C-8E2F-1D5B7A9C3E4F}']
+
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
   end;
 
 implementation
