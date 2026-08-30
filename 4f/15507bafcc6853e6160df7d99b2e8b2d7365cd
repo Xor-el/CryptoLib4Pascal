@@ -1,0 +1,27 @@
+CryptoLib/src/Math/ClpBigInteger.pas
+  s_5e9312dc1422f7::t_5f9b11266eb9fb 215-227,1289-1321
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_5e9312dc1422f7::t_6562738642aeff 269-271,1506-1566
+CryptoLib/src/Math/EC/Multiplier/ClpCTFieldArith.pas
+  s_5e9312dc1422f7::t_059b1592603a64 85-91,271-275
+CryptoLib/src/Math/EC/Multiplier/ClpCTJacPoint.pas
+  s_5e9312dc1422f7::t_76c28bba6bcf33 513-515,520-545
+CryptoLib/src/Math/Raw/ClpNat.pas
+  s_5e9312dc1422f7::t_e754ed07fb9327 1018-1021,1031-1032
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "4f15507bafcc6853e6160df7d99b2e8b2d7365cd",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
