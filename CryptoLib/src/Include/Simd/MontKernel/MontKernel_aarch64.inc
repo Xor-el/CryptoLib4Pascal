@@ -1,35 +1,19 @@
-// Prime-field (Fp) big-integer 64-bit-limb multiply/square kernels (AArch64).
+// Prime-agnostic width-parametric modular-arithmetic kernels (AArch64).
 // -------------------------------------------------------------------
 //
-// One selector-driven file per arch; exactly one of the following must be
-// defined before including this file:
+// MontKernel family: schoolbook multiply/square, the CIOS Montgomery
+// multiply (width-general and register-resident per width), and constant-
+// time modular add/subtract. Prime-agnostic and width-parametric -- the
+// curve-specific special-prime P-256 kernels live in the PointKernel family.
 //
-//   CRYPTOLIB_FP_MUL   (ClpSimdProc4Begin: x0 = PX, x1 = PY, x2 = PZ, x3 = N)
-//     - schoolbook Z[0..2N-1] := X[0..N-1] * Y[0..N-1] over 64-bit limbs;
-//       callers reinterpret 32-bit-limb field arrays (uint32[2N] == uint64[N]).
-//   CRYPTOLIB_FP_SQR   (ClpSimdProc3Begin: x0 = PX, x1 = PZ, x2 = N)
-//     - dedicated schoolbook square Z[0..2N-1] := X[0..N-1]^2 (off-diagonal
-//       sum, double, then add the diagonal X[i]^2 terms).
-//   CRYPTOLIB_FP_MONTMUL   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - fused CIOS Montgomery multiply PR := PA * PB * R^-1 mod p over 64-bit
-//       limbs; PCtx = [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64. PR is the
-//       N+2-limb scratch and receives the fully-reduced N-limb result.
-//       Reference: CIOS Montgomery multiplication (Koc-Acar-Kaliski).
-//   CRYPTOLIB_FP_MONTMUL_REG4   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//   CRYPTOLIB_FP_MONTMUL_REG5   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//   CRYPTOLIB_FP_MONTMUL_REG6   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//   CRYPTOLIB_FP_MONTMUL_REG7   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//   CRYPTOLIB_FP_MONTMUL_REG8   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//   CRYPTOLIB_FP_MONTMUL_REG9   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply, fully unrolled and
-//       register-resident per width N=4..9.
-//   CRYPTOLIB_FP_MODADD / CRYPTOLIB_FP_MODSUB   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - constant-time modular add / subtract R := (PA +/- PB) mod p over 64-bit
-//       limbs (PCtx = [n0'(unused), N, p[0..N-1]]); inputs assumed < p.
+// One selector-driven file per arch; exactly one of the selectors listed in
+// the {$FATAL} tail must be defined before including this file. PCtx =
+// [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64 (montmul); modadd/modsub take
+// the same PCtx with n0' unused. (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
 //
-// Constant-time. Uses only caller-saved x4..x15 plus the argument registers,
-// so no callee-saved (x19..x28) preservation is required. Base ARMv8-A
-// integer instructions (mul/umulh/adds/adc/ldr/str) are emitted as mnemonics.
+// Constant-time: no data-dependent branches or memory addresses; the final
+// conditional subtract is a masked select. Kernel bodies are byte-identical
+// to the pre-decomposition FpKernel_<arch>.inc (shared emitter module).
 {$IFDEF CRYPTOLIB_FP_MUL}
   // x0=X, x1=Y, x2=Z, x3=N
   lsl   x10, x3, #1                 // 2N
@@ -256,155 +240,7 @@
   cmp   x6, x4
   b.lo  .LFpMontFAdd
     {$ELSE}
-      {$IFDEF CRYPTOLIB_FP_MONTMUL_P256}
-  ldp   x10, x11, [x1]
-  ldp   x12, x13, [x1, #16]
-  ldr   x14, [x2]
-  mul   x4, x10, x14
-  umulh x5, x10, x14
-  mul   x15, x11, x14
-  umulh x6, x11, x14
-  mul   x16, x12, x14
-  umulh x7, x12, x14
-  mul   x17, x13, x14
-  umulh x8, x13, x14
-  adds  x5, x5, x15
-  adcs  x6, x6, x16
-  adcs  x7, x7, x17
-  adc   x8, x8, xzr
-  mov   x9, xzr
-  lsl   x15, x4, #32
-  lsr   x16, x4, #32
-  adds  x5, x5, x15
-  adcs  x6, x6, x16
-  adcs  x7, x7, xzr
-  adcs  x8, x8, xzr
-  adc   x9, x9, xzr
-  subs  x17, x4, x15
-  sbc   x16, x4, x16
-  adds  x7, x7, x17
-  adcs  x8, x8, x16
-  adc   x9, x9, xzr
-  mov   x4, xzr
-  ldr   x14, [x2, #8]
-  mul   x15, x10, x14
-  mul   x16, x11, x14
-  mul   x17, x12, x14
-  adds  x5, x5, x15
-  adcs  x6, x6, x16
-  mul   x15, x13, x14
-  adcs  x7, x7, x17
-  adcs  x8, x8, x15
-  adcs  x9, x9, xzr
-  adc   x4, x4, xzr
-  umulh x15, x10, x14
-  umulh x16, x11, x14
-  umulh x17, x12, x14
-  adds  x6, x6, x15
-  adcs  x7, x7, x16
-  umulh x15, x13, x14
-  adcs  x8, x8, x17
-  adcs  x9, x9, x15
-  adc   x4, x4, xzr
-  lsl   x15, x5, #32
-  lsr   x16, x5, #32
-  adds  x6, x6, x15
-  adcs  x7, x7, x16
-  adcs  x8, x8, xzr
-  adcs  x9, x9, xzr
-  adc   x4, x4, xzr
-  subs  x17, x5, x15
-  sbc   x16, x5, x16
-  adds  x8, x8, x17
-  adcs  x9, x9, x16
-  adc   x4, x4, xzr
-  mov   x5, xzr
-  ldr   x14, [x2, #16]
-  mul   x15, x10, x14
-  mul   x16, x11, x14
-  mul   x17, x12, x14
-  adds  x6, x6, x15
-  adcs  x7, x7, x16
-  mul   x15, x13, x14
-  adcs  x8, x8, x17
-  adcs  x9, x9, x15
-  adcs  x4, x4, xzr
-  adc   x5, x5, xzr
-  umulh x15, x10, x14
-  umulh x16, x11, x14
-  umulh x17, x12, x14
-  adds  x7, x7, x15
-  adcs  x8, x8, x16
-  umulh x15, x13, x14
-  adcs  x9, x9, x17
-  adcs  x4, x4, x15
-  adc   x5, x5, xzr
-  lsl   x15, x6, #32
-  lsr   x16, x6, #32
-  adds  x7, x7, x15
-  adcs  x8, x8, x16
-  adcs  x9, x9, xzr
-  adcs  x4, x4, xzr
-  adc   x5, x5, xzr
-  subs  x17, x6, x15
-  sbc   x16, x6, x16
-  adds  x9, x9, x17
-  adcs  x4, x4, x16
-  adc   x5, x5, xzr
-  mov   x6, xzr
-  ldr   x14, [x2, #24]
-  mul   x15, x10, x14
-  mul   x16, x11, x14
-  mul   x17, x12, x14
-  adds  x7, x7, x15
-  adcs  x8, x8, x16
-  mul   x15, x13, x14
-  adcs  x9, x9, x17
-  adcs  x4, x4, x15
-  adcs  x5, x5, xzr
-  adc   x6, x6, xzr
-  umulh x15, x10, x14
-  umulh x16, x11, x14
-  umulh x17, x12, x14
-  adds  x8, x8, x15
-  adcs  x9, x9, x16
-  umulh x15, x13, x14
-  adcs  x4, x4, x17
-  adcs  x5, x5, x15
-  adc   x6, x6, xzr
-  lsl   x15, x7, #32
-  lsr   x16, x7, #32
-  adds  x8, x8, x15
-  adcs  x9, x9, x16
-  adcs  x4, x4, xzr
-  adcs  x5, x5, xzr
-  adc   x6, x6, xzr
-  subs  x17, x7, x15
-  sbc   x16, x7, x16
-  adds  x4, x4, x17
-  adcs  x5, x5, x16
-  adc   x6, x6, xzr
-  mov   x7, xzr
-  ldp   x10, x11, [x3, #16]
-  ldp   x12, x13, [x3, #32]
-  subs  x14, x8, x10
-  sbcs  x15, x9, x11
-  sbcs  x16, x4, x12
-  sbcs  x17, x5, x13
-  sbcs  xzr, x6, xzr
-  sbc   x6, xzr, xzr
-  and   x10, x10, x6
-  and   x11, x11, x6
-  and   x12, x12, x6
-  and   x13, x13, x6
-  adds  x14, x14, x10
-  adcs  x15, x15, x11
-  adcs  x16, x16, x12
-  adc   x17, x17, x13
-  stp   x14, x15, [x0]
-  stp   x16, x17, [x0, #16]
-      {$ELSE}
-        {$IFDEF CRYPTOLIB_FP_MONTMUL_REG4}
+      {$IFDEF CRYPTOLIB_FP_MONTMUL_REG4}
   ldp   x10, x11, [x1]
   ldp   x12, x13, [x1, #16]
   ldr   x14, [x2]
@@ -615,8 +451,8 @@
   adc   x17, x17, x13
   stp   x14, x15, [x0]
   stp   x16, x17, [x0, #16]
-        {$ELSE}
-          {$IFDEF CRYPTOLIB_FP_MONTMUL_REG5}
+      {$ELSE}
+        {$IFDEF CRYPTOLIB_FP_MONTMUL_REG5}
   mov  x4, xzr
   mov  x5, xzr
   mov  x6, xzr
@@ -1119,8 +955,8 @@
   add  x12, x15, x11
   neg  x12, x12
   str  x14, [x0, #32]
-          {$ELSE}
-            {$IFDEF CRYPTOLIB_FP_MONTMUL_REG6}
+        {$ELSE}
+          {$IFDEF CRYPTOLIB_FP_MONTMUL_REG6}
   mov  x4, xzr
   mov  x5, xzr
   mov  x6, xzr
@@ -1812,8 +1648,8 @@
   add  x13, x16, x12
   neg  x13, x13
   str  x15, [x0, #40]
-            {$ELSE}
-              {$IFDEF CRYPTOLIB_FP_MONTMUL_REG7}
+          {$ELSE}
+            {$IFDEF CRYPTOLIB_FP_MONTMUL_REG7}
   sub  sp, sp, #16
   str  x19, [sp, #0]
   mov  x4, xzr
@@ -2728,8 +2564,8 @@
   str  x16, [x0, #48]
   ldr  x19, [sp, #0]
   add  sp, sp, #16
-              {$ELSE}
-                {$IFDEF CRYPTOLIB_FP_MONTMUL_REG8}
+            {$ELSE}
+              {$IFDEF CRYPTOLIB_FP_MONTMUL_REG8}
   sub  sp, sp, #16
   stp  x19, x20, [sp, #0]
   mov  x4, xzr
@@ -3893,8 +3729,8 @@
   str  x17, [x0, #56]
   ldp  x19, x20, [sp, #0]
   add  sp, sp, #16
-                {$ELSE}
-                  {$IFDEF CRYPTOLIB_FP_MONTMUL_REG9}
+              {$ELSE}
+                {$IFDEF CRYPTOLIB_FP_MONTMUL_REG9}
   sub  sp, sp, #32
   stp  x19, x20, [sp, #0]
   str  x21, [sp, #16]
@@ -5339,8 +5175,8 @@
   ldp  x19, x20, [sp, #0]
   ldr  x21, [sp, #16]
   add  sp, sp, #32
-                  {$ELSE}
-                    {$IFDEF CRYPTOLIB_FP_MODADD}
+                {$ELSE}
+                  {$IFDEF CRYPTOLIB_FP_MODADD}
   // x0=PR, x1=PA, x2=PB, x3=PCtx ([n0'(unused)@0, N@8, p@16]); inputs < p.
   // R := (A + B) mod p, constant-time. Width-general, single carry chain.
   ldr   x4, [x3, #8]               // N
@@ -5395,8 +5231,8 @@
   add   x6, x6, #1
   cmp   x6, x4
   b.lo  .LFpModAddBack
-                    {$ELSE}
-                      {$IFDEF CRYPTOLIB_FP_MODSUB}
+                  {$ELSE}
+                    {$IFDEF CRYPTOLIB_FP_MODSUB}
   // x0=PR, x1=PA, x2=PB, x3=PCtx ([n0'(unused)@0, N@8, p@16]); inputs < p.
   // R := (A - B) mod p, constant-time. Width-general, single borrow chain.
   ldr   x4, [x3, #8]               // N
@@ -5432,9 +5268,8 @@
   add   x6, x6, #1
   cmp   x6, x4
   b.lo  .LFpModSubBack
-                      {$ELSE}
-                      {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_P256, CRYPTOLIB_FP_MONTMUL_REG4, CRYPTOLIB_FP_MONTMUL_REG5, CRYPTOLIB_FP_MONTMUL_REG6, CRYPTOLIB_FP_MONTMUL_REG7, CRYPTOLIB_FP_MONTMUL_REG8, CRYPTOLIB_FP_MONTMUL_REG9, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
-                      {$ENDIF}
+                    {$ELSE}
+                    {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_REG4, CRYPTOLIB_FP_MONTMUL_REG5, CRYPTOLIB_FP_MONTMUL_REG6, CRYPTOLIB_FP_MONTMUL_REG7, CRYPTOLIB_FP_MONTMUL_REG8, CRYPTOLIB_FP_MONTMUL_REG9, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB must be defined before including this file}
                     {$ENDIF}
                   {$ENDIF}
                 {$ENDIF}

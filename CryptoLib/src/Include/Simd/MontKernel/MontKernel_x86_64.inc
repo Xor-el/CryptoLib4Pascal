@@ -1,54 +1,19 @@
-// Prime-field (Fp) big-integer 64-bit-limb multiply/square kernels (x86-64).
+// Prime-agnostic width-parametric modular-arithmetic kernels (x86-64).
 // -------------------------------------------------------------------
 //
-// One selector-driven file per arch; exactly one of the following must be
-// defined before including this file:
+// MontKernel family: schoolbook multiply/square, the CIOS Montgomery
+// multiply (width-general and register-resident per width), and constant-
+// time modular add/subtract. Prime-agnostic and width-parametric -- the
+// curve-specific special-prime P-256 kernels live in the PointKernel family.
 //
-//   CRYPTOLIB_FP_MUL   (ClpSimdProc4Begin: rcx = PX, rdx = PY, r8 = PZ, r9 = N)
-//     - schoolbook Z[0..2N-1] := X[0..N-1] * Y[0..N-1] over 64-bit limbs;
-//       callers reinterpret 32-bit-limb field arrays (uint32[2N] == uint64[N]).
-//   CRYPTOLIB_FP_SQR   (ClpSimdProc3Begin: rcx = PX, rdx = PZ, r8 = N)
-//     - dedicated schoolbook square Z[0..2N-1] := X[0..N-1]^2 (off-diagonal
-//       sum, double, then add the diagonal X[i]^2 terms).
-//   CRYPTOLIB_FP_MONTMUL   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - fused CIOS Montgomery multiply PR := PA * PB * R^-1 mod p over 64-bit
-//       limbs; PCtx = [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64. PR is the
-//       N+2-limb scratch and receives the fully-reduced N-limb result.
-//       Reference: CIOS Montgomery multiplication (Koc-Acar-Kaliski).
-//   CRYPTOLIB_FP_MONTMUL_MULX4   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=4, register-resident with two
-//       independent carry chains (MULX + ADCX/ADOX). Backend-gated on BMI2+ADX.
-//       MULX/ADCX/ADOX are db-encoded for broad assembler compatibility.
-//   CRYPTOLIB_FP_MONTSQR_P256   (ClpSimdProc3Begin: rcx = PR, rdx = PA, r8 = PCtx)
-//     - dedicated P-256 Montgomery square PR := PA^2 * R^-1 mod p: dual-chain
-//       SOS square (10 MULX vs the multiply's 16) + the same folded special-
-//       prime reduction. Backend-gated on BMI2+ADX; db-encoded.
-//   CRYPTOLIB_FP_MONTMUL_MULX6   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=6, fully unrolled and
-//       register-resident with two carry chains (MULX + ADCX/ADOX).
-//       Backend-gated on BMI2+ADX; MULX/ADCX/ADOX are db-encoded.
-//   CRYPTOLIB_FP_MONTMUL_MULX9   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=9 (P-521), fully unrolled;
-//       9 of the 11 accumulator words stay in registers by spilling the PB
-//       pointer, the top two bounce through a stack slot at the chain tails.
-//       Backend-gated on BMI2+ADX; MULX/ADCX/ADOX are db-encoded.
-//   CRYPTOLIB_FP_MONTMUL_MULX5   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=5 (register-resident), MULX two-carry-chain.
-//   CRYPTOLIB_FP_MONTMUL_MULX7   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=7 (PB-spill, all-register), MULX two-carry-chain.
-//   CRYPTOLIB_FP_MONTMUL_MULX8   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same CIOS Montgomery multiply for N=8 (PB-spill + 1 stack word), MULX two-carry-chain.
-//   CRYPTOLIB_FP_MODADD / CRYPTOLIB_FP_MODSUB   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - constant-time modular add / subtract R := (PA +/- PB) mod p over 64-bit
-//       limbs (PCtx = [n0'(unused), N, p[0..N-1]]); inputs assumed < p.
-//   CRYPTOLIB_FP_MODADD4 / CRYPTOLIB_FP_MODSUB4   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - the same modular add / subtract fully unrolled for N=4: one add/adc
-//       (sub/sbb) pass, speculative subtract of p (masked add-back of p) in
-//       registers, borrow-derived masked select, one store pass.
+// One selector-driven file per arch; exactly one of the selectors listed in
+// the {$FATAL} tail must be defined before including this file. PCtx =
+// [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64 (montmul); modadd/modsub take
+// the same PCtx with n0' unused. (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
 //
-// Constant-time: no data-dependent branches or memory addresses. The
-// multiply and square each save and restore the callee-saved GPRs they
-// use (the Proc-prologue itself pushes none on x86-64).
+// Constant-time: no data-dependent branches or memory addresses; the final
+// conditional subtract is a masked select. Kernel bodies are byte-identical
+// to the pre-decomposition FpKernel_<arch>.inc (shared emitter module).
 {$IFDEF CRYPTOLIB_FP_MUL}
   push rbx
   push rsi
@@ -835,343 +800,7 @@
   pop rsi
   pop rbx
       {$ELSE}
-        {$IFDEF CRYPTOLIB_FP_MONTMUL_P256}
-  push rbx
-  push rsi
-  push rdi
-  push r12
-  push r13
-  push r14
-  push r15
-  push rcx
-  mov rsi, rdx
-  mov rdi, r8
-  mov rdx, [rdi]
-  db $C4, $62, $BB, $F6, $16       // mulx r10, r8, qword ptr [rsi]
-  db $C4, $62, $E3, $F6, $5E, $08  // mulx r11, rbx, qword ptr [rsi + 8]
-  db $C4, $62, $F3, $F6, $66, $10  // mulx r12, rcx, qword ptr [rsi + 0x10]
-  db $C4, $62, $83, $F6, $6E, $18  // mulx r13, r15, qword ptr [rsi + 0x18]
-  xor r14d, r14d
-  add r10, rbx
-  adc r11, rcx
-  adc r12, r15
-  adc r13, 0
-  mov rdx, r8
-  mov rbx, rdx
-  shl rbx, 32
-  mov r15, rdx
-  shr r15, 32
-  db $C4, $C2, $EB, $F6, $49, $28  // mulx rcx, rdx, qword ptr [r9 + 0x28]
-  add r10, rbx
-  adc r11, r15
-  adc r12, rdx
-  adc r13, rcx
-  adc r14, 0
-  xor r8d, r8d
-  mov rdx, [rdi+8]
-  xor eax, eax
-  db $C4, $E2, $83, $F6, $1E       // mulx rbx, r15, qword ptr [rsi]
-  db $66, $4D, $0F, $38, $F6, $D7  // adcx r10, r15
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $83, $F6, $5E, $08  // mulx rbx, r15, qword ptr [rsi + 8]
-  db $66, $4D, $0F, $38, $F6, $DF  // adcx r11, r15
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $C4, $E2, $83, $F6, $5E, $10  // mulx rbx, r15, qword ptr [rsi + 0x10]
-  db $66, $4D, $0F, $38, $F6, $E7  // adcx r12, r15
-  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
-  db $C4, $E2, $83, $F6, $5E, $18  // mulx rbx, r15, qword ptr [rsi + 0x18]
-  db $66, $4D, $0F, $38, $F6, $EF  // adcx r13, r15
-  db $F3, $4C, $0F, $38, $F6, $F3  // adox r14, rbx
-  db $66, $4C, $0F, $38, $F6, $F0  // adcx r14, rax
-  db $F3, $4C, $0F, $38, $F6, $C0  // adox r8, rax
-  db $66, $4C, $0F, $38, $F6, $C0  // adcx r8, rax
-  mov rdx, r10
-  mov rbx, rdx
-  shl rbx, 32
-  mov r15, rdx
-  shr r15, 32
-  db $C4, $C2, $EB, $F6, $49, $28  // mulx rcx, rdx, qword ptr [r9 + 0x28]
-  add r11, rbx
-  adc r12, r15
-  adc r13, rdx
-  adc r14, rcx
-  adc r8, 0
-  xor r10d, r10d
-  mov rdx, [rdi+16]
-  xor eax, eax
-  db $C4, $E2, $83, $F6, $1E       // mulx rbx, r15, qword ptr [rsi]
-  db $66, $4D, $0F, $38, $F6, $DF  // adcx r11, r15
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $C4, $E2, $83, $F6, $5E, $08  // mulx rbx, r15, qword ptr [rsi + 8]
-  db $66, $4D, $0F, $38, $F6, $E7  // adcx r12, r15
-  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
-  db $C4, $E2, $83, $F6, $5E, $10  // mulx rbx, r15, qword ptr [rsi + 0x10]
-  db $66, $4D, $0F, $38, $F6, $EF  // adcx r13, r15
-  db $F3, $4C, $0F, $38, $F6, $F3  // adox r14, rbx
-  db $C4, $E2, $83, $F6, $5E, $18  // mulx rbx, r15, qword ptr [rsi + 0x18]
-  db $66, $4D, $0F, $38, $F6, $F7  // adcx r14, r15
-  db $F3, $4C, $0F, $38, $F6, $C3  // adox r8, rbx
-  db $66, $4C, $0F, $38, $F6, $C0  // adcx r8, rax
-  db $F3, $4C, $0F, $38, $F6, $D0  // adox r10, rax
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  mov rdx, r11
-  mov rbx, rdx
-  shl rbx, 32
-  mov r15, rdx
-  shr r15, 32
-  db $C4, $C2, $EB, $F6, $49, $28  // mulx rcx, rdx, qword ptr [r9 + 0x28]
-  add r12, rbx
-  adc r13, r15
-  adc r14, rdx
-  adc r8, rcx
-  adc r10, 0
-  xor r11d, r11d
-  mov rdx, [rdi+24]
-  xor eax, eax
-  db $C4, $E2, $83, $F6, $1E       // mulx rbx, r15, qword ptr [rsi]
-  db $66, $4D, $0F, $38, $F6, $E7  // adcx r12, r15
-  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
-  db $C4, $E2, $83, $F6, $5E, $08  // mulx rbx, r15, qword ptr [rsi + 8]
-  db $66, $4D, $0F, $38, $F6, $EF  // adcx r13, r15
-  db $F3, $4C, $0F, $38, $F6, $F3  // adox r14, rbx
-  db $C4, $E2, $83, $F6, $5E, $10  // mulx rbx, r15, qword ptr [rsi + 0x10]
-  db $66, $4D, $0F, $38, $F6, $F7  // adcx r14, r15
-  db $F3, $4C, $0F, $38, $F6, $C3  // adox r8, rbx
-  db $C4, $E2, $83, $F6, $5E, $18  // mulx rbx, r15, qword ptr [rsi + 0x18]
-  db $66, $4D, $0F, $38, $F6, $C7  // adcx r8, r15
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $66, $4C, $0F, $38, $F6, $D0  // adcx r10, rax
-  db $F3, $4C, $0F, $38, $F6, $D8  // adox r11, rax
-  db $66, $4C, $0F, $38, $F6, $D8  // adcx r11, rax
-  mov rdx, r12
-  mov rbx, rdx
-  shl rbx, 32
-  mov r15, rdx
-  shr r15, 32
-  db $C4, $C2, $EB, $F6, $49, $28  // mulx rcx, rdx, qword ptr [r9 + 0x28]
-  add r13, rbx
-  adc r14, r15
-  adc r8, rdx
-  adc r10, rcx
-  adc r11, 0
-  xor r12d, r12d
-  mov rax, r13
-  sub rax, [r9+16]
-  mov rbx, rax
-  mov rax, r14
-  sbb rax, [r9+24]
-  mov r15, rax
-  mov rax, r8
-  sbb rax, [r9+32]
-  mov r12, rax
-  mov rax, r10
-  sbb rax, [r9+40]
-  mov rdi, rax
-  mov rax, r11
-  sbb rax, 0
-  sbb rdx, rdx
-  mov rcx, rdx
-  not rdx
-  and r13, rcx
-  and rbx, rdx
-  or r13, rbx
-  and r14, rcx
-  and r15, rdx
-  or r14, r15
-  and r8, rcx
-  and r12, rdx
-  or r8, r12
-  and r10, rcx
-  and rdi, rdx
-  or r10, rdi
-  mov rax, [rsp]
-  mov [rax+0], r13
-  mov [rax+8], r14
-  mov [rax+16], r8
-  mov [rax+24], r10
-  add rsp, 8
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop rdi
-  pop rsi
-  pop rbx
-        {$ELSE}
-          {$IFDEF CRYPTOLIB_FP_MONTSQR_P256}
-  push rbx
-  push rsi
-  push rdi
-  push r12
-  push r13
-  push r14
-  push r15
-  push rcx
-  mov rsi, rdx
-  mov r9, r8
-  xor r10, r10
-  xor r11, r11
-  xor r12, r12
-  xor r13, r13
-  xor r14, r14
-  xor r15, r15
-  mov rdx, [rsi]
-  xor eax, eax
-  db $C4, $E2, $F3, $F6, $5E, $08  // mulx rbx, rcx, qword ptr [rsi + 8]
-  db $66, $4C, $0F, $38, $F6, $D1  // adcx r10, rcx
-  db $F3, $4C, $0F, $38, $F6, $DB  // adox r11, rbx
-  db $C4, $E2, $F3, $F6, $5E, $10  // mulx rbx, rcx, qword ptr [rsi + 0x10]
-  db $66, $4C, $0F, $38, $F6, $D9  // adcx r11, rcx
-  db $F3, $4C, $0F, $38, $F6, $E3  // adox r12, rbx
-  db $C4, $E2, $F3, $F6, $5E, $18  // mulx rbx, rcx, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $E1  // adcx r12, rcx
-  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
-  mov eax, 0
-  db $66, $4C, $0F, $38, $F6, $E8  // adcx r13, rax
-  db $F3, $4C, $0F, $38, $F6, $E8  // adox r13, rax
-  mov rdx, [rsi+8]
-  xor eax, eax
-  db $C4, $E2, $F3, $F6, $5E, $10  // mulx rbx, rcx, qword ptr [rsi + 0x10]
-  db $66, $4C, $0F, $38, $F6, $E1  // adcx r12, rcx
-  db $F3, $4C, $0F, $38, $F6, $EB  // adox r13, rbx
-  db $C4, $E2, $F3, $F6, $5E, $18  // mulx rbx, rcx, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $E9  // adcx r13, rcx
-  db $F3, $4C, $0F, $38, $F6, $F3  // adox r14, rbx
-  mov eax, 0
-  db $66, $4C, $0F, $38, $F6, $F0  // adcx r14, rax
-  db $F3, $4C, $0F, $38, $F6, $F0  // adox r14, rax
-  mov rdx, [rsi+16]
-  xor eax, eax
-  db $C4, $E2, $F3, $F6, $5E, $18  // mulx rbx, rcx, qword ptr [rsi + 0x18]
-  db $66, $4C, $0F, $38, $F6, $F1  // adcx r14, rcx
-  db $F3, $4C, $0F, $38, $F6, $FB  // adox r15, rbx
-  mov eax, 0
-  db $66, $4C, $0F, $38, $F6, $F8  // adcx r15, rax
-  db $F3, $4C, $0F, $38, $F6, $F8  // adox r15, rax
-  xor edi, edi
-  db $66, $4D, $0F, $38, $F6, $D2  // adcx r10, r10
-  mov rdx, [rsi]
-  db $C4, $E2, $BB, $F6, $1E       // mulx rbx, r8, qword ptr [rsi]
-  db $F3, $4C, $0F, $38, $F6, $D3  // adox r10, rbx
-  db $66, $4D, $0F, $38, $F6, $DB  // adcx r11, r11
-  mov rdx, [rsi+8]
-  db $C4, $E2, $FB, $F6, $4E, $08  // mulx rcx, rax, qword ptr [rsi + 8]
-  db $F3, $4C, $0F, $38, $F6, $D8  // adox r11, rax
-  db $66, $4D, $0F, $38, $F6, $E4  // adcx r12, r12
-  db $F3, $4C, $0F, $38, $F6, $E1  // adox r12, rcx
-  db $66, $4D, $0F, $38, $F6, $ED  // adcx r13, r13
-  mov rdx, [rsi+16]
-  db $C4, $E2, $FB, $F6, $4E, $10  // mulx rcx, rax, qword ptr [rsi + 0x10]
-  db $F3, $4C, $0F, $38, $F6, $E8  // adox r13, rax
-  db $66, $4D, $0F, $38, $F6, $F6  // adcx r14, r14
-  db $F3, $4C, $0F, $38, $F6, $F1  // adox r14, rcx
-  db $66, $4D, $0F, $38, $F6, $FF  // adcx r15, r15
-  mov rdx, [rsi+24]
-  db $C4, $E2, $FB, $F6, $4E, $18  // mulx rcx, rax, qword ptr [rsi + 0x18]
-  db $F3, $4C, $0F, $38, $F6, $F8  // adox r15, rax
-  db $66, $48, $0F, $38, $F6, $FF  // adcx rdi, rdi
-  db $F3, $48, $0F, $38, $F6, $F9  // adox rdi, rcx
-  mov rdx, r8
-  xor r8d, r8d
-  mov rcx, rdx
-  shl rcx, 32
-  mov rbx, rdx
-  shr rbx, 32
-  db $C4, $C2, $EB, $F6, $71, $28  // mulx rsi, rdx, qword ptr [r9 + 0x28]
-  add r10, rcx
-  adc r11, rbx
-  adc r12, rdx
-  adc r13, rsi
-  adc r14, 0
-  adc r15, 0
-  adc rdi, 0
-  adc r8, 0
-  mov rdx, r10
-  mov rcx, rdx
-  shl rcx, 32
-  mov rbx, rdx
-  shr rbx, 32
-  db $C4, $C2, $EB, $F6, $71, $28  // mulx rsi, rdx, qword ptr [r9 + 0x28]
-  add r11, rcx
-  adc r12, rbx
-  adc r13, rdx
-  adc r14, rsi
-  adc r15, 0
-  adc rdi, 0
-  adc r8, 0
-  mov rdx, r11
-  mov rcx, rdx
-  shl rcx, 32
-  mov rbx, rdx
-  shr rbx, 32
-  db $C4, $C2, $EB, $F6, $71, $28  // mulx rsi, rdx, qword ptr [r9 + 0x28]
-  add r12, rcx
-  adc r13, rbx
-  adc r14, rdx
-  adc r15, rsi
-  adc rdi, 0
-  adc r8, 0
-  mov rdx, r12
-  mov rcx, rdx
-  shl rcx, 32
-  mov rbx, rdx
-  shr rbx, 32
-  db $C4, $C2, $EB, $F6, $71, $28  // mulx rsi, rdx, qword ptr [r9 + 0x28]
-  add r13, rcx
-  adc r14, rbx
-  adc r15, rdx
-  adc rdi, rsi
-  adc r8, 0
-  mov rax, r8
-  mov r8, r13
-  mov r10, r14
-  mov r11, r15
-  mov r12, rdi
-  mov r13, rax
-  mov rax, r8
-  sub rax, [r9+16]
-  mov r15, rax
-  mov rax, r10
-  sbb rax, [r9+24]
-  mov rbx, rax
-  mov rax, r11
-  sbb rax, [r9+32]
-  mov rsi, rax
-  mov rax, r12
-  sbb rax, [r9+40]
-  mov rdi, rax
-  mov rax, r13
-  sbb rax, 0
-  sbb rdx, rdx
-  mov rcx, rdx
-  not rdx
-  and r8, rcx
-  and r15, rdx
-  or r8, r15
-  and r10, rcx
-  and rbx, rdx
-  or r10, rbx
-  and r11, rcx
-  and rsi, rdx
-  or r11, rsi
-  and r12, rcx
-  and rdi, rdx
-  or r12, rdi
-  mov rax, [rsp]
-  mov [rax+0], r8
-  mov [rax+8], r10
-  mov [rax+16], r11
-  mov [rax+24], r12
-  add rsp, 8
-  pop r15
-  pop r14
-  pop r13
-  pop r12
-  pop rdi
-  pop rsi
-  pop rbx
-          {$ELSE}
-            {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX6}
+        {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX6}
   push rbx
   push rsi
   push rdi
@@ -1596,8 +1225,8 @@
   pop rdi
   pop rsi
   pop rbx
-            {$ELSE}
-              {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX9}
+        {$ELSE}
+          {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX9}
   push rbx
   push rsi
   push rdi
@@ -2510,8 +2139,8 @@
   pop rdi
   pop rsi
   pop rbx
-              {$ELSE}
-                {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX5}
+          {$ELSE}
+            {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX5}
   push rbx
   push rsi
   push rdi
@@ -2835,8 +2464,8 @@
   pop rdi
   pop rsi
   pop rbx
-                {$ELSE}
-                  {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX7}
+            {$ELSE}
+              {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX7}
   push rbx
   push rsi
   push rdi
@@ -3387,8 +3016,8 @@
   pop rdi
   pop rsi
   pop rbx
-                  {$ELSE}
-                    {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX8}
+              {$ELSE}
+                {$IFDEF CRYPTOLIB_FP_MONTMUL_MULX8}
   push rbx
   push rsi
   push rdi
@@ -4108,8 +3737,8 @@
   pop rdi
   pop rsi
   pop rbx
-                    {$ELSE}
-                      {$IFDEF CRYPTOLIB_FP_MODADD}
+                {$ELSE}
+                  {$IFDEF CRYPTOLIB_FP_MODADD}
   push rbx
   push rsi
   push rdi
@@ -4182,8 +3811,8 @@
   pop  rdi
   pop  rsi
   pop  rbx
-                      {$ELSE}
-                        {$IFDEF CRYPTOLIB_FP_MODSUB}
+                  {$ELSE}
+                    {$IFDEF CRYPTOLIB_FP_MODSUB}
   push rbx
   push rsi
   push rdi
@@ -4238,8 +3867,8 @@
   pop  rdi
   pop  rsi
   pop  rbx
-                        {$ELSE}
-                          {$IFDEF CRYPTOLIB_FP_MODADD4}
+                    {$ELSE}
+                      {$IFDEF CRYPTOLIB_FP_MODADD4}
   push rbx
   push rsi
   push r12
@@ -4293,8 +3922,8 @@
   pop r12
   pop rsi
   pop rbx
-                          {$ELSE}
-                            {$IFDEF CRYPTOLIB_FP_MODSUB4}
+                      {$ELSE}
+                        {$IFDEF CRYPTOLIB_FP_MODSUB4}
   push rbx
   push rsi
   push r12
@@ -4333,10 +3962,8 @@
   pop r12
   pop rsi
   pop rbx
-                            {$ELSE}
-                            {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_MULX4, CRYPTOLIB_FP_MONTMUL_P256, CRYPTOLIB_FP_MONTSQR_P256, CRYPTOLIB_FP_MONTMUL_MULX6, CRYPTOLIB_FP_MONTMUL_MULX9, CRYPTOLIB_FP_MONTMUL_MULX5, CRYPTOLIB_FP_MONTMUL_MULX7, CRYPTOLIB_FP_MONTMUL_MULX8, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB, CRYPTOLIB_FP_MODADD4, CRYPTOLIB_FP_MODSUB4 must be defined before including this file}
-                            {$ENDIF}
-                          {$ENDIF}
+                        {$ELSE}
+                        {$FATAL Exactly one of CRYPTOLIB_FP_MUL, CRYPTOLIB_FP_SQR, CRYPTOLIB_FP_MONTMUL, CRYPTOLIB_FP_MONTMUL_MULX4, CRYPTOLIB_FP_MONTMUL_MULX6, CRYPTOLIB_FP_MONTMUL_MULX9, CRYPTOLIB_FP_MONTMUL_MULX5, CRYPTOLIB_FP_MONTMUL_MULX7, CRYPTOLIB_FP_MONTMUL_MULX8, CRYPTOLIB_FP_MODADD, CRYPTOLIB_FP_MODSUB, CRYPTOLIB_FP_MODADD4, CRYPTOLIB_FP_MODSUB4 must be defined before including this file}
                         {$ENDIF}
                       {$ENDIF}
                     {$ENDIF}

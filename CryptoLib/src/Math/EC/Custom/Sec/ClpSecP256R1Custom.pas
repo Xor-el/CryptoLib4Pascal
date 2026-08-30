@@ -25,7 +25,8 @@ uses
   ClpBigInteger,
   ClpNat256,
   ClpNat,
-  ClpFpKernelSimd,
+  ClpMontKernelSimd,
+  ClpPointKernelSimd,
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,
@@ -465,13 +466,13 @@ end;
 
 class procedure TSecP256R1Field.MulExt(const AX, AY, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TryMul(AX, AY, AZz, 8) then
+  if not TMontKernelSimd.TryMul(AX, AY, AZz, 8) then
     TNat256.Mul(AX, AY, AZz);
 end;
 
 class procedure TSecP256R1Field.SqrExt(const AX, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TrySqr(AX, AZz, 8) then
+  if not TMontKernelSimd.TrySqr(AX, AZz, 8) then
     TNat256.Square(AX, AZz);
 end;
 
@@ -1486,7 +1487,7 @@ class procedure TSecP256R1FieldArith.Mul(const AX, AY: TFe; var AZ: TFe; var ATT
 begin
   // Special-prime kernel writes the reduced 4-limb result straight to AZ (no scratch
   // copy); on any fallback the generic CIOS path is bit-for-bit identical.
-  if TFpKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+  if TPointKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@FParams.CtxData[0])) then
     Exit;
   inherited Mul(AX, AY, AZ, ATT);
@@ -1494,10 +1495,10 @@ end;
 
 class procedure TSecP256R1FieldArith.Sqr(const AX: TFe; var AZ: TFe; var ATT: TFeExt);
 begin
-  if TFpKernelSimd.TryMontSqrP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+  if TPointKernelSimd.TryMontSqrP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@FParams.CtxData[0])) then
     Exit;
-  if TFpKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+  if TPointKernelSimd.TryMontMulP256(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AX.W[0]), PUInt64(@FParams.CtxData[0])) then
     Exit;
   inherited Sqr(AX, AZ, ATT);
@@ -1566,19 +1567,19 @@ end;
 
 class function TSecP256R1FieldArith.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256JacPointDouble(APR, APA,
+  Result := TPointKernelSimd.TryP256JacPointDouble(APR, APA,
     PUInt64(@FParams.CtxData[0]));
 end;
 
 class function TSecP256R1FieldArith.TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256JacPointAdd(APScratch, APA, APQ,
+  Result := TPointKernelSimd.TryP256JacPointAdd(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
 class function TSecP256R1FieldArith.TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryP256JacPointAddMixed(APScratch, APA, APQ,
+  Result := TPointKernelSimd.TryP256JacPointAddMixed(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
