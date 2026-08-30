@@ -1,0 +1,28 @@
+.github/workflows/make.yml
+  h_878efc035442cc 50,270,297
+CryptoLib/src/Include/Simd/FpKernel/FpKernelGatherAvx2_x86_64.inc
+  s_5e9312dc1422f7::t_ec034a950e9db6 6-11,19-25,80-199
+CryptoLib/src/Include/Simd/FpKernel/FpKernelGatherNeon_aarch64.inc
+  s_5e9312dc1422f7::t_a60094c4695368 6-12,16-19,71-213
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "c51c9c3cf7fe5e6c05803738ac51cbff8863817b",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  },
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
