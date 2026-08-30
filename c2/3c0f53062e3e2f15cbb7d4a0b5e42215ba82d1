@@ -1,0 +1,85 @@
+CryptoLib/src/Simd/Backend/ClpMontKernelX86Backend.pas
+  s_5e9312dc1422f7::t_fcd0cd3863880f 1-298
+CryptoLib/src/Simd/Facade/ClpPointKernelSimd.pas
+  s_5e9312dc1422f7::t_1f2f26d0468d9d 1-218
+CryptoLib/src/Simd/Facade/ClpMontKernelSimd.pas
+  s_5e9312dc1422f7::t_4fab496563c3fa 1-172
+CryptoLib/src/Simd/Backend/ClpPointKernelX86Backend.pas
+  s_5e9312dc1422f7::t_f69ce31ec31575 1-288
+CryptoLib/src/Simd/Facade/ClpGatherKernelSimd.pas
+  s_5e9312dc1422f7::t_502ddf167c5aa5 1-67
+CryptoLib/src/Simd/Backend/ClpMontKernelArmBackend.pas
+  s_5e9312dc1422f7::t_48de2cc199bade 1-210
+CryptoLib/src/Simd/Backend/ClpGatherKernelX86Backend.pas
+  s_5e9312dc1422f7::t_8ac9b89e06c262 1-103
+CryptoLib/src/Simd/Backend/ClpPointKernelArmBackend.pas
+  s_5e9312dc1422f7::t_cbb40a8db92eee 1-208
+CryptoLib/src/Simd/Backend/ClpGatherKernelArmBackend.pas
+  s_5e9312dc1422f7::t_14da8e477669d7 1-79
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_5e9312dc1422f7::t_9f4400551682e0 227-235
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_5e9312dc1422f7::t_d9734b7ed50dca 246-254
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_5e9312dc1422f7::t_15f7b591bdab87 223-231
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_5e9312dc1422f7::t_aee40bcbc07a7a 565-573
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_5e9312dc1422f7::t_00f399960ee0cd 436-444
+CryptoLib/src/Include/Simd/MontKernel/MontKernel_aarch64.inc
+  s_5e9312dc1422f7::t_c0e47936d4d455 1,4-7,9-12,14-16,243,454-455,958-959,1651-1652,2567-2568,3732-3733,5178-5179,5234-5235,5271-5272
+CryptoLib/src/Include/Simd/MontKernel/MontKernel_i386.inc
+  s_5e9312dc1422f7::t_4a222d5c74e476 1,4-7,9-12,14-16
+CryptoLib/src/Include/Simd/MontKernel/MontKernel_x86_64.inc
+  s_5e9312dc1422f7::t_cdf7efc9aee5f2 1,4-7,9-12,14-16,803,1228-1229,2142-2143,2467-2468,3019-3020,3740-3741,3814-3815,3870-3871,3925-3926,3965-3966
+CryptoLib/src/Include/Simd/PointKernel/PointKernelP256Jac_aarch64.inc
+  s_5e9312dc1422f7::t_7679ce51bc6200 7540-7689
+CryptoLib/src/Include/Simd/PointKernel/PointKernelP256Jac_x86_64.inc
+  s_5e9312dc1422f7::t_82e9770f4cc267 7596-7934
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256K1Custom.pas
+  s_5e9312dc1422f7::t_de9fb5048658f0 28-29,354,360,1291,1297,1303
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP256R1Custom.pas
+  s_5e9312dc1422f7::t_94efa88454426a 28-29,469,475,1490,1498,1501,1570,1576,1582
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP384R1Custom.pas
+  s_5e9312dc1422f7::t_a0ae3f9f1f3e40 28,414,420
+CryptoLib/src/Math/EC/Custom/Sec/ClpSecP521R1Custom.pas
+  s_5e9312dc1422f7::t_5dfebe1aa05fe1 28
+CryptoLib/src/Math/EC/Multiplier/ClpCTFieldArith.pas
+  s_5e9312dc1422f7::t_3200bc002d6222 24,254,315,326
+CryptoLib/src/Math/EC/Multiplier/ClpCTJacPoint.pas
+  s_5e9312dc1422f7::t_37c67a9519026b 30,125,150
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_5e9312dc1422f7::t_c72100868c1132 237-245
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_5e9312dc1422f7::t_d49053f42a2f1a 34,3497-3498,3501-3502,3505-3506,3509-3510,3513-3514,3517-3518,3521-3522,3525-3526,3529-3530,3533-3534,3537-3538,3541-3542,3545-3546,3549-3550,3553-3554,3557-3558,3561-3562,3565-3566,3569-3570,3573-3574,3577-3578,3581-3582,3585-3586,3589-3590,3593-3594,3597-3598,3601-3602,3605-3606,3609-3610,3613-3614,3617-3618,3621-3622,3625-3626,3629-3630,3633-3634,3637-3638,3641-3642,3645-3646,3649-3650,3653-3654,3657-3658,3661-3662,3665-3666,3668-3691
+CryptoLib/src/Simd/Backend/ClpCurveFieldArmBackend.pas
+  s_5e9312dc1422f7::t_30882656d6c8b7 34,63,71,79,87,95,103,111,119,127,135,143
+CryptoLib/src/Simd/Backend/ClpCurveFieldX86Backend.pas
+  s_5e9312dc1422f7::t_0661e760a23edf 36,73,77,87,91,101,105,115,119,129,136,146,154,162,170,178,186,194
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_94c63551231fc0::t_0a41b1f01d6c45 285-302
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "c23c0f53062e3e2f15cbb7d4a0b5e42215ba82d1",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_94c63551231fc0": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-af8ab146e53a97316",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
