@@ -1,27 +1,19 @@
-// Prime-field (Fp) big-integer 64-bit-limb multiply/square kernels (i386).
+// Prime-agnostic width-parametric modular-arithmetic kernels (i386).
 // -------------------------------------------------------------------
 //
-// One selector-driven file per arch; exactly one of the following must be
-// defined before including this file:
+// MontKernel family: schoolbook multiply/square, the CIOS Montgomery
+// multiply (width-general and register-resident per width), and constant-
+// time modular add/subtract. Prime-agnostic and width-parametric -- the
+// curve-specific special-prime P-256 kernels live in the PointKernel family.
 //
-//   CRYPTOLIB_FP_MUL   (ClpSimdProc4Begin: ebx = PX, esi = PY, edi = PZ, eax = N (uint64 limbs))
-//     - schoolbook Z[0..2N-1] := X[0..N-1] * Y[0..N-1] over 64-bit limbs;
-//       callers reinterpret 32-bit-limb field arrays (uint32[2N] == uint64[N]).
-//   CRYPTOLIB_FP_SQR   (ClpSimdProc3Begin: ebx = PX, esi = PZ, edi = N)
-//     - i386 has no dedicated square: Z := X^2 is computed via the multiply
-//       kernel (X*X), reusing its body after a 3-register entry shuffle.
-//   CRYPTOLIB_FP_MONTMUL   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - fused CIOS Montgomery multiply PR := PA * PB * R^-1 mod p over 64-bit
-//       limbs; PCtx = [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64. PR is the
-//       N+2-limb scratch and receives the fully-reduced N-limb result.
-//       Reference: CIOS Montgomery multiplication (Koc-Acar-Kaliski).
-//   CRYPTOLIB_FP_MODADD / CRYPTOLIB_FP_MODSUB   (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
-//     - constant-time modular add / subtract R := (PA +/- PB) mod p over 64-bit
-//       limbs (PCtx = [n0'(unused), N, p[0..N-1]]); inputs assumed < p.
+// One selector-driven file per arch; exactly one of the selectors listed in
+// the {$FATAL} tail must be defined before including this file. PCtx =
+// [n0', N, p[0..N-1]] with n0' = -p^-1 mod 2^64 (montmul); modadd/modsub take
+// the same PCtx with n0' unused. (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
 //
-// Constant-time. The field is worked in M = 2N 32-bit limbs; loop variables
-// live on a small stack frame (i386 has too few GPRs to keep them in
-// registers). The epilogue frees the frame and pops the Proc-prologue GPRs.
+// Constant-time: no data-dependent branches or memory addresses; the final
+// conditional subtract is a masked select. Kernel bodies are byte-identical
+// to the pre-decomposition FpKernel_<arch>.inc (shared emitter module).
 {$IFDEF CRYPTOLIB_FP_MUL}
   push ebp                      // callee-saved; reused below as the carry accumulator
   sub  esp, 16                  // [esp]=M, [esp+4]=i, [esp+8]=j, [esp+12]=Xi

@@ -25,7 +25,7 @@ uses
   ClpBigInteger,
   ClpNat384,
   ClpNat,
-  ClpFpKernelSimd,
+  ClpMontKernelSimd,
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,
@@ -411,13 +411,13 @@ end;
 
 class procedure TSecP384R1Field.MulExt(const AX, AY, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TryMul(AX, AY, AZz, 12) then
+  if not TMontKernelSimd.TryMul(AX, AY, AZz, 12) then
     TNat384.Mul(AX, AY, AZz);
 end;
 
 class procedure TSecP384R1Field.SqrExt(const AX, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TrySqr(AX, AZz, 12) then
+  if not TMontKernelSimd.TrySqr(AX, AZz, 12) then
     TNat384.Square(AX, AZz);
 end;
 

@@ -21,7 +21,7 @@ unit ClpCTFieldArith;
 interface
 
 uses
-  ClpFpKernelSimd,
+  ClpMontKernelSimd,
   ClpCTFieldValue,
   ClpBinaryPrimitives,
   ClpCryptoLibTypes;
@@ -251,7 +251,7 @@ var
   LP: PMontParams;
 begin
   LP := MontParams;
-  if not TFpKernelSimd.TryMontMul(PUInt64(@ATT.W[0]), PUInt64(@AX.W[0]),
+  if not TMontKernelSimd.TryMontMul(PUInt64(@ATT.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
     MontMul(PCardinal(@ATT.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
@@ -312,7 +312,7 @@ var
   LP: PMontParams;
 begin
   LP := MontParams;
-  if not TFpKernelSimd.TryModAdd(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+  if not TMontKernelSimd.TryModAdd(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
     ModAdd(PCardinal(@AZ.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));
@@ -323,7 +323,7 @@ var
   LP: PMontParams;
 begin
   LP := MontParams;
-  if not TFpKernelSimd.TryModSub(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
+  if not TMontKernelSimd.TryModSub(PUInt64(@AZ.W[0]), PUInt64(@AX.W[0]),
     PUInt64(@AY.W[0]), PUInt64(@LP^.CtxData[0])) then
     ModSub(PCardinal(@AZ.W[0]), PCardinal(@AX.W[0]), PCardinal(@AY.W[0]),
       PUInt64(@LP^.CtxData[0]));

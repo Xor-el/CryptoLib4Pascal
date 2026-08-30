@@ -25,7 +25,8 @@ uses
   ClpBigInteger,
   ClpNat256,
   ClpNat,
-  ClpFpKernelSimd,
+  ClpMontKernelSimd,
+  ClpPointKernelSimd,
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,
@@ -350,13 +351,13 @@ end;
 
 class procedure TSecP256K1Field.MulExt(const AX, AY, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TryMul(AX, AY, AZz, 8) then
+  if not TMontKernelSimd.TryMul(AX, AY, AZz, 8) then
     TNat256.Mul(AX, AY, AZz);
 end;
 
 class procedure TSecP256K1Field.SqrExt(const AX, AZz: TCryptoLibUInt32Array);
 begin
-  if not TFpKernelSimd.TrySqr(AX, AZz, 8) then
+  if not TMontKernelSimd.TrySqr(AX, AZz, 8) then
     TNat256.Square(AX, AZz);
 end;
 
@@ -1287,19 +1288,19 @@ end;
 
 class function TSecP256K1FieldArith.TryFusedJacPointDouble(APR, APA: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryK256JacPointDouble(APR, APA,
+  Result := TPointKernelSimd.TryK256JacPointDouble(APR, APA,
     PUInt64(@FParams.CtxData[0]));
 end;
 
 class function TSecP256K1FieldArith.TryFusedJacPointAdd(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryK256JacPointAdd(APScratch, APA, APQ,
+  Result := TPointKernelSimd.TryK256JacPointAdd(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
 class function TSecP256K1FieldArith.TryFusedJacPointAddMixed(APScratch, APA, APQ: PUInt64): Boolean;
 begin
-  Result := TFpKernelSimd.TryK256JacPointAddMixed(APScratch, APA, APQ,
+  Result := TPointKernelSimd.TryK256JacPointAddMixed(APScratch, APA, APQ,
     PUInt64(@FParams.CtxData[0]));
 end;
 
