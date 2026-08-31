@@ -3,7 +3,7 @@ program CryptoLibConsole;
 {$mode objfpc}{$H+}
 
 uses
-  {$IFDEF UNIX}cwstring,{$ENDIF}
+  {$IFDEF UNIX}cthreads, cwstring,{$ENDIF}
   consoletestrunner, Asn1GeneratorTests, Asn1SequenceParserTests,
   Asn1SequenceCursorTests, Asn1TimeFormatTests, EqualsAndHashCodeTests,
   OIDTests, EnumeratedTests, ExternalTests, ParsingTests, ParseTests,

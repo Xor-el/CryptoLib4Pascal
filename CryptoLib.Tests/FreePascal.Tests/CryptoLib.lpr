@@ -3,6 +3,7 @@ program CryptoLib.Tests;
 {$mode objfpc}{$H+}
 
 uses
+  {$IFDEF UNIX}cthreads,{$ENDIF}
   Interfaces, Forms, GuiTestRunner, Asn1GeneratorTests, Asn1SequenceParserTests,
   Asn1SequenceCursorTests, Asn1TimeFormatTests, EqualsAndHashCodeTests,
   OIDTests, EnumeratedTests, ExternalTests, ParsingTests, ParseTests,
