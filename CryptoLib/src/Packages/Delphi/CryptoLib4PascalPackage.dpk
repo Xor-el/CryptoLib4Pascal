@@ -78,6 +78,7 @@ contains
   ClpBaseKdfBytesGenerator in '..\..\Crypto\Generators\ClpBaseKdfBytesGenerator.pas',
   ClpBigInteger in '..\..\Math\ClpBigInteger.pas',
   ClpMontKernelContext in '..\..\Math\ClpMontKernelContext.pas',
+  ClpIMontKernelContext in '..\..\Interfaces\Math\ClpIMontKernelContext.pas',
   ClpBigIntegerUtilities in '..\..\Math\ClpBigIntegerUtilities.pas',
   ClpPrimes in '..\..\Math\ClpPrimes.pas',
   ClpCbcBlockCipher in '..\..\Crypto\Modes\ClpCbcBlockCipher.pas',

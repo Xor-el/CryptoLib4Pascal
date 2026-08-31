@@ -25,7 +25,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
-  ClpMontKernelContext,
+  ClpIMontKernelContext,
   ClpPack,
   ClpArrayUtilities,
   ClpRsaBlindingTypes,
@@ -65,6 +65,7 @@ type
     procedure Refresh;
   strict protected
     FModulus: TBigInteger;
+    FModContext: IMontKernelContext;
     // store a freshly generated plain pair in the strategy's representation.
     procedure DoRefresh(const ABlind, AUnblind: TBigInteger); virtual; abstract;
     // advance the cached pair: (A, Ai) -> (A^2, Ai^2), the pair for r^2.
@@ -75,10 +76,10 @@ type
     function DoUnblind(const APair: TRsaBlindingPair; const AResult: TBigInteger): TBigInteger; virtual; abstract;
   public
     constructor Create(const AModulus, AExponent: TBigInteger;
-      const ARandom: ISecureRandom);
+      const ARandom: ISecureRandom; const AModContext: IMontKernelContext);
     destructor Destroy; override;
     class function NewBlinding(const AModulus, AExponent: TBigInteger;
-      const ARandom: ISecureRandom): IRsaBlinding; static;
+      const ARandom: ISecureRandom; const AModContext: IMontKernelContext): IRsaBlinding; static;
     procedure Acquire(out APair: TRsaBlindingPair);
     function Blind(const APair: TRsaBlindingPair; const AInput: TBigInteger): TBigInteger;
     function Unblind(const APair: TRsaBlindingPair; const AResult: TBigInteger): TBigInteger;
@@ -105,10 +106,7 @@ type
   TKernelRsaBlinding = class sealed(TRsaBlindingBase)
   strict private
     FN64: Int32;
-    FEngaged: Boolean;
-    FCtx: TMontKernelContext;
-    FRSquared, FBlindMont, FUnblindMont, FKernelScratch: TCryptoLibUInt64Array;
-    function TryInitKernel: Boolean;
+    FBlindMont, FUnblindMont, FKernelScratch: TCryptoLibUInt64Array;
     function ToLimbs(const AValue: TBigInteger): TCryptoLibUInt64Array;
     function FromLimbs(const ALimbs: TCryptoLibUInt64Array): TBigInteger;
     procedure Wipe(const ALimbs: TCryptoLibUInt64Array);
@@ -120,21 +118,21 @@ type
     function DoUnblind(const APair: TRsaBlindingPair; const AResult: TBigInteger): TBigInteger; override;
   public
     constructor Create(const AModulus, AExponent: TBigInteger;
-      const ARandom: ISecureRandom);
+      const ARandom: ISecureRandom; const AContext: IMontKernelContext);
     destructor Destroy; override;
-    property Engaged: Boolean read FEngaged;
   end;
 
 { TRsaBlindingBase }
 
 constructor TRsaBlindingBase.Create(const AModulus, AExponent: TBigInteger;
-  const ARandom: ISecureRandom);
+  const ARandom: ISecureRandom; const AModContext: IMontKernelContext);
 begin
   inherited Create;
   FLock := TCriticalSection.Create;
   FModulus := AModulus;
   FExponent := AExponent;
   FRandom := ARandom;
+  FModContext := AModContext;
   FCounter := 0;
   FHasPair := False;
 end;
@@ -146,18 +144,14 @@ begin
 end;
 
 class function TRsaBlindingBase.NewBlinding(const AModulus, AExponent: TBigInteger;
-  const ARandom: ISecureRandom): IRsaBlinding;
-var
-  LKernel: TKernelRsaBlinding;
+  const ARandom: ISecureRandom; const AModContext: IMontKernelContext): IRsaBlinding;
 begin
-  LKernel := TKernelRsaBlinding.Create(AModulus, AExponent, ARandom);
-  if LKernel.Engaged then
-    Result := LKernel
+  // reuse the key's shared modulus context when the kernel engages for its width;
+  // otherwise the portable strategy.
+  if (AModContext <> nil) and AModContext.Engaged then
+    Result := TKernelRsaBlinding.Create(AModulus, AExponent, ARandom, AModContext)
   else
-  begin
-    LKernel.Free;
-    Result := TScalarRsaBlinding.Create(AModulus, AExponent, ARandom);
-  end;
+    Result := TScalarRsaBlinding.Create(AModulus, AExponent, ARandom, AModContext);
 end;
 
 procedure TRsaBlindingBase.Refresh;
@@ -185,7 +179,8 @@ begin
       end;
     end;
   end;
-  LBlind := LR.ModPow(FExponent, FModulus);
+  // reuse the key's cached context for r^e; a disengaged context falls through to scalar.
+  LBlind := LR.ModPowMont(FExponent, FModulus, FModContext);
   DoRefresh(LBlind, LUnblind);
   FCounter := 0;
   FHasPair := True;
@@ -253,10 +248,13 @@ end;
 { TKernelRsaBlinding }
 
 constructor TKernelRsaBlinding.Create(const AModulus, AExponent: TBigInteger;
-  const ARandom: ISecureRandom);
+  const ARandom: ISecureRandom; const AContext: IMontKernelContext);
 begin
-  inherited Create(AModulus, AExponent, ARandom);
-  FEngaged := TryInitKernel;
+  inherited Create(AModulus, AExponent, ARandom, AContext);
+  FN64 := AContext.N64;
+  System.SetLength(FBlindMont, FN64);
+  System.SetLength(FUnblindMont, FN64);
+  System.SetLength(FKernelScratch, FN64 + 2);
 end;
 
 destructor TKernelRsaBlinding.Destroy;
@@ -265,34 +263,6 @@ begin
   Wipe(FUnblindMont);
   Wipe(FKernelScratch);
   inherited Destroy;
-end;
-
-function TKernelRsaBlinding.TryInitKernel: Boolean;
-var
-  LN, LShift: Int32;
-  LModLimbs: TCryptoLibUInt64Array;
-  LRSquared: TBigInteger;
-begin
-  Result := False;
-  // 32-bit magnitude length of a normalized positive modulus = ceil(bitLength/32);
-  // the kernel needs an even count of at least 4 (i.e. N64 >= 2).
-  LN := (FModulus.BitLength + 31) div 32;
-  if ((LN and 1) <> 0) or (LN < 4) then
-    Exit;
-  FN64 := LN shr 1;
-  System.SetLength(LModLimbs, FN64);
-  FModulus.ToUInt64sLittleEndian(LModLimbs, FN64);
-  if not FCtx.TryBuild(LModLimbs, FN64) then
-    Exit;
-  // R^2 mod n, with R = 2^(64*N64), converts a plain value to Montgomery form via one MontMul.
-  LShift := (64 * FN64) * 2;
-  LRSquared := TBigInteger.One.ShiftLeft(LShift).&Mod(FModulus);
-  System.SetLength(FRSquared, FN64);
-  LRSquared.ToUInt64sLittleEndian(FRSquared, FN64);
-  System.SetLength(FBlindMont, FN64);
-  System.SetLength(FUnblindMont, FN64);
-  System.SetLength(FKernelScratch, FN64 + 2);
-  Result := True;
 end;
 
 function TKernelRsaBlinding.ToLimbs(const AValue: TBigInteger): TCryptoLibUInt64Array;
@@ -324,17 +294,17 @@ begin
   // move both factors into Montgomery form; the MontMul overwrites the whole buffer,
   // so the superseded pair leaves no residue.
   LLimbs := ToLimbs(ABlind);
-  FCtx.Mul(FKernelScratch, LLimbs, FRSquared, FBlindMont);
+  FModContext.ToMontgomery(FKernelScratch, LLimbs, FBlindMont);
   Wipe(LLimbs);
   LLimbs := ToLimbs(AUnblind);
-  FCtx.Mul(FKernelScratch, LLimbs, FRSquared, FUnblindMont);
+  FModContext.ToMontgomery(FKernelScratch, LLimbs, FUnblindMont);
   Wipe(LLimbs);
 end;
 
 procedure TKernelRsaBlinding.DoAdvance;
 begin
-  FCtx.Sqr(FKernelScratch, FBlindMont, FBlindMont);
-  FCtx.Sqr(FKernelScratch, FUnblindMont, FUnblindMont);
+  FModContext.Sqr(FKernelScratch, FBlindMont, FBlindMont);
+  FModContext.Sqr(FKernelScratch, FUnblindMont, FUnblindMont);
 end;
 
 procedure TKernelRsaBlinding.DoSnapshot(out APair: TRsaBlindingPair);
@@ -355,7 +325,7 @@ var
 begin
   // MontMul(input, A*R) = input*A mod n, back in the plain domain.
   System.SetLength(LOut, FN64);
-  FCtx.Mul(APair.Scratch, ToLimbs(AInput), APair.BlindMont, LOut);
+  FModContext.Mul(APair.Scratch, ToLimbs(AInput), APair.BlindMont, LOut);
   Result := FromLimbs(LOut);
 end;
 
@@ -366,7 +336,7 @@ var
 begin
   // MontMul(s, Ai*R) = s*Ai mod n, back in the plain domain.
   System.SetLength(LOut, FN64);
-  FCtx.Mul(APair.Scratch, ToLimbs(AResult), APair.UnblindMont, LOut);
+  FModContext.Mul(APair.Scratch, ToLimbs(AResult), APair.UnblindMont, LOut);
   Result := FromLimbs(LOut);
 end;
 

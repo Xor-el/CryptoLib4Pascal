@@ -392,6 +392,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpBaseKdfBytesGenerator.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\ClpBigInteger.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\ClpMontKernelContext.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Math\ClpIMontKernelContext.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\ClpBigIntegerUtilities.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\ClpPrimes.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Modes\ClpCbcBlockCipher.pas"/>

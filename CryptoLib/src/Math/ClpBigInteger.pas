@@ -29,6 +29,7 @@ uses
   ClpBitOperations,
   ClpInt32Utilities,
   ClpArrayUtilities,
+  ClpIMontKernelContext,
   ClpIRandom;
 
 resourcestring
@@ -103,7 +104,9 @@ type
     function ModInversePow2(const AM: TBigInteger): TBigInteger;
     class function ModPowBarrett(const AB, AE, AM: TBigInteger): TBigInteger; static;
     class function ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger; static;
-    class function ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger; static;
+    class function ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean;
+      const ACachedCtx: IMontKernelContext = nil): TBigInteger; static;
+    function DoModPow(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
     class function ModSquareMonty(const AB, AM: TBigInteger): TBigInteger; static;
     function LastNBits(const AN: Int32): TCryptoLibUInt32Array;
     function QuickPow2Check(): Boolean;
@@ -179,6 +182,15 @@ type
     function ModMultiply(const AY, AM: TBigInteger): TBigInteger;
     function ModSquare(const AM: TBigInteger): TBigInteger;
     function ModPow(const AE, AM: TBigInteger): TBigInteger;
+    /// <summary>Self^AE mod AM using a prebuilt Montgomery context for AM (an odd
+    /// modulus), skipping the per-call context build + Montgomery-enter division.</summary>
+    function ModPowMont(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
+    /// <summary>The single builder for a Montgomery kernel context over the odd modulus
+    /// AM: derives R^2 mod n (needed only to enter Montgomery form) when ANeedEntry, and
+    /// probes engagement before that division so a disengaged width pays nothing. The
+    /// result's Engaged reports whether the kernel took the width.</summary>
+    class function CreateMontContext(const AM: TBigInteger; ANeedEntry: Boolean)
+      : IMontKernelContext; static;
     function Pow(const AExponent: Int32): TBigInteger;
     function Gcd(const AValue: TBigInteger): TBigInteger;
     function Abs(): TBigInteger;
@@ -317,10 +329,10 @@ type
   TMontModState = record
     Modulus: TBigInteger;
     LN, LN64, LPowR, NumPowers: Int32;
-    KernelCtx: TMontKernelContext;
-    Scratch, Accum, Squared, TmpPow, PowTable: TCryptoLibUInt64Array;
+    KernelCtx: IMontKernelContext;
+    Scratch, Accum, Squared, TmpPow, PowTable, BaseLimbs: TCryptoLibUInt64Array;
     MDash: UInt32;
-    SmallMonty: Boolean;
+    SmallMonty, NeedEntry: Boolean;
     YAccum, Accum32, Squared32: TCryptoLibUInt32Array;
     OddPowers32: TCryptoLibMatrixUInt32Array;
   end;
@@ -369,21 +381,41 @@ type
   end;
 
 class function TKernelMontOps.TryInit(const AM: TBigInteger; var S: TMontModState): Boolean;
+{$IFDEF DEBUG}
 var
   LMod: TCryptoLibUInt64Array;
+{$ENDIF DEBUG}
 begin
-  Result := False;
-  S.LN := System.Length(AM.FMagnitude);
-  if ((S.LN and 1) <> 0) or (S.LN < 4) then
+  // adopt path: the caller pre-set S.KernelCtx (the key's cached context) and S.Modulus;
+  // reuse it instead of building per call.
+  if S.KernelCtx <> nil then
+  begin
+    Result := S.KernelCtx.Engaged;
+    if Result then
+    begin
+{$IFDEF DEBUG}
+      System.SetLength(LMod, S.KernelCtx.N64);
+      AM.ToUInt64sLittleEndian(LMod, S.KernelCtx.N64);
+      System.Assert(S.KernelCtx.MatchesModulus(LMod),
+        'adopted Montgomery context does not match the operand modulus');
+{$ENDIF DEBUG}
+      S.LN64 := S.KernelCtx.N64;
+      System.SetLength(S.Accum, S.LN64);
+      System.SetLength(S.Scratch, S.LN64 + 2);
+      System.SetLength(S.BaseLimbs, S.LN64);
+    end;
     Exit;
+  end;
   S.Modulus := AM;
-  S.LN64 := S.LN shr 1;
-  S.LPowR := 32 * S.LN;
-  System.SetLength(LMod, S.LN64);
-  AM.ToUInt64sLittleEndian(LMod, S.LN64);
-  System.SetLength(S.Accum, S.LN64);
-  System.SetLength(S.Scratch, S.LN64 + 2);
-  Result := S.KernelCtx.TryBuild(LMod, S.LN64);
+  S.KernelCtx := TBigInteger.CreateMontContext(AM, S.NeedEntry);
+  Result := S.KernelCtx.Engaged;
+  if Result then
+  begin
+    S.LN64 := S.KernelCtx.N64;
+    System.SetLength(S.Accum, S.LN64);
+    System.SetLength(S.Scratch, S.LN64 + 2);
+    System.SetLength(S.BaseLimbs, S.LN64);
+  end;
 end;
 
 class procedure TKernelMontOps.KMul(var S: TMontModState; const AX, AY, ADst: TCryptoLibUInt64Array);
@@ -425,10 +457,19 @@ var
   LI: Int32;
 begin
   LB := AB;
-  if AConvert then
-    LB := LB.ShiftLeft(S.LPowR).Remainder(S.Modulus);
   System.SetLength(S.Accum, S.LN64);
-  LB.ToUInt64sLittleEndian(S.Accum, S.LN64);
+  if AConvert then
+  begin
+    // enter Montgomery form via MontMul(base, R^2) - no division. Guarantee base is in
+    // [0, n) first so it fits in N64 limbs (RSA bases already are, so this never divides;
+    // the guard only fires for an out-of-range base on the general path).
+    if (LB.SignValue < 0) or (LB.CompareTo(S.Modulus) >= 0) then
+      LB := LB.&Mod(S.Modulus);
+    LB.ToUInt64sLittleEndian(S.BaseLimbs, S.LN64);
+    S.KernelCtx.ToMontgomery(S.Scratch, S.BaseLimbs, S.Accum);
+  end
+  else
+    LB.ToUInt64sLittleEndian(S.Accum, S.LN64);
   System.SetLength(S.PowTable, S.NumPowers * S.LN64);
   System.SetLength(S.TmpPow, S.LN64);
   System.Move(S.Accum[0], S.PowTable[0], S.LN64 * System.SizeOf(UInt64));
@@ -2430,7 +2471,7 @@ begin
   Result := Square().&Mod(AM);
 end;
 
-function TBigInteger.ModPow(const AE, AM: TBigInteger): TBigInteger;
+function TBigInteger.DoModPow(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
 var
   LNegExp: Boolean;
   LE: TBigInteger;
@@ -2468,11 +2509,48 @@ begin
     else
     begin
       // Odd modulus - use Montgomery reduction
-      Result := ModPowMonty(Result, LE, AM, True);
+      Result := ModPowMonty(Result, LE, AM, True, ACtx);
     end;
   end;
   if LNegExp then
     Result := Result.ModInverse(AM);
+end;
+
+function TBigInteger.ModPow(const AE, AM: TBigInteger): TBigInteger;
+begin
+  Result := DoModPow(AE, AM, nil);
+end;
+
+function TBigInteger.ModPowMont(const AE, AM: TBigInteger;
+  const ACtx: IMontKernelContext): TBigInteger;
+begin
+  Result := DoModPow(AE, AM, ACtx);
+end;
+
+class function TBigInteger.CreateMontContext(const AM: TBigInteger;
+  ANeedEntry: Boolean): IMontKernelContext;
+var
+  LN, LN64: Int32;
+  LMod, LRR: TCryptoLibUInt64Array;
+begin
+  LN := System.Length(AM.FMagnitude);
+  if ((LN and 1) <> 0) or (LN < 4) then
+  begin
+    // odd limb-count / too narrow: no kernel width fits - a disengaged context.
+    Result := TMontKernelContext.Create(nil, nil, 0);
+    Exit;
+  end;
+  LN64 := LN shr 1;
+  System.SetLength(LMod, LN64);
+  AM.ToUInt64sLittleEndian(LMod, LN64);
+  // probe engagement with no R^2 first, so a disengaged width never pays the division.
+  Result := TMontKernelContext.Create(LMod, nil, LN64);
+  if (not ANeedEntry) or (not Result.Engaged) then
+    Exit;
+  // R^2 mod n = 2^(2*64*N64) mod n - the one division that entering Montgomery needs.
+  System.SetLength(LRR, LN64);
+  TBigInteger.One.ShiftLeft(2 * 64 * LN64).&Mod(AM).ToUInt64sLittleEndian(LRR, LN64);
+  Result := TMontKernelContext.Create(LMod, LRR, LN64);
 end;
 
 function TBigInteger.Pow(const AExponent: Int32): TBigInteger;
@@ -3912,7 +3990,8 @@ begin
   Result := LY;
 end;
 
-class function TBigInteger.ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger;
+class function TBigInteger.ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean;
+  const ACachedCtx: IMontKernelContext): TBigInteger;
 var
   S: TMontModState;
   LExtraBits, LExpLength: Int32;
@@ -3926,6 +4005,13 @@ begin
   end;
   S := Default(TMontModState);
   S.NumPowers := 1 shl LExtraBits;
+  // only a converting exponentiation enters Montgomery form, so only it needs R^2.
+  S.NeedEntry := AConvert;
+  if ACachedCtx <> nil then
+  begin
+    S.KernelCtx := ACachedCtx;
+    S.Modulus := AM;
+  end;
   if TKernelMontOps.TryInit(AM, S) then
   begin
     TKernelMontOps.BuildTable(S, AB, AConvert);

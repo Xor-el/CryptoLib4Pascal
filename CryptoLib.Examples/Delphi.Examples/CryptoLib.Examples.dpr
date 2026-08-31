@@ -73,6 +73,7 @@ uses
   ClpBaseKdfBytesGenerator in '..\..\CryptoLib\src\Crypto\Generators\ClpBaseKdfBytesGenerator.pas',
   ClpBigInteger in '..\..\CryptoLib\src\Math\ClpBigInteger.pas',
   ClpMontKernelContext in '..\..\CryptoLib\src\Math\ClpMontKernelContext.pas',
+  ClpIMontKernelContext in '..\..\CryptoLib\src\Interfaces\Math\ClpIMontKernelContext.pas',
   ClpBigIntegerUtilities in '..\..\CryptoLib\src\Math\ClpBigIntegerUtilities.pas',
   ClpPrimes in '..\..\CryptoLib\src\Math\ClpPrimes.pas',
   ClpCbcBlockCipher in '..\..\CryptoLib\src\Crypto\Modes\ClpCbcBlockCipher.pas',

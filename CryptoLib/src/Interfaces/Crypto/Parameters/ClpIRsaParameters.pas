@@ -22,6 +22,7 @@ interface
 
 uses
   ClpBigInteger,
+  ClpIMontKernelContext,
   ClpIRsaBlinding,
   ClpISecureRandom,
   ClpIAsymmetricKeyParameter,
@@ -34,6 +35,7 @@ type
 
     function GetModulus: TBigInteger;
     function GetExponent: TBigInteger;
+    function GetModulusContext: IMontKernelContext;
 
     function Equals(const AOther: IRsaKeyParameters): Boolean; overload;
 
@@ -54,6 +56,8 @@ type
 
     /// <summary>The lazily-created, thread-safe blinding cache bound to this key.</summary>
     function GetBlinding(const ARandom: ISecureRandom): IRsaBlinding;
+    function GetPContext: IMontKernelContext;
+    function GetQContext: IMontKernelContext;
 
     property PublicExponent: TBigInteger read GetPublicExponent;
     property P: TBigInteger read GetP;

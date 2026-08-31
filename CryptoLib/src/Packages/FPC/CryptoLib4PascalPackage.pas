@@ -301,7 +301,7 @@ uses
   ClpPointKernelX86Backend, ClpGatherKernelX86Backend, 
   ClpMontKernelArmBackend, ClpPointKernelArmBackend, 
   ClpGatherKernelArmBackend, ClpRsaBlinding, ClpMontKernelContext, 
-  ClpIRsaBlinding, ClpRsaBlindingTypes;
+  ClpIRsaBlinding, ClpRsaBlindingTypes, ClpIMontKernelContext;
 
 implementation
 
