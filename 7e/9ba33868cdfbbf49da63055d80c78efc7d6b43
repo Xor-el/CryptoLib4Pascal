@@ -1,0 +1,29 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_5e9312dc1422f7::t_f5e4f8f59e3d10 6
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_3c6f85edd6f670::t_0e9c5a90ee909b 6
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "7e9ba33868cdfbbf49da63055d80c78efc7d6b43",
+  "prompts": {},
+  "sessions": {
+    "s_3c6f85edd6f670": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-a568e72143d630210",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
