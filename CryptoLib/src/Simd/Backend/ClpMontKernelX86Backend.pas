@@ -45,6 +45,9 @@ type
     /// [n0', N, p[0..N-1]]; PR is the N+2-limb scratch and receives the reduced
     /// N-limb result. Returns False on an arch without the kernel.</summary>
     class function MontMul(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>Dedicated Montgomery square PR := PA^2*R^-1 mod p (wide widths
+    /// only). False -> caller squares via MontMul.</summary>
+    class function MontSqr(PR, PA, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -150,6 +153,49 @@ procedure FpKernelMontMulMulx8(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_MULX8}
 end;
 
+// Wide widths accumulate in the PR scratch (needs N+2 limbs); PR must not alias PA/PB.
+procedure FpKernelMontMulMulx16(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX16}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX16}
+end;
+
+procedure FpKernelMontMulMulx24(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX24}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX24}
+end;
+
+procedure FpKernelMontMulMulx32(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX32}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX32}
+end;
+
+procedure FpKernelMontSqrMulx16(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX16}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX16}
+end;
+
+procedure FpKernelMontSqrMulx24(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX24}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX24}
+end;
+
+procedure FpKernelMontSqrMulx32(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX32}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_x86_64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_x86_64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX32}
+end;
+
 {$ENDIF}
 
 {$IFDEF CRYPTOLIB_X86_64_ASM}
@@ -229,9 +275,9 @@ end;
 class function TMontKernelX86Backend.MontMul(PR, PA, PB, PCtx: PUInt64): Boolean;
 begin
 {$IFDEF CRYPTOLIB_X86_64_ASM}
-  // CtxData[1] = N (uint64 limbs). With BMI2+ADX every width N=4..9 takes a
-  // two-carry-chain MULX kernel (contiguous coverage: any value-type Fp curve up to
-  // 576-bit auto-benefits); anything outside 4..9 uses the plain-MUL kernel.
+  // CtxData[1] = N (uint64 limbs). With BMI2+ADX N=4..9 take a register-resident
+  // MULX kernel and N=16/24/32 (RSA modexp) a wide memory-accumulator MULX kernel;
+  // anything else uses the width-general plain-MUL kernel.
   if TX86SimdFeatures.HasBMI2ADX() then
   begin
     case PUInt64(PByte(PCtx) + 8)^ of
@@ -241,6 +287,9 @@ begin
       7: FpKernelMontMulMulx7(PR, PA, PB, PCtx);
       8: FpKernelMontMulMulx8(PR, PA, PB, PCtx);
       9: FpKernelMontMulMulx9(PR, PA, PB, PCtx);
+      16: FpKernelMontMulMulx16(PR, PA, PB, PCtx);
+      24: FpKernelMontMulMulx24(PR, PA, PB, PCtx);
+      32: FpKernelMontMulMulx32(PR, PA, PB, PCtx);
     else
       FpKernelMontMul(PR, PA, PB, PCtx);
     end;
@@ -255,6 +304,26 @@ begin
   {$ELSE}
   Result := False;
   {$ENDIF}
+{$ENDIF}
+end;
+
+class function TMontKernelX86Backend.MontSqr(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_X86_64_ASM}
+  if TX86SimdFeatures.HasBMI2ADX() then
+  begin
+    case PUInt64(PByte(PCtx) + 8)^ of
+      16: FpKernelMontSqrMulx16(PR, PA, PA, PCtx);
+      24: FpKernelMontSqrMulx24(PR, PA, PA, PCtx);
+      32: FpKernelMontSqrMulx32(PR, PA, PA, PCtx);
+    else
+      Exit(False);
+    end;
+    Exit(True);
+  end;
+  Result := False;
+{$ELSE}
+  Result := False;
 {$ENDIF}
 end;
 

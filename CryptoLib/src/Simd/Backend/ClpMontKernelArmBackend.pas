@@ -46,6 +46,9 @@ type
     /// [n0', N, p[0..N-1]]; PR is the N+2-limb scratch and receives the reduced
     /// N-limb result. Returns False on an arch without the kernel.</summary>
     class function MontMul(PR, PA, PB, PCtx: PUInt64): Boolean; static;
+    /// <summary>Dedicated Montgomery square PR := PA^2*R^-1 mod p (wide widths
+    /// only). False -> caller squares via MontMul.</summary>
+    class function MontSqr(PR, PA, PCtx: PUInt64): Boolean; static;
     /// <summary>Constant-time modular add/sub PR := (PA +/- PB) mod p. PCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False on arch without it.</summary>
     class function ModAdd(PR, PA, PB, PCtx: PUInt64): Boolean; static;
@@ -124,6 +127,49 @@ procedure FpKernelMontMulReg9(PR, PA, PB, PCtx: PUInt64);
 {$UNDEF CRYPTOLIB_FP_MONTMUL_REG9}
 end;
 
+// Wide widths accumulate in the PR scratch (needs N+2 limbs); PR must not alias PA/PB.
+procedure FpKernelMontMulMulx16(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX16}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX16}
+end;
+
+procedure FpKernelMontMulMulx24(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX24}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX24}
+end;
+
+procedure FpKernelMontMulMulx32(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTMUL_MULX32}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTMUL_MULX32}
+end;
+
+procedure FpKernelMontSqrMulx16(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX16}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX16}
+end;
+
+procedure FpKernelMontSqrMulx24(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX24}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX24}
+end;
+
+procedure FpKernelMontSqrMulx32(PR, PA, PB, PCtx: PUInt64);
+{$DEFINE CRYPTOLIB_FP_MONTSQR_MULX32}
+{$I ..\..\Include\Simd\Common\ClpSimdProc4Begin_aarch64.inc}
+{$I ..\..\Include\Simd\MontKernel\MontKernel_aarch64.inc}
+{$UNDEF CRYPTOLIB_FP_MONTSQR_MULX32}
+end;
+
 // Constant-time modular add/sub (FP_MODADD / FP_MODSUB selectors), width-general.
 procedure FpKernelModAdd(PR, PA, PB, PCtx: PUInt64);
 {$DEFINE CRYPTOLIB_FP_MODADD}
@@ -170,7 +216,8 @@ class function TMontKernelArmBackend.MontMul(PR, PA, PB, PCtx: PUInt64): Boolean
 begin
 {$IFDEF CRYPTOLIB_AARCH64_ASM}
   // CtxData[1] = N (uint64 limbs). N=4..9 take a fully-unrolled register-resident
-  // kernel; any other width uses the width-general loop.
+  // kernel and N=16/24/32 (RSA modexp) a wide memory-accumulator kernel; any
+  // other width uses the width-general loop.
   case PUInt64(PByte(PCtx) + 8)^ of
     4: FpKernelMontMulReg4(PR, PA, PB, PCtx);
     5: FpKernelMontMulReg5(PR, PA, PB, PCtx);
@@ -178,8 +225,27 @@ begin
     7: FpKernelMontMulReg7(PR, PA, PB, PCtx);
     8: FpKernelMontMulReg8(PR, PA, PB, PCtx);
     9: FpKernelMontMulReg9(PR, PA, PB, PCtx);
+    16: FpKernelMontMulMulx16(PR, PA, PB, PCtx);
+    24: FpKernelMontMulMulx24(PR, PA, PB, PCtx);
+    32: FpKernelMontMulMulx32(PR, PA, PB, PCtx);
   else
     FpKernelMontMul(PR, PA, PB, PCtx);
+  end;
+  Result := True;
+{$ELSE}
+  Result := False;
+{$ENDIF}
+end;
+
+class function TMontKernelArmBackend.MontSqr(PR, PA, PCtx: PUInt64): Boolean;
+begin
+{$IFDEF CRYPTOLIB_AARCH64_ASM}
+  case PUInt64(PByte(PCtx) + 8)^ of
+    16: FpKernelMontSqrMulx16(PR, PA, PA, PCtx);
+    24: FpKernelMontSqrMulx24(PR, PA, PA, PCtx);
+    32: FpKernelMontSqrMulx32(PR, PA, PA, PCtx);
+  else
+    Exit(False);
   end;
   Result := True;
 {$ELSE}

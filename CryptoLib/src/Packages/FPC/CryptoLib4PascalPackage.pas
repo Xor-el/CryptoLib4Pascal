@@ -299,7 +299,9 @@ uses
   ClpIEphemeralECDHAgreement, ClpEphemeralECDHAgreement, ClpMontKernelSimd, 
   ClpPointKernelSimd, ClpGatherKernelSimd, ClpMontKernelX86Backend, 
   ClpPointKernelX86Backend, ClpGatherKernelX86Backend, 
-  ClpMontKernelArmBackend, ClpPointKernelArmBackend, ClpGatherKernelArmBackend;
+  ClpMontKernelArmBackend, ClpPointKernelArmBackend, 
+  ClpGatherKernelArmBackend, ClpRsaBlinding, ClpMontKernelContext, 
+  ClpIRsaBlinding, ClpRsaBlindingTypes;
 
 implementation
 

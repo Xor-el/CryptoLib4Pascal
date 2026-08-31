@@ -25,6 +25,8 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpRsaBlinding,
+  ClpIRsaBlinding,
   ClpPrimes,
   ClpCryptoServicesRegistrar,
   ClpIRsaParameters,
@@ -121,6 +123,9 @@ type
     FDP: TBigInteger;
     FDQ: TBigInteger;
     FQInv: TBigInteger;
+    // lazily-created per-key blinding cache.
+    FBlinding: IRsaBlinding;
+    FBlindingLock: TCriticalSection;
 
     class procedure ValidateValue(const AX: TBigInteger;
       const AParamName, ADesc: String); static;
@@ -132,12 +137,14 @@ type
     function GetDP: TBigInteger;
     function GetDQ: TBigInteger;
     function GetQInv: TBigInteger;
+    function GetBlinding(const ARandom: ISecureRandom): IRsaBlinding;
 
   public
     constructor Create(const AModulus, APublicExponent, APrivateExponent,
       AP, AQ, ADP, ADQ, AQInv: TBigInteger); overload;
     constructor Create(const AModulus, APublicExponent, APrivateExponent,
       AP, AQ, ADP, ADQ, AQInv: TBigInteger; AIsInternal: Boolean); overload;
+    destructor Destroy; override;
 
     function Equals(const AOther: IRsaPrivateCrtKeyParameters): Boolean;
       reintroduce; overload;
@@ -428,6 +435,28 @@ begin
   FDP := ADP;
   FDQ := ADQ;
   FQInv := AQInv;
+  FBlindingLock := TCriticalSection.Create;
+end;
+
+destructor TRsaPrivateCrtKeyParameters.Destroy;
+begin
+  FBlindingLock.Free;
+  inherited Destroy;
+end;
+
+function TRsaPrivateCrtKeyParameters.GetBlinding(
+  const ARandom: ISecureRandom): IRsaBlinding;
+begin
+  // guarded lazy init: the cache is created once and shared by every signature,
+  // so the read is always taken under the lock (no unpublished-object window).
+  FBlindingLock.Acquire;
+  try
+    if FBlinding = nil then
+      FBlinding := TRsaBlindingBase.NewBlinding(Modulus, FE, ARandom);
+    Result := FBlinding;
+  finally
+    FBlindingLock.Release;
+  end;
 end;
 
 function TRsaPrivateCrtKeyParameters.Equals(

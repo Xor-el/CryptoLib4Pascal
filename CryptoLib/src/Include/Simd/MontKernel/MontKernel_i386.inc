@@ -12,8 +12,7 @@
 // the same PCtx with n0' unused. (ClpSimdProc4Begin: rcx = PR, rdx = PA, r8 = PB, r9 = PCtx)
 //
 // Constant-time: no data-dependent branches or memory addresses; the final
-// conditional subtract is a masked select. Kernel bodies are byte-identical
-// to the pre-decomposition FpKernel_<arch>.inc (shared emitter module).
+// conditional subtract is a masked select.
 {$IFDEF CRYPTOLIB_FP_MUL}
   push ebp                      // callee-saved; reused below as the carry accumulator
   sub  esp, 16                  // [esp]=M, [esp+4]=i, [esp+8]=j, [esp+12]=Xi

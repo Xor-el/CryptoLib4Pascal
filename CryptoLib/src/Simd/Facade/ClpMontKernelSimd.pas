@@ -54,6 +54,9 @@ type
     /// the reduced N-limb result. Returns False when unsupported (caller uses its
     /// Montgomery fallback).</summary>
     class function TryMontMul(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
+    /// <summary>Dedicated Montgomery square APR := APA^2*R^-1 mod p (wide widths
+    /// only). False -> square via TryMontMul.</summary>
+    class function TryMontSqr(APR, APA, APCtx: PUInt64): Boolean; static; inline;
     /// <summary>Constant-time modular add/sub APR := (APA +/- APB) mod p. APCtx =
     /// [n0'(unused), N, p[0..N-1]]; inputs assumed < p. False when unsupported.</summary>
     class function TryModAdd(APR, APA, APB, APCtx: PUInt64): Boolean; static; inline;
@@ -73,8 +76,7 @@ end;
 class function TMontKernelSimd.TryMul(APX, APY, APZz: PUInt32; ALimbs32: Int32): Boolean;
 begin
 {$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
-  // Even 32-bit limb count only: uint32[2N] == uint64[N]. Odd widths (P-521 = 17)
-  // are not byte-identical to any uint64[k] and need a mixed-width kernel.
+  // Even 32-bit limb count only: uint32[2N] == uint64[N] little-endian.
   if (ALimbs32 and 1) <> 0 then
     Exit(False);
   {$IFDEF CRYPTOLIB_X86_SIMD}
@@ -129,6 +131,23 @@ begin
   if not TMontKernelArmBackend.IsSupported then
     Exit(False);
   Result := TMontKernelArmBackend.MontMul(APR, APA, APB, APCtx);
+  {$ENDIF}
+{$ELSE}
+  Result := False;
+{$IFEND}
+end;
+
+class function TMontKernelSimd.TryMontSqr(APR, APA, APCtx: PUInt64): Boolean;
+begin
+{$IF DEFINED(CRYPTOLIB_X86_SIMD) OR DEFINED(CRYPTOLIB_AARCH64_ASM)}
+  {$IFDEF CRYPTOLIB_X86_SIMD}
+  if not TMontKernelX86Backend.IsSupported then
+    Exit(False);
+  Result := TMontKernelX86Backend.MontSqr(APR, APA, APCtx);
+  {$ELSE}
+  if not TMontKernelArmBackend.IsSupported then
+    Exit(False);
+  Result := TMontKernelArmBackend.MontSqr(APR, APA, APCtx);
   {$ENDIF}
 {$ELSE}
   Result := False;

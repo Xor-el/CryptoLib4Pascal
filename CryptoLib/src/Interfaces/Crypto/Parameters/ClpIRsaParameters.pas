@@ -22,6 +22,8 @@ interface
 
 uses
   ClpBigInteger,
+  ClpIRsaBlinding,
+  ClpISecureRandom,
   ClpIAsymmetricKeyParameter,
   ClpICipherParameters,
   ClpIKeyGenerationParameters;
@@ -49,6 +51,9 @@ type
     function GetDP: TBigInteger;
     function GetDQ: TBigInteger;
     function GetQInv: TBigInteger;
+
+    /// <summary>The lazily-created, thread-safe blinding cache bound to this key.</summary>
+    function GetBlinding(const ARandom: ISecureRandom): IRsaBlinding;
 
     property PublicExponent: TBigInteger read GetPublicExponent;
     property P: TBigInteger read GetP;

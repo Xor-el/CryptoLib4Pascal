@@ -29,6 +29,8 @@ uses
   ClpIRsa,
   ClpIAsymmetricBlockCipher,
   ClpIRsaBlindedEngine,
+  ClpIRsaBlinding,
+  ClpRsaBlindingTypes,
   ClpRsaCoreEngine,
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
@@ -132,8 +134,8 @@ function TRsaBlindedEngine.ProcessBlock(const AInBuf: TCryptoLibByteArray;
 var
   LInput, LOutput: TBigInteger;
   LCrtKey: IRsaPrivateCrtKeyParameters;
-  LE, LM: TBigInteger;
-  LR, LBlind, LUnblind: TBigInteger;
+  LBlinding: IRsaBlinding;
+  LPair: TRsaBlindingPair;
   LBlindedInput, LBlindedResult: TBigInteger;
 begin
   if FKey = nil then
@@ -146,25 +148,13 @@ begin
   // Only apply blinding for private CRT key operations
   if Supports(FKey, IRsaPrivateCrtKeyParameters, LCrtKey) then
   begin
-    LE := LCrtKey.PublicExponent;
-    LM := LCrtKey.Modulus;
-
-    // Generate random r in range [1, m-1]
-    LR := TBigIntegerUtilities.CreateRandomInRange(TBigInteger.One, LM.Subtract(TBigInteger.One), FRandom);
-
-    // blind = r^e mod m
-    LBlind := LR.ModPow(LE, LM);
-    // unblind = r^(-1) mod m
-    LUnblind := TBigIntegerUtilities.ModOddInverse(LM, LR);
-
-    // Blind the input: blindedInput = blind * input mod m
-    LBlindedInput := LBlind.Multiply(LInput).&Mod(LM);
-
-    // Process the blinded input through the core engine
+    LBlinding := LCrtKey.GetBlinding(FRandom);
+    // advance-and-snapshot under the cache lock, then blind/sign/unblind on the
+    // snapshot outside it, so concurrent signatures never share or corrupt a pair
+    LBlinding.Acquire(LPair);
+    LBlindedInput := LBlinding.Blind(LPair, LInput);
     LBlindedResult := FCore.ProcessBlock(LBlindedInput);
-
-    // Unblind: output = unblind * blindedResult mod m
-    LOutput := LUnblind.Multiply(LBlindedResult).&Mod(LM);
+    LOutput := LBlinding.Unblind(LPair, LBlindedResult);
   end
   else
   begin
