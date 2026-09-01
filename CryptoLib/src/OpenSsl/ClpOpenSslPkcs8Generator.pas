@@ -30,7 +30,6 @@ uses
   ClpEncryptedPrivateKeyInfoFactory,
   ClpIAsymmetricKeyParameter,
   ClpCryptoServicesRegistrar,
-  ClpSecureRandom,
   ClpISecureRandom,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;

@@ -25,7 +25,6 @@ uses
   ClpBigInteger,
   ClpNat512,
   ClpNat,
-  ClpMontKernelSimd,
   ClpCTFieldValue,
   ClpCTFieldArith,
   ClpFpCTMultiplier,

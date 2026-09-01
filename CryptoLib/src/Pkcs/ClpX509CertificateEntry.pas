@@ -24,7 +24,6 @@ uses
   Generics.Collections,
   ClpAsn1Comparers,
   ClpIAsn1Core,
-  ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIX509CertificateEntry,
   ClpIX509Certificate,

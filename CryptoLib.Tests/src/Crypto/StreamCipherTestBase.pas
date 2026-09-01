@@ -35,7 +35,6 @@ uses
   ClpIKeyParameter,
   ClpParametersWithIV,
   ClpIParametersWithIV,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

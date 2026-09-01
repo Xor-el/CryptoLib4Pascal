@@ -25,7 +25,6 @@ uses
   ClpCheck,
   ClpIStreamCipher,
   ClpIChaChaEngine,
-  ClpIChaCha7539Engine,
   ClpSalsa20Engine,
   ClpPack,
   ClpChaChaSimd,

@@ -40,7 +40,6 @@ uses
   ClpCipherKernelRegistry,
   ClpCipherKernelDefaults, // registers in-tree fused AEAD kernel factories
   ClpCipherModeParameterUtilities,
-  ClpIKeyParameter,
   ClpKeyParameter,
   ClpCbcBlockCipherMac,
   ClpIMac,

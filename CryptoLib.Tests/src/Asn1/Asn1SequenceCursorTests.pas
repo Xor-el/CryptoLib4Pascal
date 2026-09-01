@@ -23,8 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  Classes,
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,

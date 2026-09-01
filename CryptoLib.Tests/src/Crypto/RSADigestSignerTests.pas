@@ -30,7 +30,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpBigInteger,
   ClpIDigest,
   ClpISigner,
   ClpRsaDigestSigner,

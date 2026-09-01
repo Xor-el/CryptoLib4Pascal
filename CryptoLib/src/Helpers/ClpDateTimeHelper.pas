@@ -21,7 +21,6 @@ unit ClpDateTimeHelper;
 interface
 
 uses
-  SysUtils,
   ClpDateTimeUtilities;
 
 type

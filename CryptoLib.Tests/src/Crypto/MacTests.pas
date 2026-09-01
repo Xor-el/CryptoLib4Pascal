@@ -42,7 +42,6 @@ uses
   ClpIParametersWithIV,
   ClpPkcs7Padding,
   ClpIPkcs7Padding,
-  ClpCryptoLibTypes,
   ClpEncoders,
   CryptoLibTestBase;
 

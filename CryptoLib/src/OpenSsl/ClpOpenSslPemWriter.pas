@@ -23,7 +23,6 @@ interface
 uses
   Classes,
   Rtti,
-  SysUtils,
   ClpIOpenSslPemWriter,
   ClpIPemObject,
   ClpPemWriter,

@@ -27,7 +27,6 @@ uses
   ClpIECParameters,
   ClpBip340SchnorrUtilities,
   ClpECAlgorithms,
-  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 

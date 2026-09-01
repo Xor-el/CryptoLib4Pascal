@@ -21,8 +21,7 @@ unit ClpIPkcs5S2ParametersGenerator;
 interface
 
 uses
-  ClpIPbeParametersGenerator,
-  ClpCryptoLibTypes;
+  ClpIPbeParametersGenerator;
 
 type
   IPkcs5S2ParametersGenerator = interface(IPbeParametersGenerator)

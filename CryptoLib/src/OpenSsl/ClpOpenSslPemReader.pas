@@ -36,7 +36,6 @@ uses
   ClpIX509V2AttributeCertificate,
   ClpIPkcs10CertificationRequest,
   ClpICmsAsn1Objects,
-  ClpAsn1Core,
   ClpIAsn1Core,
   ClpAsn1Objects,
   ClpIAsn1Objects,

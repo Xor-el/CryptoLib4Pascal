@@ -30,10 +30,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpMiscObjectIdentifiers,
-  ClpNistObjectIdentifiers,
-  ClpRosstandartObjectIdentifiers,
-  ClpTeleTrusTObjectIdentifiers,
   ClpIDigest,
   ClpDigestUtilities,
   ClpConverters,

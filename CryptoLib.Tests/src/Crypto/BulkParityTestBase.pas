@@ -44,7 +44,6 @@ uses
 {$ENDIF CRYPTOLIB_AARCH64_ASM}
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
   CryptoLibTestBase,
   BlockCipherTestBase;
 

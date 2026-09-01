@@ -24,7 +24,6 @@ interface
 
 uses
   ClpBigInteger,
-  ClpCryptoLibTypes,
   ClpEncoders,
   ClpIRsaParameters,
   ClpRsaParameters;

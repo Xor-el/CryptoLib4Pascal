@@ -31,7 +31,6 @@ uses
   ClpBip340SchnorrUtilities,
   ClpPack,
   ClpECAlgorithms,
-  ClpECParameters,
   ClpConverters,
   ClpArrayUtilities,
   ClpByteUtilities,

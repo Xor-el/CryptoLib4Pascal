@@ -50,7 +50,6 @@ uses
   ClpIBufferedCipher,
   ClpICipherParameters,
   ClpPack,
-  ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase,
   BlockCipherTestBase,

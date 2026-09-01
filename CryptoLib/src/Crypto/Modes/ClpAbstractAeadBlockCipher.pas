@@ -23,8 +23,7 @@ interface
 uses
   ClpIBlockCipher,
   ClpIAeadBlockCipher,
-  ClpAbstractAeadCipher,
-  ClpCryptoLibTypes;
+  ClpAbstractAeadCipher;
 
 type
   /// <summary>

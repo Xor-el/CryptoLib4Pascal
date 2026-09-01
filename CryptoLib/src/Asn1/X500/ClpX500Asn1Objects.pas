@@ -30,8 +30,7 @@ uses
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   ClpArrayUtilities,
-  ClpAsn1Utilities,
-  ClpAsn1Comparers;
+  ClpAsn1Utilities;
 
 resourcestring
   SBadSequenceSize = 'bad sequence size: %d';

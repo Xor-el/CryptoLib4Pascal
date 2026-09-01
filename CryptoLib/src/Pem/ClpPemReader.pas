@@ -33,7 +33,6 @@ uses
   ClpCryptoLibExceptions,
   ClpEncoders,
   ClpStringUtilities,
-  ClpAsn1Objects,
   ClpCollectionUtilities;
 
 resourcestring

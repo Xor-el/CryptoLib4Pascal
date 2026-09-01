@@ -23,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -38,7 +37,6 @@ uses
   ClpIX931Signer,
   ClpX931Signer,
   ClpDigestUtilities,
-  ClpISigner,
   ClpEncoders,
   ClpCryptoLibTypes,
   CryptoLibTestBase,

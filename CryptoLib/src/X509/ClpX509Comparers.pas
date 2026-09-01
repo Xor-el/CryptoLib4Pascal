@@ -24,8 +24,7 @@ uses
   Generics.Defaults,
   ClpIX509Certificate,
   ClpIX509Crl,
-  ClpArrayUtilities,
-  ClpCryptoLibTypes;
+  ClpArrayUtilities;
 
 type
   /// <summary>

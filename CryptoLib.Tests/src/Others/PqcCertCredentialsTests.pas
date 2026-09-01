@@ -23,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -31,7 +30,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   CryptoLibTestBase,
-  ClpIX509Certificate,
   PqcSampleCredentials;
 
 type

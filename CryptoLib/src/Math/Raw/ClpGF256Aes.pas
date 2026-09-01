@@ -23,8 +23,7 @@ interface
 uses
   SysUtils,
   ClpInterleave,
-  ClpBitOperations,
-  ClpCryptoLibTypes;
+  ClpBitOperations;
 
 type
   /// <summary>

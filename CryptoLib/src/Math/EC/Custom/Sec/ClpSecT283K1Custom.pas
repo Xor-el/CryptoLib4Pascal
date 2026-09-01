@@ -34,7 +34,6 @@ uses
   ClpECFieldElement,
   ClpECPoint,
   ClpECLookupTables,
-  ClpMultipliers,
   ClpIF2mFieldOps,
   ClpF2mMontgomeryLadderCTMultiplier,
   ClpISecureRandom,

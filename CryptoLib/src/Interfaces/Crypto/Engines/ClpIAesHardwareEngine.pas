@@ -21,8 +21,7 @@ unit ClpIAesHardwareEngine;
 interface
 
 uses
-  ClpIBulkBlockCipher,
-  ClpCryptoLibTypes;
+  ClpIBulkBlockCipher;
 
 type
   /// <summary>

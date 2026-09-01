@@ -22,7 +22,6 @@ interface
 
 uses
   SysUtils,
-  Classes,
   ClpIDigest,
   ClpIDerivationFunction,
   ClpIDerivationParameters,
@@ -31,7 +30,6 @@ uses
   ClpIAsn1Objects,
   ClpAsn1Objects,
   ClpAsn1Core,
-  ClpIAsn1Core,
   ClpIX9DHAsn1Objects,
   ClpX9DHAsn1Objects,
   ClpDigestSink,

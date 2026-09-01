@@ -43,7 +43,6 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpOiwObjectIdentifiers,
   ClpNistObjectIdentifiers,
-  ClpCryptoProObjectIdentifiers,
   ClpEdECObjectIdentifiers,
   ClpParameterUtilities,
   ClpIAsymmetricKeyParameter,

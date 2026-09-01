@@ -23,8 +23,7 @@ interface
 uses
   ClpIAsn1Core,
   ClpIAsn1Objects,
-  ClpIAsn1Parsers,
-  ClpCryptoLibTypes;
+  ClpIAsn1Parsers;
 
 type
   /// <summary>

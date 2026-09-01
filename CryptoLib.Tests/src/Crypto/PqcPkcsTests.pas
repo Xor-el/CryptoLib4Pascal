@@ -23,7 +23,7 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
+
 {$IFDEF FPC}
   fpcunit,
   testregistry,

@@ -37,7 +37,6 @@ uses
   ClpIKeyParameter,
   ClpCryptoServicesRegistrar,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

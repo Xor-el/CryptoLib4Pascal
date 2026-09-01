@@ -37,7 +37,6 @@ uses
   ClpDHKdfParameters,
   ClpIDHKdfParameters,
   ClpNistObjectIdentifiers,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

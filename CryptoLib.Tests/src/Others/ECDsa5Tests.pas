@@ -37,7 +37,6 @@ uses
   ClpSecureRandom,
   ClpECCurve,
   ClpIECCommon,
-  ClpIECFieldElement,
   ClpIECParameters,
   ClpECParameters,
   ClpECGenerators,
@@ -49,7 +48,6 @@ uses
   ClpSignerUtilities,
   ClpIAsn1Objects,
   ClpISigner,
-  ClpAsn1Objects,
   ClpConverters,
   ClpCryptoLibTypes,
   CryptoLibTestBase;

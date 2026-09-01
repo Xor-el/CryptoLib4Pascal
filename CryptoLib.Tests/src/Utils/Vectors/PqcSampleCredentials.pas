@@ -25,7 +25,6 @@ interface
 uses
   SysUtils,
   Classes,
-  ClpCryptoLibTypes,
   ClpIAsymmetricCipherKeyPair,
   ClpAsymmetricCipherKeyPair,
   ClpIX509Certificate,

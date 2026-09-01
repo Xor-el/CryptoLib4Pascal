@@ -47,7 +47,6 @@ uses
   ClpMacUtilities,
   ClpIMac,
   ClpGeneratorUtilities,
-  ClpParameterUtilities,
   ClpParametersWithIV,
   ClpPbeParametersGenerator,
   ClpIPbeParametersGenerator,
@@ -58,7 +57,6 @@ uses
   ClpCryptoLibComparers,
   ClpCollectionUtilities,
   ClpStringUtilities,
-  ClpSecureRandom,
   ClpISecureRandom,
   ClpArrayUtilities;
 

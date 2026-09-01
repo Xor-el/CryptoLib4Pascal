@@ -23,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -42,11 +41,8 @@ uses
   ClpPkcsRsaAsn1Objects,
   ClpIPkcsRsaAsn1Objects,
   ClpDefaultDigestAlgorithmFinder,
-  ClpIDigestAlgorithmFinder,
   ClpDefaultMacAlgorithmFinder,
-  ClpIMacAlgorithmFinder,
   ClpDefaultSignatureAlgorithmFinder,
-  ClpISignatureAlgorithmFinder,
   ClpX509Utilities,
   ClpCryptoLibExceptions,
   CryptoLibTestBase;

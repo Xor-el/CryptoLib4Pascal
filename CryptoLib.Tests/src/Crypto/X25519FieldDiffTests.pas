@@ -35,7 +35,6 @@ uses
   ClpConverters,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

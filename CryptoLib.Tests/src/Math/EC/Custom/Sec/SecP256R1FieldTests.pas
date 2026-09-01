@@ -30,7 +30,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpIAsn1Objects,
-  ClpISecureRandom,
   ClpSecObjectIdentifiers,
   ClpIECFieldElement,
   ClpBigInteger,

@@ -54,7 +54,6 @@ uses
   ClpSubjectPublicKeyInfoFactory,
   ClpPrivateKeyInfoFactory,
   ClpIAsymmetricKeyParameter,
-  ClpPkcsObjectIdentifiers,
   ClpX9ObjectIdentifiers,
   ClpIAsn1Objects,
   ClpAsn1Objects,

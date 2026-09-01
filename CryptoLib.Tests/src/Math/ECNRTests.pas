@@ -31,7 +31,6 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpAsn1Core,
-  ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpECCurve,
   ClpIECCommon,

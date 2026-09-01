@@ -23,7 +23,6 @@ interface
 uses
   SysUtils,
   ClpAbstractPacketCipher,
-  ClpIPacketCipher,
   ClpIBlockPacketCipher,
   ClpIBulkBlockCipherMode,
   ClpIRawInitBlockCipherMode,

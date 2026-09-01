@@ -21,9 +21,11 @@ unit ClpValueHelper;
 interface
 
 uses
+{$IFDEF FPC}
+  TypInfo,
+{$ENDIF}
   Rtti,
-  SysUtils,
-  TypInfo;
+  SysUtils;
 
 type
   TValueHelper = record helper for TValue
