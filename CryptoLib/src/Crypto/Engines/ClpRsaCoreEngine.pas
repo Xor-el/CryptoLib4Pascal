@@ -24,6 +24,7 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpIMontKernelContext,
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpIRsaParameters,
@@ -182,7 +183,7 @@ begin
   // Check if we have CRT parameters for private key operations
   if not Supports(FKey, IRsaPrivateCrtKeyParameters, LCrtKey) then
   begin
-    Result := AInput.ModPow(FKey.Exponent, FKey.Modulus);
+    Result := AInput.ModPowMont(FKey.Exponent, FKey.Modulus, FKey.GetModulusContext);
     Exit;
   end;
 
@@ -194,10 +195,10 @@ begin
   LQInv := LCrtKey.QInv;
 
   // mP = ((input Mod p) ^ dP) Mod p
-  LMP := AInput.Remainder(LP).ModPow(LDP, LP);
+  LMP := AInput.Remainder(LP).ModPowMont(LDP, LP, LCrtKey.GetPContext);
 
   // mQ = ((input Mod q) ^ dQ) Mod q
-  LMQ := AInput.Remainder(LQ).ModPow(LDQ, LQ);
+  LMQ := AInput.Remainder(LQ).ModPowMont(LDQ, LQ, LCrtKey.GetQContext);
 
   // h = qInv * (mP - mQ) Mod p
   LH := LMP.Subtract(LMQ).Multiply(LQInv).&Mod(LP);
@@ -206,7 +207,7 @@ begin
   LM := LH.Multiply(LQ).Add(LMQ);
 
   // Defence against Arjen Lenstra's CRT attack
-  LCheck := LM.ModPow(LCrtKey.PublicExponent, LCrtKey.Modulus);
+  LCheck := LM.ModPowMont(LCrtKey.PublicExponent, LCrtKey.Modulus, LCrtKey.GetModulusContext);
   if not LCheck.Equals(AInput) then
   begin
     raise EInvalidOperationCryptoLibException.CreateRes(@SFaultyDecryption);

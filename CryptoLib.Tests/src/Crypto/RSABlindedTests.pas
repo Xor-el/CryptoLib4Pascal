@@ -8,6 +8,7 @@ interface
 
 uses
   SysUtils,
+  Classes,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -25,6 +26,7 @@ uses
   ClpRsaGenerators,
   ClpIRsaGenerators,
   ClpRsaBlindedEngine,
+  ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
   ClpOaepEncoding,
@@ -69,6 +71,8 @@ type
     procedure TestTruncatedPkcs1Block;
     procedure TestWrongPaddingPkcs1Block;
     procedure TestUninitializedEngine;
+    procedure TestBlindingManySignsAcrossRefresh;
+    procedure TestBlindingConcurrentSigns;
   end;
 
 implementation
@@ -188,7 +192,7 @@ begin
 
   data := THexEncoder.Decode(Input);
 
-  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   eng.Init(True, pubParams as ICipherParameters);
 
   data := eng.ProcessBlock(data, 0, System.Length(data));
@@ -211,7 +215,7 @@ begin
 
   data := THexEncoder.Decode(Input);
 
-  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   eng.Init(True, privParams as ICipherParameters);
 
   data := eng.ProcessBlock(data, 0, System.Length(data));
@@ -229,7 +233,7 @@ var
 begin
   pubParams := GetPubParameters;
 
-  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+  eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   eng.Init(True, pubParams as ICipherParameters);
 
   // PKCS1 output block size should equal underlying cipher's output block size
@@ -245,7 +249,7 @@ var
 begin
   data := THexEncoder.Decode(Input);
 
-  eng := TOaepEncoding.Create(TRsaBlindedEngine.Create());
+  eng := TOaepEncoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   eng.Init(True, pubParameters as ICipherParameters);
 
   data := eng.ProcessBlock(data, 0, System.Length(data));
@@ -364,7 +368,7 @@ begin
   try
     TPkcs1Encoding.StrictLengthEnabled := False;
 
-    eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+    eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
     eng.Init(False, pubParams as ICipherParameters);
 
     // Re-encrypt the data first
@@ -420,6 +424,130 @@ begin
   end;
 
   Check(ExceptionCaught, 'Uninitialized engine should raise exception');
+end;
+
+procedure TTestRSABlinded.TestBlindingManySignsAcrossRefresh;
+var
+  pubParams: IRsaKeyParameters;
+  privParams: IRsaPrivateCrtKeyParameters;
+  eng: IAsymmetricBlockCipher;
+  inputBytes, data: TCryptoLibByteArray;
+  i: Int32;
+begin
+  // one key instance is reused across many signatures so its per-key blinding cache
+  // advances (square-update) and periodically refreshes; every signature must verify.
+  pubParams := GetPubParameters;
+  privParams := GetPrivParameters;
+  inputBytes := THexEncoder.Decode(Input);
+
+  for i := 1 to 150 do
+  begin
+    eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
+    eng.Init(True, privParams as ICipherParameters);
+    data := eng.ProcessBlock(inputBytes, 0, System.Length(inputBytes));
+
+    eng.Init(False, pubParams as ICipherParameters);
+    data := eng.ProcessBlock(data, 0, System.Length(data));
+
+    CheckEquals(Input, THexEncoder.Encode(data, False),
+      Format('blinded signature %d did not round-trip', [i]));
+  end;
+end;
+
+type
+  TRsaBlindSignWorker = class(TThread)
+  strict private
+    FPriv: IRsaPrivateCrtKeyParameters;
+    FPub: IRsaKeyParameters;
+    FInput: TCryptoLibByteArray;
+    FExpectedHex: String;
+    FIterations: Int32;
+  public
+    FFailed: Boolean;
+    FFailMessage: String;
+    constructor Create(const APriv: IRsaPrivateCrtKeyParameters;
+      const APub: IRsaKeyParameters; const AInput: TCryptoLibByteArray;
+      const AExpectedHex: String; AIterations: Int32);
+    procedure Execute; override;
+  end;
+
+constructor TRsaBlindSignWorker.Create(const APriv: IRsaPrivateCrtKeyParameters;
+  const APub: IRsaKeyParameters; const AInput: TCryptoLibByteArray;
+  const AExpectedHex: String; AIterations: Int32);
+begin
+  inherited Create(True);
+  FreeOnTerminate := False;
+  FPriv := APriv;
+  FPub := APub;
+  FInput := AInput;
+  FExpectedHex := AExpectedHex;
+  FIterations := AIterations;
+  FFailed := False;
+end;
+
+procedure TRsaBlindSignWorker.Execute;
+var
+  eng: IAsymmetricBlockCipher;
+  data: TCryptoLibByteArray;
+  i: Int32;
+begin
+  try
+    for i := 1 to FIterations do
+    begin
+      eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
+      eng.Init(True, FPriv as ICipherParameters);
+      data := eng.ProcessBlock(FInput, 0, System.Length(FInput));
+
+      eng.Init(False, FPub as ICipherParameters);
+      data := eng.ProcessBlock(data, 0, System.Length(data));
+
+      if not SameText(FExpectedHex, THexEncoder.Encode(data, False)) then
+      begin
+        FFailMessage := Format('concurrent signature %d did not round-trip', [i]);
+        FFailed := True;
+        Exit;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      FFailMessage := 'concurrent signing raised: ' + E.Message;
+      FFailed := True;
+    end;
+  end;
+end;
+
+procedure TTestRSABlinded.TestBlindingConcurrentSigns;
+const
+  WorkerCount = 4;
+  IterationsPerWorker = 40;
+var
+  pubParams: IRsaKeyParameters;
+  privParams: IRsaPrivateCrtKeyParameters;
+  inputBytes: TCryptoLibByteArray;
+  workers: array [0 .. WorkerCount - 1] of TRsaBlindSignWorker;
+  i: Int32;
+begin
+  // many threads sign concurrently through one shared key: the blinding cache must
+  // advance and refresh without corruption, so every signature still round-trips.
+  pubParams := GetPubParameters;
+  privParams := GetPrivParameters;
+  inputBytes := THexEncoder.Decode(Input);
+
+  for i := 0 to WorkerCount - 1 do
+    workers[i] := TRsaBlindSignWorker.Create(privParams, pubParams, inputBytes,
+      Input, IterationsPerWorker);
+  try
+    for i := 0 to WorkerCount - 1 do
+      workers[i].Start;
+    for i := 0 to WorkerCount - 1 do
+      workers[i].WaitFor;
+    for i := 0 to WorkerCount - 1 do
+      Check(not workers[i].FFailed, workers[i].FFailMessage);
+  finally
+    for i := 0 to WorkerCount - 1 do
+      workers[i].Free;
+  end;
 end;
 
 initialization

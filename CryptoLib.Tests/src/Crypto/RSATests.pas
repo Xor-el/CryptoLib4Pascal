@@ -37,6 +37,7 @@ uses
   ClpIRsaGenerators,
   ClpRsaGenerators,
   ClpRsaBlindedEngine,
+  ClpIRsaBlindedEngine,
   ClpPkcs1Encoding,
   ClpOaepEncoding,
   ClpIAsymmetricBlockCipher,
@@ -189,7 +190,7 @@ begin
     '4e6f77206973207468652074696d6520666f7220616c6c20676f6f64206d656e');
 
   // Encrypt with PKCS1 padding
-  engine := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+  engine := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   engine.Init(True, FPubParams);
   encrypted := engine.ProcessBlock(input, 0, System.Length(input));
 
@@ -209,7 +210,7 @@ begin
   input := THexEncoder.Decode('48656c6c6f20576f726c6421'); // "Hello World!"
 
   // Encrypt with OAEP padding
-  engine := TOaepEncoding.Create(TRsaBlindedEngine.Create());
+  engine := TOaepEncoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   engine.Init(True, FPubParams);
   encrypted := engine.ProcessBlock(input, 0, System.Length(input));
 
@@ -251,7 +252,7 @@ begin
   // Test encryption/decryption with generated keys
   input := THexEncoder.Decode('48656c6c6f'); // "Hello"
 
-  engine := TPkcs1Encoding.Create(TRsaBlindedEngine.Create());
+  engine := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
   engine.Init(True, pubKey);
   encrypted := engine.ProcessBlock(input, 0, System.Length(input));
 

@@ -29,6 +29,7 @@ uses
   ClpBitOperations,
   ClpInt32Utilities,
   ClpArrayUtilities,
+  ClpIMontKernelContext,
   ClpIRandom;
 
 resourcestring
@@ -103,8 +104,10 @@ type
     function ModInversePow2(const AM: TBigInteger): TBigInteger;
     class function ModPowBarrett(const AB, AE, AM: TBigInteger): TBigInteger; static;
     class function ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger; static;
-    class function ModPowMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger; static;
-    class function ModSquareMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AM: TBigInteger): TBigInteger; static;
+    class function ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean;
+      const ACachedCtx: IMontKernelContext = nil): TBigInteger; static;
+    function DoModPow(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
+    class function ModSquareMonty(const AB, AM: TBigInteger): TBigInteger; static;
     function LastNBits(const AN: Int32): TCryptoLibUInt32Array;
     function QuickPow2Check(): Boolean;
     function Remainder(const AM: Int32): Int32; overload;
@@ -179,6 +182,15 @@ type
     function ModMultiply(const AY, AM: TBigInteger): TBigInteger;
     function ModSquare(const AM: TBigInteger): TBigInteger;
     function ModPow(const AE, AM: TBigInteger): TBigInteger;
+    /// <summary>Self^AE mod AM using a prebuilt Montgomery context for AM (an odd
+    /// modulus), skipping the per-call context build + Montgomery-enter division.</summary>
+    function ModPowMont(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
+    /// <summary>The single builder for a Montgomery kernel context over the odd modulus
+    /// AM: derives R^2 mod n (needed only to enter Montgomery form) when ANeedEntry, and
+    /// probes engagement before that division so a disengaged width pays nothing. The
+    /// result's Engaged reports whether the kernel took the width.</summary>
+    class function CreateMontContext(const AM: TBigInteger; ANeedEntry: Boolean)
+      : IMontKernelContext; static;
     function Pow(const AExponent: Int32): TBigInteger;
     function Gcd(const AValue: TBigInteger): TBigInteger;
     function Abs(): TBigInteger;
@@ -309,7 +321,319 @@ implementation
 
 uses
   ClpMod,
+  ClpGatherKernelSimd,
+  ClpMontKernelContext,
   ClpSecureRandom;
+
+type
+  TMontModState = record
+    Modulus: TBigInteger;
+    LN, LN64, LPowR, NumPowers: Int32;
+    KernelCtx: IMontKernelContext;
+    Scratch, Accum, Squared, TmpPow, PowTable, BaseLimbs: TCryptoLibUInt64Array;
+    MDash: UInt32;
+    SmallMonty, NeedEntry: Boolean;
+    YAccum, Accum32, Squared32: TCryptoLibUInt32Array;
+    OddPowers32: TCryptoLibMatrixUInt32Array;
+  end;
+
+  TMontModExpOps = class abstract
+    class function TryInit(const AM: TBigInteger; var S: TMontModState): Boolean; virtual; abstract;
+    class procedure BuildTable(var S: TMontModState; const AB: TBigInteger; AConvert: Boolean); virtual; abstract;
+    class procedure LoadAccum(var S: TMontModState; const AB: TBigInteger); virtual; abstract;
+    class procedure InitAccumSquared(var S: TMontModState); virtual; abstract;
+    class procedure InitAccumOdd(var S: TMontModState; AOddIdx: Int32); virtual; abstract;
+    class procedure SquareAccum(var S: TMontModState); virtual; abstract;
+    class procedure MulAccumOdd(var S: TMontModState; AOddIdx: Int32); virtual; abstract;
+    class function Finish(var S: TMontModState; AConvert: Boolean): TBigInteger; virtual; abstract;
+  end;
+
+  TKernelMontOps = class sealed(TMontModExpOps)
+  strict private
+    class procedure KMul(var S: TMontModState; const AX, AY, ADst: TCryptoLibUInt64Array); static;
+    class procedure KSqr(var S: TMontModState; const AX, ADst: TCryptoLibUInt64Array); static;
+    class procedure Gather(var S: TMontModState; AOddIdx: Int32; const ADst: TCryptoLibUInt64Array); static;
+  public
+    class function TryInit(const AM: TBigInteger; var S: TMontModState): Boolean; override;
+    class procedure BuildTable(var S: TMontModState; const AB: TBigInteger; AConvert: Boolean); override;
+    class procedure LoadAccum(var S: TMontModState; const AB: TBigInteger); override;
+    class procedure InitAccumSquared(var S: TMontModState); override;
+    class procedure InitAccumOdd(var S: TMontModState; AOddIdx: Int32); override;
+    class procedure SquareAccum(var S: TMontModState); override;
+    class procedure MulAccumOdd(var S: TMontModState; AOddIdx: Int32); override;
+    class function Finish(var S: TMontModState; AConvert: Boolean): TBigInteger; override;
+  end;
+
+  TScalarMontOps = class sealed(TMontModExpOps)
+  public
+    class function TryInit(const AM: TBigInteger; var S: TMontModState): Boolean; override;
+    class procedure BuildTable(var S: TMontModState; const AB: TBigInteger; AConvert: Boolean); override;
+    class procedure LoadAccum(var S: TMontModState; const AB: TBigInteger); override;
+    class procedure InitAccumSquared(var S: TMontModState); override;
+    class procedure InitAccumOdd(var S: TMontModState; AOddIdx: Int32); override;
+    class procedure SquareAccum(var S: TMontModState); override;
+    class procedure MulAccumOdd(var S: TMontModState; AOddIdx: Int32); override;
+    class function Finish(var S: TMontModState; AConvert: Boolean): TBigInteger; override;
+  end;
+
+  TMontModExp<TOps: TMontModExpOps> = class
+    class function Run(var S: TMontModState; const AE: TBigInteger; AConvert: Boolean; AExtraBits: Int32): TBigInteger; static;
+  end;
+
+class function TKernelMontOps.TryInit(const AM: TBigInteger; var S: TMontModState): Boolean;
+{$IFDEF DEBUG}
+var
+  LMod: TCryptoLibUInt64Array;
+{$ENDIF DEBUG}
+begin
+  // adopt path: the caller pre-set S.KernelCtx (the key's cached context) and S.Modulus;
+  // reuse it instead of building per call.
+  if S.KernelCtx <> nil then
+  begin
+    Result := S.KernelCtx.Engaged;
+    if Result then
+    begin
+{$IFDEF DEBUG}
+      System.SetLength(LMod, S.KernelCtx.N64);
+      AM.ToUInt64sLittleEndian(LMod, S.KernelCtx.N64);
+      System.Assert(S.KernelCtx.MatchesModulus(LMod),
+        'adopted Montgomery context does not match the operand modulus');
+{$ENDIF DEBUG}
+      S.LN64 := S.KernelCtx.N64;
+      System.SetLength(S.Accum, S.LN64);
+      System.SetLength(S.Scratch, S.LN64 + 2);
+      System.SetLength(S.BaseLimbs, S.LN64);
+    end;
+    Exit;
+  end;
+  S.Modulus := AM;
+  S.KernelCtx := TBigInteger.CreateMontContext(AM, S.NeedEntry);
+  Result := S.KernelCtx.Engaged;
+  if Result then
+  begin
+    S.LN64 := S.KernelCtx.N64;
+    System.SetLength(S.Accum, S.LN64);
+    System.SetLength(S.Scratch, S.LN64 + 2);
+    System.SetLength(S.BaseLimbs, S.LN64);
+  end;
+end;
+
+class procedure TKernelMontOps.KMul(var S: TMontModState; const AX, AY, ADst: TCryptoLibUInt64Array);
+begin
+  S.KernelCtx.Mul(S.Scratch, AX, AY, ADst);
+end;
+
+class procedure TKernelMontOps.KSqr(var S: TMontModState; const AX, ADst: TCryptoLibUInt64Array);
+begin
+  S.KernelCtx.Sqr(S.Scratch, AX, ADst);
+end;
+
+class procedure TKernelMontOps.Gather(var S: TMontModState; AOddIdx: Int32; const ADst: TCryptoLibUInt64Array);
+var
+  LI, LJ: Int32;
+  LMask: UInt64;
+begin
+  if TGatherKernelSimd.TryGather(PByte(@ADst[0]), PByte(@S.PowTable[0]),
+    S.LN64 * System.SizeOf(UInt64), S.NumPowers, AOddIdx) then
+    Exit;
+  System.FillChar(ADst[0], S.LN64 * System.SizeOf(UInt64), 0);
+  for LI := 0 to S.NumPowers - 1 do
+  begin
+    LMask := UInt64(Int64(TBitOperations.Asr32((LI xor AOddIdx) - 1, 31)));
+    for LJ := 0 to S.LN64 - 1 do
+      ADst[LJ] := ADst[LJ] xor (S.PowTable[LI * S.LN64 + LJ] and LMask);
+  end;
+end;
+
+class procedure TKernelMontOps.LoadAccum(var S: TMontModState; const AB: TBigInteger);
+begin
+  System.SetLength(S.Accum, S.LN64);
+  AB.ToUInt64sLittleEndian(S.Accum, S.LN64);
+end;
+
+class procedure TKernelMontOps.BuildTable(var S: TMontModState; const AB: TBigInteger; AConvert: Boolean);
+var
+  LB: TBigInteger;
+  LI: Int32;
+begin
+  LB := AB;
+  System.SetLength(S.Accum, S.LN64);
+  if AConvert then
+  begin
+    // enter Montgomery form via MontMul(base, R^2) - no division. Guarantee base is in
+    // [0, n) first so it fits in N64 limbs (RSA bases already are, so this never divides;
+    // the guard only fires for an out-of-range base on the general path).
+    if (LB.SignValue < 0) or (LB.CompareTo(S.Modulus) >= 0) then
+      LB := LB.&Mod(S.Modulus);
+    LB.ToUInt64sLittleEndian(S.BaseLimbs, S.LN64);
+    S.KernelCtx.ToMontgomery(S.Scratch, S.BaseLimbs, S.Accum);
+  end
+  else
+    LB.ToUInt64sLittleEndian(S.Accum, S.LN64);
+  System.SetLength(S.PowTable, S.NumPowers * S.LN64);
+  System.SetLength(S.TmpPow, S.LN64);
+  System.Move(S.Accum[0], S.PowTable[0], S.LN64 * System.SizeOf(UInt64));
+  System.SetLength(S.Squared, S.LN64);
+  KSqr(S, S.Accum, S.Squared);
+  System.Move(S.Accum[0], S.TmpPow[0], S.LN64 * System.SizeOf(UInt64));
+  for LI := 1 to S.NumPowers - 1 do
+  begin
+    KMul(S, S.TmpPow, S.Squared, S.TmpPow);
+    System.Move(S.TmpPow[0], S.PowTable[LI * S.LN64], S.LN64 * System.SizeOf(UInt64));
+  end;
+end;
+
+class procedure TKernelMontOps.InitAccumSquared(var S: TMontModState);
+begin
+  System.Move(S.Squared[0], S.Accum[0], S.LN64 * System.SizeOf(UInt64));
+end;
+
+class procedure TKernelMontOps.InitAccumOdd(var S: TMontModState; AOddIdx: Int32);
+begin
+  Gather(S, AOddIdx, S.Accum);
+end;
+
+class procedure TKernelMontOps.SquareAccum(var S: TMontModState);
+begin
+  KSqr(S, S.Accum, S.Accum);
+end;
+
+class procedure TKernelMontOps.MulAccumOdd(var S: TMontModState; AOddIdx: Int32);
+begin
+  Gather(S, AOddIdx, S.TmpPow);
+  KMul(S, S.Accum, S.TmpPow, S.Accum);
+end;
+
+class function TKernelMontOps.Finish(var S: TMontModState; AConvert: Boolean): TBigInteger;
+var
+  LOne: TCryptoLibUInt64Array;
+  LBytes: TCryptoLibByteArray;
+  LI: Int32;
+begin
+  if AConvert then
+  begin
+    System.SetLength(LOne, S.LN64);
+    LOne[0] := 1;
+    KMul(S, S.Accum, LOne, S.Accum);
+  end;
+  System.SetLength(LBytes, S.LN64 * 8);
+  for LI := 0 to S.LN64 - 1 do
+    TPack.UInt64_To_BE(S.Accum[S.LN64 - 1 - LI], LBytes, LI * 8);
+  Result := TBigInteger.Create(1, LBytes, True);
+end;
+
+class function TScalarMontOps.TryInit(const AM: TBigInteger; var S: TMontModState): Boolean;
+begin
+  S.Modulus := AM;
+  S.LN := System.Length(AM.FMagnitude);
+  S.LPowR := 32 * S.LN;
+  S.SmallMonty := AM.BitLength + 2 <= S.LPowR;
+  S.MDash := AM.GetMQuote();
+  System.SetLength(S.YAccum, S.LN + 1);
+  Result := True;
+end;
+
+class procedure TScalarMontOps.LoadAccum(var S: TMontModState; const AB: TBigInteger);
+var
+  LZVal: TCryptoLibUInt32Array;
+begin
+  LZVal := AB.FMagnitude;
+  System.SetLength(S.Accum32, S.LN);
+  System.FillChar(S.Accum32[0], S.LN * System.SizeOf(UInt32), 0);
+  System.Move(LZVal[0], S.Accum32[S.LN - System.Length(LZVal)], System.Length(LZVal) * System.SizeOf(UInt32));
+end;
+
+class procedure TScalarMontOps.BuildTable(var S: TMontModState; const AB: TBigInteger; AConvert: Boolean);
+var
+  LB: TBigInteger;
+  LZVal, LTmp: TCryptoLibUInt32Array;
+  LI: Int32;
+begin
+  LB := AB;
+  if AConvert then
+    LB := LB.ShiftLeft(S.LPowR).Remainder(S.Modulus);
+  LZVal := LB.FMagnitude;
+  if System.Length(LZVal) < S.LN then
+  begin
+    System.SetLength(LTmp, S.LN);
+    System.Move(LZVal[0], LTmp[S.LN - System.Length(LZVal)], System.Length(LZVal) * System.SizeOf(UInt32));
+    LZVal := LTmp;
+  end;
+  System.SetLength(S.OddPowers32, S.NumPowers);
+  S.OddPowers32[0] := LZVal;
+  S.Squared32 := System.Copy(LZVal);
+  TBigInteger.SquareMonty(S.YAccum, S.Squared32, S.Modulus.FMagnitude, S.MDash, S.SmallMonty);
+  for LI := 1 to S.NumPowers - 1 do
+  begin
+    S.OddPowers32[LI] := System.Copy(S.OddPowers32[LI - 1]);
+    TBigInteger.MultiplyMonty(S.YAccum, S.OddPowers32[LI], S.Squared32, S.Modulus.FMagnitude, S.MDash, S.SmallMonty);
+  end;
+end;
+
+class procedure TScalarMontOps.InitAccumSquared(var S: TMontModState);
+begin
+  S.Accum32 := System.Copy(S.Squared32);
+end;
+
+class procedure TScalarMontOps.InitAccumOdd(var S: TMontModState; AOddIdx: Int32);
+begin
+  S.Accum32 := System.Copy(S.OddPowers32[AOddIdx]);
+end;
+
+class procedure TScalarMontOps.SquareAccum(var S: TMontModState);
+begin
+  TBigInteger.SquareMonty(S.YAccum, S.Accum32, S.Modulus.FMagnitude, S.MDash, S.SmallMonty);
+end;
+
+class procedure TScalarMontOps.MulAccumOdd(var S: TMontModState; AOddIdx: Int32);
+begin
+  TBigInteger.MultiplyMonty(S.YAccum, S.Accum32, S.OddPowers32[AOddIdx], S.Modulus.FMagnitude, S.MDash, S.SmallMonty);
+end;
+
+class function TScalarMontOps.Finish(var S: TMontModState; AConvert: Boolean): TBigInteger;
+begin
+  if AConvert then
+    TBigInteger.MontgomeryReduce(S.Accum32, S.Modulus.FMagnitude, S.MDash)
+  else if S.SmallMonty and (TBigInteger.CompareTo(0, S.Accum32, 0, S.Modulus.FMagnitude) >= 0) then
+    TBigInteger.Subtract(0, S.Accum32, 0, S.Modulus.FMagnitude);
+  Result := TBigInteger.Create(1, S.Accum32, True);
+end;
+
+class function TMontModExp<TOps>.Run(var S: TMontModState; const AE: TBigInteger; AConvert: Boolean; AExtraBits: Int32): TBigInteger;
+var
+  LWindowList: TCryptoLibUInt32Array;
+  LWindow, LMult, LLastZeros: UInt32;
+  LWindowPos, LBits, LJ, LI: Int32;
+begin
+  LWindowList := TBigInteger.GetWindowList(AE.FMagnitude, AExtraBits);
+  LWindow := LWindowList[0];
+  LMult := LWindow and $FF;
+  LLastZeros := LWindow shr 8;
+  if LMult = 1 then
+  begin
+    TOps.InitAccumSquared(S);
+    System.Dec(LLastZeros);
+  end
+  else
+    TOps.InitAccumOdd(S, Int32(LMult shr 1));
+  LWindowPos := 1;
+  LWindow := LWindowList[LWindowPos];
+  System.Inc(LWindowPos);
+  while LWindow <> UInt32.MaxValue do
+  begin
+    LMult := LWindow and $FF;
+    LBits := Int32(LLastZeros) + TBigInteger.BitLen(Byte(LMult));
+    for LJ := 0 to LBits - 1 do
+      TOps.SquareAccum(S);
+    TOps.MulAccumOdd(S, Int32(LMult shr 1));
+    LLastZeros := LWindow shr 8;
+    LWindow := LWindowList[LWindowPos];
+    System.Inc(LWindowPos);
+  end;
+  for LI := 0 to Int32(LLastZeros) - 1 do
+    TOps.SquareAccum(S);
+  Result := TOps.Finish(S, AConvert);
+end;
 
 { TBigInteger }
 
@@ -2147,11 +2471,10 @@ begin
   Result := Square().&Mod(AM);
 end;
 
-function TBigInteger.ModPow(const AE, AM: TBigInteger): TBigInteger;
+function TBigInteger.DoModPow(const AE, AM: TBigInteger; const ACtx: IMontKernelContext): TBigInteger;
 var
   LNegExp: Boolean;
   LE: TBigInteger;
-  LYAccum: TCryptoLibUInt32Array;
 begin
   if AM.FSign < 1 then
     raise EArithmeticCryptoLibException.CreateRes(@SModulusMustBePositive);
@@ -2186,12 +2509,48 @@ begin
     else
     begin
       // Odd modulus - use Montgomery reduction
-      System.SetLength(LYAccum, System.Length(AM.FMagnitude) + 1);
-      Result := ModPowMonty(LYAccum, Result, LE, AM, True);
+      Result := ModPowMonty(Result, LE, AM, True, ACtx);
     end;
   end;
   if LNegExp then
     Result := Result.ModInverse(AM);
+end;
+
+function TBigInteger.ModPow(const AE, AM: TBigInteger): TBigInteger;
+begin
+  Result := DoModPow(AE, AM, nil);
+end;
+
+function TBigInteger.ModPowMont(const AE, AM: TBigInteger;
+  const ACtx: IMontKernelContext): TBigInteger;
+begin
+  Result := DoModPow(AE, AM, ACtx);
+end;
+
+class function TBigInteger.CreateMontContext(const AM: TBigInteger;
+  ANeedEntry: Boolean): IMontKernelContext;
+var
+  LN, LN64: Int32;
+  LMod, LRR: TCryptoLibUInt64Array;
+begin
+  LN := System.Length(AM.FMagnitude);
+  if ((LN and 1) <> 0) or (LN < 4) then
+  begin
+    // odd limb-count / too narrow: no kernel width fits - a disengaged context.
+    Result := TMontKernelContext.Create(nil, nil, 0);
+    Exit;
+  end;
+  LN64 := LN shr 1;
+  System.SetLength(LMod, LN64);
+  AM.ToUInt64sLittleEndian(LMod, LN64);
+  // probe engagement with no R^2 first, so a disengaged width never pays the division.
+  Result := TMontKernelContext.Create(LMod, nil, LN64);
+  if (not ANeedEntry) or (not Result.Engaged) then
+    Exit;
+  // R^2 mod n = 2^(2*64*N64) mod n - the one division that entering Montgomery needs.
+  System.SetLength(LRR, LN64);
+  TBigInteger.One.ShiftLeft(2 * 64 * LN64).&Mod(AM).ToUInt64sLittleEndian(LRR, LN64);
+  Result := TMontKernelContext.Create(LMod, LRR, LN64);
 end;
 
 function TBigInteger.Pow(const AExponent: Int32): TBigInteger;
@@ -3631,145 +3990,55 @@ begin
   Result := LY;
 end;
 
-class function TBigInteger.ModPowMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AE, AM: TBigInteger; const AConvert: Boolean): TBigInteger;
+class function TBigInteger.ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean;
+  const ACachedCtx: IMontKernelContext): TBigInteger;
 var
-  LN, LPowR, LExtraBits, LExpLength, LNumPowers, LI, LJ, LWindowPos, LBits: Int32;
-  LSmallMontyModulus: Boolean;
-  LMDash: UInt32;
-  LB: TBigInteger;
-  LZVal, LZSquared: TCryptoLibUInt32Array;
-  LOddPowers: TCryptoLibMatrixUInt32Array;
-  LWindowList: TCryptoLibUInt32Array;
-  LWindow, LMult, LLastZeros: UInt32;
-  LYVal, LTmp: TCryptoLibUInt32Array;
+  S: TMontModState;
+  LExtraBits, LExpLength: Int32;
 begin
-  LN := System.Length(AM.FMagnitude);
-  LPowR := 32 * LN;
-  LSmallMontyModulus := AM.BitLength + 2 <= LPowR;
-  LMDash := AM.GetMQuote();
-  // tmp = this * R mod m
-  LB := AB;
-  if AConvert then
-  begin
-    LB := LB.ShiftLeft(LPowR).Remainder(AM);
-  end;
-{$IFDEF DEBUG}
-  System.Assert(System.Length(AYAccum) = LN + 1);
-{$ENDIF DEBUG}
-  LZVal := LB.FMagnitude;
-  if System.Length(LZVal) < LN then
-  begin
-    System.SetLength(LTmp, LN);
-    System.Move(LZVal[0], LTmp[LN - System.Length(LZVal)], System.Length(LZVal) * System.SizeOf(UInt32));
-    LZVal := LTmp;
-  end;
-
-{$IFDEF DEBUG}
-  System.Assert(System.Length(LZVal) = LN);
-{$ENDIF DEBUG}
-  // Sliding window from MSW to LSW
   LExtraBits := 0;
-  // Filter the common case of small RSA exponents with few bits set
   if (System.Length(AE.FMagnitude) > 1) or (AE.BitCount > 2) then
   begin
     LExpLength := AE.BitLength;
     while LExpLength > ExpWindowThresholds[LExtraBits] do
-    begin
       System.Inc(LExtraBits);
-    end;
   end;
-  LNumPowers := 1 shl LExtraBits;
-  System.SetLength(LOddPowers, LNumPowers);
-  LOddPowers[0] := LZVal;
-
-  LZSquared := System.Copy(LZVal);
-  SquareMonty(AYAccum, LZSquared, AM.FMagnitude, LMDash, LSmallMontyModulus);
-
-  for LI := 1 to System.Pred(LNumPowers) do
+  S := Default(TMontModState);
+  S.NumPowers := 1 shl LExtraBits;
+  // only a converting exponentiation enters Montgomery form, so only it needs R^2.
+  S.NeedEntry := AConvert;
+  if ACachedCtx <> nil then
   begin
-    LOddPowers[LI] := System.Copy(LOddPowers[LI - 1]);
-
-    MultiplyMonty(AYAccum, LOddPowers[LI], LZSquared, AM.FMagnitude, LMDash, LSmallMontyModulus);
+    S.KernelCtx := ACachedCtx;
+    S.Modulus := AM;
   end;
-
-  LWindowList := GetWindowList(AE.FMagnitude, LExtraBits);
-{$IFDEF DEBUG}
-  System.Assert(System.Length(LWindowList) > 1);
-{$ENDIF DEBUG}
-  LWindow := LWindowList[0];
-  LMult := LWindow and $FF;
-  LLastZeros := LWindow shr 8;
-  if LMult = 1 then
+  if TKernelMontOps.TryInit(AM, S) then
   begin
-    LYVal := LZSquared;
-    System.Dec(LLastZeros);
-  end
-  else
-  begin
-    LYVal := System.Copy(LOddPowers[LMult shr 1]);
+    TKernelMontOps.BuildTable(S, AB, AConvert);
+    Result := TMontModExp<TKernelMontOps>.Run(S, AE, AConvert, LExtraBits);
+    Exit;
   end;
-
-  LWindowPos := 1;
-  LWindow := LWindowList[LWindowPos];
-  System.Inc(LWindowPos);
-  while LWindow <> UInt32.MaxValue do
-  begin
-    LMult := LWindow and $FF;
-    LBits := Int32(LLastZeros) + BitLen(Byte(LMult));
-    for LJ := 0 to System.Pred(LBits) do
-    begin
-      SquareMonty(AYAccum, LYVal, AM.FMagnitude, LMDash, LSmallMontyModulus);
-    end;
-    MultiplyMonty(AYAccum, LYVal, LOddPowers[LMult shr 1], AM.FMagnitude, LMDash, LSmallMontyModulus);
-    LLastZeros := LWindow shr 8;
-    // Get next window value
-    LWindow := LWindowList[LWindowPos];
-    System.Inc(LWindowPos);
-  end;
-  for LI := 0 to System.Pred(Int32(LLastZeros)) do
-  begin
-    SquareMonty(AYAccum, LYVal, AM.FMagnitude, LMDash, LSmallMontyModulus);
-  end;
-  if AConvert then
-  begin
-    // Return y * R^(-1) mod m
-    MontgomeryReduce(LYVal, AM.FMagnitude, LMDash);
-  end
-  else if LSmallMontyModulus and (CompareTo(0, LYVal, 0, AM.FMagnitude) >= 0) then
-  begin
-    Subtract(0, LYVal, 0, AM.FMagnitude);
-  end;
-  Result := TBigInteger.Create(1, LYVal, True);
+  TScalarMontOps.TryInit(AM, S);
+  TScalarMontOps.BuildTable(S, AB, AConvert);
+  Result := TMontModExp<TScalarMontOps>.Run(S, AE, AConvert, LExtraBits);
 end;
 
-class function TBigInteger.ModSquareMonty(var AYAccum: TCryptoLibUInt32Array; const AB, AM: TBigInteger): TBigInteger;
+class function TBigInteger.ModSquareMonty(const AB, AM: TBigInteger): TBigInteger;
 var
-  LN, LPowR: Int32;
-  LSmallMontyModulus: Boolean;
-  LMDash: UInt32;
-  LZVal, LYVal: TCryptoLibUInt32Array;
+  S: TMontModState;
 begin
-  LN := System.Length(AM.FMagnitude);
-  LPowR := 32 * LN;
-  LSmallMontyModulus := AM.BitLength + 2 <= LPowR;
-  LMDash := AM.GetMQuote();
-{$IFDEF DEBUG}
-  System.Assert(System.Length(AYAccum) = LN + 1);
-{$ENDIF DEBUG}
-  LZVal := AB.FMagnitude;
-{$IFDEF DEBUG}
-  System.Assert(System.Length(LZVal) <= LN);
-{$ENDIF DEBUG}
-
-  System.SetLength(LYVal, LN);
-  System.Move(LZVal[0], LYVal[LN - System.Length(LZVal)], System.Length(LZVal) * System.SizeOf(UInt32));
-
-  SquareMonty(AYAccum, LYVal, AM.FMagnitude, LMDash, LSmallMontyModulus);
-  if LSmallMontyModulus and (CompareTo(0, LYVal, 0, AM.FMagnitude) >= 0) then
+  S := Default(TMontModState);
+  if TKernelMontOps.TryInit(AM, S) then
   begin
-    Subtract(0, LYVal, 0, AM.FMagnitude);
+    TKernelMontOps.LoadAccum(S, AB);
+    TKernelMontOps.SquareAccum(S);
+    Result := TKernelMontOps.Finish(S, False);
+    Exit;
   end;
-  Result := TBigInteger.Create(1, LYVal, True);
+  TScalarMontOps.TryInit(AM, S);
+  TScalarMontOps.LoadAccum(S, AB);
+  TScalarMontOps.SquareAccum(S);
+  Result := TScalarMontOps.Finish(S, False);
 end;
 
 function TBigInteger.Remainder(const AM: Int32): Int32;
@@ -3923,7 +4192,6 @@ var
   LN, LR, LY, LA: TBigInteger;
   LMontRadix, LMinusMontRadix: TBigInteger;
   LS, LJ: Int32;
-  LYAccum: TCryptoLibUInt32Array;
 begin
   LBits := BitLength;
 
@@ -3967,7 +4235,6 @@ begin
   LMontRadix := FOne.ShiftLeft(32 * System.Length(LN.FMagnitude)).Remainder(LN);
   LMinusMontRadix := LN.Subtract(LMontRadix);
 
-  System.SetLength(LYAccum, System.Length(LN.FMagnitude) + 1);
 
   repeat
     repeat
@@ -3976,7 +4243,7 @@ begin
       and (not IsEqualMagnitude(LA.FMagnitude, LMontRadix.FMagnitude))
       and (not IsEqualMagnitude(LA.FMagnitude, LMinusMontRadix.FMagnitude));
 
-    LY := ModPowMonty(LYAccum, LA, LR, LN, False);
+    LY := ModPowMonty(LA, LR, LN, False);
 
     if not LY.Equals(LMontRadix) then
     begin
@@ -3990,7 +4257,7 @@ begin
           Exit;
         end;
 
-        LY := ModSquareMonty(LYAccum, LY, LN);
+        LY := ModSquareMonty(LY, LN);
 
         if LY.Equals(LMontRadix) then
         begin

@@ -25,6 +25,9 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
+  ClpIMontKernelContext,
+  ClpRsaBlinding,
+  ClpIRsaBlinding,
   ClpPrimes,
   ClpCryptoServicesRegistrar,
   ClpIRsaParameters,
@@ -76,9 +79,16 @@ type
     class var
       FValidated: TValidatedModulusRing;
       FValidatedLock: TCriticalSection;
+  private
+    // one class-wide lock for every per-key lazy cache: slots build once and warm acquires
+    // are noise next to any RSA operation, so a per-key lock would only tax every harvested
+    // public key that never signs or verifies.
+    class var FCacheLock: TCriticalSection;
+  strict private
     var
     FModulus: TBigInteger;
     FExponent: TBigInteger;
+    FModContext: IMontKernelContext;
 
     class constructor Create;
     class destructor Destroy;
@@ -91,6 +101,9 @@ type
   strict protected
     function GetModulus: TBigInteger;
     function GetExponent: TBigInteger;
+    // lazily builds and caches the Montgomery context for AMod into ASlot; the context
+    // reports Engaged=False when the kernel can't take the width, so callers fall back cleanly.
+    function EnsureContext(var ASlot: IMontKernelContext; const AMod: TBigInteger): IMontKernelContext;
 
   public
 
@@ -100,6 +113,10 @@ type
       const AModulus, AExponent: TBigInteger); overload;
     constructor Create(AIsPrivate: Boolean;
       const AModulus, AExponent: TBigInteger; AIsInternal: Boolean); overload;
+
+    /// <summary>The lazily-built, thread-safe Montgomery context for this modulus,
+    /// used to accelerate m^e mod n (RSA verify and the CRT fault-check).</summary>
+    function GetModulusContext: IMontKernelContext;
 
     function Equals(const AOther: IRsaKeyParameters): Boolean;
       reintroduce; overload;
@@ -121,6 +138,8 @@ type
     FDP: TBigInteger;
     FDQ: TBigInteger;
     FQInv: TBigInteger;
+    FBlinding: IRsaBlinding;
+    FPContext, FQContext: IMontKernelContext;
 
     class procedure ValidateValue(const AX: TBigInteger;
       const AParamName, ADesc: String); static;
@@ -132,6 +151,9 @@ type
     function GetDP: TBigInteger;
     function GetDQ: TBigInteger;
     function GetQInv: TBigInteger;
+    function GetBlinding(const ARandom: ISecureRandom): IRsaBlinding;
+    function GetPContext: IMontKernelContext;
+    function GetQContext: IMontKernelContext;
 
   public
     constructor Create(const AModulus, APublicExponent, APrivateExponent,
@@ -250,10 +272,12 @@ class constructor TRsaKeyParameters.Create;
 begin
   FValidated := TValidatedModulusRing.Init;
   FValidatedLock := TCriticalSection.Create;
+  FCacheLock := TCriticalSection.Create;
 end;
 
 class destructor TRsaKeyParameters.Destroy;
 begin
+  FCacheLock.Free;
   FValidatedLock.Free;
 end;
 
@@ -364,6 +388,24 @@ begin
   FExponent := AExponent;
 end;
 
+function TRsaKeyParameters.EnsureContext(var ASlot: IMontKernelContext;
+  const AMod: TBigInteger): IMontKernelContext;
+begin
+  FCacheLock.Acquire;
+  try
+    if ASlot = nil then
+      ASlot := TBigInteger.CreateMontContext(AMod, True);
+    Result := ASlot;
+  finally
+    FCacheLock.Release;
+  end;
+end;
+
+function TRsaKeyParameters.GetModulusContext: IMontKernelContext;
+begin
+  Result := EnsureContext(FModContext, FModulus);
+end;
+
 function TRsaKeyParameters.Equals(const AOther: IRsaKeyParameters): Boolean;
 begin
   if AOther = nil then
@@ -428,6 +470,33 @@ begin
   FDP := ADP;
   FDQ := ADQ;
   FQInv := AQInv;
+end;
+
+function TRsaPrivateCrtKeyParameters.GetPContext: IMontKernelContext;
+begin
+  Result := EnsureContext(FPContext, FP);
+end;
+
+function TRsaPrivateCrtKeyParameters.GetQContext: IMontKernelContext;
+begin
+  Result := EnsureContext(FQContext, FQ);
+end;
+
+function TRsaPrivateCrtKeyParameters.GetBlinding(
+  const ARandom: ISecureRandom): IRsaBlinding;
+var
+  LModContext: IMontKernelContext;
+begin
+  // created once and shared by every signature.
+  LModContext := GetModulusContext;
+  FCacheLock.Acquire;
+  try
+    if FBlinding = nil then
+      FBlinding := TRsaBlindingBase.NewBlinding(Modulus, FE, ARandom, LModContext);
+    Result := FBlinding;
+  finally
+    FCacheLock.Release;
+  end;
 end;
 
 function TRsaPrivateCrtKeyParameters.Equals(
