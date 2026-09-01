@@ -154,7 +154,6 @@ type
     FPkSeed: TCryptoLibByteArray;
     FEngine: ISlhDsaEngine;
     FWots: TSlhDsaWotsPlus;
-    FHTPubKey: TCryptoLibByteArray;
     class function GetXmssOffset(const AEngine: ISlhDsaEngine): Int32; static;
     function XmssPkFromSig(AIdx: UInt32; const ASigXmss: TCryptoLibByteArray; ASigXmssOff: Int32;
       const AM, APkSeed: TCryptoLibByteArray; const AParamAdrs: ISlhDsaAdrs): TCryptoLibByteArray;
@@ -165,7 +164,9 @@ type
   public
     constructor Create(const AEngine: ISlhDsaEngine; const ASkSeed, APkSeed: TCryptoLibByteArray);
     destructor Destroy; override;
-    function GetHTPubKey: TCryptoLibByteArray;
+    // Computes PK.root; only key generation calls this. Signing already holds
+    // PK.root, so recomputing here would cost a full top-layer XMSS tree build.
+    function PKGen: TCryptoLibByteArray;
     procedure Sign(const AM: TCryptoLibByteArray; AIdxTree: UInt64; AIdxLeaf: UInt32;
       var ASignature: TCryptoLibByteArray);
     function Verify(const AM, ASignature, APkSeed: TCryptoLibByteArray; AIdxTree: UInt64; AIdxLeaf: UInt32;
@@ -653,26 +654,12 @@ end;
 { TSlhDsaHT }
 
 constructor TSlhDsaHT.Create(const AEngine: ISlhDsaEngine; const ASkSeed, APkSeed: TCryptoLibByteArray);
-var
-  LAdrs: ISlhDsaAdrs;
 begin
   inherited Create;
   FSkSeed := ASkSeed;
   FPkSeed := APkSeed;
   FEngine := AEngine;
   FWots := TSlhDsaWotsPlus.Create(AEngine);
-
-  LAdrs := TSlhDsaAdrs.Create;
-  LAdrs.SetLayerAddress(UInt32(FEngine.D - 1));
-  LAdrs.SetTreeAddress(0);
-
-  if ASkSeed <> nil then
-  begin
-    System.SetLength(FHTPubKey, FEngine.N);
-    TreeHash(ASkSeed, 0, FEngine.HPrime, APkSeed, LAdrs, FHTPubKey, 0);
-  end
-  else
-    FHTPubKey := nil;
 end;
 
 destructor TSlhDsaHT.Destroy;
@@ -682,9 +669,16 @@ begin
   inherited Destroy;
 end;
 
-function TSlhDsaHT.GetHTPubKey: TCryptoLibByteArray;
+function TSlhDsaHT.PKGen: TCryptoLibByteArray;
+var
+  LAdrs: ISlhDsaAdrs;
 begin
-  Result := FHTPubKey;
+  LAdrs := TSlhDsaAdrs.Create;
+  LAdrs.SetLayerAddress(UInt32(FEngine.D - 1));
+  LAdrs.SetTreeAddress(0);
+
+  System.SetLength(Result, FEngine.N);
+  TreeHash(FSkSeed, 0, FEngine.HPrime, FPkSeed, LAdrs, Result, 0);
 end;
 
 class function TSlhDsaHT.GetXmssOffset(const AEngine: ISlhDsaEngine): Int32;

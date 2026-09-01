@@ -78,7 +78,7 @@ begin
   LHt := TSlhDsaHT.Create(LEngine, LSk.Seed, LPkSeed);
   try
     LPk.Seed := LPkSeed;
-    LPk.Root := LHt.GetHTPubKey;
+    LPk.Root := LHt.PKGen;
   finally
     LHt.Free;
   end;
