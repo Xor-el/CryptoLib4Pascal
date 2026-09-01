@@ -1,0 +1,39 @@
+CryptoLib/src/Crypto/Operators/ClpDefaultSignatureAlgorithmFinder.pas
+  s_0f1a2e9196b415::t_bbd25c2d45263d 49
+CryptoLib/src/Interfaces/Crypto/Engines/ClpIAesHardwareEngine.pas
+  s_4e396cb15e16b1::t_9c47e8cf2f15fb 24
+CryptoLib/src/X509/ClpX509Comparers.pas
+  s_3c1bea93377b0a::t_66bf47d6b7bb88 27
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "693b9925b20d93261a62d40ed2051e81c052a82e",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_3c1bea93377b0a": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "12e490c7-6c8e-4b1f-afbd-b5fb0c3220b3",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_4e396cb15e16b1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "96a370ed-db32-46c5-b5e2-be9c6a9c45e4",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
