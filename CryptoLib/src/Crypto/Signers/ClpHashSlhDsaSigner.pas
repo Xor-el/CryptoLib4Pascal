@@ -26,7 +26,6 @@ uses
   ClpISigner,
   ClpIHashSlhDsaSigner,
   ClpISlhDsaParameters,
-  ClpSlhDsaParameters,
   ClpSlhDsaSigner,
   ClpISlhDsaEngine,
   ClpParameterUtilities,

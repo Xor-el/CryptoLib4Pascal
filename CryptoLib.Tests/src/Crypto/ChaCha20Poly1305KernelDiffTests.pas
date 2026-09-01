@@ -46,7 +46,6 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpConverters,
-  ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase;
 

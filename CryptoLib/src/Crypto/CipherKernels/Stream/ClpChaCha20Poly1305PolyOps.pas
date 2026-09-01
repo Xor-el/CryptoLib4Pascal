@@ -21,7 +21,6 @@ unit ClpChaCha20Poly1305PolyOps;
 interface
 
 uses
-  ClpCryptoLibTypes,
   ClpBinaryPrimitives;
 
 type

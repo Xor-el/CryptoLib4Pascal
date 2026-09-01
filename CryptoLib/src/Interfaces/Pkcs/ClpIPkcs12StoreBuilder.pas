@@ -22,8 +22,7 @@ interface
 
 uses
   ClpIAsn1Objects,
-  ClpIPkcs12Store,
-  ClpCryptoLibTypes;
+  ClpIPkcs12Store;
 
 type
   /// <summary>

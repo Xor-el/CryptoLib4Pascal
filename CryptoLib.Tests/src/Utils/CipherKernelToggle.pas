@@ -23,7 +23,6 @@ interface
 {$ENDIF FPC}
 
 uses
-  SysUtils,
   ClpCipherKernelRegistry;
 
 type

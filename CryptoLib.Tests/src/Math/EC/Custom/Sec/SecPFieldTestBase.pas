@@ -36,7 +36,6 @@ uses
   ClpIX9ECAsn1Objects,
   ClpPack,
   ClpCustomNamedCurves,
-  ClpIECCommon,
   ClpIECFieldElement,
   ClpBigInteger,
   ClpCryptoLibTypes,

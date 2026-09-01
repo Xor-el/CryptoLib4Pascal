@@ -21,7 +21,7 @@ unit ClpCpuFeatures;
 interface
 
 uses
-  ClpSimdLevels
+  SysUtils
 {$IF DEFINED(CRYPTOLIB_X86)}
   , ClpX86SimdFeatures
 {$IFEND}

@@ -40,7 +40,6 @@ uses
   ClpIScalarFieldOps,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpCryptoLibTypes,
   CryptoLibTestBase;
 
 type

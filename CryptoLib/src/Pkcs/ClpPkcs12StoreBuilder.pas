@@ -23,11 +23,9 @@ interface
 uses
   ClpIAsn1Objects,
   ClpNistObjectIdentifiers,
-  ClpPkcsObjectIdentifiers,
   ClpIPkcs12StoreBuilder,
   ClpIPkcs12Store,
-  ClpPkcs12Store,
-  ClpCryptoLibTypes;
+  ClpPkcs12Store;
 
 type
   /// <summary>

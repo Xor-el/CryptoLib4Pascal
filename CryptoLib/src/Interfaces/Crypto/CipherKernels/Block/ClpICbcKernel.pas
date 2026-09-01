@@ -22,7 +22,6 @@ interface
 
 uses
   ClpIBlockCipher,
-  ClpCryptoLibTypes,
   ClpCipherKernelTypes,
   ClpICipherKernelFactory;
 

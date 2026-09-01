@@ -21,7 +21,6 @@ unit ClpGcmSivBlockCipher;
 interface
 
 uses
-  Classes,
   Math,
   SysUtils,
   ClpIBlockCipher,

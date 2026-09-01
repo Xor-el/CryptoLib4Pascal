@@ -52,7 +52,6 @@ uses
   ClpIAsymmetricCipherKeyPair,
   ClpECCurve,
   ClpIECCommon,
-  ClpIECFieldElement,
   ClpBigInteger,
   ClpBigIntegerUtilities,
   ClpArrayUtilities,

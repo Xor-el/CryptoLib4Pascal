@@ -29,7 +29,6 @@ uses
   ClpStringUtilities,
   ClpIAsn1Core,
   ClpAsn1Core,
-  ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;

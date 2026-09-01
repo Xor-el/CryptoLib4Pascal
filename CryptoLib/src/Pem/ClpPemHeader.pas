@@ -22,7 +22,6 @@ interface
 
 uses
   ClpIPemHeader,
-  ClpCryptoLibTypes,
   ClpStringUtilities;
 
 type

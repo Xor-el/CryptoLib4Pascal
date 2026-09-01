@@ -49,7 +49,6 @@ uses
   ClpIPkcs12StoreBuilder,
   ClpPkcs12StoreBuilder,
   ClpIPkcs12Store,
-  ClpPkcs12Store,
   ClpIX509CertificateEntry,
   ClpX509CertificateEntry,
   ClpIAsymmetricKeyEntry,

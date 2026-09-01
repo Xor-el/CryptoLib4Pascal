@@ -32,12 +32,10 @@ uses
 {$ENDIF FPC}
   ClpBigInteger,
   ClpISigner,
-  ClpECCurve,
   ClpIRandom,
   ClpSignerUtilities,
   ClpSecureRandom,
   ClpISecureRandom,
-  ClpECParameters,
   ClpICipherParameters,
   ClpIECParameters,
   ClpIDsaParameters,

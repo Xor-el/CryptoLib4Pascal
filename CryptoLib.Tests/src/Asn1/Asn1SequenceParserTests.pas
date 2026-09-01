@@ -31,7 +31,6 @@ uses
 {$ELSE}
   TestFramework,
 {$ENDIF FPC}
-  ClpBigInteger,
   ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsn1Parsers,

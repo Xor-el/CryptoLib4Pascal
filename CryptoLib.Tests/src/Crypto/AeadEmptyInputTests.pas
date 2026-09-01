@@ -55,7 +55,6 @@ uses
   ClpKeyParameter,
   ClpIKeyParameter,
   ClpICipherParameters,
-  ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase;
 

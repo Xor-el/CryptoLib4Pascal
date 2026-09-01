@@ -30,8 +30,7 @@ uses
   ClpNistObjectIdentifiers,
   ClpCollectionUtilities,
   ClpCryptoLibComparers,
-  ClpIMacAlgorithmFinder,
-  ClpCryptoLibTypes;
+  ClpIMacAlgorithmFinder;
 
 type
   /// <summary>

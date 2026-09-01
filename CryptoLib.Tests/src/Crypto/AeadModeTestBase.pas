@@ -36,7 +36,6 @@ uses
   ClpAesUtilities,
   ClpAesEngine,
   ClpAesBitSlicedEngine,
-  ClpCryptoLibTypes,
   CipherKernelToggle,
   CryptoLibTestBase,
   BlockCipherTestBase;

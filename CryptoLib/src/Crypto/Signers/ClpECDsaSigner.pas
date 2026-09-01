@@ -31,7 +31,6 @@ uses
   ClpIECCommon,
   ClpIECFieldElement,
   ClpIECParameters,
-  ClpMultipliers,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   ClpICipherParameters,

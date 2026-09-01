@@ -21,8 +21,7 @@ unit ClpIPkcs12ParametersGenerator;
 interface
 
 uses
-  ClpIPbeParametersGenerator,
-  ClpCryptoLibTypes;
+  ClpIPbeParametersGenerator;
 
 type
   /// <summary>

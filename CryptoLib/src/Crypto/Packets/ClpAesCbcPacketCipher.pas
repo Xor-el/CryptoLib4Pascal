@@ -21,7 +21,6 @@ unit ClpAesCbcPacketCipher;
 interface
 
 uses
-  ClpIPacketCipher,
   ClpIBlockPacketCipher,
   ClpIBlockCipher,
   ClpIBulkBlockCipherMode,

@@ -52,13 +52,10 @@ uses
   ClpDsaGenerators,
   ClpIDsaGenerators,
   ClpIAsymmetricCipherKeyPairGenerator,
-  ClpPkcsAsn1Objects,
   ClpICmsAsn1Objects,
   ClpCmsObjectIdentifiers,
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects,
-  ClpX9ObjectIdentifiers,
-  ClpCryptoLibTypes,
   CryptoLibTestBase,
   OpenSslVectors;
 

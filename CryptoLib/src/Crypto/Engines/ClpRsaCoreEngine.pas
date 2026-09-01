@@ -24,7 +24,6 @@ uses
   SysUtils,
   ClpBigInteger,
   ClpBigIntegerUtilities,
-  ClpIMontKernelContext,
   ClpICipherParameters,
   ClpParameterUtilities,
   ClpIRsaParameters,

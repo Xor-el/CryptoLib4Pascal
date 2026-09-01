@@ -24,7 +24,6 @@ uses
   SysUtils,
   ClpIStore,
   ClpIX509StoreSelectors,
-  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpAsn1Core,
   ClpAsn1Objects,

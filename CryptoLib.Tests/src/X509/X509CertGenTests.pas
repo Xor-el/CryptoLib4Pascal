@@ -36,7 +36,6 @@ uses
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
   ClpIX509Certificate,
-  ClpX509CertificateParser,
   ClpX509Generators,
   ClpIX509Generators,
   ClpAsn1SignatureFactory,
@@ -50,7 +49,6 @@ uses
   ClpRsaParameters,
   ClpIDsaParameters,
   ClpIECParameters,
-  ClpECParameters,
   ClpRsaDigestSigner,
   ClpIRsaDigestSigner,
   ClpDigestUtilities,
@@ -59,7 +57,6 @@ uses
   ClpAsn1Comparers,
   ClpDateTimeHelper,
   CryptoLibTestBase,
-  CertVectors,
   CryptoTestKeys;
 
 type
