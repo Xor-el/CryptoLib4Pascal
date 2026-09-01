@@ -1,0 +1,22 @@
+CryptoLib/src/Crypto/Generators/ClpSlhDsaGenerators.pas
+  s_0f1a2e9196b415::t_8a04662a183db2 81
+CryptoLib/src/Crypto/Signers/SlhDsa/ClpSlhDsaCore.pas
+  s_0f1a2e9196b415::t_6bc854d029e400 672-674,676-681
+  s_0f1a2e9196b415::t_03d8ebb970ef40 167-169
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9854456edb59c9d1a650c949834e21c1de0b395b",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
