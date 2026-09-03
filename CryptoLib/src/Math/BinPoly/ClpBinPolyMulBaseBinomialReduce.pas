@@ -22,6 +22,9 @@ interface
 
 uses
   SysUtils,
+{$IFDEF DEBUG}
+  ClpBinPolyMulBase,
+{$ENDIF}
   ClpBitOperations,
   ClpIBinPolyMul;
 
