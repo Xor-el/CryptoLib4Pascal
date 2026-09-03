@@ -1,0 +1,29 @@
+CryptoLib/src/Math/BinPoly/ClpBinPolyMulBaseBinomialReduce.pas
+  s_e5fb138dc4caab::t_e5754b999b7d7c 25-27
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_5e9312dc1422f7::t_6123aedea87e7e 33
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "9dd05f7856e7c4528652abab329d726629165add",
+  "prompts": {},
+  "sessions": {
+    "s_5e9312dc1422f7": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b29c589c-ed14-449b-8005-c9f68f77c10c",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_e5fb138dc4caab": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "0f562a6e-7cea-4ac6-befd-c16ce37a44f7",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
