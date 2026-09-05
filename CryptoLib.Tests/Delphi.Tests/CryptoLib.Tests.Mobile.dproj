@@ -510,6 +510,17 @@
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpGlvTypeBEndomorphism.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Math\EC\Endo\ClpGlvTypeBParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Generators\ClpHkdfBytesGenerator.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpHpkeTypes.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpHpkeKdf.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpHpkeAead.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpHpkeContext.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpDhKem.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Crypto\Hpke\ClpHpke.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Hpke\ClpIHpkeKdf.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Hpke\ClpIHpkeAead.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Hpke\ClpIHpkeContext.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Hpke\ClpIHpkeKem.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\Crypto\Hpke\ClpIHpke.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Parameters\ClpHkdfParameters.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Macs\ClpHMac.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Crypto\Signers\SignerCalculators\ClpHMacDsaKCalculator.pas"/>
@@ -1431,6 +1442,7 @@
         <DCCReference Include="..\src\Crypto\Poly1305Tests.pas"/>
         <DCCReference Include="..\src\Utils\NistSecureRandom.pas"/>
         <DCCReference Include="..\src\Crypto\MlKemTests.pas"/>
+        <DCCReference Include="..\src\Crypto\HpkeTests.pas"/>
         <DCCReference Include="..\src\Crypto\Lib25519Tests.pas"/>
         <DCCReference Include="..\src\Crypto\MlDsaTests.pas"/>
         <DCCReference Include="..\src\Crypto\SlhDsaTests.pas"/>
@@ -1484,6 +1496,7 @@
         <DCCReference Include="..\src\Utils\Vectors\PemReaderVectors.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\PkcsVectors.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\PqcTestVectors.pas"/>
+        <DCCReference Include="..\src\Utils\Vectors\HpkeVectors.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\CsvVectorLoaderBase.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\TestKeyBuilders.pas"/>
         <DCCReference Include="..\src\Utils\Vectors\PemDerCodec.pas"/>

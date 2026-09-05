@@ -45,7 +45,7 @@ uses
   CcmTests, EaxTests, CMacTests,
   AeadModeTestBase, AeadTestUtilities, AeadEmptyInputTests, GcmReorderTests, GCMTests, GcmSivTests, GMacTests,
   Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
-  MlKemTests, MlDsaTests, PqcPkcsTests, SlhDsaTests, Lib25519Tests,
+  MlKemTests, HpkeTests, MlDsaTests, PqcPkcsTests, SlhDsaTests, Lib25519Tests,
   Asn1CipherBuilderWithKeyTests, AesBitSlicedTests, ECDHPrimeConstantTimeTests,
   ECDHBinaryConstantTimeTests, CryptoLibTestBase, PkixFoundationTests,
   PkixNameConstraintTests, PkixComparerTests, CertPathTests, CertPathBuilderTests,
@@ -62,7 +62,7 @@ uses
   Argon2Vectors, AsymmetricTestVectors, SymmetricBlockVectors,
   ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
   CertVectors, PkitsVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec,
-  PqcTestVectors, DrbgTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
+  PqcTestVectors, HpkeVectors, DrbgTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
   IPAddressUtilitiesTests, PemReaderTests;
 
 {$R *.res}

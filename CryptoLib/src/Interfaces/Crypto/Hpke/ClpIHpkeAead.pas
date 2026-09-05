@@ -14,27 +14,32 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIHkdfBytesGenerator;
+unit ClpIHpkeAead;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDerivationFunction,
   ClpCryptoLibTypes;
 
 type
-  IHkdfBytesGenerator = interface(IDerivationFunction)
-    ['{79B29B35-33BB-4056-9101-828C88D1ADB0}']
+  /// <summary>
+  /// RFC 9180 sec. 5.2 AEAD wrapper. Holds the derived key and base nonce and
+  /// applies the nonce-XOR-sequence construction on each Seal / Open.
+  /// </summary>
+  IHpkeAead = interface(IInterface)
+    ['{2A5F9C34-6D18-4B27-9C4E-1E8B7A0D5F22}']
 
-    /// <summary>
-    /// Performs the extract (RFC 5869 sec. 2.2) step and returns the PRK bytes.
-    /// A nil salt defaults to HashLen zero octets.
-    /// </summary>
-    function ExtractPRK(const ASalt, AIkm: TCryptoLibByteArray)
-      : TCryptoLibByteArray;
+    function Seal(const AAad, APt: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload;
+    function Seal(const AAad, APt: TCryptoLibByteArray; APtOff, APtLen: Int32)
+      : TCryptoLibByteArray; overload;
 
+    function Open(const AAad, ACt: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload;
+    function Open(const AAad, ACt: TCryptoLibByteArray; ACtOff, ACtLen: Int32)
+      : TCryptoLibByteArray; overload;
   end;
 
 implementation
