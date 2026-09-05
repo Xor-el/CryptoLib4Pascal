@@ -1,0 +1,142 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_d34d9c8ded6c5c::t_905ddddacce056 48
+  s_d34d9c8ded6c5c::t_cd00db33bac623 65
+CryptoLib/src/Crypto/Hpke/ClpHpkeAead.pas
+  s_d34d9c8ded6c5c::t_694cbdbe3622ea 45
+  s_d34d9c8ded6c5c::t_682e0016e8c2de 180,193
+  s_d34d9c8ded6c5c::t_01e78ad8c984e2 76-77
+  s_d34d9c8ded6c5c::t_1c9f1d38e254d2 29,32
+  s_d34d9c8ded6c5c::t_42f3703627e35f 112-119
+  s_d34d9c8ded6c5c::t_6ac7dc973bcfcf 1-24,27-28,30-31,33-44,46-68,71-75,87-97,100-111,120-126,128-141,144-159,162-163,167-168,170,175-178,185,188-191,198,201-203
+  s_d34d9c8ded6c5c::t_d8b050f16d9e68 25
+  s_d34d9c8ded6c5c::t_62d855ed7772cf 26
+  s_d34d9c8ded6c5c::t_a639f201c7badd 98-99
+  s_d34d9c8ded6c5c::t_01ce31650a0ddd 127
+  s_d34d9c8ded6c5c::t_1c3e704a8aff20 142-143,160-161,164-166,169,171-174,179,181-184,186-187,192,194-197,199-200
+  s_d34d9c8ded6c5c::t_af0b6d1c14965a 69-70,78-86
+CryptoLib.Tests/src/Utils/Vectors/HpkeVectors.pas
+  s_d34d9c8ded6c5c::t_00cb637d716c58 122
+  s_d34d9c8ded6c5c::t_5de87c917c507c 50
+  s_d34d9c8ded6c5c::t_5468a01a42cc9f 1-49,51-121,123-257
+CryptoLib/src/Interfaces/Crypto/Hpke/ClpIHpkeKem.pas
+  s_d34d9c8ded6c5c::t_8d3f93930f98c5 1-78
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_d34d9c8ded6c5c::t_6ff46ce92a869f 194-204
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_d34d9c8ded6c5c::t_15538be3a2de49 956,958-959
+  s_d34d9c8ded6c5c::t_14b1541bc0bac7 82
+  s_d34d9c8ded6c5c::t_a738f8ab53a227 957,960-963
+CryptoLib/src/Interfaces/Crypto/Hpke/ClpIHpkeKdf.pas
+  s_d34d9c8ded6c5c::t_3b1768550b491f 1-54
+CryptoLib/src/Crypto/Hpke/ClpHpke.pas
+  s_d34d9c8ded6c5c::t_1c64daf86759f9 237-238
+  s_d34d9c8ded6c5c::t_9dbb5bb1230c37 236,239-240
+  s_d34d9c8ded6c5c::t_4b77ca1f44074a 68
+  s_d34d9c8ded6c5c::t_546a07b5e89ecd 93
+  s_d34d9c8ded6c5c::t_3eaa276184ffec 182-186
+  s_d34d9c8ded6c5c::t_a6ed3cf67c26b6 170-172
+  s_d34d9c8ded6c5c::t_9f6d17fd852300 1-23,25,27-67,69-92,94-142,144-169,173-181,187-235,241-468
+  s_d34d9c8ded6c5c::t_8eef97daac173e 24,26
+  s_d34d9c8ded6c5c::t_34267fa8c98d14 143
+CryptoLib/src/Interfaces/Crypto/Hpke/ClpIHpkeContext.pas
+  s_d34d9c8ded6c5c::t_04f7462470dbf6 1-33,38,43-66
+  s_d34d9c8ded6c5c::t_74c1d675ce17f9 34-37,39-42
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_d34d9c8ded6c5c::t_c806811f6ac369 13
+  s_d34d9c8ded6c5c::t_aa64e4c87df6aa 34
+  s_d34d9c8ded6c5c::t_3798757ecf649b 3712-3718,3721-3722,3725-3726,3729-3730,3733-3734,3737-3738,3741-3742,3745-3746,3749-3750,3753-3754
+  s_d34d9c8ded6c5c::t_325a57f70ee407 3719-3720,3723-3724,3727-3728,3731-3732,3735-3736,3739-3740,3743-3744,3747-3748,3751-3752,3755
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_d34d9c8ded6c5c::t_27a5b3cce94ed1 190-200
+  s_d34d9c8ded6c5c::t_23a6f264b21687 1184
+  s_d34d9c8ded6c5c::t_2a0b465adcd818 1129
+CryptoLib/src/Crypto/Hpke/ClpDhKem.pas
+  s_d34d9c8ded6c5c::t_e324173c107797 544
+  s_d34d9c8ded6c5c::t_7238a7676c4822 191-192
+  s_d34d9c8ded6c5c::t_eb6a059f88d3b1 246-248
+  s_d34d9c8ded6c5c::t_c1b03aacab3aea 28
+  s_d34d9c8ded6c5c::t_e823764a6277dc 1-27,29-190,193-245,249-459,462-467,469-471,473-492,496-543,545-590
+  s_d34d9c8ded6c5c::t_91f7333502e0b2 460-461,468,472,493-495
+CryptoLib/src/Crypto/Hpke/ClpHpkeTypes.pas
+  s_d34d9c8ded6c5c::t_d6a8b3261608af 1-35,37-41,43-47,49-53
+  s_d34d9c8ded6c5c::t_14b6533b0ca608 36,42,48
+CryptoLib/src/Crypto/Hpke/ClpHpkeKdf.pas
+  s_d34d9c8ded6c5c::t_06cffa1f607a6f 60
+  s_d34d9c8ded6c5c::t_df9f71d4fabcde 1-23,25-26,28-59,61-82,84-88,90,92,94-111,115-129,133-160
+  s_d34d9c8ded6c5c::t_20dfa88ef12131 24,27
+  s_d34d9c8ded6c5c::t_79e7f47391f635 83,89,91,93
+  s_d34d9c8ded6c5c::t_f9cb46be94b4da 112-114
+  s_d34d9c8ded6c5c::t_b1243745426898 130-132
+CryptoLib/src/Crypto/Generators/ClpHkdfBytesGenerator.pas
+  s_d34d9c8ded6c5c::t_9d53ff2b419850 155-160,162,179-180
+  s_d34d9c8ded6c5c::t_2b151f3ea3cb16 104-119
+CryptoLib/src/Interfaces/Crypto/Generators/ClpIHkdfBytesGenerator.pas
+  s_d34d9c8ded6c5c::t_d644078eeed30f 24-25,31-37
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_d34d9c8ded6c5c::t_0a7cfbe26a4806 962-973
+CryptoLib/src/Interfaces/Crypto/Hpke/ClpIHpke.pas
+  s_d34d9c8ded6c5c::t_686ae9e20fa178 106
+  s_d34d9c8ded6c5c::t_5b1ee59d96941a 56
+  s_d34d9c8ded6c5c::t_8837970565f8b2 1-23,25-39,41-55,57-105,107-111
+  s_d34d9c8ded6c5c::t_f12245beaebc85 24
+  s_d34d9c8ded6c5c::t_72348b51d10c2f 40
+CryptoLib/src/Interfaces/Crypto/Hpke/ClpIHpkeAead.pas
+  s_d34d9c8ded6c5c::t_0806ece0b9b414 1-33,38,43-47
+  s_d34d9c8ded6c5c::t_f938bcce9ea552 34-37,39-42
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_d34d9c8ded6c5c::t_240d27d5aa5a91 65
+  s_d34d9c8ded6c5c::t_2fef438264efbf 49
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_d34d9c8ded6c5c::t_a2d8219bd948b0 171-181
+  s_d34d9c8ded6c5c::t_13fe40431b169c 1108
+  s_d34d9c8ded6c5c::t_8f0722ba3595ff 1163
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_d34d9c8ded6c5c::t_afd349d840ee91 513-523
+  s_d34d9c8ded6c5c::t_0a8975e1250861 1445
+  s_d34d9c8ded6c5c::t_8c2896fb4ae5e8 1499
+CryptoLib.Tests/src/Crypto/HpkeTests.pas
+  s_d34d9c8ded6c5c::t_91da84cc74352a 45
+  s_d34d9c8ded6c5c::t_4bbb1de9680fa6 1-44,47-183,185,187-326,383-391
+  s_d34d9c8ded6c5c::t_9b31ad33407f8e 346-348,350,354-358
+  s_d34d9c8ded6c5c::t_82c8b0d7536378 363-382
+  s_d34d9c8ded6c5c::t_704e353e94c57f 46
+  s_d34d9c8ded6c5c::t_ff03747d3227b7 184,186
+  s_d34d9c8ded6c5c::t_69500a153fe1d8 327-345,349,351-353,359-362
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_d34d9c8ded6c5c::t_5fe9fb2cf0f955 42
+  s_d34d9c8ded6c5c::t_ed9ed7f58465f6 916,919-922
+  s_d34d9c8ded6c5c::t_cfa67674157f61 915,917-918
+CryptoLib/src/Crypto/Hpke/ClpHpkeContext.pas
+  s_d34d9c8ded6c5c::t_dab30bcdf75bed 47-48
+  s_d34d9c8ded6c5c::t_c2586a001c1c97 111,123
+  s_d34d9c8ded6c5c::t_7b5847643e7532 24
+  s_d34d9c8ded6c5c::t_b202647f53102c 1-23,25-46,53,58-79,81-99,108-110,112-113,120-122,130-152,155-166
+  s_d34d9c8ded6c5c::t_55ff4f3b19aabf 80
+  s_d34d9c8ded6c5c::t_6c48411bb45b1e 114-119,124-129
+  s_d34d9c8ded6c5c::t_daa75bda6d7798 153-154
+  s_d34d9c8ded6c5c::t_8e3915652e5bd3 100-107
+  s_d34d9c8ded6c5c::t_51c712d689d0c2 49-52,54-57
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_d34d9c8ded6c5c::t_e893af76f983d2 304
+  s_d34d9c8ded6c5c::t_b2b397f819d3ab 305-306
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_d34d9c8ded6c5c::t_ee647c89fa476d 175-185
+CryptoLib.Tests/Data/Crypto/Hpke/hpke.txt
+  s_d34d9c8ded6c5c::t_6c6854670710e5 1-128288
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.0",
+  "base_commit_sha": "4fdabdbcadd29c1f2e8d1d0d50b7c9cc90d164f5",
+  "prompts": {},
+  "sessions": {
+    "s_d34d9c8ded6c5c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1e0611e-27ab-4e1f-b082-04337e28d842",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
