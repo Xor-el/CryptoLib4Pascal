@@ -14,27 +14,39 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIHkdfBytesGenerator;
+unit ClpIHpkeKdf;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDerivationFunction,
   ClpCryptoLibTypes;
 
 type
-  IHkdfBytesGenerator = interface(IDerivationFunction)
-    ['{79B29B35-33BB-4056-9101-828C88D1ADB0}']
+  /// <summary>
+  /// RFC 9180 sec. 4 labeled KDF (LabeledExtract / LabeledExpand) over HKDF.
+  /// </summary>
+  IHpkeKdf = interface(IInterface)
+    ['{4C7B1E90-3B4A-4E52-9E1C-7F2D6A9B0C11}']
 
-    /// <summary>
-    /// Performs the extract (RFC 5869 sec. 2.2) step and returns the PRK bytes.
-    /// A nil salt defaults to HashLen zero octets.
-    /// </summary>
-    function ExtractPRK(const ASalt, AIkm: TCryptoLibByteArray)
+    function GetHashSize(): Int32;
+
+    function LabeledExtract(const ASalt, ASuiteId: TCryptoLibByteArray;
+      const ALabel: String; const AIkm: TCryptoLibByteArray)
       : TCryptoLibByteArray;
 
+    function LabeledExpand(const APrk, ASuiteId: TCryptoLibByteArray;
+      const ALabel: String; const AInfo: TCryptoLibByteArray; AL: Int32)
+      : TCryptoLibByteArray;
+
+    function Extract(const ASalt, AIkm: TCryptoLibByteArray)
+      : TCryptoLibByteArray;
+
+    function Expand(const APrk, AInfo: TCryptoLibByteArray; AL: Int32)
+      : TCryptoLibByteArray;
+
+    property HashSize: Int32 read GetHashSize;
   end;
 
 implementation

@@ -14,27 +14,51 @@
 
 (* &&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&& *)
 
-unit ClpIHkdfBytesGenerator;
+unit ClpIHpkeContext;
 
 {$I ..\..\..\Include\CryptoLib.inc}
 
 interface
 
 uses
-  ClpIDerivationFunction,
   ClpCryptoLibTypes;
 
 type
-  IHkdfBytesGenerator = interface(IDerivationFunction)
-    ['{79B29B35-33BB-4056-9101-828C88D1ADB0}']
+  /// <summary>
+  /// A stateful HPKE encryption / decryption context (RFC 9180 sec. 5.1),
+  /// produced by one of the HPKE setup factories.
+  /// </summary>
+  IHpkeContext = interface(IInterface)
+    ['{9D3A6E11-8C42-4B57-B1F0-2A7C5E8D9012}']
 
-    /// <summary>
-    /// Performs the extract (RFC 5869 sec. 2.2) step and returns the PRK bytes.
-    /// A nil salt defaults to HashLen zero octets.
-    /// </summary>
-    function ExtractPRK(const ASalt, AIkm: TCryptoLibByteArray)
+    function Seal(const AAad, APt: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload;
+    function Seal(const AAad, APt: TCryptoLibByteArray; APtOff, APtLen: Int32)
+      : TCryptoLibByteArray; overload;
+
+    function Open(const AAad, ACt: TCryptoLibByteArray)
+      : TCryptoLibByteArray; overload;
+    function Open(const AAad, ACt: TCryptoLibByteArray; ACtOff, ACtLen: Int32)
+      : TCryptoLibByteArray; overload;
+
+    function Export(const AExporterContext: TCryptoLibByteArray; AL: Int32)
       : TCryptoLibByteArray;
 
+    function Extract(const ASalt, AIkm: TCryptoLibByteArray)
+      : TCryptoLibByteArray;
+
+    function Expand(const APrk, AInfo: TCryptoLibByteArray; AL: Int32)
+      : TCryptoLibByteArray;
+  end;
+
+  /// <summary>
+  /// Sender-side context that also carries the KEM encapsulation to transmit
+  /// to the recipient.
+  /// </summary>
+  IHpkeContextWithEncapsulation = interface(IHpkeContext)
+    ['{5B8F2C70-1E93-4A48-9D62-3F7A0B1C4D33}']
+
+    function GetEncapsulation(): TCryptoLibByteArray;
   end;
 
 implementation

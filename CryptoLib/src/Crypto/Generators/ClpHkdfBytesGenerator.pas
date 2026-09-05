@@ -101,6 +101,22 @@ type
     function GenerateBytes(const AOutput: TCryptoLibByteArray;
       AOutOff, ALen: Int32): Int32; virtual;
 
+    /// <summary>
+    /// Performs the extract part of the key derivation function, returning the
+    /// raw PRK bytes (used by callers such as HPKE's LabeledExtract).
+    /// </summary>
+    /// <param name="ASalt">
+    /// the salt to use, nil defaults to HashLen zero octets
+    /// </param>
+    /// <param name="AIkm">
+    /// the input keying material
+    /// </param>
+    /// <returns>
+    /// the PRK
+    /// </returns>
+    function ExtractPRK(const ASalt, AIkm: TCryptoLibByteArray)
+      : TCryptoLibByteArray; virtual;
+
     property Digest: IDigest read GetDigest;
 
   end;
@@ -136,8 +152,14 @@ begin
 end;
 
 function THkdfBytesGenerator.Extract(const ASalt, AIkm: TCryptoLibByteArray): IKeyParameter;
+begin
+  Result := TKeyParameter.Create(ExtractPRK(ASalt, AIkm));
+end;
+
+function THkdfBytesGenerator.ExtractPRK(const ASalt, AIkm: TCryptoLibByteArray)
+  : TCryptoLibByteArray;
 var
-  LTemp, LPrk: TCryptoLibByteArray;
+  LTemp: TCryptoLibByteArray;
 begin
   // RFC 5869 sec. 2.2: when no salt is provided it defaults to HashLen zero octets,
   // where HashLen is the hash output length. FHashLen is exactly that length
@@ -154,9 +176,8 @@ begin
 
   FHMacHash.BlockUpdate(AIkm, 0, System.Length(AIkm));
 
-  System.SetLength(LPrk, FHashLen);
-  FHMacHash.DoFinal(LPrk, 0);
-  Result := TKeyParameter.Create(LPrk);
+  System.SetLength(Result, FHashLen);
+  FHMacHash.DoFinal(Result, 0);
 end;
 
 function THkdfBytesGenerator.GenerateBytes(const AOutput: TCryptoLibByteArray;

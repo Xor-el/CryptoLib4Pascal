@@ -46,6 +46,7 @@ uses
   AeadModeTestBase, AeadTestUtilities, AeadEmptyInputTests, GcmReorderTests, GCMTests, GcmSivTests, GMacTests,
   Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
   MlKemTests, MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests,
+  HpkeTests,
   Lib25519Tests, Asn1CipherBuilderWithKeyTests, AesBitSlicedTests,
   CryptoLibTestBase, PkixFoundationTests, PkixNameConstraintTests,
   PkixComparerTests, CertPathTests, CertPathBuilderTests, CertPathValidatorTests,
@@ -61,7 +62,7 @@ uses
   AsymmetricTestVectors, SymmetricBlockVectors, ChaChaPoly1305Vectors,
   OpenSslVectors, PkcsVectors, CertVectors, PkitsVectors, PqcSampleCredentials,
   CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
-  Argon2Vectors, PqcTestVectors, DrbgTestVectors, Int32Tests, Int64Tests,
+  Argon2Vectors, PqcTestVectors, HpkeVectors, DrbgTestVectors, Int32Tests, Int64Tests,
   ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests,
   ECDHPrimeConstantTimeTests, ECDHBinaryConstantTimeTests;
 

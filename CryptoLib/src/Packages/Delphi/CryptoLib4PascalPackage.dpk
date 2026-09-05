@@ -959,6 +959,17 @@ contains
   ClpSP800SecureRandomBuilder in '..\..\Crypto\Randoms\ClpSP800SecureRandomBuilder.pas',
   ClpFormatSettingsHelper in '..\..\Helpers\ClpFormatSettingsHelper.pas',
   ClpDateTimeHelper in '..\..\Helpers\ClpDateTimeHelper.pas',
-  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas';
+  ClpValueHelper in '..\..\Helpers\ClpValueHelper.pas',
+  ClpHpkeTypes in '..\..\Crypto\Hpke\ClpHpkeTypes.pas',
+  ClpHpkeKdf in '..\..\Crypto\Hpke\ClpHpkeKdf.pas',
+  ClpHpkeAead in '..\..\Crypto\Hpke\ClpHpkeAead.pas',
+  ClpHpkeContext in '..\..\Crypto\Hpke\ClpHpkeContext.pas',
+  ClpDhKem in '..\..\Crypto\Hpke\ClpDhKem.pas',
+  ClpHpke in '..\..\Crypto\Hpke\ClpHpke.pas',
+  ClpIHpkeKdf in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeKdf.pas',
+  ClpIHpkeAead in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeAead.pas',
+  ClpIHpkeContext in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeContext.pas',
+  ClpIHpkeKem in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeKem.pas',
+  ClpIHpke in '..\..\Interfaces\Crypto\Hpke\ClpIHpke.pas';
 
 end.
