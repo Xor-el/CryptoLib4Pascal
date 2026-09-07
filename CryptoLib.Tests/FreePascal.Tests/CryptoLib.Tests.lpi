@@ -79,7 +79,7 @@
         <PackageName Value="FCL"/>
       </Item4>
     </RequiredPackages>
-    <Units Count="220">
+    <Units Count="222">
       <Unit0>
         <Filename Value="CryptoLib.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -961,6 +961,14 @@
         <Filename Value="..\src\Utils\Vectors\HpkeVectors.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit219>
+      <Unit220>
+        <Filename Value="..\src\Crypto\RsaKeyParametersTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit220>
+      <Unit221>
+        <Filename Value="..\src\Pkix\ValidityModelTests.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit221>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
