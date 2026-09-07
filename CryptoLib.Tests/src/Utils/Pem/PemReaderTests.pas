@@ -25,6 +25,7 @@ interface
 uses
   SysUtils,
   Classes,
+  Rtti,
 {$IFDEF FPC}
   fpcunit,
   testregistry,
@@ -37,6 +38,9 @@ uses
   ClpIPemObject,
   ClpIPemReader,
   ClpPemReader,
+  ClpIOpenSslPemReader,
+  ClpOpenSslPemReader,
+  ClpValueHelper,
   ClpIPemWriter,
   ClpPemWriter,
   ClpAsn1Objects,
@@ -44,6 +48,7 @@ uses
   ClpIPkcsAsn1Objects,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
+  ClpIX509Certificate,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase,
@@ -65,6 +70,7 @@ type
     procedure TestMalformed;
     procedure TestMalformedBase64;
     procedure TestHeaderLineBreakRejected;
+    procedure TestExplanatoryTextAroundObjects;
   end;
 
 implementation
@@ -333,6 +339,61 @@ begin
       on E: Exception do
         Fail('Expected EArgumentCryptoLibException, got ' + E.ClassName + ': ' + E.Message);
     end;
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TPemReaderTest.TestExplanatoryTextAroundObjects;
+// RFC 7468 sec. 5.2: tools such as 'openssl pkcs7 -print_certs' surround each object with
+// explanatory text. It must be ignored before the first BEGIN, between objects, and after the
+// final END; dashes inside the text must not be mistaken for a boundary.
+var
+  LTest: String;
+  LStream: TStringStream;
+  LReader: IPemReader;
+  LObj: IPemObject;
+  LCertStruct: IX509CertificateStructure;
+  LOsslReader: IOpenSslPemReader;
+  LValue: TValue;
+  LCert: IX509Certificate;
+  I: Int32;
+begin
+  LTest := TPemReaderVectors.LoadFixtureText('ExplanatoryText');
+
+  // the low-level reader recovers both objects and stops cleanly at the end
+  LStream := TStringStream.Create(LTest, TEncoding.ASCII);
+  try
+    LReader := TPemReader.Create(LStream);
+    for I := 0 to 1 do
+    begin
+      LObj := LReader.ReadPemObject();
+      CheckNotNull(LObj, Format('object %d should be read', [I]));
+      CheckEquals('CERTIFICATE', LObj.&Type, 'PEM type should be CERTIFICATE');
+      CheckEquals(0, System.Length(LObj.Headers), 'the object should carry no headers');
+
+      LCertStruct := TX509CertificateStructure.GetInstance(
+        TAsn1Sequence.GetInstance(LObj.Content));
+      CheckEquals('CN=estExampleCA', LCertStruct.Issuer.ToString(), 'issuer should match');
+    end;
+    CheckTrue(LReader.ReadPemObject() = nil, 'there should be no third object');
+  finally
+    LStream.Free;
+  end;
+
+  // the same input via the OpenSSL-level reader, as used in the original report
+  LStream := TStringStream.Create(LTest, TEncoding.ASCII);
+  try
+    LOsslReader := TOpenSslPemReader.Create(LStream);
+    for I := 0 to 1 do
+    begin
+      LValue := LOsslReader.ReadObject();
+      CheckFalse(LValue.IsEmpty, Format('object %d should be read', [I]));
+      CheckTrue(LValue.TryGetAsType<IX509Certificate>(LCert),
+        Format('object %d should be a certificate', [I]));
+      CheckEquals('CN=*.cisco.com', LCert.SubjectDN.ToString(), 'subject should match');
+    end;
+    CheckTrue(LOsslReader.ReadObject().IsEmpty, 'there should be no third object');
   finally
     LStream.Free;
   end;

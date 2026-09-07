@@ -1398,6 +1398,7 @@
         <DCCReference Include="..\src\Asn1\X9Tests.pas"/>
         <DCCReference Include="..\src\Utils\Net\IPAddressUtilitiesTests.pas"/>
         <DCCReference Include="..\src\Utils\Pem\PemReaderTests.pas"/>
+        <DCCReference Include="..\src\Crypto\RsaKeyParametersTests.pas"/>
         <DCCReference Include="..\src\Crypto\X931SignerTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\CertificateTests.pas"/>
         <DCCReference Include="..\src\Asn1\X509\AuthorityKeyIdentifierTests.pas"/>
@@ -1469,6 +1470,7 @@
         <DCCReference Include="..\src\Pkix\CertPathTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathBuilderTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathValidatorTests.pas"/>
+        <DCCReference Include="..\src\Pkix\ValidityModelTests.pas"/>
         <DCCReference Include="..\src\Pkix\PkixPolicyMappingTests.pas"/>
         <DCCReference Include="..\src\Ocsp\OcspTests.pas"/>
         <DCCReference Include="..\src\Pkix\AttrCertPathTests.pas"/>

@@ -3,3 +3,4 @@ MalformedInput,Pem/Reader/MalformedCertificateRequest.pem,TestMalformedInput
 SaneInput,Pem/Reader/SaneInput.txt,TestSaneInput
 WithHeaders,Pem/Reader/WithHeaders.pem,TestWithHeaders
 NoWhiteSpace,Pem/Reader/NoWhiteSpace.pem,TestNoWhiteSpace
+ExplanatoryText,Pem/Reader/ExplanatoryText.txt,TestExplanatoryTextAroundObjects

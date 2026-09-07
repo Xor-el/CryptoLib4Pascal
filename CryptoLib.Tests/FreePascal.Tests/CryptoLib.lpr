@@ -49,7 +49,7 @@ uses
   Asn1CipherBuilderWithKeyTests, AesBitSlicedTests, ECDHPrimeConstantTimeTests,
   ECDHBinaryConstantTimeTests, CryptoLibTestBase, PkixFoundationTests,
   PkixNameConstraintTests, PkixComparerTests, CertPathTests, CertPathBuilderTests,
-  CertPathValidatorTests, PkixPolicyMappingTests, OcspTests,
+  CertPathValidatorTests, ValidityModelTests, PkixPolicyMappingTests, OcspTests,
   CryptoLibHashSetTests, PkitsTestBase, NistCertPathTests, AttrCertPathTests,
   CtrDrbgTests, DrbgTestSupport, HashDrbgTests, HMacDrbgTests,
   SimdSelectSlotTests, BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests,
@@ -63,7 +63,7 @@ uses
   ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
   CertVectors, PkitsVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec,
   PqcTestVectors, HpkeVectors, DrbgTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
-  IPAddressUtilitiesTests, PemReaderTests;
+  IPAddressUtilitiesTests, PemReaderTests, RsaKeyParametersTests;
 
 {$R *.res}
 
