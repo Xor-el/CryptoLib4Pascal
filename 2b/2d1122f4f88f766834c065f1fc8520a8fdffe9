@@ -1,0 +1,63 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_0f1a2e9196b415::t_4438c8fbe63fd1 82
+  s_0f1a2e9196b415::t_c95ada15531c4e 964-971
+CryptoLib.Tests/Data/Pem/Reader/Manifest.csv
+  s_0f1a2e9196b415::t_d187cecd26813f 6
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_0f1a2e9196b415::t_592b9871348c00 42
+  s_0f1a2e9196b415::t_226afc45a6689b 923-930
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_0f1a2e9196b415::t_406c97c5f610ba 52
+  s_0f1a2e9196b415::t_21c1fac5ba1ca7 66
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_0f1a2e9196b415::t_f765b819bdf066 1064
+  s_0f1a2e9196b415::t_99a6348c80a91e 1137
+CryptoLib.Tests/src/Pkix/ValidityModelTests.pas
+  s_0f1a2e9196b415::t_17fdd0c09f841a 130
+  s_0f1a2e9196b415::t_c6637ea265d231 1-43,45-129,131-279
+  s_0f1a2e9196b415::t_6dd21a9ba4337d 44
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_0f1a2e9196b415::t_14ec338c526938 1401
+  s_0f1a2e9196b415::t_f6ceae1cf9c7a8 1473
+CryptoLib.Tests/Data/Pem/Reader/ExplanatoryText.txt
+  s_0f1a2e9196b415::t_5a89087733bfd6 1-26
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_0f1a2e9196b415::t_0dbf1c6df281c8 1085
+  s_0f1a2e9196b415::t_275c03b56a4b31 1158
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_0f1a2e9196b415::t_1a1ecedd7e00c0 52
+  s_0f1a2e9196b415::t_3ce6722efa7a00 66
+CryptoLib.Tests/src/Utils/Pem/PemReaderTests.pas
+  s_0f1a2e9196b415::t_a4e6335830a4ac 43
+  s_0f1a2e9196b415::t_50bd0891e176b1 73
+  s_0f1a2e9196b415::t_bad205627e56dc 392-393
+  s_0f1a2e9196b415::t_d5d13223db7612 28,41-42,51
+  s_0f1a2e9196b415::t_12bba67c3ce808 348-350,362
+  s_0f1a2e9196b415::t_55a49c3d5b13a5 347,351-361,363-391,394-401
+CryptoLib.Tests/src/Crypto/RsaKeyParametersTests.pas
+  s_7bd8ec15a54c61::t_21c0f16ea7b30b 1-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.2",
+  "base_commit_sha": "2b2d1122f4f88f766834c065f1fc8520a8fdffe9",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_7bd8ec15a54c61": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "4bd463ab-aa80-4170-a1c8-02f51f2811b5",
+        "model": "claude-sonnet-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
