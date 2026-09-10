@@ -1447,6 +1447,7 @@
         <DCCReference Include="..\src\Crypto\Lib25519Tests.pas"/>
         <DCCReference Include="..\src\Crypto\MlDsaTests.pas"/>
         <DCCReference Include="..\src\Crypto\SlhDsaTests.pas"/>
+        <DCCReference Include="..\src\Crypto\PrivateKeyWipeTests.pas"/>
         <DCCReference Include="..\src\Utils\PqcTestSampler.pas"/>
         <DCCReference Include="..\src\Crypto\PqcPkcsTests.pas"/>
         <DCCReference Include="..\src\Utils\NumberUtilities\Int32Tests.pas"/>

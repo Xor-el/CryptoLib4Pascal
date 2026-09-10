@@ -45,7 +45,7 @@ uses
   OcbTests, MacTests, Poly1305Tests,
   AeadModeTestBase, AeadTestUtilities, AeadEmptyInputTests, GcmReorderTests, GCMTests, GcmSivTests, GMacTests,
   Pkcs12Tests, Bip327MuSig2Tests, Bip340SchnorrTests, AlgorithmFinderTests,
-  MlKemTests, MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests,
+  MlKemTests, MlDsaTests, SlhDsaTests, PqcTestSampler, PqcPkcsTests, PrivateKeyWipeTests,
   HpkeTests,
   Lib25519Tests, Asn1CipherBuilderWithKeyTests, AesBitSlicedTests,
   CryptoLibTestBase, PkixFoundationTests, PkixNameConstraintTests,

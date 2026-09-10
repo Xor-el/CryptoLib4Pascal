@@ -1131,6 +1131,7 @@ uses
   Lib25519Tests in '..\src\Crypto\Lib25519Tests.pas',
   MlDsaTests in '..\src\Crypto\MlDsaTests.pas',
   SlhDsaTests in '..\src\Crypto\SlhDsaTests.pas',
+  PrivateKeyWipeTests in '..\src\Crypto\PrivateKeyWipeTests.pas',
   PqcTestSampler in '..\src\Utils\PqcTestSampler.pas',
   PqcPkcsTests in '..\src\Crypto\PqcPkcsTests.pas',
   Int32Tests in '..\src\Utils\NumberUtilities\Int32Tests.pas',

@@ -125,6 +125,7 @@ type
     /// If the stream ends before <see cref="KeySize"/> bytes have been read.
     /// </exception>
     constructor Create(AInput: TStream); overload;
+    destructor Destroy; override;
 
     /// <summary>
     /// Write the 56-byte scalar into <paramref name="ABuf"/> at <paramref name="AOff"/>.
@@ -299,6 +300,13 @@ begin
   begin
     raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPrivateKey);
   end;
+end;
+
+destructor TX448PrivateKeyParameters.Destroy;
+begin
+  // wipe the secret scalar held for the key's lifetime
+  TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
+  inherited Destroy;
 end;
 
 procedure TX448PrivateKeyParameters.Encode(const ABuf: TCryptoLibByteArray;

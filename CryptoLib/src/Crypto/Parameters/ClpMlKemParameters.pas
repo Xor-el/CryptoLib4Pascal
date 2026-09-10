@@ -34,6 +34,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -158,6 +159,7 @@ type
       const ASeed: TCryptoLibByteArray; APreferredFormat: TMlKemPrivateKeyFormat): IMlKemPrivateKeyParameters; overload; static;
     constructor Create(const AParameters: IMlKemParameters; const ASeed, AEncoding: TCryptoLibByteArray;
       APreferredFormat: TMlKemPrivateKeyFormat);
+    destructor Destroy; override;
     function GetEncoded(): TCryptoLibByteArray;
     function GetSeed(): TCryptoLibByteArray;
     function GetPublicKey(): IMlKemPublicKeyParameters;
@@ -463,9 +465,18 @@ constructor TMlKemPrivateKeyParameters.Create(const AParameters: IMlKemParameter
   const ASeed, AEncoding: TCryptoLibByteArray; APreferredFormat: TMlKemPrivateKeyFormat);
 begin
   inherited Create(True, AParameters);
-  FSeed := ASeed;
-  FEncoding := AEncoding;
+  // own private copies of the secret material so the destructor can wipe them safely
+  FSeed := System.Copy(ASeed);
+  FEncoding := System.Copy(AEncoding);
   FPreferredFormat := APreferredFormat;
+end;
+
+destructor TMlKemPrivateKeyParameters.Destroy;
+begin
+  // wipe the secret key material held for the key's lifetime
+  TArrayUtilities.Fill(FSeed, 0, System.Length(FSeed), Byte(0));
+  TArrayUtilities.Fill(FEncoding, 0, System.Length(FEncoding), Byte(0));
+  inherited Destroy;
 end;
 
 function TMlKemPrivateKeyParameters.GetEncoded: TCryptoLibByteArray;
