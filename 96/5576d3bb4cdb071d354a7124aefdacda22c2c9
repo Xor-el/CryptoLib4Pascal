@@ -1,0 +1,19 @@
+CryptoLib.Tests/src/Ocsp/OcspTests.pas
+  s_0f1a2e9196b415::t_85573ecb32e733 173-179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "965576d3bb4cdb071d354a7124aefdacda22c2c9",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
