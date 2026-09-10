@@ -1,0 +1,63 @@
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_0f1a2e9196b415::t_f945ae60512e47 1450
+CryptoLib/src/Crypto/Parameters/ClpBip340SchnorrParameters.pas
+  s_0f1a2e9196b415::t_8332cd917a85a5 82
+  s_0f1a2e9196b415::t_e904ab5d15ac19 243-249
+CryptoLib/src/Crypto/Parameters/ClpSlhDsaParameters.pas
+  s_0f1a2e9196b415::t_d302a7577d99cf 187,641-642
+  s_0f1a2e9196b415::t_2bf43e74f2c092 629-631,635-640
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_0f1a2e9196b415::t_bf3085bba4b558 42
+  s_0f1a2e9196b415::t_a44979a216f681 931-934
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_0f1a2e9196b415::t_c978ca42ede2dd 48
+CryptoLib/src/Crypto/Parameters/ClpEd25519Parameters.pas
+  s_0f1a2e9196b415::t_8c80d5dc38d46c 161
+  s_0f1a2e9196b415::t_9461f8b659c3a6 398-404
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_0f1a2e9196b415::t_7bfd9b28a0795a 48
+CryptoLib/src/Crypto/Parameters/ClpEd448Parameters.pas
+  s_0f1a2e9196b415::t_31b476536d0471 350-356
+  s_0f1a2e9196b415::t_01e4a3d2819493 155
+CryptoLib/src/Crypto/Parameters/ClpMlKemParameters.pas
+  s_0f1a2e9196b415::t_6af5efc459826a 468-470,474-479
+  s_0f1a2e9196b415::t_51b15338af003e 162
+  s_0f1a2e9196b415::t_fe8d79e3f66a9a 37,480-481
+CryptoLib/src/Crypto/Parameters/ClpX448Parameters.pas
+  s_0f1a2e9196b415::t_3434ac355f7358 305-311
+  s_0f1a2e9196b415::t_60fc11791f714b 128
+CryptoLib/src/Crypto/Parameters/ClpX25519Parameters.pas
+  s_0f1a2e9196b415::t_696479be197920 305-311
+  s_0f1a2e9196b415::t_1bf60c6b5b988f 128
+CryptoLib/src/Crypto/Parameters/ClpMlDsaParameters.pas
+  s_0f1a2e9196b415::t_d26f4ccc6407dc 542-543,545-549,551,555-564
+  s_0f1a2e9196b415::t_f22f9d198d6614 36,565-566
+  s_0f1a2e9196b415::t_de5cce3a94d4a1 159
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_0f1a2e9196b415::t_e5a598956f1d47 1134
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_0f1a2e9196b415::t_7b71dafe545892 1113
+CryptoLib.Tests/src/Crypto/PrivateKeyWipeTests.pas
+  s_0f1a2e9196b415::t_fe2c25b1596e35 60-65
+  s_0f1a2e9196b415::t_0f095b5a94c9a6 93,105-108,111,124-130,132-139,141-146
+  s_0f1a2e9196b415::t_f46cce803d9f8e 1-59,66-92,94-104,109-110,112-123,131,140,147-160
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_0f1a2e9196b415::t_55ec9822aa47ab 82
+  s_0f1a2e9196b415::t_0c979c219f9c82 972-975
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "de2ffdcbca62d5b4c17795f440b50774ac1714fd",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
