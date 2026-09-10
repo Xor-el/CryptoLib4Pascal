@@ -79,6 +79,7 @@ type
     constructor Create(const ARandom: ISecureRandom); overload;
     constructor Create(const ABuf: TCryptoLibByteArray); overload;
     constructor Create(const ABuf: TCryptoLibByteArray; AOff: Int32); overload;
+    destructor Destroy; override;
 
     procedure Encode(const ABuf: TCryptoLibByteArray; AOff: Int32); inline;
     function GetEncoded(): TCryptoLibByteArray; inline;
@@ -237,6 +238,13 @@ begin
   LD := TBigInteger.Create(1, FData).&Mod(LDomain.N);
   if (LD.SignValue = 0) or (LD.CompareTo(LDomain.N) >= 0) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidPrivateKey);
+end;
+
+destructor TBip340SchnorrPrivateKeyParameters.Destroy;
+begin
+  // wipe the secret scalar held for the key's lifetime
+  TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
+  inherited Destroy;
 end;
 
 procedure TBip340SchnorrPrivateKeyParameters.Encode(const ABuf: TCryptoLibByteArray;

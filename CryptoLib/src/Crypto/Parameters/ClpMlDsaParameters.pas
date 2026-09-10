@@ -33,6 +33,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
+  ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -155,6 +156,7 @@ type
       const ASeed: TCryptoLibByteArray; APreferredFormat: TMlDsaPrivateKeyFormat): IMlDsaPrivateKeyParameters; overload; static;
     constructor Create(const AParameters: IMlDsaParameters; const ARho, AK, ATr, AS1, AS2, AT0, AT1,
       ASeed: TCryptoLibByteArray; APreferredFormat: TMlDsaPrivateKeyFormat);
+    destructor Destroy; override;
     function GetEncoded(): TCryptoLibByteArray;
     function GetSeed(): TCryptoLibByteArray;
     function GetPublicKey(): IMlDsaPublicKeyParameters;
@@ -537,15 +539,29 @@ constructor TMlDsaPrivateKeyParameters.Create(const AParameters: IMlDsaParameter
   APreferredFormat: TMlDsaPrivateKeyFormat);
 begin
   inherited Create(True, AParameters);
+  // FRho and FT1 are public (they form the public key); the rest is secret, so keep private
+  // copies of it the destructor can wipe without touching an aliased public value
   FRho := ARho;
-  FK := AK;
-  FTr := ATr;
-  FS1 := AS1;
-  FS2 := AS2;
-  FT0 := AT0;
+  FK := System.Copy(AK);
+  FTr := System.Copy(ATr);
+  FS1 := System.Copy(AS1);
+  FS2 := System.Copy(AS2);
+  FT0 := System.Copy(AT0);
   FT1 := AT1;
-  FSeed := ASeed;
+  FSeed := System.Copy(ASeed);
   FPreferredFormat := APreferredFormat;
+end;
+
+destructor TMlDsaPrivateKeyParameters.Destroy;
+begin
+  // wipe the secret key material held for the key's lifetime (public FRho/FT1 are left intact)
+  TArrayUtilities.Fill(FK, 0, System.Length(FK), Byte(0));
+  TArrayUtilities.Fill(FTr, 0, System.Length(FTr), Byte(0));
+  TArrayUtilities.Fill(FS1, 0, System.Length(FS1), Byte(0));
+  TArrayUtilities.Fill(FS2, 0, System.Length(FS2), Byte(0));
+  TArrayUtilities.Fill(FT0, 0, System.Length(FT0), Byte(0));
+  TArrayUtilities.Fill(FSeed, 0, System.Length(FSeed), Byte(0));
+  inherited Destroy;
 end;
 
 function TMlDsaPrivateKeyParameters.GetEncoded: TCryptoLibByteArray;

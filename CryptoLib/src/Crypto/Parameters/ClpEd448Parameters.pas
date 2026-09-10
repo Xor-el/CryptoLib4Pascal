@@ -152,6 +152,7 @@ type
     /// If the stream ends before <see cref="KeySize"/> bytes have been read.
     /// </exception>
     constructor Create(AInput: TStream); overload;
+    destructor Destroy; override;
 
     /// <summary>
     /// Write the 57-byte seed into <paramref name="ABuf"/> at <paramref name="AOff"/>.
@@ -344,6 +345,13 @@ begin
   System.SetLength(FData, KeySize);
   if (KeySize <> TStreamUtilities.ReadFully(AInput, FData)) then
     raise EEndOfStreamCryptoLibException.CreateRes(@SEOFInPrivateKey);
+end;
+
+destructor TEd448PrivateKeyParameters.Destroy;
+begin
+  // wipe the secret seed held for the key's lifetime
+  TArrayUtilities.Fill(FData, 0, System.Length(FData), Byte(0));
+  inherited Destroy;
 end;
 
 procedure TEd448PrivateKeyParameters.Encode(const ABuf: TCryptoLibByteArray;

@@ -184,6 +184,7 @@ type
     class function FromEncoding(const AParameters: ISlhDsaParameters;
       const AEncoding: TCryptoLibByteArray): ISlhDsaPrivateKeyParameters; static;
     constructor Create(const AParameters: ISlhDsaParameters; const ASk: TSlhDsaSK; const APk: TSlhDsaPK);
+    destructor Destroy; override;
     function GetEncoded: TCryptoLibByteArray;
     function GetPublicKey: ISlhDsaPublicKeyParameters;
     function GetPublicKeyEncoded: TCryptoLibByteArray;
@@ -625,8 +626,18 @@ constructor TSlhDsaPrivateKeyParameters.Create(const AParameters: ISlhDsaParamet
   const ASk: TSlhDsaSK; const APk: TSlhDsaPK);
 begin
   inherited Create(True, AParameters);
-  FSk := ASk;
+  // own private copies of the secret SK material so the destructor can wipe it; PK is public
+  FSk.Seed := System.Copy(ASk.Seed);
+  FSk.Prf := System.Copy(ASk.Prf);
   FPk := APk;
+end;
+
+destructor TSlhDsaPrivateKeyParameters.Destroy;
+begin
+  // wipe the secret SK.seed/SK.prf held for the key's lifetime (public PK is left intact)
+  TArrayUtilities.Fill(FSk.Seed, 0, System.Length(FSk.Seed), Byte(0));
+  TArrayUtilities.Fill(FSk.Prf, 0, System.Length(FSk.Prf), Byte(0));
+  inherited Destroy;
 end;
 
 function TSlhDsaPrivateKeyParameters.GetEncoded: TCryptoLibByteArray;
