@@ -170,6 +170,13 @@ begin
   FRandom := TSecureRandom.Create();
   FKeyPair := TCertTestUtilities.GenerateRsaKeyPair(1024);
   FSignerCert := TCertTestUtilities.GenerateRootCert(FKeyPair);
+  FRootCert := nil;
+  FInterCert := nil;
+  FEndCert := nil;
+  FRootKeyPair := nil;
+  FInterKeyPair := nil;
+  FEndKeyPair := nil;
+  FChainUtcNow := 0;
 end;
 
 function TOcspTest.SignerChain: TCryptoLibGenericArray<IX509Certificate>;
