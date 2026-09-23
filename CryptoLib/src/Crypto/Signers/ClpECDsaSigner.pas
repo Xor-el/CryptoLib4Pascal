@@ -160,8 +160,16 @@ begin
 end;
 
 function TECDsaSigner.CreateBasePointMultiplier: IECMultiplier;
+var
+  LFactory: IECCTMultiplierFactory;
 begin
-  Result := FKey.Parameters.Curve.GetBasePointMultiplier;
+  // constant-time curves route the fixed-base blind through the injected RNG;
+  // deterministic signing has no injected RNG, so it keeps the curve's shared
+  // multiplier rather than building a fresh DRBG-backed comb per signature
+  if (FRandom <> nil) and Supports(FKey.Parameters.Curve, IECCTMultiplierFactory, LFactory) then
+    Result := LFactory.CreateBasePointCTMultiplier(FRandom)
+  else
+    Result := FKey.Parameters.Curve.GetBasePointMultiplier;
 end;
 
 class constructor TECDsaSigner.ECDsaSigner;

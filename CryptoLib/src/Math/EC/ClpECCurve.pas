@@ -532,16 +532,26 @@ end;
 
 function TECCurve.GetMultiplier: IECMultiplier;
 begin
-  if FMultiplier = nil then
-    FMultiplier := CreateDefaultMultiplier();
-  Result := FMultiplier;
+  FLock.Enter;
+  try
+    if FMultiplier = nil then
+      FMultiplier := CreateDefaultMultiplier();
+    Result := FMultiplier;
+  finally
+    FLock.Leave;
+  end;
 end;
 
 function TECCurve.GetBasePointMultiplier: IECMultiplier;
 begin
-  if FBasePointMultiplier = nil then
-    FBasePointMultiplier := CreateBasePointMultiplier();
-  Result := FBasePointMultiplier;
+  FLock.Enter;
+  try
+    if FBasePointMultiplier = nil then
+      FBasePointMultiplier := CreateBasePointMultiplier();
+    Result := FBasePointMultiplier;
+  finally
+    FLock.Leave;
+  end;
 end;
 
 function TECCurve.CreatePoint(const AX, AY: TBigInteger): IECPoint;

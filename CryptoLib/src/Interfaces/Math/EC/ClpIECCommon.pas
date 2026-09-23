@@ -252,7 +252,11 @@ type
   IECCTMultiplierFactory = interface(IInterface)
     ['{C7A3F1E2-9B4D-4A6C-8E2F-1D5B7A9C3E4F}']
 
-    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier; overload;
+    // overloads whose blind randomness comes from the supplied RNG (caller-owned)
+    // rather than a lazily-created one; the base-point variant is the fixed-base [k]G comb
+    function CreateCTMultiplier(const ARandom: ISecureRandom; ABlindBits: Int32): IECMultiplier; overload;
+    function CreateBasePointCTMultiplier(const ARandom: ISecureRandom): IECMultiplier;
   end;
 
 implementation

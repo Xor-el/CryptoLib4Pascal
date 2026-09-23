@@ -26,6 +26,7 @@ uses
   ClpICipherParameters,
   ClpIECParameters,
   ClpIECCommon,
+  ClpISecureRandom,
   ClpIEphemeralECDHAgreement,
   ClpECDHBasicAgreement,
   ClpECCurveConstants,
@@ -35,6 +36,7 @@ resourcestring
   SEphemeralAgreementReused =
     'ephemeral ECDH agreement is single-use and has already produced a secret';
   SWrongPublicKey = 'ephemeral ECDH public key has wrong domain parameters';
+  SRandomNil = 'the injected-RNG ephemeral ECDH overload requires a non-nil random';
 
 type
   /// <summary>Single-use ECDH agreement for a freshly generated ephemeral private
@@ -50,7 +52,12 @@ type
     /// (default: minimal, single-use). Curves that do not implement the CT
     /// multiplier factory fall back to their fully-blinded default multiplier.</summary>
     constructor Create(const APrivateKey: IECPrivateKeyParameters;
-      ABlindBits: Int32 = TECCurveConstants.SCALAR_BLIND_MINIMAL);
+      ABlindBits: Int32 = TECCurveConstants.SCALAR_BLIND_MINIMAL); overload;
+    /// <summary>As above, but the multiplier draws its blind randomness from
+    /// the supplied RNG rather than lazily creating its own.</summary>
+    constructor Create(const APrivateKey: IECPrivateKeyParameters;
+      const ARandom: ISecureRandom;
+      ABlindBits: Int32 = TECCurveConstants.SCALAR_BLIND_MINIMAL); overload;
     function CalculateAgreement(const APubKey: ICipherParameters): TBigInteger;
   end;
 
@@ -70,6 +77,21 @@ begin
   // so the degraded posture is opt-in per curve and never a failure path.
   if Supports(APrivateKey.Parameters.Curve, IECCTMultiplierFactory, LFactory) then
     FMultiplier := LFactory.CreateCTMultiplier(ABlindBits)
+  else
+    FMultiplier := APrivateKey.Parameters.Curve.Multiplier;
+end;
+
+constructor TEphemeralECDHAgreement.Create(const APrivateKey: IECPrivateKeyParameters;
+  const ARandom: ISecureRandom; ABlindBits: Int32);
+var
+  LFactory: IECCTMultiplierFactory;
+begin
+  Inherited Create;
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
+  FPrivKey := APrivateKey;
+  if Supports(APrivateKey.Parameters.Curve, IECCTMultiplierFactory, LFactory) then
+    FMultiplier := LFactory.CreateCTMultiplier(ARandom, ABlindBits)
   else
     FMultiplier := APrivateKey.Parameters.Curve.Multiplier;
 end;

@@ -80,8 +80,14 @@ begin
 end;
 
 function TECKeyPairGenerator.CreateBasePointMultiplier: IECMultiplier;
+var
+  LFactory: IECCTMultiplierFactory;
 begin
-  Result := FParameters.Curve.GetBasePointMultiplier;
+  // constant-time curves route the fixed-base blind through the injected RNG
+  if Supports(FParameters.Curve, IECCTMultiplierFactory, LFactory) then
+    Result := LFactory.CreateBasePointCTMultiplier(FRandom)
+  else
+    Result := FParameters.Curve.GetBasePointMultiplier;
 end;
 
 class function TECKeyPairGenerator.FindECCurveByOid(const AOid: IDerObjectIdentifier): IX9ECParameters;

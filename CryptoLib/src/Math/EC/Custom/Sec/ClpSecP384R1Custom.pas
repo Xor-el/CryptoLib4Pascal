@@ -208,7 +208,9 @@ type
     function SupportsCoordinateSystem(ACoord: Int32): Boolean; override;
     function CreateDefaultMultiplier: IECMultiplier; override;
     function CreateBasePointMultiplier: IECMultiplier; override;
-    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier;
+    function CreateCTMultiplier(ABlindBits: Int32): IECMultiplier; overload;
+    function CreateCTMultiplier(const ARandom: ISecureRandom; ABlindBits: Int32): IECMultiplier; overload;
+    function CreateBasePointCTMultiplier(const ARandom: ISecureRandom): IECMultiplier;
 
     class property Q: TBigInteger read FQ;
     class property SecP384R1AffineZs: TCryptoLibGenericArray<IECFieldElement> read FSecP384R1AffineZs;
@@ -1337,6 +1339,26 @@ begin
   LCurve := Self as IECCurve;
   LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
   Result := TFpAffineCombMultiplier<TSecP384R1FieldArith>.Create(LFieldOps);
+end;
+
+function TSecP384R1Curve.CreateCTMultiplier(const ARandom: ISecureRandom; ABlindBits: Int32): IECMultiplier;
+var
+  LCurve: IECCurve;
+  LFieldOps: IFpFieldOps;
+begin
+  LCurve := Self as IECCurve;
+  LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
+  Result := TFpCTMultiplier<TSecP384R1FieldArith>.Create(LFieldOps, ARandom, ABlindBits);
+end;
+
+function TSecP384R1Curve.CreateBasePointCTMultiplier(const ARandom: ISecureRandom): IECMultiplier;
+var
+  LCurve: IECCurve;
+  LFieldOps: IFpFieldOps;
+begin
+  LCurve := Self as IECCurve;
+  LFieldOps := TSecP384R1FpFieldOps.Create(LCurve.A, LCurve.B, LCurve.Order);
+  Result := TFpAffineCombMultiplier<TSecP384R1FieldArith>.Create(LFieldOps, ARandom);
 end;
 
 { TSecP384R1FpFieldOps }

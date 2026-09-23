@@ -41,6 +41,7 @@ uses
 resourcestring
   SPointNotOnCurve = 'point is not a valid point on the curve for constant-time multiplication';
   SInvalidBlindBits = 'blinding length must be 0 or 32 (ephemeral) or a multiple of 32 between 64 and 512';
+  SRandomNil = 'the injected-RNG constructor requires a non-nil random';
 
 type
   /// <summary>
@@ -107,6 +108,8 @@ constructor TFpCTMultiplier<TOps>.Create(const AFieldOps: IFpFieldOps;
   const ARandom: ISecureRandom; ABlindBits: Int32);
 begin
   Inherited Create;
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SRandomNil);
   if not ValidBlindBits(ABlindBits) then
     raise EArgumentCryptoLibException.CreateRes(@SInvalidBlindBits);
   FFieldOps := AFieldOps;

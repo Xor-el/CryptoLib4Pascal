@@ -93,7 +93,10 @@ type
   strict protected
     function MultiplyPositive(const AP: IECPoint; const AK: TBigInteger): IECPoint; override;
   public
-    constructor Create(const AFieldOps: IFpFieldOps);
+    constructor Create(const AFieldOps: IFpFieldOps); overload;
+    // both blind draws come from ARandom instead of a lazily-created RNG
+    constructor Create(const AFieldOps: IFpFieldOps;
+      const ARandom: ISecureRandom); overload;
   end;
 
   /// <summary>Builds the per-window affine table for a base point on first use
@@ -203,6 +206,15 @@ begin
   // process a blinded, fixed-width scalar k' = k + r*n so the timing is
   // independent of k's magnitude (same posture as the [d]Q path)
   FScalarBits := AFieldOps.GetOrderBits + BLIND_BITS + 1;
+end;
+
+constructor TFpAffineCombMultiplier<TOps>.Create(const AFieldOps: IFpFieldOps;
+  const ARandom: ISecureRandom);
+begin
+  if ARandom = nil then
+    raise EArgumentNilCryptoLibException.Create('the injected-RNG constructor requires a non-nil random');
+  Create(AFieldOps);
+  FRandom := ARandom;
 end;
 
 function TFpAffineCombMultiplier<TOps>.GetRandom: ISecureRandom;

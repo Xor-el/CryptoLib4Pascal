@@ -88,9 +88,47 @@ type
     procedure TestECDHAgreement;
     procedure TestOversizedScalarReducesModOrder;
     procedure TestBlindBitsValidation;
+    procedure TestInjectedRandomFeedsCTMultiplier;
+    procedure TestInjectedRandomFeedsBasePointMultiplier;
+    procedure TestInjectedRandomNilRejected;
   end;
 
 implementation
+
+type
+  ICountingSecureRandom = interface(ISecureRandom)
+    ['{4939C212-B77E-4FF3-ADF7-600736B9B02D}']
+    function Calls: Int32;
+  end;
+
+  TCountingSecureRandom = class(TSecureRandom, ICountingSecureRandom)
+  strict private
+    FCalls: Int32;
+  public
+    function Calls: Int32;
+    procedure NextBytes(const ABuf: TCryptoLibByteArray); overload; override;
+    procedure NextBytes(const ABuf: TCryptoLibByteArray; AOff, ALen: Int32); overload; override;
+  end;
+
+{ TCountingSecureRandom }
+
+function TCountingSecureRandom.Calls: Int32;
+begin
+  Result := FCalls;
+end;
+
+procedure TCountingSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray);
+begin
+  Inc(FCalls);
+  inherited NextBytes(ABuf);
+end;
+
+procedure TCountingSecureRandom.NextBytes(const ABuf: TCryptoLibByteArray;
+  AOff, ALen: Int32);
+begin
+  Inc(FCalls);
+  inherited NextBytes(ABuf, AOff, ALen);
+end;
 
 { TTestECDHPrimeConstantTime }
 
@@ -489,6 +527,128 @@ begin
   CheckFalse(Rejects(64), '64 rejected');
   CheckFalse(Rejects(128), '128 rejected');
   CheckFalse(Rejects(512), '512 (cap) rejected');
+end;
+
+procedure TTestECDHPrimeConstantTime.TestInjectedRandomFeedsCTMultiplier;
+var
+  LNames: TCryptoLibStringArray;
+  LI: Int32;
+  LX9: IX9ECParameters;
+  LFactory: IECCTMultiplierFactory;
+  LWNaf, LMul: IECMultiplier;
+  LRnd: ICountingSecureRandom;
+  LN, LK: TBigInteger;
+  LQ, LRef, LGot: IECPoint;
+begin
+  // The variable-base CT multiplier from CreateCTMultiplier(ARandom, ...) must draw
+  // its blind and projective randomizer from the injected RNG, and the blind must
+  // remain transparent to the result (matches the WNAF reference).
+  LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
+  LNames := CurveNames;
+  for LI := 0 to System.Length(LNames) - 1 do
+  begin
+    LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
+    CheckTrue(Supports(LX9.Curve, IECCTMultiplierFactory, LFactory),
+      LNames[LI] + ' does not expose the CT multiplier factory');
+    LN := LX9.N;
+    LK := RandomScalar(LN);
+    LQ := LWNaf.Multiply(LX9.G, RandomScalar(LN)).Normalize();
+    LRef := LWNaf.Multiply(LQ, LK).Normalize();
+
+    LRnd := TCountingSecureRandom.Create();
+    LMul := LFactory.CreateCTMultiplier(LRnd, TECCurveConstants.SCALAR_BLIND_FULL);
+    LGot := LMul.Multiply(LQ, LK).Normalize();
+    // >= 2: both the scalar blind and the projective randomizer drew from it
+    CheckTrue(LRnd.Calls >= 2,
+      'injected RNG not fully consumed by the CT multiplier for ' + LNames[LI]);
+    AssertPointsEqual('injected-RNG CT parity ' + LNames[LI], LRef, LGot);
+    LRnd := nil;
+  end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestInjectedRandomFeedsBasePointMultiplier;
+var
+  LNames: TCryptoLibStringArray;
+  LI: Int32;
+  LX9: IX9ECParameters;
+  LFactory: IECCTMultiplierFactory;
+  LWNaf, LMul: IECMultiplier;
+  LRnd: ICountingSecureRandom;
+  LN, LK: TBigInteger;
+  LRef, LGot: IECPoint;
+begin
+  // The fixed-base comb from CreateBasePointCTMultiplier(ARandom) (keygen [d]G and
+  // ECDSA [k]G) must likewise draw both of its randomness sinks from the injected
+  // RNG, transparent to the result.
+  LWNaf := TWNafL2RMultiplier.Create() as IECMultiplier;
+  LNames := CurveNames;
+  for LI := 0 to System.Length(LNames) - 1 do
+  begin
+    LX9 := TCustomNamedCurves.GetByName(LNames[LI]);
+    CheckTrue(Supports(LX9.Curve, IECCTMultiplierFactory, LFactory),
+      LNames[LI] + ' does not expose the CT multiplier factory');
+    LN := LX9.N;
+    LK := RandomScalar(LN);
+    LRef := LWNaf.Multiply(LX9.G, LK).Normalize();
+
+    LRnd := TCountingSecureRandom.Create();
+    LMul := LFactory.CreateBasePointCTMultiplier(LRnd);
+    LGot := LMul.Multiply(LX9.G, LK).Normalize();
+    // >= 2: both the scalar blind and the projective randomizer drew from it
+    CheckTrue(LRnd.Calls >= 2,
+      'injected RNG not fully consumed by the base-point comb for ' + LNames[LI]);
+    AssertPointsEqual('injected-RNG comb parity ' + LNames[LI], LRef, LGot);
+    LRnd := nil;
+  end;
+end;
+
+procedure TTestECDHPrimeConstantTime.TestInjectedRandomNilRejected;
+var
+  LX9: IX9ECParameters;
+  LFactory: IECCTMultiplierFactory;
+  LEC: IECDomainParameters;
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LPair: IAsymmetricCipherKeyPair;
+  LMul: IECMultiplier;
+  LAgr: IEphemeralECDHAgreement;
+  LRaised: Boolean;
+begin
+  // the injected-RNG overloads must reject nil rather than silently degrading to
+  // a lazily-created RNG (the non-RNG overloads exist for the default-RNG case)
+  LX9 := TCustomNamedCurves.GetByName('secp256r1');
+  CheckTrue(Supports(LX9.Curve, IECCTMultiplierFactory, LFactory), 'no CT factory');
+
+  LRaised := False;
+  try
+    LMul := LFactory.CreateCTMultiplier(nil, TECCurveConstants.SCALAR_BLIND_FULL);
+  except
+    on E: EArgumentNilCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'CreateCTMultiplier(nil) not rejected');
+
+  LRaised := False;
+  try
+    LMul := LFactory.CreateBasePointCTMultiplier(nil);
+  except
+    on E: EArgumentNilCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'CreateBasePointCTMultiplier(nil) not rejected');
+
+  LEC := TECDomainParameters.Create(LX9.Curve, LX9.G, LX9.N, LX9.H);
+  LKpg := TECKeyPairGenerator.Create();
+  LKpg.Init(TECKeyGenerationParameters.Create(LEC, FRandom) as IECKeyGenerationParameters);
+  LPair := LKpg.GenerateKeyPair();
+  LRaised := False;
+  try
+    LAgr := TEphemeralECDHAgreement.Create(LPair.Private as IECPrivateKeyParameters,
+      nil, TECCurveConstants.SCALAR_BLIND_MINIMAL);
+  except
+    on E: EArgumentNilCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'ephemeral agreement Create(priv, nil) not rejected');
 end;
 
 initialization
