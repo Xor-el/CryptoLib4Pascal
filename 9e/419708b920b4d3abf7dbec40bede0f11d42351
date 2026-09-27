@@ -1,0 +1,32 @@
+CryptoLib/src/Interfaces/Pkcs/ClpIPkcs12Store.pas
+  s_09d3c46d1a9b1f::t_a5ccfee53b4b4a 109
+  s_09d3c46d1a9b1f::t_ce45d6a729428f 103-108,110-118
+CryptoLib.Tests/src/Pkcs/Pkcs12StoreTests.pas
+  s_09d3c46d1a9b1f::t_7e645943f2a89f 161-163
+  s_09d3c46d1a9b1f::t_62d66fccfa5305 1236,1239,1242-1243,1246,1250,1269,1278-1283,1285-1290,1292-1295,1297,1304-1324
+  s_09d3c46d1a9b1f::t_90812bbd616f21 1237-1238,1240-1241,1244-1245,1247-1249,1251-1268,1270-1277,1284,1291,1296,1298-1303
+CryptoLib/src/Pkcs/ClpPkcs12Store.pas
+  s_09d3c46d1a9b1f::t_76ab06ce780b46 272-277,279-287
+  s_09d3c46d1a9b1f::t_a3765f80dcc7cd 1061-1062
+  s_09d3c46d1a9b1f::t_ad27dc6f492b1e 176,1204-1205,1207-1210
+  s_09d3c46d1a9b1f::t_f11c4735b7b915 1051,1067,1138-1167,1169,1187,1191,1193,1202
+  s_09d3c46d1a9b1f::t_55daaf4b639e7f 278
+  s_09d3c46d1a9b1f::t_f30586498c9eb5 1110-1121,1126
+  s_09d3c46d1a9b1f::t_b87002c03bf5dc 1168,1170-1186,1188-1190,1192,1194-1201,1203,1206
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "9e419708b920b4d3abf7dbec40bede0f11d42351",
+  "prompts": {},
+  "sessions": {
+    "s_09d3c46d1a9b1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "753841da-6650-4f22-956f-630e9622811d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
