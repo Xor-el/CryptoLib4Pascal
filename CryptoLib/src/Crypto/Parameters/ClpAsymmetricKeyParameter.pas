@@ -38,6 +38,11 @@ type
 
     constructor Create(APrivateKey: Boolean);
 
+  protected
+    // value-equality hook Equals dispatches to; descendants compare key material here. The
+    // default is fail-closed identity, so an un-overridden key type is equal only to itself.
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; virtual;
+
   public
     property IsPrivate: Boolean read GetIsPrivate;
     property PrivateKey: Boolean read GetPrivateKey;
@@ -60,12 +65,14 @@ end;
 function TAsymmetricKeyParameter.Equals(const AOther
   : IAsymmetricKeyParameter): Boolean;
 begin
-  if (AOther = nil) then
-  begin
-    Result := False;
-    Exit;
-  end;
-  Result := FPrivateKey = AOther.PrivateKey;
+  Result := (AOther <> nil) and SameKey(AOther);
+end;
+
+function TAsymmetricKeyParameter.SameKey(const AOther
+  : IAsymmetricKeyParameter): Boolean;
+begin
+  // identity default (AOther is non-nil here); descendants override with a value comparison
+  Result := AOther = (Self as IAsymmetricKeyParameter);
 end;
 
 function TAsymmetricKeyParameter.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

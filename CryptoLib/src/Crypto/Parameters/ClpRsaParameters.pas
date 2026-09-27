@@ -31,6 +31,7 @@ uses
   ClpPrimes,
   ClpCryptoServicesRegistrar,
   ClpIRsaParameters,
+  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter,
   ClpKeyGenerationParameters,
   ClpISecureRandom,
@@ -120,6 +121,7 @@ type
 
     function Equals(const AOther: IRsaKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -163,6 +165,7 @@ type
 
     function Equals(const AOther: IRsaPrivateCrtKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -422,6 +425,13 @@ begin
     FModulus.Equals(AOther.Modulus) and FExponent.Equals(AOther.Exponent);
 end;
 
+function TRsaKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IRsaKeyParameters;
+begin
+  Result := Supports(AOther, IRsaKeyParameters, LOther) and Equals(LOther);
+end;
+
 function TRsaKeyParameters.GetExponent: TBigInteger;
 begin
   Result := FExponent;
@@ -516,6 +526,14 @@ begin
     Exponent.Equals(AOther.Exponent) and Modulus.Equals(AOther.Modulus) and
     FP.Equals(AOther.P) and FQ.Equals(AOther.Q) and
     FE.Equals(AOther.PublicExponent) and FQInv.Equals(AOther.QInv);
+end;
+
+function TRsaPrivateCrtKeyParameters.SameKey(
+  const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IRsaPrivateCrtKeyParameters;
+begin
+  Result := Supports(AOther, IRsaPrivateCrtKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TRsaPrivateCrtKeyParameters.GetDP: TBigInteger;

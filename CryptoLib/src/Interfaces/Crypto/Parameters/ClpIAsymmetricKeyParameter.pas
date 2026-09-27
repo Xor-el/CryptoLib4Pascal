@@ -32,6 +32,8 @@ type
     function GetPrivateKey: Boolean;
     property IsPrivate: Boolean read GetIsPrivate;
     property PrivateKey: Boolean read GetPrivateKey;
+    /// <summary>Value equality: the key material and its public/private role are equal. A key of
+    /// another family, or the public half versus the private key, is not equal. Never raises.</summary>
     function Equals(const AOther: IAsymmetricKeyParameter): Boolean;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}

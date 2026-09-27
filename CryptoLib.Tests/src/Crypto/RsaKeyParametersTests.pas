@@ -32,6 +32,7 @@ uses
   ClpBigInteger,
   ClpIRsaParameters,
   ClpRsaParameters,
+  ClpIAsymmetricKeyParameter,
   CryptoLibTestBase;
 
 type
@@ -50,6 +51,9 @@ type
     procedure TestHashCodeDiffersWhenOnlyExponentDiffers;
     procedure TestHashCodeDiffersWhenOnlyModulusDiffers;
     procedure TestHashCodeMatchesWhenEqual;
+    // Equals through the base IAsymmetricKeyParameter reference must compare by value, not just
+    // the public/private flag: two distinct public keys are equal iff their key material matches.
+    procedure TestBaseInterfaceEqualsComparesValue;
   end;
 
 implementation
@@ -113,6 +117,21 @@ begin
 
   CheckTrue(LA.Equals(LB), 'keys with the same modulus and exponent must be equal');
   CheckEquals(LA.GetHashCode(), LB.GetHashCode(), 'equal keys must share a hash code');
+end;
+
+procedure TRsaKeyParametersTest.TestBaseInterfaceEqualsComparesValue;
+var
+  LA, LB, LC: IAsymmetricKeyParameter;
+begin
+  // held as the base interface: two distinct public keys with identical material are equal,
+  // and two public keys that differ in material are not (a flag-only compare would say equal)
+  LA := TRsaKeyParameters.Create(False, Modulus1, Exponent1);
+  LB := TRsaKeyParameters.Create(False, Modulus1, Exponent1);
+  LC := TRsaKeyParameters.Create(False, Modulus2, Exponent1);
+  CheckTrue(LA.Equals(LB), 'equal key material must compare equal through the base interface');
+  CheckFalse(LA.Equals(LC), 'different key material must not compare equal (not a flag-only check)');
+  CheckTrue(LA.Equals(LA), 'a key equals itself');
+  CheckFalse(LA.Equals(nil), 'a key does not equal nil');
 end;
 
 initialization

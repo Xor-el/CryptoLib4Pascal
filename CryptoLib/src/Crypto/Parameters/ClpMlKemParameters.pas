@@ -34,6 +34,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
+  ClpIAsymmetricKeyParameter,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -140,6 +141,7 @@ type
     constructor Create(const AParameters: IMlKemParameters; const AEncoding: TCryptoLibByteArray);
     function GetEncoded(): TCryptoLibByteArray;
     function GetEncoding: TCryptoLibByteArray;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
   end;
 
   TMlKemPrivateKeyParameters = class sealed(TMlKemKeyParameters, IMlKemPrivateKeyParameters)
@@ -167,6 +169,7 @@ type
     function GetPreferredFormat: TMlKemPrivateKeyFormat;
     function WithPreferredFormat(AFormat: TMlKemPrivateKeyFormat): IMlKemPrivateKeyParameters;
     function GetEncoding: TCryptoLibByteArray;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
   end;
 
   TMlKemKeyGenerationParameters = class sealed(TKeyGenerationParameters,
@@ -392,6 +395,16 @@ begin
   Result := FEncoding;
 end;
 
+function TMlKemPublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IMlKemPublicKeyParameters;
+begin
+  // same parameter set (a key is bound to its scheme) and same encoded key value (constant-time)
+  Result := Supports(AOther, IMlKemPublicKeyParameters, LOther) and
+    SameText(Parameters.Name, LOther.Parameters.Name) and
+    TArrayUtilities.FixedTimeEquals(GetEncoded(), LOther.GetEncoded());
+end;
+
 procedure TMlKemPublicKeyParameters.InternalEncapsulate(const ARandBytes: TCryptoLibByteArray;
   const AEnc, ASec: TCryptoLibByteArray; AEncOff, ASecOff: Int32);
 begin
@@ -487,6 +500,15 @@ end;
 function TMlKemPrivateKeyParameters.GetEncoding: TCryptoLibByteArray;
 begin
   Result := FEncoding;
+end;
+
+function TMlKemPrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IMlKemPrivateKeyParameters;
+begin
+  Result := Supports(AOther, IMlKemPrivateKeyParameters, LOther) and
+    SameText(Parameters.Name, LOther.Parameters.Name) and
+    TArrayUtilities.FixedTimeEquals(GetEncoded(), LOther.GetEncoded());
 end;
 
 function TMlKemPrivateKeyParameters.GetPreferredFormat: TMlKemPrivateKeyFormat;
