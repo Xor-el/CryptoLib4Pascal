@@ -158,6 +158,9 @@ type
     procedure TestEmptyInputRejectedCleanly;
     procedure TestChainCycle;
     procedure TestPkcs12Store_CertificateAliasConsistency;
+    procedure TestGetCertificates_ReturnsEveryCert;
+    procedure TestGetCertificateChain_ByEntry_MatchesAliasChain;
+    procedure TestGetCertificateChain_ByEntry_NilRejected;
   end;
 
 implementation
@@ -1228,6 +1231,95 @@ begin
 
   CheckEquals('', LInStore.GetCertificateAlias(LAbsent),
     'alias found for absent certificate after reload');
+end;
+
+procedure TTestPkcs12Store.TestGetCertificates_ReturnsEveryCert;
+const
+  CertCount = Int32(8);
+var
+  LKeyPair, LCaKp, LLeafKp: IAsymmetricCipherKeyPair;
+  LCaCert, LLeafCert: IX509Certificate;
+  LStore: IPkcs12Store;
+  LChain, LAll: TCryptoLibGenericArray<IX509CertificateEntry>;
+  LI: Int32;
+  LUnreachable: Boolean;
+begin
+  // certificates that share a public key collide on the SPKI-keyed chain map; they must all still
+  // be enumerated (an SPKI-only implementation would return one)
+  LKeyPair := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LStore := BuildPkcs12Store;
+  for LI := 0 to CertCount - 1 do
+    LStore.SetCertificateEntry('cert-' + IntToStr(LI),
+      TX509CertificateEntry.Create(TCertTestUtilities.GenerateRootCert(LKeyPair,
+      TX509Name.Create('CN=multi-' + IntToStr(LI)) as IX509Name)) as IX509CertificateEntry);
+  if System.Length(LStore.GetCertificates) <> CertCount then
+    Fail('GetCertificates dropped certificates that share a public key');
+
+  // a CA supplied only as part of a key's chain carries no alias, yet must be enumerated
+  LCaKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LCaCert := TCertTestUtilities.GenerateRootCert(LCaKp, TX509Name.Create('CN=Chain CA') as IX509Name);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeafCert := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    LCaKp.Private as IAsymmetricKeyParameter, LCaCert);
+  LStore := BuildPkcs12Store;
+  SetLength(LChain, 2);
+  LChain[0] := TX509CertificateEntry.Create(LLeafCert);
+  LChain[1] := TX509CertificateEntry.Create(LCaCert);
+  LStore.SetKeyEntry('leaf', TAsymmetricKeyEntry.Create(LLeafKp.Private as IAsymmetricKeyParameter), LChain);
+  LAll := LStore.GetCertificates;
+  if System.Length(LAll) <> 2 then
+    Fail('GetCertificates did not return the leaf and its unnamed CA');
+  LUnreachable := False;
+  for LI := 0 to System.High(LAll) do
+    if LStore.GetCertificateAlias(LAll[LI].Certificate) = '' then
+      LUnreachable := True;
+  if not LUnreachable then
+    Fail('an alias-unreachable CA certificate was not enumerated');
+end;
+
+procedure TTestPkcs12Store.TestGetCertificateChain_ByEntry_MatchesAliasChain;
+var
+  LStore: IPkcs12Store;
+  LPName: String;
+  LByAlias, LByEntry, LFromCa: TCryptoLibGenericArray<IX509CertificateEntry>;
+  LI: Int32;
+begin
+  LStore := BuildPkcs12Store;
+  LoadStoreFromBytes(LStore, FPkcs12, FPasswd);
+  LPName := GetFirstKeyEntryAlias(LStore);
+  LByAlias := LStore.GetCertificateChain(LPName);
+  // starting from the leaf entry yields the same chain (same instances) as the alias overload
+  LByEntry := LStore.GetCertificateChain(LByAlias[0]);
+  if System.Length(LByEntry) <> System.Length(LByAlias) then
+    Fail('chain-by-entry length differs from chain-by-alias');
+  for LI := 0 to System.High(LByAlias) do
+    if LByEntry[LI] <> LByAlias[LI] then
+      Fail('chain-by-entry differs from chain-by-alias at index ' + IntToStr(LI));
+  // chaining from an intermediate/CA entry (not reachable by a key alias) returns the sub-chain
+  LFromCa := LStore.GetCertificateChain(LByAlias[1]);
+  if System.Length(LFromCa) <> (System.Length(LByAlias) - 1) then
+    Fail('chain-from-intermediate has the wrong length');
+  if not LFromCa[0].Certificate.Equals(LByAlias[1].Certificate) then
+    Fail('chain-from-intermediate does not start at that certificate');
+end;
+
+procedure TTestPkcs12Store.TestGetCertificateChain_ByEntry_NilRejected;
+var
+  LStore: IPkcs12Store;
+  LNil: IX509CertificateEntry;
+  LRaised: Boolean;
+begin
+  LStore := BuildPkcs12Store;
+  LNil := nil;
+  LRaised := False;
+  try
+    LStore.GetCertificateChain(LNil);
+  except
+    on E: EArgumentNilCryptoLibException do
+      LRaised := True;
+  end;
+  if not LRaised then
+    Fail('a nil certificate entry must be rejected');
 end;
 
 initialization
