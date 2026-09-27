@@ -1,0 +1,109 @@
+CryptoLib.Tests/src/Crypto/RsaKeyParametersTests.pas
+  s_09d3c46d1a9b1f::t_9274eb4c021887 35
+  s_09d3c46d1a9b1f::t_2a9b195c9f7d59 54-56
+  s_09d3c46d1a9b1f::t_63690356cdcfc2 122-136
+CryptoLib/src/Crypto/Parameters/ClpEd25519Parameters.pas
+  s_09d3c46d1a9b1f::t_f6e5e5c46cec90 192
+  s_09d3c46d1a9b1f::t_b7d71e6314f186 333-339
+  s_09d3c46d1a9b1f::t_0c062cd4403de4 25,28
+  s_09d3c46d1a9b1f::t_eb8dbf3c4269a4 122
+  s_09d3c46d1a9b1f::t_fb7140221b4008 438-444
+CryptoLib/src/Crypto/Parameters/ClpAsymmetricKeyParameter.pas
+  s_09d3c46d1a9b1f::t_ff8e0be88ad825 68-74
+  s_09d3c46d1a9b1f::t_99fafe90ae5da8 41-45
+  s_09d3c46d1a9b1f::t_ec1e4f0621770b 75
+CryptoLib/src/Interfaces/Crypto/Parameters/ClpIAsymmetricKeyParameter.pas
+  s_09d3c46d1a9b1f::t_dea1c2e6bd0e9e 35-36
+CryptoLib/src/Crypto/Parameters/ClpRsaParameters.pas
+  s_09d3c46d1a9b1f::t_182619890c8e9d 429-434
+  s_09d3c46d1a9b1f::t_354dcf0e210618 531-538
+  s_09d3c46d1a9b1f::t_e20f8eafb28948 34
+  s_09d3c46d1a9b1f::t_8a904a3d5fefb7 168
+  s_09d3c46d1a9b1f::t_da67fa956cdc6f 124
+  s_09d3c46d1a9b1f::t_7d4b16a2624e98 428
+CryptoLib/src/Crypto/Parameters/ClpDsaParameters.pas
+  s_09d3c46d1a9b1f::t_f1249ec3355599 140
+  s_09d3c46d1a9b1f::t_c156c46fec0a52 24,27
+  s_09d3c46d1a9b1f::t_a594c7863a19f8 163
+  s_09d3c46d1a9b1f::t_ff32860406f65f 449-455
+  s_09d3c46d1a9b1f::t_b7126f1380e241 377-379
+  s_09d3c46d1a9b1f::t_e93f3598e4e4a3 500-506
+CryptoLib/src/Crypto/Parameters/ClpMlKemParameters.pas
+  s_09d3c46d1a9b1f::t_a7c55a619de218 402
+  s_09d3c46d1a9b1f::t_a24a9d6a3d47fe 404,510
+  s_09d3c46d1a9b1f::t_053cc83dc12987 172
+  s_09d3c46d1a9b1f::t_ed129ef1161300 37
+  s_09d3c46d1a9b1f::t_7117314d3cbbd0 505-509,511-513
+  s_09d3c46d1a9b1f::t_cad3ea5e731d71 398-401,403,405-407
+  s_09d3c46d1a9b1f::t_ef0e7d19dfbf96 144
+CryptoLib/src/Crypto/Parameters/ClpBip340SchnorrParameters.pas
+  s_09d3c46d1a9b1f::t_99a18c3be49a13 66
+  s_09d3c46d1a9b1f::t_067cfa1d8383aa 25
+  s_09d3c46d1a9b1f::t_e82a8c11e18427 92
+  s_09d3c46d1a9b1f::t_4722db1e453826 286-292
+  s_09d3c46d1a9b1f::t_ec12341bffa165 163-169
+CryptoLib/src/Crypto/Parameters/ClpDHParameters.pas
+  s_09d3c46d1a9b1f::t_829334500bda0e 215
+  s_09d3c46d1a9b1f::t_25250f28ef097f 24,28
+  s_09d3c46d1a9b1f::t_5e120265219de7 186
+  s_09d3c46d1a9b1f::t_45266e08b197fa 490-492
+  s_09d3c46d1a9b1f::t_2c558418e8967b 653-659
+  s_09d3c46d1a9b1f::t_773f1afb68e3e8 711-717
+CryptoLib/src/Crypto/Parameters/ClpEd448Parameters.pas
+  s_09d3c46d1a9b1f::t_8526b6aae2dbaf 446-452
+  s_09d3c46d1a9b1f::t_21a00ab24d9f93 25,28
+  s_09d3c46d1a9b1f::t_93b2032e5fd67d 116
+  s_09d3c46d1a9b1f::t_9338554a8ecd05 184
+  s_09d3c46d1a9b1f::t_82d1bcd296a71b 309-315
+CryptoLib/src/Crypto/Parameters/ClpMlDsaParameters.pas
+  s_09d3c46d1a9b1f::t_ae18861a333379 427-430,432,434-436
+  s_09d3c46d1a9b1f::t_185ae17f5666d1 36
+  s_09d3c46d1a9b1f::t_3f4cbc07861b39 431
+  s_09d3c46d1a9b1f::t_1b26b00eb5bc99 433,655
+  s_09d3c46d1a9b1f::t_7d97bd50b96fa3 175
+  s_09d3c46d1a9b1f::t_cd139db00f72cb 143
+  s_09d3c46d1a9b1f::t_2f12b0398e9136 650-654,656-658
+CryptoLib/src/Crypto/Parameters/ClpX25519Parameters.pas
+  s_09d3c46d1a9b1f::t_4cce3f579c2d32 88
+  s_09d3c46d1a9b1f::t_f8a985db3e85ed 154
+  s_09d3c46d1a9b1f::t_538f34f529ce5a 235-241
+  s_09d3c46d1a9b1f::t_546a3cbfa76912 25,28
+  s_09d3c46d1a9b1f::t_8045db3f189823 345-351
+CryptoLib/src/Crypto/Parameters/ClpX448Parameters.pas
+  s_09d3c46d1a9b1f::t_9554df3131af33 235-241
+  s_09d3c46d1a9b1f::t_83a2166d9be8ad 88
+  s_09d3c46d1a9b1f::t_ede4d32ab09d1e 154
+  s_09d3c46d1a9b1f::t_78fa4e7776a6c4 345-351
+  s_09d3c46d1a9b1f::t_83b58466b31ece 25,28
+CryptoLib/src/Crypto/Parameters/ClpSlhDsaParameters.pas
+  s_09d3c46d1a9b1f::t_34c9f1b2608efc 197
+  s_09d3c46d1a9b1f::t_c1e28c45fc8633 688-692,694-696
+  s_09d3c46d1a9b1f::t_794f637c077e0a 567,569
+  s_09d3c46d1a9b1f::t_e0c08ff10595e9 177
+  s_09d3c46d1a9b1f::t_71e8cb9b0d85ce 38
+  s_09d3c46d1a9b1f::t_b97b87db688cf1 563-566,568,570-572
+  s_09d3c46d1a9b1f::t_cadb36a125f340 693
+CryptoLib/src/Crypto/Parameters/ClpECParameters.pas
+  s_09d3c46d1a9b1f::t_9cda0fb3c5f711 34
+  s_09d3c46d1a9b1f::t_66ab134239541b 241
+  s_09d3c46d1a9b1f::t_eca1811afdd3b7 629-630
+  s_09d3c46d1a9b1f::t_5a3ee1b1bdc620 759-765
+  s_09d3c46d1a9b1f::t_41f941ecf97a1d 212
+  s_09d3c46d1a9b1f::t_f164b58e97a519 696-702
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "562e3ee0750cb544a1f9f6fea0f6d67f5d83f427",
+  "prompts": {},
+  "sessions": {
+    "s_09d3c46d1a9b1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "753841da-6650-4f22-956f-630e9622811d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
