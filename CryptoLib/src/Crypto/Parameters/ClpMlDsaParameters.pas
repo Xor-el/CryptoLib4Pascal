@@ -33,6 +33,7 @@ uses
   ClpAsn1Comparers,
   ClpCryptoLibComparers,
   ClpKeyGenerationParameters,
+  ClpIAsymmetricKeyParameter,
   ClpArrayUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
@@ -139,6 +140,7 @@ type
     function GetPublicKeyHash: TCryptoLibByteArray;
     function VerifyRaw(const AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32;
       const ASig: TCryptoLibByteArray): Boolean;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
   end;
   TMlDsaPrivateKeyParameters = class sealed(TMlDsaKeyParameters, IMlDsaPrivateKeyParameters)
   strict private
@@ -170,6 +172,7 @@ type
     function GetS2: TCryptoLibByteArray;
     function GetT0: TCryptoLibByteArray;
     function SignRaw(const ARnd, AMsg: TCryptoLibByteArray; AMsgOff, AMsgLen: Int32): TCryptoLibByteArray;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
   end;
   TMlDsaKeyGenerationParameters = class sealed(TKeyGenerationParameters,
     IMlDsaKeyGenerationParameters)
@@ -421,6 +424,16 @@ begin
   System.Move(FT1[0], Result[System.Length(FRho)], System.Length(FT1));
 end;
 
+function TMlDsaPublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IMlDsaPublicKeyParameters;
+begin
+  // same parameter set (a key is bound to its scheme) and same encoded key value (constant-time)
+  Result := Supports(AOther, IMlDsaPublicKeyParameters, LOther) and
+    SameText(Parameters.Name, LOther.Parameters.Name) and
+    TArrayUtilities.FixedTimeEquals(GetEncoded(), LOther.GetEncoded());
+end;
+
 function TMlDsaPublicKeyParameters.GetPublicKeyHash: TCryptoLibByteArray;
 begin
   Result := EnsurePublicKeyHash;
@@ -632,6 +645,15 @@ end;
 function TMlDsaPrivateKeyParameters.GetTr: TCryptoLibByteArray;
 begin
   Result := FTr;
+end;
+
+function TMlDsaPrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IMlDsaPrivateKeyParameters;
+begin
+  Result := Supports(AOther, IMlDsaPrivateKeyParameters, LOther) and
+    SameText(Parameters.Name, LOther.Parameters.Name) and
+    TArrayUtilities.FixedTimeEquals(GetEncoded(), LOther.GetEncoded());
 end;
 
 function TMlDsaPrivateKeyParameters.SignRaw(const ARnd, AMsg: TCryptoLibByteArray;

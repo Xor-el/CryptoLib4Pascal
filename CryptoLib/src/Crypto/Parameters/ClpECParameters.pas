@@ -31,6 +31,7 @@ uses
   ClpIAsn1Objects,
   ClpIX9ECAsn1Objects,
   ClpX9ECAsn1Objects,
+  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter,
   ClpKeyGenerationParameters,
   ClpISecureRandom,
@@ -208,6 +209,7 @@ type
 
     function Equals(const AOther: IECPublicKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -236,6 +238,7 @@ type
 
     function Equals(const AOther: IECPrivateKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -623,7 +626,8 @@ begin
     Result := False;
     Exit;
   end;
-  Result := FParameters.Equals(AOther.Parameters) and (inherited Equals(AOther));
+  Result := FParameters.Equals(AOther.Parameters) and
+    (IsPrivate = AOther.IsPrivate);
 end;
 
 function TECKeyParameters.GetAlgorithmName: String;
@@ -689,6 +693,13 @@ begin
   Result := Q.Equals(AOther.Q) and (inherited Equals(AOther));
 end;
 
+function TECPublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IECPublicKeyParameters;
+begin
+  Result := Supports(AOther, IECPublicKeyParameters, LOther) and Equals(LOther);
+end;
+
 function TECPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
@@ -743,6 +754,13 @@ begin
     Exit;
   end;
   Result := D.Equals(AOther.D) and (inherited Equals(AOther));
+end;
+
+function TECPrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IECPrivateKeyParameters;
+begin
+  Result := Supports(AOther, IECPrivateKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TECPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

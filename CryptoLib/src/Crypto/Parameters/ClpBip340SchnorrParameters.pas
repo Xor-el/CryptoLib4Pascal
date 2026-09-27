@@ -22,6 +22,7 @@ interface
 
 uses
   SysUtils,
+  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter,
   ClpIECParameters,
   ClpIECCommon,
@@ -62,6 +63,7 @@ type
 
     function Equals(const AOther: IBip340SchnorrPublicKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
   end;
@@ -87,6 +89,7 @@ type
 
     function Equals(const AOther: IBip340SchnorrPrivateKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
   end;
@@ -155,6 +158,13 @@ begin
   LEncoded := GetEncoded();
   LOtherEncoded := AOther.GetEncoded();
   Result := TArrayUtilities.FixedTimeEquals(LEncoded, LOtherEncoded);
+end;
+
+function TBip340SchnorrPublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IBip340SchnorrPublicKeyParameters;
+begin
+  Result := Supports(AOther, IBip340SchnorrPublicKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TBip340SchnorrPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -271,6 +281,13 @@ begin
     Exit;
   end;
   Result := TArrayUtilities.FixedTimeEquals(FData, AOther.GetEncoded());
+end;
+
+function TBip340SchnorrPrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IBip340SchnorrPrivateKeyParameters;
+begin
+  Result := Supports(AOther, IBip340SchnorrPrivateKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TBip340SchnorrPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

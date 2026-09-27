@@ -21,9 +21,11 @@ unit ClpDHParameters;
 interface
 
 uses
+  SysUtils,
   Math,
   ClpICipherParameters,
   ClpIDHParameters,
+  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter,
   ClpPkcsObjectIdentifiers,
   ClpIAsn1Objects,
@@ -181,6 +183,7 @@ type
 
     function Equals(const AOther: IDHPublicKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -209,6 +212,7 @@ type
 
     function Equals(const AOther: IDHPrivateKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
 
@@ -483,7 +487,9 @@ begin
     Exit;
   end;
 
-  Result := Parameters.Equals(AOther.Parameters) and (inherited Equals(AOther));
+  Result := (((Parameters = nil) and (AOther.Parameters = nil)) or
+    ((Parameters <> nil) and Parameters.Equals(AOther.Parameters))) and
+    (IsPrivate = AOther.IsPrivate);
 end;
 
 function TDHKeyParameters.GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -644,6 +650,13 @@ begin
   Result := (Y.Equals(AOther.Y)) and (inherited Equals(AOther));
 end;
 
+function TDHPublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IDHPublicKeyParameters;
+begin
+  Result := Supports(AOther, IDHPublicKeyParameters, LOther) and Equals(LOther);
+end;
+
 function TDHPublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}
 begin
@@ -693,6 +706,13 @@ begin
     Exit;
   end;
   Result := (X.Equals(AOther.X)) and (inherited Equals(AOther));
+end;
+
+function TDHPrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IDHPrivateKeyParameters;
+begin
+  Result := Supports(AOther, IDHPrivateKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TDHPrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;

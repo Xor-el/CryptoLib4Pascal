@@ -22,8 +22,10 @@ interface
 
 uses
   Classes,
+  SysUtils,
   ClpX25519,
   ClpISecureRandom,
+  ClpIAsymmetricKeyParameter,
   ClpAsymmetricKeyParameter,
   ClpIX25519Parameters,
   ClpKeyGenerationParameters,
@@ -83,6 +85,7 @@ type
 
     function Equals(const AOther: IX25519PublicKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
   end;
@@ -148,6 +151,7 @@ type
 
     function Equals(const AOther: IX25519PrivateKeyParameters): Boolean;
       reintroduce; overload;
+    function SameKey(const AOther: IAsymmetricKeyParameter): Boolean; override;
     function GetHashCode(): {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
 {$ENDIF DELPHI}override;
   end;
@@ -226,6 +230,13 @@ begin
     Exit;
   end;
   Result := TArrayUtilities.FixedTimeEquals(FData, AOther.GetEncoded());
+end;
+
+function TX25519PublicKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IX25519PublicKeyParameters;
+begin
+  Result := Supports(AOther, IX25519PublicKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TX25519PublicKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
@@ -329,6 +340,13 @@ begin
     Exit;
   end;
   Result := TArrayUtilities.FixedTimeEquals(FData, AOther.GetEncoded());
+end;
+
+function TX25519PrivateKeyParameters.SameKey(const AOther: IAsymmetricKeyParameter): Boolean;
+var
+  LOther: IX25519PrivateKeyParameters;
+begin
+  Result := Supports(AOther, IX25519PrivateKeyParameters, LOther) and Equals(LOther);
 end;
 
 function TX25519PrivateKeyParameters.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt;
