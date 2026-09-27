@@ -100,7 +100,22 @@ type
     /// <param name="AAlias">The private-key alias.</param>
     /// <returns>The chain from end entity to root, or <c>nil</c> if the alias is not a key entry.</returns>
     /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
-    function GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>;
+    function GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>; overload;
+    /// <summary>
+    /// Builds the certificate chain starting from the given certificate entry by following Authority
+    /// Key Identifier or issuer/subject matching, so a caller can chain a certificate that is not
+    /// reachable by alias (for example a CA bag with neither a friendly name nor a local key id).
+    /// </summary>
+    /// <param name="ACertEntry">The certificate entry to start from.</param>
+    /// <returns>The chain from that entry to root.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="ACertEntry"/> is <c>nil</c>.</exception>
+    function GetCertificateChain(const ACertEntry: IX509CertificateEntry): TCryptoLibGenericArray<IX509CertificateEntry>; overload;
+    /// <summary>
+    /// Gets every certificate entry held by this store, in the order the certificates were added,
+    /// including certificate bags that carry no friendly name or local key id and so are not
+    /// reachable through <see cref="GetAliases"/> or <see cref="GetCertificate"/>.
+    /// </summary>
+    function GetCertificates: TCryptoLibGenericArray<IX509CertificateEntry>;
     /// <summary>
     /// Adds or replaces a certificate-only entry under the given alias.
     /// </summary>

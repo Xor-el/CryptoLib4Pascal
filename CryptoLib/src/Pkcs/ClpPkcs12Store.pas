@@ -173,6 +173,7 @@ type
     procedure AddLocalKeyID(const V: IAsn1EncodableVector; const ACertEntry: IX509CertificateEntry); overload;
     procedure AddLocalKeyID(const V: IAsn1EncodableVector; const AC: IX509Certificate); overload;
     function CreateCertBag(const AC: IX509Certificate): ICertBag;
+    function BuildChain(const AStart: IX509CertificateEntry): TCryptoLibGenericArray<IX509CertificateEntry>;
   strict protected
     function GetCount: Int32;
     function GetAliases: TCryptoLibStringArray;
@@ -268,7 +269,22 @@ type
     /// <param name="AAlias">The private-key alias.</param>
     /// <returns>The chain from end entity to root, or <c>nil</c> if the alias is not a key entry.</returns>
     /// <exception cref="EArgumentNilCryptoLibException"><paramref name="AAlias"/> is empty.</exception>
-    function GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>;
+    function GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>; overload;
+    /// <summary>
+    /// Builds the certificate chain starting from the given certificate entry by following Authority
+    /// Key Identifier or issuer/subject matching, so a caller can chain a certificate that is not
+    /// reachable by alias (for example a CA bag with neither a friendly name nor a local key id).
+    /// </summary>
+    /// <param name="ACertEntry">The certificate entry to start from.</param>
+    /// <returns>The chain from that entry to root.</returns>
+    /// <exception cref="EArgumentNilCryptoLibException"><paramref name="ACertEntry"/> is <c>nil</c>.</exception>
+    function GetCertificateChain(const ACertEntry: IX509CertificateEntry): TCryptoLibGenericArray<IX509CertificateEntry>; overload;
+    /// <summary>
+    /// Gets every certificate entry held by this store, in the order the certificates were added,
+    /// including certificate bags that carry no friendly name or local key id and so are not
+    /// reachable through <see cref="GetAliases"/> or <see cref="GetCertificate"/>.
+    /// </summary>
+    function GetCertificates: TCryptoLibGenericArray<IX509CertificateEntry>;
     /// <summary>
     /// Adds or replaces a certificate-only entry under the given alias.
     /// </summary>
@@ -1032,7 +1048,7 @@ begin
   Result := '';
 end;
 
-function TPkcs12Store.GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>;
+function TPkcs12Store.BuildChain(const AStart: IX509CertificateEntry): TCryptoLibGenericArray<IX509CertificateEntry>;
 var
   LC: IX509CertificateEntry;
   LX509c: IX509Certificate;
@@ -1042,23 +1058,13 @@ var
   LCs: TList<IX509CertificateEntry>;
   LNextCertID: TCertID;
   LEntry: TPair<TCertID, IX509CertificateEntry>;
+  LExisting: IX509CertificateEntry;
+  LSeen: Boolean;
   LI: IX509Name;
   LS: IX509Name;
   LCert: IX509Certificate;
 begin
-  if AAlias = '' then
-    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
-  if not IsKeyEntry(AAlias) then
-  begin
-    Result := nil;
-    Exit;
-  end;
-  LC := GetCertificate(AAlias);
-  if LC = nil then
-  begin
-    Result := nil;
-    Exit;
-  end;
+  LC := AStart;
   LCs := TList<IX509CertificateEntry>.Create;
   try
     while LC <> nil do
@@ -1101,12 +1107,23 @@ begin
           end;
         end;
       end;
-      if LCs.IndexOf(LC) >= 0 then
+      // terminate by certificate value, not entry identity, so a start entry that is not this
+      // store's own instance (a caller-built entry) still ends a self-signed chain cleanly
+      LSeen := False;
+      for LExisting in LCs do
+      begin
+        if LExisting.Certificate.Equals(LX509c) then
+        begin
+          LSeen := True;
+          Break;
+        end;
+      end;
+      if LSeen then
         LC := nil
       else
       begin
         LCs.Add(LC);
-        if (LNextC = nil) or (LNextC = LC) then
+        if (LNextC = nil) or LNextC.Certificate.Equals(LX509c) then
           LC := nil
         else
           LC := LNextC;
@@ -1114,6 +1131,79 @@ begin
     end;
     Result := TCollectionUtilities.ToArray<IX509CertificateEntry>(LCs);
   finally
+    LCs.Free;
+  end;
+end;
+
+function TPkcs12Store.GetCertificateChain(const AAlias: String): TCryptoLibGenericArray<IX509CertificateEntry>;
+var
+  LC: IX509CertificateEntry;
+begin
+  if AAlias = '' then
+    raise EArgumentNilCryptoLibException.CreateRes(@SAliasNil);
+  if not IsKeyEntry(AAlias) then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  LC := GetCertificate(AAlias);
+  if LC = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+  Result := BuildChain(LC);
+end;
+
+function TPkcs12Store.GetCertificateChain(const ACertEntry: IX509CertificateEntry): TCryptoLibGenericArray<IX509CertificateEntry>;
+begin
+  if ACertEntry = nil then
+    raise EArgumentNilCryptoLibException.CreateRes(@SCertEntryNil);
+  Result := BuildChain(ACertEntry);
+end;
+
+function TPkcs12Store.GetCertificates: TCryptoLibGenericArray<IX509CertificateEntry>;
+var
+  LCs: TList<IX509CertificateEntry>;
+  LDone: TList<IX509Certificate>;
+  LI: Int32;
+  LName: String;
+
+  procedure AddIfNew(const AEntry: IX509CertificateEntry);
+  var
+    LK: Int32;
+    LEnc: TCryptoLibByteArray;
+  begin
+    if AEntry = nil then
+      Exit;
+    LEnc := AEntry.Certificate.GetEncoded();
+    for LK := 0 to LDone.Count - 1 do
+      if TArrayUtilities.AreEqual(LEnc, LDone[LK].GetEncoded()) then
+        Exit;
+    LCs.Add(AEntry);
+    LDone.Add(AEntry.Certificate);
+  end;
+
+begin
+  // enumerate every distinct certificate the store holds, including bags with no friendly name or
+  // local key id (reachable only here): key-entry certs, then certificate-only entries, then the
+  // remaining chain certs, de-duplicated by encoding - the same set Save writes
+  LCs := TList<IX509CertificateEntry>.Create;
+  LDone := TList<IX509Certificate>.Create;
+  try
+    for LI := 0 to FKeysOrder.Count - 1 do
+      AddIfNew(GetCertificate(FKeysOrder[LI]));
+    for LI := 0 to FCertsOrder.Count - 1 do
+    begin
+      LName := FCertsOrder[LI];
+      if not FKeys.ContainsKey(LName) then
+        AddIfNew(FCerts[LName]);
+    end;
+    for LI := 0 to FChainCertsOrder.Count - 1 do
+      AddIfNew(FChainCerts[FChainCertsOrder[LI]]);
+    Result := TCollectionUtilities.ToArray<IX509CertificateEntry>(LCs);
+  finally
+    LDone.Free;
     LCs.Free;
   end;
 end;
