@@ -1,0 +1,34 @@
+CryptoLib.Tests/src/Pkcs/PkcsEncryptedPrivateKeyInfoTests.pas
+  s_09d3c46d1a9b1f::t_b5c3f6aff76302 48
+  s_09d3c46d1a9b1f::t_5a4670f11d1de6 218-229
+  s_09d3c46d1a9b1f::t_1b28cdafe4527c 78
+CryptoLib/src/OpenSsl/ClpOpenSslPemUtilities.pas
+  s_09d3c46d1a9b1f::t_88fe91b700b904 139-140
+CryptoLib/src/Crypto/ClpPbeUtilities.pas
+  s_09d3c46d1a9b1f::t_d41bd7b38cca11 640-641
+CryptoLib.Tests/src/OpenSsl/OpenSslReaderTests.pas
+  s_09d3c46d1a9b1f::t_8a4e17d656fd0c 479-485
+  s_09d3c46d1a9b1f::t_271f130e4435c7 87
+CryptoLib.Tests/Data/OpenSsl/Reader/Keys/RsaAes256CbcUtf8Pass.pem
+  s_09d3c46d1a9b1f::t_8729ac0e532ed4 1-30
+CryptoLib.Tests/Data/OpenSsl/Reader/Manifest.csv
+  s_09d3c46d1a9b1f::t_1f2742227a488a 41
+CryptoLib.Tests/Data/Pkcs/EncryptedPrivateKeyInfo/Manifest.csv
+  s_09d3c46d1a9b1f::t_76757adb40f6cd 17
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "eae5434b1b438c0b0850379080601b12833de820",
+  "prompts": {},
+  "sessions": {
+    "s_09d3c46d1a9b1f": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "753841da-6650-4f22-956f-630e9622811d",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
