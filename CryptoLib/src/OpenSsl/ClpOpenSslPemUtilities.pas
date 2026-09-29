@@ -136,7 +136,8 @@ var
 begin
   if not TryGetCipherAlgorithm(ABaseAlg, LAlgorithm, LKeyBits) then
     Exit(nil);
-  LPasswordBytes := TPbeParametersGenerator.Pkcs5PasswordToBytes(APassword);
+  // DEK-Info keys are derived from the passphrase's UTF-8 octets, as OpenSSL does
+  LPasswordBytes := TPbeParametersGenerator.Pkcs5PasswordToUtf8Bytes(APassword);
   LPGen := TOpenSslPbeParametersGenerator.Create();
   LPGen.Init(LPasswordBytes, ASalt);
   Result := LPGen.GenerateDerivedParameters(LAlgorithm, LKeyBits);

@@ -45,6 +45,7 @@ uses
   ClpPrivateKeyInfoFactory,
   ClpPrivateKeyFactory,
   ClpPbeUtilities,
+  ClpPbeParametersGenerator,
   ClpCryptoLibConfig,
   ClpAsn1Objects,
   ClpIPkcsAsn1Objects,
@@ -74,6 +75,7 @@ type
     procedure TestOpensslPbes2AesEcbKeys;
     procedure TestOpensslPbes2AesOfbKeys;
     procedure TestOpensslPbes2AesDefaultKeys;
+    procedure TestOpensslPbes2Utf8Passphrase;
     procedure TestPbkdf2IterationCountBound;
     procedure TestPkcs5V1PbeIterationCountBound;
     procedure TestPbeDefaultMaxIterationCount;
@@ -211,6 +213,18 @@ begin
   DoTestOpensslKey('pbes2.aes192', TPkcsEncryptedPrivateKeyInfoVectors.LoadKeyBytes('Pbes2Aes192'), LPassword);
 
   DoTestOpensslKey('pbes2.aes256', TPkcsEncryptedPrivateKeyInfoVectors.LoadKeyBytes('Pbes2Aes256'), LPassword);
+end;
+
+procedure TTestPkcsEncryptedPrivateKeyInfo.TestOpensslPbes2Utf8Passphrase;
+var
+  LPassword: TCryptoLibCharArray;
+begin
+  LPassword := StringToCharArray(TPkcsEncryptedPrivateKeyInfoVectors.GetPassword('Pbes2Aes256CbcUtf8Pass'));
+  // pins the manifest/loader/UTF-8 conversion chain to the octets the vector was made with
+  CheckTrue(AreEqual(DecodeHex('70C3A4737377C3B67264E282AC'),
+    TPbeParametersGenerator.Pkcs5PasswordToUtf8Bytes(LPassword)), 'UTF-8 passphrase octets');
+  DoTestOpensslKey('pbes2.aes-256-cbc.utf8-passphrase',
+    TPkcsEncryptedPrivateKeyInfoVectors.LoadKeyBytes('Pbes2Aes256CbcUtf8Pass'), LPassword);
 end;
 
 procedure TTestPkcsEncryptedPrivateKeyInfo.TestPbkdf2IterationCountBound;

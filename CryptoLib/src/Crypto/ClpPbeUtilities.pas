@@ -637,7 +637,8 @@ begin
 
     LSalt := LPbkdf2Params.GetSaltBytes();
     LIterationCount := CheckPbeIterationCount(LPbkdf2Params.IterationCountObject);
-    LKeyBytes := TPbeParametersGenerator.Pkcs5PasswordToBytes(APassword);
+    // PBES2 interoperates on the passphrase's UTF-8 octets (RFC 8018 sec 3)
+    LKeyBytes := TPbeParametersGenerator.Pkcs5PasswordToUtf8Bytes(APassword);
 
     LKeyLengthObject := LPbkdf2Params.KeyLengthObject;
     if LKeyLengthObject <> nil then

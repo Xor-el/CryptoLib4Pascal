@@ -84,6 +84,7 @@ type
     procedure TestOpenSslAes128;
     procedure TestOpenSslAes192;
     procedure TestOpenSslAes256;
+    procedure TestOpenSslAes256Utf8Passphrase;
     procedure TestOpenSslBlowfish;
     procedure TestEncryptedPrivateKey;
     procedure TestPkcs8;
@@ -473,6 +474,13 @@ end;
 procedure TOpenSslReaderTest.TestOpenSslAes256;
 begin
   DoOpenSslTests('aes256');
+end;
+
+procedure TOpenSslReaderTest.TestOpenSslAes256Utf8Passphrase;
+begin
+  // a legacy DEK-Info key encrypted under a non-ASCII passphrase must decrypt from its UTF-8 octets
+  DoOpenSslEncryptedTestData(TOpenSslVectors.LoadPemString('RsaAes256CbcUtf8Pass'),
+    TOpenSslVectors.GetPassword('RsaAes256CbcUtf8Pass'), False);
 end;
 
 procedure TOpenSslReaderTest.TestOpenSslBlowfish;
