@@ -14,3 +14,4 @@ Pbes2Aes256Ofb,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256Ofb.der,12345678a,pb
 Pbes2Aes128,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes128.der,12345678a,pbes2.aes128
 Pbes2Aes192,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes192.der,12345678a,pbes2.aes192
 Pbes2Aes256,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256.der,12345678a,pbes2.aes256
+Pbes2Aes256CbcUtf8Pass,Pkcs/EncryptedPrivateKeyInfo/Keys/Pbes2Aes256CbcUtf8Pass.der,pässwörd€,pbes2.aes-256-cbc.utf8-passphrase
