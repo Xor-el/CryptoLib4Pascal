@@ -1043,6 +1043,10 @@
         <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPemWriter.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemWriter.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpOpenSslPemReader.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpICertificateTrustBlock.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIX509TrustedCertificateBlock.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpCertificateTrustBlock.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpX509TrustedCertificateBlock.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemReader.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemParser.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemReader.pas"/>
@@ -1471,6 +1475,7 @@
         <DCCReference Include="..\src\Pkix\CertPathTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathBuilderTests.pas"/>
         <DCCReference Include="..\src\Pkix\CertPathValidatorTests.pas"/>
+        <DCCReference Include="..\src\Pkix\CertPathHardeningTests.pas"/>
         <DCCReference Include="..\src\Pkix\ValidityModelTests.pas"/>
         <DCCReference Include="..\src\Pkix\PkixPolicyMappingTests.pas"/>
         <DCCReference Include="..\src\Ocsp\OcspTests.pas"/>

@@ -55,7 +55,19 @@ uses
   ClpICmsAsn1Objects,
   ClpCmsObjectIdentifiers,
   ClpIAsn1Objects,
+  ClpAsn1Objects,
   ClpIX9ECAsn1Objects,
+  ClpIX509Certificate,
+  ClpICertificateTrustBlock,
+  ClpCertificateTrustBlock,
+  ClpIX509TrustedCertificateBlock,
+  ClpX509TrustedCertificateBlock,
+  ClpISigner,
+  ClpEd25519Signer,
+  ClpIEd25519Signer,
+  ClpIEd25519Parameters,
+  ClpCryptoLibTypes,
+  CertTestUtilities,
   CryptoLibTestBase,
   OpenSslVectors;
 
@@ -88,6 +100,8 @@ type
     procedure TestOpenSslBlowfish;
     procedure TestEncryptedPrivateKey;
     procedure TestPkcs8;
+    procedure TestTrustedCertificateRoundTrip;
+    procedure TestEddsaPrivateKey;
   end;
 
 implementation
@@ -547,6 +561,88 @@ begin
   finally
     LStream.Free;
   end;
+end;
+
+procedure TOpenSslReaderTest.TestTrustedCertificateRoundTrip;
+var
+  LKp: IAsymmetricCipherKeyPair;
+  LCert: IX509Certificate;
+  LUses: TCryptoLibGenericArray<IDerObjectIdentifier>;
+  LTrustBlock: ICertificateTrustBlock;
+  LBlock, LReadBlock: IX509TrustedCertificateBlock;
+  LWriteStream, LReadStream: TStringStream;
+  LWriter: IOpenSslPemWriter;
+  LReader: IOpenSslPemReader;
+  LReadVal: TValue;
+begin
+  LKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LCert := TCertTestUtilities.GenerateRootCert(LKp);
+
+  // id-kp-serverAuth and id-kp-clientAuth
+  LUses := TCryptoLibGenericArray<IDerObjectIdentifier>.Create(
+    TDerObjectIdentifier.Create('1.3.6.1.5.5.7.3.1') as IDerObjectIdentifier,
+    TDerObjectIdentifier.Create('1.3.6.1.5.5.7.3.2') as IDerObjectIdentifier);
+  LTrustBlock := TCertificateTrustBlock.Create('Test Trust Alias', LUses) as ICertificateTrustBlock;
+  LBlock := TX509TrustedCertificateBlock.Create(LCert, LTrustBlock) as IX509TrustedCertificateBlock;
+
+  LWriteStream := TStringStream.Create('', TEncoding.ASCII);
+  try
+    LWriter := CreatePemWriter(LWriteStream);
+    LWriter.WriteObject(TValue.From<IX509TrustedCertificateBlock>(LBlock));
+
+    LReadStream := TStringStream.Create(LWriteStream.DataString, TEncoding.ASCII);
+    try
+      LReader := CreatePemReader(LReadStream);
+      LReadVal := LReader.ReadObject();
+      Check(not LReadVal.IsEmpty, 'trusted certificate should read back');
+      Check(LReadVal.TryGetAsType<IX509TrustedCertificateBlock>(LReadBlock),
+        'the object should be a trusted certificate block');
+      Check(LReadBlock.GetCertificate.Equals(LCert), 'the certificate should round-trip');
+      CheckEquals('Test Trust Alias', LReadBlock.GetTrustBlock.GetAlias, 'the alias should round-trip');
+      CheckEquals(2, System.Length(LReadBlock.GetTrustBlock.GetUses),
+        'both key purpose uses should round-trip');
+    finally
+      LReadStream.Free;
+    end;
+  finally
+    LWriteStream.Free;
+  end;
+end;
+
+procedure TOpenSslReaderTest.TestEddsaPrivateKey;
+var
+  LStream: TStringStream;
+  LReader: IOpenSslPemReader;
+  LReadVal: TValue;
+  LKey: IAsymmetricKeyParameter;
+  LPriv: IEd25519PrivateKeyParameters;
+  LPub: IEd25519PublicKeyParameters;
+  LSigner: ISigner;
+  LMsg, LSig: TCryptoLibByteArray;
+begin
+  LStream := TStringStream.Create(TOpenSslVectors.LoadPemString('EddsaUnencrypted'), TEncoding.ASCII);
+  try
+    LReader := CreatePemReader(LStream);
+    LReadVal := LReader.ReadObject();
+    Check(not LReadVal.IsEmpty, 'the Ed25519 private key should read back');
+    Check(LReadVal.TryGetAsType<IAsymmetricKeyParameter>(LKey), 'the object should be an asymmetric key');
+    Check(Supports(LKey, IEd25519PrivateKeyParameters, LPriv), 'the key should be an Ed25519 private key');
+  finally
+    LStream.Free;
+  end;
+
+  LPub := LPriv.GeneratePublicKey();
+  LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
+
+  LSigner := TEd25519Signer.Create() as ISigner;
+  LSigner.Init(True, LPriv);
+  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  LSig := LSigner.GenerateSignature();
+
+  LSigner := TEd25519Signer.Create() as ISigner;
+  LSigner.Init(False, LPub);
+  LSigner.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  Check(LSigner.VerifySignature(LSig), 'the Ed25519 signature should verify');
 end;
 
 initialization

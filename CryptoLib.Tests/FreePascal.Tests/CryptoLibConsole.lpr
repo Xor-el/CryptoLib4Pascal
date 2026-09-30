@@ -50,6 +50,7 @@ uses
   Lib25519Tests, Asn1CipherBuilderWithKeyTests, AesBitSlicedTests,
   CryptoLibTestBase, PkixFoundationTests, PkixNameConstraintTests,
   PkixComparerTests, CertPathTests, CertPathBuilderTests, CertPathValidatorTests, ValidityModelTests,
+  CertPathHardeningTests,
   PkixPolicyMappingTests, OcspTests, CryptoLibHashSetTests, PkitsTestBase,
   NistCertPathTests, AttrCertPathTests, CtrDrbgTests, DrbgTestSupport,
   HashDrbgTests, HMacDrbgTests, SimdSelectSlotTests, BinaryPrimitivesTests,

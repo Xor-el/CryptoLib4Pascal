@@ -155,7 +155,7 @@ begin
     if LAnchorCert <> nil then
       LBuilder.Append('  Trust Anchor: ').AppendLine(LAnchorCert.IssuerDN.ToString())
     else
-      LBuilder.Append('  Trust Anchor: ').AppendLine(GetTrustAnchor().CAName);
+      LBuilder.Append('  Trust Anchor: ').AppendLine(GetTrustAnchor().CA.ToString());
     LBuilder.AppendLine(']');
     Result := LBuilder.ToString();
   finally

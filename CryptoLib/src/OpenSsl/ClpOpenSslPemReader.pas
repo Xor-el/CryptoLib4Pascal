@@ -45,6 +45,9 @@ uses
   ClpX509Certificate,
   ClpX509Crl,
   ClpX509V2AttributeCertificate,
+  ClpICertificateTrustBlock,
+  ClpIX509TrustedCertificateBlock,
+  ClpX509TrustedCertificateBlock,
   ClpPkcs10CertificationRequest,
   ClpCmsAsn1Objects,
   ClpX509RsaAsn1Objects,
@@ -75,7 +78,10 @@ uses
 
 resourcestring
   SUnrecognizedObject = 'unrecognized object: %s';
-  SProblemParsingCert = 'problem parsing cert: %s';
+  SProblemParsingCertificate = 'problem parsing certificate: %s';
+  SProblemParsingCrl = 'problem parsing CRL: %s';
+  SProblemParsingCertRequest = 'problem parsing certification request: %s';
+  SProblemParsingTrustedCert = 'problem parsing trusted certificate: %s';
   SProblemParsingPkcs7 = 'problem parsing PKCS#7 object: %s';
   SMalformedSequence = 'malformed sequence in %s private key';
   SWrongVersionDsa = 'wrong version for DSA private key';
@@ -102,6 +108,7 @@ type
     function ReadRsaPublicKey(const APemObject: IPemObject): IAsymmetricKeyParameter;
     function ReadPublicKey(const APemObject: IPemObject): IAsymmetricKeyParameter;
     function ReadCertificate(const APemObject: IPemObject): IX509Certificate;
+    function ReadTrustedCertificate(const APemObject: IPemObject): IX509TrustedCertificateBlock;
     function ReadCrl(const APemObject: IPemObject): IX509Crl;
     function ReadCertificateRequest(const APemObject: IPemObject): IPkcs10CertificationRequest;
     function ReadAttributeCertificate(const APemObject: IPemObject): IX509V2AttributeCertificate;
@@ -173,6 +180,12 @@ begin
     Exit;
   end;
 
+  if LType = 'TRUSTED CERTIFICATE' then
+  begin
+    Result := TValue.From<IX509TrustedCertificateBlock>(ReadTrustedCertificate(LObj));
+    Exit;
+  end;
+
   if (LType = 'PKCS7') or (LType = 'CMS') then
   begin
     Result := TValue.From<ICmsContentInfo>(ReadPkcs7(LObj));
@@ -229,7 +242,17 @@ begin
     Result := TX509Certificate.Create(APemObject.Content);
   except
     on E: Exception do
-      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCert, [E.Message]);
+      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCertificate, [E.Message]);
+  end;
+end;
+
+function TOpenSslPemReader.ReadTrustedCertificate(const APemObject: IPemObject): IX509TrustedCertificateBlock;
+begin
+  try
+    Result := TX509TrustedCertificateBlock.Create(APemObject.Content);
+  except
+    on E: Exception do
+      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingTrustedCert, [E.Message]);
   end;
 end;
 
@@ -239,7 +262,7 @@ begin
     Result := TX509Crl.Create(APemObject.Content);
   except
     on E: Exception do
-      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCert, [E.Message]);
+      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCrl, [E.Message]);
   end;
 end;
 
@@ -249,7 +272,7 @@ begin
     Result := TPkcs10CertificationRequest.Create(APemObject.Content);
   except
     on E: Exception do
-      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCert, [E.Message]);
+      raise EPemGenerationCryptoLibException.CreateResFmt(@SProblemParsingCertRequest, [E.Message]);
   end;
 end;
 

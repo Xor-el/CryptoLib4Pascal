@@ -308,7 +308,7 @@ begin
   CheckNull(LAnchor.TrustedCert, 'no trusted certificate was supplied');
   CheckNotNull(LAnchor.CAPublicKey, 'the public key round-trips');
   CheckTrue(LAnchor.CA.Equivalent(FRootCert.SubjectDN, True), 'the CA name round-trips');
-  CheckEquals(FRootCert.SubjectDN.ToString(), LAnchor.CAName, 'the CA name string round-trips');
+  CheckEquals(FRootCert.SubjectDN.ToString(), LAnchor.CA.ToString(), 'the CA name string round-trips');
 
   LRaised := False;
   try

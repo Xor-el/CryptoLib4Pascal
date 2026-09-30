@@ -49,7 +49,7 @@ uses
   Asn1CipherBuilderWithKeyTests, AesBitSlicedTests, ECDHPrimeConstantTimeTests,
   ECDHBinaryConstantTimeTests, CryptoLibTestBase, PkixFoundationTests,
   PkixNameConstraintTests, PkixComparerTests, CertPathTests, CertPathBuilderTests,
-  CertPathValidatorTests, ValidityModelTests, PkixPolicyMappingTests, OcspTests,
+  CertPathValidatorTests, ValidityModelTests, CertPathHardeningTests, PkixPolicyMappingTests, OcspTests,
   CryptoLibHashSetTests, PkitsTestBase, NistCertPathTests, AttrCertPathTests,
   CtrDrbgTests, DrbgTestSupport, HashDrbgTests, HMacDrbgTests,
   SimdSelectSlotTests, BinaryPrimitivesTests, PkcsEncryptedPrivateKeyInfoTests,

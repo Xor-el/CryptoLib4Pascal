@@ -301,9 +301,11 @@ uses
   ClpPointKernelX86Backend, ClpGatherKernelX86Backend, 
   ClpMontKernelArmBackend, ClpPointKernelArmBackend, 
   ClpGatherKernelArmBackend, ClpRsaBlinding, ClpMontKernelContext, 
-  ClpIRsaBlinding, ClpRsaBlindingTypes, ClpIMontKernelContext, ClpHpkeTypes,
-  ClpHpkeKdf, ClpHpkeAead, ClpHpkeContext, ClpDhKem, ClpHpke, ClpIHpkeKdf,
-  ClpIHpkeAead, ClpIHpkeContext, ClpIHpkeKem, ClpIHpke;
+  ClpIRsaBlinding, ClpRsaBlindingTypes, ClpIMontKernelContext, ClpHpkeTypes, 
+  ClpHpkeKdf, ClpHpkeAead, ClpHpkeContext, ClpDhKem, ClpHpke, ClpIHpkeKdf, 
+  ClpIHpkeAead, ClpIHpkeContext, ClpIHpkeKem, ClpIHpke, 
+  ClpICertificateTrustBlock, ClpIX509TrustedCertificateBlock, 
+  ClpCertificateTrustBlock, ClpX509TrustedCertificateBlock;
 
 implementation
 

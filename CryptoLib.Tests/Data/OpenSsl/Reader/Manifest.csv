@@ -39,3 +39,4 @@ RsaBlowfishEcb,OpenSsl/Reader/Keys/RsaBlowfishEcb.pem,changeit,Rsa,
 RsaBlowfishOfb,OpenSsl/Reader/Keys/RsaBlowfishOfb.pem,changeit,Rsa,
 RsaUnencrypted,OpenSsl/Reader/Keys/RsaUnencrypted.pem,,Rsa,
 RsaAes256CbcUtf8Pass,OpenSsl/Reader/Keys/RsaAes256CbcUtf8Pass.pem,pässwörd€,Rsa,UTF-8 passphrase
+EddsaUnencrypted,OpenSsl/Reader/Keys/EddsaUnencrypted.pem,,Ed25519,

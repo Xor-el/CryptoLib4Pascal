@@ -44,6 +44,7 @@ uses
   ClpIX509Certificate,
   ClpIX509Crl,
   ClpIX509V2AttributeCertificate,
+  ClpIX509TrustedCertificateBlock,
   ClpIPkcs10CertificationRequest,
   ClpICmsAsn1Objects,
   ClpIX9ECAsn1Objects,
@@ -140,6 +141,7 @@ var
   LPemObj: IPemObject;
   LPemGen: IPemObjectGenerator;
   LCert: IX509Certificate;
+  LTrustedCert: IX509TrustedCertificateBlock;
   LCrl: IX509Crl;
   LAkp: IAsymmetricKeyParameter;
   LPrivInfo: IPrivateKeyInfo;
@@ -178,6 +180,18 @@ begin
         raise EPemGenerationCryptoLibException.CreateResFmt(@SCannotEncodeObject, [E.Message]);
     end;
     Exit(TPemObject.Create('CERTIFICATE', LEncoding));
+  end;
+
+  // X509 trusted certificate block
+  if AObj.TryGetAsType<IX509TrustedCertificateBlock>(LTrustedCert) then
+  begin
+    try
+      LEncoding := LTrustedCert.GetEncoded();
+    except
+      on E: Exception do
+        raise EPemGenerationCryptoLibException.CreateResFmt(@SCannotEncodeObject, [E.Message]);
+    end;
+    Exit(TPemObject.Create('TRUSTED CERTIFICATE', LEncoding));
   end;
 
   // X509 CRL
