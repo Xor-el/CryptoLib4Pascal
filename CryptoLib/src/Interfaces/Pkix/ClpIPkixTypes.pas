@@ -47,7 +47,6 @@ type
 
     function GetTrustedCert: IX509Certificate;
     function GetCA: IX509Name;
-    function GetCAName: String;
     function GetCAPublicKey: IAsymmetricKeyParameter;
     /// <summary>The DER encoding of a NameConstraints extension value, or nil.</summary>
     function GetNameConstraints: TCryptoLibByteArray;
@@ -56,7 +55,6 @@ type
 
     property TrustedCert: IX509Certificate read GetTrustedCert;
     property CA: IX509Name read GetCA;
-    property CAName: String read GetCAName;
     property CAPublicKey: IAsymmetricKeyParameter read GetCAPublicKey;
   end;
 
@@ -377,6 +375,7 @@ type
 
     function GetTrustAnchors: TCryptoLibGenericArray<ITrustAnchor>;
     procedure SetTrustAnchors(const AValue: TCryptoLibGenericArray<ITrustAnchor>);
+    procedure SetTrustAnchor(const ATrustAnchor: ITrustAnchor);
 
     function GetTargetConstraintsCert: ISelector<IX509Certificate>;
     procedure SetTargetConstraintsCert(const AValue: ISelector<IX509Certificate>);
@@ -440,6 +439,7 @@ type
     /// <summary>Certificates that must not be used while building a path.</summary>
     function GetExcludedCerts: TCryptoLibGenericArray<IX509Certificate>;
     procedure SetExcludedCerts(const AValue: TCryptoLibGenericArray<IX509Certificate>);
+    function IsExcludedCert(const ACert: IX509Certificate): Boolean;
 
     property MaxPathLength: Int32 read GetMaxPathLength write SetMaxPathLength;
   end;

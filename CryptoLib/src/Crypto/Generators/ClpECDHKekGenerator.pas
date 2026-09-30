@@ -95,6 +95,7 @@ procedure TECDHKekGenerator.InitKdf;
 var
   LKeyInfo: IAlgorithmIdentifier;
   LSuppPub: IAsn1OctetString;
+  LEntityUInfo: IAsn1OctetString;
   LEcc: IEccCmsSharedInfo;
   LKdfParams: IKdfParameters;
   LZ: TCryptoLibByteArray;
@@ -105,7 +106,9 @@ begin
   LKeyInfo := TAlgorithmIdentifier.Create(FParams.Algorithm, TDerNull.Instance);
   LSuppPub := TDerOctetString.WithContents(
     TPack.UInt32_To_BE(UInt32(FParams.KeySize)));
-  LEcc := TEccCmsSharedInfo.Create(LKeyInfo, LSuppPub);
+  // RFC 5753 sec. 7.2: the optional user keying material belongs in entityUInfo
+  LEntityUInfo := TDerOctetString.WithContentsOptional(FParams.ExtraInfo);
+  LEcc := TEccCmsSharedInfo.Create(LKeyInfo, LEntityUInfo, LSuppPub);
   LZ := FParams.Z;
   LKdfParams := TKdfParameters.Create(LZ, LEcc.GetDerEncoded());
   FKdf.Init(LKdfParams);

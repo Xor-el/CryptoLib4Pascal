@@ -970,6 +970,10 @@ contains
   ClpIHpkeAead in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeAead.pas',
   ClpIHpkeContext in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeContext.pas',
   ClpIHpkeKem in '..\..\Interfaces\Crypto\Hpke\ClpIHpkeKem.pas',
-  ClpIHpke in '..\..\Interfaces\Crypto\Hpke\ClpIHpke.pas';
+  ClpIHpke in '..\..\Interfaces\Crypto\Hpke\ClpIHpke.pas',
+  ClpICertificateTrustBlock in '..\..\Interfaces\OpenSsl\ClpICertificateTrustBlock.pas',
+  ClpIX509TrustedCertificateBlock in '..\..\Interfaces\OpenSsl\ClpIX509TrustedCertificateBlock.pas',
+  ClpCertificateTrustBlock in '..\..\OpenSsl\ClpCertificateTrustBlock.pas',
+  ClpX509TrustedCertificateBlock in '..\..\OpenSsl\ClpX509TrustedCertificateBlock.pas';
 
 end.

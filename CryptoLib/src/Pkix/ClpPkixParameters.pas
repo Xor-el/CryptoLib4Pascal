@@ -100,6 +100,8 @@ type
 
     function GetTrustAnchors: TCryptoLibGenericArray<ITrustAnchor>;
     procedure SetTrustAnchors(const AValue: TCryptoLibGenericArray<ITrustAnchor>);
+    /// <summary>Set a single trust anchor, replacing any currently configured.</summary>
+    procedure SetTrustAnchor(const ATrustAnchor: ITrustAnchor);
 
     function GetTargetConstraintsCert: ISelector<IX509Certificate>;
     procedure SetTargetConstraintsCert(const AValue: ISelector<IX509Certificate>);
@@ -269,6 +271,11 @@ begin
 
   if LCount < 1 then
     raise EArgumentCryptoLibException.CreateRes(@STrustAnchorsEmpty);
+end;
+
+procedure TPkixParameters.SetTrustAnchor(const ATrustAnchor: ITrustAnchor);
+begin
+  SetTrustAnchors(TCryptoLibGenericArray<ITrustAnchor>.Create(ATrustAnchor));
 end;
 
 function TPkixParameters.GetTargetConstraintsCert: ISelector<IX509Certificate>;

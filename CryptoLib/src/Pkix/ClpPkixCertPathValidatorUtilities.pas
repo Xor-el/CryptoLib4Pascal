@@ -90,6 +90,10 @@ type
       const AIssuer: IX509Name; const ACrlSelect: IX509CrlStoreSelector;
       const APkixParams: IPkixParameters; AValidityDate: TDateTime): TCryptoLibGenericArray<IX509Crl>; static;
     class function EquivalentName(const AFirst, ASecond: IX509Name): Boolean; static;
+    /// <summary>The public key of ATrust if it names ACertIssuer, else nil. An anchor given as a
+    /// certificate is matched on that certificate's subject, one given as a name and key on the name.</summary>
+    class function GetIssuerPublicKey(const ATrust: ITrustAnchor;
+      const ACertIssuer: IX509Name): IAsymmetricKeyParameter; static;
     class function HasCriticalExtension(const AExtensions: IX509Extensions;
       const AExtensionOid: IDerObjectIdentifier): Boolean; overload; static;
     class procedure RemovePolicyNodeRecurse(const APolicyNodes: TPkixPolicyNodeLevels;
@@ -132,6 +136,15 @@ type
     class function GetIssuerPrincipal(const AAttrCert: IX509V2AttributeCertificate): IX509Name; overload; static;
 
     class function IsSelfIssued(const ACert: IX509Certificate): Boolean; static;
+
+    /// <summary>The number of non-self-issued intermediates in ATbvPath (excluding the target at
+    /// index 0), plus the candidate ATbvCert when it too is non-self-issued.</summary>
+    class function CountIntermediates(const ATbvPath: TList<IX509Certificate>;
+      const ATbvCert: IX509Certificate): Int32; static;
+
+    /// <summary>Raise a recoverable failure naming AIssuer when ACrls is empty.</summary>
+    class procedure CheckCrlsNotEmpty(const ACrls: TCryptoLibGenericArray<IX509Crl>;
+      const AIssuer: IX509Name); static;
 
     class function GetAlgorithmIdentifier(const AKey: IAsymmetricKeyParameter): IAlgorithmIdentifier; static;
 
@@ -259,76 +272,67 @@ begin
   Result := (AFirst <> nil) and (ASecond <> nil) and AFirst.Equivalent(ASecond, True);
 end;
 
+class function TPkixCertPathValidatorUtilities.GetIssuerPublicKey(const ATrust: ITrustAnchor;
+  const ACertIssuer: IX509Name): IAsymmetricKeyParameter;
+var
+  LTrustedCert: IX509Certificate;
+begin
+  // an anchor is built either from a trusted certificate or from a name and public key
+  LTrustedCert := ATrust.TrustedCert;
+  if LTrustedCert = nil then
+  begin
+    if ACertIssuer.Equivalent(ATrust.CA, True) then
+      Result := ATrust.CAPublicKey
+    else
+      Result := nil;
+    Exit;
+  end;
+
+  if ACertIssuer.Equivalent(LTrustedCert.SubjectDN, True) then
+    Result := LTrustedCert.GetPublicKey()
+  else
+    Result := nil;
+end;
+
 class function TPkixCertPathValidatorUtilities.FindTrustAnchor(const ACert: IX509Certificate;
   const ATrustAnchors: TCryptoLibGenericArray<ITrustAnchor>): ITrustAnchor;
 var
   LIdx: Int32;
   LTrust: ITrustAnchor;
   LTrustPublicKey: IAsymmetricKeyParameter;
-  LSelector: IX509CertStoreSelector;
-  LCaName: IX509Name;
+  LCertIssuer: IX509Name;
   LInvalidKeyMessage: String;
+  LHaveFailure: Boolean;
 begin
-  LSelector := TX509CertStoreSelector.Create() as IX509CertStoreSelector;
-  LSelector.Subject := GetIssuerPrincipal(ACert);
+  LCertIssuer := GetIssuerPrincipal(ACert);
 
   Result := nil;
   LInvalidKeyMessage := '';
+  LHaveFailure := False;
 
   for LIdx := 0 to System.High(ATrustAnchors) do
   begin
     LTrust := ATrustAnchors[LIdx];
-    LTrustPublicKey := nil;
+    LTrustPublicKey := GetIssuerPublicKey(LTrust, LCertIssuer);
+    if LTrustPublicKey = nil then
+      Continue;
 
-    if LTrust.TrustedCert <> nil then
-    begin
-      if LSelector.Match(LTrust.TrustedCert) then
-        LTrustPublicKey := LTrust.TrustedCert.GetPublicKey()
-      else
-        LTrust := nil;
-    end
-    else if (LTrust.CAName <> '') and (LTrust.CAPublicKey <> nil) then
-    begin
-      try
-        LCaName := LTrust.CA;
-        if (LCaName = nil) and (LTrust.CAName <> '') then
-          LCaName := TX509Name.Create(LTrust.CAName) as IX509Name;
-
-        if EquivalentName(GetIssuerPrincipal(ACert), LCaName) then
-          LTrustPublicKey := LTrust.CAPublicKey
-        else
-          LTrust := nil;
-      except
-        on E: Exception do
-          LTrust := nil;
-      end;
-    end
-    else
-    begin
-      LTrust := nil;
-    end;
-
-    if LTrustPublicKey <> nil then
-    begin
-      try
-        ACert.Verify(LTrustPublicKey);
-      except
-        on E: Exception do
-        begin
-          LInvalidKeyMessage := E.Message;
-          LTrust := nil;
-        end;
-      end;
-    end;
-
-    if LTrust <> nil then
-    begin
+    try
+      ACert.Verify(LTrustPublicKey);
       Result := LTrust;
       Exit;
+    except
+      on E: Exception do
+        // anchors sharing the issuer's subject can fail in turn; report the first failure
+        if not LHaveFailure then
+        begin
+          LHaveFailure := True;
+          LInvalidKeyMessage := E.Message;
+        end;
     end;
   end;
 
-  if LInvalidKeyMessage <> '' then
+  if LHaveFailure then
     raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@STrustAnchorValidationFailed,
       [LInvalidKeyMessage]);
 end;
@@ -386,6 +390,26 @@ end;
 class function TPkixCertPathValidatorUtilities.IsSelfIssued(const ACert: IX509Certificate): Boolean;
 begin
   Result := EquivalentName(ACert.SubjectDN, ACert.IssuerDN);
+end;
+
+class function TPkixCertPathValidatorUtilities.CountIntermediates(const ATbvPath: TList<IX509Certificate>;
+  const ATbvCert: IX509Certificate): Int32;
+var
+  LIdx: Int32;
+begin
+  Result := 0;
+  if ATbvPath.Count < 1 then
+    Exit;
+
+  // ATbvPath[0] is the target; skip it and count only non-self-issued intermediates
+  for LIdx := 1 to ATbvPath.Count - 1 do
+  begin
+    if not IsSelfIssued(ATbvPath[LIdx]) then
+      Inc(Result);
+  end;
+
+  if not IsSelfIssued(ATbvCert) then
+    Inc(Result);
 end;
 
 class function TPkixCertPathValidatorUtilities.GetAlgorithmIdentifier(const AKey: IAsymmetricKeyParameter)
@@ -817,8 +841,16 @@ begin
   LCrlSelect.CompleteCrlEnabled := True;
 
   Result := TPkixCrlUtilities.FindCrls(LCrlSelect, APkixParams, AValidityDate);
-  if System.Length(Result) < 1 then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SNoCrlsFound, [LCertObjIssuer.ToString()]);
+  CheckCrlsNotEmpty(Result, LCertObjIssuer);
+end;
+
+class procedure TPkixCertPathValidatorUtilities.CheckCrlsNotEmpty(
+  const ACrls: TCryptoLibGenericArray<IX509Crl>; const AIssuer: IX509Name);
+begin
+  // an empty result is recoverable: another distribution point or mechanism may still settle the status
+  if System.Length(ACrls) < 1 then
+    raise ERecoverablePkixCertPathValidatorCryptoLibException.CreateResFmt(@SNoCrlsFound,
+      [AIssuer.ToString()]);
 end;
 
 class function TPkixCertPathValidatorUtilities.IsDeltaCrl(const ACrl: IX509Crl): Boolean;

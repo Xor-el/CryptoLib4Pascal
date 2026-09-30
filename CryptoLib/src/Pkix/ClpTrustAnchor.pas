@@ -34,8 +34,6 @@ resourcestring
   STrustedCertNil = 'trusted certificate cannot be nil';
   SCaPrincipalNil = 'CA principal cannot be nil';
   SCaPublicKeyNil = 'CA public key cannot be nil';
-  SCaNameNil = 'CA name cannot be nil';
-  SCaNameEmpty = 'CA name cannot be an empty string';
 
 type
   /// <summary>
@@ -48,7 +46,6 @@ type
   var
     FTrustedCert: IX509Certificate;
     FCaPrincipal: IX509Name;
-    FCaName: String;
     FPubKey: IAsymmetricKeyParameter;
     FNameConstraintsBytes: TCryptoLibByteArray;
     FNameConstraints: INameConstraints;
@@ -58,7 +55,6 @@ type
   strict protected
     function GetTrustedCert: IX509Certificate;
     function GetCA: IX509Name;
-    function GetCAName: String;
     function GetCAPublicKey: IAsymmetricKeyParameter;
 
   public
@@ -71,9 +67,6 @@ type
       const ANameConstraints: TCryptoLibByteArray); overload;
     /// <summary>Anchor given as a distinguished name and public key.</summary>
     constructor Create(const ACaPrincipal: IX509Name; const APubKey: IAsymmetricKeyParameter;
-      const ANameConstraints: TCryptoLibByteArray); overload;
-    /// <summary>Anchor given as an RFC 2253 distinguished name string and public key.</summary>
-    constructor Create(const ACaName: String; const APubKey: IAsymmetricKeyParameter;
       const ANameConstraints: TCryptoLibByteArray); overload;
 
     function GetNameConstraints: TCryptoLibByteArray;
@@ -104,21 +97,6 @@ begin
   if APubKey = nil then
     raise EArgumentNilCryptoLibException.CreateRes(@SCaPublicKeyNil);
   FCaPrincipal := ACaPrincipal;
-  FCaName := ACaPrincipal.ToString();
-  FPubKey := APubKey;
-  SetNameConstraints(ANameConstraints);
-end;
-
-constructor TTrustAnchor.Create(const ACaName: String; const APubKey: IAsymmetricKeyParameter;
-  const ANameConstraints: TCryptoLibByteArray);
-begin
-  inherited Create();
-  if ACaName = '' then
-    raise EArgumentCryptoLibException.CreateRes(@SCaNameEmpty);
-  if APubKey = nil then
-    raise EArgumentNilCryptoLibException.CreateRes(@SCaPublicKeyNil);
-  FCaPrincipal := TX509Name.Create(ACaName);
-  FCaName := ACaName;
   FPubKey := APubKey;
   SetNameConstraints(ANameConstraints);
 end;
@@ -140,11 +118,6 @@ end;
 function TTrustAnchor.GetCA: IX509Name;
 begin
   Result := FCaPrincipal;
-end;
-
-function TTrustAnchor.GetCAName: String;
-begin
-  Result := FCaName;
 end;
 
 function TTrustAnchor.GetCAPublicKey: IAsymmetricKeyParameter;
@@ -171,7 +144,7 @@ begin
     LBuilder.AppendLine('[');
     if FPubKey <> nil then
     begin
-      LBuilder.Append('  Trusted CA Issuer Name: ').AppendLine(FCaName);
+      LBuilder.Append('  Trusted CA Issuer Name: ').AppendLine(FCaPrincipal.ToString());
     end
     else if FTrustedCert <> nil then
     begin

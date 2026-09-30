@@ -64,6 +64,8 @@ type
 
     function GetExcludedCerts: TCryptoLibGenericArray<IX509Certificate>;
     procedure SetExcludedCerts(const AValue: TCryptoLibGenericArray<IX509Certificate>);
+    /// <summary>True when ACert is in the excluded set; tests membership without copying the set.</summary>
+    function IsExcludedCert(const ACert: IX509Certificate): Boolean;
 
     function Clone: IPkixParameters; override;
     function ToString: String; override;
@@ -119,6 +121,18 @@ end;
 procedure TPkixBuilderParameters.SetExcludedCerts(const AValue: TCryptoLibGenericArray<IX509Certificate>);
 begin
   FExcludedCerts := System.Copy(AValue);
+end;
+
+function TPkixBuilderParameters.IsExcludedCert(const ACert: IX509Certificate): Boolean;
+var
+  LIdx: Int32;
+begin
+  for LIdx := 0 to System.High(FExcludedCerts) do
+  begin
+    if FExcludedCerts[LIdx].Equals(ACert) then
+      Exit(True);
+  end;
+  Result := False;
 end;
 
 procedure TPkixBuilderParameters.SetParams(const AParameters: IPkixParameters);

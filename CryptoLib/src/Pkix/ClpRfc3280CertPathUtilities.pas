@@ -74,7 +74,9 @@ resourcestring
   SNoMatchingCrlIssuer = 'cannot find a matching CRL issuer for the certificate';
   SCrlSignerCriteriaFailed = 'subject criteria to find the issuer certificate for the CRL could not be set: %s';
   SCrlSignerSearchFailed = 'the issuer certificate for the CRL cannot be searched: %s';
-  SCrlSignerPathFailed = 'the certification path for the CRL signer failed to validate: %s';
+  SCrlSignerPathFailed = 'CertPath for CRL signer failed to validate. Per RFC 5280 sec. 6.3.3 (f) the ' +
+    'CRL issuer''s certification path must be anchored at the same trust anchor as the certificate being ' +
+    'checked: %s';
   SCrlCheckFailed = 'the certificate revocation status could not be checked: %s';
   SCrlSignerKeyUsage = 'the issuer certificate key usage extension does not permit CRL signing';
   SNoValidCrlIssuer = 'cannot find a valid CRL issuer certificate';
@@ -991,9 +993,8 @@ begin
     end;
   end;
 
-  if (System.Length(LValidCerts) < 1) and (LSignerLastMessage <> '') then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SCrlSignerPathFailed,
-      [LSignerLastMessage]);
+  // the default CRL signer always reaches LValidCerts, so a guard on LValidCerts being empty could
+  // never report a rejected delegated signer; the check below reports it once no key survives instead
 
   Result := nil;
   LKeyUsageRejected := False;
@@ -1025,6 +1026,10 @@ begin
 
   if System.Length(Result) < 1 then
   begin
+    // report a delegated signer's own path failure first: it is the real reason a CRL anchored at a
+    // different trust anchor is not accepted, ahead of the issuer key-usage or generic messages
+    if LSignerLastMessage <> '' then
+      raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SCrlSignerPathFailed, [LSignerLastMessage]);
     if LKeyUsageRejected then
       raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SCrlSignerKeyUsage);
     raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SNoValidCrlIssuer);
@@ -1299,7 +1304,13 @@ begin
       LValidCrlFound := True;
     except
       on E: Exception do
-        LLastMessage := E.Message;
+        // this fallback runs without the distribution-point stores, so finding nothing here says
+        // nothing about the distribution-point attempts above; keep their failure in the message
+        if LLastMessage <> '' then
+          LLastMessage := E.Message +
+            '. The CRL distribution points of the certificate were tried first and failed: ' + LLastMessage
+        else
+          LLastMessage := E.Message;
     end;
   end;
 

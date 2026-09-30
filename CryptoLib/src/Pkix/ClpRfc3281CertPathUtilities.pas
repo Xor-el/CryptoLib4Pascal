@@ -373,16 +373,18 @@ class procedure TRfc3281CertPathUtilities.ProcessAttrCert4(const AIssuerCert: IX
 var
   LAnchors: TCryptoLibGenericArray<ITrustAnchor>;
   LIdx: Int32;
-  LSubject: String;
+  LSubject: IX509Name;
+  LAnchorCA: IX509Name;
 begin
   LAnchors := APkixParams.GetTrustedACIssuers();
-  // the RFC 2253 rendering of the subject name is compared against each trusted issuer name; the
-  // two-argument ToString lives on the concrete X.509 name, not on the interface
-  LSubject := (AIssuerCert.SubjectDN as TX509Name).ToString(False, TX509Name.RFC2253Symbols);
+  LSubject := AIssuerCert.SubjectDN;
 
   for LIdx := 0 to System.High(LAnchors) do
   begin
-    if (LSubject = LAnchors[LIdx].CAName) or AIssuerCert.Equals(LAnchors[LIdx].TrustedCert) then
+    LAnchorCA := LAnchors[LIdx].CA;
+    // compare the names, not their string renderings, so equivalent DNs match
+    if ((LAnchorCA <> nil) and LSubject.Equivalent(LAnchorCA, True)) or
+      AIssuerCert.Equals(LAnchors[LIdx].TrustedCert) then
       Exit; // directly trusted
   end;
 

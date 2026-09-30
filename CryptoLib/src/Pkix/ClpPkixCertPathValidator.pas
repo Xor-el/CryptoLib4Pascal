@@ -44,6 +44,7 @@ resourcestring
   SCertPathEmpty = 'certification path is empty';
   STrustAnchorSearchFailed = 'trust anchor for the certification path could not be determined: %s';
   STrustAnchorNotFound = 'trust anchor for the certification path not found';
+  STrustAnchorNotSupplied = 'trust anchor for the certification path is not one of the supplied trust anchors';
   STrustAnchorSubjectFailed = 'subject of the trust anchor could not be established: %s';
   SWorkingAlgorithmFailed = 'algorithm identifier of the public key of the trust anchor could not ' +
     'be read: %s';
@@ -156,6 +157,9 @@ var
   LWorkingAlgID: IAlgorithmIdentifier;
   LCaBasicConstraints: IBasicConstraints;
   LCert, LSign: IX509Certificate;
+  LParams: IPkixParameters;
+  LAnchors: TCryptoLibGenericArray<ITrustAnchor>;
+  LTrustFound: Boolean;
 begin
   if AParams.GetTrustAnchors() = nil then
     raise EArgumentCryptoLibException.CreateRes(@STrustAnchorsNil);
@@ -179,8 +183,9 @@ begin
   LUserInitialPolicySet := AParams.GetInitialPolicies();
 
   // (d)
+  LAnchors := AParams.GetTrustAnchors();
   try
-    LTrust := TPkixCertPathValidatorUtilities.FindTrustAnchor(LCerts[LN - 1], AParams.GetTrustAnchors());
+    LTrust := TPkixCertPathValidatorUtilities.FindTrustAnchor(LCerts[LN - 1], LAnchors);
   except
     on E: Exception do
       raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@STrustAnchorSearchFailed, [E.Message]);
@@ -189,12 +194,33 @@ begin
   if LTrust = nil then
     raise EPkixCertPathValidatorCryptoLibException.CreateRes(@STrustAnchorNotFound);
 
-  // RFC 5280: CRLs must originate from the same trust anchor as the target certificate
+  // the anchor that CRL checking is restricted to below must be one of the supplied ones, not one
+  // reached out-of-band
+  LTrustFound := False;
+  for LIdx := 0 to System.High(LAnchors) do
+  begin
+    if LAnchors[LIdx] = LTrust then
+    begin
+      LTrustFound := True;
+      Break;
+    end;
+  end;
+  if not LTrustFound then
+    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@STrustAnchorNotSupplied);
+
+  // RFC 5280 sec. 6.3.3(f): CRLs must be anchored at the same trust anchor as the certificate, so with
+  // several anchors supplied, narrow the parameters to the resolved one for the checking that follows
+  LParams := AParams;
+  if System.Length(LAnchors) > 1 then
+  begin
+    LParams := AParams.Clone();
+    LParams.SetTrustAnchor(LTrust);
+  end;
 
   // a path checker that also settles revocation status takes over RFC 5280 6.1.3 (a)(3); it is
   // not run as an ordinary path checker as well
   LRevocationChecker := nil;
-  LCheckers := AParams.GetCertPathCheckers();
+  LCheckers := LParams.GetCertPathCheckers();
   for LIdx := 0 to System.High(LCheckers) do
   begin
     LCheckers[LIdx].Init(False);
@@ -207,7 +233,7 @@ begin
   end;
 
   // with no checker supplied, revocation checking is the default over both mechanisms
-  if (LRevocationChecker = nil) and AParams.IsRevocationEnabled then
+  if (LRevocationChecker = nil) and LParams.IsRevocationEnabled then
     LRevocationChecker := TPkixRevocationChecker.Create(nil) as IPkixCertRevocationChecker;
 
   //
@@ -240,19 +266,19 @@ begin
     LNameConstraintValidator := TPkixNameConstraintValidator.Create() as IPkixNameConstraintValidator;
 
     // (d)
-    if AParams.IsExplicitPolicyRequired then
+    if LParams.IsExplicitPolicyRequired then
       LExplicitPolicy := 0
     else
       LExplicitPolicy := LN + 1;
 
     // (e)
-    if AParams.IsAnyPolicyInhibited then
+    if LParams.IsAnyPolicyInhibited then
       LInhibitAnyPolicy := 0
     else
       LInhibitAnyPolicy := LN + 1;
 
     // (f)
-    if AParams.IsPolicyMappingInhibited then
+    if LParams.IsPolicyMappingInhibited then
       LPolicyMapping := 0
     else
       LPolicyMapping := LN + 1;
@@ -289,7 +315,7 @@ begin
     // 6.1.3
     //
 
-    LTargetConstraints := AParams.GetTargetConstraintsCert();
+    LTargetConstraints := LParams.GetTargetConstraintsCert();
     if (LTargetConstraints <> nil) and (not LTargetConstraints.Match(LCerts[0])) then
       raise EPkixCertPathValidatorCryptoLibException.CreateRes(@STargetConstraintsMismatch);
 
@@ -307,7 +333,7 @@ begin
       // 6.1.3
       //
 
-      TRfc3280CertPathUtilities.ProcessCertA(ACertPath, AParams, LValidityDate, LRevocationChecker,
+      TRfc3280CertPathUtilities.ProcessCertA(ACertPath, LParams, LValidityDate, LRevocationChecker,
         LIndex, LWorkingPublicKey, LIndex = (LN - 1), LWorkingIssuerName, LSign);
 
       TRfc3280CertPathUtilities.ProcessCertBC(ACertPath, LIndex, LNameConstraintValidator, FIsForCrlCheck);
@@ -413,7 +439,7 @@ begin
     TRfc3280CertPathUtilities.WrapupCertF(ACertPath, LIndex + 1, LCheckers, LCriticalExtensions);
 
     // (g)
-    LIntersection := TRfc3280CertPathUtilities.WrapupCertG(ACertPath, AParams, LUserInitialPolicySet,
+    LIntersection := TRfc3280CertPathUtilities.WrapupCertG(ACertPath, LParams, LUserInitialPolicySet,
       LIndex + 1, LPolicyNodes, LValidPolicyTree, LAcceptablePolicies);
 
     if (LExplicitPolicy > 0) or (LIntersection <> nil) then

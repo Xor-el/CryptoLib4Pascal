@@ -188,10 +188,12 @@ begin
     Exit;
 
   // the certificate is not allowed to appear in a certification chain
-  if ContainsCert(AParams.GetExcludedCerts(), ATbvCert) then
+  if AParams.IsExcludedCert(ATbvCert) then
     Exit;
 
-  if (AParams.MaxPathLength <> -1) and ((ATbvPath.Count - 1) > AParams.MaxPathLength) then
+  // only non-self-issued intermediates count against the maximum path length
+  if (AParams.MaxPathLength <> -1) and
+    (TPkixCertPathValidatorUtilities.CountIntermediates(ATbvPath, ATbvCert) > AParams.MaxPathLength) then
     Exit;
 
   ATbvPath.Add(ATbvCert);
