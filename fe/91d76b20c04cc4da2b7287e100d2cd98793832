@@ -1,0 +1,149 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_0f1a2e9196b415::t_c257e67abdabe3 53
+CryptoLib/src/Packages/Delphi/CryptoLib4PascalPackage.dpk
+  s_0f1a2e9196b415::t_0245baa867a1a9 973-977
+CryptoLib/src/Interfaces/Pkix/ClpIPkixTypes.pas
+  s_0f1a2e9196b415::t_bee56344f09eed 442
+  s_0f1a2e9196b415::t_3a8b966368627a 378
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_0f1a2e9196b415::t_1233592ba73d5f 976-979
+  s_0f1a2e9196b415::t_bc151be443b1bc 82
+CryptoLib.Tests/Data/OpenSsl/Reader/Manifest.csv
+  s_0f1a2e9196b415::t_4d6598698eedc5 42
+CryptoLib/src/Pkix/ClpPkixAttrCertPathBuilder.pas
+  s_0f1a2e9196b415::t_7a587b800cfa9c 192-193,195-197
+CryptoLib/src/Interfaces/OpenSsl/ClpICertificateTrustBlock.pas
+  s_0f1a2e9196b415::t_4428907af4c00c 1-43
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_0f1a2e9196b415::t_d536b7819e48ad 52
+CryptoLib/src/Pkix/ClpPkixParameters.pas
+  s_0f1a2e9196b415::t_b5259e9bc96f38 103-104
+  s_0f1a2e9196b415::t_654309169fa07f 276-280
+CryptoLib/src/Pkix/ClpPkixCertPathValidator.pas
+  s_0f1a2e9196b415::t_55434ee229327b 318
+  s_0f1a2e9196b415::t_162466f782db0f 269
+  s_0f1a2e9196b415::t_26206b4405b771 236
+  s_0f1a2e9196b415::t_84a346625984da 223
+  s_0f1a2e9196b415::t_d937fe8e3a14c8 275
+  s_0f1a2e9196b415::t_9db9fe745f5215 186,188,197-218
+  s_0f1a2e9196b415::t_6b8bde8a35a944 160-162
+  s_0f1a2e9196b415::t_2f1c2ca8345ca1 281
+  s_0f1a2e9196b415::t_fd333b03dcb186 336
+  s_0f1a2e9196b415::t_5e2e7f270634c8 442
+  s_0f1a2e9196b415::t_25f89c5412ea68 47
+CryptoLib/src/Crypto/Generators/ClpECDHKekGenerator.pas
+  s_0f1a2e9196b415::t_7e5b69b0ad3813 98
+  s_0f1a2e9196b415::t_887a241e45d86a 109-111
+CryptoLib.Examples/Delphi.Examples/CryptoLib.Examples.dpr
+  s_0f1a2e9196b415::t_6df6e925476d2f 728-731
+CryptoLib.Tests/src/OpenSsl/OpenSslReaderTests.pas
+  s_0f1a2e9196b415::t_e35341d84e31a6 566-611
+  s_0f1a2e9196b415::t_b201aa76665c86 623
+  s_0f1a2e9196b415::t_c0f1dae21a4728 65-68
+  s_0f1a2e9196b415::t_f96c99eb6b4078 58,60-64,69-70
+  s_0f1a2e9196b415::t_2aa30b4b3d6889 103
+  s_0f1a2e9196b415::t_19a385d9c2cf74 104
+  s_0f1a2e9196b415::t_5a09bf1c1e3ff5 612-622,624-647
+CryptoLib.Benchmark/Delphi/CryptoLib.BenchmarkConsole.dpr
+  s_0f1a2e9196b415::t_455f66790b0e99 711-714
+CryptoLib/src/Pkix/ClpRfc3280CertPathUtilities.pas
+  s_0f1a2e9196b415::t_ac435325f6795f 77-79
+  s_0f1a2e9196b415::t_06e71faadf33c7 996-997
+  s_0f1a2e9196b415::t_468ce909980b0f 1029-1032
+  s_0f1a2e9196b415::t_6a381cc58daaf2 1307-1313
+CryptoLib/src/Pkix/ClpPkixCertPathBuilder.pas
+  s_0f1a2e9196b415::t_846c6e2572ae73 191,194-196
+CryptoLib.Tests/src/Pkix/CertPathHardeningTests.pas
+  s_0f1a2e9196b415::t_364e5d70787414 36
+  s_0f1a2e9196b415::t_bd65b91b80ee75 231-232
+  s_0f1a2e9196b415::t_04269d6aac1284 435
+  s_0f1a2e9196b415::t_da5cab535d9236 227-228
+  s_0f1a2e9196b415::t_cab814e6f70b4a 28
+  s_0f1a2e9196b415::t_08e93ed1814540 102-103
+  s_0f1a2e9196b415::t_c5aaf3f4bf564e 269-275
+  s_0f1a2e9196b415::t_c0cb410e5ca4a5 1-27,29-35,37-101,104-226,229-230,233-268,276-405,407-418,420-434,436-578
+  s_0f1a2e9196b415::t_1da05ca36c11ce 406
+  s_0f1a2e9196b415::t_c12249a1921475 419
+CryptoLib/src/OpenSsl/ClpCertificateTrustBlock.pas
+  s_0f1a2e9196b415::t_968159518a856a 1-173
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_0f1a2e9196b415::t_9c82d66cb524f6 935-938
+  s_0f1a2e9196b415::t_1cfa84325ad13e 42
+CryptoLib/src/Pkix/ClpPkixBuilderParameters.pas
+  s_0f1a2e9196b415::t_b8ffff22144269 126-137
+  s_0f1a2e9196b415::t_180de7efdca7da 67-68
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.lpk
+  s_0f1a2e9196b415::t_6e7a948aa75563 34
+  s_0f1a2e9196b415::t_c0f2470733be12 3756-3771
+CryptoLib.Tests/src/Pkix/PkixFoundationTests.pas
+  s_0f1a2e9196b415::t_afb431019a0ebf 311
+CryptoLib/src/Pkix/ClpPkixCertPathValidatorUtilities.pas
+  s_0f1a2e9196b415::t_ddff550f4b7514 93-96
+  s_0f1a2e9196b415::t_e1a55d7ca1f62e 140-144
+  s_0f1a2e9196b415::t_a7718e20b291da 275-296,303,305,307,311,316-318,320-327,329,335
+  s_0f1a2e9196b415::t_dc5128dcdce7f5 395-414
+  s_0f1a2e9196b415::t_3b95643df53685 844-853
+  s_0f1a2e9196b415::t_11bf9ea1a00b5e 145-148
+CryptoLib/src/Pkix/ClpPkixCertPathValidatorResult.pas
+  s_0f1a2e9196b415::t_d7caa94075cbab 158
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_0f1a2e9196b415::t_76f555b31223ae 1478
+  s_0f1a2e9196b415::t_dbf9e84ecd2bab 1046-1049
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_0f1a2e9196b415::t_39acf5d31216d0 723-726
+  s_0f1a2e9196b415::t_d018d3256632bd 1163
+CryptoLib/src/OpenSsl/ClpX509TrustedCertificateBlock.pas
+  s_0f1a2e9196b415::t_d312a7feed02dd 1-24,26-103,106,108-109,111-113,119-121
+  s_0f1a2e9196b415::t_08c7cb5d8c5019 104-105,107,110,114-118
+  s_0f1a2e9196b415::t_e5cd4df016e67d 25
+CryptoLib/src/Pkix/ClpTrustAnchor.pas
+  s_0f1a2e9196b415::t_9b0b3e5eae60e3 147
+CryptoLib/src/OpenSsl/ClpOpenSslMiscPemGenerator.pas
+  s_0f1a2e9196b415::t_f8b485e2a69912 144
+  s_0f1a2e9196b415::t_3e4571b3bd4d4f 185-196
+  s_0f1a2e9196b415::t_417efd0ebb1420 47
+CryptoLib.Tests/Data/OpenSsl/Reader/Keys/EddsaUnencrypted.pem
+  s_0f1a2e9196b415::t_d9edb49f55fece 1-3
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_0f1a2e9196b415::t_75275d171c2cc3 704-707
+  s_0f1a2e9196b415::t_658cea13a5a8c4 1142
+CryptoLib/src/OpenSsl/ClpOpenSslPemReader.pas
+  s_0f1a2e9196b415::t_cc32aa59731dfe 249-255
+  s_0f1a2e9196b415::t_d725e763d82689 183-188
+  s_0f1a2e9196b415::t_1d9e251e07eab0 111
+  s_0f1a2e9196b415::t_0548428c2575ab 81-84,246-248
+  s_0f1a2e9196b415::t_88f59e1d5766db 48-50
+  s_0f1a2e9196b415::t_4a8900fae068df 245
+  s_0f1a2e9196b415::t_eb1bfd83510aae 265
+  s_0f1a2e9196b415::t_cb8fb2f537a873 275
+CryptoLib/src/Interfaces/OpenSsl/ClpIX509TrustedCertificateBlock.pas
+  s_0f1a2e9196b415::t_1ca4f8a4381e67 1-41
+CryptoLib/src/Pkix/ClpRfc3281CertPathUtilities.pas
+  s_0f1a2e9196b415::t_a2fd730289ead4 376-377,380,384-387
+CryptoLib/src/Packages/FPC/CryptoLib4PascalPackage.pas
+  s_d34d9c8ded6c5c::t_b1076bff62223a 304-308
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.4",
+  "base_commit_sha": "fe91d76b20c04cc4da2b7287e100d2cd98793832",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_d34d9c8ded6c5c": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f1e0611e-27ab-4e1f-b082-04337e28d842",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
