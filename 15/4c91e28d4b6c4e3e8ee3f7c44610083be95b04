@@ -1,0 +1,21 @@
+CryptoLib.Tests/src/Crypto/RSADigestSignerTests.pas
+  s_d27f31cd14035d::t_e9f1a2a32289c3 327,332,334-335
+CryptoLib.Tests/src/Pkix/CertPathHardeningTests.pas
+  s_d27f31cd14035d::t_a515fd115a05fd 730,735,738-739
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "154c91e28d4b6c4e3e8ee3f7c44610083be95b04",
+  "prompts": {},
+  "sessions": {
+    "s_d27f31cd14035d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61c4d21-3cc2-4465-aca6-b1ba56a8e8c7",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
