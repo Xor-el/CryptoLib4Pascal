@@ -29,6 +29,15 @@ type
   /// </summary>
   IRsaDigestSigner = interface(ISigner)
     ['{D0E1F2A3-B4C5-6789-0123-456789ABCDEF}']
+    function GetStrictDigestInfo: Boolean;
+    procedure SetStrictDigestInfo(AValue: Boolean);
+
+    /// <summary>
+    /// When True, verification accepts only the DigestInfo built from the signer's own
+    /// AlgorithmIdentifier (RFC 8017 9.2); the alternate form, NULL against absent
+    /// parameters, is rejected. False keeps accepting both.
+    /// </summary>
+    property StrictDigestInfo: Boolean read GetStrictDigestInfo write SetStrictDigestInfo;
   end;
 
 implementation

@@ -131,6 +131,33 @@ type
     procedure TestMaxPathLengthUnboundedAdmitsLongSignerPath;
   end;
 
+  /// <summary>
+  /// A trust anchor's name constraints, explicit or carried by its certificate, bound the names
+  /// of every path that ends at it.
+  /// </summary>
+  TAnchorNameConstraintsTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+  const
+    SigAlgorithm = 'SHA256WITHRSA';
+  var
+    FRandom: ISecureRandom;
+    function Constraints: INameConstraints;
+    function Generator(const AIssuer, ASubject: IX509Name;
+      const APublicKey: IAsymmetricKeyParameter; ASerial: Int32): IX509V3CertificateGenerator;
+    function Root(const AKey: IAsymmetricCipherKeyPair; AWithConstraints: Boolean): IX509Certificate;
+    function Leaf(const AKey: IAsymmetricCipherKeyPair; const ARoot: IX509Certificate;
+      const AIssuerKey: IAsymmetricCipherKeyPair; const ADnsName: String): IX509Certificate;
+    function Validates(const ARoot, ALeaf: IX509Certificate;
+      const AAnchorConstraints: TCryptoLibByteArray): Boolean;
+  protected
+    procedure SetUp; override;
+  published
+    procedure TestCertificateExtensionIsEnforced;
+    procedure TestExplicitAnchorConstraintsAreEnforced;
+    procedure TestUnconstrainedAnchorAdmitsAnyName;
+    procedure TestExplicitConstraintsCannotWidenTheCertificate;
+  end;
+
 implementation
 
 { TCertPathLoopTest }
@@ -565,14 +592,165 @@ begin
     LPki, 5, nil);
 end;
 
+{ TAnchorNameConstraintsTest }
+
+procedure TAnchorNameConstraintsTest.SetUp;
+begin
+  inherited SetUp;
+  FRandom := TSecureRandom.Create() as ISecureRandom;
+end;
+
+function TAnchorNameConstraintsTest.Constraints: INameConstraints;
+begin
+  Result := TNameConstraints.Create(
+    TGeneralSubtrees.Create(TGeneralSubtree.Create(
+      TGeneralName.Create(TGeneralName.DnsName, '.good.test') as IGeneralName) as IGeneralSubtree)
+    as IGeneralSubtrees, nil) as INameConstraints;
+end;
+
+function TAnchorNameConstraintsTest.Generator(const AIssuer, ASubject: IX509Name;
+  const APublicKey: IAsymmetricKeyParameter; ASerial: Int32): IX509V3CertificateGenerator;
+var
+  LNow: TDateTime;
+begin
+  LNow := Now.ToUniversalTime();
+  Result := TX509V3CertificateGenerator.Create;
+  Result.SetIssuerDN(AIssuer);
+  Result.SetSerialNumber(TBigInteger.ValueOf(ASerial));
+  Result.SetNotBeforeUtc(IncDay(LNow, -1));
+  Result.SetNotAfterUtc(IncYear(LNow, 1));
+  Result.SetSubjectDN(ASubject);
+  Result.SetPublicKey(APublicKey);
+end;
+
+function TAnchorNameConstraintsTest.Root(const AKey: IAsymmetricCipherKeyPair;
+  AWithConstraints: Boolean): IX509Certificate;
+var
+  LName: IX509Name;
+  LPub: IAsymmetricKeyParameter;
+  LGen: IX509V3CertificateGenerator;
+begin
+  LName := TX509Name.Create('CN=Constrained Root, O=Test-PKI, C=DE');
+  LPub := AKey.Public as IAsymmetricKeyParameter;
+  LGen := Generator(LName, LName, LPub, 1);
+  LGen.AddExtension(TX509Extensions.BasicConstraints, True, TBasicConstraints.Create(True) as IBasicConstraints);
+  LGen.AddExtension(TX509Extensions.KeyUsage, True, TKeyUsage.Create(TKeyUsage.KeyCertSign) as IKeyUsage);
+  if AWithConstraints then
+    LGen.AddExtension(TX509Extensions.NameConstraints, True, Constraints as IAsn1Encodable);
+  Result := LGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    AKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+end;
+
+function TAnchorNameConstraintsTest.Leaf(const AKey: IAsymmetricCipherKeyPair;
+  const ARoot: IX509Certificate; const AIssuerKey: IAsymmetricCipherKeyPair;
+  const ADnsName: String): IX509Certificate;
+var
+  LGen: IX509V3CertificateGenerator;
+begin
+  LGen := Generator(ARoot.SubjectDN, TX509Name.Create('CN=' + ADnsName) as IX509Name,
+    AKey.Public as IAsymmetricKeyParameter, 2);
+  LGen.AddExtension(TX509Extensions.SubjectAlternativeName, False,
+    TGeneralNames.Create(TGeneralName.Create(TGeneralName.DnsName, ADnsName) as IGeneralName)
+    as IGeneralNames);
+  Result := LGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    AIssuerKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+end;
+
+function TAnchorNameConstraintsTest.Validates(const ARoot, ALeaf: IX509Certificate;
+  const AAnchorConstraints: TCryptoLibByteArray): Boolean;
+var
+  LAnchors: TCryptoLibGenericArray<ITrustAnchor>;
+  LSelector: IX509CertStoreSelector;
+  LParams: IPkixBuilderParameters;
+  LBuilder: IPkixCertPathBuilder;
+begin
+  LAnchors := TCryptoLibGenericArray<ITrustAnchor>.Create(
+    TTrustAnchor.Create(ARoot, AAnchorConstraints) as ITrustAnchor);
+  LSelector := TX509CertStoreSelector.Create();
+  LSelector.Certificate := ALeaf;
+  LParams := TPkixBuilderParameters.Create(LAnchors, LSelector) as IPkixBuilderParameters;
+  LParams.IsRevocationEnabled := False;
+  LBuilder := TPkixCertPathBuilder.Create() as IPkixCertPathBuilder;
+  try
+    LBuilder.Build(LParams);
+    Result := True;
+  except
+    on E: EPkixCertPathBuilderCryptoLibException do
+      Result := False;
+  end;
+end;
+
+procedure TAnchorNameConstraintsTest.TestCertificateExtensionIsEnforced;
+var
+  LRootKey, LLeafKey: IAsymmetricCipherKeyPair;
+  LRoot: IX509Certificate;
+begin
+  LRootKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeafKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := Root(LRootKey, True);
+  CheckTrue(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'a.good.test'), nil),
+    'a name inside the root''s permitted subtree validates');
+  CheckFalse(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'evil.test'), nil),
+    'a name outside the root''s permitted subtree is rejected');
+end;
+
+procedure TAnchorNameConstraintsTest.TestExplicitAnchorConstraintsAreEnforced;
+var
+  LRootKey, LLeafKey: IAsymmetricCipherKeyPair;
+  LRoot: IX509Certificate;
+  LDer: TCryptoLibByteArray;
+begin
+  LRootKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeafKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := Root(LRootKey, False);
+  LDer := Constraints.GetDerEncoded();
+  CheckTrue(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'a.good.test'), LDer),
+    'a name inside the anchor''s permitted subtree validates');
+  CheckFalse(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'evil.test'), LDer),
+    'a name outside the anchor''s permitted subtree is rejected');
+end;
+
+procedure TAnchorNameConstraintsTest.TestUnconstrainedAnchorAdmitsAnyName;
+var
+  LRootKey, LLeafKey: IAsymmetricCipherKeyPair;
+  LRoot: IX509Certificate;
+begin
+  LRootKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeafKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := Root(LRootKey, False);
+  CheckTrue(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'evil.test'), nil),
+    'an anchor with no name constraints leaves the names unconstrained');
+end;
+
+procedure TAnchorNameConstraintsTest.TestExplicitConstraintsCannotWidenTheCertificate;
+var
+  LRootKey, LLeafKey: IAsymmetricCipherKeyPair;
+  LRoot: IX509Certificate;
+  LWider: TCryptoLibByteArray;
+  LWiderConstraints: INameConstraints;
+begin
+  LRootKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeafKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := Root(LRootKey, True);
+  LWiderConstraints := TNameConstraints.Create(
+    TGeneralSubtrees.Create(TGeneralSubtree.Create(
+      TGeneralName.Create(TGeneralName.DnsName, '.evil.test') as IGeneralName) as IGeneralSubtree)
+    as IGeneralSubtrees, nil);
+  LWider := LWiderConstraints.GetDerEncoded();
+  CheckFalse(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'a.evil.test'), LWider),
+    'explicit constraints do not lift the certificate''s own constraints');
+end;
+
 initialization
 
 {$IFDEF FPC}
   RegisterTest(TCertPathLoopTest);
   RegisterTest(TIndirectCrlSignerTest);
+  RegisterTest(TAnchorNameConstraintsTest);
 {$ELSE}
   RegisterTest(TCertPathLoopTest.Suite);
   RegisterTest(TIndirectCrlSignerTest.Suite);
+  RegisterTest(TAnchorNameConstraintsTest.Suite);
 {$ENDIF FPC}
 
 end.

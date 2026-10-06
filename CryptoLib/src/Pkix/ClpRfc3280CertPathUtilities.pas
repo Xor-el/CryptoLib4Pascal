@@ -134,6 +134,9 @@ type
       const AOid: IDerObjectIdentifier; const AName: String): IAsn1Object; static;
     class function GetCrlExtension(const ACrl: IX509Crl;
       const AOid: IDerObjectIdentifier; const AName: String): IAsn1Object; static;
+    /// <summary>Intersects the permitted and adds the excluded subtrees; AIndex is -1 for the anchor.</summary>
+    class procedure ApplyNameConstraints(const ANameConstraints: INameConstraints; AIndex: Int32;
+      const ANameConstraintValidator: IPkixNameConstraintValidator); static;
     /// <summary>Whether ACert asserts APolicyOid in its certificatePolicies extension.</summary>
     class function HasCertificatePolicy(const ACert: IX509Certificate;
       const APolicyOid: IDerObjectIdentifier): Boolean; static;
@@ -295,6 +298,13 @@ type
 
     /// <summary>RFC 5280 6.1.4 (g): intersect the name constraints of the certificate.</summary>
     class procedure PrepareNextCertG(const ACertPath: IPkixCertPath; AIndex: Int32;
+      const ANameConstraintValidator: IPkixNameConstraintValidator); static;
+
+    /// <summary>
+    /// RFC 5280 6.2 and RFC 5937 3: seed the validator with the name constraints of the trust
+    /// anchor, from its explicit constraints and its certificate's own extension.
+    /// </summary>
+    class procedure PrepareAnchorNameConstraints(const AAnchor: ITrustAnchor;
       const ANameConstraintValidator: IPkixNameConstraintValidator); static;
 
     /// <summary>RFC 5280 6.1.4 (h)(1): decrement explicitPolicy.</summary>
@@ -1884,17 +1894,12 @@ end;
 class procedure TRfc3280CertPathUtilities.PrepareNextCertG(const ACertPath: IPkixCertPath; AIndex: Int32;
   const ANameConstraintValidator: IPkixNameConstraintValidator);
 var
-  LCert: IX509Certificate;
   LParsed: IAsn1Object;
   LNameConstraints: INameConstraints;
-  LPermitted, LExcluded: IGeneralSubtrees;
-  LSubtrees: TCryptoLibGenericArray<IGeneralSubtree>;
-  LIdx: Int32;
 begin
-  LCert := ACertPath.Certificates[AIndex];
-
   // (g) handle the name constraints extension
-  LParsed := GetCertExtension(LCert, TX509Extensions.NameConstraints, 'name constraints');
+  LParsed := GetCertExtension(ACertPath.Certificates[AIndex], TX509Extensions.NameConstraints,
+    'name constraints');
   if LParsed = nil then
     Exit;
 
@@ -1906,20 +1911,65 @@ begin
         ['name constraints', E.Message]);
   end;
 
+  ApplyNameConstraints(LNameConstraints, AIndex, ANameConstraintValidator);
+end;
+
+class procedure TRfc3280CertPathUtilities.PrepareAnchorNameConstraints(const AAnchor: ITrustAnchor;
+  const ANameConstraintValidator: IPkixNameConstraintValidator);
+var
+  LParsed: IAsn1Object;
+  LNameConstraints: INameConstraints;
+begin
+  // both sources apply, so explicit constraints can only narrow what the certificate carries
+  LNameConstraints := AAnchor.GetNameConstraintsObject;
+  if LNameConstraints <> nil then
+    ApplyNameConstraints(LNameConstraints, -1, ANameConstraintValidator);
+
+  if AAnchor.TrustedCert = nil then
+    Exit;
+
+  LParsed := GetCertExtension(AAnchor.TrustedCert, TX509Extensions.NameConstraints,
+    'name constraints');
+  if LParsed = nil then
+    Exit;
+
+  try
+    LNameConstraints := TNameConstraints.GetInstance(LParsed);
+  except
+    on E: Exception do
+      raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SExtensionDecodeFailed,
+        ['name constraints', E.Message]);
+  end;
+  ApplyNameConstraints(LNameConstraints, -1, ANameConstraintValidator);
+end;
+
+class procedure TRfc3280CertPathUtilities.ApplyNameConstraints(
+  const ANameConstraints: INameConstraints; AIndex: Int32;
+  const ANameConstraintValidator: IPkixNameConstraintValidator);
+var
+  LPermitted, LExcluded: IGeneralSubtrees;
+  LSubtrees: TCryptoLibGenericArray<IGeneralSubtree>;
+  LIdx: Int32;
+begin
   // (g)(1) permitted subtrees
-  LPermitted := LNameConstraints.PermittedSubtrees;
+  LPermitted := ANameConstraints.PermittedSubtrees;
   if LPermitted <> nil then
   begin
     try
       ANameConstraintValidator.IntersectPermittedSubtree(LPermitted.Elements);
     except
       on E: Exception do
-        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SPermittedSubtreesFailed, [E.Message]);
+      begin
+        if AIndex < 0 then
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SPermittedSubtreesFailed, [E.Message])
+        else
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SPermittedSubtreesFailed, [E.Message]);
+      end;
     end;
   end;
 
   // (g)(2) excluded subtrees
-  LExcluded := LNameConstraints.ExcludedSubtrees;
+  LExcluded := ANameConstraints.ExcludedSubtrees;
   if LExcluded <> nil then
   begin
     try
@@ -1930,7 +1980,12 @@ begin
       end;
     except
       on E: Exception do
-        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SExcludedSubtreesFailed, [E.Message]);
+      begin
+        if AIndex < 0 then
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SExcludedSubtreesFailed, [E.Message])
+        else
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SExcludedSubtreesFailed, [E.Message]);
+      end;
     end;
   end;
 end;

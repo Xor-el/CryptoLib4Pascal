@@ -264,6 +264,7 @@ begin
 
     // (b) and (c)
     LNameConstraintValidator := TPkixNameConstraintValidator.Create() as IPkixNameConstraintValidator;
+    TRfc3280CertPathUtilities.PrepareAnchorNameConstraints(LTrust, LNameConstraintValidator);
 
     // (d)
     if LParams.IsExplicitPolicyRequired then
