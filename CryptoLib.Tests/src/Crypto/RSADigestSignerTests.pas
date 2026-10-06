@@ -35,6 +35,7 @@ uses
   ClpRsaDigestSigner,
   ClpIRsaDigestSigner,
   ClpIRsaParameters,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
   ClpAsn1Objects,
   ClpX509Asn1Objects,
@@ -61,6 +62,8 @@ type
     procedure CheckNullDigest(const digest: IDigest;
       const digOid: IDerObjectIdentifier);
     class function CreatePrehashSigner: IRsaDigestSigner;
+    function SignSha256DigestInfo(const AParameters: IAsn1Encodable): TCryptoLibByteArray;
+    function VerifySha256(const ASignature: TCryptoLibByteArray; AStrict: Boolean): Boolean;
 
   protected
     procedure SetUp; override;
@@ -86,6 +89,8 @@ type
     procedure TestNullDigestSha256;
     procedure TestNullFormatError;
     procedure TestNoNullDigestInfoTailBytesChecked;
+    procedure TestStrictDigestInfoRejectsAbsentParameters;
+    procedure TestStrictDigestInfoAcceptsCanonical;
   end;
 
 implementation
@@ -313,6 +318,56 @@ begin
   LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
   CheckFalse(LVerifier.VerifySignature(LForgedSig),
     'no-NULL DigestInfo with wrong final hash bytes must be rejected');
+end;
+
+function TTestRSADigestSigner.SignSha256DigestInfo(
+  const AParameters: IAsn1Encodable): TCryptoLibByteArray;
+var
+  LMsg, LHash, LEnc: TCryptoLibByteArray;
+  LSigner: ISigner;
+begin
+  LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
+  LHash := TDigestUtilities.DoFinal(TDigestUtilities.GetDigest('SHA-256'), LMsg);
+  LEnc := TDigestInfo.Create(
+    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, AParameters) as IAlgorithmIdentifier,
+    LHash).GetDerEncoded();
+  LSigner := CreatePrehashSigner();
+  LSigner.Init(True, FRsaPrivate);
+  LSigner.BlockUpdate(LEnc, 0, System.Length(LEnc));
+  Result := LSigner.GenerateSignature();
+end;
+
+function TTestRSADigestSigner.VerifySha256(const ASignature: TCryptoLibByteArray;
+  AStrict: Boolean): Boolean;
+var
+  LMsg: TCryptoLibByteArray;
+  LVerifier: IRsaDigestSigner;
+begin
+  LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
+  LVerifier := TRsaDigestSigner.Create(TDigestUtilities.GetDigest('SHA-256'),
+    TNistObjectIdentifiers.IdSha256) as IRsaDigestSigner;
+  LVerifier.StrictDigestInfo := AStrict;
+  LVerifier.Init(False, FRsaPublic);
+  LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  Result := LVerifier.VerifySignature(ASignature);
+end;
+
+procedure TTestRSADigestSigner.TestStrictDigestInfoRejectsAbsentParameters;
+var
+  LSig: TCryptoLibByteArray;
+begin
+  LSig := SignSha256DigestInfo(nil);
+  CheckTrue(VerifySha256(LSig, False), 'the lenient verifier still accepts absent parameters');
+  CheckFalse(VerifySha256(LSig, True), 'the strict verifier rejects absent parameters');
+end;
+
+procedure TTestRSADigestSigner.TestStrictDigestInfoAcceptsCanonical;
+var
+  LSig: TCryptoLibByteArray;
+begin
+  LSig := SignSha256DigestInfo(TDerNull.Instance);
+  CheckTrue(VerifySha256(LSig, True), 'the strict verifier accepts the NULL-parameters encoding');
+  CheckTrue(VerifySha256(LSig, False), 'the lenient verifier accepts it too');
 end;
 
 initialization
