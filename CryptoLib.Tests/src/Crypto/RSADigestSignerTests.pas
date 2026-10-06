@@ -324,13 +324,15 @@ function TTestRSADigestSigner.SignSha256DigestInfo(
   const AParameters: IAsn1Encodable): TCryptoLibByteArray;
 var
   LMsg, LHash, LEnc: TCryptoLibByteArray;
+  LDigestInfo: IDigestInfo;
   LSigner: ISigner;
 begin
   LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
   LHash := TDigestUtilities.DoFinal(TDigestUtilities.GetDigest('SHA-256'), LMsg);
-  LEnc := TDigestInfo.Create(
+  LDigestInfo := TDigestInfo.Create(
     TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, AParameters) as IAlgorithmIdentifier,
-    LHash).GetDerEncoded();
+    LHash);
+  LEnc := LDigestInfo.GetDerEncoded();
   LSigner := CreatePrehashSigner();
   LSigner.Init(True, FRsaPrivate);
   LSigner.BlockUpdate(LEnc, 0, System.Length(LEnc));

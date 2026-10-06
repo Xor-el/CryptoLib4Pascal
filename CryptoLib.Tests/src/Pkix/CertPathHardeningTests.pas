@@ -727,14 +727,16 @@ var
   LRootKey, LLeafKey: IAsymmetricCipherKeyPair;
   LRoot: IX509Certificate;
   LWider: TCryptoLibByteArray;
+  LWiderConstraints: INameConstraints;
 begin
   LRootKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
   LLeafKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
   LRoot := Root(LRootKey, True);
-  LWider := (TNameConstraints.Create(
+  LWiderConstraints := TNameConstraints.Create(
     TGeneralSubtrees.Create(TGeneralSubtree.Create(
       TGeneralName.Create(TGeneralName.DnsName, '.evil.test') as IGeneralName) as IGeneralSubtree)
-    as IGeneralSubtrees, nil) as INameConstraints).GetDerEncoded();
+    as IGeneralSubtrees, nil);
+  LWider := LWiderConstraints.GetDerEncoded();
   CheckFalse(Validates(LRoot, Leaf(LLeafKey, LRoot, LRootKey, 'a.evil.test'), LWider),
     'explicit constraints do not lift the certificate''s own constraints');
 end;
