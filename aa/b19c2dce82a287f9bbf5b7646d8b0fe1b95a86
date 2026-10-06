@@ -1,0 +1,47 @@
+CryptoLib/src/Pkix/ClpPkixCertPathValidator.pas
+  s_d27f31cd14035d::t_0068bb3b331200 267
+CryptoLib/src/Interfaces/Crypto/Signers/ClpIRsaDigestSigner.pas
+  s_d27f31cd14035d::t_3232dc200f3627 32-35,39-40
+  s_d27f31cd14035d::t_3ec9c3cc66b514 36-38
+CryptoLib/src/Pkix/ClpRfc3280CertPathUtilities.pas
+  s_d27f31cd14035d::t_b25178e426e02f 137-139
+  s_d27f31cd14035d::t_57fac9299a6075 303,306-309
+  s_d27f31cd14035d::t_da96c8a95244b1 1923,1927-1943
+  s_d27f31cd14035d::t_ffab4475b46328 304-305
+  s_d27f31cd14035d::t_c155ee763ad16a 1901-1902,1914-1922,1924-1926,1944-1953,1955,1962-1967,1972,1983-1988
+CryptoLib/src/Crypto/Signers/ClpRsaDigestSigner.pas
+  s_d27f31cd14035d::t_4039cea271f117 72
+  s_d27f31cd14035d::t_da67a9d1a4f7df 339
+  s_d27f31cd14035d::t_76bee3c83b888d 103-104
+  s_d27f31cd14035d::t_4c89315d6c3b27 111
+  s_d27f31cd14035d::t_fa2f55d43637fe 209-218
+CryptoLib.Tests/src/Pkix/CertPathHardeningTests.pas
+  s_d27f31cd14035d::t_8461feda47588b 725-741
+  s_d27f31cd14035d::t_4f35e84d71066d 673,675
+  s_d27f31cd14035d::t_9f0133472019d3 144
+  s_d27f31cd14035d::t_df0055a9acc169 134-143,145-157,159-160
+  s_d27f31cd14035d::t_0a4fa3934b0dc1 595-664,666-672,674,676-724,747,751
+  s_d27f31cd14035d::t_0705c43592f977 665
+  s_d27f31cd14035d::t_0d1b3615c57b0d 158
+CryptoLib.Tests/src/Crypto/RSADigestSignerTests.pas
+  s_d27f31cd14035d::t_d37eb64591b9a0 92-93
+  s_d27f31cd14035d::t_f04756e2b7486b 323-372
+  s_d27f31cd14035d::t_e2038135e6e819 38
+  s_d27f31cd14035d::t_c72f290d0f5b4d 65-66
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "aab19c2dce82a287f9bbf5b7646d8b0fe1b95a86",
+  "prompts": {},
+  "sessions": {
+    "s_d27f31cd14035d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61c4d21-3cc2-4465-aca6-b1ba56a8e8c7",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
