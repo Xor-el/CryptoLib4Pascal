@@ -94,7 +94,7 @@ type
     procedure TestNoNullDigestInfoTailBytesChecked;
     procedure TestStrictDigestInfoRejectsAbsentParameters;
     procedure TestStrictDigestInfoAcceptsCanonical;
-    procedure TestStrictDigestInfoIsLenientByDefaultAndResets;
+    procedure TestStrictDigestInfoIsOnByDefaultAndResets;
     procedure TestStrictDigestInfoReachesTheSignerFactory;
     procedure TestStrictLengthIsOnByDefaultAndResets;
   end;
@@ -308,6 +308,8 @@ var
   LLoose: IDigestInfo;
   LLooseSigner, LVerifier: ISigner;
 begin
+  // only the lenient fallback reads the tail bytes of a no-NULL DigestInfo
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := False;
   LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
 
   LDigest := TDigestUtilities.GetDigest('SHA-256');
@@ -385,15 +387,16 @@ begin
   CheckTrue(VerifySha256(LSig, False), 'the lenient verifier accepts it too');
 end;
 
-procedure TTestRSADigestSigner.TestStrictDigestInfoIsLenientByDefaultAndResets;
+procedure TTestRSADigestSigner.TestStrictDigestInfoIsOnByDefaultAndResets;
 begin
-  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the default keeps accepting both forms');
-  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the default is strict');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := False;
+  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'it can be relaxed');
   TCryptoLibConfig.Pkcs1.ResetToDefaults();
-  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the area reset returns to lenient');
-  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the area reset returns to strict');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := False;
   TCryptoLibConfig.ResetToDefaults();
-  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the global reset returns to lenient');
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the global reset returns to strict');
 end;
 
 procedure TTestRSADigestSigner.TestStrictLengthIsOnByDefaultAndResets;
@@ -419,12 +422,12 @@ begin
   LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
   LVerifier.Init(False, FRsaPublic);
   LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  CheckTrue(LVerifier.VerifySignature(LSig), 'the default accepts a DigestInfo without NULL');
-  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  CheckFalse(LVerifier.VerifySignature(LSig), 'the default rejects a DigestInfo without NULL');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := False;
   LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
   LVerifier.Init(False, FRsaPublic);
   LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
-  CheckFalse(LVerifier.VerifySignature(LSig), 'strict mode rejects it through the factory too');
+  CheckTrue(LVerifier.VerifySignature(LSig), 'relaxing it accepts the form through the factory too');
 end;
 
 initialization
