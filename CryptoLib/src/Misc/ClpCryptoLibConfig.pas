@@ -327,8 +327,13 @@ type
     /// </summary>
     DefaultStrictLength = True;
 
+    /// <summary>
+    /// The DigestInfo check applied when <see cref="StrictDigestInfo" /> is unset.
+    /// </summary>
+    DefaultStrictDigestInfo = True;
+
   class var
-    FStrictDigestInfo: Boolean;
+    FStrictDigestInfo: TNullable<Boolean>;
     FStrictLength: TNullable<Boolean>;
 
     class function GetStrictDigestInfo: Boolean; static;
@@ -344,8 +349,8 @@ type
     /// Makes every RSASSA-PKCS1-v1_5 verification accept only the DigestInfo the verifier would
     /// build itself (RFC 8017 9.2), so a signature whose AlgorithmIdentifier omits the NULL
     /// parameters (or adds them where the verifier's own identifier has none) is rejected. That
-    /// covers certificate, CRL, OCSP and CMS signatures as well as a signer used directly. Off by
-    /// default, which keeps accepting both forms.
+    /// covers certificate, CRL, OCSP and CMS signatures as well as a signer used directly. On by
+    /// default; set it to False to accept both forms.
     /// </summary>
     class property StrictDigestInfo: Boolean read GetStrictDigestInfo write SetStrictDigestInfo;
 
@@ -781,18 +786,21 @@ end;
 
 class procedure TPkcs1Config.ResetToDefaults();
 begin
-  FStrictDigestInfo := False;
+  FStrictDigestInfo := TNullable<Boolean>.None;
   FStrictLength := TNullable<Boolean>.None;
 end;
 
 class function TPkcs1Config.GetStrictDigestInfo: Boolean;
 begin
-  Result := FStrictDigestInfo;
+  if FStrictDigestInfo.HasValue then
+    Result := FStrictDigestInfo.Value
+  else
+    Result := DefaultStrictDigestInfo;
 end;
 
 class procedure TPkcs1Config.SetStrictDigestInfo(AValue: Boolean);
 begin
-  FStrictDigestInfo := AValue;
+  FStrictDigestInfo := TNullable<Boolean>.Some(AValue);
 end;
 
 class function TPkcs1Config.GetStrictLength: Boolean;

@@ -87,6 +87,7 @@ uses
   ClpIECParameters,
   ClpDateTimeHelper,
   ClpConverters,
+  ClpCryptoLibConfig,
   CryptoLibTestBase,
   CertVectors,
   CryptoTestKeys;
@@ -134,6 +135,7 @@ type
 
   protected
     procedure SetUp; override;
+    procedure TearDown; override;
 
   published
   procedure TestX509NameBuilderMatchesRegular;
@@ -321,6 +323,13 @@ begin
     SetUpKeys;
 end;
 
+procedure TCertTest.TearDown;
+begin
+  // the strict DigestInfo mode is process-wide: leave it as the later tests expect it
+  TCryptoLibConfig.ResetToDefaults();
+  inherited TearDown;
+end;
+
 procedure TCertTest.TestX509NameBuilderMatchesRegular;
 var
   LRegular: IX509Name;
@@ -358,7 +367,19 @@ begin
 end;
 
 procedure TCertTest.TestSelfSignedProbSelfSignedCert;
+var
+  LRejected: Boolean;
 begin
+  // this signer left the NULL parameters out of the DigestInfo, which only the relaxed mode accepts
+  LRejected := False;
+  try
+    CheckSelfSignedCertificate(11, TCertVectors.LoadDer('ProbSelfSignedCert'));
+  except
+    on E: ECryptoLibException do
+      LRejected := True;
+  end;
+  CheckTrue(LRejected, 'the strict default rejects a DigestInfo without NULL parameters');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := False;
   CheckSelfSignedCertificate(11, TCertVectors.LoadDer('ProbSelfSignedCert'));
 end;
 
