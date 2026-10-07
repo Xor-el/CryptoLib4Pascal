@@ -287,11 +287,14 @@ type
     /// "unset" cannot be folded onto any integer.
     /// </summary>
     FMaxMRTests: TNullable<Int32>;
+    FStrictDigestInfo: Boolean;
 
     class function GetMaxSize: Int32; static;
     class procedure SetMaxSize(AValue: Int32); static;
     class function GetMaxMRTests: TNullable<Int32>; static;
     class procedure SetMaxMRTests(const AValue: TNullable<Int32>); static;
+    class function GetStrictDigestInfo: Boolean; static;
+    class procedure SetStrictDigestInfo(AValue: Boolean); static;
 
   public
     /// <summary>Restores this area's settings to their defaults.</summary>
@@ -309,6 +312,15 @@ type
     /// negative value raises.
     /// </summary>
     class property MaxMRTests: TNullable<Int32> read GetMaxMRTests write SetMaxMRTests;
+
+    /// <summary>
+    /// Makes every RSASSA-PKCS1-v1_5 verification accept only the DigestInfo the verifier would
+    /// build itself (RFC 8017 9.2), so a signature whose AlgorithmIdentifier omits the NULL
+    /// parameters (or adds them where the verifier's own identifier has none) is rejected. That
+    /// covers certificate, CRL, OCSP and CMS signatures as well as a signer used directly. Off by
+    /// default, which keeps accepting both forms.
+    /// </summary>
+    class property StrictDigestInfo: Boolean read GetStrictDigestInfo write SetStrictDigestInfo;
   end;
 
   /// <summary>Class reference, so the settings are reachable without an instance.</summary>
@@ -693,6 +705,17 @@ class procedure TRsaConfig.ResetToDefaults();
 begin
   FMaxSize := TNullable<Int32>.None;
   FMaxMRTests := TNullable<Int32>.None;
+  FStrictDigestInfo := False;
+end;
+
+class function TRsaConfig.GetStrictDigestInfo: Boolean;
+begin
+  Result := FStrictDigestInfo;
+end;
+
+class procedure TRsaConfig.SetStrictDigestInfo(AValue: Boolean);
+begin
+  FStrictDigestInfo := AValue;
 end;
 
 class function TRsaConfig.GetMaxSize: Int32;
