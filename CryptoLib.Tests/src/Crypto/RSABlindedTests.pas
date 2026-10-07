@@ -30,6 +30,7 @@ uses
   ClpPkcs1Encoding,
   ClpIPkcs1Encoding,
   ClpOaepEncoding,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoTestKeys;
@@ -364,9 +365,9 @@ begin
   Check(exceptionCaught, 'Oversized signature block not recognised');
 
   // Test with strict length disabled (should pass)
-  savedStrictLength := TPkcs1Encoding.StrictLengthEnabled;
+  savedStrictLength := TCryptoLibConfig.Pkcs1.StrictLength;
   try
-    TPkcs1Encoding.StrictLengthEnabled := False;
+    TCryptoLibConfig.Pkcs1.StrictLength := False;
 
     eng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
     eng.Init(False, pubParams as ICipherParameters);
@@ -381,7 +382,7 @@ begin
     data := eng.ProcessBlock(data, 0, System.Length(data));
     // Should not throw
   finally
-    TPkcs1Encoding.StrictLengthEnabled := savedStrictLength;
+    TCryptoLibConfig.Pkcs1.StrictLength := savedStrictLength;
   end;
 end;
 

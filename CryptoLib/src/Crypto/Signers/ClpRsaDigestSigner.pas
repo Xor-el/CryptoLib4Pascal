@@ -45,6 +45,7 @@ uses
   ClpTeleTrusTObjectIdentifiers,
   ClpArrayUtilities,
   ClpCollectionUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -69,7 +70,6 @@ type
     FDigestAlgID: IAlgorithmIdentifier;
     FDigest: IDigest;
     FForSigning: Boolean;
-    FStrictDigestInfo: Boolean;
 
     class constructor CreateRsaDigestSigner();
     class destructor DestroyRsaDigestSigner();
@@ -100,15 +100,12 @@ type
     procedure Init(AForSigning: Boolean; const AParameters: ICipherParameters);
     procedure Update(AInput: Byte);
     procedure BlockUpdate(const AInput: TCryptoLibByteArray; AInOff, ALength: Int32);
-    function GetStrictDigestInfo: Boolean;
-    procedure SetStrictDigestInfo(AValue: Boolean);
     function GetMaxSignatureSize: Int32;
     function GenerateSignature(): TCryptoLibByteArray;
     function VerifySignature(const ASignature: TCryptoLibByteArray): Boolean;
     procedure Reset();
 
     property AlgorithmName: String read GetAlgorithmName;
-    property StrictDigestInfo: Boolean read GetStrictDigestInfo write SetStrictDigestInfo;
 
   end;
 
@@ -204,16 +201,6 @@ end;
 function TRsaDigestSigner.GetAlgorithmName: String;
 begin
   Result := FDigest.AlgorithmName + 'withRSA';
-end;
-
-function TRsaDigestSigner.GetStrictDigestInfo: Boolean;
-begin
-  Result := FStrictDigestInfo;
-end;
-
-procedure TRsaDigestSigner.SetStrictDigestInfo(AValue: Boolean);
-begin
-  FStrictDigestInfo := AValue;
 end;
 
 procedure TRsaDigestSigner.Init(AForSigning: Boolean;
@@ -336,7 +323,8 @@ begin
   end;
 
   // Try alternate algorithm identifier encoding (with/without DerNull)
-  if (not FStrictDigestInfo) and TryGetAltAlgID(FDigestAlgID, LAltAlgID) then
+  if (not TCryptoLibConfig.Pkcs1.StrictDigestInfo) and
+    TryGetAltAlgID(FDigestAlgID, LAltAlgID) then
   begin
     LExpected := DerEncode(LAltAlgID, LHash);
     if TArrayUtilities.FixedTimeEquals(LSig, LExpected) then

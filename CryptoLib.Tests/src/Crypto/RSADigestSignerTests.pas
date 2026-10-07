@@ -45,6 +45,8 @@ uses
   ClpNistObjectIdentifiers,
   ClpPkcsObjectIdentifiers,
   ClpTeleTrusTObjectIdentifiers,
+  ClpCryptoLibConfig,
+  ClpSignerUtilities,
   ClpCryptoLibTypes,
   CryptoTestKeys;
 
@@ -67,6 +69,7 @@ type
 
   protected
     procedure SetUp; override;
+    procedure TearDown; override;
   published
     procedure TestRipeMD128;
     procedure TestRipeMD160;
@@ -91,6 +94,9 @@ type
     procedure TestNoNullDigestInfoTailBytesChecked;
     procedure TestStrictDigestInfoRejectsAbsentParameters;
     procedure TestStrictDigestInfoAcceptsCanonical;
+    procedure TestStrictDigestInfoIsLenientByDefaultAndResets;
+    procedure TestStrictDigestInfoReachesTheSignerFactory;
+    procedure TestStrictLengthIsOnByDefaultAndResets;
   end;
 
 implementation
@@ -108,6 +114,13 @@ begin
   inherited;
   if FRsaPublic = nil then
     SetUpKeys;
+end;
+
+procedure TTestRSADigestSigner.TearDown;
+begin
+  // the strict mode is process-wide: leave it as the later tests expect it
+  TCryptoLibConfig.ResetToDefaults();
+  inherited;
 end;
 
 procedure TTestRSADigestSigner.CheckDigest(const digest: IDigest;
@@ -348,7 +361,7 @@ begin
   LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
   LVerifier := TRsaDigestSigner.Create(TDigestUtilities.GetDigest('SHA-256'),
     TNistObjectIdentifiers.IdSha256) as IRsaDigestSigner;
-  LVerifier.StrictDigestInfo := AStrict;
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := AStrict;
   LVerifier.Init(False, FRsaPublic);
   LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
   Result := LVerifier.VerifySignature(ASignature);
@@ -370,6 +383,48 @@ begin
   LSig := SignSha256DigestInfo(TDerNull.Instance);
   CheckTrue(VerifySha256(LSig, True), 'the strict verifier accepts the NULL-parameters encoding');
   CheckTrue(VerifySha256(LSig, False), 'the lenient verifier accepts it too');
+end;
+
+procedure TTestRSADigestSigner.TestStrictDigestInfoIsLenientByDefaultAndResets;
+begin
+  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the default keeps accepting both forms');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  TCryptoLibConfig.Pkcs1.ResetToDefaults();
+  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the area reset returns to lenient');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  TCryptoLibConfig.ResetToDefaults();
+  CheckFalse(TCryptoLibConfig.Pkcs1.StrictDigestInfo, 'the global reset returns to lenient');
+end;
+
+procedure TTestRSADigestSigner.TestStrictLengthIsOnByDefaultAndResets;
+begin
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictLength, 'the default is strict');
+  TCryptoLibConfig.Pkcs1.StrictLength := False;
+  CheckFalse(TCryptoLibConfig.Pkcs1.StrictLength, 'it can be relaxed');
+  TCryptoLibConfig.Pkcs1.ResetToDefaults();
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictLength, 'the area reset returns to strict');
+  TCryptoLibConfig.Pkcs1.StrictLength := False;
+  TCryptoLibConfig.ResetToDefaults();
+  CheckTrue(TCryptoLibConfig.Pkcs1.StrictLength, 'the global reset returns to strict');
+end;
+
+procedure TTestRSADigestSigner.TestStrictDigestInfoReachesTheSignerFactory;
+var
+  LSig, LMsg: TCryptoLibByteArray;
+  LVerifier: ISigner;
+begin
+  // certificates, CRLs, OCSP and CMS verify through the signer factory, not a held IRsaDigestSigner
+  LSig := SignSha256DigestInfo(nil);
+  LMsg := TCryptoLibByteArray.Create(1, 6, 3, 32, 7, 43, 2, 5, 7, 78, 4, 23);
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  CheckTrue(LVerifier.VerifySignature(LSig), 'the default accepts a DigestInfo without NULL');
+  TCryptoLibConfig.Pkcs1.StrictDigestInfo := True;
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
+  CheckFalse(LVerifier.VerifySignature(LSig), 'strict mode rejects it through the factory too');
 end;
 
 initialization
