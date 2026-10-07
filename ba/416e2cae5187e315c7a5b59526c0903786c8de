@@ -1,0 +1,47 @@
+CryptoLib.Tests/src/Crypto/RSADigestSignerTests.pas
+  s_d27f31cd14035d::t_cf1c6528a5dab9 99
+  s_d27f31cd14035d::t_6baf7b389f57db 364,397-398
+  s_d27f31cd14035d::t_a85c776f71f831 390-394,396
+  s_d27f31cd14035d::t_00d417f2ed1192 399-408
+  s_d27f31cd14035d::t_dee75c48f40d92 423
+CryptoLib/src/Crypto/Signers/ClpRsaDigestSigner.pas
+  s_d27f31cd14035d::t_1c5b1d792e6335 326
+CryptoLib/src/Crypto/Encodings/ClpPkcs1Encoding.pas
+  s_d27f31cd14035d::t_a9496b7cffe9d2 130
+  s_d27f31cd14035d::t_c57e060c9fd1af 35
+  s_d27f31cd14035d::t_b327419f6eb963 111
+  s_d27f31cd14035d::t_7cd73e75df4f4e 120
+CryptoLib.Tests/src/Crypto/RSABlindedTests.pas
+  s_d27f31cd14035d::t_c544fac481b188 33
+  s_d27f31cd14035d::t_e39be45aeb7aa3 368,370
+  s_d27f31cd14035d::t_135c8f4940f5a9 385
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_d27f31cd14035d::t_a86e456dfc9254 800-803,808
+  s_d27f31cd14035d::t_12b78142fadc62 324,326,328-332
+  s_d27f31cd14035d::t_c752a0d0eac457 312-323,334-341,351-352,357-358,362
+  s_d27f31cd14035d::t_e909672c8710ef 333
+  s_d27f31cd14035d::t_4a937568c2a3e1 353-356
+  s_d27f31cd14035d::t_194fdf2d150205 511
+  s_d27f31cd14035d::t_c5927cf3aaf6fd 535-537
+  s_d27f31cd14035d::t_09739369070900 780-784,786-799,804-807,809-810
+  s_d27f31cd14035d::t_9ddc69db9f30bd 984
+  s_d27f31cd14035d::t_84e3412550eb6b 785
+  s_d27f31cd14035d::t_42109c49955a3e 957-961
+  s_d27f31cd14035d::t_6f74cfd720794d 325,327
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "ba416e2cae5187e315c7a5b59526c0903786c8de",
+  "prompts": {},
+  "sessions": {
+    "s_d27f31cd14035d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61c4d21-3cc2-4465-aca6-b1ba56a8e8c7",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
