@@ -287,14 +287,11 @@ type
     /// "unset" cannot be folded onto any integer.
     /// </summary>
     FMaxMRTests: TNullable<Int32>;
-    FStrictDigestInfo: Boolean;
 
     class function GetMaxSize: Int32; static;
     class procedure SetMaxSize(AValue: Int32); static;
     class function GetMaxMRTests: TNullable<Int32>; static;
     class procedure SetMaxMRTests(const AValue: TNullable<Int32>); static;
-    class function GetStrictDigestInfo: Boolean; static;
-    class procedure SetStrictDigestInfo(AValue: Boolean); static;
 
   public
     /// <summary>Restores this area's settings to their defaults.</summary>
@@ -312,6 +309,36 @@ type
     /// negative value raises.
     /// </summary>
     class property MaxMRTests: TNullable<Int32> read GetMaxMRTests write SetMaxMRTests;
+  end;
+
+  /// <summary>Class reference, so the settings are reachable without an instance.</summary>
+  TCryptoLibConfigRsa = class of TRsaConfig;
+
+  /// <summary>
+  /// The PKCS#1 v1.5 settings, reached as <c>TCryptoLibConfig.Pkcs1</c>: the signature DigestInfo
+  /// check and the encryption block length check.
+  /// </summary>
+  TPkcs1Config = class sealed(TObject)
+
+  strict private
+  const
+    /// <summary>
+    /// The block length check applied when <see cref="StrictLength" /> is unset.
+    /// </summary>
+    DefaultStrictLength = True;
+
+  class var
+    FStrictDigestInfo: Boolean;
+    FStrictLength: TNullable<Boolean>;
+
+    class function GetStrictDigestInfo: Boolean; static;
+    class procedure SetStrictDigestInfo(AValue: Boolean); static;
+    class function GetStrictLength: Boolean; static;
+    class procedure SetStrictLength(AValue: Boolean); static;
+
+  public
+    /// <summary>Restores this area's settings to their defaults.</summary>
+    class procedure ResetToDefaults(); static;
 
     /// <summary>
     /// Makes every RSASSA-PKCS1-v1_5 verification accept only the DigestInfo the verifier would
@@ -321,10 +348,18 @@ type
     /// default, which keeps accepting both forms.
     /// </summary>
     class property StrictDigestInfo: Boolean read GetStrictDigestInfo write SetStrictDigestInfo;
+
+    /// <summary>
+    /// Makes a PKCS#1 v1.5 block decoder require the decrypted block to be exactly the engine's
+    /// output block size. When off, a longer block is accepted too (one a shorter size is never).
+    /// On by default. The value is read when the encoding is created, so a change applies to
+    /// encodings created afterwards.
+    /// </summary>
+    class property StrictLength: Boolean read GetStrictLength write SetStrictLength;
   end;
 
   /// <summary>Class reference, so the settings are reachable without an instance.</summary>
-  TCryptoLibConfigRsa = class of TRsaConfig;
+  TCryptoLibConfigPkcs1 = class of TPkcs1Config;
 
   /// <summary>
   /// The elliptic-curve settings, reached as <c>TCryptoLibConfig.EC</c>. The prime-field (Fp)
@@ -473,6 +508,7 @@ type
     class function GetDH: TCryptoLibConfigDH; static;
     class function GetDsa: TCryptoLibConfigDsa; static;
     class function GetRsa: TCryptoLibConfigRsa; static;
+    class function GetPkcs1: TCryptoLibConfigPkcs1; static;
     class function GetEC: TCryptoLibConfigEC; static;
     class function GetPbe: TCryptoLibConfigPbe; static;
     class function GetPkcs12: TCryptoLibConfigPkcs12; static;
@@ -495,6 +531,9 @@ type
 
     /// <summary>The RSA settings.</summary>
     class property Rsa: TCryptoLibConfigRsa read GetRsa;
+
+    /// <summary>The PKCS#1 v1.5 signature and encryption settings.</summary>
+    class property Pkcs1: TCryptoLibConfigPkcs1 read GetPkcs1;
 
     /// <summary>The elliptic-curve settings.</summary>
     class property EC: TCryptoLibConfigEC read GetEC;
@@ -705,17 +744,6 @@ class procedure TRsaConfig.ResetToDefaults();
 begin
   FMaxSize := TNullable<Int32>.None;
   FMaxMRTests := TNullable<Int32>.None;
-  FStrictDigestInfo := False;
-end;
-
-class function TRsaConfig.GetStrictDigestInfo: Boolean;
-begin
-  Result := FStrictDigestInfo;
-end;
-
-class procedure TRsaConfig.SetStrictDigestInfo(AValue: Boolean);
-begin
-  FStrictDigestInfo := AValue;
 end;
 
 class function TRsaConfig.GetMaxSize: Int32;
@@ -747,6 +775,37 @@ begin
       ['RSA Miller-Rabin iteration count', AValue.Value]);
 
   FMaxMRTests := AValue;
+end;
+
+{ TPkcs1Config }
+
+class procedure TPkcs1Config.ResetToDefaults();
+begin
+  FStrictDigestInfo := False;
+  FStrictLength := TNullable<Boolean>.None;
+end;
+
+class function TPkcs1Config.GetStrictDigestInfo: Boolean;
+begin
+  Result := FStrictDigestInfo;
+end;
+
+class procedure TPkcs1Config.SetStrictDigestInfo(AValue: Boolean);
+begin
+  FStrictDigestInfo := AValue;
+end;
+
+class function TPkcs1Config.GetStrictLength: Boolean;
+begin
+  if FStrictLength.HasValue then
+    Result := FStrictLength.Value
+  else
+    Result := DefaultStrictLength;
+end;
+
+class procedure TPkcs1Config.SetStrictLength(AValue: Boolean);
+begin
+  FStrictLength := TNullable<Boolean>.Some(AValue);
 end;
 
 { TECConfig }
@@ -895,6 +954,11 @@ begin
   Result := TRsaConfig;
 end;
 
+class function TCryptoLibConfig.GetPkcs1: TCryptoLibConfigPkcs1;
+begin
+  Result := TPkcs1Config;
+end;
+
 class function TCryptoLibConfig.GetEC: TCryptoLibConfigEC;
 begin
   Result := TECConfig;
@@ -917,6 +981,7 @@ begin
   TDHConfig.ResetToDefaults();
   TDsaConfig.ResetToDefaults();
   TRsaConfig.ResetToDefaults();
+  TPkcs1Config.ResetToDefaults();
   TECConfig.ResetToDefaults();
   TPbeConfig.ResetToDefaults();
   TPkcs12Config.ResetToDefaults();

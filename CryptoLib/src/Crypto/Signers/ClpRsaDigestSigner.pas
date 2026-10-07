@@ -323,7 +323,7 @@ begin
   end;
 
   // Try alternate algorithm identifier encoding (with/without DerNull)
-  if (not TCryptoLibConfig.Rsa.StrictDigestInfo) and
+  if (not TCryptoLibConfig.Pkcs1.StrictDigestInfo) and
     TryGetAltAlgID(FDigestAlgID, LAltAlgID) then
   begin
     LExpected := DerEncode(LAltAlgID, LHash);

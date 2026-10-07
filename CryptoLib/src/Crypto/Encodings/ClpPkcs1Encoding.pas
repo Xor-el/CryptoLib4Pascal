@@ -32,6 +32,7 @@ uses
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
   ClpParameterUtilities,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions;
 
@@ -53,9 +54,6 @@ type
   strict private
   const
     HeaderLength = 10;
-
-  class var
-    FStrictLengthEnabled: Boolean;
 
   var
     FEngine: IAsymmetricBlockCipher;
@@ -86,8 +84,6 @@ type
     function GetUnderlyingCipher: IAsymmetricBlockCipher;
 
   public
-    class constructor CreatePkcs1Encoding;
-
     constructor Create(const ACipher: IAsymmetricBlockCipher); overload;
     constructor Create(const ACipher: IAsymmetricBlockCipher; APLen: Int32); overload;
     constructor Create(const ACipher: IAsymmetricBlockCipher;
@@ -96,9 +92,6 @@ type
     procedure Init(AForEncryption: Boolean; const AParameters: ICipherParameters);
     function ProcessBlock(const AInBuf: TCryptoLibByteArray;
       AInOff, AInLen: Int32): TCryptoLibByteArray;
-
-    class property StrictLengthEnabled: Boolean read FStrictLengthEnabled
-      write FStrictLengthEnabled;
 
     property AlgorithmName: String read GetAlgorithmName;
     property InputBlockSize: Int32 read GetInputBlockSize;
@@ -111,16 +104,11 @@ implementation
 
 { TPkcs1Encoding }
 
-class constructor TPkcs1Encoding.CreatePkcs1Encoding;
-begin
-  FStrictLengthEnabled := True;
-end;
-
 constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher);
 begin
   inherited Create();
   FEngine := ACipher;
-  FUseStrictLength := FStrictLengthEnabled;
+  FUseStrictLength := TCryptoLibConfig.Pkcs1.StrictLength;
   FPLen := -1;
   FFallback := nil;
 end;
@@ -129,7 +117,7 @@ constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher; APLen: 
 begin
   inherited Create();
   FEngine := ACipher;
-  FUseStrictLength := FStrictLengthEnabled;
+  FUseStrictLength := TCryptoLibConfig.Pkcs1.StrictLength;
   FPLen := APLen;
   FFallback := nil;
 end;
@@ -139,7 +127,7 @@ constructor TPkcs1Encoding.Create(const ACipher: IAsymmetricBlockCipher;
 begin
   inherited Create();
   FEngine := ACipher;
-  FUseStrictLength := FStrictLengthEnabled;
+  FUseStrictLength := TCryptoLibConfig.Pkcs1.StrictLength;
   FFallback := AFallback;
   FPLen := System.Length(AFallback);
 end;
