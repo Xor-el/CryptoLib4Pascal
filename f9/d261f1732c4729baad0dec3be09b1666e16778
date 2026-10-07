@@ -1,0 +1,31 @@
+CryptoLib.Tests/src/Others/CertTests.pas
+  s_d27f31cd14035d::t_ed87e9320d8e92 138
+  s_d27f31cd14035d::t_f98ef4e40e7a65 326-332
+  s_d27f31cd14035d::t_162b1e53d736b2 370-371,373-382
+  s_d27f31cd14035d::t_766217277b87dc 90
+CryptoLib.Tests/src/Crypto/RSADigestSignerTests.pas
+  s_d27f31cd14035d::t_b907213a756ef0 97
+  s_d27f31cd14035d::t_27df71f537d22a 425-426,430
+  s_d27f31cd14035d::t_2dc584f1b552ed 390,392-394,396-397,399
+  s_d27f31cd14035d::t_b02b6218f36bc7 311-312
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_d27f31cd14035d::t_7b4ef519d8ca56 789,795-798,803
+  s_d27f31cd14035d::t_4a64a3a4e79210 352-353
+  s_d27f31cd14035d::t_7b01dd1a1b7327 330-334,336
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f9d261f1732c4729baad0dec3be09b1666e16778",
+  "prompts": {},
+  "sessions": {
+    "s_d27f31cd14035d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61c4d21-3cc2-4465-aca6-b1ba56a8e8c7",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
