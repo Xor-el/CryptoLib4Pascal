@@ -40,6 +40,7 @@ resourcestring
   SInputDataTooLarge = 'input data too large';
   SBlockIncorrect = 'block incorrect';
   SBlockIncorrectSize = 'block incorrect size';
+  SSignatureIncorrectLength = 'signature length incorrect';
   SDecryptionOnly = 'this method is only for decryption, not for signing';
   SExpectedAsymmetricKeyParameter = 'expected asymmetric key parameter';
 
@@ -392,6 +393,10 @@ begin
     Result := DecodeBlockOrRandom(AInput, AInOff, AInLen);
     Exit;
   end;
+
+  // RFC 8017 8.2.2 step 1: public-key decoding verifies a signature, which must be exactly k octets
+  if (not FForPrivateKey) and (AInLen <> FEngine.InputBlockSize) then
+    raise EInvalidCipherTextCryptoLibException.CreateRes(@SSignatureIncorrectLength);
 
   LStrictBlockSize := FEngine.OutputBlockSize;
   LBlock := FEngine.ProcessBlock(AInput, AInOff, AInLen);

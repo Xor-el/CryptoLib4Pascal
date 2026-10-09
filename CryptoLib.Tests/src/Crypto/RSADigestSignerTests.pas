@@ -66,6 +66,11 @@ type
     class function CreatePrehashSigner: IRsaDigestSigner;
     function SignSha256DigestInfo(const AParameters: IAsn1Encodable): TCryptoLibByteArray;
     function VerifySha256(const ASignature: TCryptoLibByteArray; AStrict: Boolean): Boolean;
+    function CounterMessage(ACounter: Int32): TCryptoLibByteArray;
+    function Sha256DigestInfo(const AMsg: TCryptoLibByteArray): TCryptoLibByteArray;
+    procedure FindLeadingZeroSignature(const AAlgorithm: String; AWrapDigestInfo: Boolean;
+      out AMsg, ASig: TCryptoLibByteArray);
+    function VerifyWith(const AVerifier: ISigner; const AMsg, ASig: TCryptoLibByteArray): Boolean;
 
   protected
     procedure SetUp; override;
@@ -97,6 +102,11 @@ type
     procedure TestStrictDigestInfoIsOnByDefaultAndResets;
     procedure TestStrictDigestInfoReachesTheSignerFactory;
     procedure TestStrictLengthIsOnByDefaultAndResets;
+    procedure TestSignatureShorterThanModulusRejected;
+    procedure TestSignatureLongerThanModulusRejected;
+    procedure TestEmptySignatureRejected;
+    procedure TestSignerReusableAfterRejectedLength;
+    procedure TestShortSignatureRejectedThroughSignerFactory;
   end;
 
 implementation
@@ -428,6 +438,137 @@ begin
   LVerifier.Init(False, FRsaPublic);
   LVerifier.BlockUpdate(LMsg, 0, System.Length(LMsg));
   CheckTrue(LVerifier.VerifySignature(LSig), 'relaxing it accepts the form through the factory too');
+end;
+
+function TTestRSADigestSigner.CounterMessage(ACounter: Int32): TCryptoLibByteArray;
+begin
+  Result := TCryptoLibByteArray.Create(Byte(ACounter), Byte(ACounter shr 8), 1, 2, 3);
+end;
+
+function TTestRSADigestSigner.Sha256DigestInfo(const AMsg: TCryptoLibByteArray): TCryptoLibByteArray;
+var
+  LHash: TCryptoLibByteArray;
+  LDigestInfo: IDigestInfo;
+begin
+  LHash := TDigestUtilities.DoFinal(TDigestUtilities.GetDigest('SHA-256'), AMsg);
+  LDigestInfo := TDigestInfo.Create(
+    TAlgorithmIdentifier.Create(TNistObjectIdentifiers.IdSha256, TDerNull.Instance) as IAlgorithmIdentifier,
+    LHash);
+  Result := LDigestInfo.GetDerEncoded();
+end;
+
+// signing is deterministic, so the first message whose signature starts with 0x00 is stable
+procedure TTestRSADigestSigner.FindLeadingZeroSignature(const AAlgorithm: String;
+  AWrapDigestInfo: Boolean; out AMsg, ASig: TCryptoLibByteArray);
+var
+  LI: Int32;
+  LSigner: ISigner;
+  LInput: TCryptoLibByteArray;
+  LFound: Boolean;
+begin
+  LFound := False;
+  LI := 0;
+  while (not LFound) and (LI < 4096) do
+  begin
+    AMsg := CounterMessage(LI);
+    if AWrapDigestInfo then
+      LInput := Sha256DigestInfo(AMsg)
+    else
+      LInput := AMsg;
+    LSigner := TSignerUtilities.GetSigner(AAlgorithm);
+    LSigner.Init(True, FRsaPrivate);
+    LSigner.BlockUpdate(LInput, 0, System.Length(LInput));
+    ASig := LSigner.GenerateSignature();
+    LFound := ASig[0] = 0;
+    System.Inc(LI);
+  end;
+  CheckTrue(LFound, 'no leading-zero signature found');
+end;
+
+function TTestRSADigestSigner.VerifyWith(const AVerifier: ISigner;
+  const AMsg, ASig: TCryptoLibByteArray): Boolean;
+begin
+  AVerifier.BlockUpdate(AMsg, 0, System.Length(AMsg));
+  Result := AVerifier.VerifySignature(ASig);
+end;
+
+procedure TTestRSADigestSigner.TestSignatureShorterThanModulusRejected;
+var
+  LMsg, LSig, LShort: TCryptoLibByteArray;
+  LVerifier: IRsaDigestSigner;
+begin
+  FindLeadingZeroSignature('SHA-256withRSA', False, LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LVerifier := TRsaDigestSigner.Create(TDigestUtilities.GetDigest('SHA-256')) as IRsaDigestSigner;
+  LVerifier.Init(False, FRsaPublic);
+  CheckTrue(VerifyWith(LVerifier, LMsg, LSig), 'the full signature verifies');
+  LVerifier := TRsaDigestSigner.Create(TDigestUtilities.GetDigest('SHA-256')) as IRsaDigestSigner;
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the signature without its leading zero is rejected');
+end;
+
+procedure TTestRSADigestSigner.TestSignatureLongerThanModulusRejected;
+var
+  LMsg, LSig, LLong: TCryptoLibByteArray;
+  LVerifier: ISigner;
+begin
+  FindLeadingZeroSignature('SHA-256withRSA', False, LMsg, LSig);
+  System.SetLength(LLong, System.Length(LSig) + 1);
+  System.Move(LSig[0], LLong[1], System.Length(LSig));
+  LLong[0] := 0;
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LLong), 'a signature with an extra leading zero is rejected');
+end;
+
+procedure TTestRSADigestSigner.TestEmptySignatureRejected;
+var
+  LMsg, LEmpty: TCryptoLibByteArray;
+  LVerifier: ISigner;
+begin
+  LMsg := CounterMessage(0);
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LMsg, nil), 'a nil signature is rejected');
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  LEmpty := nil;
+  CheckFalse(VerifyWith(LVerifier, LMsg, LEmpty), 'an empty signature is rejected');
+end;
+
+procedure TTestRSADigestSigner.TestSignerReusableAfterRejectedLength;
+var
+  LMsg, LSig, LShort: TCryptoLibByteArray;
+  LVerifier: ISigner;
+begin
+  FindLeadingZeroSignature('SHA-256withRSA', False, LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the short signature is rejected');
+  CheckTrue(VerifyWith(LVerifier, LMsg, LSig), 'the same instance verifies the next message');
+end;
+
+procedure TTestRSADigestSigner.TestShortSignatureRejectedThroughSignerFactory;
+var
+  LMsg, LSig, LShort, LInput: TCryptoLibByteArray;
+  LVerifier: ISigner;
+begin
+  FindLeadingZeroSignature('SHA-256withRSA', False, LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the digest signer rejects the short signature');
+
+  FindLeadingZeroSignature('RSA', True, LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LInput := Sha256DigestInfo(LMsg);
+  LVerifier := TSignerUtilities.GetSigner('RSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckTrue(VerifyWith(LVerifier, LInput, LSig), 'the raw signer accepts the full signature');
+  LVerifier := TSignerUtilities.GetSigner('RSA');
+  LVerifier.Init(False, FRsaPublic);
+  CheckFalse(VerifyWith(LVerifier, LInput, LShort), 'the raw signer rejects the short signature');
 end;
 
 initialization
