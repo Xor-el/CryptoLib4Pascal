@@ -1,0 +1,41 @@
+CryptoLib.Tests/src/Crypto/RSABlindedTests.pas
+  s_d27f31cd14035d::t_ae2d0388213322 410-441
+  s_d27f31cd14035d::t_fee0b0b8153ef6 74
+CryptoLib.Tests/src/Crypto/RSADigestSignerTests.pas
+  s_d27f31cd14035d::t_80e8bbfe87419e 443-525,527-534,537-573
+  s_d27f31cd14035d::t_c66a40a3c0376e 105-109
+  s_d27f31cd14035d::t_867a288d11d499 69-73
+  s_d27f31cd14035d::t_b5c32f341bf7bc 526
+  s_d27f31cd14035d::t_8bf99c39be7465 535-536
+CryptoLib.Tests/src/Crypto/PssTests.pas
+  s_d27f31cd14035d::t_9fec5fe03fa717 105-106
+  s_d27f31cd14035d::t_166a259981cdd0 676-677
+  s_d27f31cd14035d::t_89bf1d158c1848 595-664,666-675,678-710
+  s_d27f31cd14035d::t_c876b8a0c6a772 120-124
+  s_d27f31cd14035d::t_b60e36c8a33462 665
+CryptoLib/src/Crypto/Encodings/ClpPkcs1Encoding.pas
+  s_d27f31cd14035d::t_834f1648bcc236 43
+  s_d27f31cd14035d::t_dd4803edc08634 397-400
+CryptoLib/src/Crypto/Signers/ClpPssSigner.pas
+  s_d27f31cd14035d::t_733b5e0616cbfa 283
+  s_d27f31cd14035d::t_d22662f54226a4 71
+  s_d27f31cd14035d::t_f607271dd21418 388-394,396
+CryptoLib/src/Crypto/Signers/ClpRsaDigestSigner.pas
+  s_d27f31cd14035d::t_0d1a9a9b5cdf0c 302-305
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "a325d80437d3f756c88b4af423cfd79aaecbffc0",
+  "prompts": {},
+  "sessions": {
+    "s_d27f31cd14035d": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "d61c4d21-3cc2-4465-aca6-b1ba56a8e8c7",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
