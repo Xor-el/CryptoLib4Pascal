@@ -299,15 +299,16 @@ begin
     raise EInvalidOperationCryptoLibException.CreateResFmt(@SNotInitialized, ['verification']);
   end;
 
+  // finalise first so a rejected signature still resets the digest for reuse
+  SetLength(LHash, FDigest.GetDigestSize);
+  FDigest.DoFinal(LHash, 0);
+
   try
     LSig := FEngine.ProcessBlock(ASignature, 0, System.Length(ASignature));
   except
     Result := False;
     Exit;
   end;
-
-  SetLength(LHash, FDigest.GetDigestSize);
-  FDigest.DoFinal(LHash, 0);
 
   if FDigestAlgID = nil then
   begin

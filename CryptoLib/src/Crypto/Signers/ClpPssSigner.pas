@@ -68,6 +68,7 @@ type
     FSLen: Int32;
     FSSet: Boolean;
     FEmBits: Int32;
+    FSigLen: Int32;
     FSalt: TCryptoLibByteArray;
     FMDash: TCryptoLibByteArray;
     FBlock: TCryptoLibByteArray;
@@ -279,6 +280,7 @@ begin
   end;
 
   FEmBits := LKParam.Modulus.BitLength - 1;
+  FSigLen := (LKParam.Modulus.BitLength + 7) div 8;
 
   if FEmBits < ((8 * FHLen) + (8 * FSLen) + 9) then
   begin
@@ -383,8 +385,15 @@ begin
 
   FContentDigest1.DoFinal(FMDash, System.Length(FMDash) - FHLen - FSLen);
 
+  // RFC 8017 8.1.2 step 1: a signature that is not exactly k octets is invalid
+  if System.Length(ASignature) <> FSigLen then
+  begin
+    Result := False;
+    Exit;
+  end;
+
   LB := FCipher.ProcessBlock(ASignature, 0, System.Length(ASignature));
-  
+
   TArrayUtilities.Fill(FBlock, 0, System.Length(FBlock) - System.Length(LB), Byte(0));
   System.Move(LB[0], FBlock[System.Length(FBlock) - System.Length(LB)],
     System.Length(LB));

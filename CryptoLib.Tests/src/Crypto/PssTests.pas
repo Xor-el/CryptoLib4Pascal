@@ -102,6 +102,8 @@ type
     procedure DoSignerUtilitiesSha512;
     procedure DoSignerUtilitiesExtraPss;
     procedure DoRawSignerTest;
+    procedure FindLeadingZeroSignature(out AMsg, ASig: TCryptoLibByteArray);
+    function VerifyWith(const AVerifier: ISigner; const AMsg, ASig: TCryptoLibByteArray): Boolean;
 
   published
     procedure TestPssVectors;
@@ -115,6 +117,11 @@ type
     procedure TestSignerUtilitiesSha512;
     procedure TestSignerUtilitiesExtraPss;
     procedure TestRawSigner;
+    procedure TestSignatureShorterThanModulusRejected;
+    procedure TestSignatureLongerThanModulusRejected;
+    procedure TestEmptySignatureRejected;
+    procedure TestSignerReusableAfterRejectedLength;
+    procedure TestShortSignatureRejectedThroughSignerFactory;
 
   end;
 
@@ -583,6 +590,122 @@ end;
 procedure TTestPss.TestRawSigner;
 begin
   DoRawSignerTest;
+end;
+
+// a fixed salt makes signing deterministic, so the first message whose signature starts with 0x00 is stable
+procedure TTestPss.FindLeadingZeroSignature(out AMsg, ASig: TCryptoLibByteArray);
+var
+  LRow: TPssVectorRow;
+  LPrv: IRsaPrivateCrtKeyParameters;
+  LSalt: TCryptoLibByteArray;
+  LSigner: IPssSigner;
+  LI: Int32;
+  LFound: Boolean;
+begin
+  LRow := TPssVectors.GetRows[0];
+  LPrv := TPssVectors.CreatePrivateCrtKey(LRow);
+  LSalt := TCryptoLibByteArray.Create(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
+    17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32);
+  LFound := False;
+  LI := 0;
+  while (not LFound) and (LI < 4096) do
+  begin
+    AMsg := TCryptoLibByteArray.Create(Byte(LI), Byte(LI shr 8), 1, 2, 3);
+    LSigner := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
+      TDigestUtilities.GetDigest('SHA-256'), LSalt);
+    LSigner.Init(True, LPrv);
+    LSigner.BlockUpdate(AMsg, 0, System.Length(AMsg));
+    ASig := LSigner.GenerateSignature();
+    LFound := ASig[0] = 0;
+    System.Inc(LI);
+  end;
+  CheckTrue(LFound, 'no leading-zero signature found');
+end;
+
+function TTestPss.VerifyWith(const AVerifier: ISigner; const AMsg, ASig: TCryptoLibByteArray): Boolean;
+begin
+  AVerifier.BlockUpdate(AMsg, 0, System.Length(AMsg));
+  Result := AVerifier.VerifySignature(ASig);
+end;
+
+procedure TTestPss.TestSignatureShorterThanModulusRejected;
+var
+  LMsg, LSig, LShort: TCryptoLibByteArray;
+  LVerifier: IPssSigner;
+  LPub: IRsaKeyParameters;
+begin
+  FindLeadingZeroSignature(LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LPub := TPssVectors.CreatePublicKey(TPssVectors.GetRows[0]);
+  LVerifier := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
+    TDigestUtilities.GetDigest('SHA-256'), 32);
+  LVerifier.Init(False, LPub);
+  CheckTrue(VerifyWith(LVerifier, LMsg, LSig), 'the full signature verifies');
+  LVerifier.Init(False, LPub);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the signature without its leading zero is rejected');
+end;
+
+procedure TTestPss.TestSignatureLongerThanModulusRejected;
+var
+  LMsg, LSig, LLong: TCryptoLibByteArray;
+  LVerifier: IPssSigner;
+begin
+  FindLeadingZeroSignature(LMsg, LSig);
+  System.SetLength(LLong, System.Length(LSig) + 1);
+  System.Move(LSig[0], LLong[1], System.Length(LSig));
+  LLong[0] := 0;
+  LVerifier := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
+    TDigestUtilities.GetDigest('SHA-256'), 32);
+  LVerifier.Init(False, TPssVectors.CreatePublicKey(TPssVectors.GetRows[0]));
+  CheckFalse(VerifyWith(LVerifier, LMsg, LLong), 'a signature with an extra leading zero is rejected');
+end;
+
+procedure TTestPss.TestEmptySignatureRejected;
+var
+  LMsg, LEmpty: TCryptoLibByteArray;
+  LVerifier: IPssSigner;
+  LPub: IRsaKeyParameters;
+begin
+  LMsg := TCryptoLibByteArray.Create(1, 2, 3);
+  LPub := TPssVectors.CreatePublicKey(TPssVectors.GetRows[0]);
+  LVerifier := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
+    TDigestUtilities.GetDigest('SHA-256'), 32);
+  LVerifier.Init(False, LPub);
+  CheckFalse(VerifyWith(LVerifier, LMsg, nil), 'a nil signature is rejected');
+  LVerifier.Init(False, LPub);
+  LEmpty := nil;
+  CheckFalse(VerifyWith(LVerifier, LMsg, LEmpty), 'an empty signature is rejected');
+end;
+
+procedure TTestPss.TestSignerReusableAfterRejectedLength;
+var
+  LMsg, LSig, LShort: TCryptoLibByteArray;
+  LVerifier: IPssSigner;
+begin
+  FindLeadingZeroSignature(LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LVerifier := TPssSigner.Create(TRsaBlindedEngine.Create() as IAsymmetricBlockCipher,
+    TDigestUtilities.GetDigest('SHA-256'), 32);
+  LVerifier.Init(False, TPssVectors.CreatePublicKey(TPssVectors.GetRows[0]));
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the short signature is rejected');
+  CheckTrue(VerifyWith(LVerifier, LMsg, LSig), 'the same instance verifies the next message');
+end;
+
+procedure TTestPss.TestShortSignatureRejectedThroughSignerFactory;
+var
+  LMsg, LSig, LShort: TCryptoLibByteArray;
+  LVerifier: ISigner;
+  LPub: IRsaKeyParameters;
+begin
+  FindLeadingZeroSignature(LMsg, LSig);
+  LShort := System.Copy(LSig, 1, System.Length(LSig) - 1);
+  LPub := TPssVectors.CreatePublicKey(TPssVectors.GetRows[0]);
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSAandMGF1');
+  LVerifier.Init(False, LPub);
+  CheckTrue(VerifyWith(LVerifier, LMsg, LSig), 'the full signature verifies through the factory');
+  LVerifier := TSignerUtilities.GetSigner('SHA-256withRSAandMGF1');
+  LVerifier.Init(False, LPub);
+  CheckFalse(VerifyWith(LVerifier, LMsg, LShort), 'the factory signer rejects the short signature');
 end;
 
 initialization

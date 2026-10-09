@@ -71,6 +71,7 @@ type
     procedure TestMissingDataPkcs1Block;
     procedure TestTruncatedPkcs1Block;
     procedure TestWrongPaddingPkcs1Block;
+    procedure TestPkcs1PublicDecodeRejectsWrongLength;
     procedure TestUninitializedEngine;
     procedure TestBlindingManySignsAcrossRefresh;
     procedure TestBlindingConcurrentSigns;
@@ -404,6 +405,38 @@ end;
 procedure TTestRSABlinded.TestWrongPaddingPkcs1Block;
 begin
   CheckForPkcs1Exception(GetPubParameters, GetPrivParameters, FIncorrectPadding, 'block incorrect');
+end;
+
+procedure TTestRSABlinded.TestPkcs1PublicDecodeRejectsWrongLength;
+var
+  LPub: IRsaKeyParameters;
+  LEng: IAsymmetricBlockCipher;
+  LK, LI: Int32;
+  LInput: TCryptoLibByteArray;
+  LCaught: Boolean;
+begin
+  LPub := GetPubParameters;
+  LK := (LPub.Modulus.BitLength + 7) div 8;
+  for LI := 0 to 1 do
+  begin
+    // one octet short, then one octet long
+    System.SetLength(LInput, LK - 1 + (LI * 2));
+    LInput[System.Length(LInput) - 1] := 1;
+    LEng := TPkcs1Encoding.Create(TRsaBlindedEngine.Create() as IRsaBlindedEngine);
+    LEng.Init(False, LPub as ICipherParameters);
+    LCaught := False;
+    try
+      LEng.ProcessBlock(LInput, 0, System.Length(LInput));
+    except
+      on E: EInvalidCipherTextCryptoLibException do
+      begin
+        LCaught := True;
+        Check(Pos('signature length incorrect', E.Message) > 0,
+          'Unexpected message: ' + E.Message);
+      end;
+    end;
+    Check(LCaught, 'Expected the wrong-length signature to be refused');
+  end;
 end;
 
 procedure TTestRSABlinded.TestUninitializedEngine;
