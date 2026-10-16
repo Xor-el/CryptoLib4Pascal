@@ -4,6 +4,7 @@
 #   .\sync-mobile-testdata.ps1 -DeployProjName CryptoLib.Tests.Mobile.TestData.deployproj -AppDeployFolderName CryptoLib.Tests.Mobile
 #   .\sync-mobile-testdata.ps1 -DeployProjName Project1.TestData.deployproj -AppDeployFolderName Project1
 # Re-run when files under CryptoLib.Tests/Data change (or AppDeployFolderName changes), then rebuild the mobile test host.
+# StartUpCopy never overwrites deployed files: uninstall the app after changing CryptoLib.Tests/Data.
 
 param(
     [string]$RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path,
@@ -58,11 +59,11 @@ Get-ChildItem -Path $DataDir -Recurse -File | ForEach-Object {
     if ($relDir) {
         $relDirSlash = $relDir -replace '\\', '\'
         $androidRemoteDir = "$AppDeployFolderName\assets\internal\CryptoLib.Tests\Data\$relDirSlash\"
-        $iosRemoteDir = "StartUpDocuments\CryptoLib.Tests\Data\$relDirSlash\"
+        $iosRemoteDir = "StartUp\Documents\CryptoLib.Tests\Data\$relDirSlash\"
     }
     else {
         $androidRemoteDir = "$AppDeployFolderName\assets\internal\CryptoLib.Tests\Data\"
-        $iosRemoteDir = "StartUpDocuments\CryptoLib.Tests\Data\"
+        $iosRemoteDir = "StartUp\Documents\CryptoLib.Tests\Data\"
     }
 
     $AndroidBlocks.Add((New-DeployFileBlock -IncludePath $include -RemoteDir $androidRemoteDir -RemoteName $fileName))
