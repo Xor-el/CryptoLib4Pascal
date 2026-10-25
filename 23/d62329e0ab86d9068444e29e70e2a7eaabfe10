@@ -1,0 +1,16 @@
+.github/workflows/ci/ppc64-be-images.env
+  h_878efc035442cc 4-5,8-9
+.github/workflows/ci/ppc64-qemu-setup.sh
+  h_878efc035442cc 8-14,19-23,29-32,39-40
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "23d62329e0ab86d9068444e29e70e2a7eaabfe10",
+  "prompts": {},
+  "humans": {
+    "h_878efc035442cc": {
+      "author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
