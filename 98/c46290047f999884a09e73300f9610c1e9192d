@@ -1,0 +1,51 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.Android.lpr
+  s_f2c9bd75607afc::t_5331f1ebd700f5 72
+  s_f2c9bd75607afc::t_8f6386b2913bc4 69-71
+  s_f2c9bd75607afc::t_eeb8f9de934403 73-75
+  s_4df3ed1e8f8003::t_f4964646368beb 1-68,76-79
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.Android.lpi
+  s_f2c9bd75607afc::t_efd7b22b02cd8d 50
+  s_f2c9bd75607afc::t_d316b18e78b63f 47-49
+  s_f2c9bd75607afc::t_a2454bbc72fc6e 51-53
+  s_f2c9bd75607afc::t_528ea28a7348e4 1-46,54-71
+.github/workflows/make.pas
+  s_f2c9bd75607afc::t_33522a4938b7c4 2399,2401
+  s_f2c9bd75607afc::t_25b976887fd6b0 261
+  s_f2c9bd75607afc::t_415b5a3f45f8de 2396-2398,2400,2402-2403
+  s_f2c9bd75607afc::t_013b1c3662893e 2206
+  s_f2c9bd75607afc::t_e3e29b0b65ace1 2502-2507
+.gitignore
+  s_f2c9bd75607afc::t_46b9358b5df1f5 41
+CryptoLib.Tests/FreePascal.Tests/Mobile/Android/AndroidManifest.xml
+  s_f2c9bd75607afc::t_60a33f23c6c59b 1-22
+CryptoLib.Tests/FreePascal.Tests/Mobile/Android/AndroidTestHost.pas
+  s_f2c9bd75607afc::t_3eb7758d40c056 1-414
+CryptoLib.Tests/FreePascal.Tests/Mobile/Android/BuildApk.java
+  s_f2c9bd75607afc::t_9d2dc046a0649e 1-360
+CryptoLib.Tests/FreePascal.Tests/Mobile/Android/src/org/fpctests/host/MainActivity.java
+  s_f2c9bd75607afc::t_90c30dd96cf8e6 1-273
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "98c46290047f999884a09e73300f9610c1e9192d",
+  "prompts": {},
+  "sessions": {
+    "s_4df3ed1e8f8003": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "agent-aabb475f05e081e37",
+        "model": "unknown"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    },
+    "s_f2c9bd75607afc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93bd4649-2a9e-4694-931c-623400c4649b",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
