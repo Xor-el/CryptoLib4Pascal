@@ -1,0 +1,106 @@
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpi
+  s_f2c9bd75607afc::t_f123f50928ec87 42
+  s_f2c9bd75607afc::t_be934c166dfa26 939-942
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dpr
+  s_f2c9bd75607afc::t_ec3dc530dcbc46 1132
+CryptoLib.Tests/src/Others/MalformedInputTests.pas
+  s_f2c9bd75607afc::t_6016f446a9ee02 430-440
+  s_f2c9bd75607afc::t_1db9cc05e4b721 97-99,101-104
+  s_f2c9bd75607afc::t_bf9701262ed6eb 495
+  s_f2c9bd75607afc::t_f5b5b0f83d6fd8 108
+  s_f2c9bd75607afc::t_777abd13de5a00 83-87
+  s_f2c9bd75607afc::t_ef5898ebbeb54b 37
+  s_f2c9bd75607afc::t_d6c64d959d3932 346-383
+  s_f2c9bd75607afc::t_2d5225682c6101 163-267
+  s_f2c9bd75607afc::t_9bb43bb9bade5d 107
+  s_f2c9bd75607afc::t_1bcc4cbb56b9d1 482,485
+  s_f2c9bd75607afc::t_efab661f34ac96 1-36,38-45,50-60,63-69,71-82,88-94,100,105-106,109-162,268-345,384-387,390-421,423-429,441-454,456-457,459-467,469-481,483-484,486-494,496-516
+  s_f2c9bd75607afc::t_6cfd6e8f1ec49d 388-389
+  s_f2c9bd75607afc::t_44a78da64ed292 95-96
+  s_f2c9bd75607afc::t_9d6f9edb1e18dc 422
+  s_f2c9bd75607afc::t_2399798c412bb7 61-62
+  s_f2c9bd75607afc::t_ed1624d737c31a 455,458
+  s_f2c9bd75607afc::t_edf43d7f37ee91 46-49
+  s_f2c9bd75607afc::t_71372b0e4a3d5b 70
+  s_f2c9bd75607afc::t_68597920e5777a 468
+CryptoLib/src/Crypto/Signers/SignerEncodings/ClpStandardDsaEncoding.pas
+  s_f2c9bd75607afc::t_58ff0ac734dc7e 80
+  s_f2c9bd75607afc::t_d6ff52a07eba67 24
+CryptoLib/src/X509/ClpX509Certificate.pas
+  s_f2c9bd75607afc::t_4b481311d328d7 289-290
+  s_f2c9bd75607afc::t_3012fb105f9c48 288
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.lpr
+  s_f2c9bd75607afc::t_d5e45e15cb0731 66
+CryptoLib.Tests/FreePascal.Tests/CryptoLib.Tests.lpi
+  s_f2c9bd75607afc::t_a7225e00de9b73 82
+  s_f2c9bd75607afc::t_3b99e381061b3b 980-983
+CryptoLib/src/Crypto/ClpPbeUtilities.pas
+  s_f2c9bd75607afc::t_d5acbc4816294f 632
+  s_f2c9bd75607afc::t_e510d452f458b8 633
+  s_f2c9bd75607afc::t_6edc663e425307 72
+CryptoLib/src/Factories/ClpPublicKeyFactory.pas
+  s_f2c9bd75607afc::t_1ee0ea2d5eace2 74
+  s_f2c9bd75607afc::t_12a2ff94af378a 319
+  s_f2c9bd75607afc::t_217adfbd45ed0c 274,314,347
+  s_f2c9bd75607afc::t_c7b8b419993a52 318
+  s_f2c9bd75607afc::t_d9d0beee2991fa 348
+  s_f2c9bd75607afc::t_600c5f2384a8b5 275
+  s_f2c9bd75607afc::t_d344a471cc0db3 278
+  s_f2c9bd75607afc::t_2f2492cd2f7716 315
+  s_f2c9bd75607afc::t_29588b77eccc18 330
+  s_f2c9bd75607afc::t_b3c0e40764fd38 266
+  s_f2c9bd75607afc::t_19669e094dce6d 265
+  s_f2c9bd75607afc::t_6eb6bebfddf1f5 329
+  s_f2c9bd75607afc::t_2c353bc5dcc4b7 279
+CryptoLib/src/Pkcs/ClpPkcs12Utilities.pas
+  s_f2c9bd75607afc::t_619b913565651e 160
+  s_f2c9bd75607afc::t_a74dff0c908fec 40-41
+  s_f2c9bd75607afc::t_6ac2ea19959b8a 165
+  s_f2c9bd75607afc::t_dae3893f54fc70 139
+  s_f2c9bd75607afc::t_c06f2e373da622 161,166
+  s_f2c9bd75607afc::t_ae5a5c031201be 138
+CryptoLib/src/Factories/ClpPrivateKeyFactory.pas
+  s_f2c9bd75607afc::t_99fc9a7f566e60 380
+  s_f2c9bd75607afc::t_591eeeccc9cf6b 320-321
+  s_f2c9bd75607afc::t_93e16a6c852318 319
+  s_f2c9bd75607afc::t_bf38f3ff85c91e 369
+  s_f2c9bd75607afc::t_8b805f0738b059 368,379
+  s_f2c9bd75607afc::t_ebf33f80f850ac 76
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.Mobile.dproj
+  s_f2c9bd75607afc::t_71167d70f0a0f5 1468
+CryptoLib/src/X509/Store/ClpX509StoreSelectors.pas
+  s_f2c9bd75607afc::t_1e451ee11e2822 679
+  s_f2c9bd75607afc::t_71272cf7c4286c 680
+CryptoLib/src/Ocsp/ClpOcspProtocolObjects.pas
+  s_f2c9bd75607afc::t_6fb01542170b0c 1113
+  s_f2c9bd75607afc::t_1bf1486d0ad7a0 1125
+  s_f2c9bd75607afc::t_a785132251a399 812
+  s_f2c9bd75607afc::t_cad99e3f55041e 1114,1126
+  s_f2c9bd75607afc::t_6a6ee1b03b0ef3 825
+  s_f2c9bd75607afc::t_0f587290b9631b 811,824
+  s_f2c9bd75607afc::t_72addc16102109 56
+CryptoLib.Tests/Delphi.Tests/CryptoLib.Tests.dpr
+  s_f2c9bd75607afc::t_6549c26dc6b670 1153
+CryptoLib.Tests/FreePascal.Tests/CryptoLibConsole.lpr
+  s_f2c9bd75607afc::t_50b1542c159e23 68
+CryptoLib/src/Pkcs/ClpPkcs12Store.pas
+  s_f2c9bd75607afc::t_4c6d9e44e82661 76
+  s_f2c9bd75607afc::t_e1c2dfff3807cc 858
+  s_f2c9bd75607afc::t_7417e4cea7d45a 857
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "150fb45fcb08367a2188d539b7a1fa081f91a811",
+  "prompts": {},
+  "sessions": {
+    "s_f2c9bd75607afc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93bd4649-2a9e-4694-931c-623400c4649b",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
