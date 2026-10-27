@@ -37,6 +37,8 @@ uses
 resourcestring
   SErrorConstructingMac = 'error constructing MAC: %s';
   SContentInfoContentMissing = 'ContentInfo content missing';
+  SPfxMissing = 'PFX structure missing';
+  SAuthSafeContentMissing = 'authenticated safe content missing';
   SEncryptedContentMissing = 'EncryptedContentInfo content missing';
   SNegativePkcs12IterationCount = 'negative iteration count found';
   SPkcs12IterationCountsOutOfRange = 'iteration counts >= 2^31 are not supported';
@@ -133,6 +135,8 @@ var
   LPfx: IPfx;
 begin
   LPfx := TPfx.GetInstance(ABerPkcs12File);
+  if LPfx = nil then
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SPfxMissing);
   Result := DLEncode(LPfx);
 end;
 
@@ -153,9 +157,13 @@ var
   LPfxNew: IPfx;
 begin
   LPfx := TPfx.GetInstance(ABerPkcs12File);
+  if LPfx = nil then
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SPfxMissing);
   LInfo := LPfx.AuthSafe;
   LContentOctets := TPkcs12Utilities.GetContentOctets(LInfo);
   LObj := TAsn1Object.FromByteArray(LContentOctets);
+  if LObj = nil then
+    raise EAsn1ParsingCryptoLibException.CreateRes(@SAuthSafeContentMissing);
   LContentOctets := DLEncode(LObj);
   LContentNew := TDerOctetString.FromContents(LContentOctets);
   LInfoNew := TPkcsContentInfo.Create(LInfo.ContentType, LContentNew);

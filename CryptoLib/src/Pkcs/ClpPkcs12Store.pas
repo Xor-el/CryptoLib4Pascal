@@ -73,6 +73,7 @@ uses
 resourcestring
   SInputNil = 'input cannot be nil';
   SMalformedPkcs12NoPfx = 'malformed PKCS#12 data: no PFX structure found';
+  SMalformedPkcs12NoAuthSafe = 'malformed PKCS#12 data: no authenticated safe found';
   SMacInvalid = 'PKCS12 key store MAC invalid - wrong password or corrupted file';
   SPasswordNotNeeded = 'password supplied for keystore that does not require one';
   SUnsupportedCertType = 'unsupported certificate type: %s';
@@ -853,6 +854,8 @@ begin
     begin
       LOctets := TPkcs12Utilities.GetContentOctets(LInfo);
       LAuthSafe := TAuthenticatedSafe.GetInstance(LOctets);
+      if LAuthSafe = nil then
+        raise EIOCryptoLibException.CreateRes(@SMalformedPkcs12NoAuthSafe);
       LCis := LAuthSafe.GetContentInfo();
       for LJ := 0 to System.Length(LCis) - 1 do
       begin

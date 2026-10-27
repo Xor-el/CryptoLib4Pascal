@@ -284,9 +284,7 @@ begin
     begin
       LKeyUsageBytes := LKeyUsageBits.GetBytes();
       LLength := (System.Length(LKeyUsageBytes) * 8) - LKeyUsageBits.PadBits;
-      if LLength < 9 then
-        LLength := 9;
-      System.SetLength(FKeyUsage, LLength);
+      System.SetLength(FKeyUsage, Math.Max(LLength, 9));
       for LI := 0 to LLength - 1 do
       begin
         FKeyUsage[LI] := (LKeyUsageBytes[LI div 8] and ($80 shr (LI mod 8))) <> 0;

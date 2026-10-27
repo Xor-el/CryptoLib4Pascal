@@ -69,6 +69,7 @@ resourcestring
   SInvalidObjectIdentifier = 'invalid object identifier %s';
   SUnknownCipher = 'unknown cipher: %s';
   SAlgorithmNotRecognized = 'algorithm %s not recognized';
+  SMalformedPbeParameters = 'malformed PBE parameters';
   SInvalidPbeIterationCount = 'invalid PBE iteration count';
   SPbeIterationExceedsMax = 'PBE iteration count (%d) greater than %d';
 
@@ -628,6 +629,8 @@ begin
     LS2P := TPbeS2Parameters.GetInstance(APbeParameters.ToAsn1Object());
     LEncScheme := LS2P.EncryptionScheme;
     LEncOid := LEncScheme.Algorithm;
+    if (LEncScheme.Parameters = nil) or (LS2P.KeyDerivationFunc.Parameters = nil) then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPbeParameters);
     LEncParams := LEncScheme.Parameters.ToAsn1Object();
 
     LPbkdf2Params := TPbkdf2Params.GetInstance(LS2P.KeyDerivationFunc.Parameters);

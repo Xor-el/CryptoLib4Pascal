@@ -1129,6 +1129,7 @@ uses
   X448HigherLevelTests in '..\src\Others\X448HigherLevelTests.pas',
   Ed448HigherLevelTests in '..\src\Others\Ed448HigherLevelTests.pas',
   Curve448KeyUtilitiesTests in '..\src\Others\Curve448KeyUtilitiesTests.pas',
+  MalformedInputTests in '..\src\Others\MalformedInputTests.pas',
   ECEncodingTests in '..\src\Math\ECEncodingTests.pas',
   Pkcs12Tests in '..\src\Crypto\Pkcs12Tests.pas',
   Pkcs12StoreTests in '..\src\Pkcs\Pkcs12StoreTests.pas',

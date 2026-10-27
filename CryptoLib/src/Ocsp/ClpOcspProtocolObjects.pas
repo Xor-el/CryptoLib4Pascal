@@ -53,6 +53,7 @@ uses
   ClpCryptoLibExceptions;
 
 resourcestring
+  SOcspEmptyEncoding = 'empty encoding';
   SOcspCertIDNil = 'certificate ID cannot be nil';
   SOcspRevokedInfoNil = 'revoked info cannot be nil';
   SOcspResponderIDNil = 'responder ID cannot be nil';
@@ -807,6 +808,8 @@ begin
     on E: Exception do
       raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedRequest, [E.Message]);
   end;
+  if FReq = nil then
+    raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedRequest, [SOcspEmptyEncoding]);
 end;
 
 constructor TOcspReq.Create(const AStream: TStream);
@@ -818,6 +821,8 @@ begin
     on E: Exception do
       raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedRequest, [E.Message]);
   end;
+  if FReq = nil then
+    raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedRequest, [SOcspEmptyEncoding]);
 end;
 
 function TOcspReq.GetX509Extensions: IX509Extensions;
@@ -1105,6 +1110,8 @@ begin
     on E: Exception do
       raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedResponse, [E.Message]);
   end;
+  if Result = nil then
+    raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedResponse, [SOcspEmptyEncoding]);
 end;
 
 class function TOcspResp.ParseResponse(const AStream: TStream): IOcspResponse;
@@ -1115,6 +1122,8 @@ begin
     on E: Exception do
       raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedResponse, [E.Message]);
   end;
+  if Result = nil then
+    raise EIOCryptoLibException.CreateResFmt(@SOcspMalformedResponse, [SOcspEmptyEncoding]);
 end;
 
 constructor TOcspResp.Create(const AResp: IOcspResponse);
