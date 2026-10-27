@@ -1465,6 +1465,7 @@
         <DCCReference Include="..\src\Others\X448HigherLevelTests.pas"/>
         <DCCReference Include="..\src\Others\Ed448HigherLevelTests.pas"/>
         <DCCReference Include="..\src\Others\Curve448KeyUtilitiesTests.pas"/>
+        <DCCReference Include="..\src\Others\MalformedInputTests.pas"/>
         <DCCReference Include="..\src\Math\ECEncodingTests.pas"/>
         <DCCReference Include="..\src\Crypto\Pkcs12Tests.pas"/>
         <DCCReference Include="..\src\Pkcs\Pkcs12StoreTests.pas"/>

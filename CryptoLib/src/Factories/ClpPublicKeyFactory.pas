@@ -71,6 +71,7 @@ uses
 
 resourcestring
   SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';
+  SMalformedPublicKey = 'malformed public key';
 
 type
   /// <summary>
@@ -261,6 +262,8 @@ begin
     LAlgOid.Equals(TPkcsObjectIdentifiers.IdRsaesOaep) then
   begin
     LPubKey := TRsaPublicKeyStructure.GetInstance(AKeyInfo.ParsePublicKey());
+    if LPubKey = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     Result := TRsaKeyParameters.Create(False, LPubKey.Modulus, LPubKey.PublicExponent);
     Exit;
   end;
@@ -268,8 +271,12 @@ begin
   // DH keys (X9.42 DHPublicNumber)
   if LAlgOid.Equals(TX9ObjectIdentifiers.DHPublicNumber) then
   begin
+    if LAlgID.Parameters = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     LSeq := TAsn1Sequence.GetInstance(LAlgID.Parameters.ToAsn1Object());
     LDHPublicKey := TDHPublicKey.GetInstance(AKeyInfo.ParsePublicKey());
+    if LDHPublicKey = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     LY := LDHPublicKey.Y.Value;
 
     if IsPkcsDHParam(LSeq) then
@@ -304,8 +311,12 @@ begin
   // DH keys (PKCS DhKeyAgreement)
   if LAlgOid.Equals(TPkcsObjectIdentifiers.DhKeyAgreement) then
   begin
+    if LAlgID.Parameters = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     LSeq := TAsn1Sequence.GetInstance(LAlgID.Parameters.ToAsn1Object());
     LDerY := TDerInteger.GetInstance(AKeyInfo.ParsePublicKey());
+    if LDerY = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     Result := ReadPkcsDHParam(LAlgOid, LDerY.Value, LSeq);
     Exit;
   end;
@@ -315,6 +326,8 @@ begin
     LAlgOid.Equals(TOiwObjectIdentifiers.DsaWithSha1) then
   begin
     LDsaY := TDerInteger.GetInstance(AKeyInfo.ParsePublicKey());
+    if LDsaY = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     if LAlgID.Parameters <> nil then
     begin
       LDsaPara := TDsaParameter.GetInstance(LAlgID.Parameters);
@@ -331,6 +344,8 @@ begin
   // EC keys
   if LAlgOid.Equals(TX9ObjectIdentifiers.IdECPublicKey) then
   begin
+    if LAlgID.Parameters = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPublicKey);
     LX962Params := TX962Parameters.GetInstance(LAlgID.Parameters);
     LECParams := TECDomainParameters.FromX962Parameters(LX962Params);
     LPublicKeyBytes := AKeyInfo.PublicKey.GetBytes();

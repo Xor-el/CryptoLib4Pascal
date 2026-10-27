@@ -676,6 +676,8 @@ begin
   begin
     LValidity := FPrivateKeyValid.Value;
     LPeriod := TPrivateKeyUsagePeriod.GetInstance(TAsn1Object.FromByteArray(LOctets.GetOctets()));
+    if LPeriod = nil then
+      Exit;
 
     if (LPeriod.NotBefore <> nil) and (LPeriod.NotBefore.ToDateTime() > LValidity) then
       Exit;

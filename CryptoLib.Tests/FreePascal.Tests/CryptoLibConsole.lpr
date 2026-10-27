@@ -65,7 +65,7 @@ uses
   CsvVectorLoaderBase, TestKeyBuilders, PemDerCodec, PemReaderVectors,
   Argon2Vectors, PqcTestVectors, HpkeVectors, DrbgTestVectors, Int32Tests, Int64Tests,
   ByteUtilitiesTests, IPAddressUtilitiesTests, PemReaderTests, RsaKeyParametersTests,
-  ECDHPrimeConstantTimeTests, ECDHBinaryConstantTimeTests;
+  ECDHPrimeConstantTimeTests, ECDHBinaryConstantTimeTests, MalformedInputTests;
 
 type
 

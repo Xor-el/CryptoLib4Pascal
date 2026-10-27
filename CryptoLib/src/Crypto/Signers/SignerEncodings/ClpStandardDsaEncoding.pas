@@ -21,6 +21,7 @@ unit ClpStandardDsaEncoding;
 interface
 
 uses
+  SysUtils,
   ClpAsn1Objects,
   ClpBigInteger,
   ClpAsn1Core,
@@ -76,8 +77,7 @@ var
   LR, LS: TBigInteger;
   LExpectedEncoding: TCryptoLibByteArray;
 begin
-  LSeq := TAsn1Object.FromByteArray(AEncoding) as IAsn1Sequence;
-  if (LSeq.Count = 2) then
+  if Supports(TAsn1Object.FromByteArray(AEncoding), IAsn1Sequence, LSeq) and (LSeq.Count = 2) then
   begin
     LR := DecodeValue(AN, LSeq, 0);
     LS := DecodeValue(AN, LSeq, 1);

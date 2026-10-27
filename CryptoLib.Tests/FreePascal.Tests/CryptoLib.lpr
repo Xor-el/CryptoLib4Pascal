@@ -63,7 +63,7 @@ uses
   ChaChaPoly1305Vectors, OpenSslVectors, PemReaderVectors, PkcsVectors,
   CertVectors, PkitsVectors, PqcSampleCredentials, TestKeyBuilders, PemDerCodec,
   PqcTestVectors, HpkeVectors, DrbgTestVectors, Int32Tests, Int64Tests, ByteUtilitiesTests,
-  IPAddressUtilitiesTests, PemReaderTests, RsaKeyParametersTests;
+  IPAddressUtilitiesTests, PemReaderTests, RsaKeyParametersTests, MalformedInputTests;
 
 {$R *.res}
 

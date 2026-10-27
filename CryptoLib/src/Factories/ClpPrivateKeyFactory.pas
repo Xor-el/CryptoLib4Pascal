@@ -73,6 +73,7 @@ uses
 
 resourcestring
   SKeyTypeWithOidNotSupported = 'key type with OID %s not yet supported';
+  SMalformedPrivateKey = 'malformed private key';
   SInvalidMlDsaPrivateKey = 'invalid %s private key';
   SInconsistentMlDsaPrivateKey = 'inconsistent %s private key';
   SInvalidMlKemPrivateKey = 'invalid %s private key';
@@ -315,6 +316,9 @@ begin
     Exit;
   end;
 
+  if AKeyInfo.PrivateKeyLength = 0 then
+    raise EArgumentCryptoLibException.CreateRes(@SMalformedPrivateKey);
+
   LAlgID := AKeyInfo.PrivateKeyAlgorithm;
   LAlgOid := LAlgID.Algorithm;
 
@@ -361,6 +365,8 @@ begin
     // PrivateKeyInfo and ECPrivateKey levels?
     LECPrivateKeyObj := AKeyInfo.ParsePrivateKey();
     LECPrivateKeySeq := TECPrivateKeyStructure.GetInstance(LECPrivateKeyObj);
+    if LAlgID.Parameters = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPrivateKey);
     LX962Params := TX962Parameters.GetInstance(LAlgID.Parameters);
     LECParams := TECDomainParameters.FromX962Parameters(LX962Params);
     Result := TECPrivateKeyParameters.Create('EC', LECPrivateKeySeq.GetKey(), LECParams);
@@ -370,6 +376,8 @@ begin
   // DH keys
   if LAlgOid.Equals(TPkcsObjectIdentifiers.DhKeyAgreement) then
   begin
+    if LAlgID.Parameters = nil then
+      raise EArgumentCryptoLibException.CreateRes(@SMalformedPrivateKey);
     LDHPara := TDHParameter.GetInstance(LAlgID.Parameters);
     LDerInteger := TDerInteger.GetInstance(AKeyInfo.ParsePrivateKey());
     if LDHPara.L <> nil then
