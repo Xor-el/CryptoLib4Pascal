@@ -1,0 +1,22 @@
+CryptoLib/src/X509/ClpX509Crl.pas
+  s_0f1a2e9196b415::t_0cd6aeb27859d6 338,350-352,359-361,363
+CryptoLib.Tests/src/Pkix/CertPathHardeningTests.pas
+  s_0f1a2e9196b415::t_3e26a074710c8a 840-874
+  s_0f1a2e9196b415::t_9d26e513356f68 179
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "1c6e4cc2784194ff790661bb98f4051a6143455a",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
