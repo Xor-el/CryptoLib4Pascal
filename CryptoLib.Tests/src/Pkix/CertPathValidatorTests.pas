@@ -51,6 +51,7 @@ uses
   ClpNullable,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
+  ClpPkixCertPathValidatorReason,
   ClpCryptoLibConfig,
   CertVectors,
   CryptoLibTestBase;
@@ -268,6 +269,7 @@ var
   LValidator: IPkixCertPathValidator;
   LRejected: Boolean;
   LIndex: Int32;
+  LReason: TPkixCertPathValidatorReason;
 begin
   // the end entity is not issued by the intermediate, so its signature cannot verify
   LRootCert := ReadCert('PkixBrokenChainRootCa');
@@ -287,6 +289,7 @@ begin
 
   LRejected := False;
   LIndex := -1;
+  LReason := TPkixCertPathValidatorReason.Unspecified;
   LValidator := TPkixCertPathValidator.Create() as IPkixCertPathValidator;
   try
     LValidator.Validate(LPath, LParams);
@@ -295,12 +298,15 @@ begin
     begin
       LRejected := True;
       LIndex := E.Index;
+      LReason := E.Reason;
     end;
   end;
 
   CheckTrue(LRejected, 'a path whose end entity signature does not verify is rejected');
   if LIndex >= 0 then
     CheckEquals(0, LIndex, 'the end entity certificate is blamed');
+  CheckTrue(LReason = TPkixCertPathValidatorReason.InvalidSignature,
+    'the failure is reported as an invalid signature');
 end;
 
 procedure TCertPathValidatorTest.TestCircularCrlIssuerProcessing;

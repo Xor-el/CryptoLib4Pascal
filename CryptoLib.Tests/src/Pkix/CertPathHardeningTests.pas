@@ -48,6 +48,8 @@ uses
   ClpX509Generators,
   ClpX509Asn1Objects,
   ClpIX509Asn1Objects,
+  ClpX509Asn1Generators,
+  ClpIX509Asn1Generators,
   ClpAsn1SignatureFactory,
   ClpISignatureFactory,
   ClpX509ExtensionUtilities,
@@ -156,6 +158,25 @@ type
     procedure TestExplicitAnchorConstraintsAreEnforced;
     procedure TestUnconstrainedAnchorAdmitsAnyName;
     procedure TestExplicitConstraintsCannotWidenTheCertificate;
+  end;
+
+  /// <summary>
+  /// An indirect CRL that revokes a serial number under one issuer must not report a certificate
+  /// sharing that serial number under a different issuer as revoked.
+  /// </summary>
+  TIndirectCrlSerialCollisionTest = class(TCryptoLibAlgorithmTestCase)
+  strict private
+  const
+    SigAlgorithm = 'SHA256WITHRSA';
+  var
+    FRandom: ISecureRandom;
+    function MakeCert(const ASerial: TBigInteger; const AIssuer, ASubject: IX509Name;
+      const AKey: IAsymmetricCipherKeyPair): IX509Certificate;
+  protected
+    procedure SetUp; override;
+  published
+    procedure TestSameSerialUnderDifferentIssuerIsNotMasked;
+    procedure TestDirectCrlRevokesBySerial;
   end;
 
 implementation
@@ -741,16 +762,128 @@ begin
     'explicit constraints do not lift the certificate''s own constraints');
 end;
 
+{ TIndirectCrlSerialCollisionTest }
+
+procedure TIndirectCrlSerialCollisionTest.SetUp;
+begin
+  inherited SetUp;
+  FRandom := TSecureRandom.Create() as ISecureRandom;
+end;
+
+function TIndirectCrlSerialCollisionTest.MakeCert(const ASerial: TBigInteger;
+  const AIssuer, ASubject: IX509Name; const AKey: IAsymmetricCipherKeyPair): IX509Certificate;
+var
+  LGen: IX509V3CertificateGenerator;
+  LNow: TDateTime;
+begin
+  // IsRevoked matches on issuer and serial only, so a minimally-populated certificate is enough
+  LNow := Now.ToUniversalTime();
+  LGen := TX509V3CertificateGenerator.Create;
+  LGen.SetIssuerDN(AIssuer);
+  LGen.SetSerialNumber(ASerial);
+  LGen.SetNotBeforeUtc(IncDay(LNow, -1));
+  LGen.SetNotAfterUtc(IncYear(LNow, 1));
+  LGen.SetSubjectDN(ASubject);
+  LGen.SetPublicKey(AKey.Public as IAsymmetricKeyParameter);
+  Result := LGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    AKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+end;
+
+procedure TIndirectCrlSerialCollisionTest.TestSameSerialUnderDifferentIssuerIsNotMasked;
+var
+  LKeyA, LKeyB, LSignerKey: IAsymmetricCipherKeyPair;
+  LDnA, LDnB, LSignerDn, LSubject: IX509Name;
+  LSerial: TBigInteger;
+  LCertA, LCertB: IX509Certificate;
+  LCrlGen: IX509V2CrlGenerator;
+  LExtGen: IX509ExtensionsGenerator;
+  LCrl: IX509Crl;
+  LNow: TDateTime;
+begin
+  LKeyA := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LKeyB := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LSignerKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+
+  LDnA := TX509Name.Create('CN=CA-A, O=Test-PKI, C=DE');
+  LDnB := TX509Name.Create('CN=CA-B, O=Test-PKI, C=DE');
+  LSignerDn := TX509Name.Create('CN=Indirect-CRL-Signer, O=Test-PKI, C=DE');
+  LSubject := TX509Name.Create('CN=EU, O=Test-PKI, C=DE');
+
+  // the same serial number issued independently by two different CAs
+  LSerial := TBigInteger.ValueOf(4660);
+  LCertA := MakeCert(LSerial, LDnA, LSubject, LKeyA);
+  LCertB := MakeCert(LSerial, LDnB, LSubject, LKeyB);
+
+  // an indirect CRL that revokes the serial, naming CA-A as the entry's certificate issuer
+  LNow := Now.ToUniversalTime();
+  LCrlGen := TX509V2CrlGenerator.Create() as IX509V2CrlGenerator;
+  LCrlGen.SetIssuerDN(LSignerDn);
+  LCrlGen.SetThisUpdateUtc(IncHour(LNow, -1));
+  LCrlGen.SetNextUpdateUtc(IncMonth(LNow, 1));
+  LCrlGen.AddExtension(TX509Extensions.IssuingDistributionPoint, True,
+    TIssuingDistributionPoint.Create(nil, False, False, nil, True, False) as IIssuingDistributionPoint);
+
+  LExtGen := TX509ExtensionsGenerator.Create() as IX509ExtensionsGenerator;
+  LExtGen.AddExtension(TX509Extensions.CertificateIssuer, True,
+    TGeneralNames.Create(TGeneralName.Create(TGeneralName.DirectoryName, LDnA as IAsn1Encodable)
+    as IGeneralName) as IGeneralNames as IAsn1Encodable);
+  LCrlGen.AddCrlEntryUtc(LSerial, IncHour(LNow, -1), LExtGen.Generate());
+
+  LCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    LSignerKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+
+  CheckTrue(LCrl.IsRevoked(LCertA), 'the certificate from the named issuer is revoked');
+  CheckFalse(LCrl.IsRevoked(LCertB),
+    'a certificate sharing the serial number under a different issuer is not masked as revoked');
+end;
+
+procedure TIndirectCrlSerialCollisionTest.TestDirectCrlRevokesBySerial;
+var
+  LCaKey, LSubjectKey: IAsymmetricCipherKeyPair;
+  LCaDn, LSubject: IX509Name;
+  LRevokedSerial, LOtherSerial: TBigInteger;
+  LCertRevoked, LCertOther: IX509Certificate;
+  LCrlGen: IX509V2CrlGenerator;
+  LCrl: IX509Crl;
+  LNow: TDateTime;
+begin
+  LCaKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LSubjectKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LCaDn := TX509Name.Create('CN=CA, O=Test-PKI, C=DE');
+  LSubject := TX509Name.Create('CN=EU, O=Test-PKI, C=DE');
+
+  LRevokedSerial := TBigInteger.ValueOf(4660);
+  LOtherSerial := TBigInteger.ValueOf(4661);
+  LCertRevoked := MakeCert(LRevokedSerial, LCaDn, LSubject, LSubjectKey);
+  LCertOther := MakeCert(LOtherSerial, LCaDn, LSubject, LSubjectKey);
+
+  // an ordinary (direct) CRL issued by the CA; its entries carry no per-entry issuer
+  LNow := Now.ToUniversalTime();
+  LCrlGen := TX509V2CrlGenerator.Create() as IX509V2CrlGenerator;
+  LCrlGen.SetIssuerDN(LCaDn);
+  LCrlGen.SetThisUpdateUtc(IncHour(LNow, -1));
+  LCrlGen.SetNextUpdateUtc(IncMonth(LNow, 1));
+  LCrlGen.AddCrlEntryUtc(LRevokedSerial, IncHour(LNow, -1), TCrlReason.KeyCompromise);
+  LCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    LCaKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+
+  CheckTrue(LCrl.IsRevoked(LCertRevoked), 'a direct CRL reports its revoked certificate as revoked');
+  CheckFalse(LCrl.IsRevoked(LCertOther),
+    'a direct CRL does not report an unrevoked serial as revoked');
+end;
+
 initialization
 
 {$IFDEF FPC}
   RegisterTest(TCertPathLoopTest);
   RegisterTest(TIndirectCrlSignerTest);
   RegisterTest(TAnchorNameConstraintsTest);
+  RegisterTest(TIndirectCrlSerialCollisionTest);
 {$ELSE}
   RegisterTest(TCertPathLoopTest.Suite);
   RegisterTest(TIndirectCrlSignerTest.Suite);
   RegisterTest(TAnchorNameConstraintsTest.Suite);
+  RegisterTest(TIndirectCrlSerialCollisionTest.Suite);
 {$ENDIF FPC}
 
 end.

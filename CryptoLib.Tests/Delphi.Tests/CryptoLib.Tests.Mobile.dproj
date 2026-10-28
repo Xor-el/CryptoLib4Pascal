@@ -1047,6 +1047,7 @@
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIX509TrustedCertificateBlock.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpCertificateTrustBlock.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\OpenSsl\ClpX509TrustedCertificateBlock.pas"/>
+        <DCCReference Include="..\..\CryptoLib\src\Pkix\ClpPkixCertPathValidatorReason.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemReader.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemParser.pas"/>
         <DCCReference Include="..\..\CryptoLib\src\Interfaces\Pem\ClpIPemReader.pas"/>

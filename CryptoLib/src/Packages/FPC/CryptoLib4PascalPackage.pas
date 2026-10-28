@@ -305,7 +305,8 @@ uses
   ClpHpkeKdf, ClpHpkeAead, ClpHpkeContext, ClpDhKem, ClpHpke, ClpIHpkeKdf, 
   ClpIHpkeAead, ClpIHpkeContext, ClpIHpkeKem, ClpIHpke, 
   ClpICertificateTrustBlock, ClpIX509TrustedCertificateBlock, 
-  ClpCertificateTrustBlock, ClpX509TrustedCertificateBlock;
+  ClpCertificateTrustBlock, ClpX509TrustedCertificateBlock,
+  ClpPkixCertPathValidatorReason;
 
 implementation
 

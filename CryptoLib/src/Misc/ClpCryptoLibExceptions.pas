@@ -21,7 +21,8 @@ unit ClpCryptoLibExceptions;
 interface
 
 uses
-  SysUtils;
+  SysUtils,
+  ClpPkixCertPathValidatorReason;
 
 type
   ECryptoLibException = class(Exception);
@@ -69,6 +70,7 @@ type
   /// <see cref="Index" /> is the position in the path of the certificate that failed, counted from
   /// the end entity, and is -1 when no single certificate is to blame or the raise site does not
   /// know its position. It is deliberately not defaulted to 0, which is a real position.
+  /// <see cref="Reason" /> gives the machine-readable cause, Unspecified when none was set.
   /// </remarks>
   EPkixCertPathValidatorCryptoLibException = class(ECryptoLibException)
 
@@ -76,8 +78,10 @@ type
   var
     FIndex: Int32;
     FHasIndex: Boolean;
+    FReason: TPkixCertPathValidatorReason;
 
     function GetIndex: Int32;
+    function GetReason: TPkixCertPathValidatorReason;
 
   public
     /// <summary>
@@ -90,8 +94,19 @@ type
     /// <summary>As CreateResFmt, but records the position in the path that failed.</summary>
     constructor CreateResFmtAt(AIndex: Int32; AResStringRec: PResStringRec;
       const AArgs: array of const);
+    /// <summary>As CreateAt, but records a reason instead of only a position. A position of
+    /// AIndex &lt; 0 means none, so a raise site re-wrapping another can preserve its reason.</summary>
+    constructor CreateReason(AReason: TPkixCertPathValidatorReason; AIndex: Int32;
+      const AMsg: String);
+    /// <summary>As CreateResAt, but records a reason (AIndex &lt; 0 means no position).</summary>
+    constructor CreateResReason(AReason: TPkixCertPathValidatorReason; AIndex: Int32;
+      AResStringRec: PResStringRec);
+    /// <summary>As CreateResFmtAt, but records a reason (AIndex &lt; 0 means no position).</summary>
+    constructor CreateResFmtReason(AReason: TPkixCertPathValidatorReason; AIndex: Int32;
+      AResStringRec: PResStringRec; const AArgs: array of const);
 
     property Index: Int32 read GetIndex;
+    property Reason: TPkixCertPathValidatorReason read GetReason;
   end;
   /// <summary>
   /// Raised when a revocation mechanism could not settle the status of a certificate, so a peer
@@ -143,6 +158,39 @@ begin
   inherited CreateResFmt(AResStringRec, AArgs);
   FIndex := AIndex;
   FHasIndex := True;
+end;
+
+constructor EPkixCertPathValidatorCryptoLibException.CreateReason(
+  AReason: TPkixCertPathValidatorReason; AIndex: Int32; const AMsg: String);
+begin
+  inherited Create(AMsg);
+  FReason := AReason;
+  FIndex := AIndex;
+  FHasIndex := AIndex >= 0;
+end;
+
+constructor EPkixCertPathValidatorCryptoLibException.CreateResReason(
+  AReason: TPkixCertPathValidatorReason; AIndex: Int32; AResStringRec: PResStringRec);
+begin
+  inherited CreateRes(AResStringRec);
+  FReason := AReason;
+  FIndex := AIndex;
+  FHasIndex := AIndex >= 0;
+end;
+
+constructor EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+  AReason: TPkixCertPathValidatorReason; AIndex: Int32; AResStringRec: PResStringRec;
+  const AArgs: array of const);
+begin
+  inherited CreateResFmt(AResStringRec, AArgs);
+  FReason := AReason;
+  FIndex := AIndex;
+  FHasIndex := AIndex >= 0;
+end;
+
+function EPkixCertPathValidatorCryptoLibException.GetReason: TPkixCertPathValidatorReason;
+begin
+  Result := FReason;
 end;
 
 function EPkixCertPathValidatorCryptoLibException.GetIndex: Int32;

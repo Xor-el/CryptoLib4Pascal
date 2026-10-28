@@ -111,7 +111,8 @@ type
     function GetIssuerDN: IX509Name;
     function GetThisUpdate: TDateTime;
     function GetNextUpdate: TNullable<TDateTime>;
-    function GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509CrlEntry;
+    function GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509CrlEntry; overload;
+    function GetRevokedCertificate(const ACert: IX509Certificate): IX509CrlEntry; overload;
     function GetRevokedCertificates: TCryptoLibGenericArray<IX509CrlEntry>;
     function GetTbsCertList: TCryptoLibByteArray;
     function GetSignature: TCryptoLibByteArray;
@@ -128,6 +129,7 @@ type
     procedure Verify(const AVerifierProvider: IVerifierFactoryProvider); overload;
     procedure VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 
+    function GetIsIndirect: Boolean;
     function IsRevoked(const ACert: IX509Certificate): Boolean;
     function Equals(const AOther: TObject): Boolean; reintroduce; overload;
     function Equals(const AOther: IX509Crl): Boolean; reintroduce; overload;
@@ -330,6 +332,44 @@ begin
   Result := nil;
 end;
 
+function TX509Crl.GetRevokedCertificate(const ACert: IX509Certificate): IX509CrlEntry;
+var
+  LRevoked: TCryptoLibGenericArray<ICrlEntry>;
+  LPreviousIssuer, LCertIssuer, LEntryIssuer: IX509Name;
+  LSerial: TBigInteger;
+  LI: Int32;
+  LEntry: IX509CrlEntry;
+begin
+  LRevoked := FCertificateList.GetRevokedCertificates();
+  if LRevoked = nil then
+  begin
+    Result := nil;
+    Exit;
+  end;
+
+  // An indirect CRL may list the same serial number under more than one issuer, so a match requires
+  // both the serial number and the entry's effective issuer, which defaults to the CRL issuer (a
+  // direct CRL has no per-entry issuer).
+  LSerial := ACert.SerialNumber;
+  LCertIssuer := ACert.IssuerDN;
+  LPreviousIssuer := GetIssuerDN();
+  for LI := 0 to System.High(LRevoked) do
+  begin
+    LEntry := TX509CrlEntry.Create(LRevoked[LI], FIsIndirect, LPreviousIssuer);
+    LEntryIssuer := LEntry.GetCertificateIssuer();
+    if LEntryIssuer = nil then
+      LEntryIssuer := GetIssuerDN();
+    if LRevoked[LI].UserCertificate.Value.Equals(LSerial) and
+      LCertIssuer.Equivalent(LEntryIssuer, True) then
+    begin
+      Result := LEntry;
+      Exit;
+    end;
+    LPreviousIssuer := LEntry.GetCertificateIssuer();
+  end;
+  Result := nil;
+end;
+
 function TX509Crl.GetRevokedCertificates: TCryptoLibGenericArray<IX509CrlEntry>;
 var
   LEntries: TCryptoLibGenericArray<IX509CrlEntry>;
@@ -461,24 +501,16 @@ begin
   Result := TX509Utilities.VerifySignature(AVerifier, LTbsCertList as IAsn1Encodable, FCertificateList.Signature);
 end;
 
-function TX509Crl.IsRevoked(const ACert: IX509Certificate): Boolean;
-var
-  LRevoked: TCryptoLibGenericArray<ICrlEntry>;
-  LSerial: TBigInteger;
-  LI: Int32;
+function TX509Crl.GetIsIndirect: Boolean;
 begin
-  LRevoked := FCertificateList.GetRevokedCertificates();
-  if LRevoked <> nil then
-  begin
-    LSerial := ACert.GetSerialNumber();
-    for LI := 0 to System.High(LRevoked) do
-      if LRevoked[LI].UserCertificate.Value.Equals(LSerial) then
-      begin
-        Result := True;
-        Exit;
-      end;
-  end;
-  Result := False;
+  Result := FIsIndirect;
+end;
+
+function TX509Crl.IsRevoked(const ACert: IX509Certificate): Boolean;
+begin
+  // Match by issuer as well as serial number so an indirect CRL does not stop at
+  // another issuer's entry sharing the serial number.
+  Result := GetRevokedCertificate(ACert) <> nil;
 end;
 
 function TX509Crl.Equals(const AOther: TObject): Boolean;

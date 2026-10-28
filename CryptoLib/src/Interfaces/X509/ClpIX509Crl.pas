@@ -40,7 +40,8 @@ type
     function GetIssuerDN: IX509Name;
     function GetThisUpdate: TDateTime;
     function GetNextUpdate: TNullable<TDateTime>;
-    function GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509CrlEntry;
+    function GetRevokedCertificate(const ASerialNumber: TBigInteger): IX509CrlEntry; overload;
+    function GetRevokedCertificate(const ACert: IX509Certificate): IX509CrlEntry; overload;
     function GetRevokedCertificates: TCryptoLibGenericArray<IX509CrlEntry>;
     function GetTbsCertList: TCryptoLibByteArray;
     function GetNonCriticalExtensionOids: TCryptoLibStringArray;
@@ -60,6 +61,7 @@ type
     procedure Verify(const AVerifierProvider: IVerifierFactoryProvider); overload;
     procedure VerifyAltSignature(const AVerifierProvider: IVerifierFactoryProvider);
 
+    function GetIsIndirect: Boolean;
     function IsRevoked(const ACert: IX509Certificate): Boolean;
     function Equals(const AOther: TObject): Boolean; overload;
     /// <summary>Value equality on the encoded CRL.</summary>
@@ -72,6 +74,8 @@ type
     property IssuerDN: IX509Name read GetIssuerDN;
     property ThisUpdate: TDateTime read GetThisUpdate;
     property NextUpdate: TNullable<TDateTime> read GetNextUpdate;
+    /// <summary>Whether this is an indirect CRL (its IssuingDistributionPoint says so).</summary>
+    property IsIndirect: Boolean read GetIsIndirect;
     property SigAlgName: String read GetSigAlgName;
     property SigAlgOid: String read GetSigAlgOid;
     property SignatureAlgorithm: IAlgorithmIdentifier read GetSignatureAlgorithm;

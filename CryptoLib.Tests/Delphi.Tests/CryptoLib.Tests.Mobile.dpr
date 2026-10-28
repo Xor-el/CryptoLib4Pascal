@@ -705,6 +705,7 @@ uses
   ClpIX509TrustedCertificateBlock in '..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIX509TrustedCertificateBlock.pas',
   ClpCertificateTrustBlock in '..\..\CryptoLib\src\OpenSsl\ClpCertificateTrustBlock.pas',
   ClpX509TrustedCertificateBlock in '..\..\CryptoLib\src\OpenSsl\ClpX509TrustedCertificateBlock.pas',
+  ClpPkixCertPathValidatorReason in '..\..\CryptoLib\src\Pkix\ClpPkixCertPathValidatorReason.pas',
   ClpIOpenSslPemReader in '..\..\CryptoLib\src\Interfaces\OpenSsl\ClpIOpenSslPemReader.pas',
   ClpIPemParser in '..\..\CryptoLib\src\Interfaces\Pem\ClpIPemParser.pas',
   ClpIPemReader in '..\..\CryptoLib\src\Interfaces\Pem\ClpIPemReader.pas',

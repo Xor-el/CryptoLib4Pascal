@@ -326,13 +326,27 @@ var
   LMask, LOther: IReasonsMask;
 begin
   LStatus := TCertStatus.Create();
-  CheckEquals(TCertStatus.Unrevoked, LStatus.Status, 'a fresh status is unrevoked');
+  CheckFalse(LStatus.IsRevoked, 'a fresh status is not revoked');
   CheckFalse(LStatus.RevocationDate.HasValue, 'a fresh status has no revocation date');
+  CheckFalse(LStatus.ReasonCode.HasValue, 'a fresh status has no reason code');
 
-  LStatus.Status := TCertStatus.Undetermined;
-  LStatus.RevocationDate := TNullable<TDateTime>.Some(FRootCert.NotBefore);
-  CheckEquals(TCertStatus.Undetermined, LStatus.Status, 'the status round-trips');
+  // a known reason code round-trips and maps to its name
+  LStatus.SetRevoked(FRootCert.NotBefore, TNullable<Int32>.Some(Int32(TCrlReason.KeyCompromise)));
+  CheckTrue(LStatus.IsRevoked, 'the revocation is recorded');
   CheckTrue(LStatus.RevocationDate.HasValue, 'the revocation date round-trips');
+  CheckEquals(TCrlReason.KeyCompromise, LStatus.Reason, 'the effective reason is the given code');
+  CheckEquals('keyCompromise', LStatus.GetReasonText, 'a known reason maps to its name');
+
+  // an out-of-range reason code is processed as unspecified but reported verbatim, so it can never
+  // be mistaken for a status
+  LStatus.SetRevoked(FRootCert.NotBefore, TNullable<Int32>.Some(Int32(99)));
+  CheckTrue(LStatus.IsRevoked, 'an unknown reason code is still a revocation');
+  CheckEquals(TCrlReason.Unspecified, LStatus.Reason, 'an unknown code is processed as unspecified');
+  CheckEquals('(unknown code: 99)', LStatus.GetReasonText, 'an unknown code is reported verbatim');
+
+  LStatus.SetUnrevoked();
+  CheckFalse(LStatus.IsRevoked, 'a removeFromCRL entry can clear the revocation');
+  CheckFalse(LStatus.RevocationDate.HasValue, 'clearing drops the revocation date');
 
   LMask := TReasonsMask.Create();
   CheckFalse(LMask.IsAllReasons, 'an empty mask does not cover every reason');

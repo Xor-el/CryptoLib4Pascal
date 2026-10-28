@@ -136,19 +136,31 @@ type
     property Parent: IPkixPolicyNode read GetParent write SetParent;
   end;
 
-  /// <summary>
-  /// Mutable revocation status carried through path validation.
-  /// </summary>
+  /// <summary>Revocation status accumulated over the CRLs checked for a certificate. The reason code
+  /// is kept apart from whether the certificate is revoked. "Undetermined" is not stored: it is
+  /// concluded when processing ends with the certificate not revoked and not all reasons covered.</summary>
   ICertStatus = interface(IInterface)
     ['{B2016D68-7C59-4FA3-8E4B-1D8F26C593E7}']
 
-    function GetStatus: Int32;
-    procedure SetStatus(AValue: Int32);
+    function GetIsRevoked: Boolean;
     function GetRevocationDate: TNullable<TDateTime>;
-    procedure SetRevocationDate(const AValue: TNullable<TDateTime>);
+    function GetReasonCode: TNullable<Int32>;
+    function GetReason: Int32;
+    function GetReasonText: String;
 
-    property Status: Int32 read GetStatus write SetStatus;
-    property RevocationDate: TNullable<TDateTime> read GetRevocationDate write SetRevocationDate;
+    /// <summary>Record a revocation. <paramref name="AReasonCode" /> is the entry's reason code as
+    /// given, or None if absent.</summary>
+    procedure SetRevoked(const ARevocationDate: TDateTime; const AReasonCode: TNullable<Int32>);
+    /// <summary>Clear a removeFromCRL revocation (RFC 5280 6.3.3 (k)).</summary>
+    procedure SetUnrevoked();
+
+    property IsRevoked: Boolean read GetIsRevoked;
+    property RevocationDate: TNullable<TDateTime> read GetRevocationDate;
+    /// <summary>The entry's reason code as given, or None if absent, out of range, or not revoked.</summary>
+    property ReasonCode: TNullable<Int32> read GetReasonCode;
+    /// <summary>The effective CRLReason to process the revocation by: the reason code if defined,
+    /// else unspecified.</summary>
+    property Reason: Int32 read GetReason;
   end;
 
   /// <summary>
