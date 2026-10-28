@@ -1,0 +1,59 @@
+CryptoLib/src/Pkcs/ClpPkcs12Store.pas
+  s_0f1a2e9196b415::t_bc7aba51945ab6 191-192
+  s_0f1a2e9196b415::t_7f3198148c33e5 505,508-509
+  s_0f1a2e9196b415::t_f95844a573fe80 851-864
+CryptoLib/src/Interfaces/Asn1/ClpIAsn1Objects.pas
+  s_0f1a2e9196b415::t_32ccd2436dd158 716-717
+CryptoLib/src/Pkcs/ClpPkcs12StoreBuilder.pas
+  s_0f1a2e9196b415::t_18e861ed5fced0 26
+  s_0f1a2e9196b415::t_ae31611265e1f5 173-176
+CryptoLib.Tests/src/Pkcs/Pkcs12StoreTests.pas
+  s_0f1a2e9196b415::t_468ffc491cd25a 175
+  s_0f1a2e9196b415::t_28df76b0dd75e1 202-207
+  s_0f1a2e9196b415::t_c85e097db5a5bb 131
+  s_0f1a2e9196b415::t_47403c2ea897e9 76
+CryptoLib.Tests/src/Crypto/MlDsaTests.pas
+  s_0f1a2e9196b415::t_dcd2347c3b167c 257-330
+  s_0f1a2e9196b415::t_55392d8e9386ab 102
+  s_0f1a2e9196b415::t_d83232a1529070 94-97
+  s_0f1a2e9196b415::t_900f8645fe421e 65
+CryptoLib.Tests/src/Crypto/SlhDsaTests.pas
+  s_0f1a2e9196b415::t_df92bdd72740ac 102-104,111
+  s_0f1a2e9196b415::t_778e5f023cb690 52
+  s_0f1a2e9196b415::t_9f2705d6de7a18 697-701
+  s_0f1a2e9196b415::t_49cfa16411d7e8 310-369
+CryptoLib/src/Asn1/ClpAsn1Objects.pas
+  s_0f1a2e9196b415::t_2273d48ed2e608 8109,8111,8113-8123
+  s_0f1a2e9196b415::t_3006f3bb282511 1900
+CryptoLib/src/Crypto/Signers/SignerCalculators/ClpHMacDsaKCalculator.pas
+  s_0f1a2e9196b415::t_4785be99ad5373 176-179
+CryptoLib.Tests/src/Asn1/EnumeratedTests.pas
+  s_0f1a2e9196b415::t_0faf4187afdcd3 190-206
+  s_0f1a2e9196b415::t_437e8cb28d5abe 34
+  s_0f1a2e9196b415::t_8553447dc63fe2 79-82
+CryptoLib/src/X509/ClpX509Certificate.pas
+  s_0f1a2e9196b415::t_06093843f9a568 866-867
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_0f1a2e9196b415::t_b0303a9bf8b984 465
+  s_0f1a2e9196b415::t_09a3787146208d 921,942-954
+  s_0f1a2e9196b415::t_5e6aca1aa62902 463-464,466,470,475-476,491-496,955-956
+CryptoLib/src/Asn1/ClpAsn1Dumper.pas
+  s_0f1a2e9196b415::t_cfef1525ff9c81 375-385,397
+  s_0f1a2e9196b415::t_78aa6f9c2a5e70 53-58
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "155e93d4024e6d31a844b964291f7184fc7c0f3d",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
