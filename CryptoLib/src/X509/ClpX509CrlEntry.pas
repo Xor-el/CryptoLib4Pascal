@@ -178,6 +178,7 @@ var
   LSelfIntf: IX509CrlEntry;
   LThat: IX509CrlEntry;
   LThatObj: TX509CrlEntry;
+  LThisIssuer, LThatIssuer: IX509Name;
 begin
   LSelfIntf := Self;
   if AOther = LSelfIntf then
@@ -202,7 +203,20 @@ begin
     end;
   end;
 
-  Result := FCrlEntry.Equals(AOther.CrlEntry);
+  if not FCrlEntry.Equals(AOther.CrlEntry) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  // The same raw entry can carry a different inherited certificate issuer in an
+  // indirect CRL, so the effective issuer is part of identity.
+  LThisIssuer := GetCertificateIssuer();
+  LThatIssuer := LThat.GetCertificateIssuer();
+  if (LThisIssuer = nil) <> (LThatIssuer = nil) then
+    Result := False
+  else
+    Result := (LThisIssuer = nil) or LThisIssuer.Equivalent(LThatIssuer, True);
 end;
 
 function TX509CrlEntry.GetHashCode: {$IFDEF DELPHI}Int32; {$ELSE}PtrInt; {$ENDIF DELPHI}

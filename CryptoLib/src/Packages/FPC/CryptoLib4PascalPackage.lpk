@@ -31,7 +31,7 @@
  Acknowledgements: 
 Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the development of this library "/>
     <Version Major="3" Minor="5"/>
-    <Files Count="934">
+    <Files Count="935">
       <Item1>
         <Filename Value="..\..\Asn1\ClpOidTokenizer.pas"/>
         <UnitName Value="ClpOidTokenizer"/>
@@ -3769,6 +3769,10 @@ Thanks to Sphere 10 Software (http://www.sphere10.com/) for sponsoring the devel
         <Filename Value="..\..\OpenSsl\ClpX509TrustedCertificateBlock.pas"/>
         <UnitName Value="ClpX509TrustedCertificateBlock"/>
       </Item934>
+      <Item935>
+        <Filename Value="..\..\Pkix\ClpPkixCertPathValidatorReason.pas"/>
+        <UnitName Value="ClpPkixCertPathValidatorReason"/>
+      </Item935>
     </Files>
     <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="3">

@@ -91,7 +91,7 @@ begin
     begin
       if E.Index >= 0 then
         raise;
-      raise EPkixCertPathValidatorCryptoLibException.CreateAt(LParameters.Index, E.Message);
+      raise EPkixCertPathValidatorCryptoLibException.CreateReason(E.Reason, LParameters.Index, E.Message);
     end;
   end;
 end;

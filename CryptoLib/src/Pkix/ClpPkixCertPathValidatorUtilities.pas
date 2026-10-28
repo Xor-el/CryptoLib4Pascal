@@ -41,6 +41,8 @@ uses
   ClpDsaParameters,
   ClpSubjectPublicKeyInfoFactory,
   ClpIPkixTypes,
+  ClpCertStatus,
+  ClpPkixCertPathValidatorReason,
   ClpPkixPolicyNode,
   ClpPkixParameters,
   ClpPkixCrlUtilities,
@@ -86,6 +88,17 @@ type
     class function GetCrlExtensions(const ACrl: IX509Crl): IX509Extensions; static;
     class procedure DoGetCertStatus(AValidDate: TDateTime; const ACrl: IX509Crl;
       const AIssuer: IX509Name; const ASerialNumber: TBigInteger; const ACertStatus: ICertStatus); static;
+    /// <summary>The CRL entry for (AIssuer, ASerialNumber), honouring indirect CRLs; nil if none.</summary>
+    class function GetCrlEntry(const ACrl: IX509Crl; const AIssuer: IX509Name;
+      const ASerialNumber: TBigInteger): IX509CrlEntry; static;
+    class function GetIndirectCrlEntry(const ACrl: IX509Crl; const ASerialNumber: TBigInteger;
+      const ACertIssuer: IX509Name): IX509CrlEntry; static;
+    /// <summary>An entry's certificate issuer, defaulting to the CRL issuer when absent.</summary>
+    class function GetEntryIssuer(const ACrl: IX509Crl; const AEntry: IX509CrlEntry): IX509Name; static;
+    /// <summary>RFC 5280 6.3.3: a revocation takes effect at its date, or at once for the
+    /// irreversible reasons.</summary>
+    class function IsRevocationEffective(AValidDate, ARevocationDate: TDateTime;
+      ACrlReason: Int32): Boolean; static;
     class function DoGetCompleteCrls(const ADistributionPoint: IDistributionPoint;
       const AIssuer: IX509Name; const ACrlSelect: IX509CrlStoreSelector;
       const APkixParams: IPkixParameters; AValidityDate: TDateTime): TCryptoLibGenericArray<IX509Crl>; static;
@@ -333,7 +346,8 @@ begin
   end;
 
   if LHaveFailure then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@STrustAnchorValidationFailed,
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+      TPkixCertPathValidatorReason.InvalidSignature, -1, @STrustAnchorValidationFailed,
       [LInvalidKeyMessage]);
 end;
 
@@ -590,7 +604,9 @@ begin
   begin
     LTotal := LTotal + APolicyNodes[LIdx].Count;
     if LTotal > TCryptoLibConfig.X509.MaxPolicyNodes then
-      raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SPolicyTreeTooLarge, [TCryptoLibConfig.X509.MaxPolicyNodes]);
+      raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+        TPkixCertPathValidatorReason.LimitExceeded, -1, @SPolicyTreeTooLarge,
+        [TCryptoLibConfig.X509.MaxPolicyNodes]);
   end;
 end;
 
@@ -606,30 +622,94 @@ begin
   DoGetCertStatus(AValidDate, ACrl, GetIssuerPrincipal(AAttrCert), AAttrCert.SerialNumber, ACertStatus);
 end;
 
+class function TPkixCertPathValidatorUtilities.GetEntryIssuer(const ACrl: IX509Crl;
+  const AEntry: IX509CrlEntry): IX509Name;
+begin
+  Result := AEntry.GetCertificateIssuer();
+  if Result = nil then
+    Result := ACrl.IssuerDN;
+end;
+
+class function TPkixCertPathValidatorUtilities.GetIndirectCrlEntry(const ACrl: IX509Crl;
+  const ASerialNumber: TBigInteger; const ACertIssuer: IX509Name): IX509CrlEntry;
+var
+  LEntry: IX509CrlEntry;
+  LEntries: TCryptoLibGenericArray<IX509CrlEntry>;
+  LIdx: Int32;
+begin
+  // fast path: the first entry with this serial, accepted only if its issuer matches
+  LEntry := ACrl.GetRevokedCertificate(ASerialNumber);
+  if (LEntry <> nil) and EquivalentName(ACertIssuer, GetEntryIssuer(ACrl, LEntry)) then
+  begin
+    Result := LEntry;
+    Exit;
+  end;
+
+  // the same serial may appear under another issuer, so scan for a full serial-and-issuer match
+  LEntries := ACrl.GetRevokedCertificates();
+  for LIdx := 0 to System.High(LEntries) do
+  begin
+    LEntry := LEntries[LIdx];
+    if LEntry.GetSerialNumber().Equals(ASerialNumber) and
+      EquivalentName(ACertIssuer, GetEntryIssuer(ACrl, LEntry)) then
+    begin
+      Result := LEntry;
+      Exit;
+    end;
+  end;
+
+  Result := nil;
+end;
+
+class function TPkixCertPathValidatorUtilities.GetCrlEntry(const ACrl: IX509Crl;
+  const AIssuer: IX509Name; const ASerialNumber: TBigInteger): IX509CrlEntry;
+begin
+  if ACrl.IsIndirect then
+  begin
+    Result := GetIndirectCrlEntry(ACrl, ASerialNumber, AIssuer);
+    Exit;
+  end;
+
+  // a direct CRL only covers certificates issued by the CRL issuer
+  if not EquivalentName(AIssuer, ACrl.IssuerDN) then
+    Result := nil
+  else
+    Result := ACrl.GetRevokedCertificate(ASerialNumber);
+end;
+
+class function TPkixCertPathValidatorUtilities.IsRevocationEffective(AValidDate,
+  ARevocationDate: TDateTime; ACrlReason: Int32): Boolean;
+begin
+  if AValidDate >= ARevocationDate then
+  begin
+    Result := True;
+    Exit;
+  end;
+
+  // a revocation dated after the checked time still counts for the irreversible reasons
+  case ACrlReason of
+    TCrlReason.Unspecified, TCrlReason.KeyCompromise, TCrlReason.CACompromise, TCrlReason.AACompromise:
+      Result := True;
+  else
+    Result := False;
+  end;
+end;
+
 class procedure TPkixCertPathValidatorUtilities.DoGetCertStatus(AValidDate: TDateTime;
   const ACrl: IX509Crl; const AIssuer: IX509Name; const ASerialNumber: TBigInteger;
   const ACertStatus: ICertStatus);
 var
   LCrlEntry: IX509CrlEntry;
-  LIssuer: IX509Name;
-  LReasonCodeValue: Int32;
+  LReasonCode: TNullable<Int32>;
   LExtensions: IX509Extensions;
   LParsed: IAsn1Object;
   LRevocationDate: TDateTime;
 begin
-  LCrlEntry := ACrl.GetRevokedCertificate(ASerialNumber);
+  LCrlEntry := GetCrlEntry(ACrl, AIssuer, ASerialNumber);
   if LCrlEntry = nil then
     Exit;
 
-  LIssuer := AIssuer;
-
-  if (not EquivalentName(LIssuer, LCrlEntry.GetCertificateIssuer())) and
-    (not EquivalentName(LIssuer, ACrl.IssuerDN)) then
-  begin
-    Exit;
-  end;
-
-  LReasonCodeValue := TCrlReason.Unspecified;
+  LReasonCode := TNullable<Int32>.None;
 
   if LCrlEntry.HasExtensions then
   begin
@@ -641,7 +721,7 @@ begin
       begin
         LParsed := LExtensions.GetExtensionParsedValue(TX509Extensions.ReasonCode);
         if LParsed <> nil then
-          LReasonCodeValue := TDerEnumerated.GetInstance(LParsed).IntValueExact;
+          LReasonCode := TNullable<Int32>.Some(TDerEnumerated.GetInstance(LParsed).IntValueExact);
       end;
     except
       on E: Exception do
@@ -650,21 +730,10 @@ begin
     end;
   end;
 
-  LRevocationDate := LCrlEntry.RevocationDate;
-  if AValidDate < LRevocationDate then
-  begin
-    // a revocation dated after the checked time still counts only for the irreversible reasons
-    case LReasonCodeValue of
-      TCrlReason.Unspecified, TCrlReason.KeyCompromise, TCrlReason.CACompromise, TCrlReason.AACompromise:
-        ;
-    else
-      Exit;
-    end;
-  end;
-
   // RFC 5280 6.3.3 (i) or (j)
-  ACertStatus.Status := LReasonCodeValue;
-  ACertStatus.RevocationDate := TNullable<TDateTime>.Some(LRevocationDate);
+  LRevocationDate := LCrlEntry.RevocationDate;
+  if IsRevocationEffective(AValidDate, LRevocationDate, TCertStatus.GetReason(LReasonCode)) then
+    ACertStatus.SetRevoked(LRevocationDate, LReasonCode);
 end;
 
 class function TPkixCertPathValidatorUtilities.GetNextWorkingKey(const ACerts
@@ -849,7 +918,8 @@ class procedure TPkixCertPathValidatorUtilities.CheckCrlsNotEmpty(
 begin
   // an empty result is recoverable: another distribution point or mechanism may still settle the status
   if System.Length(ACrls) < 1 then
-    raise ERecoverablePkixCertPathValidatorCryptoLibException.CreateResFmt(@SNoCrlsFound,
+    raise ERecoverablePkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+      TPkixCertPathValidatorReason.UndeterminedRevocationStatus, -1, @SNoCrlsFound,
       [AIssuer.ToString()]);
 end;
 

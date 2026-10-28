@@ -47,6 +47,7 @@ uses
   ClpPkixCertPathValidatorUtilities,
   ClpPkixCertRevocationCheckerParameters,
   ClpCertStatus,
+  ClpPkixCertPathValidatorReason,
   ClpReasonsMask,
   ClpArrayUtilities,
   ClpBigInteger,
@@ -186,13 +187,6 @@ type
   public
     /// <summary>The anyPolicy policy identifier of RFC 5280 4.2.1.4.</summary>
     const AnyPolicy = TPkixCertPathValidatorUtilities.AnyPolicy;
-
-    /// <summary>
-    /// The RFC 5280 5.3.1 CRL reason code as its ASN.1 identifier, or 'unknown' when the code is
-    /// outside that enumeration. Public so the attribute certificate path (RFC 3281) reports
-    /// revocation with the same wording rather than carrying a second copy of the table.
-    /// </summary>
-    class function CrlReasonName(AReason: Int32): String; static;
 
     /// <summary>
     /// RFC 5280 6.3.3 (b)(1): the CRL issuer must match the cRLIssuer field of the distribution
@@ -373,20 +367,7 @@ implementation
 uses
   ClpPkixCertPathBuilder;
 
-const
-  CrlReasonNames: array [0 .. 10] of String = ('unspecified', 'keyCompromise', 'cACompromise',
-    'affiliationChanged', 'superseded', 'cessationOfOperation', 'certificateHold', 'unknown',
-    'removeFromCRL', 'privilegeWithdrawn', 'aACompromise');
-
 { TRfc3280CertPathUtilities }
-
-class function TRfc3280CertPathUtilities.CrlReasonName(AReason: Int32): String;
-begin
-  if (AReason >= 0) and (AReason <= System.High(CrlReasonNames)) then
-    Result := CrlReasonNames[AReason]
-  else
-    Result := 'unknown';
-end;
 
 class function TRfc3280CertPathUtilities.ParseExtension(const AExtensionValue: IAsn1OctetString): IAsn1Object;
 begin
@@ -1108,14 +1089,14 @@ end;
 class procedure TRfc3280CertPathUtilities.ProcessCrlJ(AValidDate: TDateTime; const ACompleteCrl: IX509Crl;
   const ACert: IX509Certificate; const ACertStatus: ICertStatus);
 begin
-  if ACertStatus.Status = TCertStatus.Unrevoked then
+  if not ACertStatus.IsRevoked then
     TPkixCertPathValidatorUtilities.GetCertStatus(AValidDate, ACompleteCrl, ACert, ACertStatus);
 end;
 
 class procedure TRfc3280CertPathUtilities.ProcessCrlJ(AValidDate: TDateTime; const ACompleteCrl: IX509Crl;
   const AAttrCert: IX509V2AttributeCertificate; const ACertStatus: ICertStatus);
 begin
-  if ACertStatus.Status = TCertStatus.Unrevoked then
+  if not ACertStatus.IsRevoked then
     TPkixCertPathValidatorUtilities.GetCertStatus(AValidDate, ACompleteCrl, AAttrCert, ACertStatus);
 end;
 
@@ -1147,7 +1128,7 @@ begin
 
   for LIdx := 0 to System.High(LCrls) do
   begin
-    if (ACertStatus.Status <> TCertStatus.Unrevoked) or AReasonsMask.IsAllReasons then
+    if ACertStatus.IsRevoked or AReasonsMask.IsAllReasons then
       Break;
 
     LCrl := LCrls[LIdx];
@@ -1205,9 +1186,9 @@ begin
       // (j)
       ProcessCrlJ(AValidityDate, LCrl, ACert, ACertStatus);
 
-      // (k)
-      if ACertStatus.Status = TCrlReason.RemoveFromCrl then
-        ACertStatus.Status := TCertStatus.Unrevoked;
+      // (k) a removeFromCRL entry lifts a revocation carried from a delta CRL
+      if ACertStatus.IsRevoked and (ACertStatus.Reason = TCrlReason.RemoveFromCrl) then
+        ACertStatus.SetUnrevoked();
 
       AReasonsMask.AddReasons(LInterimReasonsMask);
       LValidCrlFound := True;
@@ -1281,8 +1262,8 @@ begin
     end;
 
     LIdx := 0;
-    while (LIdx <= System.High(LDistributionPoints)) and
-      (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) do
+    while (LIdx <= System.High(LDistributionPoints)) and (not LCertStatus.IsRevoked) and
+      (not LReasonsMask.IsAllReasons) do
     begin
       try
         CheckCrl(LDistributionPoints[LIdx], LPkixParamsCrlDp, ACurrentDate, AValidityDate, ACert,
@@ -1298,7 +1279,7 @@ begin
 
   // when the status is still undetermined, repeat with any CRL issued by the certificate issuer
   // that no distribution point names
-  if (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) then
+  if (not LCertStatus.IsRevoked) and (not LReasonsMask.IsAllReasons) then
   begin
     try
       // assume a distribution point with the reasons and cRLIssuer fields omitted and a
@@ -1327,26 +1308,29 @@ begin
   if not LValidCrlFound then
   begin
     if LLastMessage = '' then
-      raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SNoValidCrlFound);
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SCrlCheckFailed, [LLastMessage]);
+      raise EPkixCertPathValidatorCryptoLibException.CreateResReason(
+        TPkixCertPathValidatorReason.UndeterminedRevocationStatus, -1, @SNoValidCrlFound);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+      TPkixCertPathValidatorReason.UndeterminedRevocationStatus, -1, @SCrlCheckFailed, [LLastMessage]);
   end;
 
-  if LCertStatus.Status <> TCertStatus.Unrevoked then
+  // the certificate is undetermined when it was not found revoked and the CRLs checked did not
+  // cover all revocation reasons
+  if (not LCertStatus.IsRevoked) and (not LReasonsMask.IsAllReasons) then
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(
+      TPkixCertPathValidatorReason.UndeterminedRevocationStatus, -1, @SCertStatusUndetermined);
+
+  if LCertStatus.IsRevoked then
   begin
-    LFormattedDate := '';
+    LFormattedDate := '(NO DATE)';
     if LCertStatus.RevocationDate.HasValue then
       LFormattedDate := TPkixCertPathValidatorUtilities.FormatUtcInstant
         (LCertStatus.RevocationDate.Value);
 
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SCertificateRevoked,
-      [LFormattedDate, CrlReasonName(LCertStatus.Status)]);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+      TPkixCertPathValidatorReason.Revoked, -1, @SCertificateRevoked,
+      [LFormattedDate, LCertStatus.GetReasonText]);
   end;
-
-  if (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) then
-    LCertStatus.Status := TCertStatus.Undetermined;
-
-  if LCertStatus.Status = TCertStatus.Undetermined then
-    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SCertStatusUndetermined);
 end;
 
 class procedure TRfc3280CertPathUtilities.ProcessCertA(const ACertPath: IPkixCertPath;
@@ -1370,7 +1354,7 @@ begin
       LCert.Verify(AWorkingPublicKey);
     except
       on E: Exception do
-        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SSignatureValidationFailed, [E.Message]);
+        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidSignature, AIndex, @SSignatureValidationFailed, [E.Message]);
     end;
   end;
 
@@ -1387,7 +1371,12 @@ begin
     LCert.CheckValidity(LValidityDate);
   except
     on E: Exception do
-      raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SCertificateValidityFailed, [E.Message]);
+      if LValidityDate > LCert.NotAfter then
+        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+          TPkixCertPathValidatorReason.Expired, AIndex, @SCertificateValidityFailed, [E.Message])
+      else
+        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+          TPkixCertPathValidatorReason.NotYetValid, AIndex, @SCertificateValidityFailed, [E.Message]);
   end;
 
   // (a)(3) revocation status, settled by whatever mechanisms the checker holds. The checker
@@ -1403,7 +1392,7 @@ begin
   // (a)(4) name chaining
   LIssuer := TPkixCertPathValidatorUtilities.GetIssuerPrincipal(LCert);
   if not LIssuer.Equivalent(AWorkingIssuerName, True) then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SNameChainingFailed,
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.NameChaining, AIndex, @SNameChainingFailed,
       [LIssuer.ToString(), AWorkingIssuerName.ToString()]);
 end;
 
@@ -1458,7 +1447,7 @@ begin
       ANameConstraintValidator.CheckDN(LPrincipal);
   except
     on E: Exception do
-      raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SSubtreeCheckFailed,
+      raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidName, AIndex, @SSubtreeCheckFailed,
         ['subject', E.Message]);
   end;
 
@@ -1482,7 +1471,7 @@ begin
       ANameConstraintValidator.CheckEmail(LEmails[LIdx]);
     except
       on E: Exception do
-        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SSubtreeCheckFailed,
+        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidName, AIndex, @SSubtreeCheckFailed,
           ['subject alternative email', E.Message]);
     end;
   end;
@@ -1504,7 +1493,7 @@ begin
       ANameConstraintValidator.CheckName(LGenNames[LIdx]);
     except
       on E: Exception do
-        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SSubtreeCheckFailed,
+        raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidName, AIndex, @SSubtreeCheckFailed,
           ['subject alternative name', E.Message]);
     end;
   end;
@@ -1546,10 +1535,10 @@ begin
     end;
 
     if LIssuerDomainPolicy.GetID() = AnyPolicy then
-      raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SIssuerDomainPolicyIsAnyPolicy);
+      raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidPolicy, AIndex, @SIssuerDomainPolicyIsAnyPolicy);
 
     if LSubjectDomainPolicy.GetID() = AnyPolicy then
-      raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SSubjectDomainPolicyIsAnyPolicy);
+      raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidPolicy, AIndex, @SSubjectDomainPolicyIsAnyPolicy);
   end;
 end;
 
@@ -1719,7 +1708,7 @@ class procedure TRfc3280CertPathUtilities.ProcessCertF(AIndex: Int32;
 begin
   // (f)
   if (AExplicitPolicy <= 0) and (AValidPolicyTree = nil) then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SNoValidPolicyTree);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidPolicy, AIndex, @SNoValidPolicyTree);
 end;
 
 class function TRfc3280CertPathUtilities.PrepareCertB(const ACertPath: IPkixCertPath; AIndex: Int32;
@@ -1963,7 +1952,7 @@ begin
         if AIndex < 0 then
           raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SPermittedSubtreesFailed, [E.Message])
         else
-          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SPermittedSubtreesFailed, [E.Message]);
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidName, AIndex, @SPermittedSubtreesFailed, [E.Message]);
       end;
     end;
   end;
@@ -1984,7 +1973,7 @@ begin
         if AIndex < 0 then
           raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SExcludedSubtreesFailed, [E.Message])
         else
-          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SExcludedSubtreesFailed, [E.Message]);
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.InvalidName, AIndex, @SExcludedSubtreesFailed, [E.Message]);
       end;
     end;
   end;
@@ -2141,7 +2130,7 @@ begin
   // (k)
   LParsed := GetCertExtension(LCert, TX509Extensions.BasicConstraints, 'basic constraints');
   if LParsed = nil then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SIntermediateLacksBasicConstraints, [AIndex]);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.NotCACertificate, AIndex, @SIntermediateLacksBasicConstraints, [AIndex]);
 
   try
     Result := TBasicConstraints.GetInstance(LParsed);
@@ -2152,7 +2141,7 @@ begin
   end;
 
   if not Result.IsCA() then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SNotACACertificate, [AIndex]);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.NotCACertificate, AIndex, @SNotACACertificate, [AIndex]);
 end;
 
 class function TRfc3280CertPathUtilities.PrepareNextCertL(const ACertPath: IPkixCertPath; AIndex: Int32;
@@ -2166,7 +2155,7 @@ begin
   end;
 
   if AMaxPathLength <= 0 then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SMaxPathLengthExhausted);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.PathTooLong, AIndex, @SMaxPathLengthExhausted);
 
   Result := AMaxPathLength - 1;
 end;
@@ -2209,7 +2198,7 @@ begin
   if (LKeyUsage <> nil) and ((System.Length(LKeyUsage) <= TPkixCertPathValidatorUtilities.KeyCertSign) or
     (not LKeyUsage[TPkixCertPathValidatorUtilities.KeyCertSign])) then
   begin
-    raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SKeyUsageNoKeyCertSign);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidKeyUsage, AIndex, @SKeyUsageNoKeyCertSign);
   end;
 end;
 
@@ -2267,7 +2256,7 @@ begin
   end;
 
   if ACriticalExtensions.Count > 0 then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SUnsupportedCriticalExtensions,
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.UnrecognizedCriticalExtension, AIndex, @SUnsupportedCriticalExtensions,
       [AIndex, JoinCriticalExtensions(ACriticalExtensions)]);
 end;
 
@@ -2341,7 +2330,7 @@ begin
   end;
 
   if ACriticalExtensions.Count > 0 then
-    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtAt(AIndex, @SUnsupportedCriticalExtensions,
+    raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(TPkixCertPathValidatorReason.UnrecognizedCriticalExtension, AIndex, @SUnsupportedCriticalExtensions,
       [AIndex, JoinCriticalExtensions(ACriticalExtensions)]);
 end;
 
@@ -2363,7 +2352,7 @@ begin
   if LValidPolicyTree = nil then
   begin
     if APkixParams.IsExplicitPolicyRequired then
-      raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SExplicitPolicyUnavailable);
+      raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidPolicy, AIndex, @SExplicitPolicyUnavailable);
 
     Result := nil;
     Exit;
@@ -2375,7 +2364,7 @@ begin
     if APkixParams.IsExplicitPolicyRequired then
     begin
       if AAcceptablePolicies.Count < 1 then
-        raise EPkixCertPathValidatorCryptoLibException.CreateResAt(AIndex, @SExplicitPolicyUnavailable);
+        raise EPkixCertPathValidatorCryptoLibException.CreateResReason(TPkixCertPathValidatorReason.InvalidPolicy, AIndex, @SExplicitPolicyUnavailable);
 
       // nodes outside the acceptable policies are not pruned here; the childless sweep below is
       // what constrains the tree

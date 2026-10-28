@@ -501,7 +501,7 @@ begin
 
   for LIdx := 0 to System.High(LCrls) do
   begin
-    if (ACertStatus.Status <> TCertStatus.Unrevoked) or AReasonsMask.IsAllReasons then
+    if ACertStatus.IsRevoked or AReasonsMask.IsAllReasons then
       Break;
 
     LCrl := LCrls[LIdx];
@@ -559,9 +559,9 @@ begin
       // (j)
       TRfc3280CertPathUtilities.ProcessCrlJ(AValidityDate, LCrl, AAttrCert, ACertStatus);
 
-      // (k)
-      if ACertStatus.Status = TCrlReason.RemoveFromCrl then
-        ACertStatus.Status := TCertStatus.Unrevoked;
+      // (k) a removeFromCRL entry lifts a revocation carried from a delta CRL
+      if ACertStatus.IsRevoked and (ACertStatus.Reason = TCrlReason.RemoveFromCrl) then
+        ACertStatus.SetUnrevoked();
 
       AReasonsMask.AddReasons(LInterimReasonsMask);
       LValidCrlFound := True;
@@ -648,8 +648,8 @@ begin
     end;
 
     LIdx := 0;
-    while (LIdx <= System.High(LDistributionPoints)) and
-      (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) do
+    while (LIdx <= System.High(LDistributionPoints)) and (not LCertStatus.IsRevoked) and
+      (not LReasonsMask.IsAllReasons) do
     begin
       try
         CheckCrl(LDistributionPoints[LIdx], AAttrCert, LPkixParamsCrlDp, ACurrentDate, AValidityDate,
@@ -665,7 +665,7 @@ begin
 
   // when the status is still undetermined, repeat with any CRL issued by the AC issuer that no
   // distribution point names
-  if (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) then
+  if (not LCertStatus.IsRevoked) and (not LReasonsMask.IsAllReasons) then
   begin
     try
       // assume a distribution point with the reasons and cRLIssuer fields omitted and a
@@ -692,21 +692,20 @@ begin
     raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SCrlCheckFailed, [LLastMessage]);
   end;
 
-  if LCertStatus.Status <> TCertStatus.Unrevoked then
+  // the attribute certificate is undetermined when it was not found revoked and the CRLs checked
+  // did not cover all revocation reasons
+  if (not LCertStatus.IsRevoked) and (not LReasonsMask.IsAllReasons) then
+    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SAttrCertStatusUndetermined);
+
+  if LCertStatus.IsRevoked then
   begin
-    LFormattedDate := '';
+    LFormattedDate := '(NO DATE)';
     if LCertStatus.RevocationDate.HasValue then
       LFormattedDate := TPkixCertPathValidatorUtilities.FormatUtcInstant(LCertStatus.RevocationDate.Value);
 
     raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SAttrCertRevoked,
-      [LFormattedDate, TRfc3280CertPathUtilities.CrlReasonName(LCertStatus.Status)]);
+      [LFormattedDate, LCertStatus.GetReasonText]);
   end;
-
-  if (LCertStatus.Status = TCertStatus.Unrevoked) and (not LReasonsMask.IsAllReasons) then
-    LCertStatus.Status := TCertStatus.Undetermined;
-
-  if LCertStatus.Status = TCertStatus.Undetermined then
-    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SAttrCertStatusUndetermined);
 end;
 
 end.

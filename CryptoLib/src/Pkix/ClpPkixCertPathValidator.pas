@@ -37,6 +37,7 @@ uses
   ClpPkixRevocationChecker,
   ClpDateTimeHelper,
   ClpCryptoLibTypes,
+  ClpPkixCertPathValidatorReason,
   ClpCryptoLibExceptions;
 
 resourcestring
@@ -192,7 +193,8 @@ begin
   end;
 
   if LTrust = nil then
-    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@STrustAnchorNotFound);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(
+      TPkixCertPathValidatorReason.NoTrustAnchor, -1, @STrustAnchorNotFound);
 
   // the anchor that CRL checking is restricted to below must be one of the supplied ones, not one
   // reached out-of-band
@@ -206,7 +208,8 @@ begin
     end;
   end;
   if not LTrustFound then
-    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@STrustAnchorNotSupplied);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(
+      TPkixCertPathValidatorReason.NoTrustAnchor, -1, @STrustAnchorNotSupplied);
 
   // RFC 5280 sec. 6.3.3(f): CRLs must be anchored at the same trust anchor as the certificate, so with
   // several anchors supplied, narrow the parameters to the resolved one for the checking that follows
@@ -358,7 +361,8 @@ begin
           if (LIndex = (LN - 1)) and LCert.Equals(LTrust.TrustedCert) then
             Continue;
 
-          raise EPkixCertPathValidatorCryptoLibException.CreateResFmt(@SVersion1CACertificate, [LIndex]);
+          raise EPkixCertPathValidatorCryptoLibException.CreateResFmtReason(
+            TPkixCertPathValidatorReason.NotCACertificate, -1, @SVersion1CACertificate, [LIndex]);
         end;
 
         TRfc3280CertPathUtilities.PrepareNextCertA(ACertPath, LIndex);
@@ -450,7 +454,8 @@ begin
       Exit;
     end;
 
-    raise EPkixCertPathValidatorCryptoLibException.CreateRes(@SPolicyProcessingFailed);
+    raise EPkixCertPathValidatorCryptoLibException.CreateResReason(
+      TPkixCertPathValidatorReason.InvalidPolicy, -1, @SPolicyProcessingFailed);
   finally
     LCriticalExtensions.Free;
     LAcceptablePolicies.Free;
