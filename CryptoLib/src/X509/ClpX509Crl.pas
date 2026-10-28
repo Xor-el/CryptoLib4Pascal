@@ -335,7 +335,7 @@ end;
 function TX509Crl.GetRevokedCertificate(const ACert: IX509Certificate): IX509CrlEntry;
 var
   LRevoked: TCryptoLibGenericArray<ICrlEntry>;
-  LPreviousIssuer, LCertIssuer: IX509Name;
+  LPreviousIssuer, LCertIssuer, LEntryIssuer: IX509Name;
   LSerial: TBigInteger;
   LI: Int32;
   LEntry: IX509CrlEntry;
@@ -347,16 +347,20 @@ begin
     Exit;
   end;
 
-  // An indirect CRL may list the same serial number under more than one issuer,
-  // so a match requires both the serial number and the entry's effective issuer.
+  // An indirect CRL may list the same serial number under more than one issuer, so a match requires
+  // both the serial number and the entry's effective issuer, which defaults to the CRL issuer (a
+  // direct CRL has no per-entry issuer).
   LSerial := ACert.SerialNumber;
   LCertIssuer := ACert.IssuerDN;
   LPreviousIssuer := GetIssuerDN();
   for LI := 0 to System.High(LRevoked) do
   begin
     LEntry := TX509CrlEntry.Create(LRevoked[LI], FIsIndirect, LPreviousIssuer);
+    LEntryIssuer := LEntry.GetCertificateIssuer();
+    if LEntryIssuer = nil then
+      LEntryIssuer := GetIssuerDN();
     if LRevoked[LI].UserCertificate.Value.Equals(LSerial) and
-      LCertIssuer.Equivalent(LEntry.GetCertificateIssuer(), True) then
+      LCertIssuer.Equivalent(LEntryIssuer, True) then
     begin
       Result := LEntry;
       Exit;

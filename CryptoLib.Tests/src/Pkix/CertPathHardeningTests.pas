@@ -176,6 +176,7 @@ type
     procedure SetUp; override;
   published
     procedure TestSameSerialUnderDifferentIssuerIsNotMasked;
+    procedure TestDirectCrlRevokesBySerial;
   end;
 
 implementation
@@ -834,6 +835,41 @@ begin
   CheckTrue(LCrl.IsRevoked(LCertA), 'the certificate from the named issuer is revoked');
   CheckFalse(LCrl.IsRevoked(LCertB),
     'a certificate sharing the serial number under a different issuer is not masked as revoked');
+end;
+
+procedure TIndirectCrlSerialCollisionTest.TestDirectCrlRevokesBySerial;
+var
+  LCaKey, LSubjectKey: IAsymmetricCipherKeyPair;
+  LCaDn, LSubject: IX509Name;
+  LRevokedSerial, LOtherSerial: TBigInteger;
+  LCertRevoked, LCertOther: IX509Certificate;
+  LCrlGen: IX509V2CrlGenerator;
+  LCrl: IX509Crl;
+  LNow: TDateTime;
+begin
+  LCaKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LSubjectKey := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LCaDn := TX509Name.Create('CN=CA, O=Test-PKI, C=DE');
+  LSubject := TX509Name.Create('CN=EU, O=Test-PKI, C=DE');
+
+  LRevokedSerial := TBigInteger.ValueOf(4660);
+  LOtherSerial := TBigInteger.ValueOf(4661);
+  LCertRevoked := MakeCert(LRevokedSerial, LCaDn, LSubject, LSubjectKey);
+  LCertOther := MakeCert(LOtherSerial, LCaDn, LSubject, LSubjectKey);
+
+  // an ordinary (direct) CRL issued by the CA; its entries carry no per-entry issuer
+  LNow := Now.ToUniversalTime();
+  LCrlGen := TX509V2CrlGenerator.Create() as IX509V2CrlGenerator;
+  LCrlGen.SetIssuerDN(LCaDn);
+  LCrlGen.SetThisUpdateUtc(IncHour(LNow, -1));
+  LCrlGen.SetNextUpdateUtc(IncMonth(LNow, 1));
+  LCrlGen.AddCrlEntryUtc(LRevokedSerial, IncHour(LNow, -1), TCrlReason.KeyCompromise);
+  LCrl := LCrlGen.Generate(TAsn1SignatureFactory.Create(SigAlgorithm,
+    LCaKey.Private as IAsymmetricKeyParameter, FRandom) as ISignatureFactory);
+
+  CheckTrue(LCrl.IsRevoked(LCertRevoked), 'a direct CRL reports its revoked certificate as revoked');
+  CheckFalse(LCrl.IsRevoked(LCertOther),
+    'a direct CRL does not report an unrevoked serial as revoked');
 end;
 
 initialization
