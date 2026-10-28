@@ -49,6 +49,7 @@ uses
   FixedSecureRandom,
   ClpSlhDsaParameters,
   ClpISlhDsaParameters,
+  ClpCryptoLibExceptions,
   ClpSlhDsaGenerators,
   ClpSlhDsaSigner,
   ClpHashSlhDsaSigner,
@@ -98,12 +99,16 @@ type
     procedure RunParamVectors(const ARelativePath: string;
       AImpl: TSlhDsaVectorImpl; const AParameters: ISlhDsaParameters;
       ASampleOnly: Boolean);
+    procedure ImplComponentEncodingLengths(const AParameters: ISlhDsaParameters);
+    procedure ExpectBadLengthRejected(const AParameters: ISlhDsaParameters;
+      const AValid: TCryptoLibByteArray; APrivate: Boolean);
   public
     procedure SetUp; override;
   end;
 
   TTestSlhDsaFast = class(TTestSlhDsa)
   published
+    procedure TestComponentEncodingLengths;
     procedure Test02KeyGenAcvp192f;
     procedure Test04KeyGenAcvpShake256f;
     procedure Test10ContextFastSha2128f;
@@ -300,6 +305,66 @@ procedure TTestSlhDsa.RunSigVer(const ARelativePath: string;
   const AParameters: ISlhDsaParameters);
 begin
   RunParamVectors(ARelativePath, ImplSigVer, AParameters, False);
+end;
+
+procedure TTestSlhDsa.ExpectBadLengthRejected(const AParameters: ISlhDsaParameters;
+  const AValid: TCryptoLibByteArray; APrivate: Boolean);
+
+  procedure CheckOne(const ABuf: TCryptoLibByteArray);
+  var
+    LRaised: Boolean;
+  begin
+    LRaised := False;
+    try
+      if APrivate then
+        TSlhDsaPrivateKeyParameters.FromEncoding(AParameters, ABuf)
+      else
+        TSlhDsaPublicKeyParameters.FromEncoding(AParameters, ABuf);
+    except
+      on E: EArgumentCryptoLibException do
+        LRaised := True;
+    end;
+    CheckTrue(LRaised, 'a wrong-length SLH-DSA component must be rejected');
+  end;
+
+var
+  LBuf: TCryptoLibByteArray;
+begin
+  LBuf := System.Copy(AValid);
+  System.SetLength(LBuf, System.Length(AValid) + 1);
+  CheckOne(LBuf);
+
+  LBuf := System.Copy(AValid);
+  System.SetLength(LBuf, System.Length(AValid) - 1);
+  CheckOne(LBuf);
+end;
+
+procedure TTestSlhDsa.ImplComponentEncodingLengths(const AParameters: ISlhDsaParameters);
+var
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LKp: IAsymmetricCipherKeyPair;
+  LPriv: ISlhDsaPrivateKeyParameters;
+  LPub: ISlhDsaPublicKeyParameters;
+  LPrivEnc, LPubEnc: TCryptoLibByteArray;
+begin
+  LKpg := TSlhDsaKeyPairGenerator.Create;
+  LKpg.Init(TSlhDsaKeyGenerationParameters.Create(FRandom, AParameters) as IKeyGenerationParameters);
+  LKp := LKpg.GenerateKeyPair;
+  LPriv := LKp.Private as ISlhDsaPrivateKeyParameters;
+  LPub := LKp.Public as ISlhDsaPublicKeyParameters;
+
+  LPrivEnc := LPriv.GetEncoded();
+  LPubEnc := LPub.GetEncoded();
+
+  // correctly sized components round-trip
+  CheckNotNull(TSlhDsaPrivateKeyParameters.FromEncoding(AParameters, LPrivEnc),
+    'the private key encoding round-trips');
+  CheckNotNull(TSlhDsaPublicKeyParameters.FromEncoding(AParameters, LPubEnc),
+    'the public key encoding round-trips');
+
+  // a component one byte too long or too short is rejected
+  ExpectBadLengthRejected(AParameters, LPrivEnc, True);
+  ExpectBadLengthRejected(AParameters, LPubEnc, False);
 end;
 
 procedure TTestSlhDsa.ImplConsistency(const AParameters: ISlhDsaParameters);
@@ -627,6 +692,11 @@ end;
 procedure TTestSlhDsaSlow.Test41ContextSlowShake256sShake256;
 begin
   RunContextVectors('shake-256s-shake256.rsp', TSlhDsaParameters.SlhDsaShake_256sWithShake256, True);
+end;
+
+procedure TTestSlhDsaFast.TestComponentEncodingLengths;
+begin
+  ImplComponentEncodingLengths(TSlhDsaParameters.SlhDsaSha2_128s);
 end;
 
 procedure TTestSlhDsaFast.Test95ConsistencySha2_128s;

@@ -73,6 +73,7 @@ uses
   CertTestUtilities,
   CryptoTestKeys,
   ClpEncoders,
+  ClpCryptoLibConfig,
   CryptoLibTestBase,
   PkcsVectors;
 
@@ -127,6 +128,7 @@ type
     function GetExpectedPkcs12ChainSerial(AIndex: Int32): TBigInteger;
   protected
     procedure SetUp; override;
+    procedure TearDown; override;
   published
     procedure TestCertsOnly;
     procedure TestPkcs12Store_LoadAndVerifyKeyAndChain;
@@ -170,6 +172,7 @@ implementation
 procedure TTestPkcs12Store.SetUp;
 begin
   inherited SetUp;
+  TCryptoLibConfig.Pkcs12.StoreIterationCount := 1024;
   FPasswd := StringToCharArray(TPkcs12StoreVectors.GetPassword('MainKeyAndChain'));
   FNoFriendlyPassword := StringToCharArray(TPkcs12StoreVectors.GetPassword('NoFriendly'));
   FStoragePassword := StringToCharArray(TPkcs12StoreVectors.GetPassword('StorageIssue'));
@@ -194,6 +197,12 @@ begin
   FRawKeyBagStore := TPkcs12StoreVectors.LoadStoreBytes('RawKeyBagStore');
   FCertChainCyclePassword := StringToCharArray(TPkcs12StoreVectors.GetPassword('CertChainCycle'));
   FCertChainCycle := TPkcs12StoreVectors.LoadStoreBytes('CertChainCycle');
+end;
+
+procedure TTestPkcs12Store.TearDown;
+begin
+  TCryptoLibConfig.Pkcs12.ResetToDefaults();
+  inherited TearDown;
 end;
 
 function TTestPkcs12Store.GetFirst(const AAliases: TCryptoLibStringArray): String;

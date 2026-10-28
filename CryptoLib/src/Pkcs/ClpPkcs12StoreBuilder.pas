@@ -23,6 +23,7 @@ interface
 uses
   ClpIAsn1Objects,
   ClpNistObjectIdentifiers,
+  ClpCryptoLibConfig,
   ClpIPkcs12StoreBuilder,
   ClpIPkcs12Store,
   ClpPkcs12Store;
@@ -169,9 +170,10 @@ begin
   FReverseCertificates := False;
   FOverwriteFriendlyName := True;
   FEnableOracleTrustedKeyUsage := True;
-  FKeyIterations := TPkcs12Store.DefaultIterations;
-  FCertIterations := TPkcs12Store.DefaultIterations;
-  FMacIterations := TPkcs12Store.DefaultIterations;
+  // key and certificate encryption use the configured write-side count; the MAC uses twice that
+  FKeyIterations := TCryptoLibConfig.Pkcs12.StoreIterationCount;
+  FCertIterations := TCryptoLibConfig.Pkcs12.StoreIterationCount;
+  FMacIterations := 2 * TCryptoLibConfig.Pkcs12.StoreIterationCount;
   FKeySaltSize := TPkcs12Store.DefaultSaltSize;
   FCertSaltSize := TPkcs12Store.DefaultSaltSize;
   FMacSaltSize := TPkcs12Store.DefaultSaltSize;

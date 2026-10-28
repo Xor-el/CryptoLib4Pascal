@@ -62,6 +62,7 @@ uses
   ClpISecureRandom,
   ClpSecureRandom,
   ClpCryptoLibTypes,
+  ClpCryptoLibExceptions,
   NistSecureRandom;
 
 type
@@ -90,10 +91,15 @@ type
     // Run a vector file through AImpl. AParameters nil => derive per record.
     procedure RunParamVectors(const ARelativePath: string;
       AImpl: TMlDsaVectorImpl; const AParameters: IMlDsaParameters);
+    procedure ImplComponentEncodingLengths(const AParameters: IMlDsaParameters);
+    // AKind: 0 = private-key encoding, 1 = public-key encoding, 2 = seed
+    procedure ExpectBadLengthRejected(const AParameters: IMlDsaParameters;
+      const AValid: TCryptoLibByteArray; AKind: Int32);
   published
     procedure TestConsistency44;
     procedure TestConsistency65;
     procedure TestConsistency87;
+    procedure TestComponentEncodingLengths;
     procedure TestKeyGen;
     procedure TestKeyGenAcvp44;
     procedure TestKeyGenAcvp65;
@@ -246,6 +252,80 @@ end;
 procedure TTestMlDsa.TestConsistency87;
 begin
   ImplConsistency(TMlDsaParameters.MlDsa87);
+end;
+
+procedure TTestMlDsa.ExpectBadLengthRejected(const AParameters: IMlDsaParameters;
+  const AValid: TCryptoLibByteArray; AKind: Int32);
+
+  procedure CheckOne(const ABuf: TCryptoLibByteArray);
+  var
+    LRaised: Boolean;
+  begin
+    LRaised := False;
+    try
+      case AKind of
+        0:
+          TMlDsaPrivateKeyParameters.FromEncoding(AParameters, ABuf);
+        1:
+          TMlDsaPublicKeyParameters.FromEncoding(AParameters, ABuf);
+      else
+        TMlDsaPrivateKeyParameters.FromSeed(AParameters, ABuf);
+      end;
+    except
+      on E: EArgumentCryptoLibException do
+        LRaised := True;
+    end;
+    CheckTrue(LRaised, 'a wrong-length ML-DSA component must be rejected');
+  end;
+
+var
+  LBuf: TCryptoLibByteArray;
+begin
+  LBuf := System.Copy(AValid);
+  System.SetLength(LBuf, System.Length(AValid) + 1);
+  CheckOne(LBuf);
+
+  LBuf := System.Copy(AValid);
+  System.SetLength(LBuf, System.Length(AValid) - 1);
+  CheckOne(LBuf);
+end;
+
+procedure TTestMlDsa.ImplComponentEncodingLengths(const AParameters: IMlDsaParameters);
+var
+  LKpg: IAsymmetricCipherKeyPairGenerator;
+  LKp: IAsymmetricCipherKeyPair;
+  LPriv: IMlDsaPrivateKeyParameters;
+  LPub: IMlDsaPublicKeyParameters;
+  LPrivEnc, LPubEnc, LSeed: TCryptoLibByteArray;
+begin
+  LKpg := TMlDsaKeyPairGenerator.Create;
+  LKpg.Init(TMlDsaKeyGenerationParameters.Create(FRandom, AParameters) as IKeyGenerationParameters);
+  LKp := LKpg.GenerateKeyPair();
+  LPriv := LKp.Private as IMlDsaPrivateKeyParameters;
+  LPub := LKp.Public as IMlDsaPublicKeyParameters;
+
+  LPrivEnc := LPriv.GetEncoded();
+  LPubEnc := LPub.GetEncoded();
+  LSeed := LPriv.GetSeed();
+
+  // correctly sized components round-trip
+  CheckNotNull(TMlDsaPrivateKeyParameters.FromEncoding(AParameters, LPrivEnc),
+    'the private key encoding round-trips');
+  CheckNotNull(TMlDsaPublicKeyParameters.FromEncoding(AParameters, LPubEnc),
+    'the public key encoding round-trips');
+  CheckNotNull(TMlDsaPrivateKeyParameters.FromSeed(AParameters, LSeed), 'the seed round-trips');
+
+  // a component one byte too long or too short is rejected
+  ExpectBadLengthRejected(AParameters, LPrivEnc, 0);
+  ExpectBadLengthRejected(AParameters, LPubEnc, 1);
+  ExpectBadLengthRejected(AParameters, LSeed, 2);
+end;
+
+procedure TTestMlDsa.TestComponentEncodingLengths;
+begin
+  ImplComponentEncodingLengths(TMlDsaParameters.MlDsa44);
+  ImplComponentEncodingLengths(TMlDsaParameters.MlDsa65);
+  ImplComponentEncodingLengths(TMlDsaParameters.MlDsa87);
 end;
 
 procedure TTestMlDsa.ImplKeyGen(const AName: string; const AData: TRspTxtRecord;

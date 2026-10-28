@@ -173,6 +173,10 @@ begin
   FHmac.BlockUpdate(FV, 0, System.Length(FV));
 
   FHmac.DoFinal(FV, 0);
+
+  // the HMAC seeding is done, so wipe the private scalar's encoding
+  TArrayUtilities.Fill(LX, 0, System.Length(LX), Byte(0));
+  TArrayUtilities.Fill(LDVal, 0, System.Length(LDVal), Byte(0));
 end;
 
 function THMacDsaKCalculator.NextK: TBigInteger;

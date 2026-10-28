@@ -863,7 +863,8 @@ begin
                 else
                 begin
                   LBuf.Append(LOid.Id);
-                  LBuf.Append(' value = ').Append(TAsn1Dumper.DumpAsString(LObj));
+                  LBuf.Append(' value = ');
+                  TAsn1Dumper.AppendAsString(LBuf, LObj);
                 end;
               except
                 on E: Exception do
