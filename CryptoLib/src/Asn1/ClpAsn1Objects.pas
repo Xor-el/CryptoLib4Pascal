@@ -88,7 +88,6 @@ resourcestring
   SMalformedBmpStringEncodingEncountered = 'malformed BMPString encoding encountered';
   SEofEncounteredReadingBooleanOctet = 'EOF encountered reading BOOLEAN octet';
   SBooleanValueShouldHaveOneByte = 'BOOLEAN value should have 1 byte';
-  SEnumeratedMustBeNonNegative = 'ENUMERATED must be non-negative';
   SMalformedEnumerated = 'malformed ENUMERATED';
   SAsn1EnumeratedOutOfIntRange = 'ASN.1 Enumerated out of int range';
   SEnumeratedHasZeroLength = 'ENUMERATED has zero length';
@@ -1898,6 +1897,7 @@ type
     function GetBytes(): TCryptoLibByteArray;
     function HasValue(AX: Int32): Boolean; overload;
     function HasValue(const AX: TBigInteger): Boolean; overload;
+    function TryGetIntValueExact(out AValue: Int32): Boolean;
 
     function GetEncoding(AEncoding: Int32): IAsn1Encoding; override;
     function GetEncodingImplicit(AEncoding, ATagClass, ATagNo: Int32): IAsn1Encoding; override;
@@ -8026,9 +8026,6 @@ var
   LBytes: TCryptoLibByteArray;
 begin
   inherited Create();
-  if AVal < 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
-
   LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
   FContents := LBytes;
   FStart := 0;
@@ -8039,9 +8036,6 @@ var
   LBytes: TCryptoLibByteArray;
 begin
   inherited Create();
-  if AVal < 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
-
   LBytes := TBigInteger.ValueOf(AVal).ToByteArray();
   FContents := LBytes;
   FStart := 0;
@@ -8052,9 +8046,6 @@ var
   LBytes: TCryptoLibByteArray;
 begin
   inherited Create();
-  if AVal.SignValue < 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
-
   LBytes := AVal.ToByteArray();
   FContents := LBytes;
   FStart := 0;
@@ -8070,8 +8061,6 @@ begin
   inherited Create();
   if TDerInteger.IsMalformed(AContents) then
     raise EArgumentCryptoLibException.CreateRes(@SMalformedEnumerated);
-  if (AContents[0] and $80) <> 0 then
-    raise EArgumentCryptoLibException.CreateRes(@SEnumeratedMustBeNonNegative);
 
   if AClone then
     FContents := System.Copy(AContents)
@@ -8116,14 +8105,22 @@ begin
 end;
 
 function TDerEnumerated.GetIntValueExact(): Int32;
-var
-  LCount: Int32;
 begin
-  LCount := System.Length(FContents) - FStart;
-  if LCount > 4 then
+  if not TryGetIntValueExact(Result) then
     raise EArithmeticCryptoLibException.CreateRes(@SAsn1EnumeratedOutOfIntRange);
+end;
 
-  Result := TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned);
+function TDerEnumerated.TryGetIntValueExact(out AValue: Int32): Boolean;
+begin
+  if (System.Length(FContents) - FStart) > 4 then
+  begin
+    AValue := 0;
+    Result := False;
+    Exit;
+  end;
+
+  AValue := TDerInteger.IntValue(FContents, FStart, TDerInteger.SignExtSigned);
+  Result := True;
 end;
 
 function TDerEnumerated.GetEncoding(AEncoding: Int32): IAsn1Encoding;

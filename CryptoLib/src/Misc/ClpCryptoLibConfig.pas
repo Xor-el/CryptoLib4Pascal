@@ -460,13 +460,20 @@ type
   const
     /// <summary>Iteration-count ceiling when <see cref="MaxIterationCount" /> is unset.</summary>
     DefaultMaxIterationCount = Int32(5000000);
+    /// <summary>Write-side iteration count when <see cref="StoreIterationCount" /> is unset or out of range.</summary>
+    DefaultStoreIterationCount = Int32(300000);
+    /// <summary>Upper bound on the write-side count, so the doubled MAC count stays within the default read ceiling.</summary>
+    MaxStoreIterationCount = Int32(2500000);
 
   class var
     FMaxIterationCount: TNullable<Int32>;
+    FStoreIterationCount: TNullable<Int32>;
     FIgnoreUselessPassword: Boolean;
 
     class function GetMaxIterationCount: Int32; static;
     class procedure SetMaxIterationCount(AValue: Int32); static;
+    class function GetStoreIterationCount: Int32; static;
+    class procedure SetStoreIterationCount(AValue: Int32); static;
     class function GetIgnoreUselessPassword: Boolean; static;
     class procedure SetIgnoreUselessPassword(AValue: Boolean); static;
 
@@ -480,6 +487,12 @@ type
     /// the default.
     /// </summary>
     class property MaxIterationCount: Int32 read GetMaxIterationCount write SetMaxIterationCount;
+
+    /// <summary>
+    /// The PBE iteration count used when writing a PKCS#12 keystore; the integrity MAC uses twice
+    /// this. Defaults to 300,000; a value outside 1 to 2,500,000 is ignored and the default used.
+    /// </summary>
+    class property StoreIterationCount: Int32 read GetStoreIterationCount write SetStoreIterationCount;
 
     /// <summary>
     /// Loads a PKCS#12 keystore whose integrity is not password-protected without demanding a
@@ -905,6 +918,7 @@ end;
 class procedure TPkcs12Config.ResetToDefaults();
 begin
   FMaxIterationCount := TNullable<Int32>.None;
+  FStoreIterationCount := TNullable<Int32>.None;
   FIgnoreUselessPassword := False;
 end;
 
@@ -923,6 +937,21 @@ begin
       ['maximum PKCS#12 iteration count', AValue]);
 
   FMaxIterationCount := TNullable<Int32>.Some(AValue);
+end;
+
+class function TPkcs12Config.GetStoreIterationCount: Int32;
+begin
+  // an out-of-range configured value falls back to the default, so the doubled MAC count is bounded
+  if FStoreIterationCount.HasValue and (FStoreIterationCount.Value >= 1) and
+    (FStoreIterationCount.Value <= MaxStoreIterationCount) then
+    Result := FStoreIterationCount.Value
+  else
+    Result := DefaultStoreIterationCount;
+end;
+
+class procedure TPkcs12Config.SetStoreIterationCount(AValue: Int32);
+begin
+  FStoreIterationCount := TNullable<Int32>.Some(AValue);
 end;
 
 class function TPkcs12Config.GetIgnoreUselessPassword: Boolean;

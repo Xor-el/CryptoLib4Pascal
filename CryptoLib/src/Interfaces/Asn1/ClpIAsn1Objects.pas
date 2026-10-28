@@ -713,6 +713,8 @@ type
     /// Get the exact Int32 value, throwing if out of range.
     /// </summary>
     function GetIntValueExact(): Int32;
+    /// <summary>Get the exact Int32 value, returning False instead of throwing if out of range.</summary>
+    function TryGetIntValueExact(out AValue: Int32): Boolean;
     property Bytes: TCryptoLibByteArray read GetBytes;
     property Value: TBigInteger read GetValue;
     property IntValueExact: Int32 read GetIntValueExact;

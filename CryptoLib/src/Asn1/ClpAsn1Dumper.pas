@@ -50,6 +50,12 @@ type
       const ABytes: TCryptoLibByteArray; AOff, ALen: Int32); static;
 
   public
+    /// <summary>Append a formatted dump of a DER object to a caller-supplied buffer (non-verbose).</summary>
+    class procedure AppendAsString(const ABuf: TStringBuilder;
+      const AObj: IAsn1Encodable); overload; static;
+    /// <summary>Append a formatted dump of a DER object to a caller-supplied buffer.</summary>
+    class procedure AppendAsString(const ABuf: TStringBuilder; const AObj: IAsn1Encodable;
+      AVerbose: Boolean); overload; static;
     /// <summary>
     /// Dump out a DER object as a formatted string, in non-verbose mode.
     /// </summary>
@@ -366,6 +372,17 @@ begin
   end;
 end;
 
+class procedure TAsn1Dumper.AppendAsString(const ABuf: TStringBuilder; const AObj: IAsn1Encodable);
+begin
+  AppendAsString(ABuf, AObj, False);
+end;
+
+class procedure TAsn1Dumper.AppendAsString(const ABuf: TStringBuilder; const AObj: IAsn1Encodable;
+  AVerbose: Boolean);
+begin
+  AsString('', AVerbose, AObj.ToAsn1Object(), ABuf);
+end;
+
 class function TAsn1Dumper.DumpAsString(const AObj: IAsn1Encodable): String;
 begin
   Result := DumpAsString(AObj, False);
@@ -377,7 +394,7 @@ var
 begin
   LBuf := TStringBuilder.Create();
   try
-    AsString('', AVerbose, AObj.ToAsn1Object(), LBuf);
+    AppendAsString(LBuf, AObj, AVerbose);
     Result := LBuf.ToString();
   finally
     LBuf.Free;

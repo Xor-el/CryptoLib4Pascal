@@ -188,6 +188,8 @@ type
     const
       DefaultIterations = 1024;
       DefaultSaltSize = 20;
+      /// <summary>Floor on a loaded file's MAC salt length when it is carried onto a re-save.</summary>
+      MinMacSaltSize = 8;
     /// <summary>Calculate PBE MAC for PKCS#12 (exposed for Pkcs12Utilities).</summary>
     class function CalculatePbeMac(const AMacAlgID: IAlgorithmIdentifier;
       const ASalt: TCryptoLibByteArray; AIterations: Int32;
@@ -500,9 +502,11 @@ constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlg
   AUseDerEncoding: Boolean; AReverseCertificates: Boolean; AOverwriteFriendlyName: Boolean;
   AEnableOracleTrustedKeyUsage: Boolean);
 begin
+  // key and certificate encryption use the configured write-side count; the MAC uses twice that
   Create(ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm,
     AUseDerEncoding, AReverseCertificates, AOverwriteFriendlyName, AEnableOracleTrustedKeyUsage,
-    DefaultIterations, DefaultIterations, DefaultIterations, DefaultSaltSize, DefaultSaltSize, DefaultSaltSize);
+    TCryptoLibConfig.Pkcs12.StoreIterationCount, TCryptoLibConfig.Pkcs12.StoreIterationCount,
+    2 * TCryptoLibConfig.Pkcs12.StoreIterationCount, DefaultSaltSize, DefaultSaltSize, DefaultSaltSize);
 end;
 
 constructor TPkcs12Store.Create(const ACertAlgorithm, ACertPrfAlgorithm, AKeyAlgorithm, AKeyPrfAlgorithm, AMacDigestAlgorithm: IDerObjectIdentifier;
@@ -844,6 +848,20 @@ begin
       else
         raise EIOCryptoLibException.CreateRes(@SMacInvalid);
     end;
+
+    // the MAC verified, so latch its configuration and reproduce it on a re-save
+    FMacDigestAlgorithm := LMacData.Mac.DigestAlgorithm.Algorithm;
+    FMacIterations := TPkcs12Utilities.ValidateIterations(LMacData.Iterations);
+    FMacSaltSize := System.Length(LMacData.MacSalt.GetOctets());
+    if FMacSaltSize < MinMacSaltSize then
+      FMacSaltSize := MinMacSaltSize;
+  end
+  else
+  begin
+    // a file without a MAC must not inherit MAC settings carried from an earlier load
+    FMacDigestAlgorithm := TOiwObjectIdentifiers.IdSha1;
+    FMacIterations := 2 * TCryptoLibConfig.Pkcs12.StoreIterationCount;
+    FMacSaltSize := DefaultSaltSize;
   end;
   ClearKeys;
   FLocalIDs.Clear;

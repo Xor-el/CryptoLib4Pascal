@@ -31,6 +31,7 @@ uses
   TestFramework,
 {$ENDIF FPC}
   ClpAsn1Core,
+  ClpAsn1Objects,
   ClpIAsn1Objects,
   ClpIAsn1Core,
   ClpCryptoLibTypes,
@@ -75,6 +76,10 @@ type
     /// Makes sure multiple identically sized values are parsed correctly.
     /// </summary>
     procedure TestReadingMultipleTripleByteItems;
+    /// <summary>
+    /// An ENUMERATED is encoded like an INTEGER, so a negative value is valid and must round-trip.
+    /// </summary>
+    procedure TestNegativeValueRoundTrips;
 
   end;
 
@@ -180,6 +185,23 @@ begin
   CheckTrue(LObjectId <> nil, 'OBJECT IDENTIFIER expected');
 
   CheckEquals('1.3.6.1', LObjectId.Id, 'Unexpected OBJECT IDENTIFIER value');
+end;
+
+procedure TEnumeratedTest.TestNegativeValueRoundTrips;
+var
+  LEnum, LDecoded: IDerEnumerated;
+  LEncoded: TCryptoLibByteArray;
+  LValue: Int32;
+begin
+  LEnum := TDerEnumerated.Create(Int32(-1)) as IDerEnumerated;
+  CheckEquals(-1, LEnum.IntValueExact, 'a negative ENUMERATED keeps its value');
+
+  LEncoded := LEnum.GetEncoded();
+  LDecoded := TDerEnumerated.GetInstance(LEncoded);
+  CheckEquals(-1, LDecoded.IntValueExact, 'a negative ENUMERATED round-trips through DER');
+
+  CheckTrue(LDecoded.TryGetIntValueExact(LValue), 'TryGetIntValueExact succeeds for an in-range value');
+  CheckEquals(-1, LValue, 'TryGetIntValueExact yields the value');
 end;
 
 initialization
