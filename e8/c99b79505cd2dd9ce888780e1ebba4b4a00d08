@@ -1,0 +1,24 @@
+CryptoLib.Tests/Delphi.Tests/Mobile/MobileTestHostFormUnit.pas
+  s_f2c9bd75607afc::t_0179618dec6f41 25
+  s_f2c9bd75607afc::t_237f5df58583b9 44-48
+  s_f2c9bd75607afc::t_ed44a70622dba7 14-15,18
+  s_f2c9bd75607afc::t_a4869af257cf11 8
+CryptoLib.Tests/Delphi.Tests/Mobile/MobileTestHostFormUnit.fmx
+  s_f2c9bd75607afc::t_5c2e39eeb1025d 12,14-17,20-129
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e8c99b79505cd2dd9ce888780e1ebba4b4a00d08",
+  "prompts": {},
+  "sessions": {
+    "s_f2c9bd75607afc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93bd4649-2a9e-4694-931c-623400c4649b",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
