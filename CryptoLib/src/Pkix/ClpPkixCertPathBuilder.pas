@@ -28,6 +28,7 @@ uses
   ClpPkixCertPath,
   ClpPkixCertPathValidator,
   ClpPkixCertPathValidatorResult,
+  ClpPkixCertPathValidatorReason,
   ClpPkixCertPathValidatorUtilities,
   ClpCryptoLibConfig,
   ClpCryptoLibTypes,
@@ -51,7 +52,7 @@ type
   /// anchor, following the path building and validation algorithm of RFC 5280 6.1.
   /// </summary>
   /// <remarks>
-  /// One instance carries the last build failure across its recursion, so it is neither reentrant
+  /// One instance carries the build's failure state across its recursion, so it is neither reentrant
   /// nor thread safe: callers sharing an instance must serialize access themselves.
   /// </remarks>
   TPkixCertPathBuilder = class(TInterfacedObject, IPkixCertPathBuilder)
@@ -59,8 +60,10 @@ type
   strict private
   var
     FIsForCrlCheck: Boolean;
-    /// <summary>The failure of the most recently tried chain, carried across the recursion.</summary>
-    FCertPathException: String;
+    /// <summary>The most specific failure of the chains tried so far, carried across the recursion.</summary>
+    FHasFailure: Boolean;
+    FFailureMessage: String;
+    FFailureReason: TPkixCertPathValidatorReason;
     /// <summary>Per-build node-visit budget (from config) and running count, bounding the DFS.</summary>
     FMaxNodes: Int32;
     FNodesVisited: Int32;
@@ -73,6 +76,11 @@ type
       const ACert: IX509Certificate); static;
     class function ToCertArray(const ACerts: TList<IX509Certificate>)
       : TCryptoLibGenericArray<IX509Certificate>; static;
+    class function FailureRank(AReason: TPkixCertPathValidatorReason): Int32; static;
+    class function ReasonOf(const AException: Exception): TPkixCertPathValidatorReason; static;
+
+    /// <summary>Keeps the failure unless one of higher rank is already remembered.</summary>
+    procedure RememberFailure(const AMessage: String; AReason: TPkixCertPathValidatorReason);
 
     /// <summary>Try to complete ATbvPath through ATbvCert; nil when no chain could be built.</summary>
     function BuildPath(const ATbvCert: IX509Certificate; const AParams: IPkixBuilderParameters;
@@ -164,6 +172,53 @@ begin
   end;
 end;
 
+class function TPkixCertPathBuilder.FailureRank(AReason: TPkixCertPathValidatorReason): Int32;
+begin
+  // ranked by how useful the cause is to a caller deciding what to fix or retry
+  case AReason of
+    TPkixCertPathValidatorReason.Expired, TPkixCertPathValidatorReason.NotYetValid:
+      Result := 6;
+    TPkixCertPathValidatorReason.Revoked,
+      TPkixCertPathValidatorReason.UndeterminedRevocationStatus:
+      Result := 5;
+    TPkixCertPathValidatorReason.InvalidSignature:
+      Result := 4;
+    TPkixCertPathValidatorReason.AlgorithmConstrained:
+      Result := 3;
+    TPkixCertPathValidatorReason.InvalidKeyUsage, TPkixCertPathValidatorReason.NotCACertificate,
+      TPkixCertPathValidatorReason.PathTooLong, TPkixCertPathValidatorReason.InvalidPolicy,
+      TPkixCertPathValidatorReason.InvalidName:
+      Result := 2;
+    TPkixCertPathValidatorReason.NameChaining:
+      Result := 1;
+    TPkixCertPathValidatorReason.UnrecognizedCriticalExtension:
+      Result := 0;
+  else
+    Result := -1;
+  end;
+end;
+
+class function TPkixCertPathBuilder.ReasonOf(const AException: Exception)
+  : TPkixCertPathValidatorReason;
+begin
+  if AException is EPkixCertPathValidatorCryptoLibException then
+    Result := EPkixCertPathValidatorCryptoLibException(AException).Reason
+  else if AException is EPkixCertPathBuilderCryptoLibException then
+    Result := EPkixCertPathBuilderCryptoLibException(AException).Reason
+  else
+    Result := TPkixCertPathValidatorReason.Unspecified;
+end;
+
+procedure TPkixCertPathBuilder.RememberFailure(const AMessage: String;
+  AReason: TPkixCertPathValidatorReason);
+begin
+  if FHasFailure and (FailureRank(AReason) < FailureRank(FFailureReason)) then
+    Exit;
+  FHasFailure := True;
+  FFailureMessage := AMessage;
+  FFailureReason := AReason;
+end;
+
 function TPkixCertPathBuilder.BuildPath(const ATbvCert: IX509Certificate;
   const AParams: IPkixBuilderParameters; const ATbvPath: TList<IX509Certificate>)
   : IPkixCertPathBuilderResult;
@@ -173,6 +228,7 @@ var
   LValidatorResult: IPkixCertPathValidatorResult;
   LIssuers: TCryptoLibGenericArray<IX509Certificate>;
   LIdx: Int32;
+  LIsAnchored: Boolean;
 begin
   Result := nil;
 
@@ -200,7 +256,19 @@ begin
 
   try
     try
-      if TPkixCertPathValidatorUtilities.IsIssuerTrustAnchor(ATbvCert, AParams.GetTrustAnchors()) then
+      LIsAnchored := False;
+      try
+        LIsAnchored := TPkixCertPathValidatorUtilities.FindTrustAnchor(ATbvCert,
+          AParams.GetTrustAnchors()) <> nil;
+      except
+        on E: EPkixCertPathValidatorCryptoLibException do
+          // a named anchor whose key does not verify the certificate; pooled issuers may still work
+          RememberFailure(E.Message, E.Reason);
+        on Exception do
+          ;
+      end;
+
+      if LIsAnchored then
       begin
         try
           LCertPath := TPkixCertPath.Create(ToCertArray(ATbvPath)) as IPkixCertPath;
@@ -215,8 +283,8 @@ begin
           LValidatorResult := LValidator.Validate(LCertPath, AParams);
         except
           on E: Exception do
-            raise EPkixCertPathBuilderCryptoLibException.CreateResFmt(@SCertPathValidationFailed,
-              [E.Message]);
+            raise EPkixCertPathBuilderCryptoLibException.CreateResFmtReason(ReasonOf(E),
+              @SCertPathValidationFailed, [E.Message]);
         end;
 
         // the path is kept: this chain is the answer
@@ -241,7 +309,8 @@ begin
       end;
 
       if System.Length(LIssuers) < 1 then
-        raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SNoIssuerCertFound);
+        raise EPkixCertPathBuilderCryptoLibException.CreateResReason(
+          TPkixCertPathValidatorReason.NoTrustAnchor, @SNoIssuerCertFound);
 
       for LIdx := 0 to System.High(LIssuers) do
       begin
@@ -256,7 +325,7 @@ begin
       on E: Exception do
       begin
         // remembered for the caller; other candidate chains may still succeed
-        FCertPathException := E.Message;
+        RememberFailure(E.Message, ReasonOf(E));
         Result := nil;
       end;
     end;
@@ -274,7 +343,9 @@ var
   LIdx: Int32;
 begin
   Result := nil;
-  FCertPathException := '';
+  FHasFailure := False;
+  FFailureMessage := '';
+  FFailureReason := TPkixCertPathValidatorReason.Unspecified;
   FMaxNodes := TCryptoLibConfig.X509.MaxCertPathBuildNodes;
   FNodesVisited := 0;
 
@@ -293,7 +364,8 @@ begin
       end;
     except
       on E: ENodeBudgetExceededCryptoLibException do
-        raise EPkixCertPathBuilderCryptoLibException.Create(E.Message);
+        raise EPkixCertPathBuilderCryptoLibException.CreateReason(
+          TPkixCertPathValidatorReason.LimitExceeded, E.Message);
     end;
   finally
     LPath.Free;
@@ -302,10 +374,11 @@ begin
   if Result <> nil then
     Exit;
 
-  if FCertPathException <> '' then
-    raise EPkixCertPathBuilderCryptoLibException.Create(FCertPathException);
+  if FHasFailure then
+    raise EPkixCertPathBuilderCryptoLibException.CreateReason(FFailureReason, FFailureMessage);
 
-  raise EPkixCertPathBuilderCryptoLibException.CreateRes(@SCertPathNotFound);
+  raise EPkixCertPathBuilderCryptoLibException.CreateResReason(
+    TPkixCertPathValidatorReason.NoTrustAnchor, @SCertPathNotFound);
 end;
 
 end.

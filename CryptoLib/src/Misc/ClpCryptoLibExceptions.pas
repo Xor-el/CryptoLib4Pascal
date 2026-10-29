@@ -60,8 +60,29 @@ type
   ECrlCryptoLibException = class(ECryptoLibException);
   EPkcsCryptoLibException = class(ECryptoLibException);
   EPkcsIOCryptoLibException = class(EIOCryptoLibException);
-  EPkixCertPathBuilderCryptoLibException = class(ECryptoLibException);
   EOcspCryptoLibException = class(ECryptoLibException);
+
+  /// <summary>
+  /// Raised when no certification path can be built. <see cref="Reason" /> gives the most specific
+  /// cause among the candidate paths tried, Unspecified when none was set.
+  /// </summary>
+  EPkixCertPathBuilderCryptoLibException = class(ECryptoLibException)
+
+  strict private
+  var
+    FReason: TPkixCertPathValidatorReason;
+
+  public
+    /// <summary>As Create, but records a reason.</summary>
+    constructor CreateReason(AReason: TPkixCertPathValidatorReason; const AMsg: String);
+    /// <summary>As CreateRes, but records a reason.</summary>
+    constructor CreateResReason(AReason: TPkixCertPathValidatorReason; AResStringRec: PResStringRec);
+    /// <summary>As CreateResFmt, but records a reason.</summary>
+    constructor CreateResFmtReason(AReason: TPkixCertPathValidatorReason;
+      AResStringRec: PResStringRec; const AArgs: array of const);
+
+    property Reason: TPkixCertPathValidatorReason read FReason;
+  end;
 
   /// <summary>
   /// Raised when certification path validation fails.
@@ -134,6 +155,30 @@ type
   end;
 
 implementation
+
+{ EPkixCertPathBuilderCryptoLibException }
+
+constructor EPkixCertPathBuilderCryptoLibException.CreateReason(
+  AReason: TPkixCertPathValidatorReason; const AMsg: String);
+begin
+  inherited Create(AMsg);
+  FReason := AReason;
+end;
+
+constructor EPkixCertPathBuilderCryptoLibException.CreateResReason(
+  AReason: TPkixCertPathValidatorReason; AResStringRec: PResStringRec);
+begin
+  inherited CreateRes(AResStringRec);
+  FReason := AReason;
+end;
+
+constructor EPkixCertPathBuilderCryptoLibException.CreateResFmtReason(
+  AReason: TPkixCertPathValidatorReason; AResStringRec: PResStringRec;
+  const AArgs: array of const);
+begin
+  inherited CreateResFmt(AResStringRec, AArgs);
+  FReason := AReason;
+end;
 
 { EPkixCertPathValidatorCryptoLibException }
 

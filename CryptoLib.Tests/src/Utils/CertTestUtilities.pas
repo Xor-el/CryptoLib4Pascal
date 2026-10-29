@@ -42,7 +42,9 @@ uses
   ClpAsn1SignatureFactory,
   ClpISignatureFactory,
   ClpIX509Certificate,
+  ClpIAsn1Core,
   ClpIAsn1Objects,
+  ClpAsn1Objects,
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpX509ExtensionUtilities,
@@ -68,7 +70,7 @@ type
     class function CreateCert(const ASignerName: IX509Name;
       const ASignerKey: IAsymmetricKeyParameter; const ADn: IX509Name;
       const ASigName: String; const AExtensions: IX509Extensions;
-      const APubKey: IAsymmetricKeyParameter): IX509Certificate; static;
+      const APubKey: IAsymmetricKeyParameter; AExpired: Boolean): IX509Certificate; static;
 
   public
     class constructor Create;
@@ -90,6 +92,11 @@ type
     class function GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
       const ASubject: IX509Name; const ACaKey: IAsymmetricKeyParameter;
       const ACaCert: IX509Certificate): IX509Certificate; overload; static;
+    /// <summary>As above; ACriticalOid, when set, adds a critical extension nothing processes.</summary>
+    class function GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
+      const ASubject: IX509Name; const ACaKey: IAsymmetricKeyParameter;
+      const ACaCert: IX509Certificate; const ACriticalOid: String; AExpired: Boolean)
+      : IX509Certificate; overload; static;
     /// <summary>Generate an end-entity certificate with a single extended key usage.</summary>
     class function GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
       const ASubject: IX509Name; const AKeyPurpose: IDerObjectIdentifier;
@@ -167,7 +174,7 @@ end;
 class function TCertTestUtilities.CreateCert(const ASignerName: IX509Name;
   const ASignerKey: IAsymmetricKeyParameter; const ADn: IX509Name;
   const ASigName: String; const AExtensions: IX509Extensions;
-  const APubKey: IAsymmetricKeyParameter): IX509Certificate;
+  const APubKey: IAsymmetricKeyParameter; AExpired: Boolean): IX509Certificate;
 var
   LGen: IX509V3CertificateGenerator;
   LUtcNow: TDateTime;
@@ -178,8 +185,16 @@ begin
   LGen := TX509V3CertificateGenerator.Create;
   LGen.SetSerialNumber(TBigInteger.ValueOf(NextSerialNumber));
   LGen.SetIssuerDN(ASignerName);
-  LGen.SetNotBeforeUtc(IncSecond(LUtcNow, -5));
-  LGen.SetNotAfterUtc(IncMinute(LUtcNow, 30));
+  if AExpired then
+  begin
+    LGen.SetNotBeforeUtc(IncMinute(LUtcNow, -60));
+    LGen.SetNotAfterUtc(IncMinute(LUtcNow, -10));
+  end
+  else
+  begin
+    LGen.SetNotBeforeUtc(IncSecond(LUtcNow, -5));
+    LGen.SetNotAfterUtc(IncMinute(LUtcNow, 30));
+  end;
   LGen.SetSubjectDN(ADn);
   LGen.SetPublicKey(APubKey);
   LGen.AddExtensions(AExtensions);
@@ -212,6 +227,13 @@ end;
 class function TCertTestUtilities.GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
   const ASubject: IX509Name; const ACaKey: IAsymmetricKeyParameter;
   const ACaCert: IX509Certificate): IX509Certificate;
+begin
+  Result := GenerateEndEntityCert(AEntityKey, ASubject, ACaKey, ACaCert, '', False);
+end;
+
+class function TCertTestUtilities.GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
+  const ASubject: IX509Name; const ACaKey: IAsymmetricKeyParameter;
+  const ACaCert: IX509Certificate; const ACriticalOid: String; AExpired: Boolean): IX509Certificate;
 var
   LCaCertLw: IX509CertificateStructure;
   LExtGen: IX509ExtensionsGenerator;
@@ -229,7 +251,11 @@ begin
   LExtGen.AddExtension(TX509Extensions.BasicConstraints, True, TBasicConstraints.Create(0) as IBasicConstraints);
   LExtGen.AddExtension(TX509Extensions.KeyUsage, True,
     TKeyUsage.Create(TKeyUsage.DigitalSignature or TKeyUsage.KeyCertSign or TKeyUsage.CrlSign) as IKeyUsage);
-  Result := CreateCert(LCaCertLw.Subject, ACaKey, ASubject, 'SHA256withRSA', LExtGen.Generate, AEntityKey);
+  if ACriticalOid <> '' then
+    LExtGen.AddExtension(TDerObjectIdentifier.Create(ACriticalOid) as IDerObjectIdentifier, True,
+      TDerNull.Instance as IAsn1Encodable);
+  Result := CreateCert(LCaCertLw.Subject, ACaKey, ASubject, 'SHA256withRSA', LExtGen.Generate, AEntityKey,
+    AExpired);
 end;
 
 class function TCertTestUtilities.GenerateEndEntityCert(const AEntityKey: IAsymmetricKeyParameter;
@@ -279,7 +305,8 @@ begin
       TExtendedKeyUsage.Create(LUsages) as IExtendedKeyUsage);
   end;
 
-  Result := CreateCert(LCaCertLw.Subject, ACaKey, ASubject, 'SHA256withRSA', LExtGen.Generate, AEntityKey);
+  Result := CreateCert(LCaCertLw.Subject, ACaKey, ASubject, 'SHA256withRSA', LExtGen.Generate, AEntityKey,
+    False);
 end;
 
 class procedure TCertTestUtilities.AssertCertParses(const ACertId: string);
