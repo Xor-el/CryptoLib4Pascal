@@ -341,7 +341,7 @@ More examples (RSA, EC, Ed25519, ML-KEM, ML-DSA, SLH-DSA, certificates, password
 | macOS | ❓ | ✅ |
 | Oracle Solaris | ➖ | ✅ |
 | BSD (FreeBSD) | ➖ | ✅ |
-| Android | ✅ | ❓ |
+| Android | ✅ | ✅ |
 | iOS 2.0+ | ❓ | ❓ |
 
 > ✅ Tested and passing · ❓ Untested · ➖ Not applicable
