@@ -46,6 +46,7 @@ uses
   ClpIX509Asn1Objects,
   ClpX509Asn1Objects,
   ClpX509ObjectIdentifiers,
+  ClpPkixCertPathValidatorReason,
   ClpBigInteger,
   ClpIAsymmetricCipherKeyPair,
   ClpIAsymmetricKeyParameter,
@@ -63,9 +64,16 @@ type
   /// </summary>
   TCertPathBuilderTest = class(TCryptoLibAlgorithmTestCase)
   strict private
+  var
+    FBuilder: IPkixCertPathBuilder;
+
     function AnchorsOf(const ACert: IX509Certificate): TCryptoLibGenericArray<ITrustAnchor>;
+    /// <summary>Builds with FBuilder towards AAnchor and returns the reason of the failure.</summary>
+    function BuildFailureReason(const AAnchor: IX509Certificate; const ASubject: IX509Name;
+      const AStoreCerts: TCryptoLibGenericArray<IX509Certificate>): TPkixCertPathValidatorReason;
 
   protected
+    procedure SetUp; override;
     procedure TearDown; override;
 
   published
@@ -75,6 +83,14 @@ type
     procedure TestBuildWithUnsignedTrustAnchor;
     procedure TestBuilderInstanceReuse;
     procedure TestNodeBudgetGuard;
+    procedure TestBuilderExceptionReasonDefaultsToUnspecified;
+    procedure TestBadSignatureUnderPooledIntermediate;
+    procedure TestBadSignatureDirectlyUnderAnchor;
+    procedure TestUnrecognizedCriticalExtensionOnLeaf;
+    procedure TestUnrecognizedCriticalExtensionOnIntermediate;
+    procedure TestExpiredOutranksCriticalExtension;
+    procedure TestInvalidSignatureOutranksCriticalExtension;
+    procedure TestCriticalExtensionOutranksNoIssuer;
   end;
 
 implementation
@@ -85,6 +101,42 @@ function TCertPathBuilderTest.AnchorsOf(const ACert: IX509Certificate)
   : TCryptoLibGenericArray<ITrustAnchor>;
 begin
   Result := TCryptoLibGenericArray<ITrustAnchor>.Create(TTrustAnchor.Create(ACert, nil) as ITrustAnchor);
+end;
+
+procedure TCertPathBuilderTest.SetUp;
+begin
+  inherited SetUp;
+  FBuilder := TPkixCertPathBuilder.Create() as IPkixCertPathBuilder;
+end;
+
+function TCertPathBuilderTest.BuildFailureReason(const AAnchor: IX509Certificate; const ASubject: IX509Name;
+  const AStoreCerts: TCryptoLibGenericArray<IX509Certificate>): TPkixCertPathValidatorReason;
+var
+  LSelector: IX509CertStoreSelector;
+  LTarget: ISelector<IX509Certificate>;
+  LStore: IStore<IX509Certificate>;
+  LParams: IPkixBuilderParameters;
+begin
+  LSelector := TX509CertStoreSelector.Create();
+  LSelector.Subject := ASubject;
+  LTarget := LSelector;
+  LStore := TCollectionStore<IX509Certificate>.Create(AStoreCerts);
+  LParams := TPkixBuilderParameters.Create(AnchorsOf(AAnchor), LTarget) as IPkixBuilderParameters;
+  LParams.SetTargetConstraintsCert(LTarget);
+  LParams.AddStoreCert(LStore);
+  LParams.IsRevocationEnabled := False;
+
+  Result := TPkixCertPathValidatorReason.Unspecified;
+  try
+    FBuilder.Build(LParams);
+  except
+    on E: EPkixCertPathBuilderCryptoLibException do
+    begin
+      Result := E.Reason;
+      Exit;
+    end;
+  end;
+  Fail('the build was expected to fail');
 end;
 
 procedure TCertPathBuilderTest.TearDown;
@@ -262,14 +314,12 @@ end;
 procedure TCertPathBuilderTest.TestBuilderInstanceReuse;
 var
   LRootKp, LEeKp, LOtherKp: IAsymmetricCipherKeyPair;
-  LRoot, LEe, LOther: IX509Certificate;
+  LRoot, LEe, LOther, LBadSignature: IX509Certificate;
   LSelector: IX509CertStoreSelector;
   LTarget: ISelector<IX509Certificate>;
   LStore: IStore<IX509Certificate>;
   LParams: IPkixBuilderParameters;
-  LBuilder: IPkixCertPathBuilder;
   LResult: IPkixCertPathBuilderResult;
-  LRaised: Boolean;
 begin
   LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
   LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
@@ -278,29 +328,22 @@ begin
     LRootKp.Private as IAsymmetricKeyParameter, LRoot);
   LOtherKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
   LOther := TCertTestUtilities.GenerateRootCert(LOtherKp, TX509Name.Create('CN=Unrelated CA') as IX509Name);
+  LBadSignature := TCertTestUtilities.GenerateEndEntityCert(LEeKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Bad Signature') as IX509Name, LOtherKp.Private as IAsymmetricKeyParameter, LRoot);
 
-  // one builder instance is reused across two builds
-  LBuilder := TPkixCertPathBuilder.Create() as IPkixCertPathBuilder;
+  // one builder instance is reused across three builds
 
-  // 1) the end-entity does not chain to the (unrelated) trust anchor: no path
-  LSelector := TX509CertStoreSelector.Create();
-  LSelector.Subject := LEe.SubjectDN;
-  LTarget := LSelector;
-  LStore := TCollectionStore<IX509Certificate>.Create(
-    TCryptoLibGenericArray<IX509Certificate>.Create(LEe));
-  LParams := TPkixBuilderParameters.Create(AnchorsOf(LOther), LTarget) as IPkixBuilderParameters;
-  LParams.SetTargetConstraintsCert(LTarget);
-  LParams.AddStoreCert(LStore);
-  LParams.IsRevocationEnabled := False;
+  // 0) a leaf the anchor it names did not sign leaves an invalid-signature failure behind
+  CheckEquals(Ord(TPkixCertPathValidatorReason.InvalidSignature),
+    Ord(BuildFailureReason(LRoot, LBadSignature.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LBadSignature))),
+    'the first build reports the invalid signature');
 
-  LRaised := False;
-  try
-    LBuilder.Build(LParams);
-  except
-    on E: EPkixCertPathBuilderCryptoLibException do
-      LRaised := True;
-  end;
-  CheckTrue(LRaised, 'the first build finds no chain to the unrelated trust anchor');
+  // 1) the end-entity does not chain to the (unrelated) trust anchor: no path, and the earlier
+  // failure must not be reported
+  CheckEquals(Ord(TPkixCertPathValidatorReason.NoTrustAnchor),
+    Ord(BuildFailureReason(LOther, LEe.SubjectDN, TCryptoLibGenericArray<IX509Certificate>.Create(LEe))),
+    'the second build finds no issuer for the end-entity');
 
   // 2) the SAME builder instance must still find a valid chain to the correct anchor
   LSelector := TX509CertStoreSelector.Create();
@@ -313,7 +356,7 @@ begin
   LParams.AddStoreCert(LStore);
   LParams.IsRevocationEnabled := False;
 
-  LResult := LBuilder.Build(LParams);
+  LResult := FBuilder.Build(LParams);
   CheckNotNull(LResult, 'reusing the builder after a failed build still finds a valid chain');
   CheckEquals(1, System.Length(LResult.CertPath.Certificates),
     'the reused builder returns the single end-entity certificate below the trust anchor');
@@ -330,6 +373,7 @@ var
   LBuilder: IPkixCertPathBuilder;
   LRaised: Boolean;
   LMessage: String;
+  LReason: TPkixCertPathValidatorReason;
 begin
   LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
   LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
@@ -356,6 +400,7 @@ begin
 
   LRaised := False;
   LMessage := '';
+  LReason := TPkixCertPathValidatorReason.Unspecified;
   try
     LBuilder := TPkixCertPathBuilder.Create() as IPkixCertPathBuilder;
     LBuilder.Build(LParams);
@@ -364,12 +409,190 @@ begin
     begin
       LRaised := True;
       LMessage := E.Message;
+      LReason := E.Reason;
     end;
   end;
 
   CheckTrue(LRaised, 'exceeding the node budget aborts the build');
   CheckTrue(Pos('node limit', LMessage) > 0,
     Format('the failure names the node limit, got "%s"', [LMessage]));
+  CheckEquals(Ord(TPkixCertPathValidatorReason.LimitExceeded), Ord(LReason),
+    'exceeding the node budget reports the limit');
+end;
+
+procedure TCertPathBuilderTest.TestBuilderExceptionReasonDefaultsToUnspecified;
+var
+  LPlain, LWithReason: EPkixCertPathBuilderCryptoLibException;
+begin
+  LPlain := EPkixCertPathBuilderCryptoLibException.Create('plain');
+  try
+    CheckEquals(Ord(TPkixCertPathValidatorReason.Unspecified), Ord(LPlain.Reason),
+      'an exception built without a reason reports Unspecified');
+  finally
+    LPlain.Free;
+  end;
+
+  LWithReason := EPkixCertPathBuilderCryptoLibException.CreateReason(
+    TPkixCertPathValidatorReason.Revoked, 'revoked');
+  try
+    CheckEquals(Ord(TPkixCertPathValidatorReason.Revoked), Ord(LWithReason.Reason),
+      'the reason given at construction is kept');
+    CheckEquals('revoked', LWithReason.Message, 'the message is kept');
+  finally
+    LWithReason.Free;
+  end;
+end;
+
+procedure TCertPathBuilderTest.TestBadSignatureUnderPooledIntermediate;
+var
+  LRootKp, LInterKp, LLeafKp, LOtherKp: IAsymmetricCipherKeyPair;
+  LRoot, LInter, LLeaf: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LInterKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LInter := TCertTestUtilities.GenerateEndEntityCert(LInterKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Intermediate') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LOtherKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  // the leaf names the intermediate as its issuer but is signed with another key
+  LLeaf := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LOtherKp.Private as IAsymmetricKeyParameter, LInter);
+
+  CheckEquals(Ord(TPkixCertPathValidatorReason.InvalidSignature),
+    Ord(BuildFailureReason(LRoot, LLeaf.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LInter, LLeaf))),
+    'a leaf not signed by its pooled issuer reports an invalid signature');
+end;
+
+procedure TCertPathBuilderTest.TestBadSignatureDirectlyUnderAnchor;
+var
+  LRootKp, LLeafKp, LOtherKp: IAsymmetricCipherKeyPair;
+  LRoot, LLeaf: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LOtherKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  // the leaf names the trust anchor as its issuer but is signed with another key
+  LLeaf := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LOtherKp.Private as IAsymmetricKeyParameter, LRoot);
+
+  CheckEquals(Ord(TPkixCertPathValidatorReason.InvalidSignature),
+    Ord(BuildFailureReason(LRoot, LLeaf.SubjectDN, TCryptoLibGenericArray<IX509Certificate>.Create(LLeaf))),
+    'a leaf not signed by the anchor it names reports an invalid signature');
+end;
+
+procedure TCertPathBuilderTest.TestUnrecognizedCriticalExtensionOnLeaf;
+var
+  LRootKp, LLeafKp: IAsymmetricCipherKeyPair;
+  LRoot, LLeaf: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeaf := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot,
+    '2.999.1', False);
+
+  CheckEquals(Ord(TPkixCertPathValidatorReason.UnrecognizedCriticalExtension),
+    Ord(BuildFailureReason(LRoot, LLeaf.SubjectDN, TCryptoLibGenericArray<IX509Certificate>.Create(LLeaf))),
+    'an unprocessed critical extension on the leaf is reported');
+end;
+
+procedure TCertPathBuilderTest.TestUnrecognizedCriticalExtensionOnIntermediate;
+var
+  LRootKp, LInterKp, LLeafKp: IAsymmetricCipherKeyPair;
+  LRoot, LInter, LLeaf: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LInterKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LInter := TCertTestUtilities.GenerateEndEntityCert(LInterKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Intermediate') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot,
+    '2.999.1', False);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LLeaf := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LInterKp.Private as IAsymmetricKeyParameter, LInter);
+
+  CheckEquals(Ord(TPkixCertPathValidatorReason.UnrecognizedCriticalExtension),
+    Ord(BuildFailureReason(LRoot, LLeaf.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LInter, LLeaf))),
+    'an unprocessed critical extension on an intermediate is reported');
+end;
+
+procedure TCertPathBuilderTest.TestExpiredOutranksCriticalExtension;
+var
+  LRootKp, LLeafKp: IAsymmetricCipherKeyPair;
+  LRoot, LExpired, LCritical: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LExpired := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot, '', True);
+  LCritical := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot,
+    '2.999.1', False);
+
+  // the winner must not depend on which candidate is tried last
+  CheckEquals(Ord(TPkixCertPathValidatorReason.Expired),
+    Ord(BuildFailureReason(LRoot, LExpired.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LExpired, LCritical))),
+    'expired outranks an unprocessed critical extension when tried first');
+  CheckEquals(Ord(TPkixCertPathValidatorReason.Expired),
+    Ord(BuildFailureReason(LRoot, LExpired.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LCritical, LExpired))),
+    'expired outranks an unprocessed critical extension when tried last');
+end;
+
+procedure TCertPathBuilderTest.TestInvalidSignatureOutranksCriticalExtension;
+var
+  LRootKp, LLeafKp, LOtherKp: IAsymmetricCipherKeyPair;
+  LRoot, LBadSignature, LCritical: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LOtherKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LBadSignature := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LOtherKp.Private as IAsymmetricKeyParameter, LRoot);
+  LCritical := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot,
+    '2.999.1', False);
+
+  CheckEquals(Ord(TPkixCertPathValidatorReason.InvalidSignature),
+    Ord(BuildFailureReason(LRoot, LBadSignature.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LBadSignature, LCritical))),
+    'an invalid signature outranks an unprocessed critical extension when tried first');
+  CheckEquals(Ord(TPkixCertPathValidatorReason.InvalidSignature),
+    Ord(BuildFailureReason(LRoot, LBadSignature.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LCritical, LBadSignature))),
+    'an invalid signature outranks an unprocessed critical extension when tried last');
+end;
+
+procedure TCertPathBuilderTest.TestCriticalExtensionOutranksNoIssuer;
+var
+  LRootKp, LLeafKp, LAbsentKp: IAsymmetricCipherKeyPair;
+  LRoot, LAbsent, LCritical, LOrphan: IX509Certificate;
+begin
+  LRootKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LRoot := TCertTestUtilities.GenerateRootCert(LRootKp);
+  LLeafKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LAbsentKp := TCertTestUtilities.GenerateRsaKeyPair(1024);
+  LAbsent := TCertTestUtilities.GenerateRootCert(LAbsentKp, TX509Name.Create('CN=Absent CA') as IX509Name);
+  LCritical := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LRootKp.Private as IAsymmetricKeyParameter, LRoot,
+    '2.999.1', False);
+  // same subject, but its issuer is neither a trust anchor nor in the store
+  LOrphan := TCertTestUtilities.GenerateEndEntityCert(LLeafKp.Public as IAsymmetricKeyParameter,
+    TX509Name.Create('CN=Leaf') as IX509Name, LAbsentKp.Private as IAsymmetricKeyParameter, LAbsent);
+
+  // the orphan is tried last, so only the ranking keeps the critical-extension failure
+  CheckEquals(Ord(TPkixCertPathValidatorReason.UnrecognizedCriticalExtension),
+    Ord(BuildFailureReason(LRoot, LCritical.SubjectDN,
+    TCryptoLibGenericArray<IX509Certificate>.Create(LCritical, LOrphan))),
+    'an unprocessed critical extension outranks a candidate with no issuer');
 end;
 
 initialization
