@@ -1,0 +1,71 @@
+CryptoLib/src/Misc/ClpCryptoLibExceptions.pas
+  s_f2c9bd75607afc::t_9e6e558b117399 159-182
+  s_f2c9bd75607afc::t_6d004c2fe0d4e9 65-83,85-86
+  s_f2c9bd75607afc::t_4f22549847d376 84
+CryptoLib.Tests/src/Utils/CertTestUtilities.pas
+  s_f2c9bd75607afc::t_0d589b179d133d 254-258
+  s_f2c9bd75607afc::t_c991e47d0dd3f3 230-236
+  s_f2c9bd75607afc::t_0b67c0c1b3fd9d 45,47
+  s_f2c9bd75607afc::t_05a69df2d6f75b 73
+  s_f2c9bd75607afc::t_ca1dabbf0227e0 95,98-99
+  s_f2c9bd75607afc::t_ebdcf9a6d491d0 96-97
+  s_f2c9bd75607afc::t_a14653e6b16029 308-309
+  s_f2c9bd75607afc::t_be06945528c33a 177,188-197
+CryptoLib/src/Pkix/ClpPkixCertPathBuilder.pas
+  s_f2c9bd75607afc::t_338dca2183e83d 195
+  s_f2c9bd75607afc::t_a839ea16346ec0 259-265,269-271
+  s_f2c9bd75607afc::t_f63ccaaa6d256a 380-381
+  s_f2c9bd75607afc::t_deb7208587476e 189-190
+  s_f2c9bd75607afc::t_b3cfb6813af2c0 55
+  s_f2c9bd75607afc::t_ce8d925cdc7883 286-287
+  s_f2c9bd75607afc::t_8d4246af4d0d71 79-83
+  s_f2c9bd75607afc::t_a79f8a3a5e8808 267-268
+  s_f2c9bd75607afc::t_b47787f099d5ea 175-188,191-194,196-214,216-221
+  s_f2c9bd75607afc::t_c0cc96e2ddc76a 215
+  s_f2c9bd75607afc::t_6c33bafdae592e 63-66
+  s_f2c9bd75607afc::t_ca7d73d5125bf6 31
+  s_f2c9bd75607afc::t_38acee977090ce 346-348
+  s_f2c9bd75607afc::t_b152a51e13a0c4 231
+  s_f2c9bd75607afc::t_1dba96921e2473 312-313
+  s_f2c9bd75607afc::t_83a7c3495c00fd 377-378
+  s_f2c9bd75607afc::t_29ccb6ae1342ec 367-368
+  s_f2c9bd75607afc::t_63f5eb8d926d55 328
+  s_f2c9bd75607afc::t_3ea301f75b1fd6 266
+CryptoLib.Tests/src/Pkix/CertPathBuilderTests.pas
+  s_f2c9bd75607afc::t_72da2dbe02d791 454-455,459-460
+  s_f2c9bd75607afc::t_db5abe83c1f63d 67,69,72-73
+  s_f2c9bd75607afc::t_1300141a85391b 494-496
+  s_f2c9bd75607afc::t_d21df5e8a7ce03 403,412,419-420
+  s_f2c9bd75607afc::t_b088fd47b75a93 131
+  s_f2c9bd75607afc::t_2a948466d1bae6 478-479
+  s_f2c9bd75607afc::t_f4a007f0a782b8 423-453,456-458,461-477,480-493,497-510,514,517-531,537-557,563-573,575,578-581
+  s_f2c9bd75607afc::t_3679d517dabb64 106,108-109
+  s_f2c9bd75607afc::t_b5342c3c9ccdd1 376
+  s_f2c9bd75607afc::t_5725a5591df951 558-562
+  s_f2c9bd75607afc::t_6a66ba161c5947 68,71,76
+  s_f2c9bd75607afc::t_cfc0771b1fe09d 86-92
+  s_f2c9bd75607afc::t_6b280b5018d18c 574,576-577,582-595
+  s_f2c9bd75607afc::t_4b1f2e5c250c6b 511-513,515-516
+  s_f2c9bd75607afc::t_67dafbd44e0504 317,331-332,334,336-340,342-346
+  s_f2c9bd75607afc::t_fc7a0461bfc3ae 93
+  s_f2c9bd75607afc::t_86b9d43f106a1d 359
+  s_f2c9bd75607afc::t_b8cd2c752e8c57 49,421-422
+  s_f2c9bd75607afc::t_461fdc9eefa174 532-536
+  s_f2c9bd75607afc::t_ee44364a954b11 107,110-130,132-141
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e86f8a0d913a3aa211cc72cd2cd71fc3b4639b7b",
+  "prompts": {},
+  "sessions": {
+    "s_f2c9bd75607afc": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "93bd4649-2a9e-4694-931c-623400c4649b",
+        "model": "claude-sonnet-5-5"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
