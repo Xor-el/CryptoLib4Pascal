@@ -37,6 +37,7 @@ uses
   ClpIPemObject,
   ClpIOpenSslPemWriter,
   ClpOpenSslPemWriter,
+  ClpCryptoLibExceptions,
   ClpIOpenSslPemReader,
   ClpOpenSslPemReader,
   ClpIOpenSslPasswordFinder,
@@ -87,6 +88,7 @@ type
     procedure TestWriteReadEcKeyGenerated;
     procedure TestWritePemObjectOverride;
     procedure TestEncryptedWriteRead;
+    procedure TestEncryptedWriteNilPasswordRejected;
   end;
 
 implementation
@@ -291,6 +293,31 @@ begin
     LStream.Position := 0;
     LOut := LStream.DataString;
     Check(Pos('FRED', LOut) > 0, 'PEM should contain type FRED');
+  finally
+    LStream.Free;
+  end;
+end;
+
+procedure TOpenSslWriterTest.TestEncryptedWriteNilPasswordRejected;
+var
+  LStream: TStringStream;
+  LWriter: IOpenSslPemWriter;
+  LRandom: ISecureRandom;
+  LRaised: Boolean;
+begin
+  LRandom := TCryptoServicesRegistrar.GetSecureRandom();
+  LStream := TStringStream.Create('', TEncoding.ASCII);
+  try
+    LWriter := TOpenSslPemWriter.Create(LStream);
+    LRaised := False;
+    try
+      LWriter.WriteObject(TValue.From<IAsymmetricKeyParameter>(GetTestRsaKey),
+        'AES-128-CBC', nil, LRandom);
+    except
+      on E: EArgumentNilCryptoLibException do
+        LRaised := True;
+    end;
+    CheckTrue(LRaised, 'an algorithm with a nil password was not rejected');
   finally
     LStream.Free;
   end;

@@ -36,8 +36,10 @@ resourcestring
   SStandardLengthExceeded = 'standard length exceeded';
   SMinMayNotBeGreaterThanMax = 'min may not be greater than max';
   SMustBeOdd = 'must be odd';
+  SMustBePositive = 'must be positive';
   SModulusNotPositive = 'BigInteger: modulus not positive';
   SBigIntegerNotInvertible = 'BigInteger not invertible';
+  SModOperandsOutOfRange = '''X'' and ''Y'' must be in the range [0, M)';
 
 type
   /// <summary>
@@ -70,6 +72,13 @@ type
     class constructor Create;
     class function GetZero: TBigInteger; static;
     class function GetOne: TBigInteger; static;
+
+    class procedure CheckModOperands(const AM, AX, AY: TBigInteger); static;
+    // z = x * y * R^-1 mod m, for R = 2^(32 * len), x and y in [0, m); z may alias x or y.
+    class procedure MontgomeryMultiply(ALen: Int32; const AX, AY, AM: TCryptoLibUInt32Array;
+      AMDash: UInt32; const AT, AZ: TCryptoLibUInt32Array); static;
+    // modular inverse of X mod M (M odd); returns False (no raise) when X is not invertible.
+    class function ImplModOddInverse(const AM, AX: TBigInteger; out AResult: TBigInteger): Boolean; static;
 
   public
     /// <summary>
@@ -201,6 +210,39 @@ type
     /// <param name="AX">the value to check.</param>
     /// <returns>whether is coprime or not.</returns>
     class function ModOddIsCoprimeVar(const AM, AX: TBigInteger): Boolean; static;
+
+    /// <summary>
+    /// (X + Y) mod M, for X and Y already in [0, M), in time independent of the values. Operands outside
+    /// [0, M) are rejected rather than reduced.
+    /// </summary>
+    class function ModAdd(const AM, AX, AY: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// (X - Y) mod M, for X and Y already in [0, M), in time independent of the values. Operands outside
+    /// [0, M) are rejected rather than reduced.
+    /// </summary>
+    class function ModSubtract(const AM, AX, AY: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// (X * Y) mod M, for odd M and X, Y already in [0, M), in time independent of the values (Montgomery
+    /// multiplication). Operands outside [0, M) are rejected rather than reduced.
+    /// </summary>
+    class function ModMult(const AM, AX, AY: TBigInteger): TBigInteger; static;
+
+    /// <summary>
+    /// X^E mod M for odd prime M and X in [1, M), with the base blinded so a chosen X cannot steer the timing.
+    /// For a fresh random v this computes (X * v)^E * (v^-1)^E; neither exponentiation sees a base the caller
+    /// knows. The exponent is not randomized. Costs two exponentiations and an inversion.
+    /// </summary>
+    class function ModPowBaseBlinded(const AM, AX, AE: TBigInteger;
+      const ARandom: ISecureRandom): TBigInteger; static;
+
+    /// <summary>
+    /// Returns an exponent congruent to AExponent modulo the group order, blinded by a random multiple of
+    /// AGroupOrder, so a fixed secret exponent does not drive the timing of a following variable-time ModPow.
+    /// </summary>
+    class function CreateBlindedExponent(const AExponent, AGroupOrder: TBigInteger;
+      const ARandom: ISecureRandom): TBigInteger; static;
   end;
 
 implementation
@@ -392,7 +434,7 @@ begin
   AOutStr.Write(LBuffer[0], System.Length(LBuffer));
 end;
 
-class function TBigIntegerUtilities.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;
+class function TBigIntegerUtilities.ImplModOddInverse(const AM, AX: TBigInteger; out AResult: TBigInteger): Boolean;
 var
   LBits, LLen: Int32;
   LReducedX: TBigInteger;
@@ -415,9 +457,16 @@ begin
   LZ := TNat.Create(LLen);
 
   if TMod.ModOddInverse(LM, LX, LZ) = 0 then
-    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerNotInvertible);
+    Exit(False);
 
-  Result := TNat.ToBigInteger(LLen, LZ);
+  AResult := TNat.ToBigInteger(LLen, LZ);
+  Result := True;
+end;
+
+class function TBigIntegerUtilities.ModOddInverse(const AM, AX: TBigInteger): TBigInteger;
+begin
+  if not ImplModOddInverse(AM, AX, Result) then
+    raise EArithmeticCryptoLibException.CreateRes(@SBigIntegerNotInvertible);
 end;
 
 class function TBigIntegerUtilities.ModOddInverseVar(const AM, AX: TBigInteger): TBigInteger;
@@ -510,6 +559,147 @@ begin
   LX := TNat.FromBigInteger(LBits, LReducedX);
 
   Result := TMod.ModOddIsCoprimeVar(LM, LX);
+end;
+
+class procedure TBigIntegerUtilities.CheckModOperands(const AM, AX, AY: TBigInteger);
+begin
+  if AM.SignValue <> 1 then
+    raise EArithmeticCryptoLibException.CreateRes(@SModulusNotPositive);
+  if (AX.SignValue < 0) or (AX.CompareTo(AM) >= 0) or (AY.SignValue < 0) or (AY.CompareTo(AM) >= 0) then
+    raise EArgumentCryptoLibException.CreateRes(@SModOperandsOutOfRange);
+end;
+
+class function TBigIntegerUtilities.ModAdd(const AM, AX, AY: TBigInteger): TBigInteger;
+var
+  LBits, LLen, LBorrow: Int32;
+  LM, LX, LY: TCryptoLibUInt32Array;
+begin
+  CheckModOperands(AM, AX, AY);
+
+  // the extra bit of width means X + Y, below 2M, cannot carry out of the top word, so one conditional
+  // subtraction of M reduces it
+  LBits := AM.BitLength + 1;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, AX);
+  LY := TNat.FromBigInteger(LBits, AY);
+  LLen := System.Length(LM);
+
+  TNat.Add(LLen, LX, LY, LX);
+  LBorrow := TNat.Sub(LLen, LX, LM, LY);     // Y = X - M; borrow is -1 exactly when X < M
+  TNat.CMov(LLen, not LBorrow, LY, 0, LX, 0); // keep X - M unless the subtraction went negative
+  Result := TNat.ToBigInteger(LLen, LX);
+end;
+
+class function TBigIntegerUtilities.ModSubtract(const AM, AX, AY: TBigInteger): TBigInteger;
+var
+  LBits, LLen, LBorrow: Int32;
+  LM, LX, LY: TCryptoLibUInt32Array;
+begin
+  CheckModOperands(AM, AX, AY);
+
+  // X - Y lies in (-M, M), so one conditional addition of M reduces it; the width is that of ModAdd
+  LBits := AM.BitLength + 1;
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, AX);
+  LY := TNat.FromBigInteger(LBits, AY);
+  LLen := System.Length(LM);
+
+  LBorrow := TNat.Sub(LLen, LX, LY, LX);  // borrow is -1 exactly when X < Y
+  TNat.Add(LLen, LX, LM, LY);             // Y = X + M, discarding the carry off the top
+  TNat.CMov(LLen, LBorrow, LY, 0, LX, 0); // take X + M only where the difference went negative
+  Result := TNat.ToBigInteger(LLen, LX);
+end;
+
+class procedure TBigIntegerUtilities.MontgomeryMultiply(ALen: Int32; const AX, AY, AM: TCryptoLibUInt32Array;
+  AMDash: UInt32; const AT, AZ: TCryptoLibUInt32Array);
+var
+  LI, LBorrow, LTopSet: Int32;
+  LC: UInt64;
+  LTop: UInt32;
+begin
+  TArrayUtilities.Fill(AT, 0, System.Length(AT), UInt32(0));
+
+  for LI := 0 to ALen - 1 do
+  begin
+    // the window AT[LI..LI+ALen+1]: its top word has not been written yet, so it is zero
+    LC := UInt64(TNat.MulWordAddTo(ALen, AY[LI], AX, 0, AT, LI)) + AT[LI + ALen];
+    AT[LI + ALen] := UInt32(LC);
+    AT[LI + ALen + 1] := UInt32(LC shr 32);
+
+    LC := UInt64(TNat.MulWordAddTo(ALen, UInt32(AT[LI] * AMDash), AM, 0, AT, LI)) + AT[LI + ALen];
+    AT[LI + ALen] := UInt32(LC);
+    AT[LI + ALen + 1] := AT[LI + ALen + 1] + UInt32(LC shr 32);
+  end;
+
+  // the result, below 2m, is in AT[ALen..2*ALen]: subtract m unless it is already below m, which is when the
+  // subtraction goes negative and the top word is clear
+  LTop := AT[2 * ALen];
+  LBorrow := TNat.Sub(ALen, AT, ALen, AM, 0, AZ, 0);
+  LTopSet := Int32((LTop or (UInt32(0) - LTop)) shr 31);
+  TNat.CMov(ALen, LBorrow and (LTopSet - 1), AT, ALen, AZ, 0);
+end;
+
+class function TBigIntegerUtilities.ModMult(const AM, AX, AY: TBigInteger): TBigInteger;
+var
+  LBits, LLen: Int32;
+  LMDash: UInt32;
+  LR2: TBigInteger;
+  LM, LX, LY, LR2Words, LT: TCryptoLibUInt32Array;
+begin
+  if not AM.TestBit(0) then
+    raise EArgumentCryptoLibException.CreateRes(@SMustBeOdd);
+
+  CheckModOperands(AM, AX, AY);
+
+  LBits := AM.BitLength;
+  LLen := TNat.GetLengthForBits(LBits);
+
+  // R = 2^(32 * len) exceeds the odd M, so they are coprime. R^2 mod M depends only on the public modulus.
+  LR2 := One.ShiftLeft(LLen shl 6).&Mod(AM);
+
+  LM := TNat.FromBigInteger(LBits, AM);
+  LX := TNat.FromBigInteger(LBits, AX);
+  LY := TNat.FromBigInteger(LBits, AY);
+  LR2Words := TNat.FromBigInteger(LBits, LR2);
+  LT := TNat.Create(2 * LLen + 1);
+  LMDash := UInt32(0 - Int64(TMod.Inverse32(LM[0])));
+
+  // the first product leaves X * Y * R^-1, the second multiplies by R^2 * R^-1 to undo it
+  MontgomeryMultiply(LLen, LX, LY, LM, LMDash, LT, LX);
+  MontgomeryMultiply(LLen, LX, LR2Words, LM, LMDash, LT, LX);
+  Result := TNat.ToBigInteger(LLen, LX);
+end;
+
+class function TBigIntegerUtilities.ModPowBaseBlinded(const AM, AX, AE: TBigInteger;
+  const ARandom: ISecureRandom): TBigInteger;
+var
+  LMaxV, LV, LVInv, LBlinded, LUnblind: TBigInteger;
+begin
+  // zero cannot be blinded (the product with v stays zero), and ModMult below rejects X >= M
+  if AX.SignValue <= 0 then
+    raise EArgumentCryptoLibException.CreateRes(@SMustBePositive);
+
+  // the blinding is only as good as v is secret, so v stays on the fixed-time helpers. For a prime M the
+  // first v is always invertible; a v sharing a factor with a composite M is redrawn.
+  LMaxV := AM.Subtract(TBigInteger.Two);
+  repeat
+    LV := CreateRandomInRange(TBigInteger.Two, LMaxV, ARandom);
+  until ImplModOddInverse(AM, LV, LVInv);
+
+  LBlinded := ModMult(AM, AX, LV).ModPow(AE, AM);
+  LUnblind := LVInv.ModPow(AE, AM);
+  Result := ModMult(AM, LBlinded, LUnblind);
+end;
+
+class function TBigIntegerUtilities.CreateBlindedExponent(const AExponent, AGroupOrder: TBigInteger;
+  const ARandom: ISecureRandom): TBigInteger;
+const
+  RandomBits = Int32(7);
+var
+  LBlind: TBigInteger;
+begin
+  LBlind := CreateRandomBigInteger(RandomBits, ARandom).SetBit(RandomBits);
+  Result := AExponent.Add(LBlind.Multiply(AGroupOrder));
 end;
 
 end.

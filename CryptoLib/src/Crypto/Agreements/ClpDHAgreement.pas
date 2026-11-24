@@ -23,6 +23,7 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpISecureRandom,
   ClpCryptoServicesRegistrar,
   ClpICipherParameters,
@@ -98,8 +99,8 @@ implementation
 function TDHAgreement.CalculateAgreement(const APub: IDHPublicKeyParameters;
   const AMessage: TBigInteger): TBigInteger;
 var
-  LP, LPeerY, LPeerMessage: TBigInteger;
-  LParameter: IDHPublicKeyParameters;
+  LP, LPeerY, LPeerMessage, LStaticPart: TBigInteger;
+  LParameter, LReValidated: IDHPublicKeyParameters;
   LPubConcrete: TDHPublicKeyParameters;
 begin
   if (APub = nil) then
@@ -128,14 +129,21 @@ begin
   if LPubConcrete.ClassType = TDHPublicKeyParameters then
     LPeerY := APub.Y
   else
-    LPeerY := TDHPublicKeyParameters.Create(APub.Y, FDhParams).Y;
+  begin
+    LReValidated := TDHPublicKeyParameters.Create(APub.Y, FDhParams) as IDHPublicKeyParameters;
+    LPeerY := LReValidated.Y;
+  end;
 
+  // our ephemeral value is used once, so nothing accumulates against it and this exponentiation is left as it is
   Result := LPeerY.ModPow(FPrivateValue, LP);
 
   if Result.Equals(TBigInteger.One) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
 
-  Result := LPeerMessage.ModPow(FKey.X, LP).Multiply(Result).&Mod(LP);
+  // the peer chooses the base raised to the long-term key, so that base is blinded: the variable-time ModPow's
+  // timing could otherwise be accumulated against the key over many agreements
+  LStaticPart := TBigIntegerUtilities.ModPowBaseBlinded(LP, LPeerMessage, FKey.X, FRandom);
+  Result := LStaticPart.Multiply(Result).&Mod(LP);
 end;
 
 function TDHAgreement.CalculateMessage: TBigInteger;

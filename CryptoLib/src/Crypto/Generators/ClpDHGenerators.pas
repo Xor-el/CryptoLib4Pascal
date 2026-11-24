@@ -75,8 +75,7 @@ var
   LX, LY: TBigInteger;
 begin
   LDhp := FParam.Parameters;
-  LX := TDHKeyGeneratorHelper.CalculatePrivate(LDhp, FParam.Random);
-  LY := TDHKeyGeneratorHelper.CalculatePublic(LDhp, LX);
+  TDHKeyGeneratorHelper.CalculateKeyPair(LDhp, FParam.Random, LX, LY);
   Result := TAsymmetricCipherKeyPair.Create(TDHPublicKeyParameters.Create(LY,
     LDhp) as IDHPublicKeyParameters, TDHPrivateKeyParameters.Create(LX, LDhp)
     as IDHPrivateKeyParameters);
@@ -88,6 +87,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersCannotBeNil);
   if not Supports(AParameters, IDHKeyGenerationParameters, FParam) then
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersCannotBeNil);
+  TDHKeyGeneratorHelper.CheckPrivateValueLength(FParam.Parameters.P, FParam.Parameters.L);
 end;
 
 function TDHBasicKeyPairGenerator.GenerateKeyPair: IAsymmetricCipherKeyPair;
@@ -96,8 +96,7 @@ var
   LX, LY: TBigInteger;
 begin
   LDhp := FParam.Parameters;
-  LX := TDHKeyGeneratorHelper.CalculatePrivate(LDhp, FParam.Random);
-  LY := TDHKeyGeneratorHelper.CalculatePublic(LDhp, LX);
+  TDHKeyGeneratorHelper.CalculateKeyPair(LDhp, FParam.Random, LX, LY);
   Result := TAsymmetricCipherKeyPair.Create(TDHPublicKeyParameters.Create(LY,
     LDhp) as IDHPublicKeyParameters, TDHPrivateKeyParameters.Create(LX, LDhp)
     as IDHPrivateKeyParameters);
@@ -109,6 +108,7 @@ begin
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersCannotBeNil);
   if not Supports(AParameters, IDHKeyGenerationParameters, FParam) then
     raise EArgumentNilCryptoLibException.CreateRes(@SParametersCannotBeNil);
+  TDHKeyGeneratorHelper.CheckPrivateValueLength(FParam.Parameters.P, FParam.Parameters.L);
 end;
 
 function TDHParametersGenerator.GenerateParameters: IDHParameters;

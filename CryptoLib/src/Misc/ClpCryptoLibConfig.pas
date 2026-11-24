@@ -215,9 +215,12 @@ type
 
   class var
     FMaxSize: TNullable<Int32>;
+    FAllowShortPrivateValue: Boolean;
 
     class function GetMaxSize: Int32; static;
     class procedure SetMaxSize(AValue: Int32); static;
+    class function GetAllowShortPrivateValue: Boolean; static;
+    class procedure SetAllowShortPrivateValue(AValue: Boolean); static;
 
   public
     /// <summary>Restores this area's settings to their defaults.</summary>
@@ -228,6 +231,13 @@ type
     /// than one raises; call <see cref="ResetToDefaults" /> to go back to the default.
     /// </summary>
     class property MaxSize: Int32 read GetMaxSize write SetMaxSize;
+
+    /// <summary>
+    /// When set, a DH private value length below twice the security strength of p (the SP 800-56A floor)
+    /// is accepted instead of rejected. Off by default.
+    /// </summary>
+    class property AllowShortPrivateValue: Boolean read GetAllowShortPrivateValue
+      write SetAllowShortPrivateValue;
   end;
 
   /// <summary>Class reference, so the settings are reachable without an instance.</summary>
@@ -713,6 +723,7 @@ end;
 class procedure TDHConfig.ResetToDefaults();
 begin
   FMaxSize := TNullable<Int32>.None;
+  FAllowShortPrivateValue := False;
 end;
 
 class function TDHConfig.GetMaxSize: Int32;
@@ -730,6 +741,16 @@ begin
       ['maximum DH modulus bit length', AValue]);
 
   FMaxSize := TNullable<Int32>.Some(AValue);
+end;
+
+class function TDHConfig.GetAllowShortPrivateValue: Boolean;
+begin
+  Result := FAllowShortPrivateValue;
+end;
+
+class procedure TDHConfig.SetAllowShortPrivateValue(AValue: Boolean);
+begin
+  FAllowShortPrivateValue := AValue;
 end;
 
 { TDsaConfig }

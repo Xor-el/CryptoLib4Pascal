@@ -46,7 +46,7 @@ resourcestring
   SInvalidGeneratorRange = 'generator must be in the range [2, p - 2]';
   SQTooBigToBeAFactor = 'Q too big to be a factor of (P - 1)';
   SMTooBig = 'M value must be < bitLength of P';
-  SLErrorOne = 'when L value specified, it must be less than bitLength(P)';
+  SLErrorOne = 'when L value specified, it must not be greater than bitLength(P)';
   SLErrorTwo = 'when L value specified, it may not be less than M value';
   SInvalidSubGroupFactor = 'subgroup factor must be >= 2';
   SSeedNil = 'seed cannot be nil';
@@ -393,7 +393,8 @@ begin
   if (AL <> 0) then
   begin
 
-    if (AL >= AP.BitLength) then
+    // PKCS#3 sec. 6: 2^(l-1) <= p, so l may be up to the bit length of p
+    if (AL > AP.BitLength) then
     begin
       raise EArgumentCryptoLibException.CreateRes(@SLErrorOne);
     end;

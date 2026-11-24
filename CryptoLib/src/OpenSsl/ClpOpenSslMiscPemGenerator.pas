@@ -124,6 +124,9 @@ end;
 
 function TOpenSslMiscPemGenerator.Generate: IPemObject;
 begin
+  // an algorithm with a nil password would otherwise be treated as an empty password
+  if (FAlgorithm <> '') and (FPassword = nil) then
+    raise EArgumentNilCryptoLibException.CreateRes(@SPasswordNil);
   try
     if (FAlgorithm <> '') then
       Result := CreatePemObjectEncrypted(FObj, FAlgorithm, FPassword, FRandom)

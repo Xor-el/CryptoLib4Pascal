@@ -34,6 +34,7 @@ uses
   ClpSecureRandom,
   ClpISecureRandom,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase;
@@ -104,6 +105,7 @@ type
     procedure TestToString();
     procedure TestValueOf();
     procedure TestXor();
+    procedure TestModArithmeticAndBlinding();
   end;
 
 implementation
@@ -1493,6 +1495,48 @@ begin
 
     end;
   end;
+end;
+
+procedure TTestBigInteger.TestModArithmeticAndBlinding();
+var
+  LM, LX, LY, LE: TBigInteger;
+  LModuli: TCryptoLibGenericArray<TBigInteger>;
+  LI, LJ: Int32;
+  LRaised: Boolean;
+begin
+  // small odd primes and the secp256r1 field prime
+  LModuli := TCryptoLibGenericArray<TBigInteger>.Create(TBigInteger.ValueOf(5),
+    TBigInteger.ValueOf(7), TBigInteger.Create(
+    'FFFFFFFF00000001000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF', 16));
+
+  for LI := 0 to System.High(LModuli) do
+  begin
+    LM := LModuli[LI];
+    for LJ := 0 to 49 do
+    begin
+      LX := TBigIntegerUtilities.CreateRandomInRange(Fzero, LM.Subtract(Fone), FRandom);
+      LY := TBigIntegerUtilities.CreateRandomInRange(Fzero, LM.Subtract(Fone), FRandom);
+      CheckTrue(TBigIntegerUtilities.ModAdd(LM, LX, LY).Equals(LX.Add(LY).&Mod(LM)), 'ModAdd');
+      CheckTrue(TBigIntegerUtilities.ModSubtract(LM, LX, LY).Equals(LX.Subtract(LY).&Mod(LM)), 'ModSubtract');
+      CheckTrue(TBigIntegerUtilities.ModMult(LM, LX, LY).Equals(LX.Multiply(LY).&Mod(LM)), 'ModMult');
+    end;
+
+    // base-blinded exponentiation matches plain ModPow for a prime modulus
+    LX := TBigIntegerUtilities.CreateRandomInRange(Fone, LM.Subtract(Fone), FRandom);
+    LE := TBigInteger.ValueOf(65537);
+    CheckTrue(TBigIntegerUtilities.ModPowBaseBlinded(LM, LX, LE, FRandom).Equals(LX.ModPow(LE, LM)),
+      'ModPowBaseBlinded');
+  end;
+
+  // operands outside [0, M) are rejected rather than reduced
+  LRaised := False;
+  try
+    TBigIntegerUtilities.ModAdd(TBigInteger.ValueOf(7), TBigInteger.ValueOf(7), Fone);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'out-of-range operand not rejected');
 end;
 
 initialization

@@ -102,6 +102,9 @@ type
     function GetBitLength: Int32;
     function GetBitCount: Int32;
     function ModInversePow2(const AM: TBigInteger): TBigInteger;
+    // z = d^-1 mod 2^pow for odd d (Hensel lifting), a word at a time.
+    class procedure InversePow2(APow, ALen: Int32; const AD: TCryptoLibUInt32Array;
+      ADLen: Int32; const AAcc, AZ: TCryptoLibUInt32Array); static;
     class function ModPowBarrett(const AB, AE, AM: TBigInteger): TBigInteger; static;
     class function ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger; static;
     class function ModPowMonty(const AB, AE, AM: TBigInteger; const AConvert: Boolean;
@@ -321,6 +324,7 @@ implementation
 
 uses
   ClpMod,
+  ClpNat,
   ClpGatherKernelSimd,
   ClpMontKernelContext,
   ClpSecureRandom;
@@ -3855,9 +3859,10 @@ end;
 
 function TBigInteger.ModInversePow2(const AM: TBigInteger): TBigInteger;
 var
-  LPow, LBitsCorrect: Int32;
+  LPow, LLen, LDLen: Int32;
   LInv64: Int64;
-  LX, LD, LT: TBigInteger;
+  LX, LD: TBigInteger;
+  LDd, LAcc, LZ: TCryptoLibUInt32Array;
 begin
 {$IFDEF DEBUG}
   System.Assert(AM.FSign > 0);
@@ -3866,25 +3871,57 @@ begin
   if not TestBit(0) then
     raise EArithmeticCryptoLibException.CreateRes(@SNumbersNotRelativelyPrime);
   LPow := AM.BitLength - 1;
-  LInv64 := Int64(TMod.Inverse64(UInt64(Int64Value)));
-  if LPow < 64 then
+
+  if LPow <= 64 then
   begin
-    LInv64 := LInv64 and ((Int64(1) shl LPow) - 1);
+    LInv64 := Int64(TMod.Inverse64(UInt64(Int64Value)));
+    if LPow < 64 then
+      LInv64 := LInv64 and ((Int64(1) shl LPow) - 1);
+    LX := ValueOf(LInv64);
+    if LX.FSign < 0 then
+      LX := LX.Add(AM);
+    Result := LX;
+    Exit;
   end;
-  LX := ValueOf(LInv64);
-  if LPow > 64 then
+
+  if (FSign < 0) or (BitLength > LPow) then
+    LD := &Mod(AM)
+  else
+    LD := Self;
+
+  LLen := TNat.GetLengthForBits(LPow);
+  LDLen := TNat.GetLengthForBits(LD.BitLength);
+  LDd := TNat.FromBigInteger(LPow, LD);
+  LAcc := TNat.Create(LLen);
+  LZ := TNat.Create(LLen);
+  InversePow2(LPow, LLen, LDd, LDLen, LAcc, LZ);
+  Result := TNat.ToBigInteger(LLen, LZ);
+end;
+
+class procedure TBigInteger.InversePow2(APow, ALen: Int32; const AD: TCryptoLibUInt32Array;
+  ADLen: Int32; const AAcc, AZ: TCryptoLibUInt32Array);
+var
+  LDInv, LTarget, LZi, LC: UInt32;
+  LI, LN: Int32;
+begin
+  // acc (initially zero) holds d * z; each word of z brings the matching word of acc to that of 1. Before step i
+  // d * z spans at most i + dLen words, so the carry lands in a still-zero word.
+  LDInv := TMod.Inverse32(AD[0]);
+  LTarget := 1;
+  for LI := 0 to ALen - 1 do
   begin
-    LD := Remainder(AM);
-    LBitsCorrect := 64;
-    repeat
-      LT := LX.Multiply(LD).Remainder(AM);
-      LX := LX.Multiply(FTwo.Subtract(LT)).Remainder(AM);
-      LBitsCorrect := LBitsCorrect shl 1;
-    until LBitsCorrect >= LPow;
+    LZi := UInt32((LTarget - AAcc[LI]) * LDInv);
+    AZ[LI] := LZi;
+    LTarget := 0;
+
+    LN := ADLen;
+    if (ALen - LI) < LN then
+      LN := ALen - LI;
+    LC := TNat.MulWordAddTo(LN, LZi, AD, 0, AAcc, LI);
+    if (LI + LN) < ALen then
+      AAcc[LI + LN] := LC;
   end;
-  if LX.FSign < 0 then
-    LX := LX.Add(AM);
-  Result := LX;
+  AZ[ALen - 1] := AZ[ALen - 1] and (UInt32($FFFFFFFF) shr ((-APow) and 31));
 end;
 
 class function TBigInteger.ReduceBarrett(const AX, AM, AMr, AYu: TBigInteger): TBigInteger;
