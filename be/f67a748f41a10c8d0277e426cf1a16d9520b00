@@ -1,0 +1,84 @@
+CryptoLib/src/Crypto/Signers/ClpDsaSigner.pas
+  s_0f1a2e9196b415::t_155b571f7c8134 138,142-143,157-160,162-164
+  s_0f1a2e9196b415::t_d5b968ff3f944b 195-196
+CryptoLib/src/OpenSsl/ClpOpenSslMiscPemGenerator.pas
+  s_0f1a2e9196b415::t_a58cb360e9408a 127-129
+CryptoLib/src/Crypto/Agreements/ClpDHAgreement.pas
+  s_0f1a2e9196b415::t_5373d7b6902cae 134,140-143
+  s_0f1a2e9196b415::t_2bea9f41f2013a 26
+  s_0f1a2e9196b415::t_612cf048d9d909 102
+CryptoLib/src/Misc/ClpCryptoLibConfig.pas
+  s_0f1a2e9196b415::t_5fbba1b70caec6 726,746-753
+  s_0f1a2e9196b415::t_320b56efd19921 218,222-223,234-240,754-755
+CryptoLib/src/Math/BinPoly/ClpBinPolyScalarBackend.pas
+  s_0f1a2e9196b415::t_90a98b2d5cbcb4 94-97,99-102
+  s_0f1a2e9196b415::t_1b40338a7f02cf 63
+CryptoLib/src/Crypto/Generators/ClpDHGenerators.pas
+  s_0f1a2e9196b415::t_e5124f87be824c 78,99
+  s_0f1a2e9196b415::t_867defd59245bc 90,111
+CryptoLib.Tests/src/OpenSsl/OpenSslWriterTests.pas
+  s_0f1a2e9196b415::t_806143a19ffe26 91
+  s_0f1a2e9196b415::t_b29ada6fe3d698 301-325
+  s_0f1a2e9196b415::t_5408fedf54388c 40
+CryptoLib/src/Crypto/Signers/ClpECNRSigner.pas
+  s_0f1a2e9196b415::t_9d81307ca23690 236-237
+CryptoLib/src/Crypto/Generators/ClpDHKeyGeneratorHelper.pas
+  s_0f1a2e9196b415::t_6ed53c8c620c78 58-95,100,110-111
+  s_0f1a2e9196b415::t_42845c3095d30a 24,29,31,34-37,41-44,49-51
+  s_0f1a2e9196b415::t_5804606904a985 96-99,101-109
+CryptoLib/src/Crypto/Agreements/ClpDHBasicAgreement.pas
+  s_0f1a2e9196b415::t_7e690241e394f7 26-28,33
+  s_0f1a2e9196b415::t_1005db41f74485 133-135,137-142
+  s_0f1a2e9196b415::t_9ca11689dbf719 62
+  s_0f1a2e9196b415::t_0158b65141c247 91,106-112,114-116
+CryptoLib/src/Crypto/Signers/ClpECDsaSigner.pas
+  s_0f1a2e9196b415::t_eed5b972c10e74 192-193
+  s_0f1a2e9196b415::t_72726408d388b6 224-226
+CryptoLib/src/Crypto/Parameters/ClpDsaParameters.pas
+  s_0f1a2e9196b415::t_f69cae84abce18 157
+  s_0f1a2e9196b415::t_8227ae154ca7a4 46
+  s_0f1a2e9196b415::t_9f5e6801b7e31c 470,476-478,486
+CryptoLib.Tests/src/Crypto/DHTests.pas
+  s_0f1a2e9196b415::t_b70237d1a12e78 482,484
+  s_0f1a2e9196b415::t_3aa6040d078626 146
+  s_0f1a2e9196b415::t_c3b5e33efc3139 66
+  s_0f1a2e9196b415::t_b2553d363f206b 699-700
+  s_0f1a2e9196b415::t_64fc20d37f752c 708-734
+CryptoLib.Tests/src/Crypto/DSATests.pas
+  s_0f1a2e9196b415::t_939078854b0304 139
+  s_0f1a2e9196b415::t_48e1e155f0739a 1171-1202
+CryptoLib/src/Crypto/Parameters/ClpDHParameters.pas
+  s_0f1a2e9196b415::t_71119dbe3d840b 49
+  s_0f1a2e9196b415::t_6dd46efbe4fb76 396-397
+CryptoLib/src/Math/ClpBigIntegerUtilities.pas
+  s_0f1a2e9196b415::t_2d42b426811c0e 76-79,82
+  s_0f1a2e9196b415::t_ad97411d5d703c 213-245
+  s_0f1a2e9196b415::t_d5dfd8e43254cb 564-704
+  s_0f1a2e9196b415::t_53df302bed7009 39,42,465
+  s_0f1a2e9196b415::t_9fac7135b11f5d 80-81
+  s_0f1a2e9196b415::t_7d7136ef4f05e2 437,460,462-464,466-469
+CryptoLib/src/Math/ClpBigInteger.pas
+  s_0f1a2e9196b415::t_ea4463543443c8 105-107
+  s_0f1a2e9196b415::t_50f8068bb21fdf 327
+  s_0f1a2e9196b415::t_ec9c733298a378 3862,3864-3865,3874-3875,3877-3884,3886-3911,3913-3922,3924
+CryptoLib.Tests/src/Math/BigIntegerTests.pas
+  s_0f1a2e9196b415::t_6c389743916836 108
+  s_0f1a2e9196b415::t_f2738982306b99 1500-1541
+  s_0f1a2e9196b415::t_25bfad9636eb3c 37
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "bef67a748f41a10c8d0277e426cf1a16d9520b00",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
