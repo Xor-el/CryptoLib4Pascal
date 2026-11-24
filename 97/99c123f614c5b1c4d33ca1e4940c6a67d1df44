@@ -1,0 +1,23 @@
+CryptoLib/src/Crypto/Agreements/ClpDHBasicAgreement.pas
+  s_0f1a2e9196b415::t_dfa37079257d6a 112-115
+  s_0f1a2e9196b415::t_1896ab529d843a 90
+CryptoLib/src/Crypto/Agreements/ClpDHAgreement.pas
+  s_0f1a2e9196b415::t_e6682242354076 103
+  s_0f1a2e9196b415::t_824ade8b075334 132-135
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "9799c123f614c5b1c4d33ca1e4940c6a67d1df44",
+  "prompts": {},
+  "sessions": {
+    "s_0f1a2e9196b415": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "7b0dc21d-751b-42cb-86ab-a3242bf81777",
+        "model": "claude-opus-4-8"
+      },
+      "human_author": "Ugochukwu Mmaduekwe <ugo4brain@gmail.com>"
+    }
+  }
+}
