@@ -23,10 +23,14 @@ interface
 uses
   SysUtils,
   ClpBigInteger,
+  ClpBigIntegerUtilities,
+  ClpISecureRandom,
+  ClpCryptoServicesRegistrar,
   ClpICipherParameters,
   ClpIBasicAgreement,
   ClpIDHBasicAgreement,
   ClpIDHParameters,
+  ClpDHParameters,
   ClpIParametersWithRandom,
   ClpCryptoLibExceptions;
 
@@ -36,7 +40,6 @@ resourcestring
   SNotDHPrivateKeyParameters = 'DHEngine expects DHPrivateKeyParameters';
   SAlgorithmNotInitialized = 'agreement algorithm not initialized';
   SSharedKeyInvalid = 'shared key cannot be 1';
-  SDHPublicKeyWeak = 'Diffie-Hellman public key is weak';
 
 type
   /// <summary>
@@ -56,6 +59,7 @@ type
   var
     FKey: IDHPrivateKeyParameters;
     FDhParams: IDHParameters;
+    FRandom: ISecureRandom;
 
   public
     /// <summary>
@@ -84,6 +88,7 @@ function TDHBasicAgreement.CalculateAgreement(const APubKey: ICipherParameters)
   : TBigInteger;
 var
   LPub: IDHPublicKeyParameters;
+  LPubConcrete: TDHPublicKeyParameters;
   LP, LPeerY: TBigInteger;
 begin
   if (FKey = nil) then
@@ -98,13 +103,17 @@ begin
 
   LP := FDhParams.P;
 
-  LPeerY := LPub.Y;
+  // a normally-constructed public key already validated its Y (range, and subgroup when q is present); Y is
+  // overridable, so re-validate by construction unless pub is exactly the base type
+  LPubConcrete := LPub as TDHPublicKeyParameters;
+  if LPubConcrete.ClassType = TDHPublicKeyParameters then
+    LPeerY := LPub.Y
+  else
+    LPeerY := TDHPublicKeyParameters.Create(LPub.Y, FDhParams).Y;
 
-  if ((not LPeerY.IsInitialized) or (LPeerY.CompareTo(TBigInteger.One) <= 0) or
-    (LPeerY.CompareTo(LP.Subtract(TBigInteger.One)) >= 0)) then
-    raise EArgumentCryptoLibException.CreateRes(@SDHPublicKeyWeak);
-
-  Result := LPeerY.ModPow(FKey.X, LP);
+  // the exponent is our private value, long lived for static-static agreement, and the peer chooses the base,
+  // so blind the base: the variable-time ModPow's timing could otherwise be accumulated against the key
+  Result := TBigIntegerUtilities.ModPowBaseBlinded(LP, LPeerY, FKey.X, FRandom);
 
   if Result.Equals(TBigInteger.One) then
     raise EInvalidOperationCryptoLibException.CreateRes(@SSharedKeyInvalid);
@@ -121,9 +130,16 @@ var
   LWithRandom: IParametersWithRandom;
   LDHPriv: IDHPrivateKeyParameters;
 begin
-  LParameters := AParameters;
-  if Supports(LParameters, IParametersWithRandom, LWithRandom) then
+  if Supports(AParameters, IParametersWithRandom, LWithRandom) then
+  begin
+    FRandom := LWithRandom.Random;
     LParameters := LWithRandom.Parameters;
+  end
+  else
+  begin
+    FRandom := TCryptoServicesRegistrar.GetSecureRandom();
+    LParameters := AParameters;
+  end;
 
   if not Supports(LParameters, IDHPrivateKeyParameters, LDHPriv) then
     raise EArgumentCryptoLibException.CreateRes(@SNotDHPrivateKeyParameters);

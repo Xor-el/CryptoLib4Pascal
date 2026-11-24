@@ -189,7 +189,8 @@ var
 begin
   LEC := FKey.Parameters;
   LN := LEC.N;
-  LE := CalculateE(LN, AMessage);
+  // e is public, and CalculateE can leave it at or past n, which ModAdd below rejects rather than reduces
+  LE := CalculateE(LN, AMessage).&Mod(LN);
   LD := (FKey as IECPrivateKeyParameters).D;
   // constant-time, allocation-free nonce math when available for this order
   LHaveScalarOps := TScalarFieldRegistry.TryGet(LN, LScalarOps);
@@ -220,7 +221,9 @@ begin
     if LHaveScalarOps then
       LS := LScalarOps.ComputeS(LK, LE, LD, LR)
     else
-      LS := TBigIntegerUtilities.ModOddInverse(LN, LK).Multiply(LE.Add(LD.Multiply(LR))).&Mod(LN);
+      // s = k^-1 * (e + d * r) mod n, keeping secret d and k^-1 off BigInteger.Mod, whose cost follows the quotient
+      LS := TBigIntegerUtilities.ModMult(LN, TBigIntegerUtilities.ModOddInverse(LN, LK),
+        TBigIntegerUtilities.ModAdd(LN, LE, TBigIntegerUtilities.ModMult(LN, LD, LR)));
 
   until (not(LS.SignValue = 0));
 

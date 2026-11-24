@@ -60,6 +60,7 @@ type
 implementation
 
 uses
+  ClpArrayUtilities,
   ClpBinPolyScalarMedium,
   ClpBinPolyScalarLarge;
 
@@ -90,10 +91,15 @@ begin
 
   SetLength(LU, 16);
 
-  for LI := 0 to ALen - 1 do
-    ImplMulwAccTable(LU, AX[AXOff + LI], AY[AYOff + LI], AZz, AZzOff + (LI shl 1));
+  // the table holds multiples of operand limbs, so wipe it after use
+  try
+    for LI := 0 to ALen - 1 do
+      ImplMulwAccTable(LU, AX[AXOff + LI], AY[AYOff + LI], AZz, AZzOff + (LI shl 1));
 
-  ImplMulPostprocess(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff, LU);
+    ImplMulPostprocess(ALen, AX, AXOff, AY, AYOff, AZz, AZzOff, LU);
+  finally
+    TArrayUtilities.Fill(LU, 0, System.Length(LU), UInt64(0));
+  end;
 end;
 
 class procedure TBinPolyScalarBackend.ImplMulPostprocess(ALen: Int32; const AX: TCryptoLibUInt64Array; AXOff: Int32;

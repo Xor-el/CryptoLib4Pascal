@@ -63,6 +63,7 @@ uses
   ClpIX9DHAsn1Objects,
   ClpX9DHAsn1Objects,
   ClpBigInteger,
+  ClpCryptoLibConfig,
   ClpCryptoLibTypes,
   ClpCryptoLibExceptions,
   CryptoLibTestBase;
@@ -142,6 +143,7 @@ type
     procedure TestDHSubgroupConfinement;
     procedure TestModulusSizeBound;
     procedure TestDHBounds;
+    procedure TestPrivateValueLengthFloor;
     procedure TestDHPgenCounterBound;
     procedure TestDHMaliciousMessage;
   end;
@@ -477,8 +479,9 @@ begin
   l2 := 1024;
 
   try
+    // PKCS#3 allows l up to bitlength(p), so an oversized l is one past that
     TDHKeyGenerationParameters.Create(random,
-      TDHParameters.Create(p2, g2, TBigInteger.GetDefault, l2) as IDHParameters);
+      TDHParameters.Create(p2, g2, TBigInteger.GetDefault, l2 + 1) as IDHParameters);
     Fail('oversized DH ''l'' value accepted');
   except
     on E: EArgumentCryptoLibException do
@@ -693,11 +696,39 @@ begin
       agreeOk := True;
     except
       on E: EArgumentCryptoLibException do
-        if Pos('weak', E.Message) = 0 then
+        // the agreement now re-validates a subclassed peer key by construction, same as the constructor path
+        if Pos('invalid DH public key', E.Message) = 0 then
           Fail('wrong CalculateAgreement exception message: ' + E.Message);
     end;
     if agreeOk then
       Fail('Generated secrets with weak public key');
+  end;
+end;
+
+procedure TTestDH.TestPrivateValueLengthFloor;
+var
+  params: IDHParameters;
+  kpGen: IDHBasicKeyPairGenerator;
+  LRaised: Boolean;
+begin
+  params := Ike2048;
+  // for a 2048-bit p the floor is 2 * 112 = 224 bits, so l = 100 is too short
+  LRaised := False;
+  try
+    GetDHBasicKeyPairGenerator(params.G, params.P, 100);
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'short DH private value length not rejected');
+
+  // the opt-out accepts it
+  TCryptoLibConfig.DH.AllowShortPrivateValue := True;
+  try
+    kpGen := GetDHBasicKeyPairGenerator(params.G, params.P, 100);
+    CheckTrue(kpGen <> nil, 'generator not created with opt-out');
+  finally
+    TCryptoLibConfig.DH.AllowShortPrivateValue := False;
   end;
 end;
 

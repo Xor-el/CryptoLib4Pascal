@@ -233,8 +233,8 @@ begin
   // generate s
   LX := LPrivKey.D; // private key value
   LU := (LTempPair.Private as IECPrivateKeyParameters).D;
-  // temp's private key value
-  LS := LU.Subtract(LR.Multiply(LX)).&Mod(LN);
+  // temp's private key value, keeping secret x and u off BigInteger.Mod, whose cost follows the quotient
+  LS := TBigIntegerUtilities.ModSubtract(LN, LU, TBigIntegerUtilities.ModMult(LN, LR, LX));
 
   Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
 end;

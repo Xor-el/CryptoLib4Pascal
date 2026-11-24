@@ -43,6 +43,7 @@ resourcestring
   SDsaModulusOutOfRange = 'DSA modulus out of range';
   SInvalidYInCorrectGroup = 'Y value does not appear to be in the correct group';
   SXUninitialized = 'X cannot be uninitialized';
+  SDsaXOutOfRange = 'x must be in [1, q-1]';
 
 type
   TDsaValidationParameters = class(TInterfacedObject, IDsaValidationParameters)
@@ -153,7 +154,7 @@ type
 
     function GetX: TBigInteger; inline;
 
-    class function Validate(const AX: TBigInteger): TBigInteger; static; inline;
+    class function Validate(const AX: TBigInteger; const AParameters: IDsaParameters): TBigInteger; static;
 
   public
     constructor Create(const AX: TBigInteger; const AParameters: IDsaParameters);
@@ -466,12 +467,15 @@ begin
   Result := FX;
 end;
 
-class function TDsaPrivateKeyParameters.Validate(const AX: TBigInteger): TBigInteger;
+class function TDsaPrivateKeyParameters.Validate(const AX: TBigInteger; const AParameters: IDsaParameters): TBigInteger;
 begin
   if (not AX.IsInitialized) then
   begin
     raise EArgumentNilCryptoLibException.CreateRes(@SXUninitialized);
   end;
+  // FIPS 186-4 sec. 4.1: x is in [1, q-1]. Parameters may be nil (inherited), leaving nothing to check.
+  if (AParameters <> nil) and ((AX.SignValue < 1) or (AX.CompareTo(AParameters.Q) >= 0)) then
+    raise EArgumentCryptoLibException.CreateRes(@SDsaXOutOfRange);
   Result := AX;
 end;
 
@@ -479,7 +483,7 @@ constructor TDsaPrivateKeyParameters.Create(const AX: TBigInteger;
   const AParameters: IDsaParameters);
 begin
   inherited Create(True, AParameters);
-  FX := Validate(AX);
+  FX := Validate(AX, AParameters);
 end;
 
 function TDsaPrivateKeyParameters.Equals(const AOther: IDsaPrivateKeyParameters): Boolean;

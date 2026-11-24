@@ -136,6 +136,7 @@ type
     procedure TestDsa2Parameters;
     procedure TestKeyGenerationAll;
     procedure TestParameters;
+    procedure TestPrivateKeyRange;
     procedure TestModulusSizeBound;
 
     /// <summary>
@@ -1165,6 +1166,38 @@ begin
     bytes[System.Length(bytes) - 1] := 2;
   end;
 
+end;
+
+procedure TTestDSA.TestPrivateKeyRange;
+var
+  LParams: IDsaParameters;
+  LPriv: IDsaPrivateKeyParameters;
+  LRaised: Boolean;
+begin
+  // TDsaParameters does not check primality, so trivial domain values suffice to exercise the x range
+  LParams := TDsaParameters.Create(TBigInteger.ValueOf(23), TBigInteger.ValueOf(11),
+    TBigInteger.ValueOf(4)) as IDsaParameters;
+
+  LRaised := False;
+  try
+    LPriv := TDsaPrivateKeyParameters.Create(TBigInteger.Zero, LParams) as IDsaPrivateKeyParameters;
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'x = 0 not rejected');
+
+  LRaised := False;
+  try
+    LPriv := TDsaPrivateKeyParameters.Create(LParams.Q, LParams) as IDsaPrivateKeyParameters;
+  except
+    on E: EArgumentCryptoLibException do
+      LRaised := True;
+  end;
+  CheckTrue(LRaised, 'x = q not rejected');
+
+  LPriv := TDsaPrivateKeyParameters.Create(TBigInteger.ValueOf(5), LParams) as IDsaPrivateKeyParameters;
+  CheckTrue(LPriv.X.Equals(TBigInteger.ValueOf(5)), 'valid x rejected');
 end;
 
 initialization

@@ -135,11 +135,12 @@ function TDsaSigner.GenerateSignature(const AMessage: TCryptoLibByteArray)
   : TCryptoLibGenericArray<TBigInteger>;
 var
   LParameters: IDsaParameters;
-  LQ, LM, LX, LK, LR, LS: TBigInteger;
+  LQ, LM, LX, LK, LBlindedK, LR, LS: TBigInteger;
 begin
   LParameters := FKey.Parameters;
   LQ := LParameters.Q;
-  LM := CalculateE(LQ, AMessage);
+  // m is public, and CalculateE can leave it at or past q, which ModAdd below rejects rather than reduces
+  LM := CalculateE(LQ, AMessage).&Mod(LQ);
   LX := (FKey as IDsaPrivateKeyParameters).X;
 
   if (FKCalculator.IsDeterministic) then
@@ -153,11 +154,14 @@ begin
 
   LK := FKCalculator.NextK();
 
-  LR := LParameters.G.ModPow(LK, LParameters.P).&Mod(LQ);
+  // k leaks x through s, so the exponent is blinded with a random multiple of q before the
+  // variable-time ModPow; g has order q, so r is unchanged
+  LBlindedK := TBigIntegerUtilities.CreateBlindedExponent(LK, LQ, FRandom);
+  LR := LParameters.G.ModPow(LBlindedK, LParameters.P).&Mod(LQ);
 
-  LK := TBigIntegerUtilities.ModOddInverse(LQ, LK).Multiply(LM.Add(LX.Multiply(LR)));
-
-  LS := LK.&Mod(LQ);
+  // s = k^-1 * (m + x * r) mod q, keeping secret x and k^-1 off BigInteger.Mod, whose cost follows the quotient
+  LS := TBigIntegerUtilities.ModMult(LQ, TBigIntegerUtilities.ModOddInverse(LQ, LK),
+    TBigIntegerUtilities.ModAdd(LQ, LM, TBigIntegerUtilities.ModMult(LQ, LX, LR)));
 
   Result := TCryptoLibGenericArray<TBigInteger>.Create(LR, LS);
 end;
@@ -188,7 +192,8 @@ begin
     end;
 
     FKey := LParameters as IDsaPrivateKeyParameters;
-    FRandom := InitSecureRandom(not FKCalculator.IsDeterministic, LProvidedRandom);
+    // needed even for a deterministic k: signing blinds the exponent
+    FRandom := InitSecureRandom(True, LProvidedRandom);
   end
   else
   begin
