@@ -87,7 +87,7 @@ implementation
 function TDHBasicAgreement.CalculateAgreement(const APubKey: ICipherParameters)
   : TBigInteger;
 var
-  LPub: IDHPublicKeyParameters;
+  LPub, LReValidated: IDHPublicKeyParameters;
   LPubConcrete: TDHPublicKeyParameters;
   LP, LPeerY: TBigInteger;
 begin
@@ -109,7 +109,10 @@ begin
   if LPubConcrete.ClassType = TDHPublicKeyParameters then
     LPeerY := LPub.Y
   else
-    LPeerY := TDHPublicKeyParameters.Create(LPub.Y, FDhParams).Y;
+  begin
+    LReValidated := TDHPublicKeyParameters.Create(LPub.Y, FDhParams) as IDHPublicKeyParameters;
+    LPeerY := LReValidated.Y;
+  end;
 
   // the exponent is our private value, long lived for static-static agreement, and the peer chooses the base,
   // so blind the base: the variable-time ModPow's timing could otherwise be accumulated against the key
